@@ -19,7 +19,6 @@ block
 
 statement
     : variableDefinition
-    | variableDeclarationStatement
     | assignStatement
     | ifStatement
     | returnStatement
@@ -27,15 +26,7 @@ statement
     ;
 
 variableDefinition
-    : variableDeclaration '=' expression ';'
-    ;
-
-variableDeclaration
-    : typeName Identifier
-    ;
-
-variableDeclarationStatement
-    : variableDeclaration ';'
+    : typeName Identifier '=' expression ';'
     ;
 
 assignStatement
@@ -73,13 +64,14 @@ parameter
     ;
 
 expression
-    : '(' expression ')'
+    : '(' expression ')' // parentheses
+    | typeName '(' expression ')' // cast
     | functionCall
-    | typeName '(' expression ')'
-    | expression '.' Identifier
+    | expression '.' Identifier // member access
+    | expression '.' functionCall // member function call
     | expression ('++' | '--')
     | ('!' | '~' | '+' | '-' | '++' | '--') expression
-    | expression '**' expression
+    // | expression '**' expression --- No power
     // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled
     | expression ('/' | '%') expression
     | expression ('+' | '-') expression
@@ -106,7 +98,7 @@ numberLiteral
     ;
 
 typeName
-    : 'int' | 'string' | 'time' | 'address' | 'pubkey' | 'sig' | Bytes
+    : 'int' | 'bool' | 'string' | 'address' | 'pubkey' | 'sig' | Bytes
     ;
 
 Bytes
@@ -119,7 +111,7 @@ BooleanLiteral
 
 NumberUnit
     : 'satoshis' | 'sats' | 'finney' | 'bits' | 'bitcoin'
-    | 'seconds' | 'blocks'
+    | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks'
     ;
 
 NumberLiteral

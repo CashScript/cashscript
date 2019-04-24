@@ -9,8 +9,6 @@ import { FunctionDefinitionContext } from "./CashScriptParser";
 import { BlockContext } from "./CashScriptParser";
 import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
-import { VariableDeclarationContext } from "./CashScriptParser";
-import { VariableDeclarationStatementContext } from "./CashScriptParser";
 import { AssignStatementContext } from "./CashScriptParser";
 import { IfStatementContext } from "./CashScriptParser";
 import { ReturnStatementContext } from "./CashScriptParser";
@@ -74,20 +72,6 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitVariableDefinition?: (ctx: VariableDefinitionContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `CashScriptParser.variableDeclaration`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitVariableDeclaration?: (ctx: VariableDeclarationContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `CashScriptParser.variableDeclarationStatement`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitVariableDeclarationStatement?: (ctx: VariableDeclarationStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.assignStatement`.
