@@ -11,7 +11,7 @@ import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
 import { AssignStatementContext } from "./CashScriptParser";
 import { IfStatementContext } from "./CashScriptParser";
-import { ReturnStatementContext } from "./CashScriptParser";
+import { ThrowStatementContext } from "./CashScriptParser";
 import { FunctionCallStatementContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
@@ -117,15 +117,15 @@ export interface CashScriptListener extends ParseTreeListener {
 	exitIfStatement?: (ctx: IfStatementContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `CashScriptParser.returnStatement`.
+	 * Enter a parse tree produced by `CashScriptParser.throwStatement`.
 	 * @param ctx the parse tree
 	 */
-	enterReturnStatement?: (ctx: ReturnStatementContext) => void;
+	enterThrowStatement?: (ctx: ThrowStatementContext) => void;
 	/**
-	 * Exit a parse tree produced by `CashScriptParser.returnStatement`.
+	 * Exit a parse tree produced by `CashScriptParser.throwStatement`.
 	 * @param ctx the parse tree
 	 */
-	exitReturnStatement?: (ctx: ReturnStatementContext) => void;
+	exitThrowStatement?: (ctx: ThrowStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `CashScriptParser.functionCallStatement`.

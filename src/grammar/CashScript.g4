@@ -9,7 +9,7 @@ contractDefinition
     ;
 
 functionDefinition
-    : 'function' parameterList '{' statement* '}'
+    : 'function' Identifier parameterList '{' statement* '}'
     ;
 
 block
@@ -21,7 +21,7 @@ statement
     : variableDefinition
     | assignStatement
     | ifStatement
-    | returnStatement
+    | throwStatement
     | functionCallStatement
     ;
 
@@ -39,8 +39,8 @@ ifStatement
 
 // OP_RETURN invalidates a transaction, so that would more relate to the 'throw' keyword,
 // but if we want subroutines, return would mean regular return
-returnStatement
-    : 'return' expression? ';'
+throwStatement
+    : 'throw' expression? ';'
     ;
 
 functionCallStatement
@@ -48,7 +48,7 @@ functionCallStatement
     ;
 
 functionCall
-    : Identifier expressionList
+    : ReservedFunction expressionList // Only built-in functions are accepted
     ;
 
 expressionList
@@ -83,6 +83,7 @@ expression
     | expression '|' expression
     | expression '&&' expression
     | expression '||' expression
+    | Identifier
     | literal
     ;
 
@@ -127,7 +128,7 @@ HexLiteral
     : '0' [xX] [0-9A-Fa-f]+
     ;
 
-ReservedFunctions
+ReservedFunction
     : 'require'
     | 'abs'
     | 'min'
@@ -136,11 +137,7 @@ ReservedFunctions
     | 'ripemd160'
     | 'sha1'
     | 'sha256'
-    | 'hash160'
-    | 'hash256'
-    | 'checkSig'
-    | 'checkDataSig'
-    | 'checkMultiSig'
+    | 'sigCheck'
     ;
 
 Identifier
