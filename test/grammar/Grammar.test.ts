@@ -1,3 +1,11 @@
+/*   Grammar.test.ts
+ *
+ * - This file is used to test the functioning of the lexer and the parser.
+ * - It only tests whether incorrect syntax is detected, and correct syntax
+ *   is parsed, but it does not test whether the parse output is correct.
+ *   This needs to be done by a different test file
+ */
+
 import { CashScriptParser } from '../../src/grammar/CashScriptParser';
 import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
 import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy } from 'antlr4ts';
@@ -21,16 +29,15 @@ const setup = (input: string): TestSetup => {
     return { lexer, tokenStream, parser };
 }
 
-/* Only tests grammar (scanning + parsing) */
-
 describe('Grammar', () => {
+    let testSetup: TestSetup;
     describe('Fail', () => {
         const testCases = readCashFiles(path.join(__dirname, 'fail'));
         testCases.forEach(f => {
             it(`${f.fn} should fail`, () => {
-                const { parser } = setup(f.contents);
+                testSetup = setup(f.contents);
                 assert.throws(() => {
-                    parser.sourceFile();
+                    testSetup.parser.sourceFile();
                 });
             });
         });
@@ -40,11 +47,18 @@ describe('Grammar', () => {
         const testCases = readCashFiles(path.join(__dirname, 'success'));
         testCases.forEach(f => {
             it(`${f.fn} should succeed`, () => {
-                const { parser } = setup(f.contents);
+                testSetup = setup(f.contents);
                 assert.doesNotThrow(() => {
-                    parser.sourceFile();
+                    testSetup.parser.sourceFile();
                 });
             });
         });
     });
+
+    afterEach(function() {
+        if (this.currentTest && this.currentTest.state === 'failed') {
+            const tokens = testSetup.tokenStream.getTokens().map(t => t.text);
+            console.error(`Token stream: ${tokens}`);
+        }
+    })
 });

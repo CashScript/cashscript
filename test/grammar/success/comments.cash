@@ -1,0 +1,18 @@
+/* This is a contract with some comments
+/* It has some comment characters inside the comment too for some reason
+// line comments too
+ */
+
+contract Test(int x, string y) {
+    int globalInt = 400 + x;
+    bytes b = 0x07364897987fe87;
+
+    // Line comments are a thing
+    function hello(sig s, pubkey pk) {
+        int myVariable = 10 - 4; // they can go at the end of the line
+        int myOtherVariable = globalInt + myVariable % 2;
+        require(myOtherVariable /* And comments can be included within lines */ > globalInt);
+
+        require(ripemd160(b) == ripemd160(y));
+    }
+}
