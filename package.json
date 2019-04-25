@@ -7,7 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "antlr": "antlr4ts -visitor -no-listener src/grammar/CashScript.g4",
+    "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
     "test": "mocha -r ts-node/register test/**/*.test.ts"
   },
   "repository": {
