@@ -12,6 +12,14 @@ functionDefinition
     : 'function' Identifier parameterList '{' statement* '}'
     ;
 
+parameterList
+    : '(' (parameter (',' parameter)*)? ')'
+    ;
+
+parameter
+    : typeName Identifier
+    ;
+
 block
     : '{' statement* '}'
     | statement
@@ -53,14 +61,6 @@ functionCall
 
 expressionList
     : '(' (expression (',' expression)*)? ')'
-    ;
-
-parameterList
-    : '(' (parameter (',' parameter)*)? ')'
-    ;
-
-parameter
-    : typeName Identifier
     ;
 
 expression

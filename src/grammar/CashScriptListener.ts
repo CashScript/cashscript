@@ -6,6 +6,8 @@ import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { SourceFileContext } from "./CashScriptParser";
 import { ContractDefinitionContext } from "./CashScriptParser";
 import { FunctionDefinitionContext } from "./CashScriptParser";
+import { ParameterListContext } from "./CashScriptParser";
+import { ParameterContext } from "./CashScriptParser";
 import { BlockContext } from "./CashScriptParser";
 import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
@@ -15,8 +17,6 @@ import { ThrowStatementContext } from "./CashScriptParser";
 import { FunctionCallStatementContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
-import { ParameterListContext } from "./CashScriptParser";
-import { ParameterContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
 import { LiteralContext } from "./CashScriptParser";
 import { NumberLiteralContext } from "./CashScriptParser";
@@ -60,6 +60,28 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFunctionDefinition?: (ctx: FunctionDefinitionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.parameterList`.
+	 * @param ctx the parse tree
+	 */
+	enterParameterList?: (ctx: ParameterListContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.parameterList`.
+	 * @param ctx the parse tree
+	 */
+	exitParameterList?: (ctx: ParameterListContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.parameter`.
+	 * @param ctx the parse tree
+	 */
+	enterParameter?: (ctx: ParameterContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.parameter`.
+	 * @param ctx the parse tree
+	 */
+	exitParameter?: (ctx: ParameterContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `CashScriptParser.block`.
@@ -159,28 +181,6 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExpressionList?: (ctx: ExpressionListContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `CashScriptParser.parameterList`.
-	 * @param ctx the parse tree
-	 */
-	enterParameterList?: (ctx: ParameterListContext) => void;
-	/**
-	 * Exit a parse tree produced by `CashScriptParser.parameterList`.
-	 * @param ctx the parse tree
-	 */
-	exitParameterList?: (ctx: ParameterListContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `CashScriptParser.parameter`.
-	 * @param ctx the parse tree
-	 */
-	enterParameter?: (ctx: ParameterContext) => void;
-	/**
-	 * Exit a parse tree produced by `CashScriptParser.parameter`.
-	 * @param ctx the parse tree
-	 */
-	exitParameter?: (ctx: ParameterContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `CashScriptParser.expression`.

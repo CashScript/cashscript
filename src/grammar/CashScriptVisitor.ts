@@ -6,6 +6,8 @@ import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 import { SourceFileContext } from "./CashScriptParser";
 import { ContractDefinitionContext } from "./CashScriptParser";
 import { FunctionDefinitionContext } from "./CashScriptParser";
+import { ParameterListContext } from "./CashScriptParser";
+import { ParameterContext } from "./CashScriptParser";
 import { BlockContext } from "./CashScriptParser";
 import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
@@ -15,8 +17,6 @@ import { ThrowStatementContext } from "./CashScriptParser";
 import { FunctionCallStatementContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
-import { ParameterListContext } from "./CashScriptParser";
-import { ParameterContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
 import { LiteralContext } from "./CashScriptParser";
 import { NumberLiteralContext } from "./CashScriptParser";
@@ -51,6 +51,20 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitFunctionDefinition?: (ctx: FunctionDefinitionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.parameterList`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitParameterList?: (ctx: ParameterListContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.parameter`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitParameter?: (ctx: ParameterContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.block`.
@@ -114,20 +128,6 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitExpressionList?: (ctx: ExpressionListContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `CashScriptParser.parameterList`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitParameterList?: (ctx: ParameterListContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `CashScriptParser.parameter`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitParameter?: (ctx: ParameterContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.expression`.
