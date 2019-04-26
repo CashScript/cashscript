@@ -1,0 +1,11 @@
+contract Test(int x, string y) {
+    function hello(sig s, pubkey pk) {
+        int myVariable = 10 - 4;
+        int myOtherVariable = 20 + myVariable % 2;
+        require(myOtherVariable > x);
+
+        string x1 = "Hello \n \\ ' ''  \" World";
+        string x2 = 'Hello \n \\ " " \' World';
+        require(ripemd160(pk) == ripemd160(hw));
+    }
+}

@@ -1,0 +1,20 @@
+contract Test(
+    int x,
+    string y
+) {
+    function hello(
+        int a,
+        string b
+    ) {
+        if (a == x - 2
+         && b == y) {
+            throw;
+        } else if (b == "Hello " + y) {
+            require(
+                y == "World"
+            );
+        } else {
+            require(true == !!!false);
+        }
+    }
+}

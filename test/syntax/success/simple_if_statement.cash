@@ -2,9 +2,9 @@ contract Test(int x, string y) {
     function hello(int a, string b) {
         if (a == x - 2) {
             throw;
-        } else if (b == "Hello " + y) {
+        } else if (b == "Hello " + y)
             require(y == "World");
-        } else {
+        else {
             require(true == !!!false);
         }
     }
