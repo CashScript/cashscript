@@ -14,5 +14,10 @@ contract Test(int x, string y) {
         require(myOtherVariable /* And comments can be included within lines */ > globalInt);
 
         require(ripemd160(b) == ripemd160(y));
+
+        if (x > 10) {
+            require(globalInt < 20);
+        } else
+            require(myVariable == 1);
     }
 }
