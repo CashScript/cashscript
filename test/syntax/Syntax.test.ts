@@ -1,4 +1,4 @@
-/*   Grammar.test.ts
+/*   Syntax.test.ts
  *
  * - This file is used to test the functioning of the lexer and the parser.
  * - It only tests whether incorrect syntax is detected, and correct syntax
@@ -11,12 +11,12 @@ import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
 import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy } from 'antlr4ts';
 import { assert } from 'chai';
 import * as path from 'path';
-import { readCashFiles } from '../test-util';
+import { readCashFiles, prettyPrintTokenStream } from '../test-util';
 
 interface TestSetup {
     lexer: CashScriptLexer,
-    tokenStream: CommonTokenStream,
-    parser: CashScriptParser
+    parser: CashScriptParser,
+    tokenStream: CommonTokenStream
 }
 
 const setup = (input: string): TestSetup => {
@@ -26,7 +26,7 @@ const setup = (input: string): TestSetup => {
     let parser = new CashScriptParser(tokenStream);
     parser.errorHandler = new BailErrorStrategy();
 
-    return { lexer, tokenStream, parser };
+    return { lexer, parser, tokenStream };
 }
 
 describe('Grammar', () => {
@@ -57,8 +57,7 @@ describe('Grammar', () => {
 
     afterEach(function() {
         if (this.currentTest && this.currentTest.state === 'failed') {
-            const tokens = testSetup.tokenStream.getTokens().map(t => t.text);
-            console.error(`Token stream: ${tokens}`);
+            prettyPrintTokenStream(testSetup.lexer, testSetup.tokenStream);
         }
     })
 });
