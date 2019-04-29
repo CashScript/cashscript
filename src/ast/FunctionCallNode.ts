@@ -1,10 +1,10 @@
 import { Node } from "./Node";
 import { IdentifierNode } from "./IdentifierNode";
 
-export class AssignNode extends Node {
+export class FunctionCallNode extends Node {
     constructor(
         public identifier: IdentifierNode,
-        public expression: Node
+        public parameters: Node[]
     ) {
         super();
     }

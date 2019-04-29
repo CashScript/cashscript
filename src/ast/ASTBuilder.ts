@@ -1,9 +1,13 @@
+import { MemberFunctionCallNode } from './MemberFunctionCallNode';
+import { MemberAccessNode } from './MemberAccessNode';
+import { CastNode } from './CastNode';
+import { BranchNode } from './BranchNode';
 import { AssignNode } from './AssignNode';
 import { VariableDefinitionNode } from './VariableDefinitionNode';
-import { Type, getTypeFromCtx } from './Type';
+import { getTypeFromCtx } from './Type';
 import { FunctionDefinitionNode } from './FunctionDefinitionNode';
 import { ContractNode } from './ContractNode';
-import { ContractDefinitionContext, FunctionDefinitionContext, StatementContext, VariableDefinitionContext, ParameterContext, AssignStatementContext, IfStatementContext } from './../grammar/CashScriptParser';
+import { ContractDefinitionContext, FunctionDefinitionContext, VariableDefinitionContext, ParameterContext, AssignStatementContext, IfStatementContext, ThrowStatementContext, FunctionCallContext, CastContext, ExpressionContext } from './../grammar/CashScriptParser';
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { Node } from './Node';
@@ -12,6 +16,10 @@ import { SourceFileContext } from '../grammar/CashScriptParser';
 import { SourceFileNode } from './SourceFileNode';
 import { Location } from './Location';
 import { ParameterNode } from './ParameterNode';
+import { ThrowNode } from './ThrowNode';
+import { FunctionCallNode } from './FunctionCallNode';
+import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
+import { IdentifierNode } from './IdentifierNode';
 export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashScriptVisitor<Node> {
     constructor(private tree: ParseTree) {
         super();
@@ -69,10 +77,36 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
     }
 
     visitAssignStatement(ctx: AssignStatementContext): AssignNode {
-        const name = ctx.Identifier().text;
+        const identifier = new IdentifierNode(ctx.Identifier().text);
         const expression = this.visit(ctx.expression());
-        const assign = new AssignNode(name, expression);
+        const assign = new AssignNode(identifier, expression);
         assign.location = Location.fromCtx(ctx);
         return assign;
+    }
+
+    visitThrowStatement(ctx: ThrowStatementContext): ThrowNode {
+        const expressionCtx = ctx.expression();
+        const expression = expressionCtx && this.visit(expressionCtx);
+        const throwNode = new ThrowNode(expression);
+        throwNode.location = Location.fromCtx(ctx);
+        return throwNode;
+    }
+
+    visitIfStatement(ctx: IfStatementContext): BranchNode {
+        const condition = this.visit(ctx.expression());
+        // I want these _ifBlock variables to be getters @antlr4ts :(
+        const ifBlock = ctx._ifBlock.statement().map(s => this.visit(s));
+        const elseBlock = ctx._elseBlock.statement().map(s => this.visit(s));
+        const branch = new BranchNode(condition, ifBlock, elseBlock);
+        branch.location = Location.fromCtx(ctx);
+        return branch;
+    }
+
+    visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
+        const identifier = new IdentifierNode(ctx.ReservedFunction().text);
+        const parameters = ctx.expressionList().expression().map(e => this.visit(e));
+        const functionCall = new FunctionCallNode(identifier, parameters);
+        functionCall.location = Location.fromCtx(ctx);
+        return functionCall;
     }
 }
