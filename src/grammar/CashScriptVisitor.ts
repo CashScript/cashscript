@@ -12,9 +12,10 @@ import { BlockContext } from "./CashScriptParser";
 import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
 import { AssignStatementContext } from "./CashScriptParser";
-import { IfStatementContext } from "./CashScriptParser";
 import { ThrowStatementContext } from "./CashScriptParser";
 import { FunctionCallStatementContext } from "./CashScriptParser";
+import { IfStatementContext } from "./CashScriptParser";
+import { CastContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
@@ -95,13 +96,6 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitAssignStatement?: (ctx: AssignStatementContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `CashScriptParser.ifStatement`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitIfStatement?: (ctx: IfStatementContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `CashScriptParser.throwStatement`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -114,6 +108,20 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitFunctionCallStatement?: (ctx: FunctionCallStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.ifStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitIfStatement?: (ctx: IfStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.cast`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitCast?: (ctx: CastContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.functionCall`.

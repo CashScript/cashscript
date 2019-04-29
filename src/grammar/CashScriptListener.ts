@@ -12,9 +12,10 @@ import { BlockContext } from "./CashScriptParser";
 import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
 import { AssignStatementContext } from "./CashScriptParser";
-import { IfStatementContext } from "./CashScriptParser";
 import { ThrowStatementContext } from "./CashScriptParser";
 import { FunctionCallStatementContext } from "./CashScriptParser";
+import { IfStatementContext } from "./CashScriptParser";
+import { CastContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
@@ -128,17 +129,6 @@ export interface CashScriptListener extends ParseTreeListener {
 	exitAssignStatement?: (ctx: AssignStatementContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `CashScriptParser.ifStatement`.
-	 * @param ctx the parse tree
-	 */
-	enterIfStatement?: (ctx: IfStatementContext) => void;
-	/**
-	 * Exit a parse tree produced by `CashScriptParser.ifStatement`.
-	 * @param ctx the parse tree
-	 */
-	exitIfStatement?: (ctx: IfStatementContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `CashScriptParser.throwStatement`.
 	 * @param ctx the parse tree
 	 */
@@ -159,6 +149,28 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFunctionCallStatement?: (ctx: FunctionCallStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.ifStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterIfStatement?: (ctx: IfStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.ifStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitIfStatement?: (ctx: IfStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.cast`.
+	 * @param ctx the parse tree
+	 */
+	enterCast?: (ctx: CastContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.cast`.
+	 * @param ctx the parse tree
+	 */
+	exitCast?: (ctx: CastContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `CashScriptParser.functionCall`.

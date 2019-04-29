@@ -28,9 +28,9 @@ block
 statement
     : variableDefinition
     | assignStatement
-    | ifStatement
     | throwStatement
     | functionCallStatement
+    | ifStatement
     ;
 
 variableDefinition
@@ -39,10 +39,6 @@ variableDefinition
 
 assignStatement
     : Identifier '=' expression ';'
-    ;
-
-ifStatement
-    : 'if' '(' expression ')' block ('else' block)?
     ;
 
 // OP_RETURN invalidates a transaction, so that would more relate to the 'throw' keyword,
@@ -55,8 +51,16 @@ functionCallStatement
     : functionCall ';'
     ;
 
+ifStatement
+    : 'if' '(' expression ')' ifBlock=block ('else' elseBlock=block)?
+    ;
+
+cast
+    : typeName '(' expression ')'
+    ;
+
 functionCall
-    : ReservedFunction expressionList // Only built-in functions are accepted
+    : GlobalFunction expressionList // Only built-in functions are accepted
     ;
 
 expressionList
@@ -64,25 +68,26 @@ expressionList
     ;
 
 expression
-    : '(' expression ')' // parentheses
-    | typeName '(' expression ')' // cast
+    : '(' paren=expression ')' // parentheses
+    | cast
     | functionCall
-    | expression '.' Identifier // member access
-    | expression '.' functionCall // member function call
-    | expression ('++' | '--')
-    | ('!' | '~' | '+' | '-' | '++' | '--') expression
+    | obj=expression '.' Identifier // member access
+    | obj=expression '.' functionCall // member function call
+    // | left=expression op=('++' | '--')
+    // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
+    | op=('!' | '~' | '+' | '-') right=expression
     // | expression '**' expression --- No power
     // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled
-    | expression ('/' | '%') expression
-    | expression ('+' | '-') expression
+    | left=expression op=('/' | '%') right=expression
+    | left=expression op=('+' | '-') right=expression
     // | expression ('>>' | '<<') expression --- OP_LSHIFT 7 RSHIFT are disabled
-    | expression ('<' | '<=' | '>' | '>=') expression
-    | expression ('==' | '!=' | '===' | '!==') expression
-    | expression '&' expression
-    | expression '^' expression
-    | expression '|' expression
-    | expression '&&' expression
-    | expression '||' expression
+    | left=expression op=('<' | '<=' | '>' | '>=') right=expression
+    | left=expression op=('==' | '!=') right=expression
+    | left=expression op='&' right=expression
+    | left=expression op='^' right=expression
+    | left=expression op='|' right=expression
+    | left=expression op='&&' right=expression
+    | left=expression op='||' right=expression
     | Identifier
     | literal
     ;
@@ -99,7 +104,8 @@ numberLiteral
     ;
 
 typeName
-    : 'int' | 'bool' | 'string' | 'address' | 'pubkey' | 'sig' | Bytes
+    // : 'int' | 'bool' | 'string' | 'address' | 'pubkey' | 'sig' | Bytes
+    : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | Bytes
     ;
 
 Bytes
@@ -128,7 +134,7 @@ HexLiteral
     : '0' [xX] [0-9A-Fa-f]+
     ;
 
-ReservedFunction
+GlobalFunction
     : 'require'
     | 'abs'
     | 'min'
