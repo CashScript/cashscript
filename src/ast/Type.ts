@@ -1,15 +1,15 @@
 import { TypeNameContext } from "../grammar/CashScriptParser";
 
 export enum Type {
-    INT,
-    BOOL,
-    STRING,
-    ADDRESS,
-    PUBKEY,
-    SIG,
-    BYTES,
-    BYTES20,
-    BYTES32
+    INT = 'int',
+    BOOL = 'bool',
+    STRING = 'string',
+    ADDRESS = 'address',
+    PUBKEY = 'pubkey',
+    SIG = 'sig',
+    BYTES = 'bytes',
+    BYTES20 = 'bytes20',
+    BYTES32 = 'bytes32'
 }
 
 export function getTypeFromCtx(ctx: TypeNameContext): Type {
