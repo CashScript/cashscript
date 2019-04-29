@@ -1,7 +1,7 @@
 import { Node, SourceFileNode, ContractNode, ParameterNode, VariableDefinitionNode, FunctionDefinitionNode, AssignNode, IdentifierNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, UnaryOpNode, BinaryOpNode, BoolLiteralNode, IntLiteralNode, HexLiteralNode, StringLiteralNode, ExpressionNode, StatementNode, LiteralNode } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import { getTypeFromCtx } from './Type';
-import { ContractDefinitionContext, FunctionDefinitionContext, VariableDefinitionContext, ParameterContext, AssignStatementContext, IfStatementContext, ThrowStatementContext, FunctionCallContext, CastContext, ExpressionContext, LiteralContext, NumberLiteralContext, FunctionCallStatementContext } from './../grammar/CashScriptParser';
+import { ContractDefinitionContext, FunctionDefinitionContext, VariableDefinitionContext, ParameterContext, AssignStatementContext, IfStatementContext, ThrowStatementContext, FunctionCallContext, CastContext, ExpressionContext, LiteralContext, NumberLiteralContext, FunctionCallStatementContext } from '../grammar/CashScriptParser';
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
@@ -9,13 +9,13 @@ import { SourceFileContext } from '../grammar/CashScriptParser';
 import { Location } from './Location';
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
 import { NumberUnit } from './NumberUnit';
-export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashScriptVisitor<Node> {
+export class AstBuilder extends AbstractParseTreeVisitor<Node> implements CashScriptVisitor<Node> {
     constructor(private tree: ParseTree) {
         super();
     }
 
     defaultResult(): Node {
-        return new Node();
+        return new BoolLiteralNode(false);
     }
 
     build(): Node {

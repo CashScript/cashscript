@@ -1,9 +1,19 @@
+import { AstVisitor } from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
 import { Type } from './Type';
 
-export class Node {
+export abstract class Node {
     location?: Location;
+    abstract accept<T>(visitor: AstVisitor<T>): T;
+}
+
+export interface Named {
+    name: string;
+}
+
+export interface Typed {
+    type: Type;
 }
 
 export class SourceFileNode extends Node {
@@ -12,8 +22,13 @@ export class SourceFileNode extends Node {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitSourceFile(this);
+    }
 }
-export class ContractNode extends Node {
+
+export class ContractNode extends Node implements Named {
     constructor(
         public name: string,
         public parameters: ParameterNode[],
@@ -22,9 +37,13 @@ export class ContractNode extends Node {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitContract(this);
+    }
 }
 
-export class FunctionDefinitionNode extends Node {
+export class FunctionDefinitionNode extends Node implements Named {
     constructor(
         public name: string,
         public parameters: ParameterNode[],
@@ -32,27 +51,38 @@ export class FunctionDefinitionNode extends Node {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitFunctionDefinition(this);
+    }
 }
 
-export class ParameterNode extends Node {
+export class ParameterNode extends Node implements Named, Typed {
     constructor(
         public type: Type,
         public name: string
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitParameter(this);
+    }
 }
 
 export type StatementNode = VariableDefinitionNode | AssignNode | BranchNode | FunctionCallNode;
 
-
-export class VariableDefinitionNode extends Node {
+export class VariableDefinitionNode extends Node implements Named, Typed {
     constructor(
         public type: Type,
         public name: string,
         public expression: ExpressionNode
     ) {
         super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitVariableDefinition(this);
     }
 }
 
@@ -63,6 +93,10 @@ export class AssignNode extends Node {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitAssign(this);
+    }
 }
 
 export class ThrowNode extends Node {
@@ -70,6 +104,10 @@ export class ThrowNode extends Node {
         public expression?: ExpressionNode
     ) {
         super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitThrow(this);
     }
 }
 
@@ -81,16 +119,24 @@ export class BranchNode extends Node {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitBranch(this);
+    }
 }
 
-export class ExpressionNode extends Node {}
+export abstract class ExpressionNode extends Node {}
 
-export class CastNode extends ExpressionNode {
+export class CastNode extends ExpressionNode implements Typed {
     constructor(
         public type: Type,
         public expression: ExpressionNode
     ) {
         super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitCast(this);
     }
 }
 
@@ -101,6 +147,10 @@ export class MemberAccessNode extends ExpressionNode {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitMemberAccess(this);
+    }
 }
 
 export class MemberFunctionCallNode extends ExpressionNode {
@@ -110,6 +160,10 @@ export class MemberFunctionCallNode extends ExpressionNode {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitMemberFunctionCall(this);
+    }
 }
 
 export class FunctionCallNode extends ExpressionNode {
@@ -118,6 +172,10 @@ export class FunctionCallNode extends ExpressionNode {
         public parameters: ExpressionNode[]
     ) {
         super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitFunctionCall(this);
     }
 }
 
@@ -129,6 +187,10 @@ export class BinaryOpNode extends ExpressionNode {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitBinaryOp(this);
+    }
 }
 
 export class UnaryOpNode extends ExpressionNode {
@@ -138,24 +200,36 @@ export class UnaryOpNode extends ExpressionNode {
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitUnaryOp(this);
+    }
 }
 
 // TODO: Add symboltable support
-export class IdentifierNode extends ExpressionNode {
+export class IdentifierNode extends ExpressionNode implements Named {
     constructor(
         public name: string
     ) {
         super();
     }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitIdentifier(this);
+    }
 }
 
-export class LiteralNode extends ExpressionNode {}
+export abstract class LiteralNode extends ExpressionNode {}
 
 export class BoolLiteralNode extends LiteralNode {
     constructor(
         public value: boolean
     ) {
         super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitBoolLiteral(this);
     }
 }
 
@@ -165,14 +239,21 @@ export class IntLiteralNode extends LiteralNode {
     ) {
         super();
     }
-}
 
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitIntLiteral(this);
+    }
+}
 
 export class StringLiteralNode extends LiteralNode {
     constructor(
         public value: string
     ) {
         super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitStringLiteral(this);
     }
 }
 
@@ -181,5 +262,9 @@ export class HexLiteralNode extends LiteralNode {
         public value: Buffer
     ) {
         super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitHexLiteral(this);
     }
 }
