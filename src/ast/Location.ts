@@ -1,5 +1,4 @@
 import { ParserRuleContext } from 'antlr4ts/ParserRuleContext';
-import { ParseTree } from 'antlr4ts/tree/ParseTree';
 export class Location {
     constructor(public start: Point, public end: Point) {}
 

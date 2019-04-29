@@ -13,7 +13,7 @@ contract Test(int x, string y) {
         int myOtherVariable = globalInt + myVariable % 2;
         require(myOtherVariable /* And comments can be included within lines */ > globalInt);
 
-        require(ripemd160(b) == ripemd160(y));
+        require(ripemd160(b) == ripemd160(string(myVariable)));
 
         if (x > 10) {
             require(globalInt < 20);
