@@ -1,4 +1,4 @@
-import { SourceFileNode } from './SourceFileNode';
+import { SourceFileNode } from './AST';
 import { CashScriptParser } from './../grammar/CashScriptParser';
 import { CashScriptLexer } from './../grammar/CashScriptLexer';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';

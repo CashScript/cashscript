@@ -1,33 +1,14 @@
-import { StringLiteralNode } from './StringLiteralNode';
-import { HexLiteralNode } from './HexLiteralNode';
-import { BoolLiteralNode } from './BoolLiteralNode';
-import { BinaryOp } from './BinaryOp';
-import { UnaryOp } from './UnaryOp';
+import { Node, SourceFileNode, ContractNode, ParameterNode, VariableDefinitionNode, FunctionDefinitionNode, AssignNode, IdentifierNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, UnaryOpNode, BinaryOpNode, BoolLiteralNode, IntLiteralNode, HexLiteralNode, StringLiteralNode, ExpressionNode, StatementNode, LiteralNode } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
-import { MemberFunctionCallNode } from './MemberFunctionCallNode';
-import { MemberAccessNode } from './MemberAccessNode';
-import { CastNode } from './CastNode';
-import { BranchNode } from './BranchNode';
-import { AssignNode } from './AssignNode';
-import { VariableDefinitionNode } from './VariableDefinitionNode';
 import { getTypeFromCtx } from './Type';
-import { FunctionDefinitionNode } from './FunctionDefinitionNode';
-import { ContractNode } from './ContractNode';
 import { ContractDefinitionContext, FunctionDefinitionContext, VariableDefinitionContext, ParameterContext, AssignStatementContext, IfStatementContext, ThrowStatementContext, FunctionCallContext, CastContext, ExpressionContext, LiteralContext, NumberLiteralContext, FunctionCallStatementContext } from './../grammar/CashScriptParser';
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
-import { Node } from './Node';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { SourceFileContext } from '../grammar/CashScriptParser';
-import { SourceFileNode } from './SourceFileNode';
 import { Location } from './Location';
-import { ParameterNode } from './ParameterNode';
-import { ThrowNode } from './ThrowNode';
-import { FunctionCallNode } from './FunctionCallNode';
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
-import { IdentifierNode } from './IdentifierNode';
 import { NumberUnit } from './NumberUnit';
-import { IntLiteralNode } from './IntLiteralNode';
 export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashScriptVisitor<Node> {
     constructor(private tree: ParseTree) {
         super();
@@ -60,8 +41,8 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
 
     visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
         const name = ctx.Identifier().text;
-        const parameters = ctx.parameterList().parameter().map(p => this.visit(p));
-        const statements = ctx.statement().map(s => this.visit(s));
+        const parameters = ctx.parameterList().parameter().map(p => this.visit(p) as ParameterNode);
+        const statements = ctx.statement().map(s => this.visit(s) as StatementNode);
         const functionDefinition = new FunctionDefinitionNode(name, parameters, statements);
         functionDefinition.location = Location.fromCtx(ctx);
         return functionDefinition;
@@ -100,21 +81,21 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         return throwNode;
     }
 
-    visitFunctionCallStatement(ctx: FunctionCallStatementContext): Node {
-        return this.visit(ctx.functionCall());
+    visitFunctionCallStatement(ctx: FunctionCallStatementContext): FunctionCallNode {
+        return this.visit(ctx.functionCall()) as FunctionCallNode;
     }
 
     visitIfStatement(ctx: IfStatementContext): BranchNode {
         const condition = this.visit(ctx.expression());
         // I want these _ifBlock variables to be getters @antlr4ts :(
-        const ifBlock = ctx._ifBlock.statement().map(s => this.visit(s));
-        const elseBlock = ctx._elseBlock.statement().map(s => this.visit(s));
+        const ifBlock = ctx._ifBlock.statement().map(s => this.visit(s) as StatementNode);
+        const elseBlock = ctx._elseBlock.statement().map(s => this.visit(s) as StatementNode);
         const branch = new BranchNode(condition, ifBlock, elseBlock);
         branch.location = Location.fromCtx(ctx);
         return branch;
     }
 
-    visitExpression(ctx: ExpressionContext): Node {
+    visitExpression(ctx: ExpressionContext): ExpressionNode {
         if (ctx._paren) {
             return this.visit(ctx._paren);
         } else if (ctx.cast()) {
@@ -147,7 +128,7 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         return cast;
     }
 
-    createMemberAccess(ctx: ExpressionContext): Node {
+    createMemberAccess(ctx: ExpressionContext): MemberAccessNode {
         const obj = this.visit(ctx._obj);
         const member = (ctx.Identifier() as TerminalNode).text;
         const memberAccess = new MemberAccessNode(obj, member);
@@ -155,9 +136,9 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         return memberAccess;
     }
 
-    createMemberFunctionCall(ctx: ExpressionContext): Node {
+    createMemberFunctionCall(ctx: ExpressionContext): MemberFunctionCallNode {
         const obj = this.visit(ctx._obj);
-        const functionCall = this.visit(ctx.functionCall() as FunctionCallContext);
+        const functionCall = this.visit(ctx.functionCall() as FunctionCallContext) as FunctionCallNode;
         const memberFunctionCall = new MemberFunctionCallNode(obj, functionCall);
         memberFunctionCall.location = Location.fromCtx(ctx);
         return memberFunctionCall;
@@ -165,36 +146,36 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
 
     visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
         const identifier = new IdentifierNode(ctx.GlobalFunction().text);
-        const parameters = ctx.expressionList().expression().map(e => this.visit(e));
+        const parameters = ctx.expressionList().expression().map(e => this.visit(e) as ExpressionNode);
         const functionCall = new FunctionCallNode(identifier, parameters);
         functionCall.location = Location.fromCtx(ctx);
         return functionCall;
     }
 
-    createBinaryOp(ctx: ExpressionContext): Node {
+    createBinaryOp(ctx: ExpressionContext): BinaryOpNode {
         const left = this.visit(ctx._left);
         const operator = ctx._op.text as BinaryOperator;
         const right = this.visit(ctx._right);
-        const binaryOp = new BinaryOp(left, operator, right);
+        const binaryOp = new BinaryOpNode(left, operator, right);
         binaryOp.location = Location.fromCtx(ctx);
         return binaryOp;
     }
 
-    createUnaryOp(ctx: ExpressionContext): Node {
+    createUnaryOp(ctx: ExpressionContext): UnaryOpNode {
         const operator = ctx._op.text as UnaryOperator;
         const expression = this.visit(ctx._right);
-        const unaryOp = new UnaryOp(operator, expression);
+        const unaryOp = new UnaryOpNode(operator, expression);
         unaryOp.location = Location.fromCtx(ctx);
         return unaryOp;
     }
 
-    createIdentifier(ctx: ExpressionContext): Node {
+    createIdentifier(ctx: ExpressionContext): IdentifierNode {
         const identifier = new IdentifierNode((ctx.Identifier() as TerminalNode).text);
         identifier.location = Location.fromCtx(ctx);
         return identifier;
     }
 
-    createLiteral(ctx: LiteralContext): Node {
+    createLiteral(ctx: LiteralContext): LiteralNode {
         if (ctx.BooleanLiteral()) {
             return this.createBooleanLiteral(ctx);
         } else if (ctx.numberLiteral()) {
@@ -206,7 +187,7 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         }
     }
 
-    createBooleanLiteral(ctx: LiteralContext): Node {
+    createBooleanLiteral(ctx: LiteralContext): BoolLiteralNode {
         const boolString = (ctx.BooleanLiteral() as TerminalNode).text;
         const boolValue = boolString == "true";
         const booleanLiteral = new BoolLiteralNode(boolValue);
@@ -214,7 +195,7 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         return booleanLiteral;
     }
 
-    createIntLiteral(ctx: LiteralContext): Node {
+    createIntLiteral(ctx: LiteralContext): IntLiteralNode {
         const numberCtx = ctx.numberLiteral() as NumberLiteralContext;
         const numberString = numberCtx.NumberLiteral().text;
         const numberUnit = numberCtx.NumberUnit();
@@ -225,7 +206,7 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         return intLiteral;
     }
 
-    createStringLiteral(ctx: LiteralContext): Node {
+    createStringLiteral(ctx: LiteralContext): StringLiteralNode {
         const rawString = (ctx.StringLiteral() as TerminalNode).text;
         const stringValue = rawString.substring(1, rawString.length - 1);
         const stringLiteral = new StringLiteralNode(stringValue);
@@ -233,7 +214,7 @@ export class ASTBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         return stringLiteral;
     }
 
-    createHexLiteral(ctx: LiteralContext): Node {
+    createHexLiteral(ctx: LiteralContext): HexLiteralNode {
         const hexString = (ctx.HexLiteral() as TerminalNode).text;
         const hexValue = Buffer.from(hexString.substring(2), "hex");
         const hexLiteral = new HexLiteralNode(hexValue);
