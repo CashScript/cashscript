@@ -5,16 +5,28 @@
 
 contract Test(int x, string y) {
     int globalInt = 400 + x;
-    bytes b = 0x07364897987fe87;
+    bytes b = 0x07364897987fe87 + bytes(x);
 
     // Line comments are a thing
     function hello(sig s, pubkey pk) {
-        int myVariable = 10 - 4; // they can go at the end of the line
+        int myVariable = 10 - int(b); // they can go at the end of the line
         int myOtherVariable = globalInt + myVariable % 2;
         require(myOtherVariable /* And comments can be included within lines */ > globalInt);
 
+        myOtherVariable = globalInt;
+
+        require(ripemd160(b) == ripemd160(string(myVariable)));
+        require(tx.timeAge > 500 && y.length < +-10);
+
+        if (globalInt > 400) {
+            globalInt = 400;
+        }
+
         if (x > 10) {
             require(globalInt < 20);
+            myVariable = 10;
+        } else if (x < 5) {
+            throw;
         } else
             require(myVariable == 1);
     }

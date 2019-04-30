@@ -111,11 +111,23 @@ export class ThrowNode extends Node {
     }
 }
 
+export class FunctionCallStatementNode extends Node {
+    constructor(
+        public functionCall: FunctionCallNode
+    ) {
+        super();
+    }
+
+    accept<T>(visitor: AstVisitor<T>): T {
+        return visitor.visitFunctionCallStatement(this);
+    }
+}
+
 export class BranchNode extends Node {
     constructor(
         public condition: ExpressionNode,
         public ifBlock: StatementNode[],
-        public elseBlock: StatementNode[]
+        public elseBlock?: StatementNode[]
     ) {
         super();
     }

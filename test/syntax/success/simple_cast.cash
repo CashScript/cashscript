@@ -1,6 +1,6 @@
 contract Test(int x, string y) {
     function hello(sig s, pubkey pk) {
-        int myVariable = 10 - 4;
+        int myVariable = 10 - int(pk);
         int myOtherVariable = 20 + myVariable % 2;
         require(myOtherVariable > x);
 

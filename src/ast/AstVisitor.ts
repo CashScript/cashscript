@@ -1,4 +1,4 @@
-import { SourceFileNode, ContractNode, FunctionDefinitionNode, ParameterNode, VariableDefinitionNode, AssignNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, BinaryOpNode, UnaryOpNode, IdentifierNode, BoolLiteralNode, IntLiteralNode, StringLiteralNode, HexLiteralNode, Node } from "./AST";
+import { SourceFileNode, ContractNode, FunctionDefinitionNode, ParameterNode, VariableDefinitionNode, AssignNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, BinaryOpNode, UnaryOpNode, IdentifierNode, BoolLiteralNode, IntLiteralNode, StringLiteralNode, HexLiteralNode, Node, FunctionCallStatementNode } from "./AST";
 
 export abstract class AstVisitor<T> {
     abstract visitSourceFile(node: SourceFileNode): T;
@@ -8,6 +8,7 @@ export abstract class AstVisitor<T> {
     abstract visitVariableDefinition(node: VariableDefinitionNode): T;
     abstract visitAssign(node: AssignNode): T;
     abstract visitThrow(node: ThrowNode): T;
+    abstract visitFunctionCallStatement(node: FunctionCallStatementNode): T;
     abstract visitBranch(node: BranchNode): T;
     abstract visitCast(node: CastNode): T;
     abstract visitMemberAccess(node: MemberAccessNode): T;
@@ -25,11 +26,15 @@ export abstract class AstVisitor<T> {
         return node.accept(this);
     }
 
-    optionalVisit(node?: Node): T | undefined {
-        return node ? this.visit(node) : undefined;
+    visitOptional(node?: Node): T | undefined {
+        return node && this.visit(node);
     }
 
     visitList(nodes: Node[]): T[] {
         return nodes.map(n => this.visit(n));
+    }
+
+    visitOptionalList(nodes?: Node[]): T[] | undefined {
+        return nodes && nodes.map(n => this.visit(n));
     }
 }

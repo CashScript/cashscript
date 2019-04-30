@@ -1,4 +1,4 @@
-import { Node, SourceFileNode, ContractNode, ParameterNode, VariableDefinitionNode, FunctionDefinitionNode, AssignNode, IdentifierNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, UnaryOpNode, BinaryOpNode, BoolLiteralNode, IntLiteralNode, HexLiteralNode, StringLiteralNode, ExpressionNode, StatementNode, LiteralNode } from './AST';
+import { Node, SourceFileNode, ContractNode, ParameterNode, VariableDefinitionNode, FunctionDefinitionNode, AssignNode, IdentifierNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, UnaryOpNode, BinaryOpNode, BoolLiteralNode, IntLiteralNode, HexLiteralNode, StringLiteralNode, ExpressionNode, StatementNode, LiteralNode, FunctionCallStatementNode } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import { getTypeFromCtx } from './Type';
 import { ContractDefinitionContext, FunctionDefinitionContext, VariableDefinitionContext, ParameterContext, AssignStatementContext, IfStatementContext, ThrowStatementContext, FunctionCallContext, CastContext, ExpressionContext, LiteralContext, NumberLiteralContext, FunctionCallStatementContext } from '../grammar/CashScriptParser';
@@ -81,15 +81,18 @@ export class AstBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
         return throwNode;
     }
 
-    visitFunctionCallStatement(ctx: FunctionCallStatementContext): FunctionCallNode {
-        return this.visit(ctx.functionCall()) as FunctionCallNode;
+    visitFunctionCallStatement(ctx: FunctionCallStatementContext): FunctionCallStatementNode {
+        const functionCall = this.visit(ctx.functionCall()) as FunctionCallNode;
+        const functionCallStatement = new FunctionCallStatementNode(functionCall);
+        functionCallStatement.location = Location.fromCtx(ctx);
+        return functionCallStatement;
     }
 
     visitIfStatement(ctx: IfStatementContext): BranchNode {
         const condition = this.visit(ctx.expression());
         // I want these _ifBlock variables to be getters @antlr4ts :(
         const ifBlock = ctx._ifBlock.statement().map(s => this.visit(s) as StatementNode);
-        const elseBlock = ctx._elseBlock.statement().map(s => this.visit(s) as StatementNode);
+        const elseBlock = ctx._elseBlock && ctx._elseBlock.statement().map(s => this.visit(s) as StatementNode);
         const branch = new BranchNode(condition, ifBlock, elseBlock);
         branch.location = Location.fromCtx(ctx);
         return branch;

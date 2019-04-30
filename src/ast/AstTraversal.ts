@@ -1,4 +1,4 @@
-import { Node, SourceFileNode, ContractNode, FunctionDefinitionNode, ParameterNode, VariableDefinitionNode, AssignNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, UnaryOpNode, BinaryOpNode, IdentifierNode, BoolLiteralNode, IntLiteralNode, StringLiteralNode, HexLiteralNode, StatementNode, ExpressionNode } from './AST';
+import { Node, SourceFileNode, ContractNode, FunctionDefinitionNode, ParameterNode, VariableDefinitionNode, AssignNode, ThrowNode, BranchNode, CastNode, MemberAccessNode, MemberFunctionCallNode, FunctionCallNode, UnaryOpNode, BinaryOpNode, IdentifierNode, BoolLiteralNode, IntLiteralNode, StringLiteralNode, HexLiteralNode, StatementNode, ExpressionNode, FunctionCallStatementNode } from './AST';
 import { AstVisitor } from "./AstVisitor";
 
 export class AstTraversal extends AstVisitor<Node> {
@@ -36,14 +36,19 @@ export class AstTraversal extends AstVisitor<Node> {
     }
 
     visitThrow(node: ThrowNode): Node {
-        node.expression = this.optionalVisit(node.expression);
+        node.expression = this.visitOptional(node.expression);
+        return node;
+    }
+
+    visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+        node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
         return node;
     }
 
     visitBranch(node: BranchNode): Node {
         node.condition = this.visit(node.condition);
         node.ifBlock = this.visitList(node.ifBlock) as StatementNode[];
-        node.elseBlock = this.visitList(node.elseBlock) as StatementNode[];
+        node.elseBlock = this.visitOptionalList(node.elseBlock) as StatementNode[];
         return node;
     }
 
@@ -71,7 +76,7 @@ export class AstTraversal extends AstVisitor<Node> {
 
     visitBinaryOp(node: BinaryOpNode): Node {
         node.left = this.visit(node.left);
-        node.right = this.visit(node.left);
+        node.right = this.visit(node.right);
         return node;
     }
 
