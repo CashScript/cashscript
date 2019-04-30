@@ -192,7 +192,7 @@ export class OutputSourceCodeTraversal extends AstTraversal {
     }
 
     visitStringLiteral(node: StringLiteralNode) {
-        this.addOutput(node.value);
+        this.addOutput(`${node.quote}${node.value}${node.quote}`);
 
         return node;
     }

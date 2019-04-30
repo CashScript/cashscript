@@ -212,7 +212,8 @@ export class AstBuilder extends AbstractParseTreeVisitor<Node> implements CashSc
     createStringLiteral(ctx: LiteralContext): StringLiteralNode {
         const rawString = (ctx.StringLiteral() as TerminalNode).text;
         const stringValue = rawString.substring(1, rawString.length - 1);
-        const stringLiteral = new StringLiteralNode(stringValue);
+        const quote = rawString.substring(0, 1);
+        const stringLiteral = new StringLiteralNode(stringValue, quote);
         stringLiteral.location = Location.fromCtx(ctx);
         return stringLiteral;
     }

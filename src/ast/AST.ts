@@ -259,7 +259,8 @@ export class IntLiteralNode extends LiteralNode {
 
 export class StringLiteralNode extends LiteralNode {
     constructor(
-        public value: string
+        public value: string,
+        public quote: string
     ) {
         super();
     }
