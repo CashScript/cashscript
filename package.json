@@ -8,7 +8,8 @@
   },
   "scripts": {
     "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
-    "test": "mocha -r ts-node/register test/**/*.test.ts"
+    "test": "mocha -r ts-node/register test/**/*.test.ts",
+    "lint": "eslint . --ext .ts"
   },
   "repository": {
     "type": "git",
@@ -27,8 +28,13 @@
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.7",
+    "@typescript-eslint/eslint-plugin": "^1.7.0",
+    "@typescript-eslint/parser": "^1.7.0",
     "antlr4ts-cli": "^0.5.0-alpha.3",
     "chai": "^4.2.0",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-typescript": "^3.0.0",
+    "eslint-plugin-import": "^2.17.2",
     "mocha": "^6.1.4",
     "ts-node": "^8.1.0",
     "typescript": "^3.4.5"

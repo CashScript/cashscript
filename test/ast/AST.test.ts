@@ -9,40 +9,40 @@
  *   by storing the expected AST in JSON under the same name as the .cash file.
  */
 
-import { AstBuilder } from './../../src/ast/AstBuilder';
-import { CashScriptParser } from '../../src/grammar/CashScriptParser';
-import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
-import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy } from 'antlr4ts';
+import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import { assert } from 'chai';
 import * as path from 'path';
-import { readCashFiles, prettyPrintTokenStream } from '../test-util';
+import AstBuilder from '../../src/ast/AstBuilder';
+import { CashScriptParser } from '../../src/grammar/CashScriptParser';
+import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
+import { readCashFiles } from '../test-util';
 import { Node, SourceFileNode } from '../../src/ast/AST';
-import { OutputSourceCodeTraversal } from '../../src/traversals/OutputSourceCodeTraversal';
+import OutputSourceCodeTraversal from '../../src/traversals/OutputSourceCodeTraversal';
 
 interface TestSetup {
-    ast: Node,
-    sourceOutput: string,
+  ast: Node,
+  sourceOutput: string
 }
 
 function setup(input: string): TestSetup {
-    const inputStream = new ANTLRInputStream(input);
-    const lexer = new CashScriptLexer(inputStream);
-    const tokenStream = new CommonTokenStream(lexer);
-    const parser = new CashScriptParser(tokenStream);
-    const ast = new AstBuilder(parser.sourceFile()).build() as SourceFileNode;
-    const traversal = new OutputSourceCodeTraversal();
-    ast.accept(traversal);
+  const inputStream = new ANTLRInputStream(input);
+  const lexer = new CashScriptLexer(inputStream);
+  const tokenStream = new CommonTokenStream(lexer);
+  const parser = new CashScriptParser(tokenStream);
+  const ast = new AstBuilder(parser.sourceFile()).build() as SourceFileNode;
+  const traversal = new OutputSourceCodeTraversal();
+  ast.accept(traversal);
 
-    return { ast, sourceOutput: traversal.output };
+  return { ast, sourceOutput: traversal.output };
 }
 
 describe('AST Builder', () => {
-    const testCases = readCashFiles(path.join(__dirname, '..', 'syntax', 'success'));
-    testCases.forEach(f => {
-        it(`${f.fn} should succeed`, () => {
-            const { sourceOutput: initialOutput } = setup(f.contents);
-            const { sourceOutput: rerunOutput } = setup(initialOutput);
-            assert.equal(initialOutput, rerunOutput);
-        });
+  const testCases = readCashFiles(path.join(__dirname, '..', 'syntax', 'success'));
+  testCases.forEach((f) => {
+    it(`${f.fn} should succeed`, () => {
+      const { sourceOutput: initialOutput } = setup(f.contents);
+      const { sourceOutput: rerunOutput } = setup(initialOutput);
+      assert.equal(initialOutput, rerunOutput);
     });
+  });
 });
