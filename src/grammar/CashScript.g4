@@ -122,7 +122,7 @@ NumberUnit
     ;
 
 NumberLiteral
-    : [1-9] [0-9]* ([eE] [0-9]+)?
+    : [0-9]* ([eE] [0-9]+)?
     ;
 
 StringLiteral
@@ -147,7 +147,7 @@ GlobalFunction
     ;
 
 Identifier
-    : [a-zA-Z] [a-zA-Z0-9$_]*
+    : [a-zA-Z] [a-zA-Z0-9_]*
     ;
 
 WHITESPACE
