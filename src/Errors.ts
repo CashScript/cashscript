@@ -1,20 +1,53 @@
-import { Location } from './ast/Location';
-import { Type } from './ast/Type';
+import {
+  IdentifierNode,
+  FunctionDefinitionNode,
+  VariableDefinitionNode,
+  ParameterNode,
+  Node,
+} from './ast/AST';
 
 export class CashScriptError extends Error {
+  node: Node;
+
   constructor(
-    public location?: Location,
+    node: Node,
+    message: string,
   ) {
-    super();
+    if (node.location) {
+      message += ` at ${node.location.start}`;
+    }
+
+    super(message);
+
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+
+    this.node = node;
   }
 }
 
-export class TypeError extends CashScriptError {
+export class UndefinedReferenceError extends CashScriptError {
   constructor(
-    public expected: Type,
-    public actual: Type,
-    public location?: Location,
+    public node: IdentifierNode,
   ) {
-    super(location);
+    super(node, `Undefined reference to symbol ${node.name}`);
+  }
+}
+
+export class RedefinitionError extends CashScriptError {}
+
+export class FunctionRedefinitionError extends RedefinitionError {
+  constructor(
+    public node: FunctionDefinitionNode,
+  ) {
+    super(node, `Redefinition of function ${node.name}`);
+  }
+}
+
+export class VariableRedefinitionError extends RedefinitionError {
+  constructor(
+    public node: VariableDefinitionNode | ParameterNode,
+  ) {
+    super(node, `Redefinition of variable ${node.name}`);
   }
 }

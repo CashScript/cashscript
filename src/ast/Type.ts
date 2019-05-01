@@ -9,7 +9,9 @@ export enum Type {
   SIG = 'sig',
   BYTES = 'bytes',
   BYTES20 = 'bytes20',
-  BYTES32 = 'bytes32'
+  BYTES32 = 'bytes32',
+  VOID = 'void',
+  TX = 'tx',
 }
 
 export function getTypeFromCtx(ctx: TypeNameContext): Type {

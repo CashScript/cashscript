@@ -1,0 +1,7 @@
+contract Test(int x, string y) {
+    int z = 0;
+
+    function unlock(int a, int b) {
+        int c = a + d;
+    }
+}

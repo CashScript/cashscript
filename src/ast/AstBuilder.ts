@@ -87,7 +87,10 @@ export default class AstBuilder
     const name = ctx.Identifier().text;
     const parameters = ctx.parameterList().parameter().map(p => this.visit(p) as ParameterNode);
     const statements = ctx.statement().map(s => this.visit(s) as StatementNode);
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, statements);
+    const block = new BlockNode(statements);
+    block.location = Location.fromCtx(ctx);
+
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, block);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -111,6 +114,8 @@ export default class AstBuilder
 
   visitAssignStatement(ctx: AssignStatementContext): AssignNode {
     const identifier = new IdentifierNode(ctx.Identifier().text);
+    identifier.location = Location.fromToken(ctx.Identifier().symbol);
+
     const expression = this.visit(ctx.expression());
     const assign = new AssignNode(identifier, expression);
     assign.location = Location.fromCtx(ctx);
@@ -200,6 +205,7 @@ export default class AstBuilder
 
   visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
     const identifier = new IdentifierNode(ctx.GlobalFunction().text);
+    identifier.location = Location.fromToken(ctx.GlobalFunction().symbol);
     const parameters = ctx.expressionList().expression().map(e => this.visit(e) as ExpressionNode);
     const functionCall = new FunctionCallNode(identifier, parameters);
     functionCall.location = Location.fromCtx(ctx);

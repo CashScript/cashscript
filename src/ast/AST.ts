@@ -2,6 +2,7 @@ import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
 import { Type } from './Type';
+import { SymbolTable, Symbol } from './SymbolTable';
 
 export abstract class Node {
   location?: Location;
@@ -29,6 +30,8 @@ export class SourceFileNode extends Node {
 }
 
 export class ContractNode extends Node implements Named {
+  symbolTable?: SymbolTable
+
   constructor(
     public name: string,
     public parameters: ParameterNode[],
@@ -44,10 +47,12 @@ export class ContractNode extends Node implements Named {
 }
 
 export class FunctionDefinitionNode extends Node implements Named {
+  symbolTable?: SymbolTable;
+
   constructor(
     public name: string,
     public parameters: ParameterNode[],
-    public statements: StatementNode[],
+    public body: BlockNode,
   ) {
     super();
   }
@@ -138,6 +143,8 @@ export class BranchNode extends Node {
 }
 
 export class BlockNode extends Node {
+  symbolTable?: SymbolTable;
+
   constructor(
     public statements?: StatementNode[],
   ) {
@@ -230,8 +237,9 @@ export class UnaryOpNode extends ExpressionNode {
   }
 }
 
-// TODO: Add symboltable support
 export class IdentifierNode extends ExpressionNode implements Named {
+  definition?: Symbol;
+
   constructor(
     public name: string,
   ) {

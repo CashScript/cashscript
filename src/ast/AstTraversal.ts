@@ -40,7 +40,7 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
-    node.statements = this.visitList(node.statements) as StatementNode[];
+    node.body = this.visit(node.body) as BlockNode;
     return node;
   }
 

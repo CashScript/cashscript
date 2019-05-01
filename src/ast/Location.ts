@@ -1,13 +1,24 @@
 import { ParserRuleContext } from 'antlr4ts/ParserRuleContext';
+import { Token } from 'antlr4ts';
 
 export class Location {
   constructor(public start: Point, public end: Point) {}
 
   static fromCtx(ctx: ParserRuleContext): Location | undefined {
-    if (!ctx.stop || !ctx.stop.text) return undefined;
+    const stop = ctx.stop && ctx.stop.text ? ctx.stop : ctx.start;
+    const textLength = (stop.text || '').length;
 
     const start = new Point(ctx.start.line, ctx.start.charPositionInLine);
-    const end = new Point(ctx.stop.line, ctx.stop.charPositionInLine + ctx.stop.text.length);
+    const end = new Point(stop.line, stop.charPositionInLine + textLength);
+
+    return new Location(start, end);
+  }
+
+  static fromToken(token: Token): Location | undefined {
+    const textLength = (token.text || '').length;
+
+    const start = new Point(token.line, token.charPositionInLine);
+    const end = new Point(token.line, token.charPositionInLine + textLength);
 
     return new Location(start, end);
   }

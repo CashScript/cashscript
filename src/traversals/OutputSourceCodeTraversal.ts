@@ -65,13 +65,11 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitFunctionDefinition(node: FunctionDefinitionNode) {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
-    this.addOutput(') {\n');
+    this.addOutput(') ');
 
-    this.indent();
-    node.statements = this.visitList(node.statements) as StatementNode[];
-    this.unindent();
+    node.body = this.visit(node.body) as BlockNode;
+    this.addOutput('\n');
 
-    this.addOutput('}\n', true);
     return node;
   }
 
