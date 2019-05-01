@@ -20,6 +20,7 @@ import {
   HexLiteralNode,
   StringLiteralNode,
   FunctionCallStatementNode,
+  BlockNode,
 } from './AST';
 
 export default abstract class AstVisitor<T> {
@@ -32,6 +33,7 @@ export default abstract class AstVisitor<T> {
   abstract visitThrow(node: ThrowNode): T;
   abstract visitFunctionCallStatement(node: FunctionCallStatementNode): T;
   abstract visitBranch(node: BranchNode): T;
+  abstract visitBlock(node: BlockNode): T;
   abstract visitCast(node: CastNode): T;
   abstract visitMemberAccess(node: MemberAccessNode): T;
   abstract visitMemberFunctionCall(node: MemberFunctionCallNode): T;

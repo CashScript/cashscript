@@ -20,6 +20,7 @@ import {
   StringLiteralNode,
   StatementNode,
   FunctionCallStatementNode,
+  BlockNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -129,22 +130,26 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitBranch(node: BranchNode) {
     this.addOutput('if (', true);
     node.condition = this.visit(node.condition);
-    this.addOutput(') {\n');
+    this.addOutput(') ');
 
-    this.indent();
-    node.ifBlock = this.visitList(node.ifBlock) as StatementNode[];
-    this.unindent();
-    this.addOutput('}', true);
-
+    node.ifBlock = this.visit(node.ifBlock) as BlockNode;
     if (node.elseBlock) {
-      this.addOutput(' else {\n');
-      this.indent();
-      node.elseBlock = this.visitList(node.elseBlock) as StatementNode[];
-      this.unindent();
-      this.addOutput('}', true);
+      this.addOutput(' else ');
+      node.elseBlock = this.visit(node.elseBlock) as BlockNode;
     }
 
     this.addOutput('\n');
+
+    return node;
+  }
+
+  visitBlock(node: BlockNode) {
+    this.addOutput('{\n');
+    this.indent();
+    node.statements = this.visitOptionalList(node.statements) as StatementNode[];
+    this.unindent();
+    this.addOutput('}', true);
+
     return node;
   }
 

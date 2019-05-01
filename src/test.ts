@@ -8,7 +8,7 @@ import { CashScriptParser } from './grammar/CashScriptParser';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
 import AstBuilder from './ast/AstBuilder';
 
-const contents = fs.readFileSync(path.join('..', 'test', 'syntax', 'success', 'everything.cash'), { encoding: 'utf-8' });
+const contents = fs.readFileSync(path.join(__dirname, '..', 'test', 'syntax', 'success', 'everything.cash'), { encoding: 'utf-8' });
 
 const inputStream = new ANTLRInputStream(contents);
 const lexer = new CashScriptLexer(inputStream);

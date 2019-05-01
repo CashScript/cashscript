@@ -26,6 +26,7 @@ import {
   StatementNode,
   LiteralNode,
   FunctionCallStatementNode,
+  BlockNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import { getTypeFromCtx } from './Type';
@@ -44,6 +45,7 @@ import {
   NumberLiteralContext,
   FunctionCallStatementContext,
   SourceFileContext,
+  BlockContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -133,14 +135,18 @@ export default class AstBuilder
   visitIfStatement(ctx: IfStatementContext): BranchNode {
     const condition = this.visit(ctx.expression());
     // I want these _ifBlock variables to be getters @antlr4ts :(
-    const ifBlock = ctx._ifBlock.statement().map(s => this.visit(s) as StatementNode);
-    let elseBlock;
-    if (ctx._elseBlock) {
-      elseBlock = ctx._elseBlock.statement().map(s => this.visit(s) as StatementNode);
-    }
+    const ifBlock = this.visit(ctx._ifBlock) as StatementNode;
+    const elseBlock = ctx._elseBlock && this.visit(ctx._elseBlock) as StatementNode;
     const branch = new BranchNode(condition, ifBlock, elseBlock);
     branch.location = Location.fromCtx(ctx);
     return branch;
+  }
+
+  visitBlock(ctx: BlockContext): BlockNode {
+    const statements = ctx.statement().map(s => this.visit(s) as StatementNode);
+    const block = new BlockNode(statements);
+    block.location = Location.fromCtx(ctx);
+    return block;
   }
 
   visitExpression(ctx: ExpressionContext): ExpressionNode {

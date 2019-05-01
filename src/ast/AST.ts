@@ -126,14 +126,26 @@ export class FunctionCallStatementNode extends Node {
 export class BranchNode extends Node {
   constructor(
     public condition: ExpressionNode,
-    public ifBlock: StatementNode[],
-    public elseBlock?: StatementNode[],
+    public ifBlock: BlockNode,
+    public elseBlock?: BlockNode,
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitBranch(this);
+  }
+}
+
+export class BlockNode extends Node {
+  constructor(
+    public statements?: StatementNode[],
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitBlock(this);
   }
 }
 
