@@ -46,6 +46,7 @@ import {
   FunctionCallStatementContext,
   SourceFileContext,
   BlockContext,
+  ExpressionListContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -197,8 +198,10 @@ export default class AstBuilder
 
   createMemberFunctionCall(ctx: ExpressionContext): MemberFunctionCallNode {
     const obj = this.visit(ctx._obj);
-    const functionCall = this.visit(ctx.functionCall() as FunctionCallContext) as FunctionCallNode;
-    const memberFunctionCall = new MemberFunctionCallNode(obj, functionCall);
+    const functionName = (ctx.Identifier() as TerminalNode).text;
+    const parameters = (ctx.expressionList() as ExpressionListContext).expression()
+      .map(e => this.visit(e));
+    const memberFunctionCall = new MemberFunctionCallNode(obj, functionName, parameters);
     memberFunctionCall.location = Location.fromCtx(ctx);
     return memberFunctionCall;
   }
@@ -206,7 +209,7 @@ export default class AstBuilder
   visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
     const identifier = new IdentifierNode(ctx.GlobalFunction().text);
     identifier.location = Location.fromToken(ctx.GlobalFunction().symbol);
-    const parameters = ctx.expressionList().expression().map(e => this.visit(e) as ExpressionNode);
+    const parameters = ctx.expressionList().expression().map(e => this.visit(e));
     const functionCall = new FunctionCallNode(identifier, parameters);
     functionCall.location = Location.fromCtx(ctx);
     return functionCall;

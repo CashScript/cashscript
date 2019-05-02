@@ -187,7 +187,8 @@ export class MemberAccessNode extends ExpressionNode {
 export class MemberFunctionCallNode extends ExpressionNode {
   constructor(
     public object: ExpressionNode,
-    public functionCall: FunctionCallNode,
+    public functionName: string,
+    public parameters: ExpressionNode[],
   ) {
     super();
   }

@@ -72,7 +72,7 @@ expression
     | cast
     | functionCall
     | obj=expression '.' Identifier // member access
-    | obj=expression '.' functionCall // member function call
+    | obj=expression '.' Identifier '(' expressionList ')' // member function call
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
     | op=('!' | '~' | '+' | '-') right=expression

@@ -1,4 +1,4 @@
-import { SymbolTable, Symbol } from '../ast/SymbolTable';
+import { SymbolTable } from '../ast/SymbolTable';
 import {
   Node,
   ContractNode,
@@ -179,8 +179,12 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
   visitMemberFunctionCall(node: MemberFunctionCallNode) {
     node.object = this.visit(node.object);
-    this.addOutput('.');
-    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
+    this.addOutput(`.${node.functionName}`);
+
+    this.addOutput('(');
+    node.parameters = this.visitCommaList(node.parameters);
+    this.addOutput(')');
+
     return node;
   }
 

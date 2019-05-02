@@ -93,7 +93,7 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitMemberFunctionCall(node: MemberFunctionCallNode): Node {
     node.object = this.visit(node.object);
-    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
+    node.parameters = this.visitList(node.parameters);
     return node;
   }
 
