@@ -1,3 +1,4 @@
+import { SymbolTable, Symbol } from '../ast/SymbolTable';
 import {
   Node,
   ContractNode,
@@ -45,10 +46,36 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.indentationLevel -= 1;
   }
 
+  private outputSymbolTable(symbolTable?: SymbolTable) {
+    if (symbolTable) {
+      this.addOutput(' --> ST: [');
+      Array.from(symbolTable.symbols)
+        .forEach((entry, i, a) => this.outputSymbol(entry[1], i === a.length - 1));
+      this.addOutput(']');
+    }
+  }
+
+  private outputSymbol(symbol: Symbol, final: boolean) {
+    this.addOutput(`${symbol.type} ${symbol.name}`);
+
+    if (symbol.parameters) {
+      this.addOutput('(');
+      symbol.parameters.forEach((p, i, a) => {
+        this.addOutput(p);
+        i !== a.length - 1 && this.addOutput(', ');
+      });
+      this.addOutput(')');
+    }
+
+    !final && this.addOutput(', ');
+  }
+
   visitContract(node: ContractNode) {
     this.addOutput(`contract ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
-    this.addOutput(') {\n');
+    this.addOutput(') {');
+    this.outputSymbolTable(node.symbolTable);
+    this.addOutput('\n');
 
     this.indent();
     node.variables = this.visitList(node.variables) as VariableDefinitionNode[];
@@ -65,7 +92,9 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitFunctionDefinition(node: FunctionDefinitionNode) {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
-    this.addOutput(') ');
+    this.addOutput(')');
+    this.outputSymbolTable(node.symbolTable);
+    this.addOutput(' ');
 
     node.body = this.visit(node.body) as BlockNode;
     this.addOutput('\n');
@@ -142,7 +171,10 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitBlock(node: BlockNode) {
-    this.addOutput('{\n');
+    this.addOutput('{');
+    this.outputSymbolTable(node.symbolTable);
+    this.addOutput('\n');
+
     this.indent();
     node.statements = this.visitOptionalList(node.statements) as StatementNode[];
     this.unindent();

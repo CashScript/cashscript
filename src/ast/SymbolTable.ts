@@ -26,7 +26,8 @@ export class Symbol {
 }
 
 export class SymbolTable {
-  private symbols: Map<String, Symbol> = new Map<String, Symbol>();
+  symbols: Map<String, Symbol> = new Map<String, Symbol>();
+
   constructor(
     public parent?: SymbolTable,
   ) {}
