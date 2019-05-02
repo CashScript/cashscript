@@ -47,27 +47,8 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   private outputSymbolTable(symbolTable?: SymbolTable) {
-    if (symbolTable) {
-      this.addOutput(' --> ST: [');
-      Array.from(symbolTable.symbols)
-        .forEach((entry, i, a) => this.outputSymbol(entry[1], i === a.length - 1));
-      this.addOutput(']');
-    }
-  }
-
-  private outputSymbol(symbol: Symbol, final: boolean) {
-    this.addOutput(`${symbol.type} ${symbol.name}`);
-
-    if (symbol.parameters) {
-      this.addOutput('(');
-      symbol.parameters.forEach((p, i, a) => {
-        this.addOutput(p);
-        i !== a.length - 1 && this.addOutput(', ');
-      });
-      this.addOutput(')');
-    }
-
-    !final && this.addOutput(', ');
+    if (!symbolTable) return;
+    this.addOutput(` --> ST: ${symbolTable}`);
   }
 
   visitContract(node: ContractNode) {

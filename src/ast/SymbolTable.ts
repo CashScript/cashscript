@@ -25,6 +25,14 @@ export class Symbol {
   static function(node: FunctionDefinitionNode) {
     return new Symbol(node.name, Type.VOID, node.parameters.map(p => p.type));
   }
+
+  toString(): string {
+    let str = `${this.type} ${this.name}`;
+    if (this.parameters) {
+      str += ` (${this.parameters})`;
+    }
+    return str;
+  }
 }
 
 export class SymbolTable {
@@ -46,5 +54,9 @@ export class SymbolTable {
 
   getFromThis(name: string): Symbol | undefined {
     return this.symbols.get(name);
+  }
+
+  toString(): string {
+    return `[${Array.from(this.symbols).map(e => e[1])}]`;
   }
 }
