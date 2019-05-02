@@ -6,6 +6,6 @@ contract Test(int x, string y) {
 
         string x1 = "Hello \n \\ ' ''  \" World";
         string x2 = 'Hello \n \\ " " \' World';
-        require(ripemd160(pk) == ripemd160(hw));
+        require(ripemd160(pk) == ripemd160(x2));
     }
 }

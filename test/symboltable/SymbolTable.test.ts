@@ -57,7 +57,7 @@ describe('Symbol Table', () => {
   });
 
   describe('Success', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'success'));
+    const testCases = readCashFiles(path.join(__dirname, '..', 'syntax', 'success'));
     testCases.forEach((f) => {
       it(`${f.fn} should succeed`, () => {
         const { ast, traversal } = setup(f.contents);
