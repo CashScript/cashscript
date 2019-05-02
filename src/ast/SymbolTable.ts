@@ -2,10 +2,12 @@ import {
   VariableDefinitionNode,
   ParameterNode,
   FunctionDefinitionNode,
+  IdentifierNode,
 } from './AST';
 import { Type } from './Type';
 
 export class Symbol {
+  references: IdentifierNode[] = [];
   constructor(
     public name: string,
     public type: Type,

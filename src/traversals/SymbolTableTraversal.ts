@@ -84,6 +84,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     node.definition = definition;
+    node.definition.references.push(node);
 
     return node;
   }
