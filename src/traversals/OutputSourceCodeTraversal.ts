@@ -10,8 +10,6 @@ import {
   ThrowNode,
   BranchNode,
   CastNode,
-  MemberAccessNode,
-  MemberFunctionCallNode,
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
@@ -22,6 +20,9 @@ import {
   StatementNode,
   FunctionCallStatementNode,
   BlockNode,
+  TimeOpNode,
+  SizeOpNode,
+  SpliceOpNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -171,20 +172,22 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitMemberAccess(node: MemberAccessNode) {
-    node.object = this.visit(node.object);
-    this.addOutput(`.${node.member}`);
+  visitTimeOp(node: TimeOpNode) {
+    this.addOutput(node.timeOp);
     return node;
   }
 
-  visitMemberFunctionCall(node: MemberFunctionCallNode) {
+  visitSizeOp(node: SizeOpNode) {
     node.object = this.visit(node.object);
-    this.addOutput(`.${node.functionName}`);
+    this.addOutput('.length');
+    return node;
+  }
 
-    this.addOutput('(');
-    node.parameters = this.visitCommaList(node.parameters);
+  visitSpliceOp(node: SpliceOpNode) {
+    node.object = this.visit(node.object);
+    this.addOutput('.splice(');
+    node.index = this.visit(node.index);
     this.addOutput(')');
-
     return node;
   }
 

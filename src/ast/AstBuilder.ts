@@ -13,8 +13,6 @@ import {
   ThrowNode,
   BranchNode,
   CastNode,
-  MemberAccessNode,
-  MemberFunctionCallNode,
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
@@ -27,6 +25,8 @@ import {
   LiteralNode,
   FunctionCallStatementNode,
   BlockNode,
+  SpliceOpNode,
+  SizeOpNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import { getTypeFromCtx } from './Type';
@@ -46,7 +46,7 @@ import {
   FunctionCallStatementContext,
   SourceFileContext,
   BlockContext,
-  ExpressionListContext,
+  TimeOperationContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -160,11 +160,13 @@ export default class AstBuilder
       return this.visit(ctx._paren);
     } else if (ctx.cast()) {
       return this.visit(ctx.cast() as CastContext);
+    } else if (ctx.timeOperation()) {
+      return this.visit(ctx.timeOperation() as TimeOperationContext);
     } else if (ctx._obj) {
-      if (ctx.Identifier()) {
-        return this.createMemberAccess(ctx);
+      if (ctx._index) {
+        return this.createSpliceOp(ctx);
       } else {
-        return this.createMemberFunctionCall(ctx);
+        return this.createSizeOp(ctx);
       }
     } else if (ctx.functionCall()) {
       return this.visit(ctx.functionCall() as FunctionCallContext);
@@ -188,22 +190,19 @@ export default class AstBuilder
     return cast;
   }
 
-  createMemberAccess(ctx: ExpressionContext): MemberAccessNode {
+  createSpliceOp(ctx: ExpressionContext): SpliceOpNode {
     const obj = this.visit(ctx._obj);
-    const member = (ctx.Identifier() as TerminalNode).text;
-    const memberAccess = new MemberAccessNode(obj, member);
-    memberAccess.location = Location.fromCtx(ctx);
-    return memberAccess;
+    const index = this.visit(ctx._index);
+    const spliceOp = new SpliceOpNode(obj, index);
+    spliceOp.location = Location.fromCtx(ctx);
+    return spliceOp;
   }
 
-  createMemberFunctionCall(ctx: ExpressionContext): MemberFunctionCallNode {
+  createSizeOp(ctx: ExpressionContext): SizeOpNode {
     const obj = this.visit(ctx._obj);
-    const functionName = (ctx.Identifier() as TerminalNode).text;
-    const parameters = (ctx.expressionList() as ExpressionListContext).expression()
-      .map(e => this.visit(e));
-    const memberFunctionCall = new MemberFunctionCallNode(obj, functionName, parameters);
-    memberFunctionCall.location = Location.fromCtx(ctx);
-    return memberFunctionCall;
+    const sizeOp = new SizeOpNode(obj);
+    sizeOp.location = Location.fromCtx(ctx);
+    return sizeOp;
   }
 
   visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {

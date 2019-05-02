@@ -2,7 +2,7 @@ export enum UnaryOperator {
   NOT = '!',
   BIT_NOT = '~',
   PLUS = '+',
-  NEGATION = '-'
+  NEGATE = '-'
 }
 
 export enum BinaryOperator {

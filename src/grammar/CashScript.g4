@@ -67,12 +67,18 @@ expressionList
     : '(' (expression (',' expression)*)? ')'
     ;
 
+timeOperation
+    : 'tx.minTime'
+    | 'tx.minAge'
+    ;
+
 expression
     : '(' paren=expression ')' // parentheses
     | cast
     | functionCall
-    | obj=expression '.' Identifier // member access
-    | obj=expression '.' Identifier '(' expressionList ')' // member function call
+    | timeOperation
+    | obj=expression '.length'
+    | obj=expression '.splice' '(' index=expression ')'
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
     | op=('!' | '~' | '+' | '-') right=expression

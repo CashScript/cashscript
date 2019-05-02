@@ -1,3 +1,4 @@
+import { TimeOp } from './Globals';
 import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
@@ -171,30 +172,40 @@ export class CastNode extends ExpressionNode implements Typed {
   }
 }
 
-export class MemberAccessNode extends ExpressionNode {
+export class TimeOpNode extends ExpressionNode {
   constructor(
-    public object: ExpressionNode,
-    public member: string,
+    public timeOp: TimeOp,
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitMemberAccess(this);
+    return visitor.visitTimeOp(this);
   }
 }
 
-export class MemberFunctionCallNode extends ExpressionNode {
+export class SizeOpNode extends ExpressionNode {
   constructor(
     public object: ExpressionNode,
-    public functionName: string,
-    public parameters: ExpressionNode[],
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitMemberFunctionCall(this);
+    return visitor.visitSizeOp(this);
+  }
+}
+
+export class SpliceOpNode extends ExpressionNode {
+  constructor(
+    public object: ExpressionNode,
+    public index: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitSpliceOp(this);
   }
 }
 

@@ -27,8 +27,9 @@ export enum GlobalFunction {
   SIGCHECK = 'sigCheck'
 }
 
-export enum GlobalVariable {
-  TX = 'tx'
+export enum TimeOp {
+  MIN_AGE = 'tx.minAge',
+  MIN_TIME = 'tx.minTime',
 }
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
@@ -43,4 +44,3 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.SHA256, Type.BYTES32, [Type.BY
 GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$single`, Type.VOID, [Type.SIG, Type.PUBKEY]));
 // GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$multi`, Type.VOID, [Type.BYTES]));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$data`, Type.VOID, [Type.SIG, Type.BYTES, Type.PUBKEY]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalVariable.TX, Type.TX));

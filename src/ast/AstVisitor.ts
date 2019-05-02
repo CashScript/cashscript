@@ -10,8 +10,6 @@ import {
   ThrowNode,
   BranchNode,
   CastNode,
-  MemberAccessNode,
-  MemberFunctionCallNode,
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
@@ -21,6 +19,9 @@ import {
   StringLiteralNode,
   FunctionCallStatementNode,
   BlockNode,
+  SizeOpNode,
+  SpliceOpNode,
+  TimeOpNode,
 } from './AST';
 
 export default abstract class AstVisitor<T> {
@@ -35,8 +36,9 @@ export default abstract class AstVisitor<T> {
   abstract visitBranch(node: BranchNode): T;
   abstract visitBlock(node: BlockNode): T;
   abstract visitCast(node: CastNode): T;
-  abstract visitMemberAccess(node: MemberAccessNode): T;
-  abstract visitMemberFunctionCall(node: MemberFunctionCallNode): T;
+  abstract visitSizeOp(node: SizeOpNode): T;
+  abstract visitSpliceOp(node: SpliceOpNode): T;
+  abstract visitTimeOp(node: TimeOpNode): T;
   abstract visitFunctionCall(node: FunctionCallNode): T;
   abstract visitBinaryOp(node: BinaryOpNode): T;
   abstract visitUnaryOp(node: UnaryOpNode): T;
