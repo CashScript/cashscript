@@ -10,7 +10,7 @@ contract Test(int x, string y) {
     // Line comments are a thing
     function hello(sig s, pubkey pk) {
         int myVariable = 10 - int(b); // they can go at the end of the line
-        int myOtherVariable = globalInt + myVariable % 2;
+        int myOtherVariable = (globalInt + myVariable) % 2;
         require(myOtherVariable /* And comments can be included within lines */ > globalInt);
 
         myOtherVariable = globalInt;
