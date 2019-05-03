@@ -28,8 +28,8 @@ export enum GlobalFunction {
 }
 
 export enum TimeOp {
-  MIN_AGE = 'tx.minAge',
-  MIN_TIME = 'tx.minTime',
+  CHECK_SEQUENCE = 'tx.minAge',
+  CHECK_LOCKTIME = 'tx.minTime',
 }
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();

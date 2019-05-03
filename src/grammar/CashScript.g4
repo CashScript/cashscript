@@ -59,6 +59,11 @@ cast
     : typeName '(' expression ')'
     ;
 
+timeOp
+    : 'require' '(' op='tx.minTime' '>=' expression ')'
+    | 'require' '(' op='tx.minAge' '>=' expression ')'
+    ;
+
 functionCall
     : GlobalFunction expressionList // Only built-in functions are accepted
     ;
@@ -67,16 +72,11 @@ expressionList
     : '(' (expression (',' expression)*)? ')'
     ;
 
-timeOperation
-    : 'tx.minTime'
-    | 'tx.minAge'
-    ;
-
 expression
     : '(' paren=expression ')' // parentheses
     | cast
+    | timeOp
     | functionCall
-    | timeOperation
     | obj=expression '.length'
     | obj=expression '.splice' '(' index=expression ')'
     // | left=expression op=('++' | '--')

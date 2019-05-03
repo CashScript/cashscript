@@ -175,6 +175,7 @@ export class CastNode extends ExpressionNode implements Typed {
 export class TimeOpNode extends ExpressionNode {
   constructor(
     public timeOp: TimeOp,
+    public expression: ExpressionNode,
   ) {
     super();
   }

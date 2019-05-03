@@ -16,9 +16,9 @@ import { ThrowStatementContext } from "./CashScriptParser";
 import { FunctionCallStatementContext } from "./CashScriptParser";
 import { IfStatementContext } from "./CashScriptParser";
 import { CastContext } from "./CashScriptParser";
+import { TimeOpContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
-import { TimeOperationContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
 import { LiteralContext } from "./CashScriptParser";
 import { NumberLiteralContext } from "./CashScriptParser";
@@ -125,6 +125,13 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitCast?: (ctx: CastContext) => Result;
 
 	/**
+	 * Visit a parse tree produced by `CashScriptParser.timeOp`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTimeOp?: (ctx: TimeOpContext) => Result;
+
+	/**
 	 * Visit a parse tree produced by `CashScriptParser.functionCall`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -137,13 +144,6 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitExpressionList?: (ctx: ExpressionListContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by `CashScriptParser.timeOperation`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitTimeOperation?: (ctx: TimeOperationContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.expression`.

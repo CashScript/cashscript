@@ -27,6 +27,7 @@ import {
   BlockNode,
   SpliceOpNode,
   SizeOpNode,
+  TimeOpNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import { getTypeFromCtx } from './Type';
@@ -46,11 +47,11 @@ import {
   FunctionCallStatementContext,
   SourceFileContext,
   BlockContext,
-  TimeOperationContext,
+  TimeOpContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
-import { NumberUnit } from './Globals';
+import { NumberUnit, TimeOp } from './Globals';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>
@@ -160,8 +161,8 @@ export default class AstBuilder
       return this.visit(ctx._paren);
     } else if (ctx.cast()) {
       return this.visit(ctx.cast() as CastContext);
-    } else if (ctx.timeOperation()) {
-      return this.visit(ctx.timeOperation() as TimeOperationContext);
+    } else if (ctx.timeOp()) {
+      return this.visit(ctx.timeOp() as TimeOpContext);
     } else if (ctx._obj) {
       if (ctx._index) {
         return this.createSpliceOp(ctx);
@@ -190,6 +191,22 @@ export default class AstBuilder
     return cast;
   }
 
+  visitTimeOp(ctx: TimeOpContext): TimeOpNode {
+    const expression = this.visit(ctx.expression());
+    const timeOp = new TimeOpNode(ctx._op.text as TimeOp, expression);
+    timeOp.location = Location.fromCtx(ctx);
+    return timeOp;
+  }
+
+  visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
+    const identifier = new IdentifierNode(ctx.GlobalFunction().text);
+    identifier.location = Location.fromToken(ctx.GlobalFunction().symbol);
+    const parameters = ctx.expressionList().expression().map(e => this.visit(e));
+    const functionCall = new FunctionCallNode(identifier, parameters);
+    functionCall.location = Location.fromCtx(ctx);
+    return functionCall;
+  }
+
   createSpliceOp(ctx: ExpressionContext): SpliceOpNode {
     const obj = this.visit(ctx._obj);
     const index = this.visit(ctx._index);
@@ -203,15 +220,6 @@ export default class AstBuilder
     const sizeOp = new SizeOpNode(obj);
     sizeOp.location = Location.fromCtx(ctx);
     return sizeOp;
-  }
-
-  visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
-    const identifier = new IdentifierNode(ctx.GlobalFunction().text);
-    identifier.location = Location.fromToken(ctx.GlobalFunction().symbol);
-    const parameters = ctx.expressionList().expression().map(e => this.visit(e));
-    const functionCall = new FunctionCallNode(identifier, parameters);
-    functionCall.location = Location.fromCtx(ctx);
-    return functionCall;
   }
 
   createBinaryOp(ctx: ExpressionContext): BinaryOpNode {

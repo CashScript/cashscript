@@ -88,6 +88,7 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitTimeOp(node: TimeOpNode): Node {
+    node.expression = this.visit(node.expression);
     return node;
   }
 

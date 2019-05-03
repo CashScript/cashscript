@@ -16,9 +16,9 @@ import { ThrowStatementContext } from "./CashScriptParser";
 import { FunctionCallStatementContext } from "./CashScriptParser";
 import { IfStatementContext } from "./CashScriptParser";
 import { CastContext } from "./CashScriptParser";
+import { TimeOpContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
-import { TimeOperationContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
 import { LiteralContext } from "./CashScriptParser";
 import { NumberLiteralContext } from "./CashScriptParser";
@@ -174,6 +174,17 @@ export interface CashScriptListener extends ParseTreeListener {
 	exitCast?: (ctx: CastContext) => void;
 
 	/**
+	 * Enter a parse tree produced by `CashScriptParser.timeOp`.
+	 * @param ctx the parse tree
+	 */
+	enterTimeOp?: (ctx: TimeOpContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.timeOp`.
+	 * @param ctx the parse tree
+	 */
+	exitTimeOp?: (ctx: TimeOpContext) => void;
+
+	/**
 	 * Enter a parse tree produced by `CashScriptParser.functionCall`.
 	 * @param ctx the parse tree
 	 */
@@ -194,17 +205,6 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExpressionList?: (ctx: ExpressionListContext) => void;
-
-	/**
-	 * Enter a parse tree produced by `CashScriptParser.timeOperation`.
-	 * @param ctx the parse tree
-	 */
-	enterTimeOperation?: (ctx: TimeOperationContext) => void;
-	/**
-	 * Exit a parse tree produced by `CashScriptParser.timeOperation`.
-	 * @param ctx the parse tree
-	 */
-	exitTimeOperation?: (ctx: TimeOperationContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `CashScriptParser.expression`.
