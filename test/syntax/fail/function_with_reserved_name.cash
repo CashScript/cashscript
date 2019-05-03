@@ -1,4 +1,0 @@
-contract Test(int x, string y) {
-    function sigCheck(sig s, pubkey pk) {
-    }
-}

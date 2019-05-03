@@ -65,6 +65,11 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
+  visitTimeOp(node: TimeOpNode): Node {
+    node.expression = this.visit(node.expression);
+    return node;
+  }
+
   visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
     node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
     return node;
@@ -83,11 +88,6 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitCast(node: CastNode): Node {
-    node.expression = this.visit(node.expression);
-    return node;
-  }
-
-  visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
     return node;
   }

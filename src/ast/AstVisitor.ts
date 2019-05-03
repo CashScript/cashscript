@@ -32,11 +32,11 @@ export default abstract class AstVisitor<T> {
   abstract visitVariableDefinition(node: VariableDefinitionNode): T;
   abstract visitAssign(node: AssignNode): T;
   abstract visitThrow(node: ThrowNode): T;
+  abstract visitTimeOp(node: TimeOpNode): T;
   abstract visitFunctionCallStatement(node: FunctionCallStatementNode): T;
   abstract visitBranch(node: BranchNode): T;
   abstract visitBlock(node: BlockNode): T;
   abstract visitCast(node: CastNode): T;
-  abstract visitTimeOp(node: TimeOpNode): T;
   abstract visitFunctionCall(node: FunctionCallNode): T;
   abstract visitSizeOp(node: SizeOpNode): T;
   abstract visitSpliceOp(node: SpliceOpNode): T;

@@ -76,7 +76,8 @@ export class ParameterNode extends Node implements Named, Typed {
   }
 }
 
-export type StatementNode = VariableDefinitionNode | AssignNode | BranchNode | FunctionCallNode;
+export type StatementNode =
+VariableDefinitionNode | AssignNode | TimeOpNode | FunctionCallNode | BranchNode;
 
 export class VariableDefinitionNode extends Node implements Named, Typed {
   constructor(
@@ -114,6 +115,19 @@ export class ThrowNode extends Node {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitThrow(this);
+  }
+}
+
+export class TimeOpNode extends Node {
+  constructor(
+    public timeOp: TimeOp,
+    public expression: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitTimeOp(this);
   }
 }
 
@@ -169,19 +183,6 @@ export class CastNode extends ExpressionNode implements Typed {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitCast(this);
-  }
-}
-
-export class TimeOpNode extends ExpressionNode {
-  constructor(
-    public timeOp: TimeOp,
-    public expression: ExpressionNode,
-  ) {
-    super();
-  }
-
-  accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitTimeOp(this);
   }
 }
 

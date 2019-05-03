@@ -16,7 +16,8 @@ contract Test(int x, string y) {
         myOtherVariable = globalInt;
 
         require(ripemd160(b) == ripemd160(string(myVariable)));
-        require(tx.minAge > 500 && y.length < +-10);
+        require(tx.minAge >= 500);
+        require(y.length < +-10);
 
         if (globalInt > 400) {
             globalInt = 400;

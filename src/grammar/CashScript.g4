@@ -29,6 +29,7 @@ statement
     : variableDefinition
     | assignStatement
     | throwStatement
+    | timeOpStatement
     | functionCallStatement
     | ifStatement
     ;
@@ -47,6 +48,10 @@ throwStatement
     : 'throw' expression? ';'
     ;
 
+timeOpStatement
+    : Require '(' TxVar '>=' expression ')' ';'
+    ;
+
 functionCallStatement
     : functionCall ';'
     ;
@@ -59,13 +64,8 @@ cast
     : typeName '(' expression ')'
     ;
 
-timeOp
-    : 'require' '(' op='tx.minTime' '>=' expression ')'
-    | 'require' '(' op='tx.minAge' '>=' expression ')'
-    ;
-
 functionCall
-    : GlobalFunction expressionList // Only built-in functions are accepted
+    : id=(Identifier | Require) expressionList // Only built-in functions are accepted
     ;
 
 expressionList
@@ -75,7 +75,6 @@ expressionList
 expression
     : '(' paren=expression ')' // parentheses
     | cast
-    | timeOp
     | functionCall
     | obj=expression '.length'
     | obj=expression '.splice' '(' index=expression ')'
@@ -128,7 +127,7 @@ NumberUnit
     ;
 
 NumberLiteral
-    : [0-9]* ([eE] [0-9]+)?
+    : [0-9]+ ([eE] [0-9]+)?
     ;
 
 StringLiteral
@@ -140,16 +139,13 @@ HexLiteral
     : '0' [xX] [0-9A-Fa-f]+
     ;
 
-GlobalFunction
+TxVar
+    : 'tx.minAge'
+    | 'tx.minTime'
+    ;
+
+Require
     : 'require'
-    | 'abs'
-    | 'min'
-    | 'max'
-    | 'within'
-    | 'ripemd160'
-    | 'sha1'
-    | 'sha256'
-    | 'sigCheck'
     ;
 
 Identifier

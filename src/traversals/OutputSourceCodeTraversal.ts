@@ -173,7 +173,9 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitTimeOp(node: TimeOpNode) {
-    this.addOutput(node.timeOp);
+    this.addOutput(`require(${node.timeOp} >= `, true);
+    node.expression = this.visit(node.expression);
+    this.addOutput(');\n');
     return node;
   }
 

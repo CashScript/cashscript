@@ -3,7 +3,7 @@ contract Test(int x, string y) {
         int v = 10;
         string ripemd160 = 'hello';
 
-        require(sigCheck(s, pk));
+        require(pk == pubkey(v));
     }
 
     function world(int a) {
