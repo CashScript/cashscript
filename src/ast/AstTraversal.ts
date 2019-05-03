@@ -92,6 +92,12 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
+  visitFunctionCall(node: FunctionCallNode): Node {
+    node.identifier = this.visit(node.identifier) as IdentifierNode;
+    node.parameters = this.visitList(node.parameters);
+    return node;
+  }
+
   visitSizeOp(node: SizeOpNode): Node {
     node.object = this.visit(node.object);
     return node;
@@ -100,12 +106,6 @@ export default class AstTraversal extends AstVisitor<Node> {
   visitSpliceOp(node: SpliceOpNode): Node {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
-    return node;
-  }
-
-  visitFunctionCall(node: FunctionCallNode): Node {
-    node.identifier = this.visit(node.identifier) as IdentifierNode;
-    node.parameters = this.visitList(node.parameters);
     return node;
   }
 

@@ -81,7 +81,7 @@ expression
     | obj=expression '.splice' '(' index=expression ')'
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
-    | op=('!' | '~' | '+' | '-') right=expression
+    | op=('!' | '+' | '-') right=expression
     // | expression '**' expression --- No power
     // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled
     | left=expression op=('/' | '%') right=expression
@@ -89,9 +89,9 @@ expression
     // | expression ('>>' | '<<') expression --- OP_LSHIFT 7 RSHIFT are disabled
     | left=expression op=('<' | '<=' | '>' | '>=') right=expression
     | left=expression op=('==' | '!=') right=expression
-    | left=expression op='&' right=expression
-    | left=expression op='^' right=expression
-    | left=expression op='|' right=expression
+    // | left=expression op='&' right=expression --- Sisabled bitwise logic for now
+    // | left=expression op='^' right=expression
+    // | left=expression op='|' right=expression
     | left=expression op='&&' right=expression
     | left=expression op='||' right=expression
     | Identifier

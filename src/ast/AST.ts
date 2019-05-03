@@ -185,6 +185,19 @@ export class TimeOpNode extends ExpressionNode {
   }
 }
 
+export class FunctionCallNode extends ExpressionNode {
+  constructor(
+    public identifier: IdentifierNode,
+    public parameters: ExpressionNode[],
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitFunctionCall(this);
+  }
+}
+
 export class SizeOpNode extends ExpressionNode {
   constructor(
     public object: ExpressionNode,
@@ -207,19 +220,6 @@ export class SpliceOpNode extends ExpressionNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitSpliceOp(this);
-  }
-}
-
-export class FunctionCallNode extends ExpressionNode {
-  constructor(
-    public identifier: IdentifierNode,
-    public parameters: ExpressionNode[],
-  ) {
-    super();
-  }
-
-  accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitFunctionCall(this);
   }
 }
 

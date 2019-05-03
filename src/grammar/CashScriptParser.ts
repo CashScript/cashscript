@@ -63,21 +63,17 @@ export class CashScriptParser extends Parser {
 	public static readonly T__32 = 33;
 	public static readonly T__33 = 34;
 	public static readonly T__34 = 35;
-	public static readonly T__35 = 36;
-	public static readonly T__36 = 37;
-	public static readonly T__37 = 38;
-	public static readonly T__38 = 39;
-	public static readonly Bytes = 40;
-	public static readonly BooleanLiteral = 41;
-	public static readonly NumberUnit = 42;
-	public static readonly NumberLiteral = 43;
-	public static readonly StringLiteral = 44;
-	public static readonly HexLiteral = 45;
-	public static readonly GlobalFunction = 46;
-	public static readonly Identifier = 47;
-	public static readonly WHITESPACE = 48;
-	public static readonly COMMENT = 49;
-	public static readonly LINE_COMMENT = 50;
+	public static readonly Bytes = 36;
+	public static readonly BooleanLiteral = 37;
+	public static readonly NumberUnit = 38;
+	public static readonly NumberLiteral = 39;
+	public static readonly StringLiteral = 40;
+	public static readonly HexLiteral = 41;
+	public static readonly GlobalFunction = 42;
+	public static readonly Identifier = 43;
+	public static readonly WHITESPACE = 44;
+	public static readonly COMMENT = 45;
+	public static readonly LINE_COMMENT = 46;
 	public static readonly RULE_sourceFile = 0;
 	public static readonly RULE_contractDefinition = 1;
 	public static readonly RULE_functionDefinition = 2;
@@ -110,9 +106,9 @@ export class CashScriptParser extends Parser {
 	private static readonly _LITERAL_NAMES: Array<string | undefined> = [
 		undefined, "'contract'", "'{'", "'}'", "'function'", "'('", "','", "')'", 
 		"'='", "';'", "'throw'", "'if'", "'else'", "'require'", "'tx.minTime'", 
-		"'>='", "'tx.minAge'", "'.length'", "'.splice'", "'!'", "'~'", "'+'", 
-		"'-'", "'/'", "'%'", "'<'", "'<='", "'>'", "'=='", "'!='", "'&'", "'^'", 
-		"'|'", "'&&'", "'||'", "'int'", "'bool'", "'string'", "'pubkey'", "'sig'",
+		"'>='", "'tx.minAge'", "'.length'", "'.splice'", "'!'", "'+'", "'-'", 
+		"'/'", "'%'", "'<'", "'<='", "'>'", "'=='", "'!='", "'&&'", "'||'", "'int'", 
+		"'bool'", "'string'", "'pubkey'", "'sig'",
 	];
 	private static readonly _SYMBOLIC_NAMES: Array<string | undefined> = [
 		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
@@ -120,9 +116,9 @@ export class CashScriptParser extends Parser {
 		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
 		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
 		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
-		undefined, undefined, undefined, undefined, undefined, "Bytes", "BooleanLiteral", 
-		"NumberUnit", "NumberLiteral", "StringLiteral", "HexLiteral", "GlobalFunction", 
-		"Identifier", "WHITESPACE", "COMMENT", "LINE_COMMENT",
+		undefined, "Bytes", "BooleanLiteral", "NumberUnit", "NumberLiteral", "StringLiteral", 
+		"HexLiteral", "GlobalFunction", "Identifier", "WHITESPACE", "COMMENT", 
+		"LINE_COMMENT",
 	];
 	public static readonly VOCABULARY: Vocabulary = new VocabularyImpl(CashScriptParser._LITERAL_NAMES, CashScriptParser._SYMBOLIC_NAMES, []);
 
@@ -192,7 +188,7 @@ export class CashScriptParser extends Parser {
 			this.state = 50;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (((((_la - 35)) & ~0x1F) === 0 && ((1 << (_la - 35)) & ((1 << (CashScriptParser.T__34 - 35)) | (1 << (CashScriptParser.T__35 - 35)) | (1 << (CashScriptParser.T__36 - 35)) | (1 << (CashScriptParser.T__37 - 35)) | (1 << (CashScriptParser.T__38 - 35)) | (1 << (CashScriptParser.Bytes - 35)))) !== 0)) {
+			while (((((_la - 31)) & ~0x1F) === 0 && ((1 << (_la - 31)) & ((1 << (CashScriptParser.T__30 - 31)) | (1 << (CashScriptParser.T__31 - 31)) | (1 << (CashScriptParser.T__32 - 31)) | (1 << (CashScriptParser.T__33 - 31)) | (1 << (CashScriptParser.T__34 - 31)) | (1 << (CashScriptParser.Bytes - 31)))) !== 0)) {
 				{
 				{
 				this.state = 47;
@@ -254,7 +250,7 @@ export class CashScriptParser extends Parser {
 			this.state = 68;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la === CashScriptParser.T__9 || _la === CashScriptParser.T__10 || ((((_la - 35)) & ~0x1F) === 0 && ((1 << (_la - 35)) & ((1 << (CashScriptParser.T__34 - 35)) | (1 << (CashScriptParser.T__35 - 35)) | (1 << (CashScriptParser.T__36 - 35)) | (1 << (CashScriptParser.T__37 - 35)) | (1 << (CashScriptParser.T__38 - 35)) | (1 << (CashScriptParser.Bytes - 35)) | (1 << (CashScriptParser.GlobalFunction - 35)) | (1 << (CashScriptParser.Identifier - 35)))) !== 0)) {
+			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__9) | (1 << CashScriptParser.T__10) | (1 << CashScriptParser.T__30))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (CashScriptParser.T__31 - 32)) | (1 << (CashScriptParser.T__32 - 32)) | (1 << (CashScriptParser.T__33 - 32)) | (1 << (CashScriptParser.T__34 - 32)) | (1 << (CashScriptParser.Bytes - 32)) | (1 << (CashScriptParser.GlobalFunction - 32)) | (1 << (CashScriptParser.Identifier - 32)))) !== 0)) {
 				{
 				{
 				this.state = 65;
@@ -296,7 +292,7 @@ export class CashScriptParser extends Parser {
 			this.state = 82;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 35)) & ~0x1F) === 0 && ((1 << (_la - 35)) & ((1 << (CashScriptParser.T__34 - 35)) | (1 << (CashScriptParser.T__35 - 35)) | (1 << (CashScriptParser.T__36 - 35)) | (1 << (CashScriptParser.T__37 - 35)) | (1 << (CashScriptParser.T__38 - 35)) | (1 << (CashScriptParser.Bytes - 35)))) !== 0)) {
+			if (((((_la - 31)) & ~0x1F) === 0 && ((1 << (_la - 31)) & ((1 << (CashScriptParser.T__30 - 31)) | (1 << (CashScriptParser.T__31 - 31)) | (1 << (CashScriptParser.T__32 - 31)) | (1 << (CashScriptParser.T__33 - 31)) | (1 << (CashScriptParser.T__34 - 31)) | (1 << (CashScriptParser.Bytes - 31)))) !== 0)) {
 				{
 				this.state = 74;
 				this.parameter();
@@ -381,7 +377,7 @@ export class CashScriptParser extends Parser {
 				this.state = 93;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la === CashScriptParser.T__9 || _la === CashScriptParser.T__10 || ((((_la - 35)) & ~0x1F) === 0 && ((1 << (_la - 35)) & ((1 << (CashScriptParser.T__34 - 35)) | (1 << (CashScriptParser.T__35 - 35)) | (1 << (CashScriptParser.T__36 - 35)) | (1 << (CashScriptParser.T__37 - 35)) | (1 << (CashScriptParser.T__38 - 35)) | (1 << (CashScriptParser.Bytes - 35)) | (1 << (CashScriptParser.GlobalFunction - 35)) | (1 << (CashScriptParser.Identifier - 35)))) !== 0)) {
+				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__9) | (1 << CashScriptParser.T__10) | (1 << CashScriptParser.T__30))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (CashScriptParser.T__31 - 32)) | (1 << (CashScriptParser.T__32 - 32)) | (1 << (CashScriptParser.T__33 - 32)) | (1 << (CashScriptParser.T__34 - 32)) | (1 << (CashScriptParser.Bytes - 32)) | (1 << (CashScriptParser.GlobalFunction - 32)) | (1 << (CashScriptParser.Identifier - 32)))) !== 0)) {
 					{
 					{
 					this.state = 90;
@@ -398,11 +394,11 @@ export class CashScriptParser extends Parser {
 				break;
 			case CashScriptParser.T__9:
 			case CashScriptParser.T__10:
+			case CashScriptParser.T__30:
+			case CashScriptParser.T__31:
+			case CashScriptParser.T__32:
+			case CashScriptParser.T__33:
 			case CashScriptParser.T__34:
-			case CashScriptParser.T__35:
-			case CashScriptParser.T__36:
-			case CashScriptParser.T__37:
-			case CashScriptParser.T__38:
 			case CashScriptParser.Bytes:
 			case CashScriptParser.GlobalFunction:
 			case CashScriptParser.Identifier:
@@ -438,11 +434,11 @@ export class CashScriptParser extends Parser {
 			this.state = 105;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
+			case CashScriptParser.T__30:
+			case CashScriptParser.T__31:
+			case CashScriptParser.T__32:
+			case CashScriptParser.T__33:
 			case CashScriptParser.T__34:
-			case CashScriptParser.T__35:
-			case CashScriptParser.T__36:
-			case CashScriptParser.T__37:
-			case CashScriptParser.T__38:
 			case CashScriptParser.Bytes:
 				this.enterOuterAlt(_localctx, 1);
 				{
@@ -573,7 +569,7 @@ export class CashScriptParser extends Parser {
 			this.state = 120;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__4) | (1 << CashScriptParser.T__12) | (1 << CashScriptParser.T__18) | (1 << CashScriptParser.T__19) | (1 << CashScriptParser.T__20) | (1 << CashScriptParser.T__21))) !== 0) || ((((_la - 35)) & ~0x1F) === 0 && ((1 << (_la - 35)) & ((1 << (CashScriptParser.T__34 - 35)) | (1 << (CashScriptParser.T__35 - 35)) | (1 << (CashScriptParser.T__36 - 35)) | (1 << (CashScriptParser.T__37 - 35)) | (1 << (CashScriptParser.T__38 - 35)) | (1 << (CashScriptParser.Bytes - 35)) | (1 << (CashScriptParser.BooleanLiteral - 35)) | (1 << (CashScriptParser.NumberLiteral - 35)) | (1 << (CashScriptParser.StringLiteral - 35)) | (1 << (CashScriptParser.HexLiteral - 35)) | (1 << (CashScriptParser.GlobalFunction - 35)) | (1 << (CashScriptParser.Identifier - 35)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__4) | (1 << CashScriptParser.T__12) | (1 << CashScriptParser.T__18) | (1 << CashScriptParser.T__19) | (1 << CashScriptParser.T__20) | (1 << CashScriptParser.T__30))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (CashScriptParser.T__31 - 32)) | (1 << (CashScriptParser.T__32 - 32)) | (1 << (CashScriptParser.T__33 - 32)) | (1 << (CashScriptParser.T__34 - 32)) | (1 << (CashScriptParser.Bytes - 32)) | (1 << (CashScriptParser.BooleanLiteral - 32)) | (1 << (CashScriptParser.NumberLiteral - 32)) | (1 << (CashScriptParser.StringLiteral - 32)) | (1 << (CashScriptParser.HexLiteral - 32)) | (1 << (CashScriptParser.GlobalFunction - 32)) | (1 << (CashScriptParser.Identifier - 32)))) !== 0)) {
 				{
 				this.state = 119;
 				this.expression(0);
@@ -800,7 +796,7 @@ export class CashScriptParser extends Parser {
 			this.state = 169;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__4) | (1 << CashScriptParser.T__12) | (1 << CashScriptParser.T__18) | (1 << CashScriptParser.T__19) | (1 << CashScriptParser.T__20) | (1 << CashScriptParser.T__21))) !== 0) || ((((_la - 35)) & ~0x1F) === 0 && ((1 << (_la - 35)) & ((1 << (CashScriptParser.T__34 - 35)) | (1 << (CashScriptParser.T__35 - 35)) | (1 << (CashScriptParser.T__36 - 35)) | (1 << (CashScriptParser.T__37 - 35)) | (1 << (CashScriptParser.T__38 - 35)) | (1 << (CashScriptParser.Bytes - 35)) | (1 << (CashScriptParser.BooleanLiteral - 35)) | (1 << (CashScriptParser.NumberLiteral - 35)) | (1 << (CashScriptParser.StringLiteral - 35)) | (1 << (CashScriptParser.HexLiteral - 35)) | (1 << (CashScriptParser.GlobalFunction - 35)) | (1 << (CashScriptParser.Identifier - 35)))) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__4) | (1 << CashScriptParser.T__12) | (1 << CashScriptParser.T__18) | (1 << CashScriptParser.T__19) | (1 << CashScriptParser.T__20) | (1 << CashScriptParser.T__30))) !== 0) || ((((_la - 32)) & ~0x1F) === 0 && ((1 << (_la - 32)) & ((1 << (CashScriptParser.T__31 - 32)) | (1 << (CashScriptParser.T__32 - 32)) | (1 << (CashScriptParser.T__33 - 32)) | (1 << (CashScriptParser.T__34 - 32)) | (1 << (CashScriptParser.Bytes - 32)) | (1 << (CashScriptParser.BooleanLiteral - 32)) | (1 << (CashScriptParser.NumberLiteral - 32)) | (1 << (CashScriptParser.StringLiteral - 32)) | (1 << (CashScriptParser.HexLiteral - 32)) | (1 << (CashScriptParser.GlobalFunction - 32)) | (1 << (CashScriptParser.Identifier - 32)))) !== 0)) {
 				{
 				this.state = 161;
 				this.expression(0);
@@ -874,11 +870,11 @@ export class CashScriptParser extends Parser {
 				this.match(CashScriptParser.T__6);
 				}
 				break;
+			case CashScriptParser.T__30:
+			case CashScriptParser.T__31:
+			case CashScriptParser.T__32:
+			case CashScriptParser.T__33:
 			case CashScriptParser.T__34:
-			case CashScriptParser.T__35:
-			case CashScriptParser.T__36:
-			case CashScriptParser.T__37:
-			case CashScriptParser.T__38:
 			case CashScriptParser.Bytes:
 				{
 				this.state = 178;
@@ -900,12 +896,11 @@ export class CashScriptParser extends Parser {
 			case CashScriptParser.T__18:
 			case CashScriptParser.T__19:
 			case CashScriptParser.T__20:
-			case CashScriptParser.T__21:
 				{
 				this.state = 181;
 				_localctx._op = this._input.LT(1);
 				_la = this._input.LA(1);
-				if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__18) | (1 << CashScriptParser.T__19) | (1 << CashScriptParser.T__20) | (1 << CashScriptParser.T__21))) !== 0))) {
+				if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__18) | (1 << CashScriptParser.T__19) | (1 << CashScriptParser.T__20))) !== 0))) {
 					_localctx._op = this._errHandler.recoverInline(this);
 				} else {
 					if (this._input.LA(1) === Token.EOF) {
@@ -916,7 +911,7 @@ export class CashScriptParser extends Parser {
 					this.consume();
 				}
 				this.state = 182;
-				_localctx._right = this.expression(12);
+				_localctx._right = this.expression(9);
 				}
 				break;
 			case CashScriptParser.Identifier:
@@ -938,7 +933,7 @@ export class CashScriptParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			this._ctx._stop = this._input.tryLT(-1);
-			this.state = 224;
+			this.state = 215;
 			this._errHandler.sync(this);
 			_alt = this.interpreter.adaptivePredict(this._input, 15, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
@@ -948,7 +943,7 @@ export class CashScriptParser extends Parser {
 					}
 					_prevctx = _localctx;
 					{
-					this.state = 222;
+					this.state = 213;
 					this._errHandler.sync(this);
 					switch ( this.interpreter.adaptivePredict(this._input, 14, this._ctx) ) {
 					case 1:
@@ -957,13 +952,13 @@ export class CashScriptParser extends Parser {
 						_localctx._left = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 187;
-						if (!(this.precpred(this._ctx, 11))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 11)");
+						if (!(this.precpred(this._ctx, 8))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 8)");
 						}
 						this.state = 188;
 						_localctx._op = this._input.LT(1);
 						_la = this._input.LA(1);
-						if (!(_la === CashScriptParser.T__22 || _la === CashScriptParser.T__23)) {
+						if (!(_la === CashScriptParser.T__21 || _la === CashScriptParser.T__22)) {
 							_localctx._op = this._errHandler.recoverInline(this);
 						} else {
 							if (this._input.LA(1) === Token.EOF) {
@@ -974,7 +969,7 @@ export class CashScriptParser extends Parser {
 							this.consume();
 						}
 						this.state = 189;
-						_localctx._right = this.expression(12);
+						_localctx._right = this.expression(9);
 						}
 						break;
 
@@ -984,13 +979,13 @@ export class CashScriptParser extends Parser {
 						_localctx._left = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 190;
-						if (!(this.precpred(this._ctx, 10))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 10)");
+						if (!(this.precpred(this._ctx, 7))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 7)");
 						}
 						this.state = 191;
 						_localctx._op = this._input.LT(1);
 						_la = this._input.LA(1);
-						if (!(_la === CashScriptParser.T__20 || _la === CashScriptParser.T__21)) {
+						if (!(_la === CashScriptParser.T__19 || _la === CashScriptParser.T__20)) {
 							_localctx._op = this._errHandler.recoverInline(this);
 						} else {
 							if (this._input.LA(1) === Token.EOF) {
@@ -1001,7 +996,7 @@ export class CashScriptParser extends Parser {
 							this.consume();
 						}
 						this.state = 192;
-						_localctx._right = this.expression(11);
+						_localctx._right = this.expression(8);
 						}
 						break;
 
@@ -1011,13 +1006,13 @@ export class CashScriptParser extends Parser {
 						_localctx._left = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 193;
-						if (!(this.precpred(this._ctx, 9))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 9)");
+						if (!(this.precpred(this._ctx, 6))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 6)");
 						}
 						this.state = 194;
 						_localctx._op = this._input.LT(1);
 						_la = this._input.LA(1);
-						if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__14) | (1 << CashScriptParser.T__24) | (1 << CashScriptParser.T__25) | (1 << CashScriptParser.T__26))) !== 0))) {
+						if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << CashScriptParser.T__14) | (1 << CashScriptParser.T__23) | (1 << CashScriptParser.T__24) | (1 << CashScriptParser.T__25))) !== 0))) {
 							_localctx._op = this._errHandler.recoverInline(this);
 						} else {
 							if (this._input.LA(1) === Token.EOF) {
@@ -1028,7 +1023,7 @@ export class CashScriptParser extends Parser {
 							this.consume();
 						}
 						this.state = 195;
-						_localctx._right = this.expression(10);
+						_localctx._right = this.expression(7);
 						}
 						break;
 
@@ -1038,13 +1033,13 @@ export class CashScriptParser extends Parser {
 						_localctx._left = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 196;
-						if (!(this.precpred(this._ctx, 8))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 8)");
+						if (!(this.precpred(this._ctx, 5))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 5)");
 						}
 						this.state = 197;
 						_localctx._op = this._input.LT(1);
 						_la = this._input.LA(1);
-						if (!(_la === CashScriptParser.T__27 || _la === CashScriptParser.T__28)) {
+						if (!(_la === CashScriptParser.T__26 || _la === CashScriptParser.T__27)) {
 							_localctx._op = this._errHandler.recoverInline(this);
 						} else {
 							if (this._input.LA(1) === Token.EOF) {
@@ -1055,7 +1050,7 @@ export class CashScriptParser extends Parser {
 							this.consume();
 						}
 						this.state = 198;
-						_localctx._right = this.expression(9);
+						_localctx._right = this.expression(6);
 						}
 						break;
 
@@ -1065,13 +1060,13 @@ export class CashScriptParser extends Parser {
 						_localctx._left = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 199;
-						if (!(this.precpred(this._ctx, 7))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 7)");
+						if (!(this.precpred(this._ctx, 4))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 4)");
 						}
 						this.state = 200;
-						_localctx._op = this.match(CashScriptParser.T__29);
+						_localctx._op = this.match(CashScriptParser.T__28);
 						this.state = 201;
-						_localctx._right = this.expression(8);
+						_localctx._right = this.expression(5);
 						}
 						break;
 
@@ -1081,101 +1076,53 @@ export class CashScriptParser extends Parser {
 						_localctx._left = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 202;
-						if (!(this.precpred(this._ctx, 6))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 6)");
+						if (!(this.precpred(this._ctx, 3))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
 						}
 						this.state = 203;
-						_localctx._op = this.match(CashScriptParser.T__30);
+						_localctx._op = this.match(CashScriptParser.T__29);
 						this.state = 204;
-						_localctx._right = this.expression(7);
+						_localctx._right = this.expression(4);
 						}
 						break;
 
 					case 7:
 						{
 						_localctx = new ExpressionContext(_parentctx, _parentState);
-						_localctx._left = _prevctx;
+						_localctx._obj = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 205;
-						if (!(this.precpred(this._ctx, 5))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 5)");
+						if (!(this.precpred(this._ctx, 11))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 11)");
 						}
 						this.state = 206;
-						_localctx._op = this.match(CashScriptParser.T__31);
-						this.state = 207;
-						_localctx._right = this.expression(6);
+						this.match(CashScriptParser.T__16);
 						}
 						break;
 
 					case 8:
 						{
 						_localctx = new ExpressionContext(_parentctx, _parentState);
-						_localctx._left = _prevctx;
+						_localctx._obj = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
+						this.state = 207;
+						if (!(this.precpred(this._ctx, 10))) {
+							throw new FailedPredicateException(this, "this.precpred(this._ctx, 10)");
+						}
 						this.state = 208;
-						if (!(this.precpred(this._ctx, 4))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 4)");
-						}
-						this.state = 209;
-						_localctx._op = this.match(CashScriptParser.T__32);
-						this.state = 210;
-						_localctx._right = this.expression(5);
-						}
-						break;
-
-					case 9:
-						{
-						_localctx = new ExpressionContext(_parentctx, _parentState);
-						_localctx._left = _prevctx;
-						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
-						this.state = 211;
-						if (!(this.precpred(this._ctx, 3))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 3)");
-						}
-						this.state = 212;
-						_localctx._op = this.match(CashScriptParser.T__33);
-						this.state = 213;
-						_localctx._right = this.expression(4);
-						}
-						break;
-
-					case 10:
-						{
-						_localctx = new ExpressionContext(_parentctx, _parentState);
-						_localctx._obj = _prevctx;
-						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
-						this.state = 214;
-						if (!(this.precpred(this._ctx, 14))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 14)");
-						}
-						this.state = 215;
-						this.match(CashScriptParser.T__16);
-						}
-						break;
-
-					case 11:
-						{
-						_localctx = new ExpressionContext(_parentctx, _parentState);
-						_localctx._obj = _prevctx;
-						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
-						this.state = 216;
-						if (!(this.precpred(this._ctx, 13))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 13)");
-						}
-						this.state = 217;
 						this.match(CashScriptParser.T__17);
-						this.state = 218;
+						this.state = 209;
 						this.match(CashScriptParser.T__4);
-						this.state = 219;
+						this.state = 210;
 						_localctx._index = this.expression(0);
-						this.state = 220;
+						this.state = 211;
 						this.match(CashScriptParser.T__6);
 						}
 						break;
 					}
 					}
 				}
-				this.state = 226;
+				this.state = 217;
 				this._errHandler.sync(this);
 				_alt = this.interpreter.adaptivePredict(this._input, 15, this._ctx);
 			}
@@ -1200,34 +1147,34 @@ export class CashScriptParser extends Parser {
 		let _localctx: LiteralContext = new LiteralContext(this._ctx, this.state);
 		this.enterRule(_localctx, 34, CashScriptParser.RULE_literal);
 		try {
-			this.state = 231;
+			this.state = 222;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case CashScriptParser.BooleanLiteral:
 				this.enterOuterAlt(_localctx, 1);
 				{
-				this.state = 227;
+				this.state = 218;
 				this.match(CashScriptParser.BooleanLiteral);
 				}
 				break;
 			case CashScriptParser.NumberLiteral:
 				this.enterOuterAlt(_localctx, 2);
 				{
-				this.state = 228;
+				this.state = 219;
 				this.numberLiteral();
 				}
 				break;
 			case CashScriptParser.StringLiteral:
 				this.enterOuterAlt(_localctx, 3);
 				{
-				this.state = 229;
+				this.state = 220;
 				this.match(CashScriptParser.StringLiteral);
 				}
 				break;
 			case CashScriptParser.HexLiteral:
 				this.enterOuterAlt(_localctx, 4);
 				{
-				this.state = 230;
+				this.state = 221;
 				this.match(CashScriptParser.HexLiteral);
 				}
 				break;
@@ -1256,14 +1203,14 @@ export class CashScriptParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 233;
+			this.state = 224;
 			this.match(CashScriptParser.NumberLiteral);
-			this.state = 235;
+			this.state = 226;
 			this._errHandler.sync(this);
 			switch ( this.interpreter.adaptivePredict(this._input, 17, this._ctx) ) {
 			case 1:
 				{
-				this.state = 234;
+				this.state = 225;
 				this.match(CashScriptParser.NumberUnit);
 				}
 				break;
@@ -1292,9 +1239,9 @@ export class CashScriptParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 237;
+			this.state = 228;
 			_la = this._input.LA(1);
-			if (!(((((_la - 35)) & ~0x1F) === 0 && ((1 << (_la - 35)) & ((1 << (CashScriptParser.T__34 - 35)) | (1 << (CashScriptParser.T__35 - 35)) | (1 << (CashScriptParser.T__36 - 35)) | (1 << (CashScriptParser.T__37 - 35)) | (1 << (CashScriptParser.T__38 - 35)) | (1 << (CashScriptParser.Bytes - 35)))) !== 0))) {
+			if (!(((((_la - 31)) & ~0x1F) === 0 && ((1 << (_la - 31)) & ((1 << (CashScriptParser.T__30 - 31)) | (1 << (CashScriptParser.T__31 - 31)) | (1 << (CashScriptParser.T__32 - 31)) | (1 << (CashScriptParser.T__33 - 31)) | (1 << (CashScriptParser.T__34 - 31)) | (1 << (CashScriptParser.Bytes - 31)))) !== 0))) {
 			this._errHandler.recoverInline(this);
 			} else {
 				if (this._input.LA(1) === Token.EOF) {
@@ -1331,43 +1278,34 @@ export class CashScriptParser extends Parser {
 	private expression_sempred(_localctx: ExpressionContext, predIndex: number): boolean {
 		switch (predIndex) {
 		case 0:
-			return this.precpred(this._ctx, 11);
-
-		case 1:
-			return this.precpred(this._ctx, 10);
-
-		case 2:
-			return this.precpred(this._ctx, 9);
-
-		case 3:
 			return this.precpred(this._ctx, 8);
 
-		case 4:
+		case 1:
 			return this.precpred(this._ctx, 7);
 
-		case 5:
+		case 2:
 			return this.precpred(this._ctx, 6);
 
-		case 6:
+		case 3:
 			return this.precpred(this._ctx, 5);
 
-		case 7:
+		case 4:
 			return this.precpred(this._ctx, 4);
 
-		case 8:
+		case 5:
 			return this.precpred(this._ctx, 3);
 
-		case 9:
-			return this.precpred(this._ctx, 14);
+		case 6:
+			return this.precpred(this._ctx, 11);
 
-		case 10:
-			return this.precpred(this._ctx, 13);
+		case 7:
+			return this.precpred(this._ctx, 10);
 		}
 		return true;
 	}
 
 	public static readonly _serializedATN: string =
-		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x034\xF2\x04\x02" +
+		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x030\xE9\x04\x02" +
 		"\t\x02\x04\x03\t\x03\x04\x04\t\x04\x04\x05\t\x05\x04\x06\t\x06\x04\x07" +
 		"\t\x07\x04\b\t\b\x04\t\t\t\x04\n\t\n\x04\v\t\v\x04\f\t\f\x04\r\t\r\x04" +
 		"\x0E\t\x0E\x04\x0F\t\x0F\x04\x10\t\x10\x04\x11\t\x11\x04\x12\t\x12\x04" +
@@ -1389,41 +1327,40 @@ export class CashScriptParser extends Parser {
 		"\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x05\x12\xBC\n\x12\x03\x12\x03" +
 		"\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03" +
 		"\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03" +
-		"\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03" +
-		"\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x07\x12\xE1\n\x12" +
-		"\f\x12\x0E\x12\xE4\v\x12\x03\x13\x03\x13\x03\x13\x03\x13\x05\x13\xEA\n" +
-		"\x13\x03\x14\x03\x14\x05\x14\xEE\n\x14\x03\x15\x03\x15\x03\x15\x02\x02" +
+		"\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x07\x12\xD8\n\x12" +
+		"\f\x12\x0E\x12\xDB\v\x12\x03\x13\x03\x13\x03\x13\x03\x13\x05\x13\xE1\n" +
+		"\x13\x03\x14\x03\x14\x05\x14\xE5\n\x14\x03\x15\x03\x15\x03\x15\x02\x02" +
 		"\x03\"\x16\x02\x02\x04\x02\x06\x02\b\x02\n\x02\f\x02\x0E\x02\x10\x02\x12" +
 		"\x02\x14\x02\x16\x02\x18\x02\x1A\x02\x1C\x02\x1E\x02 \x02\"\x02$\x02&" +
-		"\x02(\x02\x02\b\x03\x02\x15\x18\x03\x02\x19\x1A\x03\x02\x17\x18\x04\x02" +
-		"\x11\x11\x1B\x1D\x03\x02\x1E\x1F\x03\x02%*\x02\u0102\x02*\x03\x02\x02" +
-		"\x02\x04-\x03\x02\x02\x02\x06?\x03\x02\x02\x02\bK\x03\x02\x02\x02\nX\x03" +
-		"\x02\x02\x02\fd\x03\x02\x02\x02\x0Ek\x03\x02\x02\x02\x10m\x03\x02\x02" +
-		"\x02\x12s\x03\x02\x02\x02\x14x\x03\x02\x02\x02\x16~\x03\x02\x02\x02\x18" +
-		"\x81\x03\x02\x02\x02\x1A\x8A\x03\x02\x02\x02\x1C\x9D\x03\x02\x02\x02\x1E" +
-		"\x9F\x03\x02\x02\x02 \xA2\x03\x02\x02\x02\"\xBB\x03\x02\x02\x02$\xE9\x03" +
-		"\x02\x02\x02&\xEB\x03\x02\x02\x02(\xEF\x03\x02\x02\x02*+\x05\x04\x03\x02" +
-		"+,\x07\x02\x02\x03,\x03\x03\x02\x02\x02-.\x07\x03\x02\x02./\x071\x02\x02" +
+		"\x02(\x02\x02\b\x03\x02\x15\x17\x03\x02\x18\x19\x03\x02\x16\x17\x04\x02" +
+		"\x11\x11\x1A\x1C\x03\x02\x1D\x1E\x03\x02!&\x02\xF6\x02*\x03\x02\x02\x02" +
+		"\x04-\x03\x02\x02\x02\x06?\x03\x02\x02\x02\bK\x03\x02\x02\x02\nX\x03\x02" +
+		"\x02\x02\fd\x03\x02\x02\x02\x0Ek\x03\x02\x02\x02\x10m\x03\x02\x02\x02" +
+		"\x12s\x03\x02\x02\x02\x14x\x03\x02\x02\x02\x16~\x03\x02\x02\x02\x18\x81" +
+		"\x03\x02\x02\x02\x1A\x8A\x03\x02\x02\x02\x1C\x9D\x03\x02\x02\x02\x1E\x9F" +
+		"\x03\x02\x02\x02 \xA2\x03\x02\x02\x02\"\xBB\x03\x02\x02\x02$\xE0\x03\x02" +
+		"\x02\x02&\xE2\x03\x02\x02\x02(\xE6\x03\x02\x02\x02*+\x05\x04\x03\x02+" +
+		",\x07\x02\x02\x03,\x03\x03\x02\x02\x02-.\x07\x03\x02\x02./\x07-\x02\x02" +
 		"/0\x05\b\x05\x0204\x07\x04\x02\x0213\x05\x10\t\x0221\x03\x02\x02\x023" +
 		"6\x03\x02\x02\x0242\x03\x02\x02\x0245\x03\x02\x02\x025:\x03\x02\x02\x02" +
 		"64\x03\x02\x02\x0279\x05\x06\x04\x0287\x03\x02\x02\x029<\x03\x02\x02\x02" +
 		":8\x03\x02\x02\x02:;\x03\x02\x02\x02;=\x03\x02\x02\x02<:\x03\x02\x02\x02" +
-		"=>\x07\x05\x02\x02>\x05\x03\x02\x02\x02?@\x07\x06\x02\x02@A\x071\x02\x02" +
+		"=>\x07\x05\x02\x02>\x05\x03\x02\x02\x02?@\x07\x06\x02\x02@A\x07-\x02\x02" +
 		"AB\x05\b\x05\x02BF\x07\x04\x02\x02CE\x05\x0E\b\x02DC\x03\x02\x02\x02E" +
 		"H\x03\x02\x02\x02FD\x03\x02\x02\x02FG\x03\x02\x02\x02GI\x03\x02\x02\x02" +
 		"HF\x03\x02\x02\x02IJ\x07\x05\x02\x02J\x07\x03\x02\x02\x02KT\x07\x07\x02" +
 		"\x02LQ\x05\n\x06\x02MN\x07\b\x02\x02NP\x05\n\x06\x02OM\x03\x02\x02\x02" +
 		"PS\x03\x02\x02\x02QO\x03\x02\x02\x02QR\x03\x02\x02\x02RU\x03\x02\x02\x02" +
 		"SQ\x03\x02\x02\x02TL\x03\x02\x02\x02TU\x03\x02\x02\x02UV\x03\x02\x02\x02" +
-		"VW\x07\t\x02\x02W\t\x03\x02\x02\x02XY\x05(\x15\x02YZ\x071\x02\x02Z\v\x03" +
+		"VW\x07\t\x02\x02W\t\x03\x02\x02\x02XY\x05(\x15\x02YZ\x07-\x02\x02Z\v\x03" +
 		"\x02\x02\x02[_\x07\x04\x02\x02\\^\x05\x0E\b\x02]\\\x03\x02\x02\x02^a\x03" +
 		"\x02\x02\x02_]\x03\x02\x02\x02_`\x03\x02\x02\x02`b\x03\x02\x02\x02a_\x03" +
 		"\x02\x02\x02be\x07\x05\x02\x02ce\x05\x0E\b\x02d[\x03\x02\x02\x02dc\x03" +
 		"\x02\x02\x02e\r\x03\x02\x02\x02fl\x05\x10\t\x02gl\x05\x12\n\x02hl\x05" +
 		"\x14\v\x02il\x05\x16\f\x02jl\x05\x18\r\x02kf\x03\x02\x02\x02kg\x03\x02" +
 		"\x02\x02kh\x03\x02\x02\x02ki\x03\x02\x02\x02kj\x03\x02\x02\x02l\x0F\x03" +
-		"\x02\x02\x02mn\x05(\x15\x02no\x071\x02\x02op\x07\n\x02\x02pq\x05\"\x12" +
-		"\x02qr\x07\v\x02\x02r\x11\x03\x02\x02\x02st\x071\x02\x02tu\x07\n\x02\x02" +
+		"\x02\x02\x02mn\x05(\x15\x02no\x07-\x02\x02op\x07\n\x02\x02pq\x05\"\x12" +
+		"\x02qr\x07\v\x02\x02r\x11\x03\x02\x02\x02st\x07-\x02\x02tu\x07\n\x02\x02" +
 		"uv\x05\"\x12\x02vw\x07\v\x02\x02w\x13\x03\x02\x02\x02xz\x07\f\x02\x02" +
 		"y{\x05\"\x12\x02zy\x03\x02\x02\x02z{\x03\x02\x02\x02{|\x03\x02\x02\x02" +
 		"|}\x07\v\x02\x02}\x15\x03\x02\x02\x02~\x7F\x05\x1E\x10\x02\x7F\x80\x07" +
@@ -1438,7 +1375,7 @@ export class CashScriptParser extends Parser {
 		"\x97\x98\x07\x07\x02\x02\x98\x99\x07\x12\x02\x02\x99\x9A\x07\x11\x02\x02" +
 		"\x9A\x9B\x05\"\x12\x02\x9B\x9C\x07\t\x02\x02\x9C\x9E\x03\x02\x02\x02\x9D" +
 		"\x8F\x03\x02\x02\x02\x9D\x96\x03\x02\x02\x02\x9E\x1D\x03\x02\x02\x02\x9F" +
-		"\xA0\x070\x02\x02\xA0\xA1\x05 \x11\x02\xA1\x1F\x03\x02\x02\x02\xA2\xAB" +
+		"\xA0\x07,\x02\x02\xA0\xA1\x05 \x11\x02\xA1\x1F\x03\x02\x02\x02\xA2\xAB" +
 		"\x07\x07\x02\x02\xA3\xA8\x05\"\x12\x02\xA4\xA5\x07\b\x02\x02\xA5\xA7\x05" +
 		"\"\x12\x02\xA6\xA4\x03\x02\x02\x02\xA7\xAA\x03\x02\x02\x02\xA8\xA6\x03" +
 		"\x02\x02\x02\xA8\xA9\x03\x02\x02\x02\xA9\xAC\x03\x02\x02\x02\xAA\xA8\x03" +
@@ -1446,33 +1383,29 @@ export class CashScriptParser extends Parser {
 		"\x02\x02\x02\xAD\xAE\x07\t\x02\x02\xAE!\x03\x02\x02\x02\xAF\xB0\b\x12" +
 		"\x01\x02\xB0\xB1\x07\x07\x02\x02\xB1\xB2\x05\"\x12\x02\xB2\xB3\x07\t\x02" +
 		"\x02\xB3\xBC\x03\x02\x02\x02\xB4\xBC\x05\x1A\x0E\x02\xB5\xBC\x05\x1C\x0F" +
-		"\x02\xB6\xBC\x05\x1E\x10\x02\xB7\xB8\t\x02\x02\x02\xB8\xBC\x05\"\x12\x0E" +
-		"\xB9\xBC\x071\x02\x02\xBA\xBC\x05$\x13\x02\xBB\xAF\x03\x02\x02\x02\xBB" +
+		"\x02\xB6\xBC\x05\x1E\x10\x02\xB7\xB8\t\x02\x02\x02\xB8\xBC\x05\"\x12\v" +
+		"\xB9\xBC\x07-\x02\x02\xBA\xBC\x05$\x13\x02\xBB\xAF\x03\x02\x02\x02\xBB" +
 		"\xB4\x03\x02\x02\x02\xBB\xB5\x03\x02\x02\x02\xBB\xB6\x03\x02\x02\x02\xBB" +
 		"\xB7\x03\x02\x02\x02\xBB\xB9\x03\x02\x02\x02\xBB\xBA\x03\x02\x02\x02\xBC" +
-		"\xE2\x03\x02\x02\x02\xBD\xBE\f\r\x02\x02\xBE\xBF\t\x03\x02\x02\xBF\xE1" +
-		"\x05\"\x12\x0E\xC0\xC1\f\f\x02\x02\xC1\xC2\t\x04\x02\x02\xC2\xE1\x05\"" +
-		"\x12\r\xC3\xC4\f\v\x02\x02\xC4\xC5\t\x05\x02\x02\xC5\xE1\x05\"\x12\f\xC6" +
-		"\xC7\f\n\x02\x02\xC7\xC8\t\x06\x02\x02\xC8\xE1\x05\"\x12\v\xC9\xCA\f\t" +
-		"\x02\x02\xCA\xCB\x07 \x02\x02\xCB\xE1\x05\"\x12\n\xCC\xCD\f\b\x02\x02" +
-		"\xCD\xCE\x07!\x02\x02\xCE\xE1\x05\"\x12\t\xCF\xD0\f\x07\x02\x02\xD0\xD1" +
-		"\x07\"\x02\x02\xD1\xE1\x05\"\x12\b\xD2\xD3\f\x06\x02\x02\xD3\xD4\x07#" +
-		"\x02\x02\xD4\xE1\x05\"\x12\x07\xD5\xD6\f\x05\x02\x02\xD6\xD7\x07$\x02" +
-		"\x02\xD7\xE1\x05\"\x12\x06\xD8\xD9\f\x10\x02\x02\xD9\xE1\x07\x13\x02\x02" +
-		"\xDA\xDB\f\x0F\x02\x02\xDB\xDC\x07\x14\x02\x02\xDC\xDD\x07\x07\x02\x02" +
-		"\xDD\xDE\x05\"\x12\x02\xDE\xDF\x07\t\x02\x02\xDF\xE1\x03\x02\x02\x02\xE0" +
-		"\xBD\x03\x02\x02\x02\xE0\xC0\x03\x02\x02\x02\xE0\xC3\x03\x02\x02\x02\xE0" +
-		"\xC6\x03\x02\x02\x02\xE0\xC9\x03\x02\x02\x02\xE0\xCC\x03\x02\x02\x02\xE0" +
-		"\xCF\x03\x02\x02\x02\xE0\xD2\x03\x02\x02\x02\xE0\xD5\x03\x02\x02\x02\xE0" +
-		"\xD8\x03\x02\x02\x02\xE0\xDA\x03\x02\x02\x02\xE1\xE4\x03\x02\x02\x02\xE2" +
-		"\xE0\x03\x02\x02\x02\xE2\xE3\x03\x02\x02\x02\xE3#\x03\x02\x02\x02\xE4" +
-		"\xE2\x03\x02\x02\x02\xE5\xEA\x07+\x02\x02\xE6\xEA\x05&\x14\x02\xE7\xEA" +
-		"\x07.\x02\x02\xE8\xEA\x07/\x02\x02\xE9\xE5\x03\x02\x02\x02\xE9\xE6\x03" +
-		"\x02\x02\x02\xE9\xE7\x03\x02\x02\x02\xE9\xE8\x03\x02\x02\x02\xEA%\x03" +
-		"\x02\x02\x02\xEB\xED\x07-\x02\x02\xEC\xEE\x07,\x02\x02\xED\xEC\x03\x02" +
-		"\x02\x02\xED\xEE\x03\x02\x02\x02\xEE\'\x03\x02\x02\x02\xEF\xF0\t\x07\x02" +
-		"\x02\xF0)\x03\x02\x02\x02\x144:FQT_dkz\x88\x9D\xA8\xAB\xBB\xE0\xE2\xE9" +
-		"\xED";
+		"\xD9\x03\x02\x02\x02\xBD\xBE\f\n\x02\x02\xBE\xBF\t\x03\x02\x02\xBF\xD8" +
+		"\x05\"\x12\v\xC0\xC1\f\t\x02\x02\xC1\xC2\t\x04\x02\x02\xC2\xD8\x05\"\x12" +
+		"\n\xC3\xC4\f\b\x02\x02\xC4\xC5\t\x05\x02\x02\xC5\xD8\x05\"\x12\t\xC6\xC7" +
+		"\f\x07\x02\x02\xC7\xC8\t\x06\x02\x02\xC8\xD8\x05\"\x12\b\xC9\xCA\f\x06" +
+		"\x02\x02\xCA\xCB\x07\x1F\x02\x02\xCB\xD8\x05\"\x12\x07\xCC\xCD\f\x05\x02" +
+		"\x02\xCD\xCE\x07 \x02\x02\xCE\xD8\x05\"\x12\x06\xCF\xD0\f\r\x02\x02\xD0" +
+		"\xD8\x07\x13\x02\x02\xD1\xD2\f\f\x02\x02\xD2\xD3\x07\x14\x02\x02\xD3\xD4" +
+		"\x07\x07\x02\x02\xD4\xD5\x05\"\x12\x02\xD5\xD6\x07\t\x02\x02\xD6\xD8\x03" +
+		"\x02\x02\x02\xD7\xBD\x03\x02\x02\x02\xD7\xC0\x03\x02\x02\x02\xD7\xC3\x03" +
+		"\x02\x02\x02\xD7\xC6\x03\x02\x02\x02\xD7\xC9\x03\x02\x02\x02\xD7\xCC\x03" +
+		"\x02\x02\x02\xD7\xCF\x03\x02\x02\x02\xD7\xD1\x03\x02\x02\x02\xD8\xDB\x03" +
+		"\x02\x02\x02\xD9\xD7\x03\x02\x02\x02\xD9\xDA\x03\x02\x02\x02\xDA#\x03" +
+		"\x02\x02\x02\xDB\xD9\x03\x02\x02\x02\xDC\xE1\x07\'\x02\x02\xDD\xE1\x05" +
+		"&\x14\x02\xDE\xE1\x07*\x02\x02\xDF\xE1\x07+\x02\x02\xE0\xDC\x03\x02\x02" +
+		"\x02\xE0\xDD\x03\x02\x02\x02\xE0\xDE\x03\x02\x02\x02\xE0\xDF\x03\x02\x02" +
+		"\x02\xE1%\x03\x02\x02\x02\xE2\xE4\x07)\x02\x02\xE3\xE5\x07(\x02\x02\xE4" +
+		"\xE3\x03\x02\x02\x02\xE4\xE5\x03\x02\x02\x02\xE5\'\x03\x02\x02\x02\xE6" +
+		"\xE7\t\x07\x02\x02\xE7)\x03\x02\x02\x02\x144:FQT_dkz\x88\x9D\xA8\xAB\xBB" +
+		"\xD7\xD9\xE0\xE4";
 	public static __ATN: ATN;
 	public static get _ATN(): ATN {
 		if (!CashScriptParser.__ATN) {

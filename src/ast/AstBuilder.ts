@@ -207,19 +207,19 @@ export default class AstBuilder
     return functionCall;
   }
 
+  createSizeOp(ctx: ExpressionContext): SizeOpNode {
+    const obj = this.visit(ctx._obj);
+    const sizeOp = new SizeOpNode(obj);
+    sizeOp.location = Location.fromCtx(ctx);
+    return sizeOp;
+  }
+
   createSpliceOp(ctx: ExpressionContext): SpliceOpNode {
     const obj = this.visit(ctx._obj);
     const index = this.visit(ctx._index);
     const spliceOp = new SpliceOpNode(obj, index);
     spliceOp.location = Location.fromCtx(ctx);
     return spliceOp;
-  }
-
-  createSizeOp(ctx: ExpressionContext): SizeOpNode {
-    const obj = this.visit(ctx._obj);
-    const sizeOp = new SizeOpNode(obj);
-    sizeOp.location = Location.fromCtx(ctx);
-    return sizeOp;
   }
 
   createBinaryOp(ctx: ExpressionContext): BinaryOpNode {
