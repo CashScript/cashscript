@@ -171,7 +171,9 @@ export class BlockNode extends Node {
   }
 }
 
-export abstract class ExpressionNode extends Node {}
+export abstract class ExpressionNode extends Node {
+  type?: Type;
+}
 
 export class CastNode extends ExpressionNode implements Typed {
   constructor(
@@ -272,6 +274,7 @@ export class BoolLiteralNode extends LiteralNode {
     public value: boolean,
   ) {
     super();
+    this.type = Type.BOOL;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -284,6 +287,7 @@ export class IntLiteralNode extends LiteralNode {
     public value: number,
   ) {
     super();
+    this.type = Type.INT;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -297,6 +301,7 @@ export class StringLiteralNode extends LiteralNode {
     public quote: string,
   ) {
     super();
+    this.type = Type.STRING;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -309,6 +314,7 @@ export class HexLiteralNode extends LiteralNode {
     public value: Buffer,
   ) {
     super();
+    this.type = Type.BYTES;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
