@@ -29,7 +29,7 @@ const ExplicitlyCastableTo: { [key in Type]: Type[]} = {
 
 export function explicitlyCastable(castable?: Type, castType?: Type): boolean {
   if (!castable || !castType) return false;
-  if (!(castType in ExplicitlyCastableTo[castable])) return false;
+  if (!(ExplicitlyCastableTo[castable].includes(castType))) return false;
   return true;
 }
 
@@ -46,7 +46,7 @@ export function compatibleSignature(actual: Type[], expected: Type[]): boolean {
 }
 
 export function isBytes(type?: Type): boolean {
-  return !!type && type in [Type.BYTES, Type.BYTES20, Type.BYTES32];
+  return !!type && [Type.BYTES, Type.BYTES20, Type.BYTES32].includes(type);
 }
 
 export function getTypeFromCtx(ctx: TypeNameContext): Type {

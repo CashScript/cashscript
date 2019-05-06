@@ -9,13 +9,13 @@ contract Test(int x, string y) {
         int i = 400 + x;
         bytes b = 0x07364897987fe87 + bytes(x);
 
-        int myVariable = 10 - int(b); // they can go at the end of the line
+        int myVariable = 10 - int(false); // they can go at the end of the line
         int myOtherVariable = (i + myVariable) % 2;
         require(myOtherVariable /* And comments can be included within lines */ > i);
 
         myOtherVariable = i;
 
-        require(ripemd160(b) == ripemd160(string(myVariable)));
+        require(ripemd160(b) == ripemd160(bytes(myVariable)));
         require(tx.minAge >= 500);
         require(y.length < +-10);
 

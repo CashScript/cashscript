@@ -1,12 +1,12 @@
 contract Test(int x, string y) {
     function hello(sig s, pubkey pk) {
-        int myVariable = 10 - int(pk);
+        int myVariable = 10 - int(true);
         int myOtherVariable = 20 + myVariable % 2;
         require(myOtherVariable > x);
 
         string hw = "Hello World";
         hw = hw + y;
 
-        require(ripemd160(pk) == ripemd160(hw));
+        require(ripemd160(pk) == ripemd160(bytes(hw) + bytes(pk)));
     }
 }
