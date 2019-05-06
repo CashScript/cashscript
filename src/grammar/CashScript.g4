@@ -49,7 +49,7 @@ throwStatement
     ;
 
 timeOpStatement
-    : Require '(' TxVar '>=' expression ')' ';'
+    : 'require' '(' TxVar '>=' expression ')' ';'
     ;
 
 functionCallStatement
@@ -65,7 +65,7 @@ cast
     ;
 
 functionCall
-    : id=(Identifier | Require) expressionList // Only built-in functions are accepted
+    : id=(Identifier | 'require') expressionList // Only built-in functions are accepted
     ;
 
 expressionList
@@ -142,10 +142,6 @@ HexLiteral
 TxVar
     : 'tx.minAge'
     | 'tx.minTime'
-    ;
-
-Require
-    : 'require'
     ;
 
 Identifier
