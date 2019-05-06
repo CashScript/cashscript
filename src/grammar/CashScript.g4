@@ -5,7 +5,7 @@ sourceFile
     ;
 
 contractDefinition
-    : 'contract' Identifier parameterList '{' variableDefinition* functionDefinition* '}'
+    : 'contract' Identifier parameterList '{' functionDefinition* '}'
     ;
 
 functionDefinition

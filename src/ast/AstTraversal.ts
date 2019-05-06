@@ -34,7 +34,6 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
-    node.variables = this.visitList(node.variables) as VariableDefinitionNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
     return node;
   }

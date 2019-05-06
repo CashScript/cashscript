@@ -9,7 +9,8 @@ contract Test(
         if (a == x - 2
          && b == y) {
             throw;
-        } else if (b == "Hello " + y) {
+        } else if (b == "Hello "
+        + y) {
             require(
                 y == "World"
             );

@@ -4,27 +4,27 @@
  */
 
 contract Test(int x, string y) {
-    int globalInt = 400 + x;
-    bytes b = 0x07364897987fe87 + bytes(x);
-
     // Line comments are a thing
     function hello(sig s, pubkey pk) {
-        int myVariable = 10 - int(b); // they can go at the end of the line
-        int myOtherVariable = (globalInt + myVariable) % 2;
-        require(myOtherVariable /* And comments can be included within lines */ > globalInt);
+        int i = 400 + x;
+        bytes b = 0x07364897987fe87 + bytes(x);
 
-        myOtherVariable = globalInt;
+        int myVariable = 10 - int(b); // they can go at the end of the line
+        int myOtherVariable = (i + myVariable) % 2;
+        require(myOtherVariable /* And comments can be included within lines */ > i);
+
+        myOtherVariable = i;
 
         require(ripemd160(b) == ripemd160(string(myVariable)));
         require(tx.minAge >= 500);
         require(y.length < +-10);
 
-        if (globalInt > 400) {
-            globalInt = 400;
+        if (i > 400) {
+            i = 400;
         }
 
         if (x > 10) {
-            require(globalInt < 20);
+            require(i < 20);
             myVariable = 10;
         } else if (x < 5) {
             throw;

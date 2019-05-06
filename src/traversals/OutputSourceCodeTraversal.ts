@@ -60,10 +60,6 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput('\n');
 
     this.indent();
-    node.variables = this.visitList(node.variables) as VariableDefinitionNode[];
-    if (node.variables.length > 0) {
-      this.addOutput('\n');
-    }
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
     this.unindent();
 

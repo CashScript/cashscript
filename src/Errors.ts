@@ -12,7 +12,6 @@ import {
   SpliceOpNode,
 } from './ast/AST';
 import { Type } from './ast/Type';
-import { TimeOp } from './ast/Globals';
 
 export class CashScriptError extends Error {
   node: Node;

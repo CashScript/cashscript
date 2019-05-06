@@ -4,17 +4,17 @@
  */
 
 contract Test(int x, string y) {
-    int globalInt = 400 + x;
-    bytes b = 0x07364897987fe87;
-
     // Line comments are a thing
     function hello(sig s, pubkey pk) {
+        int i = 400 + x;
+        bytes b = 0x07364897987fe87 + bytes(x);
+
         int myVariable = 10 - 4; // they can go at the end of the line
-        int myOtherVariable = globalInt + myVariable % 2;
-        require(myOtherVariable /* And comments can be included within lines */ > globalInt);
+        int myOtherVariable = i + myVariable % 2;
+        require(myOtherVariable /* And comments can be included within lines */ > i);
 
         if (x > 10) {
-            require(globalInt < 20);
+            require(i < 20);
         } else
             require(myVariable == 1);
     }

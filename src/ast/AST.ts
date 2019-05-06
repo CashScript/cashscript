@@ -36,7 +36,6 @@ export class ContractNode extends Node implements Named {
   constructor(
     public name: string,
     public parameters: ParameterNode[],
-    public variables: VariableDefinitionNode[],
     public functions: FunctionDefinitionNode[],
   ) {
     super();

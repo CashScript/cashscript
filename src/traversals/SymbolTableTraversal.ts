@@ -21,7 +21,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.symbolTables.unshift(node.symbolTable);
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
-    node.variables = this.visitList(node.variables) as VariableDefinitionNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
 
     this.symbolTables.shift();

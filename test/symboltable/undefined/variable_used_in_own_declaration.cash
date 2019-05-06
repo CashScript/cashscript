@@ -1,7 +1,5 @@
 contract Test(int x, string y) {
-    int z = 0;
-
     function unlock(int a, int b) {
-        int c = a + c;
+        int c = 0 + a + c;
     }
 }

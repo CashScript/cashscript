@@ -78,9 +78,8 @@ export default class AstBuilder
   visitContractDefinition(ctx: ContractDefinitionContext): ContractNode {
     const name = ctx.Identifier().text;
     const parameters = ctx.parameterList().parameter().map(p => this.visit(p) as ParameterNode);
-    const variables = ctx.variableDefinition().map(v => this.visit(v) as VariableDefinitionNode);
     const functions = ctx.functionDefinition().map(f => this.visit(f) as FunctionDefinitionNode);
-    const contract = new ContractNode(name, parameters, variables, functions);
+    const contract = new ContractNode(name, parameters, functions);
     contract.location = Location.fromCtx(ctx);
     return contract;
   }
