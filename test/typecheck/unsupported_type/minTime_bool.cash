@@ -1,0 +1,5 @@
+contract Test(int x, string y) {
+    function hello(sig s, bool b) {
+        require(tx.minTime >= bool(1));
+    }
+}

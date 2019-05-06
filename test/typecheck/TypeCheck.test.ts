@@ -1,3 +1,4 @@
+import { UnsupportedTypeError } from './../../src/Errors';
 /*   TypeCheck.test.ts
  *
  * - This file is used to test the functioning of the symbol table.
@@ -42,6 +43,18 @@ describe('Type Check', () => {
         assert.throws(() => {
           ast.accept(traversal);
         }, InvalidParameterTypeError);
+      });
+    });
+  });
+
+  describe('Unsupported Type', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'unsupported_type'));
+    testCases.forEach((f) => {
+      it(`${f.fn} should throw UnsupportedTypeError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        assert.throws(() => {
+          ast.accept(traversal);
+        }, UnsupportedTypeError);
       });
     });
   });

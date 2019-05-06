@@ -1,0 +1,8 @@
+contract Test(int x, string y) {
+    function hello(sig s, pubkey pk) {
+        string hw = "Hello World";
+        hw = hw ++ y;
+
+        require(ripemd160(pk) == ripemd160(hw));
+    }
+}

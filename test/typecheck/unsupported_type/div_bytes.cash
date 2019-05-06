@@ -1,0 +1,5 @@
+contract Test(int x, string y) {
+    function hello(sig s, pubkey pk) {
+        require(0x50 / 0x40);
+    }
+}
