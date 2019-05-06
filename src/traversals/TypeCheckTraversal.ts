@@ -16,6 +16,9 @@ import {
   InvalidParameterTypeError,
   UnequalTypeError,
   UnsupportedTypeError,
+  CastTypeError,
+  TypeError,
+  AssignTypeError,
 } from '../Errors';
 import {
   Type,
@@ -30,8 +33,8 @@ export default class TypeCheckTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode) {
     node.expression = this.visit(node.expression);
 
-    if (node.expression.type !== node.type) {
-      throw new Error(); // TODO
+    if (!compatibleType(node.expression.type, node.type)) {
+      throw new AssignTypeError(node);
     }
 
     return node;
@@ -41,8 +44,8 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.expression = this.visit(node.expression);
 
-    if (node.expression.type !== node.identifier.type) {
-      throw new Error(); // TODO
+    if (!compatibleType(node.expression.type, node.identifier.type)) {
+      throw new AssignTypeError(node);
     }
 
     return node;
@@ -52,7 +55,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.expression = this.visit(node.expression);
 
     if (node.expression.type !== Type.INT) {
-      throw new Error(); // TODO
+      throw new UnsupportedTypeError(node, Type.INT);
     }
 
     return node;
@@ -64,7 +67,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.elseBlock = this.visitOptional(node.elseBlock);
 
     if (node.condition.type !== Type.BOOL) {
-      throw new Error(); // TODO
+      throw new TypeError(node, Type.BOOL, node.condition.type);
     }
 
     return node;
@@ -73,7 +76,7 @@ export default class TypeCheckTraversal extends AstTraversal {
   visitCast(node: CastNode) {
     node.expression = this.visit(node.expression);
     if (!explicitlyCastable(node.expression.type, node.type)) {
-      throw new Error(); // TODO Cast error
+      throw new CastTypeError(node);
     }
 
     return node;

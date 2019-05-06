@@ -10,6 +10,8 @@ import {
   TimeOpNode,
   SizeOpNode,
   SpliceOpNode,
+  CastNode,
+  AssignNode,
 } from './ast/AST';
 import { Type } from './ast/Type';
 
@@ -78,7 +80,7 @@ export class InvalidParameterTypeError extends TypeError {
   ) {
     super(
       node, expected, actual,
-      `Found function parameters (${actual}) in call to fnuction '${node.identifier.name}' where parameters (${expected}) were expected`,
+      `Found function parameters (${actual}) in call to function '${node.identifier.name}' where parameters (${expected}) were expected`,
     );
   }
 }
@@ -116,6 +118,23 @@ export class UnsupportedTypeError extends TypeError {
   }
 }
 
+export class CastTypeError extends TypeError {
+  constructor(
+    node: CastNode,
+  ) {
+    super(node, node.type, node.expression.type, `Type '${node.expression.type}' is not castable to type '${node.type}'`);
+  }
+}
+
+export class AssignTypeError extends TypeError {
+  constructor(
+    node: AssignNode | VariableDefinitionNode,
+  ) {
+    const expected = node instanceof AssignNode ? node.identifier.type : node.type;
+    super(node, expected, node.expression.type, `Type '${node.expression.type}' can not be assigned to variable of type '${expected}'`);
+  }
+}
+
 export class UnsupportedTimeOpError extends CashScriptError {
   constructor(
     node: TimeOpNode,
@@ -127,7 +146,6 @@ export class UnsupportedTimeOpError extends CashScriptError {
 export class UnboundedBytesTypeError extends CashScriptError {
   constructor(
     node: BinaryOpNode,
-
   ) {
     super(
       node,
