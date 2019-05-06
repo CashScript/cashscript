@@ -64,8 +64,8 @@ export class VariableRedefinitionError extends RedefinitionError {
 export class TypeError extends CashScriptError {
   constructor(
     node: Node,
-    public expected?: Type | Type[],
     public actual?: Type | Type[],
+    public expected?: Type | Type[],
     message?: string,
   ) {
     super(node, message || `Found type '${actual}' where type '${expected}' was expected`);
@@ -75,11 +75,11 @@ export class TypeError extends CashScriptError {
 export class InvalidParameterTypeError extends TypeError {
   constructor(
     node: FunctionCallNode,
-    expected: Type[],
     actual: Type[],
+    expected: Type[],
   ) {
     super(
-      node, expected, actual,
+      node, actual, expected,
       `Found function parameters (${actual}) in call to function '${node.identifier.name}' where parameters (${expected}) were expected`,
     );
   }
@@ -98,22 +98,25 @@ export class UnequalTypeError extends TypeError {
 export class UnsupportedTypeError extends TypeError {
   constructor(
     node: BinaryOpNode | UnaryOpNode | SizeOpNode | SpliceOpNode | TimeOpNode,
-    expected: Type,
+    actual?: Type,
+    expected?: Type,
   ) {
     if (node instanceof BinaryOpNode) {
-      super(node, expected, node.left.type, `Tried to apply operator '${node.operator}' to unsupported type '${node.left.type}'`);
+      super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode) {
-      super(node, expected, node.expression.type, `Tried to apply operator '${node.operator}' to unsupported type '${node.expression.type}'`);
+      super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof SizeOpNode) {
-      super(node, expected, node.object.type, `Tried to access member 'length' on unsupported type '${node.object.type}'`);
+      super(node, actual, expected, `Tried to access member 'length' on unsupported type '${actual}'`);
     } else if (node instanceof SpliceOpNode) {
       if (expected === Type.INT) {
-        super(node, expected, node.object.type, `Tried to call member 'splice' on unsupported type '${node.object.type}'`);
+        super(node, actual, expected, `Tried to call member 'splice' on unsupported type '${actual}'`);
       } else {
-        super(node, expected, node.index.type, `Tried to call member 'splice' with unsupported parameter type '${node.index.type}'`);
+        super(node, actual, expected, `Tried to call member 'splice' with unsupported parameter type '${actual}'`);
       }
-    } else { // TimeOpNode
-      super(node, expected, node.expression.type, `Tried to apply operator '>=' on unsupported type '${node.expression.type}'`);
+    } else if (node instanceof TimeOpNode) {
+      super(node, actual, expected, `Tried to apply operator '>=' on unsupported type '${actual}'`);
+    } else {
+      super(node, actual, expected);
     }
   }
 }
@@ -122,7 +125,7 @@ export class CastTypeError extends TypeError {
   constructor(
     node: CastNode,
   ) {
-    super(node, node.type, node.expression.type, `Type '${node.expression.type}' is not castable to type '${node.type}'`);
+    super(node, node.expression.type, node.type, `Type '${node.expression.type}' is not castable to type '${node.type}'`);
   }
 }
 
@@ -131,7 +134,7 @@ export class AssignTypeError extends TypeError {
     node: AssignNode | VariableDefinitionNode,
   ) {
     const expected = node instanceof AssignNode ? node.identifier.type : node.type;
-    super(node, expected, node.expression.type, `Type '${node.expression.type}' can not be assigned to variable of type '${expected}'`);
+    super(node, node.expression.type, expected, `Type '${node.expression.type}' can not be assigned to variable of type '${expected}'`);
   }
 }
 

@@ -27,22 +27,38 @@ const ExplicitlyCastableTo: { [key in Type]: Type[]} = {
   [Type.ANY]: [],
 };
 
+const ImplicitlyCastableTo: { [key in Type]: Type[]} = {
+  [Type.INT]: [Type.INT, Type.ANY],
+  [Type.BOOL]: [Type.BOOL, Type.ANY],
+  [Type.STRING]: [Type.STRING, Type.ANY],
+  [Type.PUBKEY]: [Type.PUBKEY, Type.BYTES, Type.ANY],
+  [Type.SIG]: [Type.SIG, Type.BYTES, Type.ANY],
+  [Type.BYTES]: [Type.BYTES, Type.ANY], // Could support downcasting
+  [Type.BYTES20]: [Type.BYTES20, Type.BYTES32, Type.BYTES, Type.ANY],
+  [Type.BYTES32]: [Type.BYTES32, Type.BYTES, Type.ANY],
+  [Type.VOID]: [],
+  [Type.ANY]: [],
+};
+
 export function explicitlyCastable(castable?: Type, castType?: Type): boolean {
   if (!castable || !castType) return false;
-  if (!(ExplicitlyCastableTo[castable].includes(castType))) return false;
-  return true;
+  return ExplicitlyCastableTo[castable].includes(castType);
 }
 
-export function compatibleType(actual?: Type, expected?: Type): boolean {
+export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (!actual || !expected) return false;
-  if (expected === Type.ANY) return true;
-  if (expected === Type.BYTES) return isBytes(actual);
-  return expected === actual;
+  return ImplicitlyCastableTo[actual].includes(expected);
 }
 
-export function compatibleSignature(actual: Type[], expected: Type[]): boolean {
-  if (expected.length !== actual.length) return false;
-  return expected.every((t, i) => compatibleType(actual[i], t));
+export function resultingType(left?: Type, right?: Type): Type | undefined {
+  if (implicitlyCastable(left, right)) return right;
+  if (implicitlyCastable(right, left)) return left;
+  return undefined;
+}
+
+export function implicitlyCastableSignature(actual: Type[], expected: Type[]): boolean {
+  if (actual.length !== expected.length) return false;
+  return expected.every((t, i) => implicitlyCastable(actual[i], t));
 }
 
 export function isBytes(type?: Type): boolean {
