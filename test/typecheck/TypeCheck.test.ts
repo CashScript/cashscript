@@ -13,7 +13,13 @@ import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/traversals/SymbolTableTraversal';
 import AstBuilder from '../../src/ast/AstBuilder';
 import { SourceFileNode, Node } from '../../src/ast/AST';
-import { InvalidParameterTypeError, UnsupportedTypeError } from '../../src/Errors';
+import {
+  InvalidParameterTypeError,
+  UnsupportedTypeError,
+  UnequalTypeError,
+  CastTypeError,
+  AssignTypeError,
+} from '../../src/Errors';
 import TypeCheckTraversal from '../../src/traversals/TypeCheckTraversal';
 
 interface TestSetup {
@@ -34,8 +40,8 @@ function setup(input: string): TestSetup {
 }
 
 describe('Type Check', () => {
-  describe('Invalid Parameters', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'invalid_parameters'));
+  describe('InvalidParameterTypeError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'InvalidParameterTypeError'));
     testCases.forEach((f) => {
       it(`${f.fn} should throw InvalidParameterTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
@@ -46,8 +52,44 @@ describe('Type Check', () => {
     });
   });
 
-  describe('Unsupported Type', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'unsupported_type'));
+  describe('AssignTypeError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'AssignTypeError'));
+    testCases.forEach((f) => {
+      it(`${f.fn} should throw AssignTypeError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        assert.throws(() => {
+          ast.accept(traversal);
+        }, AssignTypeError);
+      });
+    });
+  });
+
+  describe('CastTypeError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'CastTypeError'));
+    testCases.forEach((f) => {
+      it(`${f.fn} should throw CastTypeError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        assert.throws(() => {
+          ast.accept(traversal);
+        }, CastTypeError);
+      });
+    });
+  });
+
+  describe('UnequalTypeError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'UnequalTypeError'));
+    testCases.forEach((f) => {
+      it(`${f.fn} should throw UnequalTypeError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        assert.throws(() => {
+          ast.accept(traversal);
+        }, UnequalTypeError);
+      });
+    });
+  });
+
+  describe('UnsupportedTypeError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'UnsupportedTypeError'));
     testCases.forEach((f) => {
       it(`${f.fn} should throw UnsupportedTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
