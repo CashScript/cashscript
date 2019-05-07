@@ -20,7 +20,7 @@ const ExplicitlyCastableTo: { [key in Type]: Type[]} = {
   [Type.STRING]: [Type.STRING, Type.BYTES],
   [Type.PUBKEY]: [Type.PUBKEY, Type.BYTES],
   [Type.SIG]: [Type.SIG, Type.BYTES],
-  [Type.BYTES]: [Type.BYTES, Type.SIG, Type.PUBKEY, Type.STRING], // Could support downcasting
+  [Type.BYTES]: [Type.BYTES, Type.SIG, Type.PUBKEY], // Could support downcasting
   [Type.BYTES20]: [Type.BYTES20, Type.BYTES32, Type.BYTES],
   [Type.BYTES32]: [Type.BYTES32, Type.BYTES],
   [Type.VOID]: [],
