@@ -69,4 +69,10 @@ describe('Type Check', () => {
       });
     });
   });
+
+  describe('Handwritten tests', () => {
+    describe('Correct result type', () => {
+      // TODO
+    });
+  });
 });

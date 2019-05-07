@@ -89,7 +89,6 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters);
 
     const { definition, type } = node.identifier;
-
     if (!definition || !definition.parameters) return node; // aready checked in symbol table
 
     const parameterTypes = node.parameters.map(p => p.type as Type);

@@ -67,4 +67,10 @@ describe('Symbol Table', () => {
       });
     });
   });
+
+  describe('Handwritten tests', () => {
+    describe('Reference/definition registration', () => {
+      // TODO
+    });
+  });
 });
