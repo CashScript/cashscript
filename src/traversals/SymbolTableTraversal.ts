@@ -37,7 +37,7 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitVariableDefinition(node: VariableDefinitionNode) {
-    if (this.symbolTables[0].getFromThis(node.name)) {
+    if (this.symbolTables[0].get(node.name)) {
       throw new VariableRedefinitionError(node);
     }
 
