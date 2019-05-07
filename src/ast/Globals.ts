@@ -37,10 +37,17 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.REQUIRE, Type.VOID, [Type.BOOL
 GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.ABS, Type.INT, [Type.INT]));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.MIN, Type.INT, [Type.INT, Type.INT]));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.MAX, Type.INT, [Type.INT, Type.INT]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.WITHIN, Type.BOOL, [Type.INT, Type.INT]));
+GLOBAL_SYMBOL_TABLE.set(
+  new Symbol(GlobalFunction.WITHIN, Type.BOOL, [Type.INT, Type.INT, Type.INT]),
+);
 GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.RIPEMD160, Type.BYTES20, [Type.ANY]));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.SHA1, Type.BYTES32, [Type.ANY]));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.SHA256, Type.BYTES32, [Type.ANY]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$single`, Type.VOID, [Type.SIG, Type.PUBKEY]));
-// GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$multi`, Type.VOID, [Type.BYTES]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$data`, Type.VOID, [Type.SIG, Type.BYTES, Type.PUBKEY]));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.SIGCHECK, Type.BOOL, [Type.SIG, Type.PUBKEY]));
+// GLOBAL_SYMBOL_TABLE.set(
+//   new Symbol(`${GlobalFunction.SIGCHECK}$single`, Type.BOOL, [Type.SIG, Type.PUBKEY]),
+// );
+// GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$multi`, Type.BOOL, [Type.BYTES]));
+// GLOBAL_SYMBOL_TABLE.set(
+//   new Symbol(`${GlobalFunction.SIGCHECK}$data`, Type.BOOL, [Type.SIG, Type.BYTES, Type.PUBKEY]),
+// );
