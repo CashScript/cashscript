@@ -1,4 +1,3 @@
-import { UnsupportedTypeError } from './../../src/Errors';
 /*   TypeCheck.test.ts
  *
  * - This file is used to test the functioning of the symbol table.
@@ -14,7 +13,7 @@ import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/traversals/SymbolTableTraversal';
 import AstBuilder from '../../src/ast/AstBuilder';
 import { SourceFileNode, Node } from '../../src/ast/AST';
-import { UndefinedReferenceError, RedefinitionError, InvalidParameterTypeError } from '../../src/Errors';
+import { InvalidParameterTypeError, UnsupportedTypeError } from '../../src/Errors';
 import TypeCheckTraversal from '../../src/traversals/TypeCheckTraversal';
 
 interface TestSetup {
