@@ -76,7 +76,7 @@ export class ParameterNode extends Node implements Named, Typed {
 }
 
 export type StatementNode =
-VariableDefinitionNode | AssignNode | TimeOpNode | FunctionCallNode | BranchNode;
+VariableDefinitionNode | AssignNode | TimeOpNode | FunctionCallStatementNode | BranchNode;
 
 export class VariableDefinitionNode extends Node implements Named, Typed {
   constructor(
