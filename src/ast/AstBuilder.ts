@@ -10,7 +10,6 @@ import {
   FunctionDefinitionNode,
   AssignNode,
   IdentifierNode,
-  ThrowNode,
   BranchNode,
   CastNode,
   FunctionCallNode,
@@ -38,7 +37,6 @@ import {
   ParameterContext,
   AssignStatementContext,
   IfStatementContext,
-  ThrowStatementContext,
   FunctionCallContext,
   CastContext,
   ExpressionContext,
@@ -121,14 +119,6 @@ export default class AstBuilder
     const assign = new AssignNode(identifier, expression);
     assign.location = Location.fromCtx(ctx);
     return assign;
-  }
-
-  visitThrowStatement(ctx: ThrowStatementContext): ThrowNode {
-    const expressionCtx = ctx.expression();
-    const expression = expressionCtx && this.visit(expressionCtx);
-    const throwNode = new ThrowNode(expression);
-    throwNode.location = Location.fromCtx(ctx);
-    return throwNode;
   }
 
   visitTimeOpStatement(ctx: TimeOpStatementContext): TimeOpNode {

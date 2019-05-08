@@ -27,7 +27,7 @@ contract Test(int x, string y) {
             require(i < 20);
             myVariable = 10;
         } else if (x < 5) {
-            throw;
+            require(false);
         } else
             require(myVariable == 1);
     }

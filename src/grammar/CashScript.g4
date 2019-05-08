@@ -28,7 +28,6 @@ block
 statement
     : variableDefinition
     | assignStatement
-    | throwStatement
     | timeOpStatement
     | functionCallStatement
     | ifStatement
@@ -40,12 +39,6 @@ variableDefinition
 
 assignStatement
     : Identifier '=' expression ';'
-    ;
-
-// OP_RETURN invalidates a transaction, so that would more relate to the 'throw' keyword,
-// but if we want subroutines, return would mean regular return
-throwStatement
-    : 'throw' expression? ';'
     ;
 
 timeOpStatement

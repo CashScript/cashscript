@@ -105,18 +105,6 @@ export class AssignNode extends Node {
   }
 }
 
-export class ThrowNode extends Node {
-  constructor(
-    public expression?: ExpressionNode,
-  ) {
-    super();
-  }
-
-  accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitThrow(this);
-  }
-}
-
 export class TimeOpNode extends Node {
   constructor(
     public timeOp: TimeOp,

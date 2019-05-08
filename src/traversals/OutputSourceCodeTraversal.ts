@@ -7,7 +7,6 @@ import {
   FunctionDefinitionNode,
   AssignNode,
   IdentifierNode,
-  ThrowNode,
   BranchNode,
   CastNode,
   FunctionCallNode,
@@ -110,18 +109,6 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.addOutput(';\n');
 
-    return node;
-  }
-
-  visitThrow(node: ThrowNode) {
-    this.addOutput('throw', true);
-
-    if (node.expression) {
-      this.addOutput(' ');
-      node.expression = this.visit(node.expression);
-    }
-
-    this.addOutput(';\n');
     return node;
   }
 

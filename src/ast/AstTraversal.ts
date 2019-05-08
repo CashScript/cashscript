@@ -7,7 +7,6 @@ import {
   FunctionDefinitionNode,
   AssignNode,
   IdentifierNode,
-  ThrowNode,
   BranchNode,
   CastNode,
   FunctionCallNode,
@@ -56,11 +55,6 @@ export default class AstTraversal extends AstVisitor<Node> {
   visitAssign(node: AssignNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.expression = this.visit(node.expression);
-    return node;
-  }
-
-  visitThrow(node: ThrowNode): Node {
-    node.expression = this.visitOptional(node.expression);
     return node;
   }
 
