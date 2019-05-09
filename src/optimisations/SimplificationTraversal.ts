@@ -9,28 +9,50 @@ import {
   SizeOpNode,
   SpliceOpNode,
   LiteralNode,
+  StringLiteralNode,
+  HexLiteralNode,
+  BoolLiteralNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
-import { applyUnaryOperator, applyBinaryOperator } from '../ast/Operator';
+import {
+  applyUnaryOperator,
+  applyBinaryOperator,
+  applyGlobalFunction,
+  applySizeOp,
+  applyCast,
+} from './OperationSimulations';
+import { ConstantConditionError } from '../Errors';
 
 export default class SimplificationTraversal extends AstTraversal {
-  // TODO
   visitBranch(node: BranchNode) {
     node.condition = this.visit(node.condition);
     node.ifBlock = this.visit(node.ifBlock) as BlockNode;
     node.elseBlock = this.visitOptional(node.elseBlock);
+
+    if (node.condition instanceof BoolLiteralNode) {
+      throw new ConstantConditionError(node, node.condition.value);
+    }
+
     return node;
   }
 
-  // TODO
   visitCast(node: CastNode) {
     node.expression = this.visit(node.expression);
+
+    if (node.expression instanceof LiteralNode) {
+      return applyCast(node.expression, node.type);
+    }
+
     return node;
   }
 
-  // TODO
   visitSizeOp(node: SizeOpNode) {
     node.object = this.visit(node.object);
+
+    if (node.object instanceof StringLiteralNode || node.object instanceof HexLiteralNode) {
+      return applySizeOp(node.object);
+    }
+
     return node;
   }
 
@@ -41,10 +63,14 @@ export default class SimplificationTraversal extends AstTraversal {
     return node;
   }
 
-  // TODO
   visitFunctionCall(node: FunctionCallNode) {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
+
+    if (node.parameters.every(p => p instanceof LiteralNode)) {
+      return applyGlobalFunction(node);
+    }
+
     return node;
   }
 

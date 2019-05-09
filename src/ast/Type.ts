@@ -15,7 +15,7 @@ export enum Type {
 }
 
 const ExplicitlyCastableTo: { [key in Type]: Type[]} = {
-  [Type.INT]: [Type.INT, Type.BYTES, Type.BYTES32, Type.BOOL],
+  [Type.INT]: [Type.INT, Type.BYTES, Type.BYTES20, Type.BYTES32, Type.BOOL],
   [Type.BOOL]: [Type.BOOL, Type.INT],
   [Type.STRING]: [Type.STRING, Type.BYTES],
   [Type.PUBKEY]: [Type.PUBKEY, Type.BYTES],

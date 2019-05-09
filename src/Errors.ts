@@ -12,6 +12,7 @@ import {
   SpliceOpNode,
   CastNode,
   AssignNode,
+  BranchNode,
 } from './ast/AST';
 import { Type } from './ast/Type';
 import { Symbol } from './ast/SymbolTable';
@@ -164,5 +165,14 @@ export class UnboundedBytesTypeError extends CashScriptError {
       `Tried to apply operator '${node.operator}' to unbounded '${Type.BYTES}' type`
       + ` where fixed length '${Type.BYTES20}' or '${Type.BYTES32}' was expected`,
     );
+  }
+}
+
+export class ConstantConditionError extends CashScriptError {
+  constructor(
+    node: BranchNode | FunctionCallNode,
+    res: boolean,
+  ) {
+    super(node, `Condition always evaluates to ${res}`);
   }
 }
