@@ -1,0 +1,14 @@
+contract TransferWithTimeout(
+    pubkey sender,
+    pubkey recipient,
+    int timeout
+) {
+    function transfer(sig recipientSig) {
+        require(sigCheck(recipientSig, recipient));
+    }
+
+    function timeout(sig senderSig) {
+        require(sigCHeck(senderSig, sender));
+        require(tx.time >= timeout);
+    }
+}
