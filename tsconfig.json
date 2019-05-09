@@ -6,6 +6,7 @@
         "sourceMap": true,                  /* Generates corresponding '.map' file. */
         "strict": true,                     /* Enable all strict type-checking options. */
         "strictPropertyInitialization": false,
-        "experimentalDecorators": true      /* Enables experimental support for ES7 decorators. */
+        "experimentalDecorators": true,     /* Enables experimental support for ES7 decorators. */
+        "typeRoots" : ["node_modules/@types", "src/lib"],
     }
 }
