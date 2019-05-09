@@ -4,5 +4,3 @@ contract P2PKH(bytes20 pkh) {
         require(sigCheck(pk, s));
     }
 }
-
-
