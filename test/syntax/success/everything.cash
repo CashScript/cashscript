@@ -16,7 +16,7 @@ contract Test(int x, string y) {
         myOtherVariable = i;
 
         require(ripemd160(b) == ripemd160(bytes(myVariable)));
-        require(tx.minAge >= 500);
+        require(tx.age >= 500);
         require(y.length < +-10);
 
         if (i > 400) {

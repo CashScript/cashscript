@@ -133,8 +133,8 @@ HexLiteral
     ;
 
 TxVar
-    : 'tx.minAge'
-    | 'tx.minTime'
+    : 'tx.age'
+    | 'tx.time'
     ;
 
 Identifier
