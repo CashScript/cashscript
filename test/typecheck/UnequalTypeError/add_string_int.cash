@@ -1,5 +1,5 @@
 contract Test(int x, string y) {
-    function hello(sig s, pubkey pk) {
+    function hello() {
         require((y + x).length > 50);
     }
 }

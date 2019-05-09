@@ -14,6 +14,7 @@ import {
   AssignNode,
 } from './ast/AST';
 import { Type } from './ast/Type';
+import { Symbol } from './ast/SymbolTable';
 
 export class CashScriptError extends Error {
   node: Node;
@@ -58,6 +59,14 @@ export class VariableRedefinitionError extends RedefinitionError {
     public node: VariableDefinitionNode | ParameterNode,
   ) {
     super(node, `Redefinition of variable ${node.name}`);
+  }
+}
+
+export class UnusedVariableError extends CashScriptError {
+  constructor(
+    public symbol: Symbol,
+  ) {
+    super(symbol.definition as Node, `Unused variable ${symbol.name}`);
   }
 }
 

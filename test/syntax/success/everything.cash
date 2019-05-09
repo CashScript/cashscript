@@ -7,13 +7,14 @@ contract Test(int x, string y) {
     // Line comments are a thing
     function hello(sig s, pubkey pk) {
         int i = 400 + x;
-        bytes b = 0x07364897987fe87 + bytes(x);
+        bytes b = 0x07364897987fe87 + bytes(y);
 
         int myVariable = 10 - int(false); // they can go at the end of the line
         int myOtherVariable = (i + myVariable) % 2;
         require(myOtherVariable /* And comments can be included within lines */ > i);
 
         myOtherVariable = i;
+        myVariable = 10;
 
         require(ripemd160(b) == ripemd160(bytes(myVariable)));
         require(tx.age >= 500);
@@ -25,7 +26,7 @@ contract Test(int x, string y) {
 
         if (x > 10) {
             require(i < 20);
-            myVariable = 10;
+            require(sigCheck(s, pk));
         } else if (x < 5) {
             require(false);
         } else

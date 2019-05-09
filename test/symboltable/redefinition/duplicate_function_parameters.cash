@@ -1,4 +1,4 @@
-contract Test(int x, string y) {
+contract Test() {
     function hello(sig s, pubkey s) {
         require(sigCheck(s, s));
     }

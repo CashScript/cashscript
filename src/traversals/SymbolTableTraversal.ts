@@ -10,7 +10,12 @@ import {
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { SymbolTable, Symbol } from '../ast/SymbolTable';
-import { FunctionRedefinitionError, VariableRedefinitionError, UndefinedReferenceError } from '../Errors';
+import {
+  FunctionRedefinitionError,
+  VariableRedefinitionError,
+  UndefinedReferenceError,
+  UnusedVariableError,
+} from '../Errors';
 
 export default class SymbolTableTraversal extends AstTraversal {
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];
@@ -22,6 +27,11 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
+
+    const unusedSymbols = node.symbolTable.unusedSymbols();
+    if (unusedSymbols.length !== 0) {
+      throw new UnusedVariableError(unusedSymbols[0]);
+    }
 
     this.symbolTables.shift();
     return node;
@@ -61,6 +71,11 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body);
 
+    const unusedSymbols = node.symbolTable.unusedSymbols();
+    if (unusedSymbols.length !== 0) {
+      throw new UnusedVariableError(unusedSymbols[0]);
+    }
+
     this.symbolTables.shift();
     return node;
   }
@@ -70,6 +85,11 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.symbolTables.unshift(node.symbolTable);
 
     node.statements = this.visitOptionalList(node.statements) as StatementNode[];
+
+    const unusedSymbols = node.symbolTable.unusedSymbols();
+    if (unusedSymbols.length !== 0) {
+      throw new UnusedVariableError(unusedSymbols[0]);
+    }
 
     this.symbolTables.shift();
     return node;

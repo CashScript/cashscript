@@ -1,5 +1,5 @@
-contract Test(int x, string y) {
-    function hello(sig s, pubkey pk) {
-        require(("hi" + "hello").length + 2 > 5);
+contract Test() {
+    function hello(string who) {
+        require(("hello " + who).length + 2 > 5);
     }
 }

@@ -1,5 +1,5 @@
-contract Test(int x, string y) {
-    function hello(sig s, bool b) {
-        require(tx.time >= bool(1));
+contract Test(int x) {
+    function hello() {
+        require(tx.time >= bool(x));
     }
 }

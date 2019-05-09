@@ -1,4 +1,4 @@
-contract Test(int x, string y) {
+contract Test() {
     function unlock(int a, int b) {
         int c = 0 + a + d;
     }

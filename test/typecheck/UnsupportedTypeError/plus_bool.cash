@@ -1,5 +1,5 @@
-contract Test(int x, string y) {
-    function hello(bool b, pubkey pk) {
+contract Test() {
+    function hello(bool b) {
         require(true + b);
     }
 }

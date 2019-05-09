@@ -1,5 +1,6 @@
-contract Test(int x, string y) {
-    function hello(sig s, pubkey pk) {
+contract Test() {
+    function hello() {
+        string y = "Hello";
         y = 0x000000fefe00;
     }
 }

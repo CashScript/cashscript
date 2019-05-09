@@ -1,7 +1,7 @@
-contract Test(int x, string y) {
-    function hello(sig s, pubkey pk) {
+contract Test() {
+    function hello() {
     }
 
-    function world(int a) {
+    function world() {
     }
 }

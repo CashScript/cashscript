@@ -1,0 +1,7 @@
+contract Test() {
+    function hello(sig s, pubkey pk) {
+        if (sigCheck(s, pk)) {
+            string x = 'Hello';
+        }
+    }
+}

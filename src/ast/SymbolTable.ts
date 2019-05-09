@@ -59,4 +59,10 @@ export class SymbolTable {
   toString(): string {
     return `[${Array.from(this.symbols).map(e => e[1])}]`;
   }
+
+  unusedSymbols(): Symbol[] {
+    return Array.from(this.symbols)
+      .map(e => e[1])
+      .filter(s => s.references.length === 0);
+  }
 }

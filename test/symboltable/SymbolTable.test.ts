@@ -13,7 +13,7 @@ import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/traversals/SymbolTableTraversal';
 import AstBuilder from '../../src/ast/AstBuilder';
 import { SourceFileNode, Node } from '../../src/ast/AST';
-import { UndefinedReferenceError, RedefinitionError } from '../../src/Errors';
+import { UndefinedReferenceError, RedefinitionError, UnusedVariableError } from '../../src/Errors';
 
 interface TestSetup {
   ast: Node,
@@ -52,6 +52,18 @@ describe('Symbol Table', () => {
         assert.throws(() => {
           ast.accept(traversal);
         }, UndefinedReferenceError);
+      });
+    });
+  });
+
+  describe('Unused', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'unused'));
+    testCases.forEach((f) => {
+      it(`${f.fn} should throw UnusedVariableError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        assert.throws(() => {
+          ast.accept(traversal);
+        }, UnusedVariableError);
       });
     });
   });

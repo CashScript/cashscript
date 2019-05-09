@@ -1,5 +1,6 @@
-contract Test(int x, string y) {
-    function hello(sig s, pubkey pk) {
-        pubkey pk2 = 0x0;
+contract Test() {
+    function hello() {
+        pubkey pk = 0x0;
+        require(bytes(pk) == 0x0);
     }
 }

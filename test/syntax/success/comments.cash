@@ -3,7 +3,7 @@
 // line comments too
  */
 
-contract Test(int x, string y) {
+contract Test(int x) {
     // Line comments are a thing
     function hello(sig s, pubkey pk) {
         int i = 400 + x;
@@ -15,7 +15,8 @@ contract Test(int x, string y) {
 
         if (x > 10) {
             require(i < 20);
+            require(sigCheck(s, pk));
         } else
-            require(myVariable == 1);
+            require(b == 0x01);
     }
 }

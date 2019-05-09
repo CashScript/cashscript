@@ -1,5 +1,5 @@
-contract Test(int x, string y) {
-    function hello(sig s, pubkey pk) {
+contract Test(string y) {
+    function hello() {
         require(string(0x4801) == y);
     }
 }

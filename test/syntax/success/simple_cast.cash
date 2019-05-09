@@ -8,5 +8,6 @@ contract Test(int x, string y) {
         hw = hw + y;
 
         require(ripemd160(pk) == ripemd160(bytes(hw) + bytes(pk)));
+        require(sigCheck(s, pk));
     }
 }

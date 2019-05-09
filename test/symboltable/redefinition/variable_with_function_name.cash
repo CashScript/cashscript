@@ -1,12 +1,8 @@
-contract Test(int x, string y) {
+contract Test() {
     function hello(sig s, pubkey pk) {
         int v = 10;
         string ripemd160 = 'hello';
 
-        require(pk == pubkey(v));
-    }
-
-    function world(int a) {
-        require(a + 5 == 10);
+        require(sigCheck(s, pk) && v < 10);
     }
 }
