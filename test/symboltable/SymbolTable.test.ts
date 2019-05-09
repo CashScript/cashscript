@@ -10,7 +10,7 @@ import * as path from 'path';
 import { CashScriptParser } from '../../src/grammar/CashScriptParser';
 import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
 import { readCashFiles } from '../test-util';
-import SymbolTableTraversal from '../../src/traversals/SymbolTableTraversal';
+import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import AstBuilder from '../../src/ast/AstBuilder';
 import { SourceFileNode, Node } from '../../src/ast/AST';
 import { UndefinedReferenceError, RedefinitionError, UnusedVariableError } from '../../src/Errors';

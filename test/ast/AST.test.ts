@@ -17,7 +17,7 @@ import { CashScriptParser } from '../../src/grammar/CashScriptParser';
 import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
 import { readCashFiles } from '../test-util';
 import { Node, SourceFileNode } from '../../src/ast/AST';
-import OutputSourceCodeTraversal from '../../src/traversals/OutputSourceCodeTraversal';
+import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal';
 
 interface TestSetup {
   ast: Node,

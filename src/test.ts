@@ -2,12 +2,12 @@ import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import * as fs from 'fs';
 import * as path from 'path';
 // import * as util from 'util';
-import OutputSourceCodeTraversal from './traversals/OutputSourceCodeTraversal';
+import OutputSourceCodeTraversal from './print/OutputSourceCodeTraversal';
 import { SourceFileNode } from './ast/AST';
 import { CashScriptParser } from './grammar/CashScriptParser';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
 import AstBuilder from './ast/AstBuilder';
-import SymbolTableTraversal from './traversals/SymbolTableTraversal';
+import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 
 const contents = fs.readFileSync(path.join(__dirname, '..', 'test', 'syntax', 'success', 'everything.cash'), { encoding: 'utf-8' });
 
