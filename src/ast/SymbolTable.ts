@@ -1,29 +1,26 @@
 import {
   VariableDefinitionNode,
   ParameterNode,
-  FunctionDefinitionNode,
   IdentifierNode,
+  Node,
 } from './AST';
-import { Type, PrimitiveType } from './Type';
+import { Type } from './Type';
 
 export class Symbol {
   references: IdentifierNode[] = [];
   constructor(
     public name: string,
     public type: Type,
+    public definition?: Node,
     public parameters?: Type[],
   ) {}
 
   static variable(node: VariableDefinitionNode) {
-    return new Symbol(node.name, node.type);
+    return new Symbol(node.name, node.type, node);
   }
 
   static parameter(node: ParameterNode) {
-    return new Symbol(node.name, node.type);
-  }
-
-  static function(node: FunctionDefinitionNode) {
-    return new Symbol(node.name, PrimitiveType.VOID, node.parameters.map(p => p.type));
+    return new Symbol(node.name, node.type, node);
   }
 
   toString(): string {

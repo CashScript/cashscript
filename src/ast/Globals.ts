@@ -34,50 +34,50 @@ export enum TimeOp {
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.REQUIRE, PrimitiveType.VOID,
+  GlobalFunction.REQUIRE, PrimitiveType.VOID, undefined,
   [PrimitiveType.BOOL],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.ABS, PrimitiveType.INT,
+  GlobalFunction.ABS, PrimitiveType.INT, undefined,
   [PrimitiveType.INT],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.MIN, PrimitiveType.INT,
+  GlobalFunction.MIN, PrimitiveType.INT, undefined,
   [PrimitiveType.INT, PrimitiveType.INT],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.MAX, PrimitiveType.INT,
+  GlobalFunction.MAX, PrimitiveType.INT, undefined,
   [PrimitiveType.INT, PrimitiveType.INT],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.WITHIN, PrimitiveType.BOOL,
+  GlobalFunction.WITHIN, PrimitiveType.BOOL, undefined,
   [PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.RIPEMD160, PrimitiveType.BYTES20,
+  GlobalFunction.RIPEMD160, PrimitiveType.BYTES20, undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.SHA1, PrimitiveType.BYTES32,
+  GlobalFunction.SHA1, PrimitiveType.BYTES32, undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.SHA256, PrimitiveType.BYTES32,
+  GlobalFunction.SHA256, PrimitiveType.BYTES32, undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.SIGCHECK, PrimitiveType.BOOL,
+  GlobalFunction.SIGCHECK, PrimitiveType.BOOL, undefined,
   [PrimitiveType.SIG, PrimitiveType.PUBKEY],
 ));
 // GLOBAL_SYMBOL_TABLE.set(new Symbol(
-//   `${GlobalFunction.SIGCHECK}$single`, PrimitiveType.BOOL,
+//   `${GlobalFunction.SIGCHECK}$single`, PrimitiveType.BOOL, undefined,
 //   [PrimitiveType.SIG, PrimitiveType.PUBKEY],
 // ));
 // GLOBAL_SYMBOL_TABLE.set(new Symbol(
-//   `${GlobalFunction.SIGCHECK}$multi`, PrimitiveType.BOOL,
+//   `${GlobalFunction.SIGCHECK}$multi`, PrimitiveType.BOOL, undefined,
 //   [PrimitiveType.BYTES],
 // ));
 // GLOBAL_SYMBOL_TABLE.set(new Symbol(
-//   `${GlobalFunction.SIGCHECK}$data`, PrimitiveType.BOOL,
+//   `${GlobalFunction.SIGCHECK}$data`, PrimitiveType.BOOL, undefined,
 //   [PrimitiveType.SIG, PrimitiveType.BYTES, PrimitiveType.PUBKEY],
 // ));
