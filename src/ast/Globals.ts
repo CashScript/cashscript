@@ -1,5 +1,5 @@
 import { SymbolTable, Symbol } from './SymbolTable';
-import { PrimitiveType } from './Type';
+import { PrimitiveType, ArrayType } from './Type';
 
 export const NumberUnit: { [index:string] : number } = {
   SATOSHIS: 1,
@@ -24,7 +24,9 @@ export enum GlobalFunction {
   RIPEMD160 = 'ripemd160',
   SHA1 = 'sha1',
   SHA256 = 'sha256',
-  SIGCHECK = 'sigCheck'
+  CHECKSIG = 'checkSig',
+  CHECKMULTISIG = 'checkMultiSig',
+  CHECKDATASIG = 'checkDataSig',
 }
 
 export enum TimeOp {
@@ -66,18 +68,14 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.SIGCHECK, PrimitiveType.BOOL, undefined,
+  GlobalFunction.CHECKSIG, PrimitiveType.BOOL, undefined,
   [PrimitiveType.SIG, PrimitiveType.PUBKEY],
 ));
-// GLOBAL_SYMBOL_TABLE.set(new Symbol(
-//   `${GlobalFunction.SIGCHECK}$single`, PrimitiveType.BOOL, undefined,
-//   [PrimitiveType.SIG, PrimitiveType.PUBKEY],
-// ));
-// GLOBAL_SYMBOL_TABLE.set(new Symbol(
-//   `${GlobalFunction.SIGCHECK}$multi`, PrimitiveType.BOOL, undefined,
-//   [PrimitiveType.BYTES],
-// ));
-// GLOBAL_SYMBOL_TABLE.set(new Symbol(
-//   `${GlobalFunction.SIGCHECK}$data`, PrimitiveType.BOOL, undefined,
-//   [PrimitiveType.SIG, PrimitiveType.BYTES, PrimitiveType.PUBKEY],
-// ));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.CHECKMULTISIG, PrimitiveType.BOOL, undefined,
+  [new ArrayType(PrimitiveType.SIG), new ArrayType(PrimitiveType.PUBKEY)],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.CHECKDATASIG, PrimitiveType.BOOL, undefined,
+  [PrimitiveType.SIG, PrimitiveType.BYTES, PrimitiveType.PUBKEY],
+));

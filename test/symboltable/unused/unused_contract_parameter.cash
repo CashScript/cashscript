@@ -1,5 +1,5 @@
 contract Test(string x) {
     function hello(sig s, pubkey pk) {
-        require(sigCheck(s, pk));
+        require(checkSig(s, pk));
     }
 }

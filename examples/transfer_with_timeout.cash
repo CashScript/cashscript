@@ -4,11 +4,11 @@ contract TransferWithTimeout(
     int timeout
 ) {
     function transfer(sig recipientSig) {
-        require(sigCheck(recipientSig, recipient));
+        require(checkSig(recipientSig, recipient));
     }
 
     function timeout(sig senderSig) {
-        require(sigCHeck(senderSig, sender));
+        require(checkSig(senderSig, sender));
         require(tx.time >= timeout);
     }
 }

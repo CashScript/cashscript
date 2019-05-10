@@ -1,6 +1,6 @@
 contract Test(int x, string x) {
     function hello(sig s, pubkey pk) {
-        require(sigCheck(s, pk));
+        require(checkSig(s, pk));
     }
 
     function world(int a) {

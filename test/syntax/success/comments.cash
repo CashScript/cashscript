@@ -15,7 +15,7 @@ contract Test(int x) {
 
         if (x > 10) {
             require(i < 20);
-            require(sigCheck(s, pk));
+            require(checkSig(s, pk));
         } else
             require(b == 0x01);
     }

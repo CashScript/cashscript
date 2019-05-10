@@ -3,6 +3,6 @@ contract Test() {
         int v = 10;
         string ripemd160 = 'hello';
 
-        require(sigCheck(s, pk) && v < 10);
+        require(checkSig(s, pk) && v < 10);
     }
 }

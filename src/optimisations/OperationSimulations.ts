@@ -194,7 +194,7 @@ function applyHashFunction(f: (a: Buffer)=>Buffer, node: LiteralNode): HexLitera
   if (node instanceof IntLiteralNode) {
     return new HexLiteralNode(f(Buffer.alloc(32, node.value)));
   } else if (node instanceof BoolLiteralNode) {
-    return new HexLiteralNode(f(Buffer.alloc(1, node.value ? 0x1 : 0x0)));
+    return new HexLiteralNode(f(Buffer.alloc(1, node.value ? 0x01 : 0x00)));
   } else if (node instanceof StringLiteralNode) {
     return new HexLiteralNode(f(Buffer.from(node.value)));
   } else if (node instanceof HexLiteralNode) {

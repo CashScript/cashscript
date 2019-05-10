@@ -1,0 +1,5 @@
+contract Test() {
+    function cms(sig s, pubkey pk) {
+        require(checkMultiSig([s], [pk, pubkey(0x00)]));
+    }
+}

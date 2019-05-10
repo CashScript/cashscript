@@ -1,6 +1,6 @@
 contract Test() {
     function hello() {
-        bool b = 0x0;
+        bool b = 0x00;
         require(b);
     }
 }

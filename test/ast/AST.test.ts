@@ -35,7 +35,7 @@ describe('AST Builder', () => {
     it(`${f.fn} should succeed`, () => {
       const { sourceOutput: initialOutput } = setup(f.contents);
       const { sourceOutput: rerunOutput } = setup(initialOutput);
-      assert.equal(initialOutput, rerunOutput);
+      assert.equal(rerunOutput, initialOutput);
     });
   });
 });
