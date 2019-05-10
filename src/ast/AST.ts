@@ -5,6 +5,8 @@ import { Location } from './Location';
 import { Type, PrimitiveType } from './Type';
 import { SymbolTable, Symbol } from './SymbolTable';
 
+export type Ast = SourceFileNode;
+
 export abstract class Node {
   location?: Location;
   abstract accept<T>(visitor: AstVisitor<T>): T;

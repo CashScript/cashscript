@@ -4,14 +4,10 @@
  * - It has three different test categories: success, undefined and redefinition.
  */
 
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import { assert } from 'chai';
 import * as path from 'path';
-import { CashScriptParser } from '../../src/grammar/CashScriptParser';
-import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
 import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
-import AstBuilder from '../../src/ast/AstBuilder';
 import { SourceFileNode, Node } from '../../src/ast/AST';
 import {
   InvalidParameterTypeError,
@@ -22,6 +18,7 @@ import {
   ArrayElementError,
 } from '../../src/Errors';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
+import { parseCode } from '../../src/sdk';
 
 interface TestSetup {
   ast: Node,
@@ -29,11 +26,7 @@ interface TestSetup {
 }
 
 function setup(input: string): TestSetup {
-  const inputStream = new ANTLRInputStream(input);
-  const lexer = new CashScriptLexer(inputStream);
-  const tokenStream = new CommonTokenStream(lexer);
-  const parser = new CashScriptParser(tokenStream);
-  let ast = new AstBuilder(parser.sourceFile()).build() as SourceFileNode;
+  let ast = parseCode(input);
   ast = ast.accept(new SymbolTableTraversal()) as SourceFileNode;
   const traversal = new TypeCheckTraversal();
 
