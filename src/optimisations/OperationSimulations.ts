@@ -1,4 +1,4 @@
-import { crypto } from 'bitcore-lib-cash';
+import { BITBOX } from 'bitbox-sdk';
 import { UnaryOperator, BinaryOperator } from '../ast/Operator';
 import {
   LiteralNode,
@@ -11,6 +11,8 @@ import {
 import { GlobalFunction } from '../ast/Globals';
 import { Type, PrimitiveType } from '../ast/Type';
 import { ConstantConditionError } from '../Errors';
+
+const bitbox = new BITBOX();
 
 export function applyUnaryOperator(
   op: UnaryOperator,
@@ -174,11 +176,11 @@ export function applyGlobalFunction(node: FunctionCallNode): LiteralNode {
     case GlobalFunction.WITHIN:
       return applyWithin(parameters[0], parameters[1], parameters[2]);
     case GlobalFunction.RIPEMD160:
-      return applyHashFunction(crypto.Hash.ripemd160, parameters[0]);
+      return applyHashFunction(bitbox.Crypto.ripemd160, parameters[0]);
     case GlobalFunction.SHA1:
-      return applyHashFunction(crypto.Hash.sha1, parameters[0]);
+      return applyHashFunction(bitbox.Crypto.sha1, parameters[0]);
     case GlobalFunction.SHA256:
-      return applyHashFunction(crypto.Hash.sha256, parameters[0]);
+      return applyHashFunction(bitbox.Crypto.sha256, parameters[0]);
     // TODO: case GlobalFunction.SIGCHECK:
     default:
       throw new Error();

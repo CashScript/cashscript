@@ -23,7 +23,7 @@
   "homepage": "https://github.com/rkalis/cashscript#readme",
   "dependencies": {
     "antlr4ts": "^0.5.0-alpha.3",
-    "bitcore-lib-cash": "^8.3.0"
+    "bitbox-sdk": "^7.0.16"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
