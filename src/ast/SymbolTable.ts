@@ -4,7 +4,7 @@ import {
   FunctionDefinitionNode,
   IdentifierNode,
 } from './AST';
-import { Type } from './Type';
+import { Type, PrimitiveType } from './Type';
 
 export class Symbol {
   references: IdentifierNode[] = [];
@@ -23,7 +23,7 @@ export class Symbol {
   }
 
   static function(node: FunctionDefinitionNode) {
-    return new Symbol(node.name, Type.VOID, node.parameters.map(p => p.type));
+    return new Symbol(node.name, PrimitiveType.VOID, node.parameters.map(p => p.type));
   }
 
   toString(): string {

@@ -27,9 +27,9 @@ import {
   SpliceOpNode,
   SizeOpNode,
   TimeOpNode,
+  ArrayNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
-import { getTypeFromCtx } from './Type';
 import {
   ContractDefinitionContext,
   FunctionDefinitionContext,
@@ -46,10 +46,12 @@ import {
   SourceFileContext,
   BlockContext,
   TimeOpStatementContext,
+  ArrayContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
 import { NumberUnit, TimeOp } from './Globals';
+import { getPrimitiveTypeFromCtx } from './Type';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>
@@ -95,7 +97,7 @@ export default class AstBuilder
   }
 
   visitParameter(ctx: ParameterContext): ParameterNode {
-    const type = getTypeFromCtx(ctx.typeName());
+    const type = getPrimitiveTypeFromCtx(ctx.typeName());
     const name = ctx.Identifier().text;
     const parameter = new ParameterNode(type, name);
     parameter.location = Location.fromCtx(ctx);
@@ -103,7 +105,7 @@ export default class AstBuilder
   }
 
   visitVariableDefinition(ctx: VariableDefinitionContext): VariableDefinitionNode {
-    const type = getTypeFromCtx(ctx.typeName());
+    const type = getPrimitiveTypeFromCtx(ctx.typeName());
     const name = ctx.Identifier().text;
     const expression = this.visit(ctx.expression());
     const variableDefinition = new VariableDefinitionNode(type, name, expression);
@@ -170,16 +172,20 @@ export default class AstBuilder
       return this.createBinaryOp(ctx);
     } else if (ctx._right) {
       return this.createUnaryOp(ctx);
+    } else if (ctx.array()) {
+      return this.visit(ctx.array() as ArrayContext);
     } else if (ctx.Identifier()) {
       return this.createIdentifier(ctx);
-    } else { // literal
+    } else if (ctx.literal()) {
       const literal = ctx.literal() as LiteralContext;
       return this.createLiteral(literal);
+    } else {
+      throw new Error();
     }
   }
 
   visitCast(ctx: CastContext): CastNode {
-    const type = getTypeFromCtx(ctx.typeName());
+    const type = getPrimitiveTypeFromCtx(ctx.typeName());
     const expression = this.visit(ctx.expression());
     const cast = new CastNode(type, expression);
     cast.location = Location.fromCtx(ctx);
@@ -227,6 +233,13 @@ export default class AstBuilder
     return unaryOp;
   }
 
+  visitArray(ctx: ArrayContext): ArrayNode {
+    const elements = ctx.expression().map(e => this.visit(e));
+    const array = new ArrayNode(elements);
+    array.location = Location.fromCtx(ctx);
+    return array;
+  }
+
   createIdentifier(ctx: ExpressionContext): IdentifierNode {
     const identifier = new IdentifierNode((ctx.Identifier() as TerminalNode).text);
     identifier.location = Location.fromCtx(ctx);
@@ -240,8 +253,10 @@ export default class AstBuilder
       return this.createIntLiteral(ctx);
     } else if (ctx.StringLiteral()) {
       return this.createStringLiteral(ctx);
-    } else {
+    } else if (ctx.HexLiteral()) {
       return this.createHexLiteral(ctx);
+    } else {
+      throw new Error();
     }
   }
 

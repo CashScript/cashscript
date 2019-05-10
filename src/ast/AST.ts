@@ -2,7 +2,7 @@ import { TimeOp } from './Globals';
 import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
-import { Type } from './Type';
+import { Type, PrimitiveType } from './Type';
 import { SymbolTable, Symbol } from './SymbolTable';
 
 export abstract class Node {
@@ -240,6 +240,18 @@ export class UnaryOpNode extends ExpressionNode {
   }
 }
 
+export class ArrayNode extends ExpressionNode {
+  constructor(
+    public elements: ExpressionNode[],
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitArray(this);
+  }
+}
+
 export class IdentifierNode extends ExpressionNode implements Named {
   definition?: Symbol;
 
@@ -261,7 +273,7 @@ export class BoolLiteralNode extends LiteralNode {
     public value: boolean,
   ) {
     super();
-    this.type = Type.BOOL;
+    this.type = PrimitiveType.BOOL;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -274,7 +286,7 @@ export class IntLiteralNode extends LiteralNode {
     public value: number,
   ) {
     super();
-    this.type = Type.INT;
+    this.type = PrimitiveType.INT;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -288,7 +300,7 @@ export class StringLiteralNode extends LiteralNode {
     public quote: string,
   ) {
     super();
-    this.type = Type.STRING;
+    this.type = PrimitiveType.STRING;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -301,7 +313,7 @@ export class HexLiteralNode extends LiteralNode {
     public value: Buffer,
   ) {
     super();
-    this.type = Type.BYTES;
+    this.type = PrimitiveType.BYTES;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {

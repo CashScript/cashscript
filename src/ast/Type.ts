@@ -1,6 +1,18 @@
 import { TypeNameContext } from '../grammar/CashScriptParser';
 
-export enum Type {
+export type Type = PrimitiveType | ArrayType;
+
+export class ArrayType {
+  constructor(
+    public elementType: PrimitiveType,
+  ) {}
+
+  toString() {
+    return `${this.elementType}[]`;
+  }
+}
+
+export enum PrimitiveType {
   INT = 'int',
   BOOL = 'bool',
   STRING = 'string',
@@ -14,39 +26,64 @@ export enum Type {
   ANY = 'any',
 }
 
-const ExplicitlyCastableTo: { [key in Type]: Type[]} = {
-  [Type.INT]: [Type.INT, Type.BYTES, Type.BYTES20, Type.BYTES32, Type.BOOL],
-  [Type.BOOL]: [Type.BOOL, Type.INT],
-  [Type.STRING]: [Type.STRING, Type.BYTES],
-  [Type.PUBKEY]: [Type.PUBKEY, Type.BYTES],
-  [Type.SIG]: [Type.SIG, Type.BYTES],
-  [Type.BYTES]: [Type.BYTES, Type.SIG, Type.PUBKEY], // Could support downcasting
-  [Type.BYTES20]: [Type.BYTES20, Type.BYTES32, Type.BYTES],
-  [Type.BYTES32]: [Type.BYTES32, Type.BYTES],
-  [Type.VOID]: [],
-  [Type.ANY]: [],
+const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
+  [PrimitiveType.INT]: [
+    PrimitiveType.INT, PrimitiveType.BYTES, PrimitiveType.BYTES20,
+    PrimitiveType.BYTES32, PrimitiveType.BOOL,
+  ],
+  [PrimitiveType.BOOL]: [PrimitiveType.BOOL, PrimitiveType.INT],
+  [PrimitiveType.STRING]: [PrimitiveType.STRING, PrimitiveType.BYTES],
+  [PrimitiveType.PUBKEY]: [PrimitiveType.PUBKEY, PrimitiveType.BYTES],
+  [PrimitiveType.SIG]: [PrimitiveType.SIG, PrimitiveType.BYTES],
+  [PrimitiveType.BYTES]: [
+    PrimitiveType.BYTES, PrimitiveType.SIG, PrimitiveType.PUBKEY,
+  ], // Could support downcasting
+  [PrimitiveType.BYTES20]: [PrimitiveType.BYTES20, PrimitiveType.BYTES32, PrimitiveType.BYTES],
+  [PrimitiveType.BYTES32]: [PrimitiveType.BYTES32, PrimitiveType.BYTES],
+  [PrimitiveType.VOID]: [],
+  [PrimitiveType.ANY]: [],
 };
 
-const ImplicitlyCastableTo: { [key in Type]: Type[]} = {
-  [Type.INT]: [Type.INT, Type.ANY],
-  [Type.BOOL]: [Type.BOOL, Type.ANY],
-  [Type.STRING]: [Type.STRING, Type.ANY],
-  [Type.PUBKEY]: [Type.PUBKEY, Type.BYTES, Type.ANY],
-  [Type.SIG]: [Type.SIG, Type.BYTES, Type.ANY],
-  [Type.BYTES]: [Type.BYTES, Type.ANY], // Could support downcasting
-  [Type.BYTES20]: [Type.BYTES20, Type.BYTES32, Type.BYTES, Type.ANY],
-  [Type.BYTES32]: [Type.BYTES32, Type.BYTES, Type.ANY],
-  [Type.VOID]: [],
-  [Type.ANY]: [],
+const ImplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
+  [PrimitiveType.INT]: [PrimitiveType.INT, PrimitiveType.ANY],
+  [PrimitiveType.BOOL]: [PrimitiveType.BOOL, PrimitiveType.ANY],
+  [PrimitiveType.STRING]: [PrimitiveType.STRING, PrimitiveType.ANY],
+  [PrimitiveType.PUBKEY]: [PrimitiveType.PUBKEY, PrimitiveType.BYTES, PrimitiveType.ANY],
+  [PrimitiveType.SIG]: [PrimitiveType.SIG, PrimitiveType.BYTES, PrimitiveType.ANY],
+  [PrimitiveType.BYTES]: [PrimitiveType.BYTES, PrimitiveType.ANY], // Could support downcasting
+  [PrimitiveType.BYTES20]: [
+    PrimitiveType.BYTES20, PrimitiveType.BYTES32, PrimitiveType.BYTES, PrimitiveType.ANY,
+  ],
+  [PrimitiveType.BYTES32]: [PrimitiveType.BYTES32, PrimitiveType.BYTES, PrimitiveType.ANY],
+  [PrimitiveType.VOID]: [],
+  [PrimitiveType.ANY]: [],
 };
 
 export function explicitlyCastable(castable?: Type, castType?: Type): boolean {
   if (!castable || !castType) return false;
+
+  if (castable instanceof ArrayType && castType instanceof ArrayType) {
+    return explicitlyCastable(castable.elementType, castType.elementType);
+  }
+
+  if (castable instanceof ArrayType || castType instanceof ArrayType) {
+    return false;
+  }
+
   return ExplicitlyCastableTo[castable].includes(castType);
 }
 
 export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (!actual || !expected) return false;
+
+  if (actual instanceof ArrayType && expected instanceof ArrayType) {
+    return implicitlyCastable(actual.elementType, expected.elementType);
+  }
+
+  if (actual instanceof ArrayType || expected instanceof ArrayType) {
+    return false;
+  }
+
   return ImplicitlyCastableTo[actual].includes(expected);
 }
 
@@ -56,19 +93,32 @@ export function resultingType(left?: Type, right?: Type): Type | undefined {
   return undefined;
 }
 
-export function implicitlyCastableSignature(actual: Type[], expected: Type[]): boolean {
+export function arrayType(types: PrimitiveType[]): PrimitiveType | undefined {
+  if (types.length === 0) return undefined;
+  let resType: Type | undefined = types[0];
+  types.forEach((t) => {
+    resType = resultingType(resType, t);
+  });
+  return resType;
+}
+
+export function implicitlyCastableSignature(
+  actual: Type[],
+  expected: Type[],
+): boolean {
   if (actual.length !== expected.length) return false;
   return expected.every((t, i) => implicitlyCastable(actual[i], t));
 }
 
-export function isBytes(type?: Type): boolean {
-  return !!type && [Type.BYTES, Type.BYTES20, Type.BYTES32].includes(type);
+export function isBytes(type?: PrimitiveType): boolean {
+  if (!type) return false;
+  return [PrimitiveType.BYTES, PrimitiveType.BYTES20, PrimitiveType.BYTES32].includes(type);
 }
 
-export function getTypeFromCtx(ctx: TypeNameContext): Type {
-  return getType(ctx.text || ctx.Bytes().text);
+export function getPrimitiveTypeFromCtx(ctx: TypeNameContext): PrimitiveType {
+  return getPrimitiveType(ctx.text || ctx.Bytes().text);
 }
 
-export function getType(name: string): Type {
-  return Type[name.toUpperCase() as keyof typeof Type];
+export function getPrimitiveType(name: string): PrimitiveType {
+  return PrimitiveType[name.toUpperCase() as keyof typeof PrimitiveType];
 }

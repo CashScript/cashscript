@@ -19,6 +19,7 @@ import {
   UnequalTypeError,
   CastTypeError,
   AssignTypeError,
+  ArrayElementError,
 } from '../../src/Errors';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 
@@ -96,6 +97,18 @@ describe('Type Check', () => {
         assert.throws(() => {
           ast.accept(traversal);
         }, UnsupportedTypeError);
+      });
+    });
+  });
+
+  describe('ArrayElementError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'ArrayElementError'));
+    testCases.forEach((f) => {
+      it(`${f.fn} should throw ArrayElementError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        assert.throws(() => {
+          ast.accept(traversal);
+        }, ArrayElementError);
       });
     });
   });

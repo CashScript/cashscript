@@ -19,6 +19,7 @@ import { CastContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
+import { ArrayContext } from "./CashScriptParser";
 import { LiteralContext } from "./CashScriptParser";
 import { NumberLiteralContext } from "./CashScriptParser";
 import { TypeNameContext } from "./CashScriptParser";
@@ -204,6 +205,17 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitExpression?: (ctx: ExpressionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.array`.
+	 * @param ctx the parse tree
+	 */
+	enterArray?: (ctx: ArrayContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.array`.
+	 * @param ctx the parse tree
+	 */
+	exitArray?: (ctx: ArrayContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `CashScriptParser.literal`.

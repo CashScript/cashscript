@@ -9,7 +9,7 @@ import {
   FunctionCallNode,
 } from '../ast/AST';
 import { GlobalFunction } from '../ast/Globals';
-import { Type } from '../ast/Type';
+import { Type, PrimitiveType } from '../ast/Type';
 import { ConstantConditionError } from '../Errors';
 
 export function applyUnaryOperator(
@@ -224,9 +224,9 @@ export function applyCast(node: LiteralNode, castType: Type): LiteralNode {
 
 function castBoolean(node: BoolLiteralNode, castType: Type): LiteralNode {
   switch (castType) {
-    case Type.INT:
+    case PrimitiveType.INT:
       return new IntLiteralNode(node.value ? 1 : 0);
-    case Type.BOOL:
+    case PrimitiveType.BOOL:
       return node;
     default:
       throw new Error();
@@ -235,13 +235,13 @@ function castBoolean(node: BoolLiteralNode, castType: Type): LiteralNode {
 
 function castInt(node: IntLiteralNode, castType: Type): LiteralNode {
   switch (castType) {
-    case Type.INT:
+    case PrimitiveType.INT:
       return node;
-    case Type.BOOL:
+    case PrimitiveType.BOOL:
       return new BoolLiteralNode(node.value !== 0);
-    case Type.BYTES:
-    case Type.BYTES20:
-    case Type.BYTES32:
+    case PrimitiveType.BYTES:
+    case PrimitiveType.BYTES20:
+    case PrimitiveType.BYTES32:
       return new HexLiteralNode(Buffer.alloc(32, node.value));
     default:
       throw new Error();
@@ -250,9 +250,9 @@ function castInt(node: IntLiteralNode, castType: Type): LiteralNode {
 
 function castString(node: StringLiteralNode, castType: Type): LiteralNode {
   switch (castType) {
-    case Type.STRING:
+    case PrimitiveType.STRING:
       return node;
-    case Type.BYTES:
+    case PrimitiveType.BYTES:
       return new HexLiteralNode(Buffer.from(node.value));
     default:
       throw new Error();
@@ -261,11 +261,11 @@ function castString(node: StringLiteralNode, castType: Type): LiteralNode {
 
 function castHex(node: HexLiteralNode, castType: Type): LiteralNode {
   switch (castType) {
-    case Type.PUBKEY:
-    case Type.SIG:
-    case Type.BYTES:
-    case Type.BYTES20:
-    case Type.BYTES32:
+    case PrimitiveType.PUBKEY:
+    case PrimitiveType.SIG:
+    case PrimitiveType.BYTES:
+    case PrimitiveType.BYTES20:
+    case PrimitiveType.BYTES32:
       return node;
     default:
       throw new Error();

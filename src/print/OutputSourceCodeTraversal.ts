@@ -22,6 +22,7 @@ import {
   TimeOpNode,
   SizeOpNode,
   SpliceOpNode,
+  ArrayNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -200,6 +201,13 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(node.operator);
     node.expression = this.visit(node.expression);
     this.addOutput(')');
+    return node;
+  }
+
+  visitArray(node: ArrayNode) {
+    this.addOutput('[');
+    node.elements = this.visitCommaList(node.elements);
+    this.addOutput(']');
     return node;
   }
 

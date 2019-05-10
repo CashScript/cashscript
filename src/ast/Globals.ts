@@ -1,5 +1,5 @@
 import { SymbolTable, Symbol } from './SymbolTable';
-import { Type } from './Type';
+import { PrimitiveType } from './Type';
 
 export const NumberUnit: { [index:string] : number } = {
   SATOSHIS: 1,
@@ -33,21 +33,51 @@ export enum TimeOp {
 }
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.REQUIRE, Type.VOID, [Type.BOOL]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.ABS, Type.INT, [Type.INT]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.MIN, Type.INT, [Type.INT, Type.INT]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.MAX, Type.INT, [Type.INT, Type.INT]));
-GLOBAL_SYMBOL_TABLE.set(
-  new Symbol(GlobalFunction.WITHIN, Type.BOOL, [Type.INT, Type.INT, Type.INT]),
-);
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.RIPEMD160, Type.BYTES20, [Type.ANY]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.SHA1, Type.BYTES32, [Type.ANY]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.SHA256, Type.BYTES32, [Type.ANY]));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(GlobalFunction.SIGCHECK, Type.BOOL, [Type.SIG, Type.PUBKEY]));
-// GLOBAL_SYMBOL_TABLE.set(
-//   new Symbol(`${GlobalFunction.SIGCHECK}$single`, Type.BOOL, [Type.SIG, Type.PUBKEY]),
-// );
-// GLOBAL_SYMBOL_TABLE.set(new Symbol(`${GlobalFunction.SIGCHECK}$multi`, Type.BOOL, [Type.BYTES]));
-// GLOBAL_SYMBOL_TABLE.set(
-//   new Symbol(`${GlobalFunction.SIGCHECK}$data`, Type.BOOL, [Type.SIG, Type.BYTES, Type.PUBKEY]),
-// );
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.REQUIRE, PrimitiveType.VOID,
+  [PrimitiveType.BOOL],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.ABS, PrimitiveType.INT,
+  [PrimitiveType.INT],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.MIN, PrimitiveType.INT,
+  [PrimitiveType.INT, PrimitiveType.INT],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.MAX, PrimitiveType.INT,
+  [PrimitiveType.INT, PrimitiveType.INT],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.WITHIN, PrimitiveType.BOOL,
+  [PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.RIPEMD160, PrimitiveType.BYTES20,
+  [PrimitiveType.ANY],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.SHA1, PrimitiveType.BYTES32,
+  [PrimitiveType.ANY],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.SHA256, PrimitiveType.BYTES32,
+  [PrimitiveType.ANY],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.SIGCHECK, PrimitiveType.BOOL,
+  [PrimitiveType.SIG, PrimitiveType.PUBKEY],
+));
+// GLOBAL_SYMBOL_TABLE.set(new Symbol(
+//   `${GlobalFunction.SIGCHECK}$single`, PrimitiveType.BOOL,
+//   [PrimitiveType.SIG, PrimitiveType.PUBKEY],
+// ));
+// GLOBAL_SYMBOL_TABLE.set(new Symbol(
+//   `${GlobalFunction.SIGCHECK}$multi`, PrimitiveType.BOOL,
+//   [PrimitiveType.BYTES],
+// ));
+// GLOBAL_SYMBOL_TABLE.set(new Symbol(
+//   `${GlobalFunction.SIGCHECK}$data`, PrimitiveType.BOOL,
+//   [PrimitiveType.SIG, PrimitiveType.BYTES, PrimitiveType.PUBKEY],
+// ));

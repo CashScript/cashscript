@@ -22,6 +22,7 @@ import {
   TimeOpNode,
   SizeOpNode,
   SpliceOpNode,
+  ArrayNode,
 } from './AST';
 import AstVisitor from './AstVisitor';
 
@@ -110,6 +111,11 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
+    return node;
+  }
+
+  visitArray(node: ArrayNode): Node {
+    node.elements = this.visitList(node.elements);
     return node;
   }
 

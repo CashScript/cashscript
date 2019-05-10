@@ -1,0 +1,6 @@
+contract Test() {
+    function hello() {
+        int x = [];
+        require(x > 1);
+    }
+}

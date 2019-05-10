@@ -19,6 +19,7 @@ import { CastContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
+import { ArrayContext } from "./CashScriptParser";
 import { LiteralContext } from "./CashScriptParser";
 import { NumberLiteralContext } from "./CashScriptParser";
 import { TypeNameContext } from "./CashScriptParser";
@@ -143,6 +144,13 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitExpression?: (ctx: ExpressionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.array`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitArray?: (ctx: ArrayContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.literal`.

@@ -86,8 +86,13 @@ expression
     // | left=expression op='|' right=expression
     | left=expression op='&&' right=expression
     | left=expression op='||' right=expression
+    | array
     | Identifier
     | literal
+    ;
+
+array
+    : '[' (expression (',' expression)*)? ']'
     ;
 
 literal

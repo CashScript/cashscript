@@ -1,0 +1,5 @@
+contract Test(bytes y) {
+    function hello() {
+        require(bytes(['world']) == y);
+    }
+}

@@ -13,8 +13,9 @@ import {
   CastNode,
   AssignNode,
   BranchNode,
+  ArrayNode,
 } from './ast/AST';
-import { Type } from './ast/Type';
+import { Type, PrimitiveType } from './ast/Type';
 import { Symbol } from './ast/SymbolTable';
 
 export class CashScriptError extends Error {
@@ -118,7 +119,7 @@ export class UnsupportedTypeError extends TypeError {
     } else if (node instanceof SizeOpNode) {
       super(node, actual, expected, `Tried to access member 'length' on unsupported type '${actual}'`);
     } else if (node instanceof SpliceOpNode) {
-      if (expected === Type.INT) {
+      if (expected === PrimitiveType.INT) {
         super(node, actual, expected, `Tried to call member 'splice' on unsupported type '${actual}'`);
       } else {
         super(node, actual, expected, `Tried to call member 'splice' with unsupported parameter type '${actual}'`);
@@ -156,23 +157,19 @@ export class UnsupportedTimeOpError extends CashScriptError {
   }
 }
 
-export class UnboundedBytesTypeError extends CashScriptError {
-  constructor(
-    node: BinaryOpNode,
-  ) {
-    super(
-      node,
-      `Tried to apply operator '${node.operator}' to unbounded '${Type.BYTES}' type`
-      + ` where fixed length '${Type.BYTES20}' or '${Type.BYTES32}' was expected`,
-    );
-  }
-}
-
 export class ConstantConditionError extends CashScriptError {
   constructor(
     node: BranchNode | FunctionCallNode,
     res: boolean,
   ) {
     super(node, `Condition always evaluates to ${res}`);
+  }
+}
+
+export class ArrayElementError extends CashScriptError {
+  constructor(
+    node: ArrayNode,
+  ) {
+    super(node, 'Incorrect elements in array');
   }
 }
