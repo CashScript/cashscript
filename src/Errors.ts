@@ -14,6 +14,7 @@ import {
   AssignNode,
   BranchNode,
   ArrayNode,
+  TupleIndexOpNode,
 } from './ast/AST';
 import { Type, PrimitiveType } from './ast/Type';
 import { Symbol } from './ast/SymbolTable';
@@ -108,7 +109,7 @@ export class UnequalTypeError extends TypeError {
 
 export class UnsupportedTypeError extends TypeError {
   constructor(
-    node: BinaryOpNode | UnaryOpNode | SizeOpNode | SpliceOpNode | TimeOpNode,
+    node: BinaryOpNode | UnaryOpNode | SizeOpNode | SpliceOpNode | TimeOpNode | TupleIndexOpNode,
     actual?: Type,
     expected?: Type,
   ) {
@@ -120,12 +121,14 @@ export class UnsupportedTypeError extends TypeError {
       super(node, actual, expected, `Tried to access member 'length' on unsupported type '${actual}'`);
     } else if (node instanceof SpliceOpNode) {
       if (expected === PrimitiveType.INT) {
-        super(node, actual, expected, `Tried to call member 'splice' on unsupported type '${actual}'`);
-      } else {
         super(node, actual, expected, `Tried to call member 'splice' with unsupported parameter type '${actual}'`);
+      } else {
+        super(node, actual, expected, `Tried to call member 'splice' on unsupported type '${actual}'`);
       }
     } else if (node instanceof TimeOpNode) {
       super(node, actual, expected, `Tried to apply operator '>=' on unsupported type '${actual}'`);
+    } else if (node instanceof TupleIndexOpNode) {
+      super(node, actual, expected, `Tried to index unsupported type '${actual}'`);
     } else {
       super(node, actual, expected);
     }
@@ -171,5 +174,21 @@ export class ArrayElementError extends CashScriptError {
     node: ArrayNode,
   ) {
     super(node, 'Incorrect elements in array');
+  }
+}
+
+export class IndexOutOfBoundsError extends CashScriptError {
+  constructor(
+    node: TupleIndexOpNode,
+  ) {
+    super(node, `Index ${node.index} out of bounds`);
+  }
+}
+
+export class PrimitiveTypeError extends TypeError {
+  constructor(
+    node: Node,
+  ) {
+    super(node, undefined, undefined, 'Expected primitive type');
   }
 }

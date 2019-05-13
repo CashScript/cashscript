@@ -190,6 +190,19 @@ export class FunctionCallNode extends ExpressionNode {
   }
 }
 
+export class TupleIndexOpNode extends ExpressionNode {
+  constructor(
+    public tuple: ExpressionNode,
+    public index: number,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitTupleIndexOp(this);
+  }
+}
+
 export class SizeOpNode extends ExpressionNode {
   constructor(
     public object: ExpressionNode,

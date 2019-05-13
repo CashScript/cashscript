@@ -28,6 +28,7 @@ import {
   SizeOpNode,
   TimeOpNode,
   ArrayNode,
+  TupleIndexOpNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import {
@@ -54,6 +55,7 @@ import {
   BinaryOpContext,
   IdentifierContext,
   LiteralExpressionContext,
+  TupleIndexOpContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -147,7 +149,6 @@ export default class AstBuilder
 
   visitIfStatement(ctx: IfStatementContext): BranchNode {
     const condition = this.visit(ctx.expression());
-    // I want these _ifBlock variables to be getters @antlr4ts :(
     const ifBlock = this.visit(ctx._ifBlock) as StatementNode;
     const elseBlock = ctx._elseBlock && this.visit(ctx._elseBlock) as StatementNode;
     const branch = new BranchNode(condition, ifBlock, elseBlock);
@@ -185,6 +186,14 @@ export default class AstBuilder
     const functionCall = new FunctionCallNode(identifier, parameters);
     functionCall.location = Location.fromCtx(ctx);
     return functionCall;
+  }
+
+  visitTupleIndexOp(ctx: TupleIndexOpContext): TupleIndexOpNode {
+    const tuple = this.visit(ctx.expression());
+    const index = parseInt(ctx._index.text as string, 10);
+    const tupleIndexOp = new TupleIndexOpNode(tuple, index);
+    tupleIndexOp.location = Location.fromCtx(ctx);
+    return tupleIndexOp;
   }
 
   visitSizeOp(ctx: SizeOpContext): SizeOpNode {

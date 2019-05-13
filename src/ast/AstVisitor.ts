@@ -22,6 +22,7 @@ import {
   SpliceOpNode,
   TimeOpNode,
   ArrayNode,
+  TupleIndexOpNode,
 } from './AST';
 
 export default abstract class AstVisitor<T> {
@@ -37,6 +38,7 @@ export default abstract class AstVisitor<T> {
   abstract visitBlock(node: BlockNode): T;
   abstract visitCast(node: CastNode): T;
   abstract visitFunctionCall(node: FunctionCallNode): T;
+  abstract visitTupleIndexOp(node: TupleIndexOpNode): T;
   abstract visitSizeOp(node: SizeOpNode): T;
   abstract visitSpliceOp(node: SpliceOpNode): T;
   abstract visitBinaryOp(node: BinaryOpNode): T;

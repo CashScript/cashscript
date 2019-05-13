@@ -65,6 +65,7 @@ expression
     : '(' expression ')' # Parenthesised
     | typeName '(' expression ')' # Cast
     | functionCall # FunctionCallExpression
+    | expression '[' index=NumberLiteral ']' # TupleIndexOp
     | expression '.length' # SizeOp
     | obj=expression '.splice' '(' index=expression ')' # SpliceOp
     // | left=expression op=('++' | '--')
@@ -117,7 +118,7 @@ NumberUnit
     ;
 
 NumberLiteral
-    : [0-9]+ ([eE] [0-9]+)?
+    : [-]?[0-9]+ ([eE] [0-9]+)?
     ;
 
 StringLiteral

@@ -1,6 +1,6 @@
 import { TypeNameContext } from '../grammar/CashScriptParser';
 
-export type Type = PrimitiveType | ArrayType;
+export type Type = PrimitiveType | ArrayType | TupleType;
 
 export class ArrayType {
   constructor(
@@ -9,6 +9,16 @@ export class ArrayType {
 
   toString() {
     return `${this.elementType}[]`;
+  }
+}
+
+export class TupleType {
+  constructor(
+    public elementType?: PrimitiveType,
+  ) {}
+
+  toString() {
+    return `(${this.elementType}, ${this.elementType})`;
   }
 }
 
@@ -61,33 +71,34 @@ const ImplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
 
 export function explicitlyCastable(castable?: Type, castType?: Type): boolean {
   if (!castable || !castType) return false;
+  if (castable instanceof TupleType || castType instanceof TupleType) return false;
 
   if (castable instanceof ArrayType && castType instanceof ArrayType) {
     return explicitlyCastable(castable.elementType, castType.elementType);
   }
 
-  if (castable instanceof ArrayType || castType instanceof ArrayType) {
-    return false;
-  }
+  if (castable instanceof ArrayType || castType instanceof ArrayType) return false;
 
   return ExplicitlyCastableTo[castable].includes(castType);
 }
 
 export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (!actual || !expected) return false;
+  if (actual instanceof TupleType || expected instanceof TupleType) return false;
 
   if (actual instanceof ArrayType && expected instanceof ArrayType) {
     return implicitlyCastable(actual.elementType, expected.elementType);
   }
 
-  if (actual instanceof ArrayType || expected instanceof ArrayType) {
-    return false;
-  }
+  if (actual instanceof ArrayType || expected instanceof ArrayType) return false;
 
   return ImplicitlyCastableTo[actual].includes(expected);
 }
 
-export function resultingType(left?: Type, right?: Type): Type | undefined {
+export function resultingType(
+  left?: Type,
+  right?: Type,
+): Type | undefined {
   if (implicitlyCastable(left, right)) return right;
   if (implicitlyCastable(right, left)) return left;
   return undefined;
@@ -95,9 +106,9 @@ export function resultingType(left?: Type, right?: Type): Type | undefined {
 
 export function arrayType(types: PrimitiveType[]): PrimitiveType | undefined {
   if (types.length === 0) return undefined;
-  let resType: Type | undefined = types[0];
+  let resType: PrimitiveType | undefined = types[0];
   types.forEach((t) => {
-    resType = resultingType(resType, t);
+    resType = resultingType(resType, t) as PrimitiveType;
   });
   return resType;
 }
@@ -121,4 +132,8 @@ export function getPrimitiveTypeFromCtx(ctx: TypeNameContext): PrimitiveType {
 
 export function getPrimitiveType(name: string): PrimitiveType {
   return PrimitiveType[name.toUpperCase() as keyof typeof PrimitiveType];
+}
+
+export function isPrimitive(type: Type): type is PrimitiveType {
+  return !!PrimitiveType[type.toString().toUpperCase() as keyof typeof PrimitiveType];
 }

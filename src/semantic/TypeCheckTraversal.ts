@@ -11,6 +11,7 @@ import {
   TimeOpNode,
   VariableDefinitionNode,
   ArrayNode,
+  TupleIndexOpNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -21,6 +22,8 @@ import {
   TypeError,
   AssignTypeError,
   ArrayElementError,
+  IndexOutOfBoundsError,
+  PrimitiveTypeError,
 } from '../Errors';
 import {
   PrimitiveType,
@@ -30,6 +33,9 @@ import {
   resultingType,
   arrayType,
   ArrayType,
+  TupleType,
+  isPrimitive,
+  isBytes,
 } from '../ast/Type';
 import { BinaryOperator, UnaryOperator } from '../ast/Operator';
 import { GlobalFunction } from '../ast/Globals';
@@ -114,6 +120,21 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
+  visitTupleIndexOp(node: TupleIndexOpNode) {
+    node.tuple = this.visit(node.tuple);
+
+    if (!(node.tuple.type instanceof TupleType)) {
+      throw new UnsupportedTypeError(node, node.tuple.type, new TupleType());
+    }
+
+    if (node.index !== 0 && node.index !== 1) {
+      throw new IndexOutOfBoundsError(node);
+    }
+
+    node.type = node.tuple.type.elementType;
+    return node;
+  }
+
   visitSizeOp(node: SizeOpNode) {
     node.object = this.visit(node.object);
 
@@ -131,6 +152,10 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
 
+    if (!node.object.type || !isPrimitive(node.object.type)) {
+      throw new PrimitiveTypeError(node);
+    }
+
     if (!implicitlyCastable(node.object.type, PrimitiveType.BYTES)
      && !implicitlyCastable(node.object.type, PrimitiveType.STRING)
     ) { // Should support Bytes and String
@@ -141,8 +166,8 @@ export default class TypeCheckTraversal extends AstTraversal {
       throw new UnsupportedTypeError(node, node.object.type, PrimitiveType.INT);
     }
 
-    // TODO: Splice should return two values, left and right
-    // node.type = isBytes(node.object.type) ? PrimitiveType.BYTES : PrimitiveType.STRING;
+    const elementType = isBytes(node.object.type) ? PrimitiveType.BYTES : PrimitiveType.STRING;
+    node.type = new TupleType(elementType);
     return node;
   }
 
@@ -226,11 +251,12 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.elements = this.visitList(node.elements);
 
     const elementTypes = node.elements.map((e) => {
-      if (!e.type || e.type instanceof ArrayType) {
-        throw new ArrayElementError(node);
+      if (!e.type || !isPrimitive(e.type)) {
+        throw new PrimitiveTypeError(node);
       }
       return e.type;
     });
+
     const elementType = arrayType(elementTypes);
 
     if (!elementType) {

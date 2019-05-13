@@ -1,0 +1,6 @@
+contract Test() {
+    function hello() {
+        int x = [1, 2, 0x0010.splice(1)];
+        require(x > 1);
+    }
+}

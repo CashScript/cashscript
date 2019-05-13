@@ -23,6 +23,7 @@ import {
   SizeOpNode,
   SpliceOpNode,
   ArrayNode,
+  TupleIndexOpNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -113,6 +114,13 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
+  visitTimeOp(node: TimeOpNode) {
+    this.addOutput(`require(${node.timeOp} >= `, true);
+    node.expression = this.visit(node.expression);
+    this.addOutput(');\n');
+    return node;
+  }
+
   visitFunctionCallStatement(node: FunctionCallStatementNode) {
     this.addOutput('', true);
     node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
@@ -156,10 +164,19 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitTimeOp(node: TimeOpNode) {
-    this.addOutput(`require(${node.timeOp} >= `, true);
-    node.expression = this.visit(node.expression);
-    this.addOutput(');\n');
+  visitFunctionCall(node: FunctionCallNode) {
+    node.identifier = this.visit(node.identifier) as IdentifierNode;
+
+    this.addOutput('(');
+    node.parameters = this.visitCommaList(node.parameters);
+    this.addOutput(')');
+
+    return node;
+  }
+
+  visitTupleIndexOp(node: TupleIndexOpNode) {
+    node.tuple = this.visit(node.tuple);
+    this.addOutput(`[${node.index}]`);
     return node;
   }
 
@@ -174,16 +191,6 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput('.splice(');
     node.index = this.visit(node.index);
     this.addOutput(')');
-    return node;
-  }
-
-  visitFunctionCall(node: FunctionCallNode) {
-    node.identifier = this.visit(node.identifier) as IdentifierNode;
-
-    this.addOutput('(');
-    node.parameters = this.visitCommaList(node.parameters);
-    this.addOutput(')');
-
     return node;
   }
 
