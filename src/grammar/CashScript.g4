@@ -53,10 +53,6 @@ ifStatement
     : 'if' '(' expression ')' ifBlock=block ('else' elseBlock=block)?
     ;
 
-cast
-    : typeName '(' expression ')'
-    ;
-
 functionCall
     : id=(Identifier | 'require') expressionList // Only built-in functions are accepted
     ;
@@ -66,33 +62,29 @@ expressionList
     ;
 
 expression
-    : '(' paren=expression ')' // parentheses
-    | cast
-    | functionCall
-    | obj=expression '.length'
-    | obj=expression '.splice' '(' index=expression ')'
+    : '(' expression ')' # Parenthesised
+    | typeName '(' expression ')' # Cast
+    | functionCall # FunctionCallExpression
+    | expression '.length' # SizeOp
+    | obj=expression '.splice' '(' index=expression ')' # SpliceOp
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
-    | op=('!' | '+' | '-') right=expression
+    | op=('!' | '+' | '-') expression # UnaryOp
     // | expression '**' expression --- No power
     // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled
-    | left=expression op=('/' | '%') right=expression
-    | left=expression op=('+' | '-') right=expression
+    | left=expression op=('/' | '%') right=expression # BinaryOp
+    | left=expression op=('+' | '-') right=expression # BinaryOp
     // | expression ('>>' | '<<') expression --- OP_LSHIFT 7 RSHIFT are disabled
-    | left=expression op=('<' | '<=' | '>' | '>=') right=expression
-    | left=expression op=('==' | '!=') right=expression
-    // | left=expression op='&' right=expression --- Sisabled bitwise logic for now
+    | left=expression op=('<' | '<=' | '>' | '>=') right=expression # BinaryOp
+    | left=expression op=('==' | '!=') right=expression # BinaryOp
+    // | left=expression op='&' right=expression --- Disabled bitwise logic for now
     // | left=expression op='^' right=expression
     // | left=expression op='|' right=expression
-    | left=expression op='&&' right=expression
-    | left=expression op='||' right=expression
-    | array
-    | Identifier
-    | literal
-    ;
-
-array
-    : '[' (expression (',' expression)*)? ']'
+    | left=expression op='&&' right=expression # BinaryOp
+    | left=expression op='||' right=expression # BinaryOp
+    | '[' (expression (',' expression)*)? ']' # Array
+    | Identifier # Identifier
+    | literal # LiteralExpression
     ;
 
 literal

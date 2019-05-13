@@ -39,7 +39,6 @@ import {
   IfStatementContext,
   FunctionCallContext,
   CastContext,
-  ExpressionContext,
   LiteralContext,
   NumberLiteralContext,
   FunctionCallStatementContext,
@@ -47,6 +46,14 @@ import {
   BlockContext,
   TimeOpStatementContext,
   ArrayContext,
+  ParenthesisedContext,
+  FunctionCallExpressionContext,
+  SizeOpContext,
+  SpliceOpContext,
+  UnaryOpContext,
+  BinaryOpContext,
+  IdentifierContext,
+  LiteralExpressionContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -155,33 +162,8 @@ export default class AstBuilder
     return block;
   }
 
-  visitExpression(ctx: ExpressionContext): ExpressionNode {
-    if (ctx._paren) {
-      return this.visit(ctx._paren);
-    } else if (ctx.cast()) {
-      return this.visit(ctx.cast() as CastContext);
-    } else if (ctx._obj) {
-      if (ctx._index) {
-        return this.createSpliceOp(ctx);
-      } else {
-        return this.createSizeOp(ctx);
-      }
-    } else if (ctx.functionCall()) {
-      return this.visit(ctx.functionCall() as FunctionCallContext);
-    } else if (ctx._left) {
-      return this.createBinaryOp(ctx);
-    } else if (ctx._right) {
-      return this.createUnaryOp(ctx);
-    } else if (ctx.array()) {
-      return this.visit(ctx.array() as ArrayContext);
-    } else if (ctx.Identifier()) {
-      return this.createIdentifier(ctx);
-    } else if (ctx.literal()) {
-      const literal = ctx.literal() as LiteralContext;
-      return this.createLiteral(literal);
-    } else {
-      throw new Error();
-    }
+  visitParenthesised(ctx: ParenthesisedContext): ExpressionNode {
+    return this.visit(ctx.expression());
   }
 
   visitCast(ctx: CastContext): CastNode {
@@ -190,6 +172,10 @@ export default class AstBuilder
     const cast = new CastNode(type, expression);
     cast.location = Location.fromCtx(ctx);
     return cast;
+  }
+
+  visitFunctionCallExpression(ctx: FunctionCallExpressionContext): FunctionCallNode {
+    return this.visit(ctx.functionCall()) as FunctionCallNode;
   }
 
   visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
@@ -201,14 +187,14 @@ export default class AstBuilder
     return functionCall;
   }
 
-  createSizeOp(ctx: ExpressionContext): SizeOpNode {
-    const obj = this.visit(ctx._obj);
+  visitSizeOp(ctx: SizeOpContext): SizeOpNode {
+    const obj = this.visit(ctx.expression());
     const sizeOp = new SizeOpNode(obj);
     sizeOp.location = Location.fromCtx(ctx);
     return sizeOp;
   }
 
-  createSpliceOp(ctx: ExpressionContext): SpliceOpNode {
+  visitSpliceOp(ctx: SpliceOpContext): SpliceOpNode {
     const obj = this.visit(ctx._obj);
     const index = this.visit(ctx._index);
     const spliceOp = new SpliceOpNode(obj, index);
@@ -216,21 +202,21 @@ export default class AstBuilder
     return spliceOp;
   }
 
-  createBinaryOp(ctx: ExpressionContext): BinaryOpNode {
+  visitUnaryOp(ctx: UnaryOpContext): UnaryOpNode {
+    const operator = ctx._op.text as UnaryOperator;
+    const expression = this.visit(ctx.expression());
+    const unaryOp = new UnaryOpNode(operator, expression);
+    unaryOp.location = Location.fromCtx(ctx);
+    return unaryOp;
+  }
+
+  visitBinaryOp(ctx: BinaryOpContext): BinaryOpNode {
     const left = this.visit(ctx._left);
     const operator = ctx._op.text as BinaryOperator;
     const right = this.visit(ctx._right);
     const binaryOp = new BinaryOpNode(left, operator, right);
     binaryOp.location = Location.fromCtx(ctx);
     return binaryOp;
-  }
-
-  createUnaryOp(ctx: ExpressionContext): UnaryOpNode {
-    const operator = ctx._op.text as UnaryOperator;
-    const expression = this.visit(ctx._right);
-    const unaryOp = new UnaryOpNode(operator, expression);
-    unaryOp.location = Location.fromCtx(ctx);
-    return unaryOp;
   }
 
   visitArray(ctx: ArrayContext): ArrayNode {
@@ -240,10 +226,14 @@ export default class AstBuilder
     return array;
   }
 
-  createIdentifier(ctx: ExpressionContext): IdentifierNode {
+  visitIdentifier(ctx: IdentifierContext): IdentifierNode {
     const identifier = new IdentifierNode((ctx.Identifier() as TerminalNode).text);
     identifier.location = Location.fromCtx(ctx);
     return identifier;
+  }
+
+  visitLiteralExpression(ctx: LiteralExpressionContext): LiteralNode {
+    return this.createLiteral(ctx.literal());
   }
 
   createLiteral(ctx: LiteralContext): LiteralNode {

@@ -1,4 +1,4 @@
 import * as fs from 'fs';
-import { printAst, parseCode } from './sdk';
+import { parseCode, printAstAsCode } from './sdk';
 
-printAst(parseCode(fs.readFileSync(process.argv[2], { encoding: 'utf-8' })));
+printAstAsCode(parseCode(fs.readFileSync(process.argv[2], { encoding: 'utf-8' })));
