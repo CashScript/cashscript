@@ -104,7 +104,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const parameterTypes = node.parameters.map(p => p.type as PrimitiveType);
 
     if (!implicitlyCastableSignature(parameterTypes, definition.parameters)) {
-      throw new InvalidParameterTypeError(node, definition.parameters, parameterTypes);
+      throw new InvalidParameterTypeError(node, parameterTypes, definition.parameters);
     }
 
     // Additional array length check for checkMultiSig

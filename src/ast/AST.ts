@@ -166,7 +166,7 @@ export abstract class ExpressionNode extends Node {
 
 export class CastNode extends ExpressionNode implements Typed {
   constructor(
-    public type: Type,
+    public type: PrimitiveType,
     public expression: ExpressionNode,
   ) {
     super();

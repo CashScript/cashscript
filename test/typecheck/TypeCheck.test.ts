@@ -8,7 +8,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
-import { SourceFileNode, Node } from '../../src/ast/AST';
+import { Node, Ast } from '../../src/ast/AST';
 import {
   InvalidParameterTypeError,
   UnsupportedTypeError,
@@ -29,7 +29,7 @@ interface TestSetup {
 
 function setup(input: string): TestSetup {
   let ast = parseCode(input);
-  ast = ast.accept(new SymbolTableTraversal()) as SourceFileNode;
+  ast = ast.accept(new SymbolTableTraversal()) as Ast;
   const traversal = new TypeCheckTraversal();
 
   return { ast, traversal };

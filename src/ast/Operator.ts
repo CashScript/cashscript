@@ -1,3 +1,8 @@
+import { GlobalFunction, TimeOp } from './Globals';
+import { PrimitiveType } from './Type';
+
+export type Operator = UnaryOperator | BinaryOperator | GlobalFunction | TimeOp | PrimitiveType | 'size' | 'splice';
+
 export enum UnaryOperator {
   NOT = '!',
   PLUS = '+',
