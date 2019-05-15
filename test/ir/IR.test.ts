@@ -19,6 +19,11 @@ import {
   Op,
   PushInt,
   PushString,
+  If,
+  Replace,
+  Drop,
+  EndIf,
+  Else,
 } from '../../src/ir/IR';
 
 interface TestSetup {
@@ -70,5 +75,27 @@ describe('IR', () => {
     ];
     assert.deepEqual(traversal.output, expectedIr);
     assert.deepEqual(traversal.stack, ['hw', 'hw', 'myOtherVariable', 'myVariable', 'x', 'y', 'pk', 's']);
+  });
+
+  it('should compile if_statements contract (includes scoped variables / reassignment)', () => {
+    const code = fs.readFileSync(path.join(__dirname, 'fixture', 'if_statement.cash'), { encoding: 'utf-8' });
+    const { ast, traversal } = setup(code);
+    ast.accept(traversal);
+    const expectedIr: Op[] = [
+      new Get(2), new Get(4), new Call(BinaryOperator.PLUS),
+      new Get(0), new Get(4), new Call(BinaryOperator.MINUS),
+      new Get(0), new Get(3), new PushInt(2), new Call(BinaryOperator.MINUS),
+      new Call(BinaryOperator.EQ), new If(),
+      new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
+      new Get(5), new Get(1), new Call(BinaryOperator.PLUS), new Replace(2),
+      new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
+      new Drop(), new Else(),
+      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+      new EndIf(),
+      new Get(0), new Get(5), new Call(BinaryOperator.PLUS),
+      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+    ];
+    assert.deepEqual(traversal.output, expectedIr);
+    assert.deepEqual(traversal.stack, ['d', 'd', 'd', 'x', 'y', 'a', 'b']);
   });
 });

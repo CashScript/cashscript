@@ -75,6 +75,18 @@ export class Get extends IntermediateOp {
   }
 }
 
+export class Replace extends IntermediateOp {
+  constructor(
+    public index: number,
+  ) {
+    super();
+  }
+
+  toString() {
+    return `|replace (${this.index})|`;
+  }
+}
+
 export class If extends Op {
   toString() {
     return 'IF';

@@ -35,6 +35,7 @@ import {
   PushBool,
   PushString,
   PushBytes,
+  Replace,
 } from './IR';
 import { GlobalFunction } from '../ast/Globals';
 import { PrimitiveType } from '../ast/Type';
@@ -42,6 +43,8 @@ import { PrimitiveType } from '../ast/Type';
 export default class GenerateIrTraversal extends AstTraversal {
   output: Op[] = [];
   stack: string[] = [];
+
+  private scopeDepth = 0;
 
   private emit(op: Op, addToFront?: boolean) {
     if (addToFront) {
@@ -112,8 +115,13 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitAssign(node: AssignNode) {
     node.expression = this.visit(node.expression);
-    this.popFromStack();
-    this.pushToStack(node.identifier.name);
+    if (this.scopeDepth > 0) {
+      this.emit(new Replace(this.getStackIndex(node.identifier.name)));
+      this.popFromStack();
+    } else {
+      this.popFromStack();
+      this.pushToStack(node.identifier.name);
+    }
     return node;
   }
 
@@ -127,17 +135,33 @@ export default class GenerateIrTraversal extends AstTraversal {
   // TODO: Doesn't support scoped variables yet
   visitBranch(node: BranchNode) {
     node.condition = this.visit(node.condition);
-    this.emit(new If());
     this.popFromStack();
 
+    this.scopeDepth += 1;
+    this.emit(new If());
+
+    let stackDepth = this.stack.length;
     node.ifBlock = this.visit(node.ifBlock);
+    this.removeScopedVariables(stackDepth);
+
     if (node.elseBlock) {
       this.emit(new Else());
+      stackDepth = this.stack.length;
       node.elseBlock = this.visit(node.elseBlock);
+      this.removeScopedVariables(stackDepth);
     }
 
     this.emit(new EndIf());
+    this.scopeDepth -= 1;
+
     return node;
+  }
+
+  removeScopedVariables(depthBeforeScope: number) {
+    for (let i = 0; i < this.stack.length - depthBeforeScope; i += 1) {
+      this.emit(new Drop());
+      this.popFromStack();
+    }
   }
 
   visitCast(node: CastNode) {
