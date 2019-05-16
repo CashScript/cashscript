@@ -47,12 +47,8 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   private scopeDepth = 0;
 
-  private emit(op: Op, addToFront?: boolean) {
-    if (addToFront) {
-      this.output.unshift(op);
-    } else {
-      this.output.push(op);
-    }
+  private emit(op: Op) {
+    this.output.push(op);
   }
 
   private pushToStack(value: string, pushToBottom?: boolean) {
@@ -79,14 +75,6 @@ export default class GenerateIrTraversal extends AstTraversal {
     return index;
   }
 
-  // private remove(op: Op) {
-  //   const index = this.output.findIndex(o => o.toString() === op.toString());
-  //   if (index) {
-  //     this.output.splice(index, 1);
-  //   }
-  // }
-
-  // TODO: Only works with single functions
   visitContract(node: ContractNode) {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     if (node.functions.length === 1) {
