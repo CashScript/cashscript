@@ -9,13 +9,14 @@
   "scripts": {
     "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
     "test": "nyc mocha",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "lint": "eslint . --ext .ts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rkalis/cashscript.git"
   },
-  "author": "Rosco Kalis <roscokalis@gmail.com>",
+  "author": "Rosco Kalis <rosco@bitcoin.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/rkalis/cashscript/issues"
@@ -34,6 +35,7 @@
     "@typescript-eslint/parser": "^1.7.0",
     "antlr4ts-cli": "^0.5.0-alpha.3",
     "chai": "^4.2.0",
+    "codecov": "^3.5.0",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-typescript": "^3.0.0",
     "eslint-plugin-import": "^2.17.2",

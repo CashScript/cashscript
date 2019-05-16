@@ -1,0 +1,15 @@
+language: node_js
+
+node_js:
+  - "10"
+
+script:
+  - yarn test
+  - yarn lint
+
+after_success:
+  - yarn coverage
+
+notifications:
+  email:
+    rosco+travis@bitcoin.com
