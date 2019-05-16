@@ -111,7 +111,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
       const sigs = node.parameters[0] as ArrayNode;
       const pks = node.parameters[1] as ArrayNode;
-      if (sigs.elements.length !== pks.elements.length) {
+      if (sigs.elements.length > pks.elements.length) {
         throw new ArrayElementError(pks);
       }
     }
