@@ -24,6 +24,7 @@ import {
   Drop,
   EndIf,
   Else,
+  Nip,
 } from '../../src/ir/IR';
 
 interface TestSetup {
@@ -163,7 +164,7 @@ describe('IR', () => {
     assert.deepEqual(traversal.stack, ['d', 'd', 'd', 'x', 'y', '$$', 'b']);
   });
 
-  it('should compile multisig', () => {
+  it('should compile 2_of_3_multisig.cash (multisig / array)', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', '2_of_3_multisig.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
@@ -179,7 +180,21 @@ describe('IR', () => {
     assert.deepEqual(traversal.stack, ['pk1', 'pk2', 'pk3', 's1', 's2']);
   });
 
-  it('should compile splice/tuple/size', () => {
-    // TODO
+  it('should compile splice_size.cash (splice, tuple, size)', () => {
+    const code = fs.readFileSync(path.join(__dirname, 'fixture', 'splice_size.cash'), { encoding: 'utf-8' });
+    const { ast, traversal } = setup(code);
+    ast.accept(traversal);
+    const expectedIr: Op[] = [
+      new Get(0), new Get(1), new Call('size'), new PushInt(2), new Call(BinaryOperator.DIV),
+      new Call('splice'), new Nip(),
+      new Get(0), new Get(2), new Call(BinaryOperator.NE), new Call(GlobalFunction.REQUIRE),
+      new Get(1), new PushInt(4), new Call('splice'), new Drop(), new Get(1),
+      new Call(BinaryOperator.NE), new Call(GlobalFunction.REQUIRE),
+    ];
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
+    assert.deepEqual(traversal.stack, ['x', 'b']);
   });
 });

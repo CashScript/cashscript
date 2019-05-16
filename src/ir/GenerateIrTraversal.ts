@@ -216,6 +216,7 @@ export default class GenerateIrTraversal extends AstTraversal {
   visitSizeOp(node: SizeOpNode) {
     node.object = this.visit(node.object);
     this.emit(new Call('size'));
+    this.popFromStack();
     this.pushToStack('(value)');
     return node;
   }
