@@ -39,6 +39,7 @@ import {
 } from './IR';
 import { GlobalFunction } from '../ast/Globals';
 import { PrimitiveType } from '../ast/Type';
+import { BinaryOperator } from '../ast/Operator';
 
 export default class GenerateIrTraversal extends AstTraversal {
   output: Op[] = [];
@@ -87,9 +88,28 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   // TODO: Only works with single functions
   visitContract(node: ContractNode) {
+    node.parameters = this.visitList(node.parameters) as ParameterNode[];
     if (node.functions.length === 1) {
-      node.parameters = this.visitList(node.parameters) as ParameterNode[];
       node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
+    } else {
+      this.pushToStack('$$', true);
+      node.functions = node.functions.map((f, i) => {
+        const stackCopy = [...this.stack];
+        this.emit(new Get(this.getStackIndex('$$')));
+        this.emit(new PushInt(i));
+        this.emit(new Call(BinaryOperator.EQ));
+        this.emit(new If());
+        f = this.visit(f) as FunctionDefinitionNode;
+
+        if (i < node.functions.length - 1) {
+          this.emit(new Else());
+          this.stack = [...stackCopy];
+        }
+
+        return f;
+      });
+
+      node.functions.forEach(() => this.emit(new EndIf()));
     }
 
     return node;

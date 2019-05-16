@@ -11,7 +11,7 @@ import { Node, Ast } from '../../src/ast/AST';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/sdk';
 import GenerateIrTraversal from '../../src/ir/GenerateIrTraversal';
-import { GlobalFunction } from '../../src/ast/Globals';
+import { GlobalFunction, TimeOp } from '../../src/ast/Globals';
 import { BinaryOperator } from '../../src/ast/Operator';
 import {
   Call,
@@ -52,7 +52,10 @@ describe('IR', () => {
       new Get(2), new Get(2), new Call(GlobalFunction.CHECKSIG),
       new Call(GlobalFunction.REQUIRE),
     ];
-    assert.deepEqual(traversal.output, expectedIr);
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
     assert.deepEqual(traversal.stack, ['pkh', 'pk', 's']);
   });
 
@@ -73,7 +76,10 @@ describe('IR', () => {
       new Get(7), new Get(7), new Call(GlobalFunction.CHECKSIG),
       new Call(GlobalFunction.REQUIRE),
     ];
-    assert.deepEqual(traversal.output, expectedIr);
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
     assert.deepEqual(traversal.stack, ['hw', 'hw', 'myOtherVariable', 'myVariable', 'x', 'y', 'pk', 's']);
   });
 
@@ -95,7 +101,73 @@ describe('IR', () => {
       new Get(0), new Get(5), new Call(BinaryOperator.PLUS),
       new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
     ];
-    assert.deepEqual(traversal.output, expectedIr);
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
     assert.deepEqual(traversal.stack, ['d', 'd', 'd', 'x', 'y', 'a', 'b']);
+  });
+
+  it('should compile transfer_with_timeout (multi-function contract)', () => {
+    const code = fs.readFileSync(path.join(__dirname, 'fixture', 'transfer_with_timeout.cash'), { encoding: 'utf-8' });
+    const { ast, traversal } = setup(code);
+    ast.accept(traversal);
+    const expectedIr: Op[] = [
+      new Get(3), new PushInt(0), new Call(BinaryOperator.EQ), new If(),
+      new Get(4), new Get(2), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
+      new Else(), new Get(3), new PushInt(1), new Call(BinaryOperator.EQ), new If(),
+      new Get(4), new Get(1), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
+      new Get(2), new Call(TimeOp.CHECK_LOCKTIME),
+      new EndIf(), new EndIf(),
+    ];
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
+    assert.deepEqual(traversal.stack, ['sender', 'recipient', 'timeout', '$$', 'senderSig']);
+  });
+
+  it('should compile multifunction_if_statements.cash (multi-function, scoping, reassignment)', () => {
+    const code = fs.readFileSync(path.join(__dirname, 'fixture', 'multifunction_if_statements.cash'), { encoding: 'utf-8' });
+    const { ast, traversal } = setup(code);
+    ast.accept(traversal);
+    const expectedIr: Op[] = [
+      new Get(2), new PushInt(0), new Call(BinaryOperator.EQ), new If(),
+      new Get(3), new Get(5), new Call(BinaryOperator.PLUS),
+      new Get(0), new Get(5), new Call(BinaryOperator.MINUS),
+      new Get(0), new Get(3), new Call(BinaryOperator.EQ), new If(),
+      new Get(0), new Get(7), new Call(BinaryOperator.PLUS),
+      new Get(6), new Get(1), new Call(BinaryOperator.PLUS), new Replace(2),
+      new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
+      new Drop(), new Else(),
+      new Get(5), new Replace(1),
+      new EndIf(),
+      new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
+      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+      new Else(), new Get(2), new PushInt(1), new Call(BinaryOperator.EQ), new If(),
+      new Get(3),
+      new Get(0), new PushInt(2), new Call(BinaryOperator.PLUS),
+      new Get(0), new Get(3), new Call(BinaryOperator.EQ), new If(),
+      new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
+      new Get(0), new Get(2), new Call(BinaryOperator.PLUS), new Replace(2),
+      new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
+      new Drop(), new EndIf(),
+      new Get(5),
+      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+      new EndIf(), new EndIf(),
+    ];
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
+    assert.deepEqual(traversal.stack, ['d', 'd', 'd', 'x', 'y', '$$', 'b']);
+  });
+
+  it('should compile multisig', () => {
+    // TODO
+  });
+
+  it('should compile splice/tuple/size', () => {
+    // TODO
   });
 });
