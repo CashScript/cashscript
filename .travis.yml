@@ -1,7 +1,7 @@
 language: node_js
 
 node_js:
-  - "10"
+  - '10'
 
 script:
   - yarn test
@@ -11,5 +11,6 @@ after_success:
   - yarn coverage
 
 notifications:
-  email:
-    rosco+travis@bitcoin.com
+  email: rosco+travis@bitcoin.com
+  slack:
+    secure: HqS5zNMghQLm6+WDpQ77d7Blq7hfY7pQ3qQ5fsLaMldO/+tZ0GiO99Eq0KSIUpaPzJf0H+aHV8klCIw2ryzfQPcxwnQHRBFBAY9vJi9DmZ2et8XPocKJ5kQwigyxlo0Nj4r+Oiy/9sYy7vcfxReqNhP8Cjzirdg5wmrV8NMrSEGgnKWihJc6n5oKWjFJyYYT8TpW0ED3qks3BKjPJ3/FcQ0DEpL2gIuYT+FShQmFj7JGTfQ0n8IgMA+UnH3O24ZvN0mpcpyvsdsVAhWcvtj56YXT7hyXfA7K9l5ObKjda/OD3mtuWpsAzd4RIIqR1l+9rYz3+g2ry1F+Zzs+5Pi8ydF0hTyCs+wzaC2WabR36DEP/NGzUtSKIjw3X9cYiCoqJrRifaJXAUzIhPTUFdfjkUqzPRwhRZXSW5RxDhVlrQDPoWLUGpNbdDr7PqRogkK5vEtZszZc+YGw3q/qoO4TUw4OhfhNBr8vCHedcv2ioG4YIpyhpQsPrKyN5PS6LYvZV5S/Ec3TFs8BtUfoXbUxaWozHGxAcG6Ok3B66laO9GVhjKVb3AE2KGkWvmC5c18SE9GqKn4zdZN+BdLI0cmP9yPveJB08xYzpWmD58KMcmJ9HIsEEMXvNNNx3/qa1dXjYE/+t3UPTFE+u5xRE4oH/5iJpQceL57Ov/SyPRBlni0=
