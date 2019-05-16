@@ -1,0 +1,5 @@
+contract MultiSig(pubkey pk1, pubkey pk2, pubkey pk3) {
+  function spend(sig s1, sig s2) {
+    require(checkMultiSig([s1, s2], [pk1, pk2, pk3]));
+  }
+}

@@ -164,7 +164,19 @@ describe('IR', () => {
   });
 
   it('should compile multisig', () => {
-    // TODO
+    const code = fs.readFileSync(path.join(__dirname, 'fixture', '2_of_3_multisig.cash'), { encoding: 'utf-8' });
+    const { ast, traversal } = setup(code);
+    ast.accept(traversal);
+    const expectedIr: Op[] = [
+      new Get(3), new Get(5), new PushInt(2),
+      new Get(3), new Get(5), new Get(7), new PushInt(3),
+      new Call(GlobalFunction.CHECKMULTISIG), new Call(GlobalFunction.REQUIRE),
+    ];
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
+    assert.deepEqual(traversal.stack, ['pk1', 'pk2', 'pk3', 's1', 's2']);
   });
 
   it('should compile splice/tuple/size', () => {
