@@ -12,7 +12,7 @@ import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/sdk';
 import GenerateIrTraversal from '../../src/ir/GenerateIrTraversal';
 import { GlobalFunction, TimeOp } from '../../src/ast/Globals';
-import { BinaryOperator } from '../../src/ast/Operator';
+import { BinaryOperator, UnaryOperator } from '../../src/ast/Operator';
 import {
   Call,
   Get,
@@ -25,7 +25,10 @@ import {
   EndIf,
   Else,
   Nip,
+  PushBytes,
+  PushBool,
 } from '../../src/ir/IR';
+import { PrimitiveType } from '../../src/ast/Type';
 
 interface TestSetup {
   ast: Node,
@@ -196,5 +199,23 @@ describe('IR', () => {
       expectedIr.map(o => o.toString()),
     );
     assert.deepEqual(traversal.stack, ['x', 'b']);
+  });
+
+  it('should compile simple_operations.cash', () => {
+    const code = fs.readFileSync(path.join(__dirname, 'fixture', 'simple_operations.cash'), { encoding: 'utf-8' });
+    const { ast, traversal } = setup(code);
+    ast.accept(traversal);
+    const expectedIr: Op[] = [
+      new Get(0), new Call(PrimitiveType.BYTES), new Call(GlobalFunction.RIPEMD160),
+      new PushBytes(Buffer.from('0', 'hex')), new Call(GlobalFunction.RIPEMD160),
+      new Call(BinaryOperator.EQ), new PushBool(true), new Call(UnaryOperator.NOT),
+      new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+      new Get(1), new Get(1), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
+    ];
+    assert.deepEqual(
+      traversal.output.map(o => o.toString()),
+      expectedIr.map(o => o.toString()),
+    );
+    assert.deepEqual(traversal.stack, ['pk', 's']);
   });
 });
