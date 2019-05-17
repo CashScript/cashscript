@@ -1,7 +1,7 @@
 import { Operator } from '../ast/Operator';
 
-export class IntermediateOp {}
-export class Op extends IntermediateOp {}
+export abstract class IntermediateOp {}
+export type Op = IntermediateOp | Operator;
 
 export class PushBool extends IntermediateOp {
   constructor(
@@ -84,35 +84,5 @@ export class Replace extends IntermediateOp {
 
   toString() {
     return `|replace (${this.index})|`;
-  }
-}
-
-export class If extends Op {
-  toString() {
-    return 'IF';
-  }
-}
-
-export class Else extends Op {
-  toString() {
-    return 'ELSE';
-  }
-}
-
-export class EndIf extends Op {
-  toString() {
-    return 'ENDIF';
-  }
-}
-
-export class Drop extends Op {
-  toString() {
-    return 'DROP';
-  }
-}
-
-export class Nip extends Op {
-  toString() {
-    return 'NIP';
   }
 }

@@ -25,21 +25,23 @@ import {
 import AstTraversal from '../ast/AstTraversal';
 import {
   Call,
-  If,
-  Else,
-  EndIf,
-  Op,
-  Drop,
-  Nip,
   PushInt,
   Get,
   PushBool,
   PushString,
   PushBytes,
   Replace,
+  Op,
 } from './IR';
 import { GlobalFunction } from '../ast/Globals';
 import { BinaryOperator } from '../ast/Operator';
+import {
+  If,
+  Else,
+  EndIf,
+  Drop,
+  Nip,
+} from './Script';
 
 export default class GenerateIrTraversal extends AstTraversal {
   output: Op[] = [];

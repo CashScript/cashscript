@@ -10,25 +10,27 @@ import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import { Node, Ast } from '../../src/ast/AST';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/sdk';
-import GenerateIrTraversal from '../../src/ir/GenerateIrTraversal';
 import { GlobalFunction, TimeOp } from '../../src/ast/Globals';
 import { BinaryOperator, UnaryOperator } from '../../src/ast/Operator';
 import {
   Call,
   Get,
-  Op,
   PushInt,
   PushString,
-  If,
   Replace,
-  Drop,
-  EndIf,
-  Else,
-  Nip,
   PushBytes,
   PushBool,
-} from '../../src/ir/IR';
+  Op,
+} from '../../src/generation/IR';
 import { PrimitiveType } from '../../src/ast/Type';
+import GenerateIrTraversal from '../../src/generation/GenerateIrTraversal';
+import {
+  Else,
+  If,
+  EndIf,
+  Drop,
+  Nip,
+} from '../../src/generation/Script';
 
 interface TestSetup {
   ast: Node,
