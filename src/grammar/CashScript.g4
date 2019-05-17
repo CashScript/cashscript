@@ -29,7 +29,7 @@ statement
     : variableDefinition
     | assignStatement
     | timeOpStatement
-    | functionCallStatement
+    | requireStatement
     | ifStatement
     ;
 
@@ -45,8 +45,8 @@ timeOpStatement
     : 'require' '(' TxVar '>=' expression ')' ';'
     ;
 
-functionCallStatement
-    : functionCall ';'
+requireStatement
+    : 'require' '(' expression ')' ';'
     ;
 
 ifStatement
@@ -54,7 +54,7 @@ ifStatement
     ;
 
 functionCall
-    : id=(Identifier | 'require') expressionList // Only built-in functions are accepted
+    : Identifier expressionList // Only built-in functions are accepted
     ;
 
 expressionList

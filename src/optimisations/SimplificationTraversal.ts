@@ -12,6 +12,7 @@ import {
   StringLiteralNode,
   HexLiteralNode,
   BoolLiteralNode,
+  RequireNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -24,6 +25,16 @@ import {
 import { ConstantConditionError } from '../Errors';
 
 export default class SimplificationTraversal extends AstTraversal {
+  visitRequire(node: RequireNode) {
+    node.expression = this.visit(node.expression);
+
+    if (node.expression instanceof BoolLiteralNode) {
+      throw new ConstantConditionError(node, node.expression.value);
+    }
+
+    return node;
+  }
+
   visitBranch(node: BranchNode) {
     node.condition = this.visit(node.condition);
     node.ifBlock = this.visit(node.ifBlock) as BlockNode;

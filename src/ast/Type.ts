@@ -32,7 +32,6 @@ export enum PrimitiveType {
   BYTES = 'bytes',
   BYTES20 = 'bytes20',
   BYTES32 = 'bytes32',
-  VOID = 'void',
   ANY = 'any',
 }
 
@@ -50,7 +49,6 @@ const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
   ], // Could support downcasting
   [PrimitiveType.BYTES20]: [PrimitiveType.BYTES20, PrimitiveType.BYTES32, PrimitiveType.BYTES],
   [PrimitiveType.BYTES32]: [PrimitiveType.BYTES32, PrimitiveType.BYTES],
-  [PrimitiveType.VOID]: [],
   [PrimitiveType.ANY]: [],
 };
 
@@ -65,7 +63,6 @@ const ImplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
     PrimitiveType.BYTES20, PrimitiveType.BYTES32, PrimitiveType.BYTES, PrimitiveType.ANY,
   ],
   [PrimitiveType.BYTES32]: [PrimitiveType.BYTES32, PrimitiveType.BYTES, PrimitiveType.ANY],
-  [PrimitiveType.VOID]: [],
   [PrimitiveType.ANY]: [],
 };
 

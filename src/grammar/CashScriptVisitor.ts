@@ -24,7 +24,7 @@ import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
 import { AssignStatementContext } from "./CashScriptParser";
 import { TimeOpStatementContext } from "./CashScriptParser";
-import { FunctionCallStatementContext } from "./CashScriptParser";
+import { RequireStatementContext } from "./CashScriptParser";
 import { IfStatementContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
@@ -201,11 +201,11 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitTimeOpStatement?: (ctx: TimeOpStatementContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `CashScriptParser.functionCallStatement`.
+	 * Visit a parse tree produced by `CashScriptParser.requireStatement`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitFunctionCallStatement?: (ctx: FunctionCallStatementContext) => Result;
+	visitRequireStatement?: (ctx: RequireStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.ifStatement`.

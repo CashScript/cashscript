@@ -46,17 +46,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
-  visitVariableDefinition(node: VariableDefinitionNode) {
-    if (this.symbolTables[0].get(node.name)) {
-      throw new VariableRedefinitionError(node);
-    }
-
-    node.expression = this.visit(node.expression);
-    this.symbolTables[0].set(Symbol.variable(node));
-
-    return node;
-  }
-
   visitFunctionDefinition(node: FunctionDefinitionNode) {
     // Checked for function redefinition, but they are not included in the
     // symbol table, as internal function calls are not supported.
@@ -92,6 +81,17 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     this.symbolTables.shift();
+    return node;
+  }
+
+  visitVariableDefinition(node: VariableDefinitionNode) {
+    if (this.symbolTables[0].get(node.name)) {
+      throw new VariableRedefinitionError(node);
+    }
+
+    node.expression = this.visit(node.expression);
+    this.symbolTables[0].set(Symbol.variable(node));
+
     return node;
   }
 

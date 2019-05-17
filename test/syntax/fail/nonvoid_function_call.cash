@@ -1,0 +1,6 @@
+contract Test() {
+    function hello() {
+        require(true);
+        ripemd160(true);
+    }
+}

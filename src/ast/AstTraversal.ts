@@ -17,13 +17,13 @@ import {
   HexLiteralNode,
   StringLiteralNode,
   StatementNode,
-  FunctionCallStatementNode,
   BlockNode,
   TimeOpNode,
   SizeOpNode,
   SpliceOpNode,
   ArrayNode,
   TupleIndexOpNode,
+  RequireNode,
 } from './AST';
 import AstVisitor from './AstVisitor';
 
@@ -65,8 +65,8 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
-  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
-    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
+  visitRequire(node: RequireNode): Node {
+    node.expression = this.visit(node.expression);
     return node;
   }
 

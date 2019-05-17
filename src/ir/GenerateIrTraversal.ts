@@ -20,6 +20,7 @@ import {
   SpliceOpNode,
   ArrayNode,
   TupleIndexOpNode,
+  RequireNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -38,7 +39,6 @@ import {
   Replace,
 } from './IR';
 import { GlobalFunction } from '../ast/Globals';
-import { PrimitiveType } from '../ast/Type';
 import { BinaryOperator } from '../ast/Operator';
 
 export default class GenerateIrTraversal extends AstTraversal {
@@ -140,7 +140,13 @@ export default class GenerateIrTraversal extends AstTraversal {
     return node;
   }
 
-  // TODO: Doesn't support scoped variables yet
+  visitRequire(node: RequireNode) {
+    node.expression = this.visit(node.expression);
+    this.emit(new Call(GlobalFunction.REQUIRE));
+    this.popFromStack();
+    return node;
+  }
+
   visitBranch(node: BranchNode) {
     node.condition = this.visit(node.condition);
     this.popFromStack();
@@ -192,9 +198,7 @@ export default class GenerateIrTraversal extends AstTraversal {
       this.popFromStack(node.parameters.length);
     }
 
-    if (node.type !== PrimitiveType.VOID) {
-      this.pushToStack('(value)');
-    }
+    this.pushToStack('(value)');
 
     return node;
   }

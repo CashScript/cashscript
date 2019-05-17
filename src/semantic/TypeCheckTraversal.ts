@@ -12,6 +12,7 @@ import {
   VariableDefinitionNode,
   ArrayNode,
   TupleIndexOpNode,
+  RequireNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -67,6 +68,17 @@ export default class TypeCheckTraversal extends AstTraversal {
 
     if (!implicitlyCastable(node.expression.type, PrimitiveType.INT)) {
       throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.INT);
+    }
+
+    return node;
+  }
+
+  visitRequire(node: RequireNode) {
+    node.expression = this.visit(node.expression);
+
+    if (!implicitlyCastable(node.expression.type, PrimitiveType.BOOL)) {
+      const actual = node.expression.type ? [node.expression.type] : [];
+      throw new InvalidParameterTypeError(node, actual, [PrimitiveType.BOOL]);
     }
 
     return node;

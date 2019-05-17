@@ -16,13 +16,13 @@ import {
   IntLiteralNode,
   HexLiteralNode,
   StringLiteralNode,
-  FunctionCallStatementNode,
   BlockNode,
   SizeOpNode,
   SpliceOpNode,
   TimeOpNode,
   ArrayNode,
   TupleIndexOpNode,
+  RequireNode,
 } from './AST';
 
 export default abstract class AstVisitor<T> {
@@ -33,7 +33,7 @@ export default abstract class AstVisitor<T> {
   abstract visitVariableDefinition(node: VariableDefinitionNode): T;
   abstract visitAssign(node: AssignNode): T;
   abstract visitTimeOp(node: TimeOpNode): T;
-  abstract visitFunctionCallStatement(node: FunctionCallStatementNode): T;
+  abstract visitRequire(node: RequireNode): T;
   abstract visitBranch(node: BranchNode): T;
   abstract visitBlock(node: BlockNode): T;
   abstract visitCast(node: CastNode): T;

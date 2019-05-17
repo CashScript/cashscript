@@ -36,10 +36,6 @@ export enum TimeOp {
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.REQUIRE, PrimitiveType.VOID, undefined,
-  [PrimitiveType.BOOL],
-));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(
   GlobalFunction.ABS, PrimitiveType.INT, undefined,
   [PrimitiveType.INT],
 ));

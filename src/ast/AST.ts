@@ -77,10 +77,9 @@ export class ParameterNode extends Node implements Named, Typed {
   }
 }
 
-export type StatementNode =
-VariableDefinitionNode | AssignNode | TimeOpNode | FunctionCallStatementNode | BranchNode;
+export abstract class StatementNode extends Node {}
 
-export class VariableDefinitionNode extends Node implements Named, Typed {
+export class VariableDefinitionNode extends StatementNode implements Named, Typed {
   constructor(
     public type: Type,
     public name: string,
@@ -94,7 +93,7 @@ export class VariableDefinitionNode extends Node implements Named, Typed {
   }
 }
 
-export class AssignNode extends Node {
+export class AssignNode extends StatementNode {
   constructor(
     public identifier: IdentifierNode,
     public expression: ExpressionNode,
@@ -107,7 +106,7 @@ export class AssignNode extends Node {
   }
 }
 
-export class TimeOpNode extends Node {
+export class TimeOpNode extends StatementNode {
   constructor(
     public timeOp: TimeOp,
     public expression: ExpressionNode,
@@ -120,19 +119,19 @@ export class TimeOpNode extends Node {
   }
 }
 
-export class FunctionCallStatementNode extends Node {
+export class RequireNode extends StatementNode {
   constructor(
-    public functionCall: FunctionCallNode,
+    public expression: ExpressionNode,
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitFunctionCallStatement(this);
+    return visitor.visitRequire(this);
   }
 }
 
-export class BranchNode extends Node {
+export class BranchNode extends StatementNode {
   constructor(
     public condition: ExpressionNode,
     public ifBlock: BlockNode,

@@ -15,6 +15,7 @@ import {
   BranchNode,
   ArrayNode,
   TupleIndexOpNode,
+  RequireNode,
 } from './ast/AST';
 import { Type, PrimitiveType } from './ast/Type';
 import { Symbol } from './ast/SymbolTable';
@@ -86,13 +87,14 @@ export class TypeError extends CashScriptError {
 
 export class InvalidParameterTypeError extends TypeError {
   constructor(
-    node: FunctionCallNode,
+    node: FunctionCallNode | RequireNode,
     actual: Type[],
     expected: Type[],
   ) {
+    const name = node instanceof FunctionCallNode ? node.identifier.name : 'require';
     super(
       node, actual, expected,
-      `Found function parameters (${actual}) in call to function '${node.identifier.name}' where parameters (${expected}) were expected`,
+      `Found function parameters (${actual}) in call to function '${name}' where parameters (${expected}) were expected`,
     );
   }
 }
@@ -154,7 +156,7 @@ export class AssignTypeError extends TypeError {
 
 export class ConstantConditionError extends CashScriptError {
   constructor(
-    node: BranchNode | FunctionCallNode,
+    node: BranchNode | RequireNode,
     res: boolean,
   ) {
     super(node, `Condition always evaluates to ${res}`);

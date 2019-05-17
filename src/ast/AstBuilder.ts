@@ -22,13 +22,13 @@ import {
   ExpressionNode,
   StatementNode,
   LiteralNode,
-  FunctionCallStatementNode,
   BlockNode,
   SpliceOpNode,
   SizeOpNode,
   TimeOpNode,
   ArrayNode,
   TupleIndexOpNode,
+  RequireNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import {
@@ -42,7 +42,6 @@ import {
   CastContext,
   LiteralContext,
   NumberLiteralContext,
-  FunctionCallStatementContext,
   SourceFileContext,
   BlockContext,
   TimeOpStatementContext,
@@ -56,6 +55,7 @@ import {
   IdentifierContext,
   LiteralExpressionContext,
   TupleIndexOpContext,
+  RequireStatementContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -140,11 +140,11 @@ export default class AstBuilder
     return timeOp;
   }
 
-  visitFunctionCallStatement(ctx: FunctionCallStatementContext): FunctionCallStatementNode {
-    const functionCall = this.visit(ctx.functionCall()) as FunctionCallNode;
-    const functionCallStatement = new FunctionCallStatementNode(functionCall);
-    functionCallStatement.location = Location.fromCtx(ctx);
-    return functionCallStatement;
+  visitRequireStatement(ctx: RequireStatementContext): RequireNode {
+    const expression = this.visit(ctx.expression());
+    const require = new RequireNode(expression);
+    require.location = Location.fromCtx(ctx);
+    return require;
   }
 
   visitIfStatement(ctx: IfStatementContext): BranchNode {
@@ -180,8 +180,8 @@ export default class AstBuilder
   }
 
   visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
-    const identifier = new IdentifierNode(ctx._id.text as string);
-    identifier.location = Location.fromToken(ctx._id);
+    const identifier = new IdentifierNode(ctx.Identifier().text as string);
+    identifier.location = Location.fromToken(ctx.Identifier().symbol);
     const parameters = ctx.expressionList().expression().map(e => this.visit(e));
     const functionCall = new FunctionCallNode(identifier, parameters);
     functionCall.location = Location.fromCtx(ctx);

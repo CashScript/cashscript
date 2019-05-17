@@ -10,7 +10,6 @@ import {
 } from '../ast/AST';
 import { GlobalFunction } from '../ast/Globals';
 import { Type, PrimitiveType } from '../ast/Type';
-import { ConstantConditionError } from '../Errors';
 
 const bitbox = new BITBOX();
 
@@ -151,7 +150,6 @@ function applyBinaryOperatorToHex(
   }
 }
 
-
 export function applyGlobalFunction(node: FunctionCallNode): LiteralNode {
   const { parameters } = node;
   if (!parameters.every(p => p instanceof LiteralNode)) {
@@ -159,8 +157,6 @@ export function applyGlobalFunction(node: FunctionCallNode): LiteralNode {
   }
 
   switch (node.identifier.name) {
-    case GlobalFunction.REQUIRE:
-      throw new ConstantConditionError(node, (parameters[0] as BoolLiteralNode).value);
     case GlobalFunction.ABS:
       return new IntLiteralNode(Math.abs((parameters[0] as IntLiteralNode).value));
     case GlobalFunction.MIN:
