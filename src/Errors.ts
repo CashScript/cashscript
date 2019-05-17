@@ -152,14 +152,6 @@ export class AssignTypeError extends TypeError {
   }
 }
 
-export class UnsupportedTimeOpError extends CashScriptError {
-  constructor(
-    node: TimeOpNode,
-  ) {
-    super(node, `Unsupported use of ${node.timeOp}`);
-  }
-}
-
 export class ConstantConditionError extends CashScriptError {
   constructor(
     node: BranchNode | FunctionCallNode,

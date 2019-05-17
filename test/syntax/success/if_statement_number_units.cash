@@ -1,0 +1,11 @@
+contract Test() {
+    function hello(int a, int b) {
+        if (a == b - 2 minutes) {
+            require(false);
+        } else if (b == 2 weeks)
+            require(a == 20 seconds);
+        else {
+            require(true == !!!false);
+        }
+    }
+}

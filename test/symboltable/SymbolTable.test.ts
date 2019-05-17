@@ -25,8 +25,8 @@ function setup(input: string): TestSetup {
 }
 
 describe('Symbol Table', () => {
-  describe('Redefinition', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'redefinition'));
+  describe('RedefinitionError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'RedefinitionError'));
     testCases.forEach((f) => {
       it(`${f.fn} should throw RedefinitionError`, () => {
         const { ast, traversal } = setup(f.contents);
@@ -37,8 +37,8 @@ describe('Symbol Table', () => {
     });
   });
 
-  describe('Undefined', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'undefined'));
+  describe('UndefinedReferenceError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'UndefinedReferenceError'));
     testCases.forEach((f) => {
       it(`${f.fn} should throw UndefinedReferenceError`, () => {
         const { ast, traversal } = setup(f.contents);
@@ -49,8 +49,8 @@ describe('Symbol Table', () => {
     });
   });
 
-  describe('Unused', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'unused'));
+  describe('UnusedVariableError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'UnusedVariableError'));
     testCases.forEach((f) => {
       it(`${f.fn} should throw UnusedVariableError`, () => {
         const { ast, traversal } = setup(f.contents);
