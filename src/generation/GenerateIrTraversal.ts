@@ -24,7 +24,6 @@ import {
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
-  Call,
   PushInt,
   Get,
   PushBool,
@@ -32,9 +31,10 @@ import {
   PushBytes,
   Replace,
   IrOp,
+  toIrOps,
 } from './IR';
 import { GlobalFunction } from '../ast/Globals';
-import { BinaryOperator } from '../ast/Operator';
+import { resultingType, PrimitiveType } from '../ast/Type';
 import { Op } from './Script';
 
 export default class GenerateIrTraversal extends AstTraversal {
@@ -43,8 +43,12 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   private scopeDepth = 0;
 
-  private emit(op: IrOp) {
-    this.output.push(op);
+  private emit(op: IrOp | IrOp[]) {
+    if (Array.isArray(op)) {
+      this.output.push(...op);
+    } else {
+      this.output.push(op);
+    }
   }
 
   private pushToStack(value: string, pushToBottom?: boolean) {
@@ -81,7 +85,7 @@ export default class GenerateIrTraversal extends AstTraversal {
         const stackCopy = [...this.stack];
         this.emit(new Get(this.getStackIndex('$$')));
         this.emit(new PushInt(i));
-        this.emit(new Call(BinaryOperator.EQ));
+        this.emit(Op.NUMEQUAL);
         this.emit(Op.IF);
         f = this.visit(f) as FunctionDefinitionNode;
 
@@ -131,14 +135,14 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitTimeOp(node: TimeOpNode) {
     node.expression = this.visit(node.expression);
-    this.emit(new Call(node.timeOp));
+    this.emit(toIrOps.fromTimeOp(node.timeOp));
     this.popFromStack();
     return node;
   }
 
   visitRequire(node: RequireNode) {
     node.expression = this.visit(node.expression);
-    this.emit(new Call(GlobalFunction.REQUIRE));
+    this.emit(Op.VERIFY);
     this.popFromStack();
     return node;
   }
@@ -176,7 +180,7 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitCast(node: CastNode) {
     node.expression = this.visit(node.expression);
-    this.emit(new Call(node.type));
+    this.emit(toIrOps.fromCast(node.expression.type as PrimitiveType, node.type));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -184,7 +188,7 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitFunctionCall(node: FunctionCallNode) {
     node.parameters = this.visitList(node.parameters);
-    this.emit(new Call(node.identifier.name as GlobalFunction));
+    this.emit(toIrOps.fromFunction(node.identifier.name as GlobalFunction));
 
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
       const sigs = node.parameters[0] as ArrayNode;
@@ -215,7 +219,8 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitSizeOp(node: SizeOpNode) {
     node.object = this.visit(node.object);
-    this.emit(new Call('size'));
+    this.emit(Op.SIZE);
+    this.emit(Op.NIP);
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -224,7 +229,7 @@ export default class GenerateIrTraversal extends AstTraversal {
   visitSpliceOp(node: SpliceOpNode) {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
-    this.emit(new Call('splice'));
+    this.emit(Op.SPLIT);
     this.popFromStack(2);
     this.pushToStack('(value)');
     this.pushToStack('(value)');
@@ -234,7 +239,10 @@ export default class GenerateIrTraversal extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode) {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    this.emit(new Call(node.operator));
+    this.emit(toIrOps.fromBinaryOp(
+      node.operator,
+      resultingType(node.left.type, node.right.type) === PrimitiveType.INT,
+    ));
     this.popFromStack(2);
     this.pushToStack('(value)');
     return node;
@@ -242,7 +250,7 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitUnaryOp(node: UnaryOpNode) {
     node.expression = this.visit(node.expression);
-    this.emit(new Call(node.operator));
+    this.emit(toIrOps.fromUnaryOp(node.operator));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;

@@ -10,10 +10,7 @@ import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import { Node, Ast } from '../../src/ast/AST';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/sdk';
-import { GlobalFunction, TimeOp } from '../../src/ast/Globals';
-import { BinaryOperator, UnaryOperator } from '../../src/ast/Operator';
 import {
-  Call,
   Get,
   PushInt,
   PushString,
@@ -22,7 +19,6 @@ import {
   PushBool,
   IrOp,
 } from '../../src/generation/IR';
-import { PrimitiveType } from '../../src/ast/Type';
 import GenerateIrTraversal from '../../src/generation/GenerateIrTraversal';
 import { Op } from '../../src/generation/Script';
 
@@ -46,11 +42,8 @@ describe('IR', () => {
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
     const expectedIr = [
-      new Get(1), new Call(GlobalFunction.SHA256),
-      new Get(1), new Call(BinaryOperator.EQ),
-      new Call(GlobalFunction.REQUIRE),
-      new Get(2), new Get(2), new Call(GlobalFunction.CHECKSIG),
-      new Call(GlobalFunction.REQUIRE),
+      new Get(1), Op.SHA256, new Get(1), Op.EQUAL, Op.VERIFY,
+      new Get(2), new Get(2), Op.CHECKSIG, Op.VERIFY,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),
@@ -64,17 +57,13 @@ describe('IR', () => {
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
     const expectedIr: IrOp[] = [
-      new PushInt(10), new PushInt(4), new Call(BinaryOperator.MINUS),
-      new PushInt(20), new Get(1), new PushInt(2),
-      new Call(BinaryOperator.MOD), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(3), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
+      new PushInt(10), new PushInt(4), Op.SUB,
+      new PushInt(20), new Get(1), new PushInt(2), Op.MOD, Op.ADD,
+      new Get(0), new Get(3), Op.GREATERTHAN, Op.VERIFY,
       new PushString('Hello World'),
-      new Get(0), new Get(5), new Call(BinaryOperator.PLUS),
-      new Get(6), new Call(GlobalFunction.RIPEMD160),
-      new Get(1), new Call(GlobalFunction.RIPEMD160),
-      new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
-      new Get(7), new Get(7), new Call(GlobalFunction.CHECKSIG),
-      new Call(GlobalFunction.REQUIRE),
+      new Get(0), new Get(5), Op.CAT,
+      new Get(6), Op.RIPEMD160, new Get(1), Op.RIPEMD160, Op.EQUAL, Op.VERIFY,
+      new Get(7), new Get(7), Op.CHECKSIG, Op.VERIFY,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),
@@ -88,18 +77,17 @@ describe('IR', () => {
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
     const expectedIr: IrOp[] = [
-      new Get(2), new Get(4), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(4), new Call(BinaryOperator.MINUS),
-      new Get(0), new Get(3), new PushInt(2), new Call(BinaryOperator.MINUS),
-      new Call(BinaryOperator.EQ), Op.IF,
-      new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
-      new Get(5), new Get(1), new Call(BinaryOperator.PLUS), new Replace(2),
-      new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
+      new Get(2), new Get(4), Op.ADD,
+      new Get(0), new Get(4), Op.SUB,
+      new Get(0), new Get(3), new PushInt(2), Op.SUB, Op.NUMEQUAL, Op.IF,
+      new Get(0), new Get(6), Op.ADD,
+      new Get(5), new Get(1), Op.ADD, new Replace(2),
+      new Get(0), new Get(2), Op.GREATERTHAN, Op.VERIFY,
       Op.DROP, Op.ELSE,
-      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
       Op.ENDIF,
-      new Get(0), new Get(5), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+      new Get(0), new Get(5), Op.ADD,
+      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),
@@ -113,11 +101,11 @@ describe('IR', () => {
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
     const expectedIr: IrOp[] = [
-      new Get(3), new PushInt(0), new Call(BinaryOperator.EQ), Op.IF,
-      new Get(4), new Get(2), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
-      Op.ELSE, new Get(3), new PushInt(1), new Call(BinaryOperator.EQ), Op.IF,
-      new Get(4), new Get(1), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
-      new Get(2), new Call(TimeOp.CHECK_LOCKTIME),
+      new Get(3), new PushInt(0), Op.NUMEQUAL, Op.IF,
+      new Get(4), new Get(2), Op.CHECKSIG, Op.VERIFY,
+      Op.ELSE, new Get(3), new PushInt(1), Op.NUMEQUAL, Op.IF,
+      new Get(4), new Get(1), Op.CHECKSIG, Op.VERIFY,
+      new Get(2), Op.CHECKLOCKTIMEVERIFY, Op.DROP,
       Op.ENDIF, Op.ENDIF,
     ];
     assert.deepEqual(
@@ -132,28 +120,28 @@ describe('IR', () => {
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
     const expectedIr: IrOp[] = [
-      new Get(2), new PushInt(0), new Call(BinaryOperator.EQ), Op.IF,
-      new Get(3), new Get(5), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(5), new Call(BinaryOperator.MINUS),
-      new Get(0), new Get(3), new Call(BinaryOperator.EQ), Op.IF,
-      new Get(0), new Get(7), new Call(BinaryOperator.PLUS),
-      new Get(6), new Get(1), new Call(BinaryOperator.PLUS), new Replace(2),
-      new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
+      new Get(2), new PushInt(0), Op.NUMEQUAL, Op.IF,
+      new Get(3), new Get(5), Op.ADD,
+      new Get(0), new Get(5), Op.SUB,
+      new Get(0), new Get(3), Op.NUMEQUAL, Op.IF,
+      new Get(0), new Get(7), Op.ADD,
+      new Get(6), new Get(1), Op.ADD, new Replace(2),
+      new Get(0), new Get(2), Op.GREATERTHAN, Op.VERIFY,
       Op.DROP, Op.ELSE,
       new Get(5), new Replace(1),
       Op.ENDIF,
-      new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
-      Op.ELSE, new Get(2), new PushInt(1), new Call(BinaryOperator.EQ), Op.IF,
+      new Get(0), new Get(6), Op.ADD,
+      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
+      Op.ELSE, new Get(2), new PushInt(1), Op.NUMEQUAL, Op.IF,
       new Get(3),
-      new Get(0), new PushInt(2), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(3), new Call(BinaryOperator.EQ), Op.IF,
-      new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(2), new Call(BinaryOperator.PLUS), new Replace(2),
-      new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
+      new Get(0), new PushInt(2), Op.ADD,
+      new Get(0), new Get(3), Op.NUMEQUAL, Op.IF,
+      new Get(0), new Get(6), Op.ADD,
+      new Get(0), new Get(2), Op.ADD, new Replace(2),
+      new Get(0), new Get(2), Op.GREATERTHAN, Op.VERIFY,
       Op.DROP, Op.ENDIF,
       new Get(5),
-      new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
+      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
       Op.ENDIF, Op.ENDIF,
     ];
     assert.deepEqual(
@@ -170,7 +158,7 @@ describe('IR', () => {
     const expectedIr: IrOp[] = [
       new Get(3), new Get(5), new PushInt(2),
       new Get(3), new Get(5), new Get(7), new PushInt(3),
-      new Call(GlobalFunction.CHECKMULTISIG), new Call(GlobalFunction.REQUIRE),
+      Op.CHECKMULTISIG, Op.VERIFY,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),
@@ -184,11 +172,9 @@ describe('IR', () => {
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
     const expectedIr: IrOp[] = [
-      new Get(0), new Get(1), new Call('size'), new PushInt(2), new Call(BinaryOperator.DIV),
-      new Call('splice'), Op.NIP,
-      new Get(0), new Get(2), new Call(BinaryOperator.NE), new Call(GlobalFunction.REQUIRE),
-      new Get(1), new PushInt(4), new Call('splice'), Op.DROP, new Get(1),
-      new Call(BinaryOperator.NE), new Call(GlobalFunction.REQUIRE),
+      new Get(0), new Get(1), Op.SIZE, Op.NIP, new PushInt(2), Op.DIV, Op.SPLIT, Op.NIP,
+      new Get(0), new Get(2), Op.EQUAL, Op.NOT, Op.VERIFY,
+      new Get(1), new PushInt(4), Op.SPLIT, Op.DROP, new Get(1), Op.EQUAL, Op.NOT, Op.VERIFY,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),
@@ -202,11 +188,10 @@ describe('IR', () => {
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
     const expectedIr: IrOp[] = [
-      new Get(0), new Call(PrimitiveType.BYTES), new Call(GlobalFunction.RIPEMD160),
-      new PushBytes(Buffer.from('0', 'hex')), new Call(GlobalFunction.RIPEMD160),
-      new Call(BinaryOperator.EQ), new PushBool(true), new Call(UnaryOperator.NOT),
-      new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
-      new Get(1), new Get(1), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
+      new Get(0), Op.RIPEMD160,
+      new PushBytes(Buffer.from('0', 'hex')), Op.RIPEMD160,
+      Op.EQUAL, new PushBool(true), Op.NOT, Op.EQUAL, Op.VERIFY,
+      new Get(1), new Get(1), Op.CHECKSIG, Op.VERIFY,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),

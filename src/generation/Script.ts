@@ -21,6 +21,7 @@ export class Op {
   static readonly SPLIT = new Op('SPLIT', 127);
   static readonly NUM2BIN = new Op('NUM2BIN', 128);
   static readonly BIN2NUM = new Op('BIN2NUM', 129);
+  static readonly SIZE = new Op('SIZE', 130);
   // -- BITWISE LOGIC --
   static readonly EQUAL = new Op('EQUAL', 135);
   static readonly EQUALVERIFY = new Op('EQUALVERIFY', 136);

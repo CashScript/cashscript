@@ -66,17 +66,17 @@ const ImplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
   [PrimitiveType.ANY]: [],
 };
 
-export function explicitlyCastable(castable?: Type, castType?: Type): boolean {
-  if (!castable || !castType) return false;
-  if (castable instanceof TupleType || castType instanceof TupleType) return false;
+export function explicitlyCastable(from?: Type, to?: Type): boolean {
+  if (!from || !to) return false;
+  if (from instanceof TupleType || to instanceof TupleType) return false;
 
-  if (castable instanceof ArrayType && castType instanceof ArrayType) {
-    return explicitlyCastable(castable.elementType, castType.elementType);
+  if (from instanceof ArrayType && to instanceof ArrayType) {
+    return explicitlyCastable(from.elementType, to.elementType);
   }
 
-  if (castable instanceof ArrayType || castType instanceof ArrayType) return false;
+  if (from instanceof ArrayType || to instanceof ArrayType) return false;
 
-  return ExplicitlyCastableTo[castable].includes(castType);
+  return ExplicitlyCastableTo[from].includes(to);
 }
 
 export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
