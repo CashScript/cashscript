@@ -20,17 +20,11 @@ import {
   Replace,
   PushBytes,
   PushBool,
-  Op,
+  IrOp,
 } from '../../src/generation/IR';
 import { PrimitiveType } from '../../src/ast/Type';
 import GenerateIrTraversal from '../../src/generation/GenerateIrTraversal';
-import {
-  Else,
-  If,
-  EndIf,
-  Drop,
-  Nip,
-} from '../../src/generation/Script';
+import { Op } from '../../src/generation/Script';
 
 interface TestSetup {
   ast: Node,
@@ -69,7 +63,7 @@ describe('IR', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', 'simple_variables.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
-    const expectedIr: Op[] = [
+    const expectedIr: IrOp[] = [
       new PushInt(10), new PushInt(4), new Call(BinaryOperator.MINUS),
       new PushInt(20), new Get(1), new PushInt(2),
       new Call(BinaryOperator.MOD), new Call(BinaryOperator.PLUS),
@@ -93,17 +87,17 @@ describe('IR', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', 'if_statement.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
-    const expectedIr: Op[] = [
+    const expectedIr: IrOp[] = [
       new Get(2), new Get(4), new Call(BinaryOperator.PLUS),
       new Get(0), new Get(4), new Call(BinaryOperator.MINUS),
       new Get(0), new Get(3), new PushInt(2), new Call(BinaryOperator.MINUS),
-      new Call(BinaryOperator.EQ), new If(),
+      new Call(BinaryOperator.EQ), Op.IF,
       new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
       new Get(5), new Get(1), new Call(BinaryOperator.PLUS), new Replace(2),
       new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
-      new Drop(), new Else(),
+      Op.DROP, Op.ELSE,
       new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
-      new EndIf(),
+      Op.ENDIF,
       new Get(0), new Get(5), new Call(BinaryOperator.PLUS),
       new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
     ];
@@ -118,13 +112,13 @@ describe('IR', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', 'transfer_with_timeout.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
-    const expectedIr: Op[] = [
-      new Get(3), new PushInt(0), new Call(BinaryOperator.EQ), new If(),
+    const expectedIr: IrOp[] = [
+      new Get(3), new PushInt(0), new Call(BinaryOperator.EQ), Op.IF,
       new Get(4), new Get(2), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
-      new Else(), new Get(3), new PushInt(1), new Call(BinaryOperator.EQ), new If(),
+      Op.ELSE, new Get(3), new PushInt(1), new Call(BinaryOperator.EQ), Op.IF,
       new Get(4), new Get(1), new Call(GlobalFunction.CHECKSIG), new Call(GlobalFunction.REQUIRE),
       new Get(2), new Call(TimeOp.CHECK_LOCKTIME),
-      new EndIf(), new EndIf(),
+      Op.ENDIF, Op.ENDIF,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),
@@ -137,30 +131,30 @@ describe('IR', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', 'multifunction_if_statements.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
-    const expectedIr: Op[] = [
-      new Get(2), new PushInt(0), new Call(BinaryOperator.EQ), new If(),
+    const expectedIr: IrOp[] = [
+      new Get(2), new PushInt(0), new Call(BinaryOperator.EQ), Op.IF,
       new Get(3), new Get(5), new Call(BinaryOperator.PLUS),
       new Get(0), new Get(5), new Call(BinaryOperator.MINUS),
-      new Get(0), new Get(3), new Call(BinaryOperator.EQ), new If(),
+      new Get(0), new Get(3), new Call(BinaryOperator.EQ), Op.IF,
       new Get(0), new Get(7), new Call(BinaryOperator.PLUS),
       new Get(6), new Get(1), new Call(BinaryOperator.PLUS), new Replace(2),
       new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
-      new Drop(), new Else(),
+      Op.DROP, Op.ELSE,
       new Get(5), new Replace(1),
-      new EndIf(),
+      Op.ENDIF,
       new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
       new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
-      new Else(), new Get(2), new PushInt(1), new Call(BinaryOperator.EQ), new If(),
+      Op.ELSE, new Get(2), new PushInt(1), new Call(BinaryOperator.EQ), Op.IF,
       new Get(3),
       new Get(0), new PushInt(2), new Call(BinaryOperator.PLUS),
-      new Get(0), new Get(3), new Call(BinaryOperator.EQ), new If(),
+      new Get(0), new Get(3), new Call(BinaryOperator.EQ), Op.IF,
       new Get(0), new Get(6), new Call(BinaryOperator.PLUS),
       new Get(0), new Get(2), new Call(BinaryOperator.PLUS), new Replace(2),
       new Get(0), new Get(2), new Call(BinaryOperator.GT), new Call(GlobalFunction.REQUIRE),
-      new Drop(), new EndIf(),
+      Op.DROP, Op.ENDIF,
       new Get(5),
       new Get(0), new Get(5), new Call(BinaryOperator.EQ), new Call(GlobalFunction.REQUIRE),
-      new EndIf(), new EndIf(),
+      Op.ENDIF, Op.ENDIF,
     ];
     assert.deepEqual(
       traversal.output.map(o => o.toString()),
@@ -173,7 +167,7 @@ describe('IR', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', '2_of_3_multisig.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
-    const expectedIr: Op[] = [
+    const expectedIr: IrOp[] = [
       new Get(3), new Get(5), new PushInt(2),
       new Get(3), new Get(5), new Get(7), new PushInt(3),
       new Call(GlobalFunction.CHECKMULTISIG), new Call(GlobalFunction.REQUIRE),
@@ -189,11 +183,11 @@ describe('IR', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', 'splice_size.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
-    const expectedIr: Op[] = [
+    const expectedIr: IrOp[] = [
       new Get(0), new Get(1), new Call('size'), new PushInt(2), new Call(BinaryOperator.DIV),
-      new Call('splice'), new Nip(),
+      new Call('splice'), Op.NIP,
       new Get(0), new Get(2), new Call(BinaryOperator.NE), new Call(GlobalFunction.REQUIRE),
-      new Get(1), new PushInt(4), new Call('splice'), new Drop(), new Get(1),
+      new Get(1), new PushInt(4), new Call('splice'), Op.DROP, new Get(1),
       new Call(BinaryOperator.NE), new Call(GlobalFunction.REQUIRE),
     ];
     assert.deepEqual(
@@ -207,7 +201,7 @@ describe('IR', () => {
     const code = fs.readFileSync(path.join(__dirname, 'fixture', 'simple_operations.cash'), { encoding: 'utf-8' });
     const { ast, traversal } = setup(code);
     ast.accept(traversal);
-    const expectedIr: Op[] = [
+    const expectedIr: IrOp[] = [
       new Get(0), new Call(PrimitiveType.BYTES), new Call(GlobalFunction.RIPEMD160),
       new PushBytes(Buffer.from('0', 'hex')), new Call(GlobalFunction.RIPEMD160),
       new Call(BinaryOperator.EQ), new PushBool(true), new Call(UnaryOperator.NOT),

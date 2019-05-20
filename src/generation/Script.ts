@@ -1,287 +1,71 @@
-export type OpOrData = Opcode | Buffer;
-export abstract class Opcode {
-  name: string;
-  opcode: number;
+export type OpOrData = Op | Buffer;
+export class Op {
+  // -- CONSTANTS --
+  // Skipped as data pushes are handled by BITBOX
+  // -- FLOW CONTROL --
+  static readonly IF = new Op('IF', 99);
+  static readonly NOTIF = new Op('NOTIF', 100);
+  static readonly ELSE = new Op('ELSE', 103);
+  static readonly ENDIF = new Op('ENDIF', 104);
+  static readonly VERIFY = new Op('VERIFY', 105);
+  // -- STACK --
+  static readonly TOALTSTACK = new Op('TOALTSTACK', 107);
+  static readonly FROMALTSTACK = new Op('FROMALTSTACK', 108);
+  static readonly DROP = new Op('DROP', 117);
+  static readonly NIP = new Op('NIP', 119);
+  static readonly PICK = new Op('PICK', 121);
+  static readonly ROLL = new Op('ROLL', 122);
+  static readonly SWAP = new Op('SWAP', 124);
+  // -- SPLICE --
+  static readonly CAT = new Op('CAT', 126);
+  static readonly SPLIT = new Op('SPLIT', 127);
+  static readonly NUM2BIN = new Op('NUM2BIN', 128);
+  static readonly BIN2NUM = new Op('BIN2NUM', 129);
+  // -- BITWISE LOGIC --
+  static readonly EQUAL = new Op('EQUAL', 135);
+  static readonly EQUALVERIFY = new Op('EQUALVERIFY', 136);
+  // -- ARITHMETIC --
+  static readonly ADD1 = new Op('1ADD', 139);
+  static readonly SUB1 = new Op('1SUB', 140);
+  static readonly NEGATE = new Op('NEGATE', 143);
+  static readonly ABS = new Op('ABS', 144);
+  static readonly NOT = new Op('NOT', 145);
+  static readonly NOTEQUAL0 = new Op('0NOTEQUAL', 146);
+  static readonly ADD = new Op('ADD', 147);
+  static readonly SUB = new Op('SUB', 148);
+  static readonly DIV = new Op('DIV', 150);
+  static readonly MOD = new Op('MOD', 151);
+  static readonly BOOLAND = new Op('BOOLAND', 154);
+  static readonly BOOLOR = new Op('BOOLOR', 155);
+  static readonly NUMEQUAL = new Op('NUMEQUAL', 156);
+  static readonly NUMEQUALVERIFY = new Op('NUMEQUALVERIFY', 157);
+  static readonly NUMNOTEQUAL = new Op('NUMNOTEQUAL', 158);
+  static readonly LESSTHAN = new Op('LESSTHAN', 159);
+  static readonly GREATERTHAN = new Op('GREATERTHAN', 160);
+  static readonly LESSTHANOREQUAL = new Op('LESSTHANOREQUAL', 161);
+  static readonly GREATERTHANOREQUAL = new Op('GREATERTHANOREQUAL', 162);
+  static readonly MIN = new Op('MIN', 163);
+  static readonly MAX = new Op('MAX', 164);
+  static readonly WITHIN = new Op('WITHIN', 165);
+  // -- CRYPTO --
+  static readonly RIPEMD160 = new Op('RIPEMD160', 166);
+  static readonly SHA1 = new Op('SHA1', 167);
+  static readonly SHA256 = new Op('SHA256', 168);
+  static readonly HASH160 = new Op('HASH160', 169);
+  static readonly HASH256 = new Op('HASH256', 170);
+  static readonly CHECKSIG = new Op('CHECKSIG', 172);
+  static readonly CHECKSIGVERIFY = new Op('CHECKSIGVERIFY', 173);
+  static readonly CHECKMULTISIG = new Op('CHECKMULTISIG', 174);
+  static readonly CHECKMULTISIGVERIFY = new Op('CHECKMULTISIGVERIFY', 175);
+  static readonly CHECKDATASIG = new Op('CHECKDATASIG', 186);
+  static readonly CHECKDATASIGVERIFY = new Op('CHECKDATASIGVERIFY', 187);
+  // -- LOCKTIME --
+  static readonly CHECKLOCKTIMEVERIFY = new Op('CHECKLOCKTIMEVERIFY', 177);
+  static readonly CHECKSEQUENCEVERIFY = new Op('CHECKSEQUENCEVERIFY', 178);
+
+  private constructor(public name: string, public opcode: number) {}
 
   toString() {
     return this.name;
   }
-}
-
-// TODO: Probably want to replace this whole thing with something out of a library like bitbox
-
-// -- CONSTANTS --
-// Skipped as data pushes are handled by BITBOX
-
-// -- FLOW CONTROL --
-export class If extends Opcode {
-  name: 'IF';
-  opcode: 99;
-}
-
-export class NotIf extends Opcode {
-  name: 'NOTIF';
-  opcode: 100;
-}
-
-export class Else extends Opcode {
-  name: 'ELSE';
-  opcode: 103;
-}
-
-export class EndIf extends Opcode {
-  name: 'ENDIF';
-  opcode: 104;
-}
-
-export class Verify extends Opcode {
-  name: 'VERIFY';
-  opcode: 105;
-}
-
-// -- STACK --
-export class ToAltStack extends Opcode {
-  name: 'TOALTSTACK';
-  opcode: 107;
-}
-
-export class FromAltStack extends Opcode {
-  name: 'FROMALTSTACK';
-  opcode: 106;
-}
-
-export class Drop extends Opcode {
-  name: 'DROP';
-  opcode: 117;
-}
-
-export class Nip extends Opcode {
-  name: 'NIP';
-  opcode: 119;
-}
-
-export class Pick extends Opcode {
-  name: 'PICK';
-  opcode: 121;
-}
-
-export class Roll extends Opcode {
-  name: 'ROLL';
-  opcode: 122;
-}
-
-export class Swap extends Opcode {
-  name: 'SWAP';
-  opcode: 124;
-}
-
-// -- SPLICE --
-export class Cat extends Opcode {
-  name: 'CAT';
-  opcode: 126;
-}
-
-export class Split extends Opcode {
-  name: 'PICK';
-  opcode: 127;
-}
-
-export class Num2Bin extends Opcode {
-  name: 'NUM2BIN';
-  opcode: 128;
-}
-
-export class Bin2Num extends Opcode {
-  name: 'BIN2NUM';
-  opcode: 129;
-}
-
-// -- BITWISE LOGIC --
-export class Equal extends Opcode {
-  name: 'EQUAL';
-  opcode: 135;
-}
-
-export class EqualVerify extends Opcode {
-  name: 'EQUALVERIFY';
-  opcode: 136;
-}
-
-// -- ARITHMETIC --
-export class Add1 extends Opcode {
-  name: '1ADD';
-  opcode: 139;
-}
-
-export class Sub1 extends Opcode {
-  name: '1SUB';
-  opcode: 140;
-}
-
-export class Negate extends Opcode {
-  name: 'NEGATE';
-  opcode: 143;
-}
-
-export class Abs extends Opcode {
-  name: 'ABS';
-  opcode: 144;
-}
-
-export class Not extends Opcode {
-  name: 'NOT';
-  opcode: 145;
-}
-
-export class NotEqual0 extends Opcode {
-  name: '0NOTEQUAL';
-  opcode: 146;
-}
-
-export class Add extends Opcode {
-  name: 'ADD';
-  opcode: 147;
-}
-
-export class Sub extends Opcode {
-  name: 'SUB';
-  opcode: 148;
-}
-
-export class Div extends Opcode {
-  name: 'DIV';
-  opcode: 150;
-}
-
-export class Mod extends Opcode {
-  name: 'MOD';
-  opcode: 151;
-}
-
-export class BoolAnd extends Opcode {
-  name: 'BOOLAND';
-  opcode: 154;
-}
-
-export class BoolOr extends Opcode {
-  name: 'BOOLOR';
-  opcode: 145;
-}
-
-export class NumEqual extends Opcode {
-  name: 'NUMEQUAL';
-  opcode: 156;
-}
-
-export class NumEqualVerify extends Opcode {
-  name: 'NUMEQUALVERIFY';
-  opcode: 157;
-}
-
-export class NumNotEqual extends Opcode {
-  name: 'NUMNOTEQUAL';
-  opcode: 158;
-}
-
-export class LessThan extends Opcode {
-  name: 'LESSTHAN';
-  opcode: 159;
-}
-
-export class GreaterThan extends Opcode {
-  name: 'GREATERTHAN';
-  opcode: 160;
-}
-
-export class LessThanOrEqual extends Opcode {
-  name: 'LESSTHANOREQUAL';
-  opcode: 161;
-}
-
-export class GreaterThanOrEqual extends Opcode {
-  name: 'GREATERTHANOREQUAL';
-  opcode: 162;
-}
-
-export class Min extends Opcode {
-  name: 'MIN';
-  opcode: 163;
-}
-
-export class Max extends Opcode {
-  name: 'MAX';
-  opcode: 164;
-}
-
-export class Within extends Opcode {
-  name: 'WITHIN';
-  opcode: 165;
-}
-
-// -- CRYPTO --
-
-export class Ripemd160 extends Opcode {
-  name: 'RIPEMD160';
-  opcode: 166;
-}
-
-export class Sha1 extends Opcode {
-  name: 'SHA1';
-  opcode: 167;
-}
-
-export class Sha256 extends Opcode {
-  name: 'SHA256';
-  opcode: 168;
-}
-
-export class Hash160 extends Opcode {
-  name: 'HASH160';
-  opcode: 169;
-}
-
-export class Hash256 extends Opcode {
-  name: 'HASH256';
-  opcode: 170;
-}
-
-export class CheckSig extends Opcode {
-  name: 'CHECKSIG';
-  opcode: 172;
-}
-
-export class CheckSigVerify extends Opcode {
-  name: 'CHECKSIGVERIFY';
-  opcode: 173;
-}
-
-export class CheckMultiSig extends Opcode {
-  name: 'CHECKMULTISIG';
-  opcode: 174;
-}
-
-export class CheckMultiSigVerify extends Opcode {
-  name: 'CHECKMULTISIGVERIFY';
-  opcode: 175;
-}
-
-export class CheckDataSig extends Opcode {
-  name: 'CHECKDATASIG';
-  opcode: 186;
-}
-
-export class CheckDataSigVerify extends Opcode {
-  name: 'CHECKDATASIGVERIFY';
-  opcode: 187;
-}
-
-// -- LOCKTIME --
-export class CheckLockTimeVerify extends Opcode {
-  name: 'CHECKLOCKTIMEVERIFY';
-  opcode: 177;
-}
-
-export class CheckSequenceVerify extends Opcode {
-  name: 'CHECKSEQUENCEVERIFY';
-  opcode: 178;
 }

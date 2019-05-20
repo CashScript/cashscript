@@ -31,25 +31,19 @@ import {
   PushString,
   PushBytes,
   Replace,
-  Op,
+  IrOp,
 } from './IR';
 import { GlobalFunction } from '../ast/Globals';
 import { BinaryOperator } from '../ast/Operator';
-import {
-  If,
-  Else,
-  EndIf,
-  Drop,
-  Nip,
-} from './Script';
+import { Op } from './Script';
 
 export default class GenerateIrTraversal extends AstTraversal {
-  output: Op[] = [];
+  output: IrOp[] = [];
   stack: string[] = [];
 
   private scopeDepth = 0;
 
-  private emit(op: Op) {
+  private emit(op: IrOp) {
     this.output.push(op);
   }
 
@@ -88,18 +82,18 @@ export default class GenerateIrTraversal extends AstTraversal {
         this.emit(new Get(this.getStackIndex('$$')));
         this.emit(new PushInt(i));
         this.emit(new Call(BinaryOperator.EQ));
-        this.emit(new If());
+        this.emit(Op.IF);
         f = this.visit(f) as FunctionDefinitionNode;
 
         if (i < node.functions.length - 1) {
-          this.emit(new Else());
+          this.emit(Op.ELSE);
           this.stack = [...stackCopy];
         }
 
         return f;
       });
 
-      node.functions.forEach(() => this.emit(new EndIf()));
+      node.functions.forEach(() => this.emit(Op.ENDIF));
     }
 
     return node;
@@ -154,20 +148,20 @@ export default class GenerateIrTraversal extends AstTraversal {
     this.popFromStack();
 
     this.scopeDepth += 1;
-    this.emit(new If());
+    this.emit(Op.IF);
 
     let stackDepth = this.stack.length;
     node.ifBlock = this.visit(node.ifBlock);
     this.removeScopedVariables(stackDepth);
 
     if (node.elseBlock) {
-      this.emit(new Else());
+      this.emit(Op.ELSE);
       stackDepth = this.stack.length;
       node.elseBlock = this.visit(node.elseBlock);
       this.removeScopedVariables(stackDepth);
     }
 
-    this.emit(new EndIf());
+    this.emit(Op.ENDIF);
     this.scopeDepth -= 1;
 
     return node;
@@ -175,7 +169,7 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   removeScopedVariables(depthBeforeScope: number) {
     for (let i = 0; i < this.stack.length - depthBeforeScope; i += 1) {
-      this.emit(new Drop());
+      this.emit(Op.DROP);
       this.popFromStack();
     }
   }
@@ -209,10 +203,10 @@ export default class GenerateIrTraversal extends AstTraversal {
     node.tuple = this.visit(node.tuple);
 
     if (node.index === 0) {
-      this.emit(new Drop());
+      this.emit(Op.DROP);
       this.popFromStack();
     } else if (node.index === 1) {
-      this.emit(new Nip());
+      this.emit(Op.NIP);
       this.nipFromStack();
     }
 

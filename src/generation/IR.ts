@@ -1,7 +1,8 @@
+import { Op } from './Script';
 import { Operator } from '../ast/Operator';
 
 export abstract class IntermediateOp {}
-export type Op = IntermediateOp | Operator;
+export type IrOp = IntermediateOp | Op;
 
 export class PushBool extends IntermediateOp {
   constructor(
