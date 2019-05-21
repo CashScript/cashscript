@@ -1,10 +1,18 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
+import { Script } from 'bitbox-sdk';
 import * as util from 'util';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
 import { CashScriptParser } from './grammar/CashScriptParser';
 import AstBuilder from './ast/AstBuilder';
 import OutputSourceCodeTraversal from './print/OutputSourceCodeTraversal';
+import SymbolTableTraversal from './semantic/SymbolTableTraversal';
+import TypeCheckTraversal from './semantic/TypeCheckTraversal';
+import GenerateIrTraversal from './generation/GenerateIrTraversal';
+import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
+import { OpOrData } from './generation/Script';
+
+const script = new Script();
 
 export function parseCode(code: string): Ast {
   const inputStream = new ANTLRInputStream(code);
@@ -23,4 +31,32 @@ export function printAstAsCode(ast: Ast): void {
 
 export function printAst(ast: Ast): void {
   console.log(util.inspect(ast, false, null, true));
+}
+
+export function encodeBool(b: boolean): Buffer {
+  return b ? encodeInt(1) : encodeInt(0);
+}
+
+export function encodeInt(i: number): Buffer {
+  return script.number.encode(i);
+}
+
+export function encodeString(s: string): Buffer {
+  return Buffer.from(s, 'utf8');
+}
+
+export function compileToTargetCode(code: string): OpOrData[] {
+  const ast = parseCode(code);
+  ast.accept(new SymbolTableTraversal());
+  ast.accept(new TypeCheckTraversal());
+  const irTraversal = new GenerateIrTraversal();
+  ast.accept(irTraversal);
+  const ir = irTraversal.output;
+  const target = new GenerateTargetTraversal(ir).traverse();
+  return target;
+}
+
+export function printTargetCode(target: OpOrData[]) {
+  const scriptString = target.map(o => o.toString('hex')).join(' ');
+  console.log(scriptString);
 }

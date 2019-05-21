@@ -1,4 +1,5 @@
 export type OpOrData = Op | Buffer;
+
 export class Op {
   // -- CONSTANTS --
   // Skipped as data pushes are handled by BITBOX
