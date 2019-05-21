@@ -24,6 +24,8 @@ export enum GlobalFunction {
   RIPEMD160 = 'ripemd160',
   SHA1 = 'sha1',
   SHA256 = 'sha256',
+  HASH160 = 'hash160',
+  HASH256 = 'hash256',
   CHECKSIG = 'checkSig',
   CHECKMULTISIG = 'checkMultiSig',
   CHECKDATASIG = 'checkDataSig',
@@ -61,6 +63,14 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
   GlobalFunction.SHA256, PrimitiveType.BYTES32, undefined,
+  [PrimitiveType.ANY],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.HASH160, PrimitiveType.BYTES20, undefined,
+  [PrimitiveType.ANY],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  GlobalFunction.HASH256, PrimitiveType.BYTES32, undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(

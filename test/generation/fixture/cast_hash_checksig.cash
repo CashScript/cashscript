@@ -1,6 +1,6 @@
 contract Test() {
     function hello(pubkey pk, sig s) {
-        require((ripemd160(bytes(pk)) == ripemd160(0x0) == !true));
+        require((ripemd160(bytes(pk)) == hash160(0x0) == !true));
         require(checkSig(s, pk));
     }
 }

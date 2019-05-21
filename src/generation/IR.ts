@@ -112,6 +112,8 @@ export class toIrOps {
       [GlobalFunction.RIPEMD160]: [Op.RIPEMD160],
       [GlobalFunction.SHA1]: [Op.SHA1],
       [GlobalFunction.SHA256]: [Op.SHA256],
+      [GlobalFunction.HASH160]: [Op.HASH160],
+      [GlobalFunction.HASH256]: [Op.HASH256],
       [GlobalFunction.WITHIN]: [Op.WITHIN],
     };
 

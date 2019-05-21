@@ -140,12 +140,12 @@ export const irFixtures: Fixture[] = [
     fn: 'cast_hash_checksig.cash',
     ir: [
       new Get(0), Op.RIPEMD160,
-      new PushBytes(Buffer.from('0', 'hex')), Op.RIPEMD160,
+      new PushBytes(Buffer.from('0', 'hex')), Op.HASH160,
       Op.EQUAL, new PushBool(true), Op.NOT, Op.EQUAL, Op.VERIFY,
       new Get(1), new Get(1), Op.CHECKSIG, Op.VERIFY,
     ],
     stack: ['pk', 's'],
-    script: '{} PICK RIPEMD160 {} RIPEMD160 EQUAL {01} NOT EQUAL VERIFY {01} PICK {01} PICK CHECKSIG',
+    script: '{} PICK RIPEMD160 {} HASH160 EQUAL {01} NOT EQUAL VERIFY {01} PICK {01} PICK CHECKSIG',
   },
   {
     fn: 'checkdatasig.cash',
