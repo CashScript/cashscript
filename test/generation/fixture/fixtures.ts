@@ -12,10 +12,11 @@ import { Op } from '../../../src/generation/Script';
 interface Fixture {
   fn: string,
   ir: IrOp[],
-  stack: string[],
+  stack?: string[],
+  script: string,
 }
 
-const fixtures: Fixture[] = [
+export const irFixtures: Fixture[] = [
   {
     fn: 'p2pkh.cash',
     ir: [
@@ -23,6 +24,7 @@ const fixtures: Fixture[] = [
       new Get(2), new Get(2), Op.CHECKSIG, Op.VERIFY,
     ],
     stack: ['pkh', 'pk', 's'],
+    script: '{01} PICK SHA256 {01} PICK EQUAL VERIFY {02} PICK {02} PICK CHECKSIG',
   },
   {
     fn: 'reassignment.cash',
@@ -36,6 +38,9 @@ const fixtures: Fixture[] = [
       new Get(7), new Get(7), Op.CHECKSIG, Op.VERIFY,
     ],
     stack: ['hw', 'hw', 'myOtherVariable', 'myVariable', 'x', 'y', 'pk', 's'],
+    script: '{0a} {04} SUB {14} {01} PICK {02} MOD ADD {} PICK {03} PICK GREATERTHAN VERIFY '
+          + '{48656c6c6f20576f726c64} {} PICK {05} PICK CAT {06} PICK RIPEMD160 {01} PICK '
+          + 'RIPEMD160 EQUAL VERIFY {07} PICK {07} PICK CHECKSIG',
   },
   {
     fn: 'if_statement.cash',
@@ -53,6 +58,10 @@ const fixtures: Fixture[] = [
       new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
     ],
     stack: ['d', 'd', 'd', 'x', 'y', 'a', 'b'],
+    script: '{02} PICK {04} PICK ADD {} PICK {04} PICK SUB {} PICK {03} PICK {02} SUB NUMEQUAL IF '
+          + '{} PICK {06} PICK ADD {05} PICK {01} PICK ADD {02} ROLL DROP SWAP {} PICK {02} PICK '
+          + 'GREATERTHAN VERIFY DROP ELSE {} PICK {05} PICK NUMEQUAL VERIFY ENDIF '
+          + '{} PICK {05} PICK ADD {} PICK {05} PICK NUMEQUAL',
   },
   {
     fn: 'multifunction.cash',
@@ -65,6 +74,9 @@ const fixtures: Fixture[] = [
       Op.ENDIF, Op.ENDIF,
     ],
     stack: ['sender', 'recipient', 'timeout', '$$', 'senderSig'],
+    script: '{03} PICK {} NUMEQUAL IF {04} PICK {02} PICK CHECKSIG VERIFY ELSE '
+          + '{03} PICK {01} NUMEQUAL IF {04} PICK {01} PICK CHECKSIG VERIFY '
+          + '{02} PICK CHECKLOCKTIMEVERIFY DROP ENDIF ENDIF {01}',
   },
   {
     fn: 'multifunction_if_statements.cash',
@@ -94,6 +106,14 @@ const fixtures: Fixture[] = [
       Op.ENDIF, Op.ENDIF,
     ],
     stack: ['d', 'd', 'd', 'x', 'y', '$$', 'b'],
+    script: '{02} PICK {} NUMEQUAL IF {03} PICK {05} PICK ADD {} PICK {05} PICK SUB '
+          + '{} PICK {03} PICK NUMEQUAL IF {} PICK {07} PICK ADD {06} PICK {01} PICK ADD '
+          + '{02} ROLL DROP SWAP {} PICK {02} PICK GREATERTHAN VERIFY DROP ELSE '
+          + '{05} PICK {01} ROLL DROP ENDIF {} PICK {06} PICK ADD {} PICK {05} PICK NUMEQUAL VERIFY '
+          + 'ELSE {02} PICK {01} NUMEQUAL IF {03} PICK {} PICK {02} ADD {} PICK '
+          + '{03} PICK NUMEQUAL IF {} PICK {06} PICK ADD {} PICK {02} PICK ADD {02} ROLL DROP SWAP '
+          + '{} PICK {02} PICK GREATERTHAN VERIFY DROP ENDIF {05} PICK {} PICK {05} PICK '
+          + 'NUMEQUAL VERIFY ENDIF ENDIF {01}',
   },
   {
     fn: '2_of_3_multisig.cash',
@@ -103,6 +123,7 @@ const fixtures: Fixture[] = [
       Op.CHECKMULTISIG, Op.VERIFY,
     ],
     stack: ['pk1', 'pk2', 'pk3', 's1', 's2'],
+    script: '{03} PICK {05} PICK {02} {03} PICK {05} PICK {07} PICK {03} CHECKMULTISIG',
   },
   {
     fn: 'splice_size.cash',
@@ -112,6 +133,8 @@ const fixtures: Fixture[] = [
       new Get(1), new PushInt(4), Op.SPLIT, Op.DROP, new Get(1), Op.EQUAL, Op.NOT, Op.VERIFY,
     ],
     stack: ['x', 'b'],
+    script: '{} PICK {01} PICK SIZE NIP {02} DIV SPLIT NIP {} PICK {02} PICK EQUAL NOT VERIFY '
+          + '{01} PICK {04} SPLIT DROP {01} PICK EQUAL NOT',
   },
   {
     fn: 'cast_hash_checksig.cash',
@@ -122,7 +145,17 @@ const fixtures: Fixture[] = [
       new Get(1), new Get(1), Op.CHECKSIG, Op.VERIFY,
     ],
     stack: ['pk', 's'],
+    script: '{} PICK RIPEMD160 {} RIPEMD160 EQUAL {01} NOT EQUAL VERIFY {01} PICK {01} PICK CHECKSIG',
   },
 ];
 
-export default fixtures;
+export const targetFixtures: Fixture[] = [
+  {
+    fn: 'deep_replace',
+    ir: [
+      new Replace(6),
+    ],
+    script: '{06} ROLL DROP SWAP TOALTSTACK SWAP TOALTSTACK SWAP TOALTSTACK SWAP TOALTSTACK SWAP '
+          + 'FROMALTSTACK FROMALTSTACK FROMALTSTACK FROMALTSTACK {01}',
+  },
+];
