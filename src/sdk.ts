@@ -10,7 +10,7 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import GenerateIrTraversal from './generation/GenerateIrTraversal';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
-import { OpOrData } from './generation/Script';
+import { OpOrData, opOrDataToString } from './generation/Script';
 
 const script = new Script();
 
@@ -57,6 +57,6 @@ export function compileToTargetCode(code: string): OpOrData[] {
 }
 
 export function printTargetCode(target: OpOrData[]) {
-  const scriptString = target.map(o => o.toString('hex')).join(' ');
+  const scriptString = target.map(o => opOrDataToString(o)).join(' ');
   console.log(scriptString);
 }

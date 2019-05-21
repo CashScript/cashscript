@@ -2,6 +2,7 @@
     "extends": "@istanbuljs/nyc-config-typescript",
     "exclude": [
         "src/grammar/",
-        "test/"
+        "test/",
+        "test.ts"
     ]
 }

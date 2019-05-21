@@ -71,3 +71,12 @@ export class Op {
     return this.name;
   }
 }
+
+
+export function opOrDataToString(opOrData: OpOrData) {
+  if (opOrData instanceof Op) {
+    return opOrData.toString();
+  } else {
+    return `{${opOrData.toString('hex')}}`;
+  }
+}
