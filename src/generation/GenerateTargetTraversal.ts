@@ -36,6 +36,11 @@ export default class GenerateTargetTraversal {
         this.visitReplace(op);
       }
     });
+    if (this.output[this.output.length - 1] === Op.VERIFY) {
+      this.output.pop();
+    } else {
+      this.output.push(encodeInt(1));
+    }
     return this.output;
   }
 
