@@ -29,6 +29,7 @@ export enum PrimitiveType {
   // ADDRESS = 'address',
   PUBKEY = 'pubkey',
   SIG = 'sig',
+  DATASIG = 'datasig',
   BYTES = 'bytes',
   BYTES20 = 'bytes20',
   BYTES32 = 'bytes32',
@@ -43,7 +44,8 @@ const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
   [PrimitiveType.BOOL]: [PrimitiveType.BOOL, PrimitiveType.INT],
   [PrimitiveType.STRING]: [PrimitiveType.STRING, PrimitiveType.BYTES],
   [PrimitiveType.PUBKEY]: [PrimitiveType.PUBKEY, PrimitiveType.BYTES],
-  [PrimitiveType.SIG]: [PrimitiveType.SIG, PrimitiveType.BYTES],
+  [PrimitiveType.SIG]: [PrimitiveType.SIG, PrimitiveType.DATASIG, PrimitiveType.BYTES],
+  [PrimitiveType.DATASIG]: [PrimitiveType.DATASIG, PrimitiveType.SIG, PrimitiveType.BYTES],
   [PrimitiveType.BYTES]: [
     PrimitiveType.BYTES, PrimitiveType.SIG, PrimitiveType.PUBKEY,
   ], // Could support downcasting
@@ -58,6 +60,7 @@ const ImplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
   [PrimitiveType.STRING]: [PrimitiveType.STRING, PrimitiveType.ANY],
   [PrimitiveType.PUBKEY]: [PrimitiveType.PUBKEY, PrimitiveType.BYTES, PrimitiveType.ANY],
   [PrimitiveType.SIG]: [PrimitiveType.SIG, PrimitiveType.BYTES, PrimitiveType.ANY],
+  [PrimitiveType.DATASIG]: [PrimitiveType.DATASIG, PrimitiveType.BYTES, PrimitiveType.ANY],
   [PrimitiveType.BYTES]: [PrimitiveType.BYTES, PrimitiveType.ANY], // Could support downcasting
   [PrimitiveType.BYTES20]: [
     PrimitiveType.BYTES20, PrimitiveType.BYTES32, PrimitiveType.BYTES, PrimitiveType.ANY,

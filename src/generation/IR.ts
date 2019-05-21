@@ -93,6 +93,8 @@ export class toIrOps {
       return [new PushInt(8), Op.NUM2BIN]; // TODO: Fix proper sized int casting
     } else if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
       return [Op.BIN2NUM];
+    } else if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
+      return [Op.SIZE, new PushInt(1), Op.SUB, Op.SPLIT, Op.DROP];
     } else {
       return [];
     }

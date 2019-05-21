@@ -101,11 +101,11 @@ numberLiteral
 
 typeName
     // : 'int' | 'bool' | 'string' | 'address' | 'pubkey' | 'sig' | Bytes
-    : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | Bytes
+    : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | 'datasig' | Bytes
     ;
 
 Bytes
-    : 'bytes' | 'bytes20' | 'bytes32'
+    : 'bytes' ('20' | '32')?
     ;
 
 BooleanLiteral

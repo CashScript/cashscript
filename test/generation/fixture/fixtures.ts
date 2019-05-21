@@ -147,6 +147,17 @@ export const irFixtures: Fixture[] = [
     stack: ['pk', 's'],
     script: '{} PICK RIPEMD160 {} RIPEMD160 EQUAL {01} NOT EQUAL VERIFY {01} PICK {01} PICK CHECKSIG',
   },
+  {
+    fn: 'checkdatasig.cash',
+    ir: [
+      new Get(1), new Get(1), Op.CHECKSIG, Op.VERIFY,
+      new Get(1), Op.SIZE, new PushInt(1), Op.SUB, Op.SPLIT, Op.DROP,
+      new Get(3), new Get(2), Op.CHECKDATASIG, Op.VERIFY,
+    ],
+    stack: ['pk', 's', 'data'],
+    script: '{01} PICK {01} PICK CHECKSIG VERIFY {01} PICK SIZE {01} SUB SPLIT DROP '
+          + '{03} PICK {02} PICK CHECKDATASIG',
+  },
 ];
 
 export const targetFixtures: Fixture[] = [

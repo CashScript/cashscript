@@ -73,5 +73,5 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
   GlobalFunction.CHECKDATASIG, PrimitiveType.BOOL, undefined,
-  [PrimitiveType.SIG, PrimitiveType.BYTES, PrimitiveType.PUBKEY],
+  [PrimitiveType.DATASIG, PrimitiveType.BYTES, PrimitiveType.PUBKEY],
 ));
