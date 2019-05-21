@@ -1,10 +1,14 @@
 import { OpOrData, Op } from './Script';
 import {
   IrOp,
+  PushBool,
+  PushInt,
+  PushString,
+  PushBytes,
   Get,
   Replace,
 } from './IR';
-import { encodeInt } from '../sdk';
+import { encodeBool, encodeInt, encodeString } from '../sdk';
 
 export default class GenerateTargetTraversal {
   private output: OpOrData[] = [];
@@ -18,6 +22,14 @@ export default class GenerateTargetTraversal {
     this.input.forEach((op) => {
       if (op instanceof Op) {
         this.emit(op);
+      } else if (op instanceof PushBool) {
+        this.visitPushBool(op);
+      } else if (op instanceof PushInt) {
+        this.visitPushInt(op);
+      } else if (op instanceof PushString) {
+        this.visitPushString(op);
+      } else if (op instanceof PushBytes) {
+        this.visitPushBytes(op);
       } else if (op instanceof Get) {
         this.visitGet(op);
       } else if (op instanceof Replace) {
@@ -25,6 +37,22 @@ export default class GenerateTargetTraversal {
       }
     });
     return this.output;
+  }
+
+  visitPushBool(op: PushBool) {
+    this.emit(encodeBool(op.value));
+  }
+
+  visitPushInt(op: PushInt) {
+    this.emit(encodeInt(op.value));
+  }
+
+  visitPushString(op: PushString) {
+    this.emit(encodeString(op.value));
+  }
+
+  visitPushBytes(op: PushBytes) {
+    this.emit(op.value);
   }
 
   visitGet(op: Get) {
