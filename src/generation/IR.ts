@@ -81,8 +81,8 @@ export class Replace extends IntermediateOp {
 export class toIrOps {
   static fromTimeOp(op: TimeOp): Op[] {
     const mapping = {
-      [TimeOp.CHECK_LOCKTIME]: [Op.CHECKLOCKTIMEVERIFY, Op.DROP],
-      [TimeOp.CHECK_SEQUENCE]: [Op.CHECKSEQUENCEVERIFY, Op.DROP],
+      [TimeOp.CHECK_LOCKTIME]: [Op.OP_CHECKLOCKTIMEVERIFY, Op.OP_DROP],
+      [TimeOp.CHECK_SEQUENCE]: [Op.OP_CHECKSEQUENCEVERIFY, Op.OP_DROP],
     };
 
     return mapping[op];
@@ -90,11 +90,11 @@ export class toIrOps {
 
   static fromCast(from: PrimitiveType, to: PrimitiveType): IrOp[] {
     if (from === PrimitiveType.INT && to !== PrimitiveType.INT) {
-      return [new PushInt(8), Op.NUM2BIN]; // TODO: Fix proper sized int casting
+      return [new PushInt(8), Op.OP_NUM2BIN]; // TODO: Fix proper sized int casting
     } else if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
-      return [Op.BIN2NUM];
+      return [Op.OP_BIN2NUM];
     } else if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
-      return [Op.SIZE, new PushInt(1), Op.SUB, Op.SPLIT, Op.DROP];
+      return [Op.OP_SIZE, new PushInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP];
     } else {
       return [];
     }
@@ -102,19 +102,19 @@ export class toIrOps {
 
   static fromFunction(fn: GlobalFunction): Op[] {
     const mapping = {
-      [GlobalFunction.ABS]: [Op.ABS],
-      [GlobalFunction.CHECKDATASIG]: [Op.CHECKDATASIG],
-      [GlobalFunction.CHECKMULTISIG]: [Op.CHECKMULTISIG],
-      [GlobalFunction.CHECKSIG]: [Op.CHECKSIG],
-      [GlobalFunction.MAX]: [Op.MAX],
-      [GlobalFunction.MIN]: [Op.MIN],
-      [GlobalFunction.REQUIRE]: [Op.VERIFY],
-      [GlobalFunction.RIPEMD160]: [Op.RIPEMD160],
-      [GlobalFunction.SHA1]: [Op.SHA1],
-      [GlobalFunction.SHA256]: [Op.SHA256],
-      [GlobalFunction.HASH160]: [Op.HASH160],
-      [GlobalFunction.HASH256]: [Op.HASH256],
-      [GlobalFunction.WITHIN]: [Op.WITHIN],
+      [GlobalFunction.ABS]: [Op.OP_ABS],
+      [GlobalFunction.CHECKDATASIG]: [Op.OP_CHECKDATASIG],
+      [GlobalFunction.CHECKMULTISIG]: [Op.OP_CHECKMULTISIG],
+      [GlobalFunction.CHECKSIG]: [Op.OP_CHECKSIG],
+      [GlobalFunction.MAX]: [Op.OP_MAX],
+      [GlobalFunction.MIN]: [Op.OP_MIN],
+      [GlobalFunction.REQUIRE]: [Op.OP_VERIFY],
+      [GlobalFunction.RIPEMD160]: [Op.OP_RIPEMD160],
+      [GlobalFunction.SHA1]: [Op.OP_SHA1],
+      [GlobalFunction.SHA256]: [Op.OP_SHA256],
+      [GlobalFunction.HASH160]: [Op.OP_HASH160],
+      [GlobalFunction.HASH256]: [Op.OP_HASH256],
+      [GlobalFunction.WITHIN]: [Op.OP_WITHIN],
     };
 
     return mapping[fn];
@@ -122,28 +122,28 @@ export class toIrOps {
 
   static fromBinaryOp(op: BinaryOperator, numeric: boolean = false): Op[] {
     const mapping = {
-      [BinaryOperator.DIV]: [Op.DIV],
-      [BinaryOperator.MOD]: [Op.MOD],
-      [BinaryOperator.PLUS]: [Op.CAT],
-      [BinaryOperator.MINUS]: [Op.SUB],
-      [BinaryOperator.LT]: [Op.LESSTHAN],
-      [BinaryOperator.LE]: [Op.LESSTHANOREQUAL],
-      [BinaryOperator.GT]: [Op.GREATERTHAN],
-      [BinaryOperator.GE]: [Op.GREATERTHANOREQUAL],
-      [BinaryOperator.EQ]: [Op.EQUAL],
-      [BinaryOperator.NE]: [Op.EQUAL, Op.NOT],
-      [BinaryOperator.AND]: [Op.BOOLAND],
-      [BinaryOperator.OR]: [Op.BOOLOR],
+      [BinaryOperator.DIV]: [Op.OP_DIV],
+      [BinaryOperator.MOD]: [Op.OP_MOD],
+      [BinaryOperator.PLUS]: [Op.OP_CAT],
+      [BinaryOperator.MINUS]: [Op.OP_SUB],
+      [BinaryOperator.LT]: [Op.OP_LESSTHAN],
+      [BinaryOperator.LE]: [Op.OP_LESSTHANOREQUAL],
+      [BinaryOperator.GT]: [Op.OP_GREATERTHAN],
+      [BinaryOperator.GE]: [Op.OP_GREATERTHANOREQUAL],
+      [BinaryOperator.EQ]: [Op.OP_EQUAL],
+      [BinaryOperator.NE]: [Op.OP_EQUAL, Op.OP_NOT],
+      [BinaryOperator.AND]: [Op.OP_BOOLAND],
+      [BinaryOperator.OR]: [Op.OP_BOOLOR],
     };
 
     if (numeric) {
       switch (op) {
         case BinaryOperator.PLUS:
-          return [Op.ADD];
+          return [Op.OP_ADD];
         case BinaryOperator.EQ:
-          return [Op.NUMEQUAL];
+          return [Op.OP_NUMEQUAL];
         case BinaryOperator.NE:
-          return [Op.NUMNOTEQUAL];
+          return [Op.OP_NUMNOTEQUAL];
         default:
           return mapping[op];
       }
@@ -153,8 +153,8 @@ export class toIrOps {
 
   static fromUnaryOp(op: UnaryOperator): Op[] {
     const mapping = {
-      [UnaryOperator.NOT]: [Op.NOT],
-      [UnaryOperator.NEGATE]: [Op.NEGATE],
+      [UnaryOperator.NOT]: [Op.OP_NOT],
+      [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
       [UnaryOperator.PLUS]: [],
     };
 

@@ -8,7 +8,7 @@ import {
   Get,
   Replace,
 } from './IR';
-import { encodeBool, encodeInt, encodeString } from '../sdk';
+import { encodeBool, encodeInt, encodeString } from '../util';
 
 export default class GenerateTargetTraversal {
   private output: OpOrData[] = [];
@@ -20,7 +20,7 @@ export default class GenerateTargetTraversal {
 
   traverse(): OpOrData[] {
     this.input.forEach((op) => {
-      if (op instanceof Op) {
+      if (typeof op === 'number') {
         this.emit(op);
       } else if (op instanceof PushBool) {
         this.visitPushBool(op);
@@ -36,7 +36,7 @@ export default class GenerateTargetTraversal {
         this.visitReplace(op);
       }
     });
-    if (this.output[this.output.length - 1] === Op.VERIFY) {
+    if (this.output[this.output.length - 1] === Op.OP_VERIFY) {
       this.output.pop();
     } else {
       this.output.push(encodeInt(1));
@@ -62,23 +62,23 @@ export default class GenerateTargetTraversal {
 
   visitGet(op: Get) {
     this.emit(encodeInt(op.index));
-    this.emit(Op.PICK);
+    this.emit(Op.OP_PICK);
   }
 
   // This algorithm can be optimised for hardcoded depths
   // See thesis for explanation
   visitReplace(op: Replace) {
     this.emit(encodeInt(op.index));
-    this.emit(Op.ROLL);
-    this.emit(Op.DROP);
+    this.emit(Op.OP_ROLL);
+    this.emit(Op.OP_DROP);
     for (let i = 0; i < op.index - 1; i += 1) {
-      this.emit(Op.SWAP);
+      this.emit(Op.OP_SWAP);
       if (i < op.index - 2) {
-        this.emit(Op.TOALTSTACK);
+        this.emit(Op.OP_TOALTSTACK);
       }
     }
     for (let i = 0; i < op.index - 2; i += 1) {
-      this.emit(Op.FROMALTSTACK);
+      this.emit(Op.OP_FROMALTSTACK);
     }
   }
 }

@@ -20,143 +20,155 @@ export const irFixtures: Fixture[] = [
   {
     fn: 'p2pkh.cash',
     ir: [
-      new Get(1), Op.SHA256, new Get(1), Op.EQUAL, Op.VERIFY,
-      new Get(2), new Get(2), Op.CHECKSIG, Op.VERIFY,
+      new Get(1), Op.OP_SHA256, new Get(1), Op.OP_EQUAL, Op.OP_VERIFY,
+      new Get(2), new Get(2), Op.OP_CHECKSIG, Op.OP_VERIFY,
     ],
     stack: ['pkh', 'pk', 's'],
-    script: '{01} PICK SHA256 {01} PICK EQUAL VERIFY {02} PICK {02} PICK CHECKSIG',
+    script: 'OP_1 OP_PICK OP_SHA256 OP_1 OP_PICK OP_EQUAL OP_VERIFY OP_2 OP_PICK OP_2 OP_PICK OP_CHECKSIG',
   },
   {
     fn: 'reassignment.cash',
     ir: [
-      new PushInt(10), new PushInt(4), Op.SUB,
-      new PushInt(20), new Get(1), new PushInt(2), Op.MOD, Op.ADD,
-      new Get(0), new Get(3), Op.GREATERTHAN, Op.VERIFY,
+      new PushInt(10), new PushInt(4), Op.OP_SUB,
+      new PushInt(20), new Get(1), new PushInt(2), Op.OP_MOD, Op.OP_ADD,
+      new Get(0), new Get(3), Op.OP_GREATERTHAN, Op.OP_VERIFY,
       new PushString('Hello World'),
-      new Get(0), new Get(5), Op.CAT,
-      new Get(6), Op.RIPEMD160, new Get(1), Op.RIPEMD160, Op.EQUAL, Op.VERIFY,
-      new Get(7), new Get(7), Op.CHECKSIG, Op.VERIFY,
+      new Get(0), new Get(5), Op.OP_CAT,
+      new Get(6), Op.OP_RIPEMD160, new Get(1), Op.OP_RIPEMD160, Op.OP_EQUAL, Op.OP_VERIFY,
+      new Get(7), new Get(7), Op.OP_CHECKSIG, Op.OP_VERIFY,
     ],
     stack: ['hw', 'hw', 'myOtherVariable', 'myVariable', 'x', 'y', 'pk', 's'],
-    script: '{0a} {04} SUB {14} {01} PICK {02} MOD ADD {} PICK {03} PICK GREATERTHAN VERIFY '
-          + '{48656c6c6f20576f726c64} {} PICK {05} PICK CAT {06} PICK RIPEMD160 {01} PICK '
-          + 'RIPEMD160 EQUAL VERIFY {07} PICK {07} PICK CHECKSIG',
+    script: 'OP_10 OP_4 OP_SUB 14 OP_1 OP_PICK OP_2 OP_MOD OP_ADD OP_0 OP_PICK OP_3 '
+          + 'OP_PICK OP_GREATERTHAN OP_VERIFY 48656c6c6f20576f726c64 OP_0 OP_PICK OP_5 '
+          + 'OP_PICK OP_CAT OP_6 OP_PICK OP_RIPEMD160 OP_1 OP_PICK OP_RIPEMD160 OP_EQUAL '
+          + 'OP_VERIFY OP_7 OP_PICK OP_7 OP_PICK OP_CHECKSIG',
   },
   {
     fn: 'if_statement.cash',
     ir: [
-      new Get(2), new Get(4), Op.ADD,
-      new Get(0), new Get(4), Op.SUB,
-      new Get(0), new Get(3), new PushInt(2), Op.SUB, Op.NUMEQUAL, Op.IF,
-      new Get(0), new Get(6), Op.ADD,
-      new Get(5), new Get(1), Op.ADD, new Replace(2),
-      new Get(0), new Get(2), Op.GREATERTHAN, Op.VERIFY,
-      Op.DROP, Op.ELSE,
-      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
-      Op.ENDIF,
-      new Get(0), new Get(5), Op.ADD,
-      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
+      new Get(2), new Get(4), Op.OP_ADD,
+      new Get(0), new Get(4), Op.OP_SUB,
+      new Get(0), new Get(3), new PushInt(2), Op.OP_SUB, Op.OP_NUMEQUAL, Op.OP_IF,
+      new Get(0), new Get(6), Op.OP_ADD,
+      new Get(5), new Get(1), Op.OP_ADD, new Replace(2),
+      new Get(0), new Get(2), Op.OP_GREATERTHAN, Op.OP_VERIFY,
+      Op.OP_DROP, Op.OP_ELSE,
+      new Get(0), new Get(5), Op.OP_NUMEQUAL, Op.OP_VERIFY,
+      Op.OP_ENDIF,
+      new Get(0), new Get(5), Op.OP_ADD,
+      new Get(0), new Get(5), Op.OP_NUMEQUAL, Op.OP_VERIFY,
     ],
     stack: ['d', 'd', 'd', 'x', 'y', 'a', 'b'],
-    script: '{02} PICK {04} PICK ADD {} PICK {04} PICK SUB {} PICK {03} PICK {02} SUB NUMEQUAL IF '
-          + '{} PICK {06} PICK ADD {05} PICK {01} PICK ADD {02} ROLL DROP SWAP {} PICK {02} PICK '
-          + 'GREATERTHAN VERIFY DROP ELSE {} PICK {05} PICK NUMEQUAL VERIFY ENDIF '
-          + '{} PICK {05} PICK ADD {} PICK {05} PICK NUMEQUAL',
+    script: 'OP_2 OP_PICK OP_4 OP_PICK OP_ADD OP_0 OP_PICK OP_4 OP_PICK OP_SUB OP_0 '
+          + 'OP_PICK OP_3 OP_PICK OP_2 OP_SUB OP_NUMEQUAL OP_IF OP_0 OP_PICK OP_6 OP_PICK '
+          + 'OP_ADD OP_5 OP_PICK OP_1 OP_PICK OP_ADD OP_2 OP_ROLL OP_DROP OP_SWAP OP_0 OP_PICK '
+          + 'OP_2 OP_PICK OP_GREATERTHAN OP_VERIFY OP_DROP OP_ELSE OP_0 OP_PICK OP_5 OP_PICK '
+          + 'OP_NUMEQUAL OP_VERIFY OP_ENDIF OP_0 OP_PICK OP_5 OP_PICK OP_ADD OP_0 OP_PICK OP_5 '
+          + 'OP_PICK OP_NUMEQUAL',
   },
   {
     fn: 'multifunction.cash',
     ir: [
-      new Get(3), new PushInt(0), Op.NUMEQUAL, Op.IF,
-      new Get(4), new Get(2), Op.CHECKSIG, Op.VERIFY,
-      Op.ELSE, new Get(3), new PushInt(1), Op.NUMEQUAL, Op.IF,
-      new Get(4), new Get(1), Op.CHECKSIG, Op.VERIFY,
-      new Get(2), Op.CHECKLOCKTIMEVERIFY, Op.DROP,
-      Op.ENDIF, Op.ENDIF,
+      new Get(3), new PushInt(0), Op.OP_NUMEQUAL, Op.OP_IF,
+      new Get(4), new Get(2), Op.OP_CHECKSIG, Op.OP_VERIFY,
+      Op.OP_ELSE, new Get(3), new PushInt(1), Op.OP_NUMEQUAL, Op.OP_IF,
+      new Get(4), new Get(1), Op.OP_CHECKSIG, Op.OP_VERIFY,
+      new Get(2), Op.OP_CHECKLOCKTIMEVERIFY, Op.OP_DROP,
+      Op.OP_ENDIF, Op.OP_ENDIF,
     ],
     stack: ['sender', 'recipient', 'timeout', '$$', 'senderSig'],
-    script: '{03} PICK {} NUMEQUAL IF {04} PICK {02} PICK CHECKSIG VERIFY ELSE '
-          + '{03} PICK {01} NUMEQUAL IF {04} PICK {01} PICK CHECKSIG VERIFY '
-          + '{02} PICK CHECKLOCKTIMEVERIFY DROP ENDIF ENDIF {01}',
+    script: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_PICK OP_2 OP_PICK OP_CHECKSIG '
+          + 'OP_VERIFY OP_ELSE OP_3 OP_PICK OP_1 OP_NUMEQUAL OP_IF OP_4 OP_PICK OP_1 '
+          + 'OP_PICK OP_CHECKSIG OP_VERIFY OP_2 OP_PICK OP_CHECKLOCKTIMEVERIFY OP_DROP '
+          + 'OP_ENDIF OP_ENDIF OP_1',
   },
   {
     fn: 'multifunction_if_statements.cash',
     ir: [
-      new Get(2), new PushInt(0), Op.NUMEQUAL, Op.IF,
-      new Get(3), new Get(5), Op.ADD,
-      new Get(0), new Get(5), Op.SUB,
-      new Get(0), new Get(3), Op.NUMEQUAL, Op.IF,
-      new Get(0), new Get(7), Op.ADD,
-      new Get(6), new Get(1), Op.ADD, new Replace(2),
-      new Get(0), new Get(2), Op.GREATERTHAN, Op.VERIFY,
-      Op.DROP, Op.ELSE,
+      new Get(2), new PushInt(0), Op.OP_NUMEQUAL, Op.OP_IF,
+      new Get(3), new Get(5), Op.OP_ADD,
+      new Get(0), new Get(5), Op.OP_SUB,
+      new Get(0), new Get(3), Op.OP_NUMEQUAL, Op.OP_IF,
+      new Get(0), new Get(7), Op.OP_ADD,
+      new Get(6), new Get(1), Op.OP_ADD, new Replace(2),
+      new Get(0), new Get(2), Op.OP_GREATERTHAN, Op.OP_VERIFY,
+      Op.OP_DROP, Op.OP_ELSE,
       new Get(5), new Replace(1),
-      Op.ENDIF,
-      new Get(0), new Get(6), Op.ADD,
-      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
-      Op.ELSE, new Get(2), new PushInt(1), Op.NUMEQUAL, Op.IF,
+      Op.OP_ENDIF,
+      new Get(0), new Get(6), Op.OP_ADD,
+      new Get(0), new Get(5), Op.OP_NUMEQUAL, Op.OP_VERIFY,
+      Op.OP_ELSE, new Get(2), new PushInt(1), Op.OP_NUMEQUAL, Op.OP_IF,
       new Get(3),
-      new Get(0), new PushInt(2), Op.ADD,
-      new Get(0), new Get(3), Op.NUMEQUAL, Op.IF,
-      new Get(0), new Get(6), Op.ADD,
-      new Get(0), new Get(2), Op.ADD, new Replace(2),
-      new Get(0), new Get(2), Op.GREATERTHAN, Op.VERIFY,
-      Op.DROP, Op.ENDIF,
+      new Get(0), new PushInt(2), Op.OP_ADD,
+      new Get(0), new Get(3), Op.OP_NUMEQUAL, Op.OP_IF,
+      new Get(0), new Get(6), Op.OP_ADD,
+      new Get(0), new Get(2), Op.OP_ADD, new Replace(2),
+      new Get(0), new Get(2), Op.OP_GREATERTHAN, Op.OP_VERIFY,
+      Op.OP_DROP, Op.OP_ENDIF,
       new Get(5),
-      new Get(0), new Get(5), Op.NUMEQUAL, Op.VERIFY,
-      Op.ENDIF, Op.ENDIF,
+      new Get(0), new Get(5), Op.OP_NUMEQUAL, Op.OP_VERIFY,
+      Op.OP_ENDIF, Op.OP_ENDIF,
     ],
     stack: ['d', 'd', 'd', 'x', 'y', '$$', 'b'],
-    script: '{02} PICK {} NUMEQUAL IF {03} PICK {05} PICK ADD {} PICK {05} PICK SUB '
-          + '{} PICK {03} PICK NUMEQUAL IF {} PICK {07} PICK ADD {06} PICK {01} PICK ADD '
-          + '{02} ROLL DROP SWAP {} PICK {02} PICK GREATERTHAN VERIFY DROP ELSE '
-          + '{05} PICK {01} ROLL DROP ENDIF {} PICK {06} PICK ADD {} PICK {05} PICK NUMEQUAL VERIFY '
-          + 'ELSE {02} PICK {01} NUMEQUAL IF {03} PICK {} PICK {02} ADD {} PICK '
-          + '{03} PICK NUMEQUAL IF {} PICK {06} PICK ADD {} PICK {02} PICK ADD {02} ROLL DROP SWAP '
-          + '{} PICK {02} PICK GREATERTHAN VERIFY DROP ENDIF {05} PICK {} PICK {05} PICK '
-          + 'NUMEQUAL VERIFY ENDIF ENDIF {01}',
+    script: 'OP_2 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_3 OP_PICK OP_5 OP_PICK OP_ADD '
+          + 'OP_0 OP_PICK OP_5 OP_PICK OP_SUB OP_0 OP_PICK OP_3 OP_PICK OP_NUMEQUAL '
+          + 'OP_IF OP_0 OP_PICK OP_7 OP_PICK OP_ADD OP_6 OP_PICK OP_1 OP_PICK OP_ADD '
+          + 'OP_2 OP_ROLL OP_DROP OP_SWAP OP_0 OP_PICK OP_2 OP_PICK OP_GREATERTHAN '
+          + 'OP_VERIFY OP_DROP OP_ELSE OP_5 OP_PICK OP_1 OP_ROLL OP_DROP OP_ENDIF OP_0 '
+          + 'OP_PICK OP_6 OP_PICK OP_ADD OP_0 OP_PICK OP_5 OP_PICK OP_NUMEQUAL OP_VERIFY '
+          + 'OP_ELSE OP_2 OP_PICK OP_1 OP_NUMEQUAL OP_IF OP_3 OP_PICK OP_0 OP_PICK OP_2 '
+          + 'OP_ADD OP_0 OP_PICK OP_3 OP_PICK OP_NUMEQUAL OP_IF OP_0 OP_PICK OP_6 OP_PICK '
+          + 'OP_ADD OP_0 OP_PICK OP_2 OP_PICK OP_ADD OP_2 OP_ROLL OP_DROP OP_SWAP OP_0 '
+          + 'OP_PICK OP_2 OP_PICK OP_GREATERTHAN OP_VERIFY OP_DROP OP_ENDIF OP_5 OP_PICK '
+          + 'OP_0 OP_PICK OP_5 OP_PICK OP_NUMEQUAL OP_VERIFY OP_ENDIF OP_ENDIF OP_1',
   },
   {
     fn: '2_of_3_multisig.cash',
     ir: [
       new Get(3), new Get(5), new PushInt(2),
       new Get(3), new Get(5), new Get(7), new PushInt(3),
-      Op.CHECKMULTISIG, Op.VERIFY,
+      Op.OP_CHECKMULTISIG, Op.OP_VERIFY,
     ],
     stack: ['pk1', 'pk2', 'pk3', 's1', 's2'],
-    script: '{03} PICK {05} PICK {02} {03} PICK {05} PICK {07} PICK {03} CHECKMULTISIG',
+    script: 'OP_3 OP_PICK OP_5 OP_PICK OP_2 OP_3 OP_PICK OP_5 OP_PICK OP_7 OP_PICK '
+          + 'OP_3 OP_CHECKMULTISIG',
   },
   {
     fn: 'splice_size.cash',
     ir: [
-      new Get(0), new Get(1), Op.SIZE, Op.NIP, new PushInt(2), Op.DIV, Op.SPLIT, Op.NIP,
-      new Get(0), new Get(2), Op.EQUAL, Op.NOT, Op.VERIFY,
-      new Get(1), new PushInt(4), Op.SPLIT, Op.DROP, new Get(1), Op.EQUAL, Op.NOT, Op.VERIFY,
+      new Get(0), new Get(1), Op.OP_SIZE, Op.OP_NIP, new PushInt(2),
+      Op.OP_DIV, Op.OP_SPLIT, Op.OP_NIP,
+      new Get(0), new Get(2), Op.OP_EQUAL, Op.OP_NOT, Op.OP_VERIFY,
+      new Get(1), new PushInt(4), Op.OP_SPLIT, Op.OP_DROP, new Get(1),
+      Op.OP_EQUAL, Op.OP_NOT, Op.OP_VERIFY,
     ],
     stack: ['x', 'b'],
-    script: '{} PICK {01} PICK SIZE NIP {02} DIV SPLIT NIP {} PICK {02} PICK EQUAL NOT VERIFY '
-          + '{01} PICK {04} SPLIT DROP {01} PICK EQUAL NOT',
+    script: 'OP_0 OP_PICK OP_1 OP_PICK OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP OP_0 '
+          + 'OP_PICK OP_2 OP_PICK OP_EQUAL OP_NOT OP_VERIFY OP_1 OP_PICK OP_4 OP_SPLIT '
+          + 'OP_DROP OP_1 OP_PICK OP_EQUAL OP_NOT',
   },
   {
     fn: 'cast_hash_checksig.cash',
     ir: [
-      new Get(0), Op.RIPEMD160,
-      new PushBytes(Buffer.from('0', 'hex')), Op.HASH160,
-      Op.EQUAL, new PushBool(true), Op.NOT, Op.EQUAL, Op.VERIFY,
-      new Get(1), new Get(1), Op.CHECKSIG, Op.VERIFY,
+      new Get(0), Op.OP_RIPEMD160,
+      new PushBytes(Buffer.from('0', 'hex')), Op.OP_HASH160,
+      Op.OP_EQUAL, new PushBool(true), Op.OP_NOT, Op.OP_EQUAL, Op.OP_VERIFY,
+      new Get(1), new Get(1), Op.OP_CHECKSIG, Op.OP_VERIFY,
     ],
     stack: ['pk', 's'],
-    script: '{} PICK RIPEMD160 {} HASH160 EQUAL {01} NOT EQUAL VERIFY {01} PICK {01} PICK CHECKSIG',
+    script: 'OP_0 OP_PICK OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_EQUAL '
+          + 'OP_VERIFY OP_1 OP_PICK OP_1 OP_PICK OP_CHECKSIG',
   },
   {
     fn: 'checkdatasig.cash',
     ir: [
-      new Get(1), new Get(1), Op.CHECKSIG, Op.VERIFY,
-      new Get(1), Op.SIZE, new PushInt(1), Op.SUB, Op.SPLIT, Op.DROP,
-      new Get(3), new Get(2), Op.CHECKDATASIG, Op.VERIFY,
+      new Get(1), new Get(1), Op.OP_CHECKSIG, Op.OP_VERIFY,
+      new Get(1), Op.OP_SIZE, new PushInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP,
+      new Get(3), new Get(2), Op.OP_CHECKDATASIG, Op.OP_VERIFY,
     ],
     stack: ['pk', 's', 'data'],
-    script: '{01} PICK {01} PICK CHECKSIG VERIFY {01} PICK SIZE {01} SUB SPLIT DROP '
-          + '{03} PICK {02} PICK CHECKDATASIG',
+    script: 'OP_1 OP_PICK OP_1 OP_PICK OP_CHECKSIG OP_VERIFY OP_1 OP_PICK OP_SIZE '
+          + 'OP_1 OP_SUB OP_SPLIT OP_DROP OP_3 OP_PICK OP_2 OP_PICK OP_CHECKDATASIG',
   },
 ];
 
@@ -166,7 +178,8 @@ export const targetFixtures: Fixture[] = [
     ir: [
       new Replace(6),
     ],
-    script: '{06} ROLL DROP SWAP TOALTSTACK SWAP TOALTSTACK SWAP TOALTSTACK SWAP TOALTSTACK SWAP '
-          + 'FROMALTSTACK FROMALTSTACK FROMALTSTACK FROMALTSTACK {01}',
+    script: 'OP_6 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP '
+          + 'OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_FROMALTSTACK '
+          + 'OP_FROMALTSTACK OP_FROMALTSTACK OP_1',
   },
 ];

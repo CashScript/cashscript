@@ -1,5 +1,4 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
-import { Script } from 'bitbox-sdk';
 import * as util from 'util';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
@@ -10,9 +9,7 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import GenerateIrTraversal from './generation/GenerateIrTraversal';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
-import { OpOrData, opOrDataToString } from './generation/Script';
-
-const script = new Script();
+import { OpOrData, Script } from './generation/Script';
 
 export function parseCode(code: string): Ast {
   const inputStream = new ANTLRInputStream(code);
@@ -38,7 +35,7 @@ export function encodeBool(b: boolean): Buffer {
 }
 
 export function encodeInt(i: number): Buffer {
-  return script.number.encode(i);
+  return Script.encodeNumber(i);
 }
 
 export function encodeString(s: string): Buffer {
@@ -57,6 +54,5 @@ export function compileToTargetCode(code: string): OpOrData[] {
 }
 
 export function printTargetCode(target: OpOrData[]) {
-  const scriptString = target.map(o => opOrDataToString(o)).join(' ');
-  console.log(scriptString);
+  console.log(Script.toASM(Script.encode(target)));
 }

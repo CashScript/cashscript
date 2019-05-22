@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Ast } from '../../src/ast/AST';
 import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal';
-import { parseCode } from '../../src/sdk';
+import { parseCode } from '../../src/util';
 import { Location } from '../../src/ast/Location';
 
 function setup(input: string): Ast {

@@ -21,7 +21,7 @@ import {
   TypeError,
 } from '../../src/Errors';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
-import { parseCode } from '../../src/sdk';
+import { parseCode } from '../../src/util';
 
 interface TestSetup {
   ast: Node,

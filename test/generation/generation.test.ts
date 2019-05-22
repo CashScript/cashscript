@@ -9,11 +9,11 @@ import * as fs from 'fs';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import { Ast } from '../../src/ast/AST';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
-import { parseCode } from '../../src/sdk';
+import { parseCode } from '../../src/util';
 import GenerateIrTraversal from '../../src/generation/GenerateIrTraversal';
 import { irFixtures, targetFixtures } from './fixture/fixtures';
 import GenerateTargetTraversal from '../../src/generation/GenerateTargetTraversal';
-import { opOrDataToString } from '../../src/generation/Script';
+import { Script } from '../../src/generation/Script';
 
 describe('Code generation', () => {
   describe('IR', () => {
@@ -41,8 +41,8 @@ describe('Code generation', () => {
       it(`should compile ${fixture.fn} to Bitcoin Script`, () => {
         const target = new GenerateTargetTraversal(fixture.ir).traverse();
 
-        assert.deepEqual(
-          target.map(o => opOrDataToString(o)).join(' '),
+        assert.equal(
+          Script.toASM(Script.encode(target)),
           fixture.script,
         );
       });

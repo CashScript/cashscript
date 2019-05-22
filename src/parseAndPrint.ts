@@ -4,7 +4,7 @@ import {
   printAstAsCode,
   printTargetCode,
   compileToTargetCode,
-} from './sdk';
+} from './util';
 
 printAstAsCode(parseCode(fs.readFileSync(process.argv[2], { encoding: 'utf-8' })));
 printTargetCode(compileToTargetCode(fs.readFileSync(process.argv[2], { encoding: 'utf-8' })));
