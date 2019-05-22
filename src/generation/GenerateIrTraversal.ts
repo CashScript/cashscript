@@ -106,7 +106,17 @@ export default class GenerateIrTraversal extends AstTraversal {
   visitFunctionDefinition(node: FunctionDefinitionNode) {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
+    this.cleanStack();
     return node;
+  }
+
+  cleanStack() {
+    this.stack.forEach(() => {
+      this.emit(Op.OP_DROP);
+    });
+    this.stack = [];
+    this.pushToStack('true');
+    this.emit(new PushBool(true));
   }
 
   visitParameter(node: ParameterNode) {

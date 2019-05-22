@@ -31,7 +31,7 @@ describe('Code generation', () => {
           genIr.output.map(o => o.toString()),
           fixture.ir.map(o => o.toString()),
         );
-        assert.deepEqual(genIr.stack, fixture.stack);
+        assert.deepEqual(genIr.stack, ['true']);
       });
     });
   });
