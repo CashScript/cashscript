@@ -187,17 +187,25 @@ export default class GenerateIrTraversal extends AstTraversal {
   }
 
   visitFunctionCall(node: FunctionCallNode) {
-    node.parameters = this.visitList(node.parameters);
-    this.emit(toIrOps.fromFunction(node.identifier.name as GlobalFunction));
-
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
-      const sigs = node.parameters[0] as ArrayNode;
-      const pks = node.parameters[1] as ArrayNode;
-      this.popFromStack(sigs.elements.length + pks.elements.length + 2);
-    } else {
-      this.popFromStack(node.parameters.length);
+      return this.visitMultiSig(node);
     }
 
+    node.parameters = this.visitList(node.parameters);
+    this.emit(toIrOps.fromFunction(node.identifier.name as GlobalFunction));
+    this.popFromStack(node.parameters.length);
+    this.pushToStack('(value)');
+
+    return node;
+  }
+
+  visitMultiSig(node: FunctionCallNode) {
+    this.emit(new PushBool(false));
+    node.parameters = this.visitList(node.parameters);
+    this.emit(Op.OP_CHECKMULTISIG);
+    const sigs = node.parameters[0] as ArrayNode;
+    const pks = node.parameters[1] as ArrayNode;
+    this.popFromStack(sigs.elements.length + pks.elements.length + 2);
     this.pushToStack('(value)');
 
     return node;

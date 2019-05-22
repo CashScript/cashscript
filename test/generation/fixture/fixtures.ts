@@ -125,12 +125,12 @@ export const irFixtures: Fixture[] = [
   {
     fn: '2_of_3_multisig.cash',
     ir: [
-      new Get(3), new Get(5), new PushInt(2),
+      new PushBool(false), new Get(3), new Get(5), new PushInt(2),
       new Get(3), new Get(5), new Get(7), new PushInt(3),
       Op.OP_CHECKMULTISIG, Op.OP_VERIFY,
     ],
     stack: ['pk1', 'pk2', 'pk3', 's1', 's2'],
-    script: 'OP_3 OP_PICK OP_5 OP_PICK OP_2 OP_3 OP_PICK OP_5 OP_PICK OP_7 OP_PICK '
+    script: 'OP_0 OP_3 OP_PICK OP_5 OP_PICK OP_2 OP_3 OP_PICK OP_5 OP_PICK OP_7 OP_PICK '
           + 'OP_3 OP_CHECKMULTISIG',
   },
   {
