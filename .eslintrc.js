@@ -29,5 +29,6 @@ module.exports = {
       'error',
       { allowShortCircuit: true }
     ],
+    'import/prefer-default-export': 0,
   },
 }

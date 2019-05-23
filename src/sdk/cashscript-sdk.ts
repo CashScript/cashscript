@@ -23,3 +23,5 @@ export function compileFile(codeFile: string): Abi {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
   return compile(code);
 }
+
+export { Contract } from './Contract';

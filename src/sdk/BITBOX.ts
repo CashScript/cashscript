@@ -1,4 +1,9 @@
-import { BITBOX, Script, Crypto, Address } from 'bitbox-sdk';
+import {
+  BITBOX,
+  Script,
+  Crypto,
+  Address,
+} from 'bitbox-sdk';
 
 export const NETWORKS: { [index: string]: string } = {
   mainnet: 'https://rest.bitcoin.com/v2/',
