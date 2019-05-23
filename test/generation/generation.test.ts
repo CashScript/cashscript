@@ -13,7 +13,7 @@ import { parseCode } from '../../src/util';
 import GenerateIrTraversal from '../../src/generation/GenerateIrTraversal';
 import { irFixtures, targetFixtures } from './fixture/fixtures';
 import GenerateTargetTraversal from '../../src/generation/GenerateTargetTraversal';
-import { Script } from '../../src/generation/Script';
+import { ScriptUtil } from '../../src/sdk/BITBOX';
 
 describe('Code generation', () => {
   describe('IR', () => {
@@ -42,7 +42,7 @@ describe('Code generation', () => {
         const target = new GenerateTargetTraversal(fixture.ir).traverse();
 
         assert.equal(
-          Script.toASM(Script.encode(target)),
+          ScriptUtil.toASM(ScriptUtil.encode(target)),
           fixture.script,
         );
       });

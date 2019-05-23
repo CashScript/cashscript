@@ -1,4 +1,4 @@
-import { OpOrData, Op } from './Script';
+import { OpOrData, Op, Script } from './Script';
 import {
   IrOp,
   PushBool,
@@ -11,14 +11,14 @@ import {
 import { encodeBool, encodeInt, encodeString } from '../util';
 
 export default class GenerateTargetTraversal {
-  private output: OpOrData[] = [];
+  private output: Script = [];
   constructor(private input: IrOp[]) {}
 
   emit(opOrData: OpOrData) {
     this.output.push(opOrData);
   }
 
-  traverse(): OpOrData[] {
+  traverse(): Script {
     this.input.forEach((op) => {
       if (typeof op === 'number') {
         this.emit(op);

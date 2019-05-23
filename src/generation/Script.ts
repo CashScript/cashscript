@@ -1,7 +1,7 @@
-import { Script as BScript } from 'bitbox-sdk';
+import { ScriptUtil } from '../sdk/BITBOX';
 
-export const Script = new BScript();
-export const Op = Script.opcodes;
+export const Op = ScriptUtil.opcodes;
 
 export type Op = number;
 export type OpOrData = Op | Buffer;
+export type Script = OpOrData[];

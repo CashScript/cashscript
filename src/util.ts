@@ -9,7 +9,8 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import GenerateIrTraversal from './generation/GenerateIrTraversal';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
-import { OpOrData, Script } from './generation/Script';
+import { Script } from './generation/Script';
+import { ScriptUtil } from './sdk/BITBOX';
 
 export function parseCode(code: string): Ast {
   const inputStream = new ANTLRInputStream(code);
@@ -35,14 +36,14 @@ export function encodeBool(b: boolean): Buffer {
 }
 
 export function encodeInt(i: number): Buffer {
-  return Script.encodeNumber(i);
+  return ScriptUtil.encodeNumber(i);
 }
 
 export function encodeString(s: string): Buffer {
   return Buffer.from(s, 'utf8');
 }
 
-export function compileToTargetCode(code: string): OpOrData[] {
+export function compileToTargetCode(code: string): Script {
   const ast = parseCode(code);
   ast.accept(new SymbolTableTraversal());
   ast.accept(new TypeCheckTraversal());
@@ -53,6 +54,6 @@ export function compileToTargetCode(code: string): OpOrData[] {
   return target;
 }
 
-export function printTargetCode(target: OpOrData[]) {
-  console.log(Script.toASM(Script.encode(target)));
+export function printTargetCode(target: Script) {
+  console.log(ScriptUtil.toASM(ScriptUtil.encode(target)));
 }
