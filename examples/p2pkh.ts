@@ -1,4 +1,4 @@
-import { ECPair, BITBOX } from 'bitbox-sdk';
+import { BITBOX } from 'bitbox-sdk';
 import * as path from 'path';
 import { NETWORKS } from '../src/sdk/BITBOX';
 import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
@@ -11,7 +11,7 @@ import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
   const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
   const keypair = bitbox.HDNode.toKeyPair(hdNode);
 
-  const pk = new ECPair(bitbox.Address).toPublicKey(keypair);
+  const pk = bitbox.ECPair.toPublicKey(keypair);
   const pkh = bitbox.Crypto.hash160(pk);
 
   const abi = compileFile(path.join(__dirname, 'p2pkh.cash'));

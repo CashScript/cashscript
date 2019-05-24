@@ -533,13 +533,13 @@ bip-schnorr@^0.3.0:
     random-bytes "^1.0.0"
     safe-buffer "^5.0.1"
 
-bip21@Bitcoin-com/bip21:
+"bip21@github:Bitcoin-com/bip21":
   version "2.0.1"
   resolved "https://codeload.github.com/Bitcoin-com/bip21/tar.gz/28f8d03a3a16ed11eb5b963248ed1be8c46c6d6f"
   dependencies:
     qs "^6.3.0"
 
-bip32-utils@Bitcoin-com/bip32-utils#0.13.1:
+"bip32-utils@github:Bitcoin-com/bip32-utils#0.13.1":
   version "0.13.1"
   resolved "https://codeload.github.com/Bitcoin-com/bip32-utils/tar.gz/b8a33ebd0a0ac39de7cd987e5c3f77a8c5d84e58"
   dependencies:
@@ -579,10 +579,10 @@ bip66@^1.1.0, bip66@^1.1.5:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitbox-sdk@^8.1.1:
-  version "8.1.1"
-  resolved "https://registry.yarnpkg.com/bitbox-sdk/-/bitbox-sdk-8.1.1.tgz#4f9bc4f0c8cc552aa6df641d1143114fddc8e8ed"
-  integrity sha512-3GVoFC11eXEYIEWLF/qaqeHcA7KQVGzKgsXE1mm8ROSU7M+K4S1Un+Q3FSuY2ykh3aynSK7N/Eejhvm/297YPw==
+bitbox-sdk@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/bitbox-sdk/-/bitbox-sdk-8.2.0.tgz#31e6be27141bdd8ce7f425a940849f524284c6d7"
+  integrity sha512-wyh9q0PKZdEj74IVgT/17ptLFrdGVzLyNztjPIJMxlVAROBnGb9Kkx65376+6YMhwcxmQI71v4tFKVEFqDt9rQ==
   dependencies:
     "@types/bigi" "^1.4.2"
     "@types/bip39" "^2.4.2"
@@ -620,11 +620,11 @@ bitbox-sdk@^8.1.1:
     socket.io-client "^2.1.1"
     wif "^2.0.6"
 
-bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0:
+bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0, "bitcoincash-ops@github:Bitcoin-com/bitcoincash-ops#2.0.0":
   version "2.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincash-ops/tar.gz/6ab82cc7326c67236f3b2d9d0457258ac2ef48e3"
 
-bitcoincashjs-lib@Bitcoin-com/bitcoincashjs-lib#v4.0.0:
+bitcoincashjs-lib@Bitcoin-com/bitcoincashjs-lib#v4.0.0, "bitcoincashjs-lib@github:Bitcoin-com/bitcoincashjs-lib#v4.0.0":
   version "4.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincashjs-lib/tar.gz/3d360c780ec7df4a74aea93664c2b5ff8b08949a"
   dependencies:
@@ -1027,7 +1027,7 @@ codecov@^3.5.0:
     teeny-request "^3.11.3"
     urlgrey "^0.4.4"
 
-coininfo@Bitcoin-com/coininfo:
+"coininfo@github:Bitcoin-com/coininfo":
   version "4.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/coininfo/tar.gz/eece2c6141d08c3e7783929f2a1e1e681aa1a82c"
   dependencies:

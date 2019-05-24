@@ -92,7 +92,7 @@ class Instance {
       if (f.parameters.length !== ps.length) throw new Error();
       ps.forEach((p, i) => typecheckParameter(p, f.parameters[i].type));
 
-      const txBuilder = new this.bitbox.TransactionBuilder(this.network, this.bitbox.Address);
+      const txBuilder = new this.bitbox.TransactionBuilder(this.network);
       const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
 
       // Add inputs and outputs
