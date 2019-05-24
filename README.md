@@ -10,4 +10,4 @@ CashScript is a high level language enabling basic smart contract functionality 
 CashScript is still under active development, so it can not be installed yet. Check back to this page to find out when it can be used.
 
 ## Usage
-A detailed documentation will be added when the code base has reached a higher maturity level. In the mean time, you can refer to the examples in this repository under the `examples/` directory. This includes several example CashScript contracts, as well as an example of the SDK usage under `examples/p2pkh.ts`.
+A detailed documentation will be added when the code base has reached a higher maturity level. In the mean time, you can refer to the examples in this repository under the `examples/` directory. This includes several example CashScript contracts, as well as an example of the SDK usage under `examples/p2pkh.ts`. Note that not all of these examples have been tested to work, and are also still a work in progress.
