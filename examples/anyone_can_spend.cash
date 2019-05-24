@@ -1,0 +1,5 @@
+contract AnyoneCanSpend() {
+    function spend() {
+        require(true);
+    }
+}

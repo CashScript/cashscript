@@ -1,11 +1,12 @@
 {
   "name": "cashscript",
-  "version": "0.1.0",
+  "version": "0.1.0-beta.0",
   "description": "",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
+  "files": [],
   "scripts": {
     "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
     "test": "nyc mocha",
