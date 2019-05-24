@@ -533,13 +533,13 @@ bip-schnorr@^0.3.0:
     random-bytes "^1.0.0"
     safe-buffer "^5.0.1"
 
-"bip21@github:Bitcoin-com/bip21":
+bip21@Bitcoin-com/bip21:
   version "2.0.1"
   resolved "https://codeload.github.com/Bitcoin-com/bip21/tar.gz/28f8d03a3a16ed11eb5b963248ed1be8c46c6d6f"
   dependencies:
     qs "^6.3.0"
 
-"bip32-utils@github:Bitcoin-com/bip32-utils#0.13.1":
+bip32-utils@Bitcoin-com/bip32-utils#0.13.1:
   version "0.13.1"
   resolved "https://codeload.github.com/Bitcoin-com/bip32-utils/tar.gz/b8a33ebd0a0ac39de7cd987e5c3f77a8c5d84e58"
   dependencies:
@@ -579,10 +579,10 @@ bip66@^1.1.0, bip66@^1.1.5:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitbox-sdk@^8.1.0:
-  version "8.1.0"
-  resolved "https://registry.yarnpkg.com/bitbox-sdk/-/bitbox-sdk-8.1.0.tgz#f1b8e0d6c53ca60b2c34902bfe9ce12ef9c29599"
-  integrity sha512-kCRsTH0JxXPhtK/at3JGWf6nqv0pawFo1B2ii5EIpy2ux0O2lQzpVZLR28ACWx1neQrIn83q1wZaSr7BFHUs0Q==
+bitbox-sdk@^8.1.1:
+  version "8.1.1"
+  resolved "https://registry.yarnpkg.com/bitbox-sdk/-/bitbox-sdk-8.1.1.tgz#4f9bc4f0c8cc552aa6df641d1143114fddc8e8ed"
+  integrity sha512-3GVoFC11eXEYIEWLF/qaqeHcA7KQVGzKgsXE1mm8ROSU7M+K4S1Un+Q3FSuY2ykh3aynSK7N/Eejhvm/297YPw==
   dependencies:
     "@types/bigi" "^1.4.2"
     "@types/bip39" "^2.4.2"
@@ -620,11 +620,11 @@ bitbox-sdk@^8.1.0:
     socket.io-client "^2.1.1"
     wif "^2.0.6"
 
-bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0, "bitcoincash-ops@github:Bitcoin-com/bitcoincash-ops#2.0.0":
+bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0:
   version "2.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincash-ops/tar.gz/6ab82cc7326c67236f3b2d9d0457258ac2ef48e3"
 
-"bitcoincashjs-lib@github:Bitcoin-com/bitcoincashjs-lib#v4.0.0":
+bitcoincashjs-lib@Bitcoin-com/bitcoincashjs-lib#v4.0.0:
   version "4.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincashjs-lib/tar.gz/3d360c780ec7df4a74aea93664c2b5ff8b08949a"
   dependencies:
@@ -1027,7 +1027,7 @@ codecov@^3.5.0:
     teeny-request "^3.11.3"
     urlgrey "^0.4.4"
 
-"coininfo@github:Bitcoin-com/coininfo":
+coininfo@Bitcoin-com/coininfo:
   version "4.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/coininfo/tar.gz/eece2c6141d08c3e7783929f2a1e1e681aa1a82c"
   dependencies:
@@ -1316,6 +1316,11 @@ deglob@^2.1.0:
     pkg-config "^1.1.0"
     run-parallel "^1.1.2"
     uniq "^1.0.1"
+
+delay@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/delay/-/delay-4.2.0.tgz#3f6c39dbd28aef50355e670fecee050ef01242ce"
+  integrity sha512-EBX+pZE4qSowGAMr6M0cLiPRQu2Kus/qTNLO7c+EoXpTPJH9ApFdHX+cQU1WsSHXgwhLyidfZ5Hxuq6ctWhSdw==
 
 deps-sort@^2.0.0:
   version "2.0.0"

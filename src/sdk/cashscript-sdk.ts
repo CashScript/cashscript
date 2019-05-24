@@ -24,4 +24,4 @@ export function compileFile(codeFile: string): Abi {
   return compile(code);
 }
 
-export { Contract } from './Contract';
+export { Contract, Sig } from './Contract';

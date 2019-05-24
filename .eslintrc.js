@@ -30,5 +30,7 @@ module.exports = {
       { allowShortCircuit: true }
     ],
     'import/prefer-default-export': 0,
+    'import/no-unresolved': 0,
+    'no-bitwise': 0,
   },
 }

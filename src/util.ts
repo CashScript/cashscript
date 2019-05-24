@@ -57,3 +57,9 @@ export function compileToTargetCode(code: string): Script {
 export function printTargetCode(target: Script) {
   console.log(ScriptUtil.toASM(ScriptUtil.encode(target)));
 }
+
+export function printDebug(unlockScript: Script, redeemScript: Script) {
+  const redeemASM = ScriptUtil.toASM(ScriptUtil.encode(redeemScript));
+  const unlockASM = ScriptUtil.toASM(ScriptUtil.encode(unlockScript));
+  console.log(`btcdeb --modify-flags=-NULLFAIL '[${redeemASM}]' ${unlockASM}`);
+}

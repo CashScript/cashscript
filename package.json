@@ -24,7 +24,9 @@
   "homepage": "https://github.com/rkalis/cashscript#readme",
   "dependencies": {
     "antlr4ts": "^0.5.0-alpha.3",
-    "bitbox-sdk": "^8.1.0"
+    "bitbox-sdk": "^8.1.1",
+    "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.0",
+    "delay": "^4.2.0"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^0.1.3",
