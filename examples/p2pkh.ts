@@ -22,10 +22,8 @@ import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
   console.log('contract address:', instance.address);
   console.log('contract balance:', contractBalance);
 
-  const tx = await instance.functions.spend(
-    [pk, new Sig(keypair, 0x01)],
-    { to: instance.address, amount: contractBalance - 1000 },
-  );
+  const tx = await instance.functions.spend(pk, new Sig(keypair, 0x01))
+    .send(instance.address, contractBalance - 1000);
 
   console.log('transaction details:', tx);
 })();

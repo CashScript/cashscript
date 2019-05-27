@@ -50,7 +50,7 @@ interface Output {
   to: string;
   amount: number;
 }
-type ContractFunction = (parameters: Parameter[], output: Output) => Promise<TxnDetailsResult>
+type ContractFunction = (...parameters: Parameter[]) => Transaction
 
 class Instance {
   name: string;
@@ -88,65 +88,83 @@ class Instance {
   }
 
   private createFunction(f: AbiFunction, selector?: number): ContractFunction {
-    return async (ps: Parameter[], output: Output) => {
+    return (...ps: Parameter[]) => {
       if (f.parameters.length !== ps.length) throw new Error();
       ps.forEach((p, i) => typecheckParameter(p, f.parameters[i].type));
-
-      const txBuilder = new this.bitbox.TransactionBuilder(this.network);
-      const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
-
-      // Add inputs and outputs
-      utxos.forEach((utxo) => {
-        txBuilder.addInput(utxo.txid, utxo.vout);
-      });
-      txBuilder.addOutput(output.to, output.amount);
-
-      // Vout is a misnomer used in BITBOX, should be vin
-      const inputScripts: { vout: number, script: Buffer }[] = [];
-
-      // Convert all Sig objects to valid tx signatures for current tx
-      const tx = txBuilder.transaction.buildIncomplete();
-      utxos.forEach((utxo, vin) => {
-        const cleanedPs = ps.map((p) => {
-          if (!(p instanceof Sig)) return p;
-
-          // Bitcoin cash replay protection
-          const hashtype = p.hashtype | tx.constructor.SIGHASH_BITCOINCASHBIP143;
-
-          const sighash = tx.hashForCashSignature(
-            vin, ScriptUtil.encode(this.redeemScript), utxo.satoshis, hashtype,
-          );
-          const sig = p.keypair.sign(sighash).toScriptSignature(hashtype);
-
-          return sig;
-        });
-
-        // Create unlock script / redeemScriptSig
-        const unlockScript = cleanedPs
-          .map((p, i) => encodeParameter(p, f.parameters[i]))
-          .reverse();
-        if (selector) unlockScript.unshift(encodeInt(selector));
-
-        // Create total input script / scriptSig
-        const inputScript = ScriptUtil.encodeP2SHInput(
-          ScriptUtil.encode(unlockScript),
-          ScriptUtil.encode(this.redeemScript),
-        );
-        inputScripts.push({ vout: vin, script: inputScript });
-      });
-
-      // Add all generated input scripts to the transaction
-      txBuilder.addInputScripts(inputScripts);
-
-      const finalTx = txBuilder.build();
-
-      const txid = await this.bitbox.RawTransactions.sendRawTransaction(finalTx.toHex());
-      await delay(2000);
-
-      return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
-
-      // TODO: Fee calculation, change, proper utxo selection etc etc.
+      return new Transaction(this.address, this.network, this.redeemScript, f, ps, selector);
     };
+  }
+}
+
+export class Transaction {
+  private bitbox: BITBOX;
+
+  constructor(
+    private address: string,
+    private network: string,
+    private redeemScript: Script,
+    private abiFunction: AbiFunction,
+    private parameters: Parameter[],
+    private selector?: number,
+  ) {
+    this.bitbox = bitbox[network];
+  }
+
+  async send(to: string, amount: number) {
+    const txBuilder = new this.bitbox.TransactionBuilder(this.network);
+    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+
+    // Add inputs and outputs
+    utxos.forEach((utxo) => {
+      txBuilder.addInput(utxo.txid, utxo.vout);
+    });
+    txBuilder.addOutput(to, amount);
+
+    // Vout is a misnomer used in BITBOX, should be vin
+    const inputScripts: { vout: number, script: Buffer }[] = [];
+
+    // Convert all Sig objects to valid tx signatures for current tx
+    const tx = txBuilder.transaction.buildIncomplete();
+    utxos.forEach((utxo, vin) => {
+      const cleanedPs = this.parameters.map((p) => {
+        if (!(p instanceof Sig)) return p;
+
+        // Bitcoin cash replay protection
+        const hashtype = p.hashtype | tx.constructor.SIGHASH_BITCOINCASHBIP143;
+
+        const sighash = tx.hashForCashSignature(
+          vin, ScriptUtil.encode(this.redeemScript), utxo.satoshis, hashtype,
+        );
+        const sig = p.keypair.sign(sighash).toScriptSignature(hashtype);
+
+        return sig;
+      });
+
+      // Create unlock script / redeemScriptSig
+      const unlockScript = cleanedPs
+        .map((p, i) => encodeParameter(p, this.abiFunction.parameters[i]))
+        .reverse();
+      if (this.selector) unlockScript.unshift(encodeInt(this.selector));
+
+      // Create total input script / scriptSig
+      const inputScript = ScriptUtil.encodeP2SHInput(
+        ScriptUtil.encode(unlockScript),
+        ScriptUtil.encode(this.redeemScript),
+      );
+      inputScripts.push({ vout: vin, script: inputScript });
+    });
+
+    // Add all generated input scripts to the transaction
+    txBuilder.addInputScripts(inputScripts);
+
+    const finalTx = txBuilder.build();
+
+    const txid = await this.bitbox.RawTransactions.sendRawTransaction(finalTx.toHex());
+    await delay(2000);
+
+    return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+
+    // TODO: Fee calculation, change, proper utxo selection etc etc.
   }
 }
 
