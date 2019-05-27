@@ -47,7 +47,8 @@ const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
   [PrimitiveType.SIG]: [PrimitiveType.SIG, PrimitiveType.DATASIG, PrimitiveType.BYTES],
   [PrimitiveType.DATASIG]: [PrimitiveType.DATASIG, PrimitiveType.SIG, PrimitiveType.BYTES],
   [PrimitiveType.BYTES]: [
-    PrimitiveType.BYTES, PrimitiveType.SIG, PrimitiveType.PUBKEY,
+    PrimitiveType.BYTES, PrimitiveType.BYTES20, PrimitiveType.BYTES32,
+    PrimitiveType.SIG, PrimitiveType.PUBKEY, PrimitiveType.INT,
   ], // Could support downcasting
   [PrimitiveType.BYTES20]: [PrimitiveType.BYTES20, PrimitiveType.BYTES32, PrimitiveType.BYTES],
   [PrimitiveType.BYTES32]: [PrimitiveType.BYTES32, PrimitiveType.BYTES],
