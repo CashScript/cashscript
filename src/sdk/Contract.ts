@@ -2,12 +2,6 @@ import { BITBOX } from 'bitbox-sdk';
 import { ECPair } from 'bitcoincashjs-lib';
 import { AddressUtxoResult, AddressDetailsResult, TxnDetailsResult } from 'bitcoin-com-rest';
 import delay from 'delay';
-import { PrimitiveType, Type } from '../ast/Type';
-import {
-  encodeInt,
-  encodeBool,
-  encodeString,
-} from '../util';
 import { AbiFunction, Abi, AbiParameter } from './ABI';
 import { Script } from '../generation/Script';
 import {
@@ -16,8 +10,16 @@ import {
   ScriptUtil,
   CryptoUtil,
 } from './BITBOX';
+import { DUST_LIMIT } from './constants';
+import {
+  createInputScript,
+  selectUtxos,
+  typecheckParameter,
+  encodeParameter,
+} from './transaction-util';
+import { SignatureAlgorithm } from './interfaces';
 
-type Parameter = number | boolean | string | Buffer | Sig;
+export type Parameter = number | boolean | string | Buffer | Sig;
 export class Sig {
   constructor(public keypair: ECPair, public hashtype: number) {}
 }
@@ -108,13 +110,25 @@ export class Transaction {
 
   async send(to: string, amount: number) {
     const txBuilder = new this.bitbox.TransactionBuilder(this.network);
-    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+    const { utxos: allUtxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
 
-    // Add inputs and outputs
+    // Utxo selection with placeholder script for script size calculation
+    const placeholderScript = createInputScript(
+      this.redeemScript,
+      this.abiFunction,
+      this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
+      this.selector,
+    );
+    const { utxos, change } = selectUtxos(allUtxos, [{ to, amount }], placeholderScript);
+
     utxos.forEach((utxo) => {
       txBuilder.addInput(utxo.txid, utxo.vout);
     });
     txBuilder.addOutput(to, amount);
+
+    if (change >= DUST_LIMIT) {
+      txBuilder.addOutput(this.address, change);
+    }
 
     // Vout is a misnomer used in BITBOX, should be vin
     const inputScripts: { vout: number, script: Buffer }[] = [];
@@ -130,7 +144,9 @@ export class Transaction {
         const sighash = tx.hashForCashSignature(
           vin, ScriptUtil.encode(this.redeemScript), utxo.satoshis, hashtype,
         );
-        return p.keypair.sign(sighash).toScriptSignature(hashtype);
+        return p.keypair
+          .sign(sighash, SignatureAlgorithm.SCHNORR)
+          .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
       });
 
       const inputScript = createInputScript(
@@ -148,74 +164,6 @@ export class Transaction {
     await delay(2000);
 
     return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
-
-    // TODO: Fee calculation, change, proper utxo selection etc etc.
-  }
-}
-
-function createInputScript(
-  redeemScript: Script,
-  abiFunction: AbiFunction,
-  parameters: Parameter[],
-  selector?: number,
-): Buffer {
-  // Create unlock script / redeemScriptSig
-  const unlockScript = parameters
-    .map((p, i) => encodeParameter(p, abiFunction.parameters[i]))
-    .reverse();
-  if (selector) unlockScript.unshift(encodeInt(selector));
-
-  // Create total input script / scriptSig
-  return ScriptUtil.encodeP2SHInput(
-    ScriptUtil.encode(unlockScript),
-    ScriptUtil.encode(redeemScript),
-  );
-}
-
-function typecheckParameter(parameter: Parameter, type: Type): void {
-  switch (type) {
-    case PrimitiveType.BOOL:
-      if (typeof parameter === 'boolean') return;
-      throw new Error();
-    case PrimitiveType.INT:
-      if (typeof parameter === 'number') return;
-      throw new Error();
-    case PrimitiveType.STRING:
-      if (typeof parameter !== 'string') return;
-      throw new Error();
-    case PrimitiveType.SIG:
-      if (typeof parameter === 'string') return;
-      if (parameter instanceof Buffer) return;
-      if (parameter instanceof Sig) return;
-      throw new Error();
-    default:
-      if (typeof parameter === 'string') return;
-      if (parameter instanceof Buffer) return;
-      throw new Error();
-  }
-}
-
-function encodeParameter(parameter: Parameter, type: Type): Buffer {
-  switch (type) {
-    case PrimitiveType.BOOL:
-      if (typeof parameter !== 'boolean') throw new Error();
-      return encodeBool(parameter);
-    case PrimitiveType.INT:
-      if (typeof parameter !== 'number') throw new Error();
-      return encodeInt(parameter);
-    case PrimitiveType.STRING:
-      if (typeof parameter !== 'string') throw new Error();
-      return encodeString(parameter);
-    default:
-      if (typeof parameter === 'string') {
-        if (parameter.startsWith('0x')) {
-          parameter = parameter.slice(2);
-        }
-
-        return Buffer.from(parameter, 'hex');
-      }
-      if (!(parameter instanceof Buffer)) throw Error();
-      return parameter;
   }
 }
 

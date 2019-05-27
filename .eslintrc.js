@@ -32,5 +32,6 @@ module.exports = {
     'import/prefer-default-export': 0,
     'import/no-unresolved': 0,
     'no-bitwise': 0,
+    'no-restricted-syntax': 0,
   },
 }

@@ -3,6 +3,7 @@ import {
   Script,
   Crypto,
   Address,
+  BitcoinCash,
 } from 'bitbox-sdk';
 
 export const NETWORKS: { [index: string]: string } = {
@@ -20,3 +21,4 @@ export const bitbox: { [index: string]: BITBOX } = {
 export const ScriptUtil = new Script();
 export const CryptoUtil = new Crypto();
 export const AddressUtil = new Address();
+export const BitcoinCashUtil = new BitcoinCash();

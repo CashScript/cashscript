@@ -1,4 +1,4 @@
-interface Utxo {
+export interface Utxo {
   txid: string
   vout: number
   amount: number
@@ -7,7 +7,12 @@ interface Utxo {
   confirmations: number
 }
 
-interface Output {
+export interface Output {
   to: string,
   amount: number,
+}
+
+export enum SignatureAlgorithm {
+  ECDSA = 0x00,
+  SCHNORR = 0x01,
 }
