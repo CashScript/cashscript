@@ -46,10 +46,6 @@ export class Contract {
   }
 }
 
-interface Output {
-  to: string;
-  amount: number;
-}
 type ContractFunction = (...parameters: Parameter[]) => Transaction
 
 class Instance {
@@ -131,25 +127,14 @@ export class Transaction {
 
         // Bitcoin cash replay protection
         const hashtype = p.hashtype | tx.constructor.SIGHASH_BITCOINCASHBIP143;
-
         const sighash = tx.hashForCashSignature(
           vin, ScriptUtil.encode(this.redeemScript), utxo.satoshis, hashtype,
         );
-        const sig = p.keypair.sign(sighash).toScriptSignature(hashtype);
-
-        return sig;
+        return p.keypair.sign(sighash).toScriptSignature(hashtype);
       });
 
-      // Create unlock script / redeemScriptSig
-      const unlockScript = cleanedPs
-        .map((p, i) => encodeParameter(p, this.abiFunction.parameters[i]))
-        .reverse();
-      if (this.selector) unlockScript.unshift(encodeInt(this.selector));
-
-      // Create total input script / scriptSig
-      const inputScript = ScriptUtil.encodeP2SHInput(
-        ScriptUtil.encode(unlockScript),
-        ScriptUtil.encode(this.redeemScript),
+      const inputScript = createInputScript(
+        this.redeemScript, this.abiFunction, cleanedPs, this.selector,
       );
       inputScripts.push({ vout: vin, script: inputScript });
     });
@@ -166,6 +151,25 @@ export class Transaction {
 
     // TODO: Fee calculation, change, proper utxo selection etc etc.
   }
+}
+
+function createInputScript(
+  redeemScript: Script,
+  abiFunction: AbiFunction,
+  parameters: Parameter[],
+  selector?: number,
+): Buffer {
+  // Create unlock script / redeemScriptSig
+  const unlockScript = parameters
+    .map((p, i) => encodeParameter(p, abiFunction.parameters[i]))
+    .reverse();
+  if (selector) unlockScript.unshift(encodeInt(selector));
+
+  // Create total input script / scriptSig
+  return ScriptUtil.encodeP2SHInput(
+    ScriptUtil.encode(unlockScript),
+    ScriptUtil.encode(redeemScript),
+  );
 }
 
 function typecheckParameter(parameter: Parameter, type: Type): void {
