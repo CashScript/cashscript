@@ -12,6 +12,11 @@ export interface Output {
   amount: number,
 }
 
+export interface TxOptions {
+  time?: number,
+  age?: number,
+}
+
 export enum SignatureAlgorithm {
   ECDSA = 0x00,
   SCHNORR = 0x01,

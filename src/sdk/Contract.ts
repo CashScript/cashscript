@@ -17,7 +17,7 @@ import {
   typecheckParameter,
   encodeParameter,
 } from './transaction-util';
-import { SignatureAlgorithm } from './interfaces';
+import { SignatureAlgorithm, TxOptions } from './interfaces';
 
 export type Parameter = number | boolean | string | Buffer | Sig;
 export class Sig {
@@ -108,9 +108,18 @@ export class Transaction {
     this.bitbox = bitbox[network];
   }
 
-  async send(to: string, amount: number) {
+  async send(to: string, amount: number, options?: TxOptions) {
     const txBuilder = new this.bitbox.TransactionBuilder(this.network);
     const { utxos: allUtxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+
+    const sequence = options && options.age
+      ? txBuilder.bip68.encode({ blocks: options.age })
+      : 0xfffffffe;
+    const locktime = options && options.time
+      ? options.time
+      : await this.bitbox.Blockchain.getBlockCount();
+
+    txBuilder.setLockTime(locktime);
 
     // Utxo selection with placeholder script for script size calculation
     const placeholderScript = createInputScript(
@@ -122,7 +131,7 @@ export class Transaction {
     const { utxos, change } = selectUtxos(allUtxos, [{ to, amount }], placeholderScript);
 
     utxos.forEach((utxo) => {
-      txBuilder.addInput(utxo.txid, utxo.vout);
+      txBuilder.addInput(utxo.txid, utxo.vout, sequence);
     });
     txBuilder.addOutput(to, amount);
 

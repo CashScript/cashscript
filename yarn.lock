@@ -579,10 +579,10 @@ bip66@^1.1.0, bip66@^1.1.5:
   dependencies:
     safe-buffer "^5.0.1"
 
-bitbox-sdk@^8.2.0:
-  version "8.2.0"
-  resolved "https://registry.yarnpkg.com/bitbox-sdk/-/bitbox-sdk-8.2.0.tgz#31e6be27141bdd8ce7f425a940849f524284c6d7"
-  integrity sha512-wyh9q0PKZdEj74IVgT/17ptLFrdGVzLyNztjPIJMxlVAROBnGb9Kkx65376+6YMhwcxmQI71v4tFKVEFqDt9rQ==
+bitbox-sdk@^8.2.1:
+  version "8.2.1"
+  resolved "https://registry.yarnpkg.com/bitbox-sdk/-/bitbox-sdk-8.2.1.tgz#c4b2ef9c89fe71019248487d8cc32cbf2ee8edb2"
+  integrity sha512-LfhNgYTDVXzgHdbWlho+asDs7aTSseJ2O5gXU2kRN2eIpHeVymKocay6QGEZ+OqsSJfISXLlS2qINqHAuS/W0Q==
   dependencies:
     "@types/bigi" "^1.4.2"
     "@types/bip39" "^2.4.2"
