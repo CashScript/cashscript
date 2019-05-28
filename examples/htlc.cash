@@ -1,0 +1,16 @@
+contract HTLC(
+    pubkey sender,
+    pubkey recipient,
+    int expiration,
+    bytes32 hash,
+) {
+    function complete(bytes preimage, sig s) {
+        require(sha256(preimage == hash));
+        require(checkSig(s, recipient));
+    }
+
+    function cancel(sig s) {
+        require(tx.time >= expiration);
+        require(checkSig(s, sender));
+    }
+}
