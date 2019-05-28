@@ -48,7 +48,7 @@ export function createInputScript(
   const unlockScript = parameters
     .map((p, i) => encodeParameter(p, abiFunction.parameters[i]))
     .reverse();
-  if (selector) unlockScript.unshift(encodeInt(selector));
+  if (selector !== undefined) unlockScript.push(encodeInt(selector));
 
   // Create total input script / scriptSig
   return ScriptUtil.encodeP2SHInput(
