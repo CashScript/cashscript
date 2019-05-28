@@ -1,11 +1,10 @@
 import { BITBOX } from 'bitbox-sdk';
 import * as path from 'path';
-import { NETWORKS } from '../src/sdk/BITBOX';
 import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
 
 (async () => {
-  const network = 'bchtest';
-  const bitbox = new BITBOX({ restURL: NETWORKS[network] });
+  const network = 'testnet';
+  const bitbox = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
 
   const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
   const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
