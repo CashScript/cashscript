@@ -2,7 +2,7 @@ import { BITBOX } from 'bitbox-sdk';
 import { ECPair } from 'bitcoincashjs-lib';
 import { AddressUtxoResult, AddressDetailsResult, TxnDetailsResult } from 'bitcoin-com-rest';
 import delay from 'delay';
-import { AbiFunction, Abi, AbiParameter } from './ABI';
+import { AbiFunction, Abi } from './ABI';
 import { Script } from '../generation/Script';
 import {
   bitbox,
@@ -27,23 +27,39 @@ export class Sig {
 export class Contract {
   name: string;
   new: (...params: Parameter[]) => Instance;
+  deployed: (at?: string) => Instance;
 
   constructor(
-    private abi: Abi,
+    public abi: Abi,
     private network: string = 'mainnet',
   ) {
     this.name = abi.name;
-    this.createConstructor(abi.constructorParameters);
-  }
 
-  private createConstructor(parameters: AbiParameter[]) {
     this.new = (...ps: Parameter[]) => {
-      if (parameters.length !== ps.length) throw new Error();
+      if (abi.constructorParameters.length !== ps.length) throw new Error();
       const encodedParameters = ps
-        .map((p, i) => encodeParameter(p, parameters[i].type))
+        .map((p, i) => encodeParameter(p, abi.constructorParameters[i].type))
         .reverse();
+
       const redeemScript = [...encodedParameters, ...this.abi.uninstantiatedScript];
-      return new Instance(this.abi, redeemScript, this.network);
+      const instance = new Instance(this.abi, redeemScript, this.network);
+
+      const deployedContracts = this.abi.networks[this.network] || [];
+      deployedContracts.push({ redeemScript, address: instance.address });
+      this.abi.networks[this.network] = deployedContracts;
+
+      return instance;
+    };
+
+    this.deployed = (at?: string) => {
+      if (!this.abi.networks[this.network]) throw new Error('No registered deployed contracts');
+      const deployedContract = at
+        ? this.abi.networks[this.network].find(c => c.address === at)
+        : this.abi.networks[this.network][0];
+
+      if (!deployedContract) throw new Error(`No registered contract deployed at ${at}`);
+
+      return new Instance(this.abi, deployedContract.redeemScript, this.network);
     };
   }
 }

@@ -14,7 +14,6 @@ export interface AbiFunction {
 
 export interface DeployedContract {
   redeemScript: (number | Buffer)[];
-  hex: Buffer;
   address: string;
 }
 
@@ -24,7 +23,7 @@ export interface Abi {
   functions: AbiFunction[];
   uninstantiatedScript: Script;
   networks: {
-    [network: string]: DeployedContract;
+    [network: string]: DeployedContract[];
   }
 }
 
