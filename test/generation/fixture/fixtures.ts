@@ -6,8 +6,8 @@ import {
   PushBool,
   PushBytes,
   IrOp,
-} from '../../../src/generation/IR';
-import { Op } from '../../../src/generation/Script';
+} from '../../../src/compiler/generation/IR';
+import { Op } from '../../../src/compiler/generation/Script';
 
 interface Fixture {
   fn: string,

@@ -16,9 +16,9 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
-} from './ast/AST';
-import { Type, PrimitiveType } from './ast/Type';
-import { Symbol } from './ast/SymbolTable';
+} from './compiler/ast/AST';
+import { Type, PrimitiveType } from './compiler/ast/Type';
+import { Symbol } from './compiler/ast/SymbolTable';
 
 export class CashScriptError extends Error {
   node: Node;

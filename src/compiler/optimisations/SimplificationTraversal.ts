@@ -22,7 +22,7 @@ import {
   applySizeOp,
   applyCast,
 } from './OperationSimulations';
-import { ConstantConditionError } from '../Errors';
+import { ConstantConditionError } from '../../Errors';
 
 export default class SimplificationTraversal extends AstTraversal {
   visitRequire(node: RequireNode) {

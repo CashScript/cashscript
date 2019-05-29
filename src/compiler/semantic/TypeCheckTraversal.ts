@@ -25,7 +25,7 @@ import {
   ArrayElementError,
   IndexOutOfBoundsError,
   PrimitiveTypeError,
-} from '../Errors';
+} from '../../Errors';
 import {
   PrimitiveType,
   explicitlyCastable,

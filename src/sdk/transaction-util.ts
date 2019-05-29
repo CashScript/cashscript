@@ -1,9 +1,9 @@
 import { Utxo, Output } from './interfaces';
 import { BitcoinCashUtil, ScriptUtil } from './BITBOX';
-import { Script } from '../generation/Script';
+import { Script } from '../compiler/generation/Script';
 import { AbiFunction } from './ABI';
 import { Parameter, Sig } from './Contract';
-import { PrimitiveType, Type } from '../ast/Type';
+import { PrimitiveType, Type } from '../compiler/ast/Type';
 import { encodeBool, encodeInt, encodeString } from '../util';
 
 export function selectUtxos(

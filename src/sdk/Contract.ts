@@ -3,7 +3,7 @@ import { ECPair } from 'bitcoincashjs-lib';
 import { AddressUtxoResult, AddressDetailsResult, TxnDetailsResult } from 'bitcoin-com-rest';
 import delay from 'delay';
 import { AbiFunction, Abi } from './ABI';
-import { Script } from '../generation/Script';
+import { Script } from '../compiler/generation/Script';
 import {
   bitbox,
   AddressUtil,

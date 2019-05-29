@@ -8,7 +8,7 @@ import {
   Get,
   Replace,
 } from './IR';
-import { encodeBool, encodeInt, encodeString } from '../util';
+import { encodeBool, encodeInt, encodeString } from '../../util';
 
 export default class GenerateTargetTraversal {
   private output: Script = [];

@@ -3,8 +3,8 @@ import { CommonTokenStream, ParserRuleContext } from 'antlr4ts';
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CashScriptParser } from '../src/grammar/CashScriptParser';
-import { CashScriptLexer } from '../src/grammar/CashScriptLexer';
+import { CashScriptParser } from '../src/compiler/grammar/CashScriptParser';
+import { CashScriptLexer } from '../src/compiler/grammar/CashScriptLexer';
 
 export function getSubdirectories(directory: string): string[] {
   return fs.readdirSync(directory)

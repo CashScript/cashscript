@@ -1,15 +1,15 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import * as util from 'util';
-import { Ast } from './ast/AST';
-import { CashScriptLexer } from './grammar/CashScriptLexer';
-import { CashScriptParser } from './grammar/CashScriptParser';
-import AstBuilder from './ast/AstBuilder';
-import OutputSourceCodeTraversal from './print/OutputSourceCodeTraversal';
-import SymbolTableTraversal from './semantic/SymbolTableTraversal';
-import TypeCheckTraversal from './semantic/TypeCheckTraversal';
-import GenerateIrTraversal from './generation/GenerateIrTraversal';
-import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
-import { Script } from './generation/Script';
+import { Ast } from './compiler/ast/AST';
+import { CashScriptLexer } from './compiler/grammar/CashScriptLexer';
+import { CashScriptParser } from './compiler/grammar/CashScriptParser';
+import AstBuilder from './compiler/ast/AstBuilder';
+import OutputSourceCodeTraversal from './compiler/print/OutputSourceCodeTraversal';
+import SymbolTableTraversal from './compiler/semantic/SymbolTableTraversal';
+import TypeCheckTraversal from './compiler/semantic/TypeCheckTraversal';
+import GenerateIrTraversal from './compiler/generation/GenerateIrTraversal';
+import GenerateTargetTraversal from './compiler/generation/GenerateTargetTraversal';
+import { Script } from './compiler/generation/Script';
 import { ScriptUtil } from './sdk/BITBOX';
 
 export function parseCode(code: string): Ast {

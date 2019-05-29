@@ -1,6 +1,6 @@
-import { Ast } from '../ast/AST';
-import { Type } from '../ast/Type';
-import { Script } from '../generation/Script';
+import { Ast } from '../compiler/ast/AST';
+import { Type } from '../compiler/ast/Type';
+import { Script } from '../compiler/generation/Script';
 
 export interface AbiParameter {
   name: string;
