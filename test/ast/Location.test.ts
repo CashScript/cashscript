@@ -15,7 +15,7 @@ function setup(input: string): Ast {
 }
 
 describe('Location', () => {
-  it('should compile splice_size.cash (splice, tuple, size)', () => {
+  it('should retrieve correct text from location', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'syntax', 'success', 'simple_functions.cash'), { encoding: 'utf-8' });
     const ast = setup(code);
     const f = ast.contract.functions[0];

@@ -67,7 +67,7 @@ expression
     | functionCall # FunctionCallExpression
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
     | expression '.length' # SizeOp
-    | obj=expression '.splice' '(' index=expression ')' # SpliceOp
+    | obj=expression '.split' '(' index=expression ')' # SplitOp
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
     | op=('!' | '+' | '-') expression # UnaryOp

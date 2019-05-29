@@ -17,7 +17,7 @@ import {
   BlockNode,
   TimeOpNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
@@ -244,7 +244,7 @@ export default class GenerateIrTraversal extends AstTraversal {
     return node;
   }
 
-  visitSpliceOp(node: SpliceOpNode) {
+  visitSplitOp(node: SplitOpNode) {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
     this.emit(Op.OP_SPLIT);

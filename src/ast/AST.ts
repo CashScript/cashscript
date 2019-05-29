@@ -214,7 +214,7 @@ export class SizeOpNode extends ExpressionNode {
   }
 }
 
-export class SpliceOpNode extends ExpressionNode {
+export class SplitOpNode extends ExpressionNode {
   constructor(
     public object: ExpressionNode,
     public index: ExpressionNode,
@@ -223,7 +223,7 @@ export class SpliceOpNode extends ExpressionNode {
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitSpliceOp(this);
+    return visitor.visitSplitOp(this);
   }
 }
 

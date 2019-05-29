@@ -1,7 +1,7 @@
 contract Test(bytes b) {
     function spend() {
-        bytes x = b.split(5).split(1)[1];
+        bytes x = b.split(b.length / 2)[1];
         require(x != b);
-        require (b.split(4)[0] != x);
+        require(b.split(4)[0] != x);
     }
 }

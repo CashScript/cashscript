@@ -7,7 +7,7 @@ import {
   BinaryOpNode,
   IdentifierNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   TimeOpNode,
   VariableDefinitionNode,
   ArrayNode,
@@ -160,7 +160,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitSpliceOp(node: SpliceOpNode) {
+  visitSplitOp(node: SplitOpNode) {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
 

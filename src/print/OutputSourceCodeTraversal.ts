@@ -20,7 +20,7 @@ import {
   BlockNode,
   TimeOpNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
@@ -186,9 +186,9 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitSpliceOp(node: SpliceOpNode) {
+  visitSplitOp(node: SplitOpNode) {
     node.object = this.visit(node.object);
-    this.addOutput('.splice(');
+    this.addOutput('.split(');
     node.index = this.visit(node.index);
     this.addOutput(')');
     return node;

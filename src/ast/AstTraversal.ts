@@ -20,7 +20,7 @@ import {
   BlockNode,
   TimeOpNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
@@ -103,7 +103,7 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
-  visitSpliceOp(node: SpliceOpNode): Node {
+  visitSplitOp(node: SplitOpNode): Node {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
     return node;

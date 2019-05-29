@@ -144,7 +144,7 @@ export const irFixtures: Fixture[] = [
           + 'OP_3 OP_CHECKMULTISIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1',
   },
   {
-    fn: 'splice_size.cash',
+    fn: 'split_size.cash',
     ir: [
       new Get(0), new Get(1), Op.OP_SIZE, Op.OP_NIP, new PushInt(2),
       Op.OP_DIV, Op.OP_SPLIT, Op.OP_NIP,

@@ -16,7 +16,7 @@ null
 '['
 ']'
 '.length'
-'.splice'
+'.split'
 '!'
 '+'
 '-'
