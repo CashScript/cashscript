@@ -40,7 +40,7 @@ export function encodeInt(i: number): Buffer {
 }
 
 export function encodeString(s: string): Buffer {
-  return Buffer.from(s, 'utf8');
+  return Buffer.from(s, 'ascii');
 }
 
 export function compileToTargetCode(code: string): Script {
