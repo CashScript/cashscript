@@ -1,5 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
-import { ECPair, HDNode } from "bitcoincashjs-lib";
+import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import * as path from 'path';
 import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
 
