@@ -44,8 +44,8 @@ export class Contract {
       const redeemScript = [...encodedParameters, ...this.abi.uninstantiatedScript];
       const instance = new Instance(this.abi, redeemScript, this.network);
 
-      const deployedContracts = this.abi.networks[this.network] || [];
-      deployedContracts.push({ redeemScript, address: instance.address });
+      const deployedContracts = this.abi.networks[this.network] || {};
+      deployedContracts[instance.address] = redeemScript;
       this.abi.networks[this.network] = deployedContracts;
 
       return instance;
@@ -53,13 +53,13 @@ export class Contract {
 
     this.deployed = (at?: string) => {
       if (!this.abi.networks[this.network]) throw new Error('No registered deployed contracts');
-      const deployedContract = at
-        ? this.abi.networks[this.network].find(c => c.address === at)
-        : this.abi.networks[this.network][0];
+      const redeemScript = at
+        ? this.abi.networks[this.network][at]
+        : Object.values(this.abi.networks[this.network])[0];
 
-      if (!deployedContract) throw new Error(`No registered contract deployed at ${at}`);
+      if (!redeemScript) throw new Error(`No registered contract deployed at ${at}`);
 
-      return new Instance(this.abi, deployedContract.redeemScript, this.network);
+      return new Instance(this.abi, redeemScript, this.network);
     };
   }
 }

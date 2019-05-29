@@ -12,19 +12,16 @@ export interface AbiFunction {
   parameters: AbiParameter[];
 }
 
-export interface DeployedContract {
-  redeemScript: (number | Buffer)[];
-  address: string;
-}
-
 export interface Abi {
   name: string;
   constructorParameters: AbiParameter[];
   functions: AbiFunction[];
   uninstantiatedScript: Script;
   networks: {
-    [network: string]: DeployedContract[];
-  }
+    [network: string]: {
+      [address: string]: (number | Buffer)[];
+    };
+  };
 }
 
 export function generateAbi(ast: Ast, script: Script): Abi {
