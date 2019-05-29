@@ -17,7 +17,7 @@ import {
   typecheckParameter,
   encodeParameter,
 } from './transaction-util';
-import { SignatureAlgorithm, TxOptions } from './interfaces';
+import { SignatureAlgorithm, TxOptions, Output } from './interfaces';
 
 export type Parameter = number | boolean | string | Buffer | Sig;
 export class Sig {
@@ -108,7 +108,29 @@ export class Transaction {
     this.bitbox = bitbox[network];
   }
 
-  async send(to: string, amount: number, options?: TxOptions) {
+  async send(outputs: Output[], options?: TxOptions): Promise<TxnDetailsResult>;
+  async send(to: string, amount: number, options?: TxOptions): Promise<TxnDetailsResult>;
+
+  async send(
+    toOrOutputs: string | Output[],
+    amountOrOptions?: number | TxOptions,
+    options?: TxOptions,
+  ) {
+    if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
+      return this.sendToOne(toOrOutputs, amountOrOptions, options);
+    } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
+      return this.sendToMany(toOrOutputs, amountOrOptions);
+    } else {
+      console.log(toOrOutputs, amountOrOptions);
+      throw new Error();
+    }
+  }
+
+  private async sendToOne(to: string, amount: number, options?: TxOptions) {
+    return this.sendToMany([{ to, amount }], options);
+  }
+
+  private async sendToMany(outputs: Output[], options?: TxOptions) {
     const txBuilder = new this.bitbox.TransactionBuilder(this.network);
     const { utxos: allUtxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
 
@@ -128,12 +150,14 @@ export class Transaction {
       this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
       this.selector,
     );
-    const { utxos, change } = selectUtxos(allUtxos, [{ to, amount }], placeholderScript);
+    const { utxos, change } = selectUtxos(allUtxos, outputs, placeholderScript);
 
     utxos.forEach((utxo) => {
       txBuilder.addInput(utxo.txid, utxo.vout, sequence);
     });
-    txBuilder.addOutput(to, amount);
+    outputs.forEach((output) => {
+      txBuilder.addOutput(output.to, output.amount);
+    });
 
     if (change >= DUST_LIMIT) {
       txBuilder.addOutput(this.address, change);

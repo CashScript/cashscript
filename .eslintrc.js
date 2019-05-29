@@ -33,5 +33,6 @@ module.exports = {
     'import/no-unresolved': 0,
     'no-bitwise': 0,
     'no-restricted-syntax': 0,
+    'no-dupe-class-members': 0,
   },
 }
