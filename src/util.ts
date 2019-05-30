@@ -7,7 +7,6 @@ import AstBuilder from './compiler/ast/AstBuilder';
 import OutputSourceCodeTraversal from './compiler/print/OutputSourceCodeTraversal';
 import SymbolTableTraversal from './compiler/semantic/SymbolTableTraversal';
 import TypeCheckTraversal from './compiler/semantic/TypeCheckTraversal';
-import GenerateIrTraversal from './compiler/generation/GenerateIrTraversal';
 import GenerateTargetTraversal from './compiler/generation/GenerateTargetTraversal';
 import { Script } from './compiler/generation/Script';
 import { ScriptUtil } from './sdk/BITBOX';
@@ -47,11 +46,9 @@ export function compileToTargetCode(code: string): Script {
   const ast = parseCode(code);
   ast.accept(new SymbolTableTraversal());
   ast.accept(new TypeCheckTraversal());
-  const irTraversal = new GenerateIrTraversal();
-  ast.accept(irTraversal);
-  const ir = irTraversal.output;
-  const target = new GenerateTargetTraversal(ir).traverse();
-  return target;
+  const traversal = new GenerateTargetTraversal();
+  ast.accept(traversal);
+  return traversal.output;
 }
 
 export function printTargetCode(target: Script) {
