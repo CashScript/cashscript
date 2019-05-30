@@ -1,8 +1,11 @@
 {
+    "all": true,
     "extends": "@istanbuljs/nyc-config-typescript",
     "exclude": [
+        "examples/",
         "src/compiler/grammar/",
         "test/",
-        "test.ts"
+        "*.js",
+        "*.ts"
     ]
 }
