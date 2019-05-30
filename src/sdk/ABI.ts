@@ -19,9 +19,10 @@ export interface Abi {
   uninstantiatedScript: Script;
   networks: {
     [network: string]: {
-      [address: string]: (number | Buffer)[];
+      [address: string]: Script;
     };
   };
+  compilerVersion: string;
 }
 
 export function generateAbi(ast: Ast, script: Script): Abi {
@@ -38,5 +39,6 @@ export function generateAbi(ast: Ast, script: Script): Abi {
     functions,
     uninstantiatedScript: script,
     networks: {},
+    compilerVersion: 'v0.1.0-alpha.0',
   };
 }
