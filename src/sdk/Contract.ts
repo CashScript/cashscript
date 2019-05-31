@@ -18,6 +18,7 @@ import {
   encodeParameter,
 } from './transaction-util';
 import { SignatureAlgorithm, TxOptions, Output } from './interfaces';
+import { meep } from '../util';
 
 export type Parameter = number | boolean | string | Buffer | Sig;
 export class Sig {
@@ -133,7 +134,7 @@ export class Transaction {
     options?: TxOptions,
   ) {
     if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
-      return this.sendToOne(toOrOutputs, amountOrOptions, options);
+      return this.sendToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
     } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
       return this.sendToMany(toOrOutputs, amountOrOptions);
     } else {
@@ -142,11 +143,34 @@ export class Transaction {
     }
   }
 
-  private async sendToOne(to: string, amount: number, options?: TxOptions) {
-    return this.sendToMany([{ to, amount }], options);
+  private async sendToMany(outputs: Output[], options?: TxOptions) {
+    const { tx } = await this.createTransaction(outputs, options);
+    const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
+    await delay(2000);
+    return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
   }
 
-  private async sendToMany(outputs: Output[], options?: TxOptions) {
+  async meep(outputs: Output[], options?: TxOptions): Promise<void>;
+  async meep(to: string, amount: number, options?: TxOptions): Promise<void>;
+
+  async meep(
+    toOrOutputs: string | Output[],
+    amountOrOptions?: number | TxOptions,
+    options?: TxOptions,
+  ) {
+    if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
+      await this.meepToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
+    } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
+      await this.meepToMany(toOrOutputs, amountOrOptions);
+    }
+  }
+
+  private async meepToMany(outputs: Output[], options?: TxOptions) {
+    const { tx, utxos } = await this.createTransaction(outputs, options);
+    await meep(tx, utxos, this.redeemScript);
+  }
+
+  private async createTransaction(outputs: Output[], options?: TxOptions) {
     const txBuilder = new this.bitbox.TransactionBuilder(this.network);
     const { utxos: allUtxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
 
@@ -207,12 +231,7 @@ export class Transaction {
     // Add all generated input scripts to the transaction
     txBuilder.addInputScripts(inputScripts);
 
-    const finalTx = txBuilder.build();
-
-    const txid = await this.bitbox.RawTransactions.sendRawTransaction(finalTx.toHex());
-    await delay(2000);
-
-    return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+    return { tx: txBuilder.build(), utxos };
   }
 }
 

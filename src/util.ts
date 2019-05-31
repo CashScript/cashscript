@@ -9,7 +9,8 @@ import SymbolTableTraversal from './compiler/semantic/SymbolTableTraversal';
 import TypeCheckTraversal from './compiler/semantic/TypeCheckTraversal';
 import GenerateTargetTraversal from './compiler/generation/GenerateTargetTraversal';
 import { Script } from './compiler/generation/Script';
-import { ScriptUtil } from './sdk/BITBOX';
+import { ScriptUtil, CryptoUtil } from './sdk/BITBOX';
+import { Utxo } from './sdk/interfaces';
 
 export function parseCode(code: string): Ast {
   const inputStream = new ANTLRInputStream(code);
@@ -55,8 +56,11 @@ export function printTargetCode(target: Script) {
   console.log(ScriptUtil.toASM(ScriptUtil.encode(target)));
 }
 
-export function printDebug(unlockScript: Script, redeemScript: Script) {
-  const redeemASM = ScriptUtil.toASM(ScriptUtil.encode(redeemScript));
-  const unlockASM = ScriptUtil.toASM(ScriptUtil.encode(unlockScript));
-  console.log(`btcdeb --modify-flags=-NULLFAIL '[${redeemASM}]' ${unlockASM}`);
+export function meep(tx: any, utxos: Utxo[], script: Script) {
+  const scriptPubkey = ScriptUtil.encodeP2SHOutput(
+    CryptoUtil.hash160(
+      ScriptUtil.encode(script),
+    ),
+  ).toString('hex');
+  console.log(`meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`);
 }
