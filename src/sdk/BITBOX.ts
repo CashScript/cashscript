@@ -18,7 +18,7 @@ export const bitbox: { [index: string]: BITBOX } = {
   bchtest: new BITBOX({ restURL: NETWORKS.bchtest }),
 };
 
-export const ScriptUtil = new Script();
-export const CryptoUtil = new Crypto();
-export const AddressUtil = new Address();
-export const BitcoinCashUtil = new BitcoinCash();
+export const ScriptUtil: Script = new Script();
+export const CryptoUtil: Crypto = new Crypto();
+export const AddressUtil: Address = new Address();
+export const BitcoinCashUtil: BitcoinCash = new BitcoinCash();

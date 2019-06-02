@@ -59,7 +59,7 @@ export function printTargetCode(target: Script) {
 }
 
 export function printDebug(unlockScript: Script, redeemScript: Script) {
-  const redeemASM = ScriptUtil.toASM(ScriptUtil.encode(redeemScript));
-  const unlockASM = ScriptUtil.toASM(ScriptUtil.encode(unlockScript));
+  const redeemASM: string = ScriptUtil.toASM(ScriptUtil.encode(redeemScript));
+  const unlockASM: string = ScriptUtil.toASM(ScriptUtil.encode(unlockScript));
   console.log(`btcdeb --modify-flags=-NULLFAIL '[${redeemASM}]' ${unlockASM}`);
 }
