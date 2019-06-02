@@ -67,7 +67,7 @@ export class Contract {
 
 type ContractFunction = (...parameters: Parameter[]) => Transaction
 
-class Instance {
+export class Instance {
   name: string;
   address: string;
   functions: {

@@ -1,6 +1,6 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import * as util from 'util';
-import { Ast } from './compiler/ast/AST';
+import { Ast, SourceFileNode } from './compiler/ast/AST';
 import { CashScriptLexer } from './compiler/grammar/CashScriptLexer';
 import { CashScriptParser } from './compiler/grammar/CashScriptParser';
 import AstBuilder from './compiler/ast/AstBuilder';
@@ -13,16 +13,16 @@ import { ScriptUtil, CryptoUtil } from './sdk/BITBOX';
 import { Utxo } from './sdk/interfaces';
 
 export function parseCode(code: string): Ast {
-  const inputStream = new ANTLRInputStream(code);
-  const lexer = new CashScriptLexer(inputStream);
-  const tokenStream = new CommonTokenStream(lexer);
-  const parser = new CashScriptParser(tokenStream);
-  const ast = new AstBuilder(parser.sourceFile()).build() as Ast;
+  const inputStream: ANTLRInputStream = new ANTLRInputStream(code);
+  const lexer: CashScriptLexer = new CashScriptLexer(inputStream);
+  const tokenStream: CommonTokenStream = new CommonTokenStream(lexer);
+  const parser: CashScriptParser = new CashScriptParser(tokenStream);
+  const ast: SourceFileNode = new AstBuilder(parser.sourceFile()).build() as Ast;
   return ast;
 }
 
 export function printAstAsCode(ast: Ast): void {
-  const traversal = new OutputSourceCodeTraversal();
+  const traversal: OutputSourceCodeTraversal = new OutputSourceCodeTraversal();
   ast.accept(traversal);
   console.log(traversal.output);
 }
@@ -44,10 +44,10 @@ export function encodeString(s: string): Buffer {
 }
 
 export function compileToTargetCode(code: string): Script {
-  const ast = parseCode(code);
+  const ast: SourceFileNode = parseCode(code);
   ast.accept(new SymbolTableTraversal());
   ast.accept(new TypeCheckTraversal());
-  const traversal = new GenerateTargetTraversal();
+  const traversal: GenerateTargetTraversal = new GenerateTargetTraversal();
   ast.accept(traversal);
   return traversal.output;
 }
@@ -57,7 +57,7 @@ export function printTargetCode(target: Script) {
 }
 
 export function meep(tx: any, utxos: Utxo[], script: Script) {
-  const scriptPubkey = ScriptUtil.encodeP2SHOutput(
+  const scriptPubkey: string = ScriptUtil.encodeP2SHOutput(
     CryptoUtil.hash160(
       ScriptUtil.encode(script),
     ),

@@ -11,7 +11,7 @@ import {
 import { GlobalFunction } from '../ast/Globals';
 import { Type, PrimitiveType } from '../ast/Type';
 
-const bitbox = new BITBOX();
+const bitbox: BITBOX = new BITBOX();
 
 export function applyUnaryOperator(
   op: UnaryOperator,
