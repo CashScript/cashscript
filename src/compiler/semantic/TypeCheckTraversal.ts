@@ -7,7 +7,7 @@ import {
   BinaryOpNode,
   IdentifierNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   TimeOpNode,
   VariableDefinitionNode,
   ArrayNode,
@@ -25,7 +25,7 @@ import {
   ArrayElementError,
   IndexOutOfBoundsError,
   PrimitiveTypeError,
-} from '../Errors';
+} from '../../Errors';
 import {
   PrimitiveType,
   explicitlyCastable,
@@ -160,7 +160,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitSpliceOp(node: SpliceOpNode) {
+  visitSplitOp(node: SplitOpNode) {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
 

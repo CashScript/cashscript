@@ -7,8 +7,8 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
-import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
-import { Node, Ast } from '../../src/ast/AST';
+import SymbolTableTraversal from '../../src/compiler/semantic/SymbolTableTraversal';
+import { Node, Ast } from '../../src/compiler/ast/AST';
 import {
   InvalidParameterTypeError,
   UnsupportedTypeError,
@@ -20,7 +20,7 @@ import {
   PrimitiveTypeError,
   TypeError,
 } from '../../src/Errors';
-import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
+import TypeCheckTraversal from '../../src/compiler/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/util';
 
 interface TestSetup {

@@ -2,8 +2,8 @@ import { BITBOX } from 'bitbox-sdk';
 import { ECPair } from 'bitcoincashjs-lib';
 import { AddressUtxoResult, AddressDetailsResult, TxnDetailsResult } from 'bitcoin-com-rest';
 import delay from 'delay';
-import { AbiFunction, Abi, AbiParameter } from './ABI';
-import { Script } from '../generation/Script';
+import { AbiFunction, Abi } from './ABI';
+import { Script } from '../compiler/generation/Script';
 import {
   bitbox,
   AddressUtil,
@@ -17,7 +17,8 @@ import {
   typecheckParameter,
   encodeParameter,
 } from './transaction-util';
-import { SignatureAlgorithm, TxOptions } from './interfaces';
+import { SignatureAlgorithm, TxOptions, Output } from './interfaces';
+import { meep } from '../util';
 
 export type Parameter = number | boolean | string | Buffer | Sig;
 export class Sig {
@@ -27,22 +28,38 @@ export class Sig {
 export class Contract {
   name: string;
   new: (...params: Parameter[]) => Instance;
+  deployed: (at?: string) => Instance;
 
   constructor(
-    private abi: Abi,
+    public abi: Abi,
     private network: string = 'mainnet',
   ) {
     this.name = abi.name;
-    this.createConstructor(abi.constructorParameters);
-  }
 
-  private createConstructor(parameters: AbiParameter[]) {
     this.new = (...ps: Parameter[]) => {
-      if (parameters.length !== ps.length) throw new Error();
+      if (abi.constructorParameters.length !== ps.length) throw new Error();
       const encodedParameters = ps
-        .map((p, i) => encodeParameter(p, parameters[i].type))
+        .map((p, i) => encodeParameter(p, abi.constructorParameters[i].type))
         .reverse();
+
       const redeemScript = [...encodedParameters, ...this.abi.uninstantiatedScript];
+      const instance = new Instance(this.abi, redeemScript, this.network);
+
+      const deployedContracts = this.abi.networks[this.network] || {};
+      deployedContracts[instance.address] = redeemScript;
+      this.abi.networks[this.network] = deployedContracts;
+
+      return instance;
+    };
+
+    this.deployed = (at?: string) => {
+      if (!this.abi.networks[this.network]) throw new Error('No registered deployed contracts');
+      const redeemScript = at
+        ? this.abi.networks[this.network][at]
+        : Object.values(this.abi.networks[this.network])[0];
+
+      if (!redeemScript) throw new Error(`No registered contract deployed at ${at}`);
+
       return new Instance(this.abi, redeemScript, this.network);
     };
   }
@@ -108,7 +125,52 @@ export class Transaction {
     this.bitbox = bitbox[network];
   }
 
-  async send(to: string, amount: number, options?: TxOptions) {
+  async send(outputs: Output[], options?: TxOptions): Promise<TxnDetailsResult>;
+  async send(to: string, amount: number, options?: TxOptions): Promise<TxnDetailsResult>;
+
+  async send(
+    toOrOutputs: string | Output[],
+    amountOrOptions?: number | TxOptions,
+    options?: TxOptions,
+  ) {
+    if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
+      return this.sendToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
+    } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
+      return this.sendToMany(toOrOutputs, amountOrOptions);
+    } else {
+      console.log(toOrOutputs, amountOrOptions);
+      throw new Error();
+    }
+  }
+
+  private async sendToMany(outputs: Output[], options?: TxOptions) {
+    const { tx } = await this.createTransaction(outputs, options);
+    const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
+    await delay(2000);
+    return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+  }
+
+  async meep(outputs: Output[], options?: TxOptions): Promise<void>;
+  async meep(to: string, amount: number, options?: TxOptions): Promise<void>;
+
+  async meep(
+    toOrOutputs: string | Output[],
+    amountOrOptions?: number | TxOptions,
+    options?: TxOptions,
+  ) {
+    if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
+      await this.meepToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
+    } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
+      await this.meepToMany(toOrOutputs, amountOrOptions);
+    }
+  }
+
+  private async meepToMany(outputs: Output[], options?: TxOptions) {
+    const { tx, utxos } = await this.createTransaction(outputs, options);
+    await meep(tx, utxos, this.redeemScript);
+  }
+
+  private async createTransaction(outputs: Output[], options?: TxOptions) {
     const txBuilder = new this.bitbox.TransactionBuilder(this.network);
     const { utxos: allUtxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
 
@@ -128,12 +190,14 @@ export class Transaction {
       this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
       this.selector,
     );
-    const { utxos, change } = selectUtxos(allUtxos, [{ to, amount }], placeholderScript);
+    const { utxos, change } = selectUtxos(allUtxos, outputs, placeholderScript);
 
     utxos.forEach((utxo) => {
       txBuilder.addInput(utxo.txid, utxo.vout, sequence);
     });
-    txBuilder.addOutput(to, amount);
+    outputs.forEach((output) => {
+      txBuilder.addOutput(output.to, output.amount);
+    });
 
     if (change >= DUST_LIMIT) {
       txBuilder.addOutput(this.address, change);
@@ -167,12 +231,7 @@ export class Transaction {
     // Add all generated input scripts to the transaction
     txBuilder.addInputScripts(inputScripts);
 
-    const finalTx = txBuilder.build();
-
-    const txid = await this.bitbox.RawTransactions.sendRawTransaction(finalTx.toHex());
-    await delay(2000);
-
-    return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+    return { tx: txBuilder.build(), utxos };
   }
 }
 

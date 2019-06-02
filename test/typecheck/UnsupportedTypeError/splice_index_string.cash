@@ -1,5 +1,5 @@
 contract Test() {
     function hello() {
-        require("hello".splice("e"));
+        require("hello".split("e"));
     }
 }

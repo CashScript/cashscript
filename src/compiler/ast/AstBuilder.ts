@@ -23,7 +23,7 @@ import {
   StatementNode,
   LiteralNode,
   BlockNode,
-  SpliceOpNode,
+  SplitOpNode,
   SizeOpNode,
   TimeOpNode,
   ArrayNode,
@@ -49,7 +49,7 @@ import {
   ParenthesisedContext,
   FunctionCallExpressionContext,
   SizeOpContext,
-  SpliceOpContext,
+  SplitOpContext,
   UnaryOpContext,
   BinaryOpContext,
   IdentifierContext,
@@ -203,12 +203,12 @@ export default class AstBuilder
     return sizeOp;
   }
 
-  visitSpliceOp(ctx: SpliceOpContext): SpliceOpNode {
+  visitSplitOp(ctx: SplitOpContext): SplitOpNode {
     const obj = this.visit(ctx._obj);
     const index = this.visit(ctx._index);
-    const spliceOp = new SpliceOpNode(obj, index);
-    spliceOp.location = Location.fromCtx(ctx);
-    return spliceOp;
+    const splitOp = new SplitOpNode(obj, index);
+    splitOp.location = Location.fromCtx(ctx);
+    return splitOp;
   }
 
   visitUnaryOp(ctx: UnaryOpContext): UnaryOpNode {

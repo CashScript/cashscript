@@ -1,85 +1,17 @@
-import { Op } from './Script';
+import { Script as BScript } from 'bitbox-sdk';
 import { UnaryOperator, BinaryOperator } from '../ast/Operator';
 import { GlobalFunction, TimeOp } from '../ast/Globals';
 import { PrimitiveType } from '../ast/Type';
+import { encodeInt } from '../../util';
 
-export type IrOp = IntermediateOp | Op;
-export abstract class IntermediateOp {}
+export const Op = new BScript().opcodes;
 
-export class PushBool extends IntermediateOp {
-  constructor(
-    public value: boolean,
-  ) {
-    super();
-  }
+export type Op = number;
+export type OpOrData = Op | Buffer;
+export type Script = OpOrData[];
 
-  toString() {
-    return `|push bool (${this.value})`;
-  }
-}
-
-export class PushInt extends IntermediateOp {
-  constructor(
-    public value: number,
-  ) {
-    super();
-  }
-
-  toString() {
-    return `|push int (${this.value})`;
-  }
-}
-
-export class PushString extends IntermediateOp {
-  constructor(
-    public value: string,
-  ) {
-    super();
-  }
-
-  toString() {
-    return `|push string (${this.value})`;
-  }
-}
-
-export class PushBytes extends IntermediateOp {
-  constructor(
-    public value: Buffer,
-  ) {
-    super();
-  }
-
-  toString() {
-    return `|push bytes (${this.value})`;
-  }
-}
-
-export class Get extends IntermediateOp {
-  constructor(
-    public index: number,
-  ) {
-    super();
-  }
-
-  toString() {
-    return `|get (${this.index})|`;
-  }
-}
-
-export class Replace extends IntermediateOp {
-  constructor(
-    public index: number,
-  ) {
-    super();
-  }
-
-  toString() {
-    return `|replace (${this.index})|`;
-  }
-}
-
-export class toIrOps {
-  static fromTimeOp(op: TimeOp): Op[] {
+export class toOps {
+  static fromTimeOp(op: TimeOp): Script {
     const mapping = {
       [TimeOp.CHECK_LOCKTIME]: [Op.OP_CHECKLOCKTIMEVERIFY, Op.OP_DROP],
       [TimeOp.CHECK_SEQUENCE]: [Op.OP_CHECKSEQUENCEVERIFY, Op.OP_DROP],
@@ -88,19 +20,19 @@ export class toIrOps {
     return mapping[op];
   }
 
-  static fromCast(from: PrimitiveType, to: PrimitiveType): IrOp[] {
+  static fromCast(from: PrimitiveType, to: PrimitiveType): Script {
     if (from === PrimitiveType.INT && to !== PrimitiveType.INT) {
-      return [new PushInt(8), Op.OP_NUM2BIN]; // TODO: Fix proper sized int casting
+      return [encodeInt(8), Op.OP_NUM2BIN]; // TODO: Fix proper sized int casting
     } else if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
       return [Op.OP_BIN2NUM];
     } else if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
-      return [Op.OP_SIZE, new PushInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP];
+      return [Op.OP_SIZE, encodeInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP];
     } else {
       return [];
     }
   }
 
-  static fromFunction(fn: GlobalFunction): Op[] {
+  static fromFunction(fn: GlobalFunction): Script {
     const mapping = {
       [GlobalFunction.ABS]: [Op.OP_ABS],
       [GlobalFunction.CHECKDATASIG]: [Op.OP_CHECKDATASIG],
@@ -120,7 +52,7 @@ export class toIrOps {
     return mapping[fn];
   }
 
-  static fromBinaryOp(op: BinaryOperator, numeric: boolean = false): Op[] {
+  static fromBinaryOp(op: BinaryOperator, numeric: boolean = false): Script {
     const mapping = {
       [BinaryOperator.DIV]: [Op.OP_DIV],
       [BinaryOperator.MOD]: [Op.OP_MOD],

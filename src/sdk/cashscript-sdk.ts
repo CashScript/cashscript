@@ -1,20 +1,18 @@
 import * as fs from 'fs';
 import { parseCode } from '../util';
-import GenerateIrTraversal from '../generation/GenerateIrTraversal';
-import TypeCheckTraversal from '../semantic/TypeCheckTraversal';
-import SymbolTableTraversal from '../semantic/SymbolTableTraversal';
-import GenerateTargetTraversal from '../generation/GenerateTargetTraversal';
+import SymbolTableTraversal from '../compiler/semantic/SymbolTableTraversal';
+import TypeCheckTraversal from '../compiler/semantic/TypeCheckTraversal';
+import GenerateTargetTraversal from '../compiler/generation/GenerateTargetTraversal';
 import { generateAbi, Abi } from './ABI';
-import { Ast } from '../ast/AST';
+import { Ast } from '../compiler/ast/AST';
 
 export function compile(code: string): Abi {
   let ast = parseCode(code);
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
-  const irTraversal = new GenerateIrTraversal();
-  ast.accept(irTraversal);
-  const ir = irTraversal.output;
-  const targetCode = new GenerateTargetTraversal(ir).traverse();
+  const traversal = new GenerateTargetTraversal();
+  ast.accept(traversal);
+  const targetCode = traversal.output;
 
   return generateAbi(ast, targetCode);
 }

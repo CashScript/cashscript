@@ -12,8 +12,8 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
-import { Ast } from '../../src/ast/AST';
-import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal';
+import { Ast } from '../../src/compiler/ast/AST';
+import OutputSourceCodeTraversal from '../../src/compiler/print/OutputSourceCodeTraversal';
 import { parseCode } from '../../src/util';
 
 interface TestSetup {

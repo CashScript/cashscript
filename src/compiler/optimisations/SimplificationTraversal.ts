@@ -7,7 +7,7 @@ import {
   BinaryOpNode,
   BlockNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   LiteralNode,
   StringLiteralNode,
   HexLiteralNode,
@@ -22,7 +22,7 @@ import {
   applySizeOp,
   applyCast,
 } from './OperationSimulations';
-import { ConstantConditionError } from '../Errors';
+import { ConstantConditionError } from '../../Errors';
 
 export default class SimplificationTraversal extends AstTraversal {
   visitRequire(node: RequireNode) {
@@ -68,7 +68,7 @@ export default class SimplificationTraversal extends AstTraversal {
   }
 
   // TODO
-  visitSpliceOp(node: SpliceOpNode) {
+  visitSplitOp(node: SplitOpNode) {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
     return node;

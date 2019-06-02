@@ -7,8 +7,8 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
-import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
-import { Ast } from '../../src/ast/AST';
+import SymbolTableTraversal from '../../src/compiler/semantic/SymbolTableTraversal';
+import { Ast } from '../../src/compiler/ast/AST';
 import { UndefinedReferenceError, RedefinitionError, UnusedVariableError } from '../../src/Errors';
 import { parseCode } from '../../src/util';
 

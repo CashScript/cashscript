@@ -1,6 +1,6 @@
-import { Ast } from '../ast/AST';
-import { Type } from '../ast/Type';
-import { Script } from '../generation/Script';
+import { Ast } from '../compiler/ast/AST';
+import { Type } from '../compiler/ast/Type';
+import { Script } from '../compiler/generation/Script';
 
 export interface AbiParameter {
   name: string;
@@ -12,20 +12,17 @@ export interface AbiFunction {
   parameters: AbiParameter[];
 }
 
-export interface DeployedContract {
-  redeemScript: (number | Buffer)[];
-  hex: Buffer;
-  address: string;
-}
-
 export interface Abi {
   name: string;
   constructorParameters: AbiParameter[];
   functions: AbiFunction[];
   uninstantiatedScript: Script;
   networks: {
-    [network: string]: DeployedContract;
-  }
+    [network: string]: {
+      [address: string]: Script;
+    };
+  };
+  compilerVersion: string;
 }
 
 export function generateAbi(ast: Ast, script: Script): Abi {
@@ -42,5 +39,6 @@ export function generateAbi(ast: Ast, script: Script): Abi {
     functions,
     uninstantiatedScript: script,
     networks: {},
+    compilerVersion: 'v0.1.0-alpha.0',
   };
 }

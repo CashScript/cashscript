@@ -1,3 +1,2 @@
-src/grammar
-src/lib
+src/compiler/grammar
 test.ts

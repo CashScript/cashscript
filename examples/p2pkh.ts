@@ -25,8 +25,17 @@ import { Instance } from "../src/sdk/Contract"
   console.log('contract address:', instance.address);
   console.log('contract balance:', contractBalance);
 
+  // Send to one output
   const tx: TxnDetailsResult = await instance.functions.spend(pk, new Sig(keypair, 0x01))
     .send(instance.address, 10000);
 
   console.log('transaction details:', tx);
+
+  // Send to multiple outputs
+  const tx2 = await instance.functions.spend(pk, new Sig(keypair, 0x01)).send([
+    { to: instance.address, amount: 10000 },
+    { to: instance.address, amount: 20000 },
+  ]);
+
+  console.log('transaction details:', tx2);
 })();

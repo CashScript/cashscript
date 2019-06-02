@@ -18,7 +18,7 @@ import {
   StringLiteralNode,
   BlockNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   TimeOpNode,
   ArrayNode,
   TupleIndexOpNode,
@@ -40,7 +40,7 @@ export default abstract class AstVisitor<T> {
   abstract visitFunctionCall(node: FunctionCallNode): T;
   abstract visitTupleIndexOp(node: TupleIndexOpNode): T;
   abstract visitSizeOp(node: SizeOpNode): T;
-  abstract visitSpliceOp(node: SpliceOpNode): T;
+  abstract visitSplitOp(node: SplitOpNode): T;
   abstract visitBinaryOp(node: BinaryOpNode): T;
   abstract visitUnaryOp(node: UnaryOpNode): T;
   abstract visitArray(node: ArrayNode): T;

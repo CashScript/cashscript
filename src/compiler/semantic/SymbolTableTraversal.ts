@@ -15,7 +15,7 @@ import {
   VariableRedefinitionError,
   UndefinedReferenceError,
   UnusedVariableError,
-} from '../Errors';
+} from '../../Errors';
 
 export default class SymbolTableTraversal extends AstTraversal {
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];

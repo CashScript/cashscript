@@ -17,33 +17,29 @@ import {
   BlockNode,
   TimeOpNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
-import {
-  PushInt,
-  Get,
-  PushBool,
-  PushString,
-  PushBytes,
-  Replace,
-  IrOp,
-  toIrOps,
-} from './IR';
 import { GlobalFunction } from '../ast/Globals';
 import { resultingType, PrimitiveType } from '../ast/Type';
-import { Op } from './Script';
+import {
+  Op,
+  OpOrData,
+  Script,
+  toOps,
+} from './Script';
+import { encodeInt, encodeBool, encodeString } from '../../util';
 
-export default class GenerateIrTraversal extends AstTraversal {
-  output: IrOp[] = [];
+export default class GenerateTargetTraversal extends AstTraversal {
+  output: Script = [];
   stack: string[] = [];
 
   private scopeDepth = 0;
 
-  private emit(op: IrOp | IrOp[]) {
+  private emit(op: OpOrData | OpOrData[]) {
     if (Array.isArray(op)) {
       this.output.push(...op);
     } else {
@@ -83,8 +79,9 @@ export default class GenerateIrTraversal extends AstTraversal {
       this.pushToStack('$$', true);
       node.functions = node.functions.map((f, i) => {
         const stackCopy = [...this.stack];
-        this.emit(new Get(this.getStackIndex('$$')));
-        this.emit(new PushInt(i));
+        this.emit(encodeInt(this.getStackIndex('$$')));
+        this.emit(Op.OP_PICK);
+        this.emit(encodeInt(i));
         this.emit(Op.OP_NUMEQUAL);
         this.emit(Op.OP_IF);
         f = this.visit(f) as FunctionDefinitionNode;
@@ -116,7 +113,7 @@ export default class GenerateIrTraversal extends AstTraversal {
     });
     this.stack = [];
     this.pushToStack('true');
-    this.emit(new PushBool(true));
+    this.emit(encodeBool(true));
   }
 
   visitParameter(node: ParameterNode) {
@@ -134,7 +131,7 @@ export default class GenerateIrTraversal extends AstTraversal {
   visitAssign(node: AssignNode) {
     node.expression = this.visit(node.expression);
     if (this.scopeDepth > 0) {
-      this.emit(new Replace(this.getStackIndex(node.identifier.name)));
+      this.emitReplace(this.getStackIndex(node.identifier.name));
       this.popFromStack();
     } else {
       this.popFromStack();
@@ -143,9 +140,26 @@ export default class GenerateIrTraversal extends AstTraversal {
     return node;
   }
 
+  // This algorithm can be optimised for hardcoded depths
+  // See thesis for explanation
+  emitReplace(index: number) {
+    this.emit(encodeInt(index));
+    this.emit(Op.OP_ROLL);
+    this.emit(Op.OP_DROP);
+    for (let i = 0; i < index - 1; i += 1) {
+      this.emit(Op.OP_SWAP);
+      if (i < index - 2) {
+        this.emit(Op.OP_TOALTSTACK);
+      }
+    }
+    for (let i = 0; i < index - 2; i += 1) {
+      this.emit(Op.OP_FROMALTSTACK);
+    }
+  }
+
   visitTimeOp(node: TimeOpNode) {
     node.expression = this.visit(node.expression);
-    this.emit(toIrOps.fromTimeOp(node.timeOp));
+    this.emit(toOps.fromTimeOp(node.timeOp));
     this.popFromStack();
     return node;
   }
@@ -190,7 +204,7 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitCast(node: CastNode) {
     node.expression = this.visit(node.expression);
-    this.emit(toIrOps.fromCast(node.expression.type as PrimitiveType, node.type));
+    this.emit(toOps.fromCast(node.expression.type as PrimitiveType, node.type));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -202,7 +216,7 @@ export default class GenerateIrTraversal extends AstTraversal {
     }
 
     node.parameters = this.visitList(node.parameters);
-    this.emit(toIrOps.fromFunction(node.identifier.name as GlobalFunction));
+    this.emit(toOps.fromFunction(node.identifier.name as GlobalFunction));
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
 
@@ -210,7 +224,7 @@ export default class GenerateIrTraversal extends AstTraversal {
   }
 
   visitMultiSig(node: FunctionCallNode) {
-    this.emit(new PushBool(false));
+    this.emit(encodeBool(false));
     node.parameters = this.visitList(node.parameters);
     this.emit(Op.OP_CHECKMULTISIG);
     const sigs = node.parameters[0] as ArrayNode;
@@ -244,7 +258,7 @@ export default class GenerateIrTraversal extends AstTraversal {
     return node;
   }
 
-  visitSpliceOp(node: SpliceOpNode) {
+  visitSplitOp(node: SplitOpNode) {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
     this.emit(Op.OP_SPLIT);
@@ -257,7 +271,7 @@ export default class GenerateIrTraversal extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode) {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    this.emit(toIrOps.fromBinaryOp(
+    this.emit(toOps.fromBinaryOp(
       node.operator,
       resultingType(node.left.type, node.right.type) === PrimitiveType.INT,
     ));
@@ -268,7 +282,7 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitUnaryOp(node: UnaryOpNode) {
     node.expression = this.visit(node.expression);
-    this.emit(toIrOps.fromUnaryOp(node.operator));
+    this.emit(toOps.fromUnaryOp(node.operator));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -276,37 +290,38 @@ export default class GenerateIrTraversal extends AstTraversal {
 
   visitArray(node: ArrayNode) {
     node.elements = this.visitList(node.elements);
-    this.emit(new PushInt(node.elements.length));
+    this.emit(encodeInt(node.elements.length));
     this.pushToStack('(value)');
     return node;
   }
 
   visitIdentifier(node: IdentifierNode) {
-    this.emit(new Get(this.getStackIndex(node.name)));
+    this.emit(encodeInt(this.getStackIndex(node.name)));
+    this.emit(Op.OP_PICK);
     this.pushToStack('(value)');
     return node;
   }
 
   visitBoolLiteral(node: BoolLiteralNode) {
-    this.emit(new PushBool(node.value));
+    this.emit(encodeBool(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
   visitIntLiteral(node: IntLiteralNode) {
-    this.emit(new PushInt(node.value));
+    this.emit(encodeInt(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
   visitStringLiteral(node: StringLiteralNode) {
-    this.emit(new PushString(node.value));
+    this.emit(encodeString(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
   visitHexLiteral(node: HexLiteralNode) {
-    this.emit(new PushBytes(node.value));
+    this.emit(node.value);
     this.pushToStack('(value)');
     return node;
   }

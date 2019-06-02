@@ -9,16 +9,16 @@ import {
   UnaryOpNode,
   TimeOpNode,
   SizeOpNode,
-  SpliceOpNode,
+  SplitOpNode,
   CastNode,
   AssignNode,
   BranchNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
-} from './ast/AST';
-import { Type, PrimitiveType } from './ast/Type';
-import { Symbol } from './ast/SymbolTable';
+} from './compiler/ast/AST';
+import { Type, PrimitiveType } from './compiler/ast/Type';
+import { Symbol } from './compiler/ast/SymbolTable';
 
 export class CashScriptError extends Error {
   node: Node;
@@ -111,7 +111,7 @@ export class UnequalTypeError extends TypeError {
 
 export class UnsupportedTypeError extends TypeError {
   constructor(
-    node: BinaryOpNode | UnaryOpNode | SizeOpNode | SpliceOpNode | TimeOpNode | TupleIndexOpNode,
+    node: BinaryOpNode | UnaryOpNode | SizeOpNode | SplitOpNode | TimeOpNode | TupleIndexOpNode,
     actual?: Type,
     expected?: Type,
   ) {
@@ -121,11 +121,11 @@ export class UnsupportedTypeError extends TypeError {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof SizeOpNode) {
       super(node, actual, expected, `Tried to access member 'length' on unsupported type '${actual}'`);
-    } else if (node instanceof SpliceOpNode) {
+    } else if (node instanceof SplitOpNode) {
       if (expected === PrimitiveType.INT) {
-        super(node, actual, expected, `Tried to call member 'splice' with unsupported parameter type '${actual}'`);
+        super(node, actual, expected, `Tried to call member 'split' with unsupported parameter type '${actual}'`);
       } else {
-        super(node, actual, expected, `Tried to call member 'splice' on unsupported type '${actual}'`);
+        super(node, actual, expected, `Tried to call member 'split' on unsupported type '${actual}'`);
       }
     } else if (node instanceof TimeOpNode) {
       super(node, actual, expected, `Tried to apply operator '>=' on unsupported type '${actual}'`);

@@ -1,8 +1,15 @@
 {
+    "all": true,
     "extends": "@istanbuljs/nyc-config-typescript",
+    "include": [
+        "src/"
+    ],
     "exclude": [
-        "src/grammar/",
-        "test/",
-        "test.ts"
+        "src/compiler/grammar/",
+        "src/compiler/optimisations/",
+        "**/*.d.ts"
+    ],
+    "require": [
+        "ts-node/register/transpile-only"
     ]
 }

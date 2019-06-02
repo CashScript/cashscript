@@ -103,9 +103,9 @@ export class CashScriptParser extends Parser {
 	private static readonly _LITERAL_NAMES: Array<string | undefined> = [
 		undefined, "'contract'", "'{'", "'}'", "'function'", "'('", "','", "')'", 
 		"'='", "';'", "'require'", "'>='", "'if'", "'else'", "'['", "']'", "'.length'", 
-		"'.splice'", "'!'", "'+'", "'-'", "'/'", "'%'", "'<'", "'<='", "'>'", 
-		"'=='", "'!='", "'&&'", "'||'", "'int'", "'bool'", "'string'", "'pubkey'", 
-		"'sig'", "'datasig'",
+		"'.split'", "'!'", "'+'", "'-'", "'/'", "'%'", "'<'", "'<='", "'>'", "'=='", 
+		"'!='", "'&&'", "'||'", "'int'", "'bool'", "'string'", "'pubkey'", "'sig'", 
+		"'datasig'",
 	];
 	private static readonly _SYMBOLIC_NAMES: Array<string | undefined> = [
 		undefined, undefined, undefined, undefined, undefined, undefined, undefined, 
@@ -1062,8 +1062,8 @@ export class CashScriptParser extends Parser {
 
 					case 9:
 						{
-						_localctx = new SpliceOpContext(new ExpressionContext(_parentctx, _parentState));
-						(_localctx as SpliceOpContext)._obj = _prevctx;
+						_localctx = new SplitOpContext(new ExpressionContext(_parentctx, _parentState));
+						(_localctx as SplitOpContext)._obj = _prevctx;
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 200;
 						if (!(this.precpred(this._ctx, 11))) {
@@ -1074,7 +1074,7 @@ export class CashScriptParser extends Parser {
 						this.state = 202;
 						this.match(CashScriptParser.T__4);
 						this.state = 203;
-						(_localctx as SpliceOpContext)._index = this.expression(0);
+						(_localctx as SplitOpContext)._index = this.expression(0);
 						this.state = 204;
 						this.match(CashScriptParser.T__6);
 						}
@@ -2056,7 +2056,7 @@ export class SizeOpContext extends ExpressionContext {
 		}
 	}
 }
-export class SpliceOpContext extends ExpressionContext {
+export class SplitOpContext extends ExpressionContext {
 	public _obj: ExpressionContext;
 	public _index: ExpressionContext;
 	public expression(): ExpressionContext[];
@@ -2074,20 +2074,20 @@ export class SpliceOpContext extends ExpressionContext {
 	}
 	// @Override
 	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterSpliceOp) {
-			listener.enterSpliceOp(this);
+		if (listener.enterSplitOp) {
+			listener.enterSplitOp(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitSpliceOp) {
-			listener.exitSpliceOp(this);
+		if (listener.exitSplitOp) {
+			listener.exitSplitOp(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
-		if (visitor.visitSpliceOp) {
-			return visitor.visitSpliceOp(this);
+		if (visitor.visitSplitOp) {
+			return visitor.visitSplitOp(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

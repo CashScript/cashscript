@@ -8,7 +8,7 @@ import { CastContext } from "./CashScriptParser";
 import { FunctionCallExpressionContext } from "./CashScriptParser";
 import { TupleIndexOpContext } from "./CashScriptParser";
 import { SizeOpContext } from "./CashScriptParser";
-import { SpliceOpContext } from "./CashScriptParser";
+import { SplitOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
 import { ArrayContext } from "./CashScriptParser";
@@ -83,12 +83,12 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitSizeOp?: (ctx: SizeOpContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by the `SpliceOp`
+	 * Visit a parse tree produced by the `SplitOp`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitSpliceOp?: (ctx: SpliceOpContext) => Result;
+	visitSplitOp?: (ctx: SplitOpContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by the `UnaryOp`

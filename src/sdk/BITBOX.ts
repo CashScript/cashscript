@@ -7,9 +7,8 @@ import {
 } from 'bitbox-sdk';
 
 export const NETWORKS: { [index: string]: string } = {
-  mainnet: 'https://rest.bitcoin.com/v2/',
+  // mainnet: 'https://rest.bitcoin.com/v2/',
   testnet: 'https://trest.bitcoin.com/v2/',
-  bchtest: 'https://trest.bitcoin.com/v2/',
 };
 
 export const bitbox: { [index: string]: BITBOX } = {
