@@ -1,10 +1,10 @@
 import { BITBOX } from 'bitbox-sdk';
-import { TxnDetailsResult } from "bitcoin-com-rest"
-import { ECPair, HDNode } from "bitcoincashjs-lib"
+import { TxnDetailsResult } from 'bitcoin-com-rest'
+import { ECPair, HDNode } from 'bitcoincashjs-lib'
 import * as path from 'path';
-import { Abi } from "../src/sdk/ABI"
+import { Abi } from '../src/sdk/ABI'
 import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
-import { Instance } from "../src/sdk/Contract"
+import { Instance } from '../src/sdk/Contract'
 
 (async (): Promise<any> => {
   const network: string = 'testnet';
