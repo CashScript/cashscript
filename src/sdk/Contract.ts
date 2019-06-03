@@ -32,7 +32,7 @@ export class Contract {
 
   constructor(
     public abi: Abi,
-    private network: string = 'mainnet',
+    private network: string = 'testnet',
   ) {
     this.name = abi.name;
 
