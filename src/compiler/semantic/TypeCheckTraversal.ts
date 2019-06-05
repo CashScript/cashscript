@@ -246,7 +246,6 @@ export default class TypeCheckTraversal extends AstTraversal {
         }
         node.type = PrimitiveType.BOOL;
         break;
-      case UnaryOperator.PLUS:
       case UnaryOperator.NEGATE:
         if (!implicitlyCastable(node.expression.type, PrimitiveType.INT)) {
           throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.INT);

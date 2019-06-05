@@ -70,7 +70,7 @@ expression
     | obj=expression '.split' '(' index=expression ')' # SplitOp
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
-    | op=('!' | '+' | '-') expression # UnaryOp
+    | op=('!' | '-') expression # UnaryOp
     // | expression '**' expression --- No power
     // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled
     | left=expression op=('/' | '%') right=expression # BinaryOp

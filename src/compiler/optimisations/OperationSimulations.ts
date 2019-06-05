@@ -45,8 +45,6 @@ function applyUnaryOperatorToInt(
   switch (op) {
     case UnaryOperator.NEGATE:
       return new IntLiteralNode(-expr.value);
-    case UnaryOperator.PLUS:
-      return expr;
     default:
       throw new Error();
   }

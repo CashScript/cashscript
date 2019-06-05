@@ -1,6 +1,5 @@
 export enum UnaryOperator {
   NOT = '!',
-  PLUS = '+',
   NEGATE = '-'
 }
 

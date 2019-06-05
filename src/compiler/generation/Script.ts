@@ -87,7 +87,6 @@ export class toOps {
     const mapping = {
       [UnaryOperator.NOT]: [Op.OP_NOT],
       [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
-      [UnaryOperator.PLUS]: [],
     };
 
     return mapping[op];
