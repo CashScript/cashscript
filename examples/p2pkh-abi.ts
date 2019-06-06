@@ -4,10 +4,11 @@ import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import * as path from 'path';
 import { Abi } from '../src/sdk/ABI';
 import {
-  compileFile,
   Contract,
   Instance,
   Sig,
+  exportAbi,
+  importAbi,
 } from '..';
 
 (async (): Promise<any> => {
@@ -17,29 +18,23 @@ import {
   const rootSeed: Buffer = bitbox.Mnemonic.toSeed('CashScript');
   const hdNode: HDNode = bitbox.HDNode.fromSeed(rootSeed, network);
   const keypair: ECPair = bitbox.HDNode.toKeyPair(hdNode);
-
   const pk: Buffer = bitbox.ECPair.toPublicKey(keypair);
-  const pkh: Buffer = bitbox.Crypto.hash160(pk);
 
-  const abi: Abi = compileFile(path.join(__dirname, 'p2pkh.cash'));
+  // Import / export ABI from file, including deployed contract details
+  const abi: Abi = importAbi(path.join(__dirname, 'p2pkh.json'));
+  exportAbi(abi, path.join(__dirname, 'p2pkh.json'));
+
   const P2PKH: Contract = new Contract(abi, network);
-  const instance: Instance = P2PKH.new(pkh);
+
+  // Retrieve deployed contract details from ABI
+  const instance: Instance = P2PKH.deployed();
   const contractBalance: number = await instance.getBalance();
 
   console.log('contract address:', instance.address);
   console.log('contract balance:', contractBalance);
 
-  // Send to one output
   const tx: TxnDetailsResult = await instance.functions.spend(pk, new Sig(keypair, 0x01))
     .send(instance.address, 10000);
 
   console.log('transaction details:', tx);
-
-  // Send to multiple outputs
-  const tx2 = await instance.functions.spend(pk, new Sig(keypair, 0x01)).send([
-    { to: instance.address, amount: 10000 },
-    { to: instance.address, amount: 20000 },
-  ]);
-
-  console.log('transaction details:', tx2);
 })();

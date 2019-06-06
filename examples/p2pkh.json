@@ -1,0 +1,142 @@
+{
+  "name": "P2PKH",
+  "constructorParameters": [
+    {
+      "name": "pkh",
+      "type": "bytes20"
+    }
+  ],
+  "functions": [
+    {
+      "name": "spend",
+      "parameters": [
+        {
+          "name": "pk",
+          "type": "pubkey"
+        },
+        {
+          "name": "s",
+          "type": "sig"
+        }
+      ]
+    }
+  ],
+  "uninstantiatedScript": [
+    {
+      "type": "Buffer",
+      "data": [
+        1
+      ]
+    },
+    121,
+    169,
+    {
+      "type": "Buffer",
+      "data": [
+        1
+      ]
+    },
+    121,
+    135,
+    105,
+    {
+      "type": "Buffer",
+      "data": [
+        2
+      ]
+    },
+    121,
+    {
+      "type": "Buffer",
+      "data": [
+        2
+      ]
+    },
+    121,
+    172,
+    105,
+    117,
+    117,
+    117,
+    {
+      "type": "Buffer",
+      "data": [
+        1
+      ]
+    }
+  ],
+  "networks": {
+    "testnet": {
+      "bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl": [
+        {
+          "type": "Buffer",
+          "data": [
+            255,
+            215,
+            97,
+            109,
+            204,
+            182,
+            97,
+            9,
+            172,
+            132,
+            12,
+            249,
+            72,
+            78,
+            135,
+            14,
+            202,
+            197,
+            231,
+            254
+          ]
+        },
+        {
+          "type": "Buffer",
+          "data": [
+            1
+          ]
+        },
+        121,
+        169,
+        {
+          "type": "Buffer",
+          "data": [
+            1
+          ]
+        },
+        121,
+        135,
+        105,
+        {
+          "type": "Buffer",
+          "data": [
+            2
+          ]
+        },
+        121,
+        {
+          "type": "Buffer",
+          "data": [
+            2
+          ]
+        },
+        121,
+        172,
+        105,
+        117,
+        117,
+        117,
+        {
+          "type": "Buffer",
+          "data": [
+            1
+          ]
+        }
+      ]
+    }
+  },
+  "compilerVersion": "v0.1.0-beta.1"
+}

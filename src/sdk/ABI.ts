@@ -1,6 +1,7 @@
 import { Ast } from '../compiler/ast/AST';
 import { Type } from '../compiler/ast/Type';
 import { Script } from '../compiler/generation/Script';
+import pkg from '../../package.json';
 
 export interface AbiParameter {
   name: string;
@@ -39,6 +40,6 @@ export function generateAbi(ast: Ast, script: Script): Abi {
     functions,
     uninstantiatedScript: script,
     networks: {},
-    compilerVersion: 'v0.1.0-alpha.0',
+    compilerVersion: `v${pkg.version}`,
   };
 }

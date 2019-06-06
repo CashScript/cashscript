@@ -22,4 +22,21 @@ export function compileFile(codeFile: string): Abi {
   return compile(code);
 }
 
-export { Contract, Sig } from './Contract';
+export function exportAbi(abi: Abi, targetFile: string): void {
+  const jsonString = JSON.stringify(abi, null, 2);
+  fs.writeFileSync(targetFile, jsonString);
+}
+
+export function importAbi(abiFile: string): Abi {
+  const abiString = fs.readFileSync(abiFile, { encoding: 'utf-8' });
+  return JSON.parse(abiString, scriptReviver);
+}
+
+function scriptReviver(key: any, val: any) {
+  if (val && typeof val === 'object' && val.type === 'Buffer') {
+    return Buffer.from(val.data);
+  }
+  return val;
+}
+
+export * from './Contract';
