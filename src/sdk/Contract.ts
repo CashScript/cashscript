@@ -19,6 +19,7 @@ import {
 } from './transaction-util';
 import { SignatureAlgorithm, TxOptions, Output } from './interfaces';
 import { meep } from '../util';
+import { compileFile, importAbi, exportAbi } from './cashscript-sdk';
 
 export type Parameter = number | boolean | string | Buffer | Sig;
 export class Sig {
@@ -29,6 +30,20 @@ export class Contract {
   name: string;
   new: (...params: Parameter[]) => Instance;
   deployed: (at?: string) => Instance;
+
+  static fromCashFile(fn: string, network?: string): Contract {
+    const abi = compileFile(fn);
+    return new Contract(abi, network);
+  }
+
+  static fromAbiFile(fn: string, network?: string): Contract {
+    const abi = importAbi(fn);
+    return new Contract(abi, network);
+  }
+
+  export(fn: string): void {
+    exportAbi(this.abi, fn);
+  }
 
   constructor(
     public abi: Abi,

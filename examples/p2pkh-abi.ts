@@ -2,14 +2,7 @@ import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import * as path from 'path';
-import { Abi } from '../src/sdk/ABI';
-import {
-  Contract,
-  Instance,
-  Sig,
-  exportAbi,
-  importAbi,
-} from '..';
+import { Contract, Instance, Sig } from '..';
 
 (async (): Promise<any> => {
   const network: string = 'testnet';
@@ -21,10 +14,8 @@ import {
   const pk: Buffer = bitbox.ECPair.toPublicKey(keypair);
 
   // Import / export ABI from file, including deployed contract details
-  const abi: Abi = importAbi(path.join(__dirname, 'p2pkh.json'));
-  exportAbi(abi, path.join(__dirname, 'p2pkh.json'));
-
-  const P2PKH: Contract = new Contract(abi, network);
+  const P2PKH: Contract = Contract.fromAbiFile(path.join(__dirname, 'p2pkh.json'), network);
+  P2PKH.export(path.join(__dirname, 'p2pkh.json'));
 
   // Retrieve deployed contract details from ABI
   const instance: Instance = P2PKH.deployed();

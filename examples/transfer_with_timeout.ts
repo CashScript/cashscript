@@ -2,8 +2,7 @@ import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import * as path from 'path';
-import { Abi } from '../src/sdk/ABI';
-import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
+import { Contract, Sig } from '../src/sdk/cashscript-sdk';
 import { Instance } from '../src/sdk/Contract';
 
 (async (): Promise<any> => {
@@ -19,8 +18,9 @@ import { Instance } from '../src/sdk/Contract';
   const alicePk: Buffer = bitbox.ECPair.toPublicKey(alice);
   const bobPk: Buffer = bitbox.ECPair.toPublicKey(bob);
 
-  const abi: Abi = compileFile(path.join(__dirname, 'transfer_with_timeout.cash'));
-  const TransferWithTimeout: Contract = new Contract(abi, network);
+  const TransferWithTimeout: Contract = Contract.fromCashFile(
+    path.join(__dirname, 'transfer_with_timeout.cash'), network,
+  );
 
   // timeout value can only be block number, not timestamp
   const instance: Instance = TransferWithTimeout.new(alicePk, bobPk, 1000000);

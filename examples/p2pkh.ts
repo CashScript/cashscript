@@ -2,13 +2,7 @@ import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import * as path from 'path';
-import { Abi } from '../src/sdk/ABI';
-import {
-  compileFile,
-  Contract,
-  Instance,
-  Sig,
-} from '..';
+import { Contract, Instance, Sig } from '..';
 
 (async (): Promise<any> => {
   const network: string = 'testnet';
@@ -21,8 +15,7 @@ import {
   const pk: Buffer = bitbox.ECPair.toPublicKey(keypair);
   const pkh: Buffer = bitbox.Crypto.hash160(pk);
 
-  const abi: Abi = compileFile(path.join(__dirname, 'p2pkh.cash'));
-  const P2PKH: Contract = new Contract(abi, network);
+  const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), network);
   const instance: Instance = P2PKH.new(pkh);
   const contractBalance: number = await instance.getBalance();
 

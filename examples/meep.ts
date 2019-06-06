@@ -1,7 +1,7 @@
 import { BITBOX } from 'bitbox-sdk';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import * as path from 'path';
-import { compileFile, Contract, Sig } from '..';
+import { Contract, Instance, Sig } from '..';
 
 (async () => {
   const network: string = 'testnet';
@@ -14,9 +14,8 @@ import { compileFile, Contract, Sig } from '..';
   const pk: Buffer = bitbox.ECPair.toPublicKey(keypair);
   const pkh: Buffer = bitbox.Crypto.hash160(pk);
 
-  const abi = compileFile(path.join(__dirname, 'p2pkh.cash'));
-  const P2PKH = new Contract(abi, network);
-  const instance = P2PKH.new(pkh);
+  const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), network);
+  const instance: Instance = P2PKH.new(pkh);
 
   console.log('debug transaction:');
   await instance.functions.spend(pk, new Sig(keypair, 0x01))
