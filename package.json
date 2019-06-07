@@ -1,37 +1,17 @@
 {
   "name": "cashscript",
+  "description": "⚖️ Easily write and interact with Cash Contracts on Bitcoin Cash",
   "version": "0.1.0-beta.1",
-  "description": "",
-  "main": "index.ts",
-  "directories": {
-    "doc": "docs"
-  },
-  "files": [
-    "src/",
-    "index.ts"
-  ],
-  "scripts": {
-    "antlr": "antlr4ts -visitor -listener src/compiler/grammar/CashScript.g4",
-    "test": "nyc mocha",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "lint": "eslint . --ext .ts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
-  },
   "author": "Rosco Kalis <rosco@bitcoin.com>",
-  "contributors": [
-    "Gabriel Cardona <gabriel@bitcoin.com>"
-  ],
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Bitcoin-com/cashscript/issues"
   },
-  "homepage": "https://github.com/Bitcoin-com/cashscript#readme",
+  "contributors": [
+    "Gabriel Cardona <gabriel@bitcoin.com>"
+  ],
   "dependencies": {
     "antlr4ts": "^0.5.0-alpha.3",
-    "bitbox-sdk": "8.3.2",
+    "bitbox-sdk": "^8.4.0",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
     "delay": "^4.2.0"
   },
@@ -53,5 +33,40 @@
     "source-map-support": "^0.5.12",
     "ts-node": "^8.1.0",
     "typescript": "^3.4.5"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "lib": "src",
+    "test": "test"
+  },
+  "files": [
+    "dist/"
+  ],
+  "homepage": "https://github.com/Bitcoin-com/cashscript#readme",
+  "keywords": [
+    "bitcoin",
+    "bitcoin cash",
+    "cash contracts",
+    "compiler",
+    "programming language",
+    "sdk",
+    "smart contracts"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
+  },
+  "scripts": {
+    "antlr": "antlr4ts -visitor -listener src/compiler/grammar/CashScript.g4",
+    "build": "tsc",
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "lint": "eslint . --ext .ts",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "test": "nyc mocha"
+  },
+  "types": "dist/index.d.ts"
 }

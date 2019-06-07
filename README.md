@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/Bitcoin-com/cashscript.svg)](https://travis-ci.org/Bitcoin-com/cashscript)
 [![Coverage Status](https://img.shields.io/codecov/c/github/Bitcoin-com/cashscript.svg)](https://codecov.io/gh/Bitcoin-com/cashscript/)
-![GitHub](https://img.shields.io/github/license/Bitcoin-com/cashscript.svg)
+[![NPM Version](https://img.shields.io/npm/v/cashscript.svg)](https://www.npmjs.com/package/cashscript)
+[![NPM Monthly Downloads](https://img.shields.io/npm/dm/cashscript.svg)](https://www.npmjs.com/package/cashscript)
+[![NPM License](https://img.shields.io/npm/l/cashscript.svg)](https://www.npmjs.com/package/cashscript)
 
 CashScript is a high level language enabling basic smart contract functionality on Bitcoin Cash. We love the Ethereum development ecosystem, and with CashScript we want to bring part of that workflow into the Bitcoin Cash ecosystem.
 
@@ -42,9 +44,23 @@ The "Hello World" of cash contracts is defining the P2PKH pattern inside a cash 
 Note that not all of these examples have been tested to work, and are also still a work in progress.
 
 ### Running the examples
-All `.ts` files in the [`examples/`](/examples) directory can be easily executed with `ts-node`.
+To run the examples, clone this repository.
 
+```bash
+git clone git@github.com:Bitcoin-com/cashscript.git
+cd cashscript
 ```
+
+All `.ts` files in the [`examples/`](/examples) directory can then be easily executed with `ts-node`.
+
+```bash
 npm install -g ts-node
 ts-node examples/p2pkh.ts
+```
+
+All `.js` files can be easily executed with `node`. Be sure to compile the TypeScript source code first, so it can be used from JavaScript.
+
+```bash
+yarn / npm install
+node examples/p2pkh.js
 ```

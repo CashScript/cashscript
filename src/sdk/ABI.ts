@@ -1,7 +1,7 @@
 import { Ast } from '../compiler/ast/AST';
 import { Type } from '../compiler/ast/Type';
 import { Script } from '../compiler/generation/Script';
-import pkg from '../../package.json';
+import * as pkg from '../../package.json';
 
 export interface AbiParameter {
   name: string;

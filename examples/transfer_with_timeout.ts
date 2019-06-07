@@ -2,8 +2,7 @@ import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import * as path from 'path';
-import { Contract, Sig } from '../src/sdk/cashscript-sdk';
-import { Instance } from '../src/sdk/Contract';
+import { Contract, Instance, Sig } from '..';
 
 (async (): Promise<any> => {
   const network: string = 'testnet';

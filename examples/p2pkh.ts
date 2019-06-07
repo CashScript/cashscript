@@ -29,10 +29,11 @@ import { Contract, Instance, Sig } from '..';
   console.log('transaction details:', tx);
 
   // Send to multiple outputs
-  const tx2 = await instance.functions.spend(pk, new Sig(keypair, 0x01)).send([
-    { to: instance.address, amount: 10000 },
-    { to: instance.address, amount: 20000 },
-  ]);
+  const tx2: TxnDetailsResult = await instance.functions.spend(pk, new Sig(keypair, 0x01))
+    .send([
+      { to: instance.address, amount: 10000 },
+      { to: instance.address, amount: 20000 },
+    ]);
 
   console.log('transaction details:', tx2);
 })();
