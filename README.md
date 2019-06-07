@@ -40,3 +40,11 @@ If you want to see CashScript in action and check out its usage, there are sever
 The "Hello World" of cash contracts is defining the P2PKH pattern inside a cash contract, which can be found under [`examples/p2pkh.cash`](/examples/p2pkh.cash). Its usage can be found under [`examples/p2pkh.ts`](/examples/p2pkh.ts) or [`examples/p2pkh-abi.ts`](/examples/p2pkh-abi.ts).
 
 Note that not all of these examples have been tested to work, and are also still a work in progress.
+
+### Running the examples
+All `.ts` files in the [`examples/`](/examples) directory can be easily executed with `ts-node`.
+
+```
+npm install -g ts-node
+ts-node examples/p2pkh.ts
+```
