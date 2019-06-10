@@ -1,7 +1,7 @@
 import { Utxo, Output } from './interfaces';
 import { BitcoinCashUtil, ScriptUtil } from './BITBOX';
 import { Script } from '../compiler/generation/Script';
-import { AbiFunction } from './ABI';
+import { AbiFunction } from './Artifact';
 import { Parameter, Sig } from './Contract';
 import { PrimitiveType, Type } from '../compiler/ast/Type';
 import { encodeBool, encodeInt, encodeString } from '../util';
@@ -46,7 +46,7 @@ export function createInputScript(
 ): Buffer {
   // Create unlock script / redeemScriptSig
   const unlockScript = parameters
-    .map((p, i) => encodeParameter(p, abiFunction.parameters[i]))
+    .map((p, i) => encodeParameter(p, abiFunction.inputs[i]))
     .reverse();
   if (selector !== undefined) unlockScript.push(encodeInt(selector));
 

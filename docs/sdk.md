@@ -1,9 +1,9 @@
 # The CashScript SDK
 ## Contract
-The `Contract` class allows you to compile CashScript files into `Contract` objects, from which these contracts can be instantiated and interacted with. These `Contract` objects can also be imported from an ABI JSON file, and exported to one, which allows you to store and transfer the contract definition in JSON format, so you don't need to recompile the contract every time you use it. For more information on ABIs, see [Application Blockchain Interface](#application-blockchain-interface).
+The `Contract` class allows you to compile CashScript files into `Contract` objects, from which these contracts can be instantiated and interacted with. These `Contract` objects can also be imported from a JSON Artifact file, and exported to one, which allows you to store and transfer the contract definition in JSON format, so you don't need to recompile the contract every time you use it. For more information on Artifacts, see [Artifacts](#artifacts).
 
 ### Creating a Contract object
-Before instantiating a contract, first you need to create a new `Contract` object. This can be done by compiling a CashScript file, or by importing an ABI JSON file that was exported previously.
+Before instantiating a contract, first you need to create a new `Contract` object. This can be done by compiling a CashScript file, or by importing an Artifact file that was exported previously.
 
 ##### `Contract.fromCashFile(fn: string, network?: string): Contract`
 Compiles the CashScript file found at the path specified by argument `fn`. Optionally specify a network string (`'testnet'` or `'mainnet'`) to connect with. Returns a `Contract` object that can be further used to instantiate new instances of this contract.
@@ -12,18 +12,18 @@ Compiles the CashScript file found at the path specified by argument `fn`. Optio
 const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), 'testnet');
 ```
 
-##### `Contract.fromAbiFile(fn: string, network?: string): Contract`
-Imports an ABI JSON file that was compiled and exported previously. This file is found at the path specified by argument `fn`. Optionally specify a network string (`'testnet'` or `'mainnet'`) to connect with. Returns a `Contract` object that can be further used to instantiate new instances of this contract.
+##### `Contract.fromArtifact(fn: string, network?: string): Contract`
+Imports an Artifact file that was compiled and exported previously. This file is found at the path specified by argument `fn`. Optionally specify a network string (`'testnet'` or `'mainnet'`) to connect with. Returns a `Contract` object that can be further used to instantiate new instances of this contract.
 
 ```ts
-const P2PKH: Contract = Contract.fromAbiFile(path.join(__dirname, 'p2pkh.json'), 'testnet');
+const P2PKH: Contract = Contract.fromArtifact(path.join(__dirname, 'p2pkh.json'), 'testnet');
 ```
 
 ### Exporting a contract
-This `Contract` object can be exported to an ABI JSON file to be imported at a later moment, so it can be stored or transfered more easily, and can be used without recompilation. If the object is exported after one or more new contracts have been instantiated, their details will be stored in the file as well so they can be easily accessed later on.
+This `Contract` object can be exported to an Artifact file to be imported at a later moment, so it can be stored or transfered more easily, and can be used without recompilation. If the object is exported after one or more new contracts have been instantiated, their details will be stored in the file as well so they can be easily accessed later on.
 
 ##### `contract.export(fn: string): void`
-Writes the contract's details to an ABI JSON file found at the location specified by argument `fn`, so it can be retrieved later. If the file does not exist yet, it is created. If the file already exists, **it is overwritten**.
+Writes the contract's details to an Artifact file found at the location specified by argument `fn`, so it can be retrieved later. If the file does not exist yet, it is created. If the file already exists, **it is overwritten**.
 
 ```ts
 P2PKH.export(path.join(__dirname, 'p2pkh.json'));
@@ -124,51 +124,56 @@ For example real world uses of these functions and cash contracts check out the 
 ---
 
 ## Advanced usage
-The `Contract` class satisfies all expected needs for creating and interacting with cash contracts. If you do wish to compile CashScript manually, or if you wish to access specific ABI fields for your own custom usage, you can use the compilation and ABI functions directly.
+The `Contract` class satisfies all expected needs for creating and interacting with cash contracts. If you do wish to compile CashScript manually, or if you wish to access specific Artifact fields for your own custom usage, you can use the compilation and Artifact functions directly.
 
 ### CashScript compilation
-The SDK offers two separate functions for compilation that both compile CashScript code to an ABI object. This ABI object can then be used to instantiate contracts and interact with them. See [Application Blockchain Interface](#application-blockchain-interface) for more information on the ABI format.
+The SDK offers two separate functions for compilation that both compile CashScript code to an Artifact object. This Artifact object can then be used to instantiate contracts and interact with them. See [Application Blockchain Interface](#application-blockchain-interface) for more information on the Artifact format.
 
-##### `compileFile(codeFile: string): Abi`
-Reads a file found at the path specified by argument `codeFile`. Returns an ABI object.
+##### `compileFile(codeFile: string): Artifact`
+Reads a file found at the path specified by argument `codeFile`. Returns an Artifact object.
 
-##### `compile(code: string): Abi`
-Reads a CashScript contract in string format. For most use cases `compileFile` will be used instead, as it is usual to write cash contracts in separate files. `compile` might be used when storing contracts in JSON files or databases instead, but this is not likely to be common. Returns an ABI object.
+##### `compile(code: string): Artifact`
+Reads a CashScript contract in string format. For most use cases `compileFile` will be used instead, as it is usual to write cash contracts in separate files. `compile` might be used when storing contracts in JSON files or databases instead, but this is not likely to be common. Returns an Artifact object.
 
-### Application Blockchain Interface
-Compiled cash contracts are represented using an Application Blockchain Interface (ABI). This interface contains all the details that are required to create new contract instances and use their functions.
+### Artifacts
+Compiled cash contracts are represented using Artifacts. These Artifacts contain all the details that are required to create new contract instances and use their functions.
 
-It is not necessary to understand the way these ABIs work, because they are used under the hood to generate more accessible interfaces. If you want to manually use ABIs though, you can use the functions and interface specified below.
+It is not necessary to understand the way these Artifacts work, because they are used under the hood to generate more accessible interfaces. If you want to manually use Artifacts though, you can use the functions and interface specified below.
 
-##### `importAbi(abiFile: string): Abi`
-Reads a JSON file containing an ABI specfication at the path specified by argument `abiFile`. Returns the processed ABI specification as an ABI object.
+##### `importArtifact(artifactFile: string): Artifact`
+Reads a JSON file containing an Artifact specfication at the path specified by argument `artifactFile`. Returns the processed Artifact specification as an Artifact object.
 
-##### `exportAbi(abi: Abi, targetFile: string): void`
-Writes argument `abi` to a file at the path specified by argument `targetFile` in JSON format. This JSON file can be imported again using the `importAbi` function.
+##### `exportArtifact(artifact: Artifact, targetFile: string): void`
+Writes argument `artifact` to a file at the path specified by argument `targetFile` in JSON format. This JSON file can be imported again using the `importArtifact` function.
 
-### ABI specification
+### Artifact specification
 ```ts
-interface Abi {
-  name: string; // Contract name
-  constructorParameters: AbiParameter[]; // to instantiate a contract
-  functions: AbiFunction[]; // functions that can be called
+interface Artifact {
+  contractName: string; // Contract name
+  constructorInputs: AbiInput[]; // to instantiate a contract
+  abi: AbiFunction[]; // functions that can be called
   uninstantiatedScript: Script; // Compiled Script without constructor parameters added
-  networks: { // Dictionary of contract addresses with the corresponding compiled Script, by network (testnet / mainnet)
-    [network: string]: {
+  source: string; // Source code of the CashScript contract
+  networks: { // Dictionary per network (testnet / mainnet)
+    [network: string]: { // Dictionary of contract addresses with the corresponding compiled Script
       [address: string]: Script;
     };
   };
-  compilerVersion: string; // CashScript version used in compiling this contract
+  compiler: {
+    name: string; // Compiler used to compile this contract
+    version: string; // Compiler version used to compile this contract
+  }
+  updatedAt: string; // Last date time this artifact was updated
+}
+
+interface AbiInput {
+  name: string; // Input name
+  type: string; // Input type (see language documentation)
 }
 
 interface AbiFunction {
   name: string; // Function name
-  parameters: AbiParameter[]; // Function parameters
-}
-
-interface AbiParameter {
-  name: string; // Parameter name
-  type: string; // Parameter type (see language documentation)
+  inputs: AbiInput[]; // Function inputs / parameters
 }
 
 type Script = Buffer | number;

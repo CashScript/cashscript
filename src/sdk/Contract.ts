@@ -2,7 +2,7 @@ import { BITBOX } from 'bitbox-sdk';
 import { ECPair } from 'bitcoincashjs-lib';
 import { AddressUtxoResult, AddressDetailsResult, TxnDetailsResult } from 'bitcoin-com-rest';
 import delay from 'delay';
-import { AbiFunction, Abi } from './ABI';
+import { AbiFunction, Artifact } from './Artifact';
 import { Script } from '../compiler/generation/Script';
 import {
   bitbox,
@@ -19,7 +19,7 @@ import {
 } from './transaction-util';
 import { SignatureAlgorithm, TxOptions, Output } from './interfaces';
 import { meep } from '../util';
-import { compileFile, importAbi, exportAbi } from './cashscript-sdk';
+import { compileFile, importArtifact, exportArtifact } from './cashscript-sdk';
 
 export type Parameter = number | boolean | string | Buffer | Sig;
 export class Sig {
@@ -32,50 +32,51 @@ export class Contract {
   deployed: (at?: string) => Instance;
 
   static fromCashFile(fn: string, network?: string): Contract {
-    const abi = compileFile(fn);
-    return new Contract(abi, network);
+    const artifact = compileFile(fn);
+    return new Contract(artifact, network);
   }
 
-  static fromAbiFile(fn: string, network?: string): Contract {
-    const abi = importAbi(fn);
-    return new Contract(abi, network);
+  static fromArtifact(fn: string, network?: string): Contract {
+    const artifact = importArtifact(fn);
+    return new Contract(artifact, network);
   }
 
   export(fn: string): void {
-    exportAbi(this.abi, fn);
+    exportArtifact(this.artifact, fn);
   }
 
   constructor(
-    public abi: Abi,
+    public artifact: Artifact,
     private network: string = 'testnet',
   ) {
-    this.name = abi.name;
+    this.name = artifact.contractName;
 
     this.new = (...ps: Parameter[]) => {
-      if (abi.constructorParameters.length !== ps.length) throw new Error();
+      if (artifact.constructorInputs.length !== ps.length) throw new Error();
       const encodedParameters = ps
-        .map((p, i) => encodeParameter(p, abi.constructorParameters[i].type))
+        .map((p, i) => encodeParameter(p, artifact.constructorInputs[i].type))
         .reverse();
 
-      const redeemScript = [...encodedParameters, ...this.abi.uninstantiatedScript];
-      const instance = new Instance(this.abi, redeemScript, this.network);
+      const redeemScript = [...encodedParameters, ...this.artifact.uninstantiatedScript];
+      const instance = new Instance(this.artifact, redeemScript, this.network);
 
-      const deployedContracts = this.abi.networks[this.network] || {};
+      const deployedContracts = this.artifact.networks[this.network] || {};
       deployedContracts[instance.address] = redeemScript;
-      this.abi.networks[this.network] = deployedContracts;
+      this.artifact.networks[this.network] = deployedContracts;
+      this.artifact.updatedAt = new Date().toDateString();
 
       return instance;
     };
 
     this.deployed = (at?: string) => {
-      if (!this.abi.networks[this.network]) throw new Error('No registered deployed contracts');
+      if (!this.artifact.networks[this.network]) throw new Error('No registered deployed contracts');
       const redeemScript = at
-        ? this.abi.networks[this.network][at]
-        : Object.values(this.abi.networks[this.network])[0];
+        ? this.artifact.networks[this.network][at]
+        : Object.values(this.artifact.networks[this.network])[0];
 
       if (!redeemScript) throw new Error(`No registered contract deployed at ${at}`);
 
-      return new Instance(this.abi, redeemScript, this.network);
+      return new Instance(this.artifact, redeemScript, this.network);
     };
   }
 }
@@ -97,21 +98,21 @@ export class Instance {
   }
 
   constructor(
-    abi: Abi,
+    artifact: Artifact,
     private redeemScript: Script,
     private network: string,
   ) {
     this.bitbox = bitbox[network];
 
-    this.name = abi.name;
+    this.name = artifact.contractName;
     this.address = scriptToAddress(redeemScript, network);
 
     this.functions = {};
-    if (abi.functions.length === 1) {
-      const f = abi.functions[0];
+    if (artifact.abi.length === 1) {
+      const f = artifact.abi[0];
       this.functions[f.name] = this.createFunction(f);
     } else {
-      abi.functions.forEach((f, i) => {
+      artifact.abi.forEach((f, i) => {
         this.functions[f.name] = this.createFunction(f, i);
       });
     }
@@ -119,8 +120,8 @@ export class Instance {
 
   private createFunction(f: AbiFunction, selector?: number): ContractFunction {
     return (...ps: Parameter[]) => {
-      if (f.parameters.length !== ps.length) throw new Error();
-      ps.forEach((p, i) => typecheckParameter(p, f.parameters[i].type));
+      if (f.inputs.length !== ps.length) throw new Error();
+      ps.forEach((p, i) => typecheckParameter(p, f.inputs[i].type));
       return new Transaction(this.address, this.network, this.redeemScript, f, ps, selector);
     };
   }

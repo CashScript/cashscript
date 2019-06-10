@@ -39,7 +39,7 @@ The CashScript SDK allows you to easily integrate cash contracts written with Ca
 ## Examples
 If you want to see CashScript in action and check out its usage, there are several example contracts in the [`examples/`](/examples) directory. The `.cash` files contain example contracts, and the `.ts` files contain example usage of the CashScript SDK to interact with these contracts.
 
-The "Hello World" of cash contracts is defining the P2PKH pattern inside a cash contract, which can be found under [`examples/p2pkh.cash`](/examples/p2pkh.cash). Its usage can be found under [`examples/p2pkh.ts`](/examples/p2pkh.ts) or [`examples/p2pkh-abi.ts`](/examples/p2pkh-abi.ts).
+The "Hello World" of cash contracts is defining the P2PKH pattern inside a cash contract, which can be found under [`examples/p2pkh.cash`](/examples/p2pkh.cash). Its usage can be found under [`examples/p2pkh.ts`](/examples/p2pkh.ts) or [`examples/p2pkh-artifact.ts`](/examples/p2pkh-artifact.ts).
 
 Note that not all of these examples have been tested to work, and are also still a work in progress.
 

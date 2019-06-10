@@ -17,13 +17,13 @@ import { Contract, Instance, Sig } from 'cashscript';
   // Derive the owner's public key
   const pk: Buffer = bitbox.ECPair.toPublicKey(keypair);
 
-  // Import the P2PKH Cash Contract from ABI file, including deployed contract details
-  const P2PKH: Contract = Contract.fromAbiFile(path.join(__dirname, 'p2pkh.json'), network);
+  // Import the P2PKH Cash Contract from Artifact file, including deployed contract details
+  const P2PKH: Contract = Contract.fromArtifact(path.join(__dirname, 'p2pkh.json'), network);
 
   // Export the P2PKH Cash Contract's details again (just for demo purposes)
   P2PKH.export(path.join(__dirname, 'p2pkh.json'));
 
-  // Retrieve the deployed contract details from ABI
+  // Retrieve the deployed contract details from Artifact
   const instance: Instance = P2PKH.deployed();
 
   // Get contract balance & output address + balance

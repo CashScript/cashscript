@@ -3,10 +3,10 @@ import { parseCode } from '../util';
 import SymbolTableTraversal from '../compiler/semantic/SymbolTableTraversal';
 import TypeCheckTraversal from '../compiler/semantic/TypeCheckTraversal';
 import GenerateTargetTraversal from '../compiler/generation/GenerateTargetTraversal';
-import { generateAbi, Abi } from './ABI';
+import { generateArtifact, Artifact } from './Artifact';
 import { Ast } from '../compiler/ast/AST';
 
-export function compile(code: string): Abi {
+export function compile(code: string): Artifact {
   let ast = parseCode(code);
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
@@ -14,22 +14,22 @@ export function compile(code: string): Abi {
   ast.accept(traversal);
   const targetCode = traversal.output;
 
-  return generateAbi(ast, targetCode);
+  return generateArtifact(ast, targetCode, code);
 }
 
-export function compileFile(codeFile: string): Abi {
+export function compileFile(codeFile: string): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
   return compile(code);
 }
 
-export function exportAbi(abi: Abi, targetFile: string): void {
-  const jsonString = JSON.stringify(abi, null, 2);
+export function exportArtifact(artifact: Artifact, targetFile: string): void {
+  const jsonString = JSON.stringify(artifact, null, 2);
   fs.writeFileSync(targetFile, jsonString);
 }
 
-export function importAbi(abiFile: string): Abi {
-  const abiString = fs.readFileSync(abiFile, { encoding: 'utf-8' });
-  return JSON.parse(abiString, scriptReviver);
+export function importArtifact(artifactFile: string): Artifact {
+  const artifactString = fs.readFileSync(artifactFile, { encoding: 'utf-8' });
+  return JSON.parse(artifactString, scriptReviver);
 }
 
 function scriptReviver(key: any, val: any) {
