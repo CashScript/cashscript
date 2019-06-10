@@ -1,10 +1,10 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import * as fs from 'fs';
-import { Ast } from '../../src/compiler/ast/AST';
-import OutputSourceCodeTraversal from '../../src/compiler/print/OutputSourceCodeTraversal';
-import { parseCode } from '../../src/util';
-import { Location } from '../../src/compiler/ast/Location';
+import { Ast } from '../../../src/compiler/ast/AST';
+import OutputSourceCodeTraversal from '../../../src/compiler/print/OutputSourceCodeTraversal';
+import { parseCode } from '../../../src/util';
+import { Location } from '../../../src/compiler/ast/Location';
 
 function setup(input: string): Ast {
   const ast = parseCode(input);

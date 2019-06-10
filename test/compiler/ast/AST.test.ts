@@ -11,10 +11,10 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
-import { readCashFiles } from '../test-util';
-import { Ast } from '../../src/compiler/ast/AST';
-import OutputSourceCodeTraversal from '../../src/compiler/print/OutputSourceCodeTraversal';
-import { parseCode } from '../../src/util';
+import { readCashFiles } from '../../test-util';
+import { Ast } from '../../../src/compiler/ast/AST';
+import OutputSourceCodeTraversal from '../../../src/compiler/print/OutputSourceCodeTraversal';
+import { parseCode } from '../../../src/util';
 
 interface TestSetup {
   ast: Ast,

@@ -9,9 +9,9 @@
 import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy } from 'antlr4ts';
 import { assert } from 'chai';
 import * as path from 'path';
-import { CashScriptParser } from '../../src/compiler/grammar/CashScriptParser';
-import { CashScriptLexer } from '../../src/compiler/grammar/CashScriptLexer';
-import { readCashFiles, prettyPrintTokenStream } from '../test-util';
+import { CashScriptParser } from '../../../src/compiler/grammar/CashScriptParser';
+import { CashScriptLexer } from '../../../src/compiler/grammar/CashScriptLexer';
+import { readCashFiles, prettyPrintTokenStream } from '../../test-util';
 
 interface TestSetup {
   lexer: CashScriptLexer,

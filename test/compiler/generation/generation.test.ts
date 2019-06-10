@@ -6,13 +6,13 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import * as fs from 'fs';
-import SymbolTableTraversal from '../../src/compiler/semantic/SymbolTableTraversal';
-import { Ast } from '../../src/compiler/ast/AST';
-import TypeCheckTraversal from '../../src/compiler/semantic/TypeCheckTraversal';
-import { parseCode } from '../../src/util';
+import SymbolTableTraversal from '../../../src/compiler/semantic/SymbolTableTraversal';
+import { Ast } from '../../../src/compiler/ast/AST';
+import TypeCheckTraversal from '../../../src/compiler/semantic/TypeCheckTraversal';
+import { parseCode } from '../../../src/util';
 import { fixtures } from './fixture/fixtures';
-import GenerateTargetTraversal from '../../src/compiler/generation/GenerateTargetTraversal';
-import { ScriptUtil } from '../../src/sdk/BITBOX';
+import GenerateTargetTraversal from '../../../src/compiler/generation/GenerateTargetTraversal';
+import { ScriptUtil } from '../../../src/sdk/BITBOX';
 
 describe('Code generation', () => {
   fixtures.forEach((fixture) => {

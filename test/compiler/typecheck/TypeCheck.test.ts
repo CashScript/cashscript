@@ -6,9 +6,9 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
-import { readCashFiles } from '../test-util';
-import SymbolTableTraversal from '../../src/compiler/semantic/SymbolTableTraversal';
-import { Node, Ast } from '../../src/compiler/ast/AST';
+import { readCashFiles } from '../../test-util';
+import SymbolTableTraversal from '../../../src/compiler/semantic/SymbolTableTraversal';
+import { Node, Ast } from '../../../src/compiler/ast/AST';
 import {
   InvalidParameterTypeError,
   UnsupportedTypeError,
@@ -19,9 +19,9 @@ import {
   IndexOutOfBoundsError,
   PrimitiveTypeError,
   TypeError,
-} from '../../src/Errors';
-import TypeCheckTraversal from '../../src/compiler/semantic/TypeCheckTraversal';
-import { parseCode } from '../../src/util';
+} from '../../../src/Errors';
+import TypeCheckTraversal from '../../../src/compiler/semantic/TypeCheckTraversal';
+import { parseCode } from '../../../src/util';
 
 interface TestSetup {
   ast: Node,
