@@ -27,7 +27,7 @@ import { ... } from 'cashscript';
 ```
 
 ```js
-const { ... } = require('cashscript);
+const { ... } = require('cashscript');
 ```
 
 ## The CashScript Language
