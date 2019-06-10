@@ -1,3 +1,4 @@
 src/compiler/grammar
 test.ts
 dist/
+node_modules/

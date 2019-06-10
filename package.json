@@ -40,9 +40,6 @@
     "lib": "src",
     "test": "test"
   },
-  "files": [
-    "dist/"
-  ],
   "homepage": "https://github.com/Bitcoin-com/cashscript#readme",
   "keywords": [
     "bitcoin",
