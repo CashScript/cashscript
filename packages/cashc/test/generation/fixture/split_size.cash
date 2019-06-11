@@ -1,4 +1,4 @@
-contract Test(bytes b) {
+contract SplitSize(bytes b) {
     function spend() {
         bytes x = b.split(b.length / 2)[1];
         require(x != b);

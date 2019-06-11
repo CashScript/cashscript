@@ -1,4 +1,4 @@
-contract Test() {
+contract CastHashChecksig() {
     function hello(pubkey pk, sig s) {
         require((ripemd160(bytes(pk)) == hash160(0x0) == !true));
         require(checkSig(s, pk));

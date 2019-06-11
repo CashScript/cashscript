@@ -1,4 +1,4 @@
-contract Test(int x, int y) {
+contract IfStatement(int x, int y) {
     function hello(int a, int b) {
         int d = a + b;
         d = d - a;

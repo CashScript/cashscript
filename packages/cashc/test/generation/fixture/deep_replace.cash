@@ -1,4 +1,4 @@
-contract Test() {
+contract DeepReplace() {
     function hello() {
         int a = 1;
         int b = 2;

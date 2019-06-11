@@ -1,4 +1,4 @@
-contract TransferWithTimeout(
+contract MultiFunction(
     pubkey sender,
     pubkey recipient,
     int timeout

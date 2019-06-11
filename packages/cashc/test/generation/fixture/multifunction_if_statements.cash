@@ -1,4 +1,4 @@
-contract TransferWithTimeout(int x, int y) {
+contract MultiFunctionIfStatements(int x, int y) {
     function transfer(int a, int b) {
         int d = a + b;
         d = d - a;

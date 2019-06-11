@@ -13,10 +13,11 @@ import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/util';
 import { fixtures } from './fixture/fixtures';
 import GenerateTargetTraversal from '../../src/generation/GenerateTargetTraversal';
+import { generateArtifact } from '../../src/artifact/Artifact';
 
 describe('Code generation', () => {
   fixtures.forEach((fixture) => {
-    it(`should compile ${fixture.fn} to Bitcoin Script`, () => {
+    it(`should compile ${fixture.fn} to correct Script and artifact`, () => {
       const code = fs.readFileSync(path.join(__dirname, 'fixture', fixture.fn), { encoding: 'utf-8' });
       let ast = parseCode(code);
       ast = ast.accept(new SymbolTableTraversal()) as Ast;
@@ -25,10 +26,23 @@ describe('Code generation', () => {
       const traversal = new GenerateTargetTraversal();
       ast.accept(traversal);
 
+      const artifact = generateArtifact(ast, traversal.output, code);
+
+      // Disregard updatedAt
+      artifact.updatedAt = undefined;
+
+      // Check Script first in readable form
       assert.deepEqual(
-        new Script().toASM(new Script().encode(traversal.output)),
-        fixture.script,
+        new Script().toASM(new Script().encode(artifact.uninstantiatedScript)),
+        new Script().toASM(new Script().encode(fixture.artifact.uninstantiatedScript)),
       );
+
+      // Then check full artifact
+      assert.deepEqual(
+        artifact,
+        fixture.artifact,
+      );
+
       assert.deepEqual(traversal.stack, ['true']);
     });
   });

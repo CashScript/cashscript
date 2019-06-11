@@ -1,3 +1,4 @@
+import { Script as BScript } from 'bitbox-sdk';
 import {
   ContractNode,
   ParameterNode,
@@ -21,6 +22,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  SourceFileNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { GlobalFunction } from '../ast/Globals';
@@ -69,6 +71,17 @@ export default class GenerateTargetTraversal extends AstTraversal {
     const index = this.stack.indexOf(value);
     if (index === -1) throw new Error(); // Should not happen
     return index;
+  }
+
+  visitSourceFile(node: SourceFileNode) {
+    node.contract = this.visit(node.contract) as ContractNode;
+
+    // Minimally encode output by going Script -> ASM -> Script
+    this.output = new BScript().decode(new BScript().fromASM(
+      new BScript().toASM(new BScript().encode(this.output)),
+    ));
+
+    return node;
   }
 
   visitContract(node: ContractNode) {
