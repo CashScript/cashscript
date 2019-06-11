@@ -8,6 +8,7 @@ import {
   Artifact,
   AbiFunction,
   CashCompiler,
+  Data,
 } from 'cashc';
 import {
   bitbox,
@@ -61,13 +62,13 @@ export class Contract {
         .map((p, i) => encodeParameter(p, artifact.constructorInputs[i].type))
         .reverse();
 
-      const redeemScript = [...encodedParameters, ...this.artifact.uninstantiatedScript];
+      const redeemScript = [...encodedParameters, ...Data.asmToScript(this.artifact.bytecode)];
       const instance = new Instance(this.artifact, redeemScript, this.network);
 
       const deployedContracts = this.artifact.networks[this.network] || {};
-      deployedContracts[instance.address] = redeemScript;
+      deployedContracts[instance.address] = Data.scriptToAsm(redeemScript);
       this.artifact.networks[this.network] = deployedContracts;
-      this.artifact.updatedAt = new Date().toDateString();
+      this.artifact.updatedAt = new Date().toISOString();
 
       return instance;
     };
@@ -80,7 +81,7 @@ export class Contract {
 
       if (!redeemScript) throw new Error(`No registered contract deployed at ${at}`);
 
-      return new Instance(this.artifact, redeemScript, this.network);
+      return new Instance(this.artifact, Data.asmToScript(redeemScript), this.network);
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Script } from 'bitbox-sdk';
+import * as pjson from 'pjson';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Artifact } from '../../../src/artifact/Artifact';
@@ -15,16 +15,15 @@ export const fixtures: Fixture[] = [
       contractName: 'P2PKH',
       constructorInputs: [{ name: 'pkh', type: 'bytes20' }],
       abi: [{ name: 'spend', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_1 OP_PICK OP_SHA256 OP_1 OP_PICK OP_EQUAL OP_VERIFY '
         + 'OP_2 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'p2pkh.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -35,7 +34,7 @@ export const fixtures: Fixture[] = [
       contractName: 'Reassignment',
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'string' }],
       abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_10 OP_4 OP_SUB '
         + '14 OP_1 OP_PICK OP_2 OP_MOD OP_ADD '
         + 'OP_0 OP_PICK OP_3 OP_PICK OP_GREATERTHAN OP_VERIFY '
@@ -44,12 +43,11 @@ export const fixtures: Fixture[] = [
         + 'OP_6 OP_PICK OP_RIPEMD160 OP_1 OP_PICK OP_RIPEMD160 OP_EQUAL OP_VERIFY '
         + 'OP_7 OP_PICK OP_7 OP_PICK OP_CHECKSIG OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'reassignment.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -60,7 +58,7 @@ export const fixtures: Fixture[] = [
       contractName: 'IfStatement',
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'int' }],
       abi: [{ name: 'hello', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_2 OP_PICK OP_4 OP_PICK OP_ADD '
         + 'OP_0 OP_PICK OP_4 OP_PICK OP_SUB '
         + 'OP_0 OP_PICK OP_3 OP_PICK OP_2 OP_SUB OP_NUMEQUAL OP_IF '
@@ -72,12 +70,11 @@ export const fixtures: Fixture[] = [
         + 'OP_0 OP_PICK OP_5 OP_PICK OP_ADD '
         + 'OP_0 OP_PICK OP_5 OP_PICK OP_NUMEQUAL OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'if_statement.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -88,7 +85,7 @@ export const fixtures: Fixture[] = [
       contractName: 'MultiFunction',
       constructorInputs: [{ name: 'sender', type: 'pubkey' }, { name: 'recipient', type: 'pubkey' }, { name: 'timeout', type: 'int' }],
       abi: [{ name: 'transfer', inputs: [{ name: 'recipientSig', type: 'sig' }] }, { name: 'timeout', inputs: [{ name: 'senderSig', type: 'sig' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
         + 'OP_4 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1 OP_ELSE '
@@ -96,12 +93,11 @@ export const fixtures: Fixture[] = [
         + 'OP_4 OP_PICK OP_1 OP_PICK OP_CHECKSIG OP_VERIFY '
         + 'OP_2 OP_PICK OP_CHECKLOCKTIMEVERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1 OP_ENDIF OP_ENDIF',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'multifunction.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -112,7 +108,7 @@ export const fixtures: Fixture[] = [
       contractName: 'MultiFunctionIfStatements',
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'int' }],
       abi: [{ name: 'transfer', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }] }, { name: 'timeout', inputs: [{ name: 'b', type: 'int' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_2 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
         + 'OP_3 OP_PICK OP_5 OP_PICK OP_ADD '
         + 'OP_0 OP_PICK OP_5 OP_PICK OP_SUB '
@@ -134,12 +130,11 @@ export const fixtures: Fixture[] = [
         + 'OP_DROP OP_ENDIF '
         + 'OP_5 OP_PICK OP_0 OP_PICK OP_5 OP_PICK OP_NUMEQUAL OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1 OP_ENDIF OP_ENDIF',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'multifunction_if_statements.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -150,16 +145,15 @@ export const fixtures: Fixture[] = [
       contractName: 'MultiSig',
       constructorInputs: [{ name: 'pk1', type: 'pubkey' }, { name: 'pk2', type: 'pubkey' }, { name: 'pk3', type: 'pubkey' }],
       abi: [{ name: 'spend', inputs: [{ name: 's1', type: 'sig' }, { name: 's2', type: 'sig' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_0 OP_3 OP_PICK OP_5 OP_PICK OP_2 '
         + 'OP_3 OP_PICK OP_5 OP_PICK OP_7 OP_PICK OP_3 OP_CHECKMULTISIG OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -170,17 +164,16 @@ export const fixtures: Fixture[] = [
       contractName: 'SplitSize',
       constructorInputs: [{ name: 'b', type: 'bytes' }],
       abi: [{ name: 'spend', inputs: [] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_0 OP_PICK OP_1 OP_PICK OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP '
         + 'OP_0 OP_PICK OP_2 OP_PICK OP_EQUAL OP_NOT OP_VERIFY '
         + 'OP_1 OP_PICK OP_4 OP_SPLIT OP_DROP OP_1 OP_PICK OP_EQUAL OP_NOT OP_VERIFY '
         + 'OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'split_size.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -191,16 +184,15 @@ export const fixtures: Fixture[] = [
       contractName: 'CastHashChecksig',
       constructorInputs: [],
       abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_0 OP_PICK OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_EQUAL OP_VERIFY '
         + 'OP_1 OP_PICK OP_1 OP_PICK OP_CHECKSIG OP_VERIFY '
         + 'OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'cast_hash_checksig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -211,17 +203,16 @@ export const fixtures: Fixture[] = [
       contractName: 'CheckDataSig',
       constructorInputs: [],
       abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }, { name: 'data', type: 'bytes' }] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_1 OP_PICK OP_1 OP_PICK OP_CHECKSIG OP_VERIFY '
         + 'OP_1 OP_PICK OP_SIZE OP_1 OP_SUB OP_SPLIT OP_DROP '
         + 'OP_3 OP_PICK OP_2 OP_PICK OP_CHECKDATASIG OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'checkdatasig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },
@@ -232,7 +223,7 @@ export const fixtures: Fixture[] = [
       contractName: 'DeepReplace',
       constructorInputs: [],
       abi: [{ name: 'hello', inputs: [] }],
-      uninstantiatedScript: new Script().decode(new Script().fromASM(
+      bytecode:
         'OP_1 OP_2 OP_3 OP_4 OP_5 OP_6 '
         + 'OP_5 OP_PICK OP_3 OP_LESSTHAN OP_IF '
         + 'OP_3 OP_6 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP '
@@ -241,12 +232,11 @@ export const fixtures: Fixture[] = [
         + 'OP_5 OP_PICK OP_5 OP_PICK OP_5 OP_PICK OP_ADD OP_4 OP_PICK OP_ADD '
         + 'OP_3 OP_PICK OP_ADD OP_2 OP_PICK OP_ADD OP_GREATERTHAN OP_VERIFY '
         + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1',
-      )),
       source: fs.readFileSync(path.join(__dirname, 'deep_replace.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${process.env.npm_package_version}`,
+        version: `v${pjson.version}`,
       },
       updatedAt: undefined,
     },

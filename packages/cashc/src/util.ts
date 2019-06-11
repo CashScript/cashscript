@@ -1,5 +1,5 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
-import { Script } from 'bitbox-sdk';
+import { Script as BScript } from 'bitbox-sdk';
 import * as fs from 'fs';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
@@ -9,16 +9,23 @@ import { generateArtifact, Artifact } from './artifact/Artifact';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal';
+import { Script } from './generation/Script';
 
 export const Data = {
   encodeBool(b: boolean): Buffer {
     return b ? this.encodeInt(1) : this.encodeInt(0);
   },
   encodeInt(i: number): Buffer {
-    return new Script().encodeNumber(i);
+    return new BScript().encodeNumber(i);
   },
   encodeString(s: string): Buffer {
     return Buffer.from(s, 'ascii');
+  },
+  scriptToAsm(s: Script) {
+    return new BScript().toASM(new BScript().encode(s));
+  },
+  asmToScript(s: string) {
+    return new BScript().decode(new BScript().fromASM(s));
   },
 };
 export type Data = typeof Data;

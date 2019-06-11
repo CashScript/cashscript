@@ -3,7 +3,6 @@
  * - This file is used to test the IR and target code generation
  */
 
-import { Script } from 'bitbox-sdk';
 import { assert } from 'chai';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -29,13 +28,7 @@ describe('Code generation', () => {
       const artifact = generateArtifact(ast, traversal.output, code);
 
       // Disregard updatedAt
-      artifact.updatedAt = undefined;
-
-      // Check Script first in readable form
-      assert.deepEqual(
-        new Script().toASM(new Script().encode(artifact.uninstantiatedScript)),
-        new Script().toASM(new Script().encode(fixture.artifact.uninstantiatedScript)),
-      );
+      fixture.artifact.updatedAt = artifact.updatedAt;
 
       // Then check full artifact
       assert.deepEqual(

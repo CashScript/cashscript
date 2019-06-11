@@ -1,4 +1,3 @@
-import { Script as BScript } from 'bitbox-sdk';
 import {
   ContractNode,
   ParameterNode,
@@ -77,9 +76,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.contract = this.visit(node.contract) as ContractNode;
 
     // Minimally encode output by going Script -> ASM -> Script
-    this.output = new BScript().decode(new BScript().fromASM(
-      new BScript().toASM(new BScript().encode(this.output)),
-    ));
+    this.output = Data.asmToScript(Data.scriptToAsm(this.output));
 
     return node;
   }

@@ -1,15 +1,15 @@
 {
-  "name": "P2PKH",
-  "constructorParameters": [
+  "contractName": "P2PKH",
+  "constructorInputs": [
     {
       "name": "pkh",
       "type": "bytes20"
     }
   ],
-  "functions": [
+  "abi": [
     {
       "name": "spend",
-      "parameters": [
+      "inputs": [
         {
           "name": "pk",
           "type": "pubkey"
@@ -21,122 +21,16 @@
       ]
     }
   ],
-  "uninstantiatedScript": [
-    {
-      "type": "Buffer",
-      "data": [
-        1
-      ]
-    },
-    121,
-    169,
-    {
-      "type": "Buffer",
-      "data": [
-        1
-      ]
-    },
-    121,
-    135,
-    105,
-    {
-      "type": "Buffer",
-      "data": [
-        2
-      ]
-    },
-    121,
-    {
-      "type": "Buffer",
-      "data": [
-        2
-      ]
-    },
-    121,
-    172,
-    105,
-    117,
-    117,
-    117,
-    {
-      "type": "Buffer",
-      "data": [
-        1
-      ]
-    }
-  ],
+  "bytecode": "OP_1 OP_PICK OP_HASH160 OP_1 OP_PICK OP_EQUAL OP_VERIFY OP_2 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_1",
+  "source": "contract P2PKH(bytes20 pkh) {\n    // Require pk to match stored pkh and signature to match\n    function spend(pubkey pk, sig s) {\n        require(hash160(pk) == pkh);\n        require(checkSig(s, pk));\n    }\n}\n",
   "networks": {
     "testnet": {
-      "bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl": [
-        {
-          "type": "Buffer",
-          "data": [
-            255,
-            215,
-            97,
-            109,
-            204,
-            182,
-            97,
-            9,
-            172,
-            132,
-            12,
-            249,
-            72,
-            78,
-            135,
-            14,
-            202,
-            197,
-            231,
-            254
-          ]
-        },
-        {
-          "type": "Buffer",
-          "data": [
-            1
-          ]
-        },
-        121,
-        169,
-        {
-          "type": "Buffer",
-          "data": [
-            1
-          ]
-        },
-        121,
-        135,
-        105,
-        {
-          "type": "Buffer",
-          "data": [
-            2
-          ]
-        },
-        121,
-        {
-          "type": "Buffer",
-          "data": [
-            2
-          ]
-        },
-        121,
-        172,
-        105,
-        117,
-        117,
-        117,
-        {
-          "type": "Buffer",
-          "data": [
-            1
-          ]
-        }
-      ]
+      "bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl": "ffd7616dccb66109ac840cf9484e870ecac5e7fe OP_1 OP_PICK OP_HASH160 OP_1 OP_PICK OP_EQUAL OP_VERIFY OP_2 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_1"
     }
   },
-  "compilerVersion": "v0.1.0-beta.1"
+  "compiler": {
+    "name": "cashc",
+    "version": "v0.1.0-beta.1"
+  },
+  "updatedAt": "2019-06-11T06:46:00.670Z"
 }

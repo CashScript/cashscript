@@ -5,7 +5,6 @@ import { PrimitiveType } from '../ast/Type';
 import { Data } from '../util';
 
 export const Op = new BScript().opcodes;
-
 export type Op = number;
 export type OpOrData = Op | Buffer;
 export type Script = OpOrData[];

@@ -14,17 +14,21 @@ import { Contract, Instance, Sig } from 'cashscript';
   const hdNode: HDNode = bitbox.HDNode.fromSeed(rootSeed, network);
   const keypair: ECPair = bitbox.HDNode.toKeyPair(hdNode);
 
-  // Derive the owner's public key
+  // Derive the owner's public key and public key hash
   const pk: Buffer = bitbox.ECPair.toPublicKey(keypair);
+  const pkh: Buffer = bitbox.Crypto.hash160(pk);
 
   // Import the P2PKH Cash Contract from Artifact file, including deployed contract details
   const P2PKH: Contract = Contract.fromArtifact(path.join(__dirname, 'p2pkh.json'), network);
+
+  // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
+  let instance: Instance = P2PKH.new(pkh);
 
   // Export the P2PKH Cash Contract's details again (just for demo purposes)
   P2PKH.export(path.join(__dirname, 'p2pkh.json'));
 
   // Retrieve the deployed contract details from Artifact
-  const instance: Instance = P2PKH.deployed();
+  instance = P2PKH.deployed();
 
   // Get contract balance & output address + balance
   const contractBalance: number = await instance.getBalance();

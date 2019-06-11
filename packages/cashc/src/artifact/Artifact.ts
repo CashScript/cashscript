@@ -1,6 +1,8 @@
+import * as pjson from 'pjson';
 import { Ast } from '../ast/AST';
 import { Type } from '../ast/Type';
 import { Script } from '../generation/Script';
+import { Data } from '../util';
 
 export interface AbiInput {
   name: string;
@@ -16,11 +18,11 @@ export interface Artifact {
   contractName: string;
   constructorInputs: AbiInput[];
   abi: AbiFunction[];
-  uninstantiatedScript: Script;
+  bytecode: string;
   source: string;
   networks: {
     [network: string]: {
-      [address: string]: Script;
+      [address: string]: string;
     };
   };
   compiler: {
@@ -30,7 +32,7 @@ export interface Artifact {
   updatedAt: string;
 }
 
-export function generateArtifact(ast: Ast, uninstantiatedScript: Script, source: string): Artifact {
+export function generateArtifact(ast: Ast, script: Script, source: string): Artifact {
   const { contract } = ast;
   const constructorInputs = contract.parameters.map(p => ({ name: p.name, type: p.type }));
   const abi = contract.functions.map(f => ({
@@ -38,17 +40,19 @@ export function generateArtifact(ast: Ast, uninstantiatedScript: Script, source:
     inputs: f.parameters.map(p => ({ name: p.name, type: p.type })),
   }));
 
+  const bytecode = Data.scriptToAsm(script);
+
   return {
     contractName: contract.name,
     constructorInputs,
     abi,
-    uninstantiatedScript,
+    bytecode,
     source,
     networks: {},
     compiler: {
       name: 'cashc',
-      version: `v${process.env.npm_package_version}`,
+      version: `v${pjson.version}`,
     },
-    updatedAt: new Date().toDateString(),
+    updatedAt: new Date().toISOString(),
   };
 }
