@@ -29,8 +29,6 @@ describe('Code generation', () => {
 
       // Disregard updatedAt
       fixture.artifact.updatedAt = artifact.updatedAt;
-
-      // Then check full artifact
       assert.deepEqual(
         artifact,
         fixture.artifact,

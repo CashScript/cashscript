@@ -9,6 +9,18 @@
   "contributors": [
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
+  "dependencies": {
+    "bitbox-sdk": "^8.4.0",
+    "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
+    "cashc": "^0.1.0-beta.1",
+    "delay": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1",
+    "typescript": "^3.5.1"
+  },
   "directories": {
     "lib": "src",
     "test": "test"
@@ -17,8 +29,8 @@
   "keywords": [
     "bitcoin",
     "bitcoin cash",
-    "cashscript",
     "cash contracts",
+    "cashscript",
     "compiler",
     "programming language",
     "sdk",
@@ -34,22 +46,10 @@
     "build": "npm run clean && npm run compile",
     "clean": "rm -rf ./dist",
     "compile": "tsc -p tsconfig.build.json",
+    "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
-    "test": "nyc mocha --opts ../../mocha.opts",
-    "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore"
-  },
-  "dependencies": {
-    "bitbox-sdk": "^8.4.0",
-    "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
-    "cashc": "^0.1.0-beta.1",
-    "delay": "^4.2.0"
-  },
-  "devDependencies": {
-    "eslint": "^5.16.0",
-    "mocha": "^6.1.4",
-    "nyc": "^14.1.1",
-    "typescript": "^3.5.1"
+    "test": "nyc mocha --opts ../../mocha.opts"
   },
   "types": "dist/index"
 }

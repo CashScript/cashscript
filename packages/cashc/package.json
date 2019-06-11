@@ -3,6 +3,9 @@
   "description": "Compile Cash Contracts to Bitcoin Cash Script or artifacts",
   "version": "0.1.0-beta.1",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
+  "bin": {
+    "cashc": "dist/cashc-cli.js"
+  },
   "bugs": {
     "url": "https://github.com/Bitcoin-com/cashscript/issues"
   },
@@ -10,9 +13,11 @@
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
   "dependencies": {
+    "@types/yargs": "^13.0.0",
     "antlr4ts": "^0.5.0-alpha.3",
     "bitbox-sdk": "^8.4.0",
     "pjson": "^1.0.9",
+    "yargs": "^13.2.4"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
