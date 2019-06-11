@@ -2,12 +2,13 @@
     "all": true,
     "extends": "@istanbuljs/nyc-config-typescript",
     "include": [
-        "src/"
+        "**/src/**/*.ts"
     ],
     "exclude": [
-        "src/compiler/grammar/",
-        "src/compiler/optimisations/",
-        "**/*.d.ts"
+        "**/*.d.ts",
+        "**/index.ts",
+        "packages/cashc/src/grammar/",
+        "packages/cashc/src/optimisations/"
     ],
     "require": [
         "ts-node/register/transpile-only"

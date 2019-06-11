@@ -1,4 +1,5 @@
 module.exports = {
+  root: true,
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   extends: ['airbnb-typescript/base'],
@@ -8,6 +9,9 @@ module.exports = {
   },
   env: {
     'mocha': true,
+  },
+  parserOptions: {
+    project: './tsconfig.build.json'
   },
   rules: {
     'import/no-cycle': false, // Needed for AST -> AstVisitor -> AST
@@ -31,6 +35,13 @@ module.exports = {
     ],
     'import/prefer-default-export': 0,
     'import/no-unresolved': 0,
+    'import/no-extraneous-dependencies': context => [
+      'error',
+      {
+        devDependencies: true,
+        packageDir: [context.getFilename(), __dirname]
+      }
+    ],
     'no-bitwise': 0,
     'no-restricted-syntax': 0,
     'no-dupe-class-members': 0,

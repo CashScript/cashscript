@@ -1,0 +1,4 @@
+--recursive
+--exclude **/node_modules/**
+--exit
+**/test/**/*.test.ts

@@ -1,6 +1,6 @@
 ignore:
-  - src/compiler/grammar/
-  - test/
+  - packages/cashc/src/grammar/
+  - '**/test/'
 
 status:
   project:

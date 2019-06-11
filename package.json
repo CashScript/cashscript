@@ -1,69 +1,32 @@
 {
-  "name": "cashscript",
-  "description": "⚖️ Easily write and interact with Cash Contracts on Bitcoin Cash",
-  "version": "0.1.0-beta.1",
-  "author": "Rosco Kalis <rosco@bitcoin.com>",
-  "bugs": {
-    "url": "https://github.com/Bitcoin-com/cashscript/issues"
-  },
-  "contributors": [
-    "Gabriel Cardona <gabriel@bitcoin.com>"
+  "name": "root",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples"
   ],
-  "dependencies": {
-    "antlr4ts": "^0.5.0-alpha.3",
-    "bitbox-sdk": "^8.4.0",
-    "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
-    "delay": "^4.2.0"
-  },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^0.1.3",
     "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.6",
-    "@types/node": "^11.13.7",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.0.7",
     "@typescript-eslint/eslint-plugin": "^1.7.0",
     "@typescript-eslint/parser": "^1.7.0",
     "antlr4ts-cli": "^0.5.0-alpha.3",
     "chai": "^4.2.0",
     "codecov": "^3.5.0",
-    "eslint": "^5.16.0",
+    "eslint": "^5.14.0",
     "eslint-config-airbnb-typescript": "^3.0.0",
     "eslint-plugin-import": "^2.17.2",
+    "lerna": "^3.15.0",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1",
-    "source-map-support": "^0.5.12",
-    "ts-node": "^8.1.0",
-    "typescript": "^3.4.5"
-  },
-  "directories": {
-    "doc": "docs",
-    "example": "examples",
-    "lib": "src",
-    "test": "test"
-  },
-  "homepage": "https://github.com/Bitcoin-com/cashscript#readme",
-  "keywords": [
-    "bitcoin",
-    "bitcoin cash",
-    "cash contracts",
-    "compiler",
-    "programming language",
-    "sdk",
-    "smart contracts"
-  ],
-  "license": "MIT",
-  "main": "dist/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
+    "ts-node": "^8.2.0",
+    "typescript": "^3.5.1"
   },
   "scripts": {
-    "antlr": "antlr4ts -visitor -listener src/compiler/grammar/CashScript.g4",
-    "build": "tsc",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "test": "nyc mocha --opts mocha.opts",
     "lint": "eslint . --ext .ts",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run lint",
-    "test": "nyc mocha"
-  },
-  "types": "dist/index.d.ts"
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
+  }
 }
