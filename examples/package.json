@@ -7,6 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "bitbox-sdk": "^8.4.0",
-    "bitcoincashjs-lib": "^3.3.3"
+    "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
+    "cashscript": "^0.1.0-beta.1"
   }
 }

@@ -1,7 +1,6 @@
 import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
-import * as path from 'path';
 import { Contract, Instance, Sig } from 'cashscript';
 
 (async (): Promise<any> => {
@@ -19,13 +18,13 @@ import { Contract, Instance, Sig } from 'cashscript';
   const pkh: Buffer = bitbox.Crypto.hash160(pk);
 
   // Import the P2PKH Cash Contract from Artifact file, including deployed contract details
-  const P2PKH: Contract = Contract.fromArtifact(path.join(__dirname, 'p2pkh.json'), network);
+  const P2PKH: Contract = Contract.fromArtifact('p2pkh.json', network);
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
   let instance: Instance = P2PKH.new(pkh);
 
   // Export the P2PKH Cash Contract's details again (just for demo purposes)
-  P2PKH.export(path.join(__dirname, 'p2pkh.json'));
+  P2PKH.export('p2pkh.json');
 
   // Retrieve the deployed contract details from Artifact
   instance = P2PKH.deployed();

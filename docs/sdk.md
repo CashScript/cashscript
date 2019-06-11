@@ -9,14 +9,14 @@ Before instantiating a contract, first you need to create a new `Contract` objec
 Compiles the CashScript file found at the path specified by argument `fn`. Optionally specify a network string (`'testnet'` or `'mainnet'`) to connect with. Returns a `Contract` object that can be further used to instantiate new instances of this contract.
 
 ```ts
-const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), 'testnet');
+const P2PKH: Contract = Contract.fromCashFile('p2pkh.cash', 'testnet');
 ```
 
 ##### `Contract.fromArtifact(fn: string, network?: string): Contract`
 Imports an Artifact file that was compiled and exported previously. This file is found at the path specified by argument `fn`. Optionally specify a network string (`'testnet'` or `'mainnet'`) to connect with. Returns a `Contract` object that can be further used to instantiate new instances of this contract.
 
 ```ts
-const P2PKH: Contract = Contract.fromArtifact(path.join(__dirname, 'p2pkh.json'), 'testnet');
+const P2PKH: Contract = Contract.fromArtifact('p2pkh.json', 'testnet');
 ```
 
 ### Exporting a contract
@@ -26,7 +26,7 @@ This `Contract` object can be exported to an Artifact file to be imported at a l
 Writes the contract's details to an Artifact file found at the location specified by argument `fn`, so it can be retrieved later. If the file does not exist yet, it is created. If the file already exists, **it is overwritten**.
 
 ```ts
-P2PKH.export(path.join(__dirname, 'p2pkh.json'));
+P2PKH.export('p2pkh.json');
 ```
 
 ### Instantiating a contract

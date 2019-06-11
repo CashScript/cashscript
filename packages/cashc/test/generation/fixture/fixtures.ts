@@ -25,7 +25,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -49,7 +49,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -76,7 +76,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -99,7 +99,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -136,7 +136,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -155,7 +155,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -175,7 +175,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -194,7 +194,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -214,7 +214,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
   {
@@ -238,7 +238,7 @@ export const fixtures: Fixture[] = [
         name: 'cashc',
         version: `v${pjson.version}`,
       },
-      updatedAt: undefined,
+      updatedAt: '',
     },
   },
 ];

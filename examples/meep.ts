@@ -1,6 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
-import * as path from 'path';
 import { Contract, Instance, Sig } from 'cashscript';
 
 (async () => {
@@ -18,7 +17,7 @@ import { Contract, Instance, Sig } from 'cashscript';
   const pkh: Buffer = bitbox.Crypto.hash160(pk);
 
   // Compile the P2PKH Cash Contract
-  const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), network);
+  const P2PKH: Contract = Contract.fromCashFile('p2pkh.cash', network);
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
   const instance: Instance = P2PKH.new(pkh);

@@ -1,7 +1,6 @@
 import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
-import * as path from 'path';
 import { Contract, Instance, Sig } from 'cashscript';
 
 (async (): Promise<any> => {
@@ -23,7 +22,7 @@ import { Contract, Instance, Sig } from 'cashscript';
 
   // Compile the TransferWithTimeout Cash Contract
   const TransferWithTimeout: Contract = Contract.fromCashFile(
-    path.join(__dirname, 'transfer_with_timeout.cash'), network,
+    'transfer_with_timeout.cash', network,
   );
 
   // Instantiate a new TransferWithTimeout contract with constructor arguments:
