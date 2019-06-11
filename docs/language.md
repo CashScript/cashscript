@@ -224,3 +224,40 @@ See the following table for information on which types can be cast to other whic
 | pubkey  | bytes                  | bytes                              |
 | sig     | bytes                  | bytes, datasig                     |
 | datasig | bytes                  | bytes                              |
+
+## Artifacts
+Compiled cash contracts can be represented by so-called artifacts. These artifacts can be stored in `.json` files so they can be shared and stored for later usage without recompilation. These artifacts allow any third-party SDKs to be developed, as they only need to be able to import and use an artifact file, while leaving the compilation to the `cashc` command line tool.
+
+### Artifact specification
+```ts
+interface Artifact {
+  contractName: string; // Contract name
+  constructorInputs: AbiInput[]; // Arguments required to instantiate a contract
+  abi: AbiFunction[]; // functions that can be called
+  bytecode: string; // Compiled Script without constructor parameters added (in ASM format)
+  source: string; // Source code of the CashScript contract
+  networks: { // Dictionary per network (testnet / mainnet)
+    [network: string]: { // Dictionary of contract addresses with the corresponding compiled script (in ASM format)
+      [address: string]: string;
+    };
+  };
+  compiler: {
+    name: string; // Compiler used to compile this contract
+    version: string; // Compiler version used to compile this contract
+  }
+  updatedAt: string; // Last datetime this artifact was updated (in ISO format)
+}
+
+interface AbiInput {
+  name: string; // Input name
+  type: string; // Input type (see language documentation)
+}
+
+interface AbiFunction {
+  name: string; // Function name
+  inputs: AbiInput[]; // Function inputs / parameters
+}
+```
+
+## Examples
+For example real world uses of these functions and cash contracts check out the [examples folder](/examples/). This folder contains several example contracts as `.cash` files, and example SDK usage in the `.ts` files.

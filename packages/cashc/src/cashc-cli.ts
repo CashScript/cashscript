@@ -9,7 +9,7 @@ const { argv } = yargs
   .usage('Usage: $0 [options] [source_file]')
   .option('output', {
     alias: 'o',
-    describe: 'Specify a file to output the generated target. Uses stdout when omitted.',
+    describe: 'Specify a file to output the generated artifact.',
     type: 'string',
     demand: true,
   })
