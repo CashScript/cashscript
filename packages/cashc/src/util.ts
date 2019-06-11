@@ -10,18 +10,54 @@ import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 
-export class Data {
-  static encodeBool(b: boolean): Buffer {
+export const Data = {
+  encodeBool(b: boolean): Buffer {
     return b ? this.encodeInt(1) : this.encodeInt(0);
-  }
-
-  static encodeInt(i: number): Buffer {
+  },
+  encodeInt(i: number): Buffer {
     return new Script().encodeNumber(i);
-  }
-
-  static encodeString(s: string): Buffer {
+  },
+  encodeString(s: string): Buffer {
     return Buffer.from(s, 'ascii');
+  },
+};
+export type Data = typeof Data;
+
+export const Artifacts = {
+  require(artifactFile: string): Artifact {
+    const artifactString = fs.readFileSync(artifactFile, { encoding: 'utf-8' });
+    return JSON.parse(artifactString, scriptReviver);
+  },
+  export(artifact: Artifact, targetFile: string): void {
+    const jsonString = JSON.stringify(artifact, null, 2);
+    fs.writeFileSync(targetFile, jsonString);
+  },
+};
+export type Artifacts = typeof Artifacts;
+
+export const CashCompiler = {
+  compileString(code: string): Artifact {
+    let ast = parseCode(code);
+    ast = ast.accept(new SymbolTableTraversal()) as Ast;
+    ast = ast.accept(new TypeCheckTraversal()) as Ast;
+    const traversal = new GenerateTargetTraversal();
+    ast.accept(traversal);
+    const targetCode = traversal.output;
+
+    return generateArtifact(ast, targetCode, code);
+  },
+  compileFile(codeFile: string): Artifact {
+    const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
+    return CashCompiler.compileString(code);
+  },
+};
+export type CashCompiler = typeof CashCompiler;
+
+function scriptReviver(key: any, val: any) {
+  if (val && typeof val === 'object' && val.type === 'Buffer') {
+    return Buffer.from(val.data);
   }
+  return val;
 }
 
 export function parseCode(code: string): Ast {
@@ -31,37 +67,4 @@ export function parseCode(code: string): Ast {
   const parser: CashScriptParser = new CashScriptParser(tokenStream);
   const ast: Ast = new AstBuilder(parser.sourceFile()).build() as Ast;
   return ast;
-}
-
-export function compile(code: string): Artifact {
-  let ast = parseCode(code);
-  ast = ast.accept(new SymbolTableTraversal()) as Ast;
-  ast = ast.accept(new TypeCheckTraversal()) as Ast;
-  const traversal = new GenerateTargetTraversal();
-  ast.accept(traversal);
-  const targetCode = traversal.output;
-
-  return generateArtifact(ast, targetCode, code);
-}
-
-export function compileFile(codeFile: string): Artifact {
-  const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
-  return compile(code);
-}
-
-export function writeArtifact(artifact: Artifact, targetFile: string): void {
-  const jsonString = JSON.stringify(artifact, null, 2);
-  fs.writeFileSync(targetFile, jsonString);
-}
-
-export function readArtifact(artifactFile: string): Artifact {
-  const artifactString = fs.readFileSync(artifactFile, { encoding: 'utf-8' });
-  return JSON.parse(artifactString, scriptReviver);
-}
-
-function scriptReviver(key: any, val: any) {
-  if (val && typeof val === 'object' && val.type === 'Buffer') {
-    return Buffer.from(val.data);
-  }
-  return val;
 }

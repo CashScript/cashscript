@@ -4,8 +4,6 @@ export { Op, Script } from './generation/Script';
 export { PrimitiveType, Type } from './ast/Type';
 export {
   Data,
-  compile,
-  compileFile,
-  readArtifact,
-  writeArtifact,
+  Artifacts,
+  CashCompiler,
 } from './util';

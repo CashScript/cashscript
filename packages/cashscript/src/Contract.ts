@@ -4,11 +4,10 @@ import { AddressUtxoResult, AddressDetailsResult, TxnDetailsResult } from 'bitco
 import delay from 'delay';
 import {
   Script,
-  compileFile,
-  readArtifact,
-  writeArtifact,
+  Artifacts,
   Artifact,
   AbiFunction,
+  CashCompiler,
 } from 'cashc';
 import {
   bitbox,
@@ -37,17 +36,17 @@ export class Contract {
   deployed: (at?: string) => Instance;
 
   static fromCashFile(fn: string, network?: string): Contract {
-    const artifact = compileFile(fn);
+    const artifact = CashCompiler.compileFile(fn);
     return new Contract(artifact, network);
   }
 
   static fromArtifact(fn: string, network?: string): Contract {
-    const artifact = readArtifact(fn);
+    const artifact = Artifacts.require(fn);
     return new Contract(artifact, network);
   }
 
   export(fn: string): void {
-    writeArtifact(this.artifact, fn);
+    Artifacts.export(this.artifact, fn);
   }
 
   constructor(
