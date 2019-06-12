@@ -1,0 +1,35 @@
+{
+  "contractName": "P2PKH",
+  "constructorInputs": [
+    {
+      "name": "pkh",
+      "type": "bytes20"
+    }
+  ],
+  "abi": [
+    {
+      "name": "spend",
+      "inputs": [
+        {
+          "name": "pk",
+          "type": "pubkey"
+        },
+        {
+          "name": "s",
+          "type": "sig"
+        }
+      ]
+    }
+  ],
+  "source": "contract P2PKH(bytes20 pkh) {\n    // Require pk to match stored pkh and signature to match\n    function spend(pubkey pk, sig s) {\n        require(hash160(pk) == pkh);\n        require(checkSig(s, pk));\n    }\n}\n",
+  "networks": {
+    "testnet": {
+      "bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl": "ffd7616dccb66109ac840cf9484e870ecac5e7fe OP_1 OP_PICK OP_HASH160 OP_1 OP_PICK OP_EQUAL OP_VERIFY OP_2 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_1"
+    }
+  },
+  "compiler": {
+    "name": "cashc",
+    "version": "v0.1.0-beta.1"
+  },
+  "updatedAt": "2019-06-11T08:06:29.010Z"
+}
