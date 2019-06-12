@@ -1,6 +1,6 @@
-import * as pjson from 'pjson';
 import * as fs from 'fs';
 import * as path from 'path';
+import { version } from '../../../src';
 import { Artifact } from '../../../src/artifact/Artifact';
 
 interface Fixture {
@@ -23,7 +23,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -47,7 +47,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -74,7 +74,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -97,7 +97,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -134,7 +134,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -153,7 +153,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -173,7 +173,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -192,7 +192,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -212,7 +212,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },
@@ -236,7 +236,7 @@ export const fixtures: Fixture[] = [
       networks: {},
       compiler: {
         name: 'cashc',
-        version: `v${pjson.version}`,
+        version,
       },
       updatedAt: '',
     },

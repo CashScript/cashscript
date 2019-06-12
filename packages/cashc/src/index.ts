@@ -7,3 +7,5 @@ export {
   Artifacts,
   CashCompiler,
 } from './util';
+
+export const version = 'v0.1.0-beta.1';

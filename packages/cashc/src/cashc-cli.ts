@@ -1,9 +1,8 @@
 #! /usr/bin/env node
 import * as yargs from 'yargs';
-import * as pjson from 'pjson';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CashCompiler, Artifacts } from './util';
+import { CashCompiler, Artifacts, version } from '.';
 
 const { argv } = yargs
   .usage('Usage: $0 [options] [source_file]')
@@ -15,7 +14,7 @@ const { argv } = yargs
   })
   .showHelpOnFail(true)
   .help()
-  .version(`v${pjson.version}`);
+  .version(version);
 
 console.log(argv);
 

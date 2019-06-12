@@ -1,4 +1,4 @@
-import * as pjson from 'pjson';
+import { version } from '..';
 import { Ast } from '../ast/AST';
 import { Type } from '../ast/Type';
 import { Script } from '../generation/Script';
@@ -51,7 +51,7 @@ export function generateArtifact(ast: Ast, script: Script, source: string): Arti
     networks: {},
     compiler: {
       name: 'cashc',
-      version: `v${pjson.version}`,
+      version,
     },
     updatedAt: new Date().toISOString(),
   };

@@ -54,6 +54,12 @@ export class Contract {
     public artifact: Artifact,
     private network: string = 'testnet',
   ) {
+    if (!artifact.abi || !artifact.bytecode
+     || !artifact.constructorInputs || !artifact.contractName
+    ) {
+      throw new Error('Invalid or incomplete artifact provided');
+    }
+
     this.name = artifact.contractName;
 
     this.new = (...ps: Parameter[]) => {
