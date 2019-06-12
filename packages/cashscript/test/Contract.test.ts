@@ -37,6 +37,7 @@ describe('Contract', () => {
         Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh-invalid.json'));
       });
     });
+
     it('should create P2PKH Contract object', () => {
       const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'));
       const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh.json'));
@@ -111,6 +112,7 @@ describe('Contract', () => {
         P2PKH.deployed('bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl');
       });
     });
+
     it('should return deployed P2PKH', () => {
       const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'));
       const deployedAddress = 'bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl';
