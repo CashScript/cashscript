@@ -30,6 +30,7 @@ describe('Contract', () => {
       assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
     });
   });
+
   describe('fromArtifact', () => {
     it('should fail with invalid Artifact file', () => {
       assert.throws(() => {
@@ -50,6 +51,17 @@ describe('Contract', () => {
       assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
     });
   });
+
+  describe('export', () => {
+    it('should export Artifact file', () => {
+      const initial = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'));
+      initial.export(path.join(__dirname, 'fixture', 'p2pkh.json'));
+      const exportedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh.json'));
+
+      assert.deepEqual(initial.artifact, exportedArtifact);
+    });
+  });
+
   describe('new', () => {
     it('should fail with incorrect constructor parameters', () => {
       const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'));
@@ -86,6 +98,7 @@ describe('Contract', () => {
       assert.equal(instance.name, TransferWithTimeout.name);
     });
   });
+
   describe('deployed', () => {
     it('should fail on new Contract', () => {
       const P2PKH = Contract.fromCashFile(path.join(__dirname, 'fixture', 'p2pkh.cash'));
