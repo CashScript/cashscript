@@ -27,6 +27,7 @@
   "scripts": {
     "test": "nyc mocha --opts mocha.opts",
     "lint": "eslint . --ext .ts",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
+    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "postinstall": "lerna bootstrap && lerna run build"
   }
 }
