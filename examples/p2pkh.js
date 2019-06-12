@@ -1,7 +1,9 @@
 const { BITBOX } = require('bitbox-sdk');
 const { Contract, Sig } = require('cashscript');
+const path = require('path');
 
-(async () => {
+run();
+export function run() {
   // Initialise BITBOX
   const network = 'testnet';
   const bitbox = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
@@ -16,7 +18,7 @@ const { Contract, Sig } = require('cashscript');
   const pkh = bitbox.Crypto.hash160(pk);
 
   // Compile the P2PKH Cash Contract
-  const P2PKH = Contract.fromCashFile('p2pkh.cash', network);
+  const P2PKH = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), network);
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
   const instance = P2PKH.new(pkh);
@@ -40,4 +42,4 @@ const { Contract, Sig } = require('cashscript');
       { to: instance.address, amount: 15000 },
     ]);
   console.log('transaction details:', tx2);
-})();
+}

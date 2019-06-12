@@ -1,8 +1,10 @@
 import { BITBOX } from 'bitbox-sdk';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import { Contract, Instance, Sig } from 'cashscript';
+import * as path from 'path';
 
-(async () => {
+run();
+export async function run(): Promise<void> {
   // Initialise BITBOX
   const network: string = 'testnet';
   const bitbox: BITBOX = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
@@ -17,7 +19,7 @@ import { Contract, Instance, Sig } from 'cashscript';
   const pkh: Buffer = bitbox.Crypto.hash160(pk);
 
   // Compile the P2PKH Cash Contract
-  const P2PKH: Contract = Contract.fromCashFile('p2pkh.cash', network);
+  const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), network);
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
   const instance: Instance = P2PKH.new(pkh);
@@ -26,4 +28,4 @@ import { Contract, Instance, Sig } from 'cashscript';
   // executed to debug the transaction
   await instance.functions.spend(pk, new Sig(keypair, 0x01))
     .meep(instance.address, 10000);
-})();
+}

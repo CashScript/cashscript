@@ -1,7 +1,6 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import { Script as BScript } from 'bitbox-sdk';
 import * as fs from 'fs';
-import * as path from 'path';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
 import { CashScriptParser } from './grammar/CashScriptParser';
@@ -33,14 +32,12 @@ export type Data = typeof Data;
 
 export const Artifacts = {
   require(artifactFile: string): Artifact {
-    const fullPath = path.resolve(__dirname, artifactFile);
-    const artifactString = fs.readFileSync(fullPath, { encoding: 'utf-8' });
+    const artifactString = fs.readFileSync(artifactFile, { encoding: 'utf-8' });
     return JSON.parse(artifactString, scriptReviver);
   },
   export(artifact: Artifact, targetFile: string): void {
-    const fullPath = path.resolve(__dirname, targetFile);
     const jsonString = JSON.stringify(artifact, null, 2);
-    fs.writeFileSync(fullPath, jsonString);
+    fs.writeFileSync(targetFile, jsonString);
   },
 };
 export type Artifacts = typeof Artifacts;
@@ -57,8 +54,7 @@ export const CashCompiler = {
     return generateArtifact(ast, targetCode, code);
   },
   compileFile(codeFile: string): Artifact {
-    const fullPath = path.resolve(__dirname, codeFile);
-    const code = fs.readFileSync(fullPath, { encoding: 'utf-8' });
+    const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
     return CashCompiler.compileString(code);
   },
 };

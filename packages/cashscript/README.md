@@ -12,6 +12,8 @@ CashScript is a high level language enabling basic smart contract functionality 
 
 The CashScript JavaScript SDK allows you to easily integrate cash contracts written with CashScript into JavaScript or TypeScript applications. The CashScript SDK uses cash contract `.cash` files or `.json` artifact files to generate a JavaScript `Contract` object that can be used to instantiated and interact with these cash contracts. See the [SDK documentation](/docs/sdk.md) for a full reference of the SDK.
 
+**Note:** The CashScript currently only supports NodeJS, as it uses some NodeJS-specific functionality (fs, path). We are working on making the library compatible with the browser as well as NodeJS, but this is **currently not supported**.
+
 **Attention:** CashScript is in active development, and is currently in a `beta` phase. While CashScript is in `beta` stage, its APIs and usage is subject to change, so be sure to check the documentation. During the `beta` phase it is possible that the library still contains bugs, so for now the CashScript SDK can only be used on the `testnet` network.
 
 ## Installation
@@ -37,7 +39,7 @@ Using the CashScript SDK, you can import / compile existing cash contract files,
 ```ts
 ...
   // Compile the P2PKH Cash Contract
-  const P2PKH: Contract = Contract.fromCashFile('p2pkh.cash', 'testnet');
+  const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), 'testnet');
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
   const instance: Instance = P2PKH.new(pkh);

@@ -2,8 +2,10 @@ import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import { Contract, Instance, Sig } from 'cashscript';
+import * as path from 'path';
 
-(async (): Promise<any> => {
+run();
+export async function run(): Promise<void> {
   // Initialise BITBOX
   const network: string = 'testnet';
   const bitbox: BITBOX = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
@@ -22,7 +24,7 @@ import { Contract, Instance, Sig } from 'cashscript';
 
   // Compile the TransferWithTimeout Cash Contract
   const TransferWithTimeout: Contract = Contract.fromCashFile(
-    'transfer_with_timeout.cash', network,
+    path.join(__dirname, 'transfer_with_timeout.cash'), network,
   );
 
   // Instantiate a new TransferWithTimeout contract with constructor arguments:
@@ -46,4 +48,4 @@ import { Contract, Instance, Sig } from 'cashscript';
   const timeoutTx: TxnDetailsResult = await instance.functions.timeout(new Sig(alice, 0x01))
     .send(instance.address, 10000);
   console.log('timeout transaction details:', timeoutTx);
-})();
+}

@@ -41,6 +41,8 @@ Options:
 ## The CashScript SDK
 The main way to interact with cash contracts and integrate them into applications is using the CashScript SDK. This SDK allows you to compile `.cash` files or import `.json` artifact files, and convert them to `Contract` objects. These objects are used to create new contract instances. These instances are used to interact with the contracts using the functions that were implemented in the `.cash` file. For more information on the CashScript SDK, refer to its [README](/packages/cashscript) or the [full SDK documentation](/docs/sdk.md).
 
+**Note:** The CashScript currently only supports NodeJS, as it uses some NodeJS-specific functionality (fs, path). We are working on making the library compatible with the browser as well as NodeJS, but this is **currently not supported**.
+
 ### Installation
 ```bash
 npm install cashscript
@@ -60,7 +62,7 @@ Using the CashScript SDK, you can import / compile existing cash contract files,
 ```ts
 ...
   // Compile the P2PKH Cash Contract
-  const P2PKH: Contract = Contract.fromCashFile('p2pkh.cash', 'testnet');
+  const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), 'testnet');
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
   const instance: Instance = P2PKH.new(pkh);
