@@ -3,7 +3,7 @@ const { Contract, Sig } = require('cashscript');
 const path = require('path');
 
 run();
-export function run() {
+async function run() {
   // Initialise BITBOX
   const network = 'testnet';
   const bitbox = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
@@ -43,3 +43,7 @@ export function run() {
     ]);
   console.log('transaction details:', tx2);
 }
+
+module.exports = {
+  run,
+};
