@@ -16,8 +16,6 @@ const { argv } = yargs
   .help()
   .version(version);
 
-console.log(argv);
-
 ensure(argv._.length === 1, 'Please provide exactly one source file');
 const sourceFile = path.resolve(process.cwd(), argv._[0]);
 const outputFile = path.resolve(process.cwd(), argv.output);
