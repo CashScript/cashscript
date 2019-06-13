@@ -20,7 +20,7 @@ describe('Transaction', () => {
   describe('P2PKH', () => {
     let p2pkhInstance: Instance;
     before(() => {
-      const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'));
+      const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
       p2pkhInstance = P2PKH.new(alicePkh);
     });
 
@@ -93,7 +93,7 @@ describe('Transaction', () => {
     let twtInstancePast: Instance;
     let twtInstanceFuture: Instance;
     before(() => {
-      const TWT = Contract.fromArtifact(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'));
+      const TWT = Contract.fromArtifact(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), 'testnet');
       twtInstancePast = TWT.new(alicePk, bobPk, 1000000);
       twtInstanceFuture = TWT.new(alicePk, bobPk, 2000000);
     });
