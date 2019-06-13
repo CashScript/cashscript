@@ -10,7 +10,7 @@ CashScript is a high level language enabling basic smart contract functionality 
 
 ---
 
-`cashc` can be used as an npm package, or as a standalone CLI tool. The npm package exposes functionality that is used to build libraries on top of `cashc`, and **should not be used for other purposes**. If you do want to build your own library on top of `cashc`, a full documentation is forthcoming, but if you want to integrate Cash Contracts into JavaScript or TypeScript projects, **you should use the [CashScript JavaScript SDK](/packages/cashscript) instead**.
+`cashc` can be used as an npm package, or as a standalone CLI tool. The npm package exposes functionality that is used to build libraries on top of `cashc`, and **should not be used for other purposes**. If you do want to build your own library on top of `cashc`, a full documentation is forthcoming, but if you want to integrate Cash Contracts into JavaScript or TypeScript projects, **you should use the [CashScript JavaScript SDK](https://www.npmjs.com/package/cashscript) instead**.
 
 The rest of this README focuses on the standalone `cashc` CLI tool, which is used to compile Cash Contract files (`.cash`) into `.json` artifact files. These artifacts can be imported and used by any of the CashScript SDKs (the only existing SDK at the moment is the JavaScript SDK).
 

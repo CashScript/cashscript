@@ -28,7 +28,7 @@
     "lib": "src",
     "test": "test"
   },
-  "homepage": "https://github.com/Bitcoin-com/cashscript",
+  "homepage": "https://github.com/Bitcoin-com/cashscript/tree/master/packages/cashc",
   "keywords": [
     "bitcoin",
     "bitcoin cash",
