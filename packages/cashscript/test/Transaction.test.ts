@@ -208,7 +208,7 @@ describe('Transaction', () => {
           .meep(twtInstanceFuture.address, 10000);
 
         await twtInstancePast.functions.timeout(new Sig(alice, 0x01))
-          .send(twtInstancePast.address, 10000);
+          .meep(twtInstancePast.address, 10000);
       });
     });
 
