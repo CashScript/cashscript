@@ -50,7 +50,7 @@ export function createInputScript(
 ): Buffer {
   // Create unlock script / redeemScriptSig
   const unlockScript = parameters
-    .map((p, i) => encodeParameter(p, abiFunction.inputs[i]))
+    .map((p, i) => encodeParameter(p, abiFunction.inputs[i].type))
     .reverse();
   if (selector !== undefined) unlockScript.push(Data.encodeInt(selector));
 
@@ -70,7 +70,7 @@ export function typecheckParameter(parameter: Parameter, type: Type): void {
       if (typeof parameter === 'number') return;
       throw new Error();
     case PrimitiveType.STRING:
-      if (typeof parameter !== 'string') return;
+      if (typeof parameter === 'string') return;
       throw new Error();
     case PrimitiveType.SIG:
       if (typeof parameter === 'string') return;
