@@ -2063,6 +2063,16 @@ cashaddrjs@^0.2.9:
   dependencies:
     big-integer "^1.6.34"
 
+cashscript@^0.1.0-beta.1:
+  version "0.1.0-beta.1"
+  resolved "https://registry.yarnpkg.com/cashscript/-/cashscript-0.1.0-beta.1.tgz#ef522ad843c14b747173914c5c0c2ceb8797414f"
+  integrity sha512-1A3gQkU7ZEwWhbybK8uO/AiJyPz2YX4zFbVXk6MeYwXGVbmb9v4glXM5vmDRwZIa4CCqP0FOsXqk2+xI/KJS7w==
+  dependencies:
+    bitbox-sdk "^8.4.0"
+    bitcoincashjs-lib Bitcoin-com/bitcoincashjs-lib#v4.0.1
+    cashc "^0.1.0-beta.1"
+    delay "^4.2.0"
+
 chai-as-promised@^7.1.1:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/chai-as-promised/-/chai-as-promised-7.1.1.tgz#08645d825deb8696ee61725dbf590c012eb00ca0"

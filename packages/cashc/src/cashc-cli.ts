@@ -17,13 +17,16 @@ const { argv } = yargs
   .version(version);
 
 ensure(argv._.length === 1, 'Please provide exactly one source file');
-const sourceFile = path.resolve(process.cwd(), argv._[0]);
-const outputFile = path.resolve(process.cwd(), argv.output);
+const sourceFile = path.resolve(argv._[0]);
+const outputFile = path.resolve(argv.output);
 ensure(fs.existsSync(sourceFile) && fs.statSync(sourceFile).isFile(), 'Please provide a valid source file');
 
 try {
   const artifact = CashCompiler.compileFile(sourceFile);
-  fs.mkdirSync(path.dirname(outputFile), { recursive: true });
+  const outputDir = path.dirname(outputFile);
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
   Artifacts.export(artifact, outputFile);
 } catch (e) {
   abort(e.message);
