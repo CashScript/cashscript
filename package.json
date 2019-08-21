@@ -1,6 +1,17 @@
 {
   "name": "root",
   "private": true,
+  "author": "Rosco Kalis <rosco@bitcoin.com>",
+  "contributors": [
+    "Gabriel Cardona <gabriel@bitcoin.com>"
+  ],
+  "name": "cashscript",
+  "version": "0.1.0-beta.2",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
+  },
   "workspaces": [
     "packages/*",
     "examples"
