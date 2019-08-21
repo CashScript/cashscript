@@ -218,8 +218,8 @@ export class Transaction {
           vin, ScriptUtil.encode(this.redeemScript), utxo.satoshis, hashtype,
         );
         return p.keypair
-          .sign(sighash, SignatureAlgorithm.SCHNORR)
-          .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
+          .sign(sighash, SignatureAlgorithm.ECDSA)
+          .toScriptSignature(hashtype, SignatureAlgorithm.ECDSA);
       });
 
       const inputScript = createInputScript(
