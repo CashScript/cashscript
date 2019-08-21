@@ -1,0 +1,15 @@
+contract IfStatement(int x, int y) {
+    function hello(int a, int b) {
+        int d = a + b;
+        d = d - a;
+        if (d == x - 2) {
+            int c = d + b;
+            d = a + c;
+            require(c > d);
+        } else {
+            require(d == a);
+        }
+        d = d + a;
+        require(d == y);
+    }
+}

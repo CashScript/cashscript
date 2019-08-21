@@ -1,0 +1,13 @@
+contract Reassignment(int x, string y) {
+    function hello(pubkey pk, sig s) {
+        int myVariable = 10 - 4;
+        int myOtherVariable = 20 + myVariable % 2;
+        require(myOtherVariable > x);
+
+        string hw = "Hello World";
+        hw = hw + y;
+
+        require(ripemd160(pk) == ripemd160(hw));
+        require(checkSig(s, pk));
+    }
+}

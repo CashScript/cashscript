@@ -1,0 +1,6 @@
+contract CheckDataSig() {
+    function hello(pubkey pk, sig s, bytes data) {
+        require(checkSig(s, pk));
+        require(checkDataSig(datasig(s), data, pk));
+    }
+}

@@ -4,11 +4,13 @@ contract HTLC(
     int expiration,
     bytes32 hash
 ) {
+    // Require the preimage to match the stored hash and signature to match
     function complete(bytes preimage, sig s) {
         require(sha256(preimage) == hash);
         require(checkSig(s, recipient));
     }
 
+    // Require time to be after expiration and signature to match
     function cancel(sig s) {
         require(tx.time >= expiration);
         require(checkSig(s, sender));

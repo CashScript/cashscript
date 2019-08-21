@@ -1,0 +1,59 @@
+{
+  "name": "cashc",
+  "description": "Compile Cash Contracts to Bitcoin Cash Script or artifacts",
+  "version": "0.1.0-beta.1",
+  "author": "Rosco Kalis <roscokalis@gmail.com>",
+  "bin": {
+    "cashc": "dist/cashc-cli.js"
+  },
+  "bugs": {
+    "url": "https://github.com/Bitcoin-com/cashscript/issues"
+  },
+  "contributors": [
+    "Gabriel Cardona <gabriel@bitcoin.com>"
+  ],
+  "dependencies": {
+    "@types/yargs": "^13.0.0",
+    "antlr4ts": "^0.5.0-alpha.3",
+    "bitbox-sdk": "^8.4.0",
+    "yargs": "^13.2.4"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "mocha": "^6.1.4",
+    "nyc": "^14.1.1",
+    "typescript": "^3.5.1"
+  },
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "homepage": "https://github.com/Bitcoin-com/cashscript/tree/master/packages/cashc",
+  "keywords": [
+    "bitcoin",
+    "bitcoin cash",
+    "cash contracts",
+    "cashscript",
+    "compiler",
+    "programming language",
+    "sdk",
+    "smart contracts"
+  ],
+  "license": "MIT",
+  "main": "dist/index",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
+  },
+  "scripts": {
+    "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
+    "build": "npm run clean && npm run compile",
+    "clean": "rm -rf ./dist",
+    "compile": "tsc -p tsconfig.build.json",
+    "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "test": "nyc mocha --opts ../../mocha.opts"
+  },
+  "type": "dist/index"
+}

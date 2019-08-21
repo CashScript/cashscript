@@ -1,41 +1,51 @@
 import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
+import { Contract, Instance, Sig } from 'cashscript';
 import * as path from 'path';
-import { Abi } from '../src/sdk/ABI';
-import { compileFile, Contract, Sig } from '../src/sdk/cashscript-sdk';
-import { Instance } from '../src/sdk/Contract';
 
-(async (): Promise<any> => {
+run();
+export async function run(): Promise<void> {
+  // Initialise BITBOX
   const network: string = 'testnet';
   const bitbox: BITBOX = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
 
+  // Initialise HD node
   const rootSeed: Buffer = bitbox.Mnemonic.toSeed('CashScript');
   const hdNode: HDNode = bitbox.HDNode.fromSeed(rootSeed, network);
 
+  // Create bob and alice's key pairs
   const alice: ECPair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
   const bob: ECPair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1));
 
+  // Derive their public keys
   const alicePk: Buffer = bitbox.ECPair.toPublicKey(alice);
   const bobPk: Buffer = bitbox.ECPair.toPublicKey(bob);
 
-  const abi: Abi = compileFile(path.join(__dirname, 'transfer_with_timeout.cash'));
-  const TransferWithTimeout: Contract = new Contract(abi, network);
+  // Compile the TransferWithTimeout Cash Contract
+  const TransferWithTimeout: Contract = Contract.fromCashFile(
+    path.join(__dirname, 'transfer_with_timeout.cash'), network,
+  );
 
+  // Instantiate a new TransferWithTimeout contract with constructor arguments:
+  // { sender: alicePk, recipient: bobPk, timeout: 1000000 } // timeout in the past
   // timeout value can only be block number, not timestamp
   const instance: Instance = TransferWithTimeout.new(alicePk, bobPk, 1000000);
-  const contractBalance: number = await instance.getBalance();
 
+  // Get contract balance & output address + balance
+  const contractBalance: number = await instance.getBalance();
   console.log('contract address:', instance.address);
   console.log('contract balance:', contractBalance);
 
+  // Call the transfer function with bob's signature
+  // Allows bob to claim the money that alice sent him
   const transferTx: TxnDetailsResult = await instance.functions.transfer(new Sig(bob, 0x01))
     .send(instance.address, 10000);
-
   console.log('transfer transaction details:', transferTx);
 
+  // Call the timeout function with alice's signature
+  // Allows alice to reclaim the money she sent as the timeout is in the past
   const timeoutTx: TxnDetailsResult = await instance.functions.timeout(new Sig(alice, 0x01))
     .send(instance.address, 10000);
-
   console.log('timeout transaction details:', timeoutTx);
-})();
+}

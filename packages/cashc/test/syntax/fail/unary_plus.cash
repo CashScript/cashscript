@@ -1,0 +1,6 @@
+contract Test() {
+    function hello(int a) {
+        int b = 10 - +4;
+        require(b == a);
+    }
+}

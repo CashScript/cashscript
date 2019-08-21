@@ -1,8 +1,0 @@
-contract Test() {
-    function hello(bytes b, string s) {
-        string hw = "Hello World";
-        hw = hw ++ s;
-
-        require(ripemd160(b) == ripemd160(hw));
-    }
-}
