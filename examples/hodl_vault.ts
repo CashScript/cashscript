@@ -1,7 +1,7 @@
 import { BITBOX, Script, Crypto } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
-import { Contract, Sig } from 'cashscript';
+import { Contract, Instance, Sig } from 'cashscript';
 import * as path from 'path';
 
 class PriceOracle {
@@ -9,8 +9,8 @@ class PriceOracle {
 
   // Encode a blockHeight and bchUsdPrice into a byte sequence of 8 bytes (4 bytes per value)
   createMessage(blockHeight: number, bchUsdPrice: number): Buffer {
-    const lhs = Buffer.alloc(4, 0);
-    const rhs = Buffer.alloc(4, 0);
+    const lhs: Buffer = Buffer.alloc(4, 0);
+    const rhs: Buffer = Buffer.alloc(4, 0);
     new Script().encodeNumber(blockHeight).copy(lhs);
     new Script().encodeNumber(bchUsdPrice).copy(rhs);
     return Buffer.concat([lhs, rhs]);
@@ -33,11 +33,11 @@ export async function run(): Promise<void> {
   const owner: ECPair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
 
   // Initialise price oracle with a keypair
-  const oracle = new PriceOracle(bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1)));
+  const oracle: PriceOracle = new PriceOracle(bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1)));
 
   // Compile and instantiate HODL Vault
-  const HodlVault = Contract.fromCashFile(path.join(__dirname, 'hodl_vault.cash'), 'testnet');
-  const instance = HodlVault.new(
+  const HodlVault: Contract = Contract.fromCashFile(path.join(__dirname, 'hodl_vault.cash'), 'testnet');
+  const instance: Instance = HodlVault.new(
     bitbox.ECPair.toPublicKey(owner),
     bitbox.ECPair.toPublicKey(oracle.keypair),
     597000,
@@ -45,8 +45,8 @@ export async function run(): Promise<void> {
   );
 
   // Produce new oracle message and signature
-  const oracleMessage = oracle.createMessage(597000, 30000);
-  const oracleSignature = oracle.signMessage(oracleMessage);
+  const oracleMessage: Buffer = oracle.createMessage(597000, 30000);
+  const oracleSignature: Buffer = oracle.signMessage(oracleMessage);
 
   // Spend from the vault
   const tx: TxnDetailsResult = await instance.functions
