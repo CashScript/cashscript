@@ -58,7 +58,7 @@ export async function run(): Promise<void> {
     // Initialize oracle with oracle keypair
     const oracle: Oracle = new Oracle(bitbox.HDNode.toKeyPair(alice))
 
-    // Compile and instantiate Wager contract
+    // Compile and instantiate Escrow contract
     const Escrow: Contract = Contract.fromCashFile(
       path.join(__dirname, "Escrow.cash"),
       network
