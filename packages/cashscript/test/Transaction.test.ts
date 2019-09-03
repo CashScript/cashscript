@@ -8,6 +8,8 @@ import {
   alice,
   bob,
   bobPk,
+  oraclePk,
+  oracle,
 } from './fixture/vars';
 
 chai.use(chaiAsPromised);
@@ -247,6 +249,86 @@ describe('Transaction', () => {
           { to: twtInstancePast.address, amount: 10000 },
           { to: twtInstancePast.address, amount: 10000 },
         ]);
+      });
+    });
+  });
+
+  describe('HodlVault', () => {
+    let hodlVault: Instance;
+    before(() => {
+      const HodlVault = Contract.fromArtifact(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
+      hodlVault = HodlVault.new(alicePk, oraclePk, 597000, 30000);
+    });
+
+    describe('send (to one)', () => {
+      it('should fail when oracle sig is incorrect', async () => {
+        const message = oracle.createMessage(1000000, 1000);
+        const wrongMessage = oracle.createMessage(1000000, 1001);
+        const wrongSig = oracle.signMessage(wrongMessage);
+
+        await assert.isRejected(
+          hodlVault.functions.spend(new Sig(alice, 0x01), wrongSig, message)
+            .send(hodlVault.address, 10000),
+        );
+      });
+
+      it('should fail when price is too low', async () => {
+        const message = oracle.createMessage(1000000, 29900);
+        const oracleSig = oracle.signMessage(message);
+
+        await assert.isRejected(
+          hodlVault.functions.spend(new Sig(alice, 0x01), oracleSig, message)
+            .send(hodlVault.address, 10000),
+        );
+      });
+
+      it('should succeed when price is high enough', async () => {
+        const message = oracle.createMessage(1000000, 30000);
+        const oracleSig = oracle.signMessage(message);
+
+        assert.isNotEmpty(
+          await hodlVault.functions.spend(new Sig(alice, 0x01), oracleSig, message)
+            .send(hodlVault.address, 10000),
+        );
+      });
+    });
+
+    describe('send (to many)', () => {
+      it('should fail when oracle sig is incorrect', async () => {
+        const message = oracle.createMessage(1000000, 1000);
+        const wrongMessage = oracle.createMessage(1000000, 1001);
+        const wrongSig = oracle.signMessage(wrongMessage);
+
+        await assert.isRejected(
+          hodlVault.functions.spend(new Sig(alice, 0x01), wrongSig, message).send([
+            { to: hodlVault.address, amount: 10000 },
+            { to: hodlVault.address, amount: 10000 },
+          ]),
+        );
+      });
+
+      it('should fail when price is too low', async () => {
+        const message = oracle.createMessage(1000000, 29900);
+        const oracleSig = oracle.signMessage(message);
+
+        await assert.isRejected(
+          hodlVault.functions.spend(new Sig(alice, 0x01), oracleSig, message).send([
+            { to: hodlVault.address, amount: 10000 },
+            { to: hodlVault.address, amount: 10000 },
+          ]),
+        );
+      });
+
+      it('should succeed when price is high enough', async () => {
+        const message = oracle.createMessage(1000000, 30000);
+        const oracleSig = oracle.signMessage(message);
+
+        assert.isNotEmpty(
+          await hodlVault.functions.spend(new Sig(alice, 0x01), oracleSig, message).send([
+            { to: hodlVault.address, amount: 10000 },
+            { to: hodlVault.address, amount: 10000 },
+          ]),
+        );
       });
     });
   });

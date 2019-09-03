@@ -1,0 +1,48 @@
+{
+  "contractName": "HodlVault",
+  "constructorInputs": [
+    {
+      "name": "ownerPk",
+      "type": "pubkey"
+    },
+    {
+      "name": "oraclePk",
+      "type": "pubkey"
+    },
+    {
+      "name": "minBlock",
+      "type": "int"
+    },
+    {
+      "name": "priceTarget",
+      "type": "int"
+    }
+  ],
+  "abi": [
+    {
+      "name": "spend",
+      "inputs": [
+        {
+          "name": "ownerSig",
+          "type": "sig"
+        },
+        {
+          "name": "oracleSig",
+          "type": "datasig"
+        },
+        {
+          "name": "oracleMessage",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "bytecode": "OP_6 OP_PICK OP_4 OP_SPLIT OP_DROP OP_BIN2NUM OP_7 OP_PICK OP_4 OP_SPLIT OP_NIP OP_BIN2NUM OP_1 OP_PICK OP_5 OP_PICK OP_GREATERTHANOREQUAL OP_VERIFY OP_1 OP_PICK OP_CHECKLOCKTIMEVERIFY OP_DROP OP_0 OP_PICK OP_6 OP_PICK OP_GREATERTHANOREQUAL OP_VERIFY OP_7 OP_PICK OP_9 OP_PICK OP_5 OP_PICK OP_CHECKDATASIG OP_VERIFY OP_6 OP_PICK OP_3 OP_PICK OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1",
+  "source": "// This contract forces HODLing until a certain price target has been reached\n// A minimum block is provided to ensure that oracle price entries from before this block are disregarded\n// i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used.\n// Instead, a message with a block number and price from after the minBlock needs to be passed.\n// This contract serves as a simple example for checkDataSig-based contracts.\ncontract HodlVault(\n    pubkey ownerPk,\n    pubkey oraclePk,\n    int minBlock,\n    int priceTarget\n) {\n    function spend(sig ownerSig, datasig oracleSig, bytes oracleMessage) {\n        // message: { blockheight, price }\n        int blockHeight = int(oracleMessage.split(4)[0]);\n        int price = int(oracleMessage.split(4)[1]);\n\n        // Check that blockHeight is after minBlock and not in the future\n        require(blockHeight >= minBlock);\n        require(tx.time >= blockHeight);\n\n        // Check that current price is at least priceTarget\n        require(price >= priceTarget);\n\n        // Handle necessary signature checks\n        require(checkDataSig(oracleSig, oracleMessage, oraclePk));\n        require(checkSig(ownerSig, ownerPk));\n    }\n}\n",
+  "networks": {},
+  "compiler": {
+    "name": "cashc",
+    "version": "v0.1.0-beta.1"
+  },
+  "updatedAt": "2019-09-03T13:15:18.503Z"
+}

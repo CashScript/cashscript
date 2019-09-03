@@ -29,6 +29,16 @@ describe('Contract', () => {
       expectedArtifact.networks = TransferWithTimeout.artifact.networks;
       assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
     });
+
+    it('should create HodlVault Contract object', () => {
+      const HodlVault = Contract.fromCashFile(path.join(__dirname, 'fixture', 'hodl_vault.cash'));
+      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'hodl_vault.json'));
+
+      // Disregard updatedAt & networks
+      expectedArtifact.updatedAt = HodlVault.artifact.updatedAt;
+      expectedArtifact.networks = HodlVault.artifact.networks;
+      assert.deepEqual(HodlVault.artifact, expectedArtifact);
+    });
   });
 
   describe('fromArtifact', () => {
@@ -50,6 +60,13 @@ describe('Contract', () => {
       const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'));
 
       assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
+    });
+
+    it('should create HodlVault Contract object', () => {
+      const HodlVault = Contract.fromArtifact(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
+      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'hodl_vault.json'));
+
+      assert.deepEqual(HodlVault.artifact, expectedArtifact);
     });
   });
 
@@ -97,6 +114,16 @@ describe('Contract', () => {
       assert.exists(instance.functions.transfer);
       assert.exists(instance.functions.timeout);
       assert.equal(instance.name, TransferWithTimeout.name);
+    });
+
+    it('should create new HodlVault instance', () => {
+      const HodlVault = Contract.fromArtifact(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
+
+      const instance = HodlVault.new(Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000, 10000);
+
+      assert.exists(instance.address);
+      assert.exists(instance.functions.spend);
+      assert.equal(instance.name, HodlVault.name);
     });
   });
 

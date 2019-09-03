@@ -1,5 +1,5 @@
 --recursive
 --exclude **/node_modules/**
 --exit
---timeout 15000
+--timeout 20000
 **/test/**/*.test.ts

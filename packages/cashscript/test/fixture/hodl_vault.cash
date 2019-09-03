@@ -1,0 +1,28 @@
+// This contract forces HODLing until a certain price target has been reached
+// A minimum block is provided to ensure that oracle price entries from before this block are disregarded
+// i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used.
+// Instead, a message with a block number and price from after the minBlock needs to be passed.
+// This contract serves as a simple example for checkDataSig-based contracts.
+contract HodlVault(
+    pubkey ownerPk,
+    pubkey oraclePk,
+    int minBlock,
+    int priceTarget
+) {
+    function spend(sig ownerSig, datasig oracleSig, bytes oracleMessage) {
+        // message: { blockheight, price }
+        int blockHeight = int(oracleMessage.split(4)[0]);
+        int price = int(oracleMessage.split(4)[1]);
+
+        // Check that blockHeight is after minBlock and not in the future
+        require(blockHeight >= minBlock);
+        require(tx.time >= blockHeight);
+
+        // Check that current price is at least priceTarget
+        require(price >= priceTarget);
+
+        // Handle necessary signature checks
+        require(checkDataSig(oracleSig, oracleMessage, oraclePk));
+        require(checkSig(ownerSig, ownerPk));
+    }
+}
