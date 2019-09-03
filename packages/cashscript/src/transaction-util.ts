@@ -2,12 +2,12 @@ import {
   AbiFunction,
   Script,
   PrimitiveType,
-  Type,
   Data,
 } from 'cashc';
 import { Utxo, Output } from './interfaces';
 import { BitcoinCashUtil, ScriptUtil, CryptoUtil } from './BITBOX';
 import { Parameter, Sig } from './Contract';
+import { TypeError } from './Errors';
 
 
 export function selectUtxos(
@@ -61,39 +61,45 @@ export function createInputScript(
   );
 }
 
-export function typecheckParameter(parameter: Parameter, type: Type): void {
+export function typecheckParameter(parameter: Parameter, type: PrimitiveType): void {
   switch (type) {
     case PrimitiveType.BOOL:
       if (typeof parameter === 'boolean') return;
-      throw new Error();
+      throw new TypeError(typeof parameter, type);
     case PrimitiveType.INT:
       if (typeof parameter === 'number') return;
-      throw new Error();
+      throw new TypeError(typeof parameter, type);
     case PrimitiveType.STRING:
       if (typeof parameter === 'string') return;
-      throw new Error();
+      throw new TypeError(typeof parameter, type);
     case PrimitiveType.SIG:
       if (typeof parameter === 'string') return;
       if (parameter instanceof Buffer) return;
       if (parameter instanceof Sig) return;
-      throw new Error();
+      throw new TypeError(typeof parameter, type);
     default:
       if (typeof parameter === 'string') return;
       if (parameter instanceof Buffer) return;
-      throw new Error();
+      throw new TypeError(typeof parameter, type);
   }
 }
 
-export function encodeParameter(parameter: Parameter, type: Type): Buffer {
+export function encodeParameter(parameter: Parameter, type: PrimitiveType): Buffer {
   switch (type) {
     case PrimitiveType.BOOL:
-      if (typeof parameter !== 'boolean') throw new Error();
+      if (typeof parameter !== 'boolean') {
+        throw new TypeError(typeof parameter, type);
+      }
       return Data.encodeBool(parameter);
     case PrimitiveType.INT:
-      if (typeof parameter !== 'number') throw new Error();
+      if (typeof parameter !== 'number') {
+        throw new TypeError(typeof parameter, type);
+      }
       return Data.encodeInt(parameter);
     case PrimitiveType.STRING:
-      if (typeof parameter !== 'string') throw new Error();
+      if (typeof parameter !== 'string') {
+        throw new TypeError(typeof parameter, type);
+      }
       return Data.encodeString(parameter);
     default:
       if (typeof parameter === 'string') {

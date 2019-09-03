@@ -63,7 +63,9 @@ export class Contract {
     this.name = artifact.contractName;
 
     this.new = (...ps: Parameter[]) => {
-      if (artifact.constructorInputs.length !== ps.length) throw new Error();
+      if (artifact.constructorInputs.length !== ps.length) {
+        throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor`);
+      }
       const encodedParameters = ps
         .map((p, i) => encodeParameter(p, artifact.constructorInputs[i].type))
         .reverse();
@@ -131,7 +133,9 @@ export class Instance {
 
   private createFunction(f: AbiFunction, selector?: number): ContractFunction {
     return (...ps: Parameter[]) => {
-      if (f.inputs.length !== ps.length) throw new Error();
+      if (f.inputs.length !== ps.length) {
+        throw new Error(`Incorrect number of arguments passed to function ${f.name}`);
+      }
       ps.forEach((p, i) => typecheckParameter(p, f.inputs[i].type));
       return new Transaction(this.address, this.network, this.redeemScript, f, ps, selector);
     };
@@ -165,8 +169,7 @@ export class Transaction {
     } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
       return this.sendToMany(toOrOutputs, amountOrOptions);
     } else {
-      console.log(toOrOutputs, amountOrOptions);
-      throw new Error();
+      throw new Error('Incorrect arguments passed to function send');
     }
   }
 

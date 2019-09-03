@@ -1,12 +1,12 @@
 import { version } from '..';
 import { Ast } from '../ast/AST';
-import { Type } from '../ast/Type';
+import { PrimitiveType } from '../ast/Type';
 import { Script } from '../generation/Script';
 import { Data } from '../util';
 
 export interface AbiInput {
   name: string;
-  type: Type;
+  type: PrimitiveType;
 }
 
 export interface AbiFunction {

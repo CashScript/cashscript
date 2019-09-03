@@ -255,7 +255,7 @@ export default class AstBuilder
     } else if (ctx.HexLiteral()) {
       return this.createHexLiteral(ctx);
     } else {
-      throw new Error();
+      throw new Error(); // Should not happen
     }
   }
 

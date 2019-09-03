@@ -66,7 +66,7 @@ export class FunctionDefinitionNode extends Node implements Named {
 
 export class ParameterNode extends Node implements Named, Typed {
   constructor(
-    public type: Type,
+    public type: PrimitiveType,
     public name: string,
   ) {
     super();
