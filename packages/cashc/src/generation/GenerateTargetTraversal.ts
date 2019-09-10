@@ -39,6 +39,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   stack: string[] = [];
 
   private scopeDepth = 0;
+  private currentFunction: FunctionDefinitionNode;
 
   private emit(op: OpOrData | OpOrData[]) {
     if (Array.isArray(op)) {
@@ -60,6 +61,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
     for (let i = 0; i < count; i += 1) {
       this.stack.shift();
     }
+  }
+
+  private removeFromStack(i: number) {
+    this.stack.splice(i, 1);
   }
 
   private nipFromStack() {
@@ -89,21 +94,29 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.pushToStack('$$', true);
       node.functions = node.functions.map((f, i) => {
         const stackCopy = [...this.stack];
-        this.emit(Data.encodeInt(this.getStackIndex('$$')));
-        this.emit(Op.OP_PICK);
+        const selectorIndex = this.getStackIndex('$$');
+        this.emit(Data.encodeInt(selectorIndex));
+        if (i === node.functions.length - 1) {
+          this.emit(Op.OP_ROLL);
+          this.removeFromStack(selectorIndex);
+        } else {
+          this.emit(Op.OP_PICK);
+        }
+
         this.emit(Data.encodeInt(i));
         this.emit(Op.OP_NUMEQUAL);
         this.emit(Op.OP_IF);
         f = this.visit(f) as FunctionDefinitionNode;
 
+        this.emit(Op.OP_ELSE);
         if (i < node.functions.length - 1) {
-          this.emit(Op.OP_ELSE);
           this.stack = [...stackCopy];
         }
 
         return f;
       });
 
+      this.emit(Op.OP_FALSE);
       node.functions.forEach(() => this.emit(Op.OP_ENDIF));
     }
 
@@ -111,6 +124,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode) {
+    this.currentFunction = node;
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
     this.cleanStack();
@@ -306,10 +320,24 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitIdentifier(node: IdentifierNode) {
-    this.emit(Data.encodeInt(this.getStackIndex(node.name)));
-    this.emit(Op.OP_PICK);
+    const stackIndex = this.getStackIndex(node.name);
+    this.emit(Data.encodeInt(stackIndex));
+
+    // If the final use is inside an if-statement, we still OP_PICK it
+    // We do this so that there's no difference in satck depths between execution paths
+    if (this.isOpRoll(node)) {
+      this.emit(Op.OP_ROLL);
+      this.removeFromStack(stackIndex);
+    } else {
+      this.emit(Op.OP_PICK);
+    }
+
     this.pushToStack('(value)');
     return node;
+  }
+
+  isOpRoll(node: IdentifierNode) {
+    return this.currentFunction.opRolls.get(node.name) === node && this.scopeDepth === 0;
   }
 
   visitBoolLiteral(node: BoolLiteralNode) {

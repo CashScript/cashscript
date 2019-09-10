@@ -20,6 +20,7 @@ import {
 export default class SymbolTableTraversal extends AstTraversal {
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];
   private functionNames: Map<string, boolean> = new Map<string, boolean>();
+  private currentFunction: FunctionDefinitionNode;
 
   visitContract(node: ContractNode) {
     node.symbolTable = new SymbolTable(this.symbolTables[0]);
@@ -47,6 +48,8 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode) {
+    this.currentFunction = node;
+
     // Checked for function redefinition, but they are not included in the
     // symbol table, as internal function calls are not supported.
     if (this.functionNames.get(node.name)) {
@@ -104,6 +107,9 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     node.definition = definition;
     node.definition.references.push(node);
+
+    // Keep track of final use of variables for code generation
+    this.currentFunction.opRolls.set(node.name, node);
 
     return node;
   }
