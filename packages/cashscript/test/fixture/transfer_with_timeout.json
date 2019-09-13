@@ -34,7 +34,7 @@
       ]
     }
   ],
-  "bytecode": "OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1 OP_ELSE OP_3 OP_PICK OP_1 OP_NUMEQUAL OP_IF OP_4 OP_PICK OP_1 OP_PICK OP_CHECKSIG OP_VERIFY OP_2 OP_PICK OP_CHECKLOCKTIMEVERIFY OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_DROP OP_1 OP_ENDIF OP_ENDIF",
+  "bytecode": "OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_1 OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_IF OP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP OP_DROP OP_1 OP_ELSE OP_0 OP_ENDIF OP_ENDIF",
   "source": "contract TransferWithTimeout(\n    pubkey sender,\n    pubkey recipient,\n    int timeout\n) {\n    // Require recipient's signature to match\n    function transfer(sig recipientSig) {\n        require(checkSig(recipientSig, recipient));\n    }\n\n    // Require timeout time to be reached and sender's signature to match\n    function timeout(sig senderSig) {\n        require(checkSig(senderSig, sender));\n        require(tx.time >= timeout);\n    }\n}\n",
   "networks": {},
   "compiler": {

@@ -21,11 +21,11 @@
       ]
     }
   ],
-  "bytecode": "OP_1 OP_PICK OP_HASH160 OP_1 OP_PICK OP_EQUAL OP_VERIFY OP_2 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_1",
+  "bytecode": "OP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY OP_1",
   "source": "contract P2PKH(bytes20 pkh) {\n    // Require pk to match stored pkh and signature to match\n    function spend(pubkey pk, sig s) {\n        require(hash160(pk) == pkh);\n        require(checkSig(s, pk));\n    }\n}\n",
   "networks": {
     "testnet": {
-      "bchtest:ppuzddcskncl8hevtd9jnfa2wwkm5n2atc22dr8gt8": "12b60afc04b42a6837bc590ec007eaf78b8e73cf OP_1 OP_PICK OP_HASH160 OP_1 OP_PICK OP_EQUAL OP_VERIFY OP_2 OP_PICK OP_2 OP_PICK OP_CHECKSIG OP_VERIFY OP_DROP OP_DROP OP_DROP OP_1"
+      "bchtest:prpnwqy42crzhrt9dn3kkq6xr9d8qvlpecrnqgdka6": "12b60afc04b42a6837bc590ec007eaf78b8e73cf OP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY OP_1"
     }
   },
   "compiler": {

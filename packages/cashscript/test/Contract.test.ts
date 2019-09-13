@@ -136,13 +136,13 @@ describe('Contract', () => {
         P2PKH.deployed();
       });
       assert.throws(() => {
-        P2PKH.deployed('bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl');
+        P2PKH.deployed('bchtest:prpnwqy42crzhrt9dn3kkq6xr9d8qvlpecrnqgdka6');
       });
     });
 
     it('should return deployed P2PKH', () => {
       const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
-      const deployedAddress = 'bchtest:ppzllwzk775qk86zfskzyzae7pa9h4dvzcfezpsdkl';
+      const deployedAddress = 'bchtest:prpnwqy42crzhrt9dn3kkq6xr9d8qvlpecrnqgdka6';
 
       assert.isNotEmpty(P2PKH.artifact.networks);
       const instance1 = P2PKH.deployed();
