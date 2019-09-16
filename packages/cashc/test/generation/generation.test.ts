@@ -13,8 +13,9 @@ import { parseCode } from '../../src/util';
 import { fixtures } from './fixture/fixtures';
 import GenerateTargetTraversal from '../../src/generation/GenerateTargetTraversal';
 import { generateArtifact } from '../../src/artifact/Artifact';
+import TargetCodeOptimisation from '../../src/optimisations/TargetCodeOptimisation';
 
-describe('Code generation', () => {
+describe('Code generation & target code optimisation', () => {
   fixtures.forEach((fixture) => {
     it(`should compile ${fixture.fn} to correct Script and artifact`, () => {
       const code = fs.readFileSync(path.join(__dirname, 'fixture', fixture.fn), { encoding: 'utf-8' });
@@ -24,8 +25,8 @@ describe('Code generation', () => {
 
       const traversal = new GenerateTargetTraversal();
       ast.accept(traversal);
-
-      const artifact = generateArtifact(ast, traversal.output, code);
+      const optimisedScript = TargetCodeOptimisation.optimise(traversal.output);
+      const artifact = generateArtifact(ast, optimisedScript, code);
 
       // Disregard updatedAt
       fixture.artifact.updatedAt = artifact.updatedAt;

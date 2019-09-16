@@ -10,6 +10,7 @@ import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import { Script } from './generation/Script';
+import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
 
 export const Data = {
   encodeBool(b: boolean): Buffer {
@@ -50,8 +51,9 @@ export const CashCompiler = {
     const traversal = new GenerateTargetTraversal();
     ast.accept(traversal);
     const targetCode = traversal.output;
+    const optimisedCode = TargetCodeOptimisation.optimise(targetCode);
 
-    return generateArtifact(ast, targetCode, code);
+    return generateArtifact(ast, optimisedCode, code);
   },
   compileFile(codeFile: string): Artifact {
     const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
