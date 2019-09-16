@@ -127,17 +127,27 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.currentFunction = node;
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
+
+    // Remove final OP_VERIFY
+    // If the final opcodes are OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP
+    //   then push it back to the script, and push OP_TRUE to the stack
+    const finalOp = this.output.pop();
+    if (finalOp === Op.OP_DROP) {
+      this.emit(finalOp);
+      this.emit(Op.OP_TRUE);
+    }
+    this.pushToStack('(value)');
     this.cleanStack();
     return node;
   }
 
   cleanStack() {
-    this.stack.forEach(() => {
-      this.emit(Op.OP_DROP);
-    });
-    this.stack = [];
-    this.pushToStack('true');
-    this.emit(Data.encodeBool(true));
+    // Keep final verification value, OP_NIP the other stack values
+    const stackSize = this.stack.length;
+    for (let i = 0; i < stackSize - 1; i += 1) {
+      this.emit(Op.OP_NIP);
+      this.nipFromStack();
+    }
   }
 
   visitParameter(node: ParameterNode) {

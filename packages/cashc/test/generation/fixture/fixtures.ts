@@ -17,7 +17,7 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY '
-        + 'OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY OP_1',
+        + 'OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, 'p2pkh.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -40,8 +40,8 @@ export const fixtures: Fixture[] = [
         + '48656c6c6f20576f726c64 '
         + 'OP_0 OP_PICK OP_2 OP_ROLL OP_CAT '
         + 'OP_2 OP_PICK OP_RIPEMD160 OP_1 OP_ROLL OP_RIPEMD160 OP_EQUAL OP_VERIFY '
-        + 'OP_2 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG OP_VERIFY '
-        + 'OP_DROP OP_1',
+        + 'OP_2 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG '
+        + 'OP_NIP',
       source: fs.readFileSync(path.join(__dirname, 'reassignment.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -67,8 +67,8 @@ export const fixtures: Fixture[] = [
         + 'OP_DROP OP_ELSE '
         + 'OP_0 OP_PICK OP_4 OP_PICK OP_NUMEQUAL OP_VERIFY OP_ENDIF '
         + 'OP_0 OP_PICK OP_4 OP_ROLL OP_ADD '
-        + 'OP_0 OP_ROLL OP_3 OP_ROLL OP_NUMEQUAL OP_VERIFY '
-        + 'OP_DROP OP_DROP OP_DROP OP_1',
+        + 'OP_0 OP_ROLL OP_3 OP_ROLL OP_NUMEQUAL '
+        + 'OP_NIP OP_NIP OP_NIP',
       source: fs.readFileSync(path.join(__dirname, 'if_statement.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -86,12 +86,12 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'transfer', inputs: [{ name: 'recipientSig', type: 'sig' }] }, { name: 'timeout', inputs: [{ name: 'senderSig', type: 'sig' }] }],
       bytecode:
         'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
-        + 'OP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG OP_VERIFY '
-        + 'OP_DROP OP_DROP OP_DROP OP_1 OP_ELSE '
+        + 'OP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG '
+        + 'OP_NIP OP_NIP OP_NIP OP_ELSE '
         + 'OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_IF '
         + 'OP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY '
-        + 'OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP '
-        + 'OP_DROP OP_1 OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
+        + 'OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP OP_1 '
+        + 'OP_NIP OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
       source: fs.readFileSync(path.join(__dirname, 'multifunction.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -118,8 +118,8 @@ export const fixtures: Fixture[] = [
         + 'OP_DROP OP_ELSE '
         + 'OP_4 OP_PICK OP_1 OP_ROLL OP_DROP OP_ENDIF '
         + 'OP_0 OP_PICK OP_5 OP_ROLL OP_ADD '
-        + 'OP_0 OP_ROLL OP_3 OP_ROLL OP_NUMEQUAL OP_VERIFY '
-        + 'OP_DROP OP_DROP OP_DROP OP_DROP OP_1 OP_ELSE '
+        + 'OP_0 OP_ROLL OP_3 OP_ROLL OP_NUMEQUAL '
+        + 'OP_NIP OP_NIP OP_NIP OP_NIP OP_ELSE '
         + 'OP_2 OP_ROLL OP_1 OP_NUMEQUAL OP_IF '
         + 'OP_2 OP_PICK OP_0 OP_PICK OP_2 OP_ADD '
         + 'OP_0 OP_PICK OP_3 OP_ROLL OP_NUMEQUAL OP_IF '
@@ -128,8 +128,8 @@ export const fixtures: Fixture[] = [
         + 'OP_0 OP_PICK OP_2 OP_PICK OP_GREATERTHAN OP_VERIFY '
         + 'OP_DROP OP_ENDIF '
         + 'OP_3 OP_ROLL '
-        + 'OP_0 OP_ROLL OP_3 OP_ROLL OP_NUMEQUAL OP_VERIFY '
-        + 'OP_DROP OP_DROP OP_1 OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
+        + 'OP_0 OP_ROLL OP_3 OP_ROLL OP_NUMEQUAL '
+        + 'OP_NIP OP_NIP OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
       source: fs.readFileSync(path.join(__dirname, 'multifunction_if_statements.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -147,8 +147,7 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', inputs: [{ name: 's1', type: 'sig' }, { name: 's2', type: 'sig' }] }],
       bytecode:
         'OP_0 OP_3 OP_ROLL OP_4 OP_ROLL OP_2 '
-        + 'OP_3 OP_ROLL OP_4 OP_ROLL OP_5 OP_ROLL OP_3 OP_CHECKMULTISIG OP_VERIFY '
-        + 'OP_1',
+        + 'OP_3 OP_ROLL OP_4 OP_ROLL OP_5 OP_ROLL OP_3 OP_CHECKMULTISIG',
       source: fs.readFileSync(path.join(__dirname, '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -167,8 +166,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         'OP_0 OP_PICK OP_1 OP_PICK OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP '
         + 'OP_0 OP_PICK OP_2 OP_PICK OP_EQUAL OP_NOT OP_VERIFY '
-        + 'OP_1 OP_ROLL OP_4 OP_SPLIT OP_DROP OP_1 OP_ROLL OP_EQUAL OP_NOT OP_VERIFY '
-        + 'OP_1',
+        + 'OP_1 OP_ROLL OP_4 OP_SPLIT OP_DROP OP_1 OP_ROLL OP_EQUAL OP_NOT',
       source: fs.readFileSync(path.join(__dirname, 'split_size.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -186,8 +184,7 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_0 OP_PICK OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_EQUAL OP_VERIFY '
-        + 'OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY '
-        + 'OP_1',
+        + 'OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, 'cast_hash_checksig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -206,8 +203,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         'OP_1 OP_PICK OP_1 OP_PICK OP_CHECKSIG OP_VERIFY '
         + 'OP_1 OP_ROLL OP_SIZE OP_1 OP_SUB OP_SPLIT OP_DROP '
-        + 'OP_2 OP_ROLL OP_2 OP_ROLL OP_CHECKDATASIG OP_VERIFY '
-        + 'OP_1',
+        + 'OP_2 OP_ROLL OP_2 OP_ROLL OP_CHECKDATASIG',
       source: fs.readFileSync(path.join(__dirname, 'checkdatasig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -235,8 +231,7 @@ export const fixtures: Fixture[] = [
         + 'OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP '
         + 'OP_0 OP_ROLL OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY '
         + 'OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIG OP_VERIFY '
-        + 'OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY '
-        + 'OP_1',
+        + 'OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, 'hodl_vault.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -259,8 +254,7 @@ export const fixtures: Fixture[] = [
         + 'OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_FROMALTSTACK '
         + 'OP_FROMALTSTACK OP_FROMALTSTACK OP_ENDIF '
         + 'OP_5 OP_ROLL OP_5 OP_ROLL OP_5 OP_ROLL OP_ADD OP_4 OP_ROLL OP_ADD '
-        + 'OP_3 OP_ROLL OP_ADD OP_2 OP_ROLL OP_ADD OP_GREATERTHAN OP_VERIFY '
-        + 'OP_1',
+        + 'OP_3 OP_ROLL OP_ADD OP_2 OP_ROLL OP_ADD OP_GREATERTHAN',
       source: fs.readFileSync(path.join(__dirname, 'deep_replace.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {

@@ -34,7 +34,7 @@ describe('Code generation', () => {
         fixture.artifact,
       );
 
-      assert.deepEqual(traversal.stack, ['true']);
+      assert.deepEqual(traversal.stack, ['(value)']);
     });
   });
 });
