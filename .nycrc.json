@@ -7,8 +7,7 @@
     "exclude": [
         "**/*.d.ts",
         "**/index.ts",
-        "packages/cashc/src/grammar/",
-        "packages/cashc/src/optimisations/"
+        "packages/cashc/src/grammar/"
     ],
     "require": [
         "ts-node/register/transpile-only"

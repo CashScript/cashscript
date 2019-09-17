@@ -3,7 +3,6 @@
     "exclude": [
         "**/*.d.ts",
         "**/index.ts",
-        "src/grammar/",
-        "src/optimisations/"
+        "src/grammar/"
     ]
 }
