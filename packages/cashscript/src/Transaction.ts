@@ -1,15 +1,21 @@
-import { BITBOX } from 'bitbox-sdk';
+import { BITBOX, TransactionBuilder } from 'bitbox-sdk';
 import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import * as delay from 'delay';
 import { Script, AbiFunction } from 'cashc';
 import { Parameter, Sig } from './Parameter';
-import { bitbox, ScriptUtil } from './BITBOX';
-import { TxOptions, Output, SignatureAlgorithm } from './interfaces';
-import { meep, createInputScript, selectUtxos } from './transaction-util';
+import { bitbox, ScriptUtil, BitcoinCashUtil } from './BITBOX';
+import {
+  TxOptions,
+  Output,
+  SignatureAlgorithm,
+  Utxo,
+} from './interfaces';
+import { meep, createInputScript, inputSize } from './transaction-util';
 import { DUST_LIMIT } from './constants';
 
 export class Transaction {
   private bitbox: BITBOX;
+  private builder: TransactionBuilder;
 
   constructor(
     private address: string,
@@ -20,6 +26,7 @@ export class Transaction {
     private selector?: number,
   ) {
     this.bitbox = bitbox[network];
+    this.builder = new this.bitbox.TransactionBuilder(this.network);
   }
 
   async send(outputs: Output[], options?: TxOptions): Promise<TxnDetailsResult>;
@@ -62,49 +69,36 @@ export class Transaction {
   }
 
   private async meepToMany(outputs: Output[], options?: TxOptions) {
-    const { tx, utxos } = await this.createTransaction(outputs, options);
-    await meep(tx, utxos, this.redeemScript);
+    const { tx, inputs } = await this.createTransaction(outputs, options);
+    await meep(tx, inputs, this.redeemScript);
   }
 
-  private async createTransaction(outputs: Output[], options?: TxOptions) {
-    const txBuilder = new this.bitbox.TransactionBuilder(this.network);
-    const { utxos: allUtxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
-
+  private async createTransaction(outs: Output[], options?: TxOptions) {
     const sequence = options && options.age
-      ? txBuilder.bip68.encode({ blocks: options.age })
+      ? this.builder.bip68.encode({ blocks: options.age })
       : 0xfffffffe;
     const locktime = options && options.time
       ? options.time
       : await this.bitbox.Blockchain.getBlockCount();
 
-    txBuilder.setLockTime(locktime);
+    this.builder.setLockTime(locktime);
 
-    // Utxo selection with placeholder script for script size calculation
-    const placeholderScript = createInputScript(
-      this.redeemScript,
-      this.abiFunction,
-      this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
-      this.selector,
-    );
-    const { utxos, change } = selectUtxos(allUtxos, outputs, placeholderScript);
+    const { inputs, outputs } = await this.getInputsAndOutputs(outs);
 
-    utxos.forEach((utxo) => {
-      txBuilder.addInput(utxo.txid, utxo.vout, sequence);
+    inputs.forEach((utxo) => {
+      this.builder.addInput(utxo.txid, utxo.vout, sequence);
     });
+
     outputs.forEach((output) => {
-      txBuilder.addOutput(output.to, output.amount);
+      this.builder.addOutput(output.to, output.amount);
     });
-
-    if (change >= DUST_LIMIT) {
-      txBuilder.addOutput(this.address, change);
-    }
 
     // Vout is a misnomer used in BITBOX, should be vin
     const inputScripts: { vout: number, script: Buffer }[] = [];
 
     // Convert all Sig objects to valid tx signatures for current tx
-    const tx = txBuilder.transaction.buildIncomplete();
-    utxos.forEach((utxo, vin) => {
+    const tx = this.builder.transaction.buildIncomplete();
+    inputs.forEach((utxo: Utxo, vin: number) => {
       const cleanedPs = this.parameters.map((p) => {
         if (!(p instanceof Sig)) return p;
 
@@ -125,8 +119,42 @@ export class Transaction {
     });
 
     // Add all generated input scripts to the transaction
-    txBuilder.addInputScripts(inputScripts);
+    this.builder.addInputScripts(inputScripts);
 
-    return { tx: txBuilder.build(), utxos };
+    return { tx: this.builder.build(), inputs };
+  }
+
+  private async getInputsAndOutputs(outputs: Output[]) {
+    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+
+    // Utxo selection with placeholder script for script size calculation
+    const placeholderScript = createInputScript(
+      this.redeemScript,
+      this.abiFunction,
+      this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
+      this.selector,
+    );
+
+    const initialFee = BitcoinCashUtil.getByteCount({}, { P2PKH: outputs.length + 1 });
+    let satsNeeded = outputs.reduce((acc, output) => acc + output.amount, initialFee);
+    let satsAvailable = 0;
+
+    const inputs: Utxo[] = [];
+    for (const utxo of utxos) {
+      inputs.push(utxo);
+      satsAvailable += utxo.satoshis;
+      satsNeeded += inputSize(placeholderScript);
+      if (satsAvailable > satsNeeded) break;
+    }
+
+    const change = satsAvailable - satsNeeded;
+
+    if (change < 0) {
+      throw new Error(`Insufficient balance: available (${satsAvailable}) < needed (${satsNeeded}).`);
+    } else if (change >= DUST_LIMIT) {
+      outputs.push({ to: this.address, amount: change });
+    }
+
+    return { inputs, outputs };
   }
 }
