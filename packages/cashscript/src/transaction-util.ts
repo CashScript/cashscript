@@ -2,8 +2,9 @@ import {
   AbiFunction,
   Script,
   Data,
+  Op,
 } from 'cashc';
-import { Utxo } from './interfaces';
+import { Utxo, OpReturn } from './interfaces';
 import { ScriptUtil, CryptoUtil } from './BITBOX';
 import { Parameter, encodeParameter } from './Parameter';
 
@@ -30,6 +31,22 @@ export function createInputScript(
     ScriptUtil.encode(unlockScript),
     ScriptUtil.encode(redeemScript),
   );
+}
+export function createOpReturnScript(
+  opReturnOutput: OpReturn,
+): Buffer {
+  const script = [
+    Op.OP_RETURN,
+    ...opReturnOutput.opReturn.map((output: string) => toBuffer(output)),
+  ];
+
+  return ScriptUtil.encode(script);
+}
+
+function toBuffer(output: string): Buffer {
+  const data = output.replace(/^0x/, '');
+  const format = data === output ? 'utf8' : 'hex';
+  return Buffer.from(data, format);
 }
 
 export function meep(tx: any, utxos: Utxo[], script: Script) {

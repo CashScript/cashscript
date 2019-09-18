@@ -1,20 +1,34 @@
 export interface Utxo {
-  txid: string
-  vout: number
-  amount: number
-  satoshis: number
-  height: number
-  confirmations: number
+  txid: string;
+  vout: number;
+  amount: number;
+  satoshis: number;
+  height: number;
+  confirmations: number;
 }
 
-export interface Output {
-  to: string,
-  amount: number,
+export type Output = Recipient | OpReturn;
+
+export interface OutputForBuilder {
+  to: string | Buffer;
+  amount: number;
+}
+
+export const isRecipient = (o: Output): boolean => 'to' in o;
+export const isOpReturn = (o: Output): boolean => 'opReturn' in o;
+
+export interface Recipient {
+  to: string;
+  amount: number;
+}
+
+export interface OpReturn {
+  opReturn: string[];
 }
 
 export interface TxOptions {
-  time?: number,
-  age?: number,
+  time?: number;
+  age?: number;
 }
 
 export enum SignatureAlgorithm {
