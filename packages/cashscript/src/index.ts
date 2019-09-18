@@ -1,10 +1,7 @@
-export {
-  Contract,
-  Instance,
-  Transaction,
-  Parameter,
-  Sig,
-} from './Contract';
+export { Contract } from './Contract';
+export { Instance } from './Instance';
+export { Transaction } from './Transaction';
+export { Parameter, Sig } from './Parameter';
 export {
   Artifacts,
   Artifact,

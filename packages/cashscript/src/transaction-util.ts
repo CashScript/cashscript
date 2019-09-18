@@ -1,14 +1,11 @@
 import {
   AbiFunction,
   Script,
-  PrimitiveType,
   Data,
 } from 'cashc';
 import { Utxo, Output } from './interfaces';
 import { BitcoinCashUtil, ScriptUtil, CryptoUtil } from './BITBOX';
-import { Parameter, Sig } from './Contract';
-import { TypeError } from './Errors';
-
+import { Parameter, encodeParameter } from './Parameter';
 
 export function selectUtxos(
   utxos: Utxo[],
@@ -59,59 +56,6 @@ export function createInputScript(
     ScriptUtil.encode(unlockScript),
     ScriptUtil.encode(redeemScript),
   );
-}
-
-export function typecheckParameter(parameter: Parameter, type: PrimitiveType): void {
-  switch (type) {
-    case PrimitiveType.BOOL:
-      if (typeof parameter === 'boolean') return;
-      throw new TypeError(typeof parameter, type);
-    case PrimitiveType.INT:
-      if (typeof parameter === 'number') return;
-      throw new TypeError(typeof parameter, type);
-    case PrimitiveType.STRING:
-      if (typeof parameter === 'string') return;
-      throw new TypeError(typeof parameter, type);
-    case PrimitiveType.SIG:
-      if (typeof parameter === 'string') return;
-      if (parameter instanceof Buffer) return;
-      if (parameter instanceof Sig) return;
-      throw new TypeError(typeof parameter, type);
-    default:
-      if (typeof parameter === 'string') return;
-      if (parameter instanceof Buffer) return;
-      throw new TypeError(typeof parameter, type);
-  }
-}
-
-export function encodeParameter(parameter: Parameter, type: PrimitiveType): Buffer {
-  switch (type) {
-    case PrimitiveType.BOOL:
-      if (typeof parameter !== 'boolean') {
-        throw new TypeError(typeof parameter, type);
-      }
-      return Data.encodeBool(parameter);
-    case PrimitiveType.INT:
-      if (typeof parameter !== 'number') {
-        throw new TypeError(typeof parameter, type);
-      }
-      return Data.encodeInt(parameter);
-    case PrimitiveType.STRING:
-      if (typeof parameter !== 'string') {
-        throw new TypeError(typeof parameter, type);
-      }
-      return Data.encodeString(parameter);
-    default:
-      if (typeof parameter === 'string') {
-        if (parameter.startsWith('0x')) {
-          parameter = parameter.slice(2);
-        }
-
-        return Buffer.from(parameter, 'hex');
-      }
-      if (!(parameter instanceof Buffer)) throw Error();
-      return parameter;
-  }
 }
 
 export function meep(tx: any, utxos: Utxo[], script: Script) {
