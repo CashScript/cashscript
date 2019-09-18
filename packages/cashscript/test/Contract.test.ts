@@ -142,7 +142,7 @@ describe('Contract', () => {
 
     it('should return deployed P2PKH', () => {
       const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
-      const deployedAddress = 'bchtest:prpnwqy42crzhrt9dn3kkq6xr9d8qvlpecrnqgdka6';
+      const deployedAddress = 'bchtest:pr9w4q9r68czy330per033upg7skuc7nw52euvw0vq';
 
       assert.isNotEmpty(P2PKH.artifact.networks);
       const instance1 = P2PKH.deployed();
