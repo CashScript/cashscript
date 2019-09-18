@@ -17,7 +17,9 @@ export async function run(): Promise<void> {
   const owner: ECPair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
 
   // Initialise price oracle with a keypair
-  const oracle: PriceOracle = new PriceOracle(bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1)));
+  const oracle: PriceOracle = new PriceOracle(
+    bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1)),
+  );
 
   // Compile and instantiate HODL Vault
   const HodlVault: Contract = Contract.fromCashFile(path.join(__dirname, 'hodl_vault.cash'), 'testnet');
@@ -27,6 +29,11 @@ export async function run(): Promise<void> {
     597000,
     30000,
   );
+
+  // Get contract balance & output address + balance
+  const contractBalance: number = await instance.getBalance();
+  console.log('contract address:', instance.address);
+  console.log('contract balance:', contractBalance);
 
   // Produce new oracle message and signature
   const oracleMessage: Buffer = oracle.createMessage(597000, 30000);

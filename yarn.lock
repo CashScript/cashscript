@@ -2063,26 +2063,6 @@ cashaddrjs@^0.2.9:
   dependencies:
     big-integer "^1.6.34"
 
-cashc@^0.1.0-beta.1:
-  version "0.1.0-beta.1"
-  resolved "https://registry.yarnpkg.com/cashc/-/cashc-0.1.0-beta.1.tgz#d70079f76e05938e5cc3f32d5535177dab60cdd7"
-  integrity sha512-tUBmU/IZCZBDNFKiusqw3Wy78E+7IXtHAKpUCZEzqnUzu7NGBVNuqNemdQoi6nWDC0s4uCrGGiO0YawW1928FQ==
-  dependencies:
-    "@types/yargs" "^13.0.0"
-    antlr4ts "^0.5.0-alpha.3"
-    bitbox-sdk "^8.4.0"
-    yargs "^13.2.4"
-
-cashscript@^0.1.0-beta.1:
-  version "0.1.0-beta.1"
-  resolved "https://registry.yarnpkg.com/cashscript/-/cashscript-0.1.0-beta.1.tgz#ef522ad843c14b747173914c5c0c2ceb8797414f"
-  integrity sha512-1A3gQkU7ZEwWhbybK8uO/AiJyPz2YX4zFbVXk6MeYwXGVbmb9v4glXM5vmDRwZIa4CCqP0FOsXqk2+xI/KJS7w==
-  dependencies:
-    bitbox-sdk "^8.4.0"
-    bitcoincashjs-lib Bitcoin-com/bitcoincashjs-lib#v4.0.1
-    cashc "^0.1.0-beta.1"
-    delay "^4.2.0"
-
 chai-as-promised@^7.1.1:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/chai-as-promised/-/chai-as-promised-7.1.1.tgz#08645d825deb8696ee61725dbf590c012eb00ca0"
