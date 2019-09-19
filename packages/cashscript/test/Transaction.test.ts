@@ -1,4 +1,3 @@
-import { BITBOX } from 'bitbox-sdk';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
@@ -13,6 +12,8 @@ import {
   oracle,
 } from './fixture/vars';
 import { getTxOutputs } from './test-util';
+import { isOpReturn } from '../src/interfaces';
+import { createOpReturnScript } from '../src/transaction-util';
 
 chai.use(chaiAsPromised);
 const { assert } = chai;
@@ -56,6 +57,27 @@ describe('Transaction', () => {
         // then
         const txOutputs = getTxOutputs(tx);
         assert.deepInclude(txOutputs, { to, amount });
+      });
+
+      it('should support OP_RETURN data as an output', async () => {
+        // given
+        const outputs = [
+          { opReturn: ['0x6d02', 'Hello, World!'] },
+          { to: p2pkhInstance.address, amount: 10000 },
+          { to: p2pkhInstance.address, amount: 20000 },
+        ];
+
+        // when
+        const tx = await p2pkhInstance.functions
+          .spend(alicePk, new Sig(alice, 0x01))
+          .send(outputs);
+
+        // then
+        const txOutputs = getTxOutputs(tx);
+        const expectedOutputs = outputs.map(o => (
+          isOpReturn(o) ? { to: createOpReturnScript(o), amount: 0 } : o
+        ));
+        assert.includeDeepMembers(txOutputs, expectedOutputs);
       });
     });
 

@@ -14,8 +14,8 @@ export interface OutputForBuilder {
   amount: number;
 }
 
-export const isRecipient = (o: Output): boolean => 'to' in o;
-export const isOpReturn = (o: Output): boolean => 'opReturn' in o;
+export const isRecipient = (o: Output): o is Recipient => 'to' in o;
+export const isOpReturn = (o: Output): o is OpReturn => 'opReturn' in o;
 
 export interface Recipient {
   to: string;
