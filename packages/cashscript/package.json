@@ -16,6 +16,7 @@
     "delay": "^4.2.0"
   },
   "devDependencies": {
+    "bignumber.js": "^9.0.0",
     "eslint": "^5.16.0",
     "mocha": "^6.1.4",
     "nyc": "^14.1.1",
