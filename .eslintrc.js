@@ -45,5 +45,7 @@ module.exports = {
     'no-bitwise': 0,
     'no-restricted-syntax': 0,
     'no-dupe-class-members': 0,
+    'no-constant-condition': 0,
+    'no-await-in-loop': 0,
   },
 }

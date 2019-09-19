@@ -59,8 +59,14 @@ export class Transaction {
   private async sendToMany(outputs: Output[], options?: TxOptions) {
     const { tx } = await this.createTransaction(outputs, options);
     const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
-    await delay(2000);
-    return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+    while (true) {
+      await delay(500);
+      try {
+        return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+      } catch (e) {
+        // ignored
+      }
+    }
   }
 
   async meep(outputs: Output[], options?: TxOptions): Promise<void>;
