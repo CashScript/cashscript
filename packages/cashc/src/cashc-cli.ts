@@ -32,11 +32,11 @@ try {
   abort(e.message);
 }
 
-function ensure(condition: boolean, msg: string, code?: number) {
+function ensure(condition: boolean, msg: string, code?: number): void {
   condition || abort(msg, code);
 }
 
-function abort(msg: string, code: number = 1) {
+function abort(msg: string, code: number = 1): void {
   console.error(msg);
   process.exit(code);
 }

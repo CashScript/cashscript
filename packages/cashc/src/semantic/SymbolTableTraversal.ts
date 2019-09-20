@@ -7,6 +7,7 @@ import {
   IdentifierNode,
   StatementNode,
   BlockNode,
+  Node,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { SymbolTable, Symbol } from '../ast/SymbolTable';
@@ -22,7 +23,7 @@ export default class SymbolTableTraversal extends AstTraversal {
   private functionNames: Map<string, boolean> = new Map<string, boolean>();
   private currentFunction: FunctionDefinitionNode;
 
-  visitContract(node: ContractNode) {
+  visitContract(node: ContractNode): Node {
     node.symbolTable = new SymbolTable(this.symbolTables[0]);
     this.symbolTables.unshift(node.symbolTable);
 
@@ -38,7 +39,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
-  visitParameter(node: ParameterNode) {
+  visitParameter(node: ParameterNode): Node {
     if (this.symbolTables[0].get(node.name)) {
       throw new VariableRedefinitionError(node);
     }
@@ -47,7 +48,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
-  visitFunctionDefinition(node: FunctionDefinitionNode) {
+  visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.currentFunction = node;
 
     // Checked for function redefinition, but they are not included in the
@@ -72,7 +73,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
-  visitBlock(node: BlockNode) {
+  visitBlock(node: BlockNode): Node {
     node.symbolTable = new SymbolTable(this.symbolTables[0]);
     this.symbolTables.unshift(node.symbolTable);
 
@@ -87,7 +88,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
-  visitVariableDefinition(node: VariableDefinitionNode) {
+  visitVariableDefinition(node: VariableDefinitionNode): Node {
     if (this.symbolTables[0].get(node.name)) {
       throw new VariableRedefinitionError(node);
     }
@@ -98,7 +99,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
-  visitIdentifier(node: IdentifierNode) {
+  visitIdentifier(node: IdentifierNode): Node {
     const definition = this.symbolTables[0].get(node.name);
 
     if (!definition) {

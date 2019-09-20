@@ -8,7 +8,7 @@ import { Utxo, OpReturn } from './interfaces';
 import { ScriptUtil, CryptoUtil } from './BITBOX';
 import { Parameter, encodeParameter } from './Parameter';
 
-export function inputSize(script: Buffer) {
+export function inputSize(script: Buffer): number {
   const scriptSize = script.byteLength;
   const scriptSizeSize = Data.encodeInt(scriptSize).byteLength;
   return 32 + 4 + scriptSizeSize + scriptSize + 4;
@@ -49,7 +49,7 @@ function toBuffer(output: string): Buffer {
   return Buffer.from(data, format);
 }
 
-export function meep(tx: any, utxos: Utxo[], script: Script) {
+export function meep(tx: any, utxos: Utxo[], script: Script): void {
   const scriptPubkey: string = ScriptUtil.encodeP2SHOutput(
     CryptoUtil.hash160(
       ScriptUtil.encode(script),

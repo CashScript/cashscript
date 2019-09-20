@@ -7,7 +7,7 @@ export class ArrayType {
     public elementType: PrimitiveType,
   ) {}
 
-  toString() {
+  toString(): string {
     return `${this.elementType}[]`;
   }
 }
@@ -17,7 +17,7 @@ export class TupleType {
     public elementType?: PrimitiveType,
   ) {}
 
-  toString() {
+  toString(): string {
     return `(${this.elementType}, ${this.elementType})`;
   }
 }

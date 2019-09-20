@@ -13,6 +13,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  Node,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -42,7 +43,7 @@ import { BinaryOperator, UnaryOperator } from '../ast/Operator';
 import { GlobalFunction } from '../ast/Globals';
 
 export default class TypeCheckTraversal extends AstTraversal {
-  visitVariableDefinition(node: VariableDefinitionNode) {
+  visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
 
     if (!implicitlyCastable(node.expression.type, node.type)) {
@@ -52,7 +53,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitAssign(node: AssignNode) {
+  visitAssign(node: AssignNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.expression = this.visit(node.expression);
 
@@ -63,7 +64,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitTimeOp(node: TimeOpNode) {
+  visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
 
     if (!implicitlyCastable(node.expression.type, PrimitiveType.INT)) {
@@ -73,7 +74,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitRequire(node: RequireNode) {
+  visitRequire(node: RequireNode): Node {
     node.expression = this.visit(node.expression);
 
     if (!implicitlyCastable(node.expression.type, PrimitiveType.BOOL)) {
@@ -84,7 +85,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitBranch(node: BranchNode) {
+  visitBranch(node: BranchNode): Node {
     node.condition = this.visit(node.condition);
     node.ifBlock = this.visit(node.ifBlock);
     node.elseBlock = this.visitOptional(node.elseBlock);
@@ -96,7 +97,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitCast(node: CastNode) {
+  visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
 
     if (!explicitlyCastable(node.expression.type, node.type)) {
@@ -106,7 +107,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitFunctionCall(node: FunctionCallNode) {
+  visitFunctionCall(node: FunctionCallNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
@@ -132,7 +133,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitTupleIndexOp(node: TupleIndexOpNode) {
+  visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
 
     if (!(node.tuple.type instanceof TupleType)) {
@@ -147,7 +148,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitSizeOp(node: SizeOpNode) {
+  visitSizeOp(node: SizeOpNode): Node {
     node.object = this.visit(node.object);
 
     if (!implicitlyCastable(node.object.type, PrimitiveType.BYTES)
@@ -160,7 +161,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitSplitOp(node: SplitOpNode) {
+  visitSplitOp(node: SplitOpNode): Node {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
 
@@ -183,7 +184,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitBinaryOp(node: BinaryOpNode) {
+  visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
 
@@ -236,7 +237,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitUnaryOp(node: UnaryOpNode) {
+  visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
 
     switch (node.operator) {
@@ -258,7 +259,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitArray(node: ArrayNode) {
+  visitArray(node: ArrayNode): Node {
     node.elements = this.visitList(node.elements);
 
     const elementTypes = node.elements.map((e) => {
@@ -278,7 +279,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitIdentifier(node: IdentifierNode) {
+  visitIdentifier(node: IdentifierNode): Node {
     if (!node.definition) return node;
     node.type = node.definition.type;
     return node;

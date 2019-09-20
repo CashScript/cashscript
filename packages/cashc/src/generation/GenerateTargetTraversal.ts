@@ -22,6 +22,7 @@ import {
   TupleIndexOpNode,
   RequireNode,
   SourceFileNode,
+  Node,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { GlobalFunction } from '../ast/Globals';
@@ -41,7 +42,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
 
-  private emit(op: OpOrData | OpOrData[]) {
+  private emit(op: OpOrData | OpOrData[]): void {
     if (Array.isArray(op)) {
       this.output.push(...op);
     } else {
@@ -49,7 +50,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
   }
 
-  private pushToStack(value: string, pushToBottom?: boolean) {
+  private pushToStack(value: string, pushToBottom?: boolean): void {
     if (pushToBottom) {
       this.stack.push(value);
     } else {
@@ -57,27 +58,27 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
   }
 
-  private popFromStack(count: number = 1) {
+  private popFromStack(count: number = 1): void {
     for (let i = 0; i < count; i += 1) {
       this.stack.shift();
     }
   }
 
-  private removeFromStack(i: number) {
+  private removeFromStack(i: number): void {
     this.stack.splice(i, 1);
   }
 
-  private nipFromStack() {
+  private nipFromStack(): void {
     this.stack.splice(1, 1);
   }
 
-  private getStackIndex(value: string) {
+  private getStackIndex(value: string): number {
     const index = this.stack.indexOf(value);
     if (index === -1) throw new Error(); // Should not happen
     return index;
   }
 
-  visitSourceFile(node: SourceFileNode) {
+  visitSourceFile(node: SourceFileNode): Node {
     node.contract = this.visit(node.contract) as ContractNode;
 
     // Minimally encode output by going Script -> ASM -> Script
@@ -86,7 +87,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitContract(node: ContractNode) {
+  visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     if (node.functions.length === 1) {
       node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
@@ -123,7 +124,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitFunctionDefinition(node: FunctionDefinitionNode) {
+  visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.currentFunction = node;
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
@@ -141,7 +142,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  cleanStack() {
+  cleanStack(): void {
     // Keep final verification value, OP_NIP the other stack values
     const stackSize = this.stack.length;
     for (let i = 0; i < stackSize - 1; i += 1) {
@@ -150,19 +151,19 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
   }
 
-  visitParameter(node: ParameterNode) {
+  visitParameter(node: ParameterNode): Node {
     this.pushToStack(node.name, true);
     return node;
   }
 
-  visitVariableDefinition(node: VariableDefinitionNode) {
+  visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
     this.popFromStack();
     this.pushToStack(node.name);
     return node;
   }
 
-  visitAssign(node: AssignNode) {
+  visitAssign(node: AssignNode): Node {
     node.expression = this.visit(node.expression);
     if (this.scopeDepth > 0) {
       this.emitReplace(this.getStackIndex(node.identifier.name));
@@ -176,7 +177,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   // This algorithm can be optimised for hardcoded depths
   // See thesis for explanation
-  emitReplace(index: number) {
+  emitReplace(index: number): void {
     this.emit(Data.encodeInt(index));
     this.emit(Op.OP_ROLL);
     this.emit(Op.OP_DROP);
@@ -191,21 +192,21 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
   }
 
-  visitTimeOp(node: TimeOpNode) {
+  visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
     this.emit(toOps.fromTimeOp(node.timeOp));
     this.popFromStack();
     return node;
   }
 
-  visitRequire(node: RequireNode) {
+  visitRequire(node: RequireNode): Node {
     node.expression = this.visit(node.expression);
     this.emit(Op.OP_VERIFY);
     this.popFromStack();
     return node;
   }
 
-  visitBranch(node: BranchNode) {
+  visitBranch(node: BranchNode): Node {
     node.condition = this.visit(node.condition);
     this.popFromStack();
 
@@ -229,14 +230,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  removeScopedVariables(depthBeforeScope: number) {
+  removeScopedVariables(depthBeforeScope: number): void {
     for (let i = 0; i < this.stack.length - depthBeforeScope; i += 1) {
       this.emit(Op.OP_DROP);
       this.popFromStack();
     }
   }
 
-  visitCast(node: CastNode) {
+  visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
     this.emit(toOps.fromCast(node.expression.type as PrimitiveType, node.type));
     this.popFromStack();
@@ -244,7 +245,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitFunctionCall(node: FunctionCallNode) {
+  visitFunctionCall(node: FunctionCallNode): Node {
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
       return this.visitMultiSig(node);
     }
@@ -257,7 +258,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitMultiSig(node: FunctionCallNode) {
+  visitMultiSig(node: FunctionCallNode): Node {
     this.emit(Data.encodeBool(false));
     node.parameters = this.visitList(node.parameters);
     this.emit(Op.OP_CHECKMULTISIG);
@@ -269,7 +270,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitTupleIndexOp(node: TupleIndexOpNode) {
+  visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
 
     if (node.index === 0) {
@@ -283,7 +284,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitSizeOp(node: SizeOpNode) {
+  visitSizeOp(node: SizeOpNode): Node {
     node.object = this.visit(node.object);
     this.emit(Op.OP_SIZE);
     this.emit(Op.OP_NIP);
@@ -292,7 +293,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitSplitOp(node: SplitOpNode) {
+  visitSplitOp(node: SplitOpNode): Node {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
     this.emit(Op.OP_SPLIT);
@@ -302,7 +303,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitBinaryOp(node: BinaryOpNode) {
+  visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
     this.emit(toOps.fromBinaryOp(
@@ -314,7 +315,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitUnaryOp(node: UnaryOpNode) {
+  visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
     this.emit(toOps.fromUnaryOp(node.operator));
     this.popFromStack();
@@ -322,19 +323,19 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitArray(node: ArrayNode) {
+  visitArray(node: ArrayNode): Node {
     node.elements = this.visitList(node.elements);
     this.emit(Data.encodeInt(node.elements.length));
     this.pushToStack('(value)');
     return node;
   }
 
-  visitIdentifier(node: IdentifierNode) {
+  visitIdentifier(node: IdentifierNode): Node {
     const stackIndex = this.getStackIndex(node.name);
     this.emit(Data.encodeInt(stackIndex));
 
     // If the final use is inside an if-statement, we still OP_PICK it
-    // We do this so that there's no difference in satck depths between execution paths
+    // We do this so that there's no difference in stack depths between execution paths
     if (this.isOpRoll(node)) {
       this.emit(Op.OP_ROLL);
       this.removeFromStack(stackIndex);
@@ -346,29 +347,29 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  isOpRoll(node: IdentifierNode) {
+  isOpRoll(node: IdentifierNode): boolean {
     return this.currentFunction.opRolls.get(node.name) === node && this.scopeDepth === 0;
   }
 
-  visitBoolLiteral(node: BoolLiteralNode) {
+  visitBoolLiteral(node: BoolLiteralNode): Node {
     this.emit(Data.encodeBool(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
-  visitIntLiteral(node: IntLiteralNode) {
+  visitIntLiteral(node: IntLiteralNode): Node {
     this.emit(Data.encodeInt(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
-  visitStringLiteral(node: StringLiteralNode) {
+  visitStringLiteral(node: StringLiteralNode): Node {
     this.emit(Data.encodeString(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
-  visitHexLiteral(node: HexLiteralNode) {
+  visitHexLiteral(node: HexLiteralNode): Node {
     this.emit(node.value);
     this.pushToStack('(value)');
     return node;

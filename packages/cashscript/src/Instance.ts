@@ -20,7 +20,7 @@ export class Instance {
 
   private bitbox: BITBOX;
 
-  async getBalance() {
+  async getBalance(): Promise<number> {
     const details = await this.bitbox.Address.details(this.address) as AddressDetailsResult;
     return details.balanceSat + details.unconfirmedBalanceSat;
   }

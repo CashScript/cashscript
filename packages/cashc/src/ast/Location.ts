@@ -38,7 +38,7 @@ export class Point {
     return lineOffset + newLines + this.column;
   }
 
-  toString() {
+  toString(): string {
     return `Line ${this.line}, Column ${this.column}`;
   }
 }

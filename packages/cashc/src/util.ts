@@ -22,10 +22,10 @@ export const Data = {
   encodeString(s: string): Buffer {
     return Buffer.from(s, 'ascii');
   },
-  scriptToAsm(s: Script) {
+  scriptToAsm(s: Script): string {
     return new BScript().toASM(new BScript().encode(s));
   },
-  asmToScript(s: string) {
+  asmToScript(s: string): Script {
     return new BScript().decode(new BScript().fromASM(s));
   },
 };
@@ -34,7 +34,7 @@ export type Data = typeof Data;
 export const Artifacts = {
   require(artifactFile: string): Artifact {
     const artifactString = fs.readFileSync(artifactFile, { encoding: 'utf-8' });
-    return JSON.parse(artifactString, scriptReviver);
+    return JSON.parse(artifactString);
   },
   export(artifact: Artifact, targetFile: string): void {
     const jsonString = JSON.stringify(artifact, null, 2);
@@ -61,13 +61,6 @@ export const CashCompiler = {
   },
 };
 export type CashCompiler = typeof CashCompiler;
-
-function scriptReviver(key: any, val: any) {
-  if (val && typeof val === 'object' && val.type === 'Buffer') {
-    return Buffer.from(val.data);
-  }
-  return val;
-}
 
 export function parseCode(code: string): Ast {
   const inputStream: ANTLRInputStream = new ANTLRInputStream(code);

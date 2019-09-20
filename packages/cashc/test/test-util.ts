@@ -17,7 +17,10 @@ export function readCashFiles(directory: string): {fn: string, contents: string}
     .map(fn => ({ fn, contents: fs.readFileSync(path.join(directory, fn), { encoding: 'utf-8' }) }));
 }
 
-export function prettyPrintTokenStream(lexer: CashScriptLexer, tokenStream: CommonTokenStream) {
+export function prettyPrintTokenStream(
+  lexer: CashScriptLexer,
+  tokenStream: CommonTokenStream,
+): void {
   const tokens = tokenStream.getTokens().map((t) => {
     const tokenName = lexer.vocabulary.getSymbolicName(t.type);
     const tokenRepresentation = tokenName ? `${tokenName}<${t.text}>` : t.text;
@@ -26,14 +29,21 @@ export function prettyPrintTokenStream(lexer: CashScriptLexer, tokenStream: Comm
   console.log(`Token stream:\n${tokens.join('  ')}`);
 }
 
-export function prettyPrintParseTree(lexer: CashScriptLexer, tokenStream: CommonTokenStream) {
+export function prettyPrintParseTree(
+  lexer: CashScriptLexer,
+  tokenStream: CommonTokenStream,
+): void {
   const parser = new CashScriptParser(tokenStream);
   const rootContext = parser.sourceFile();
   console.log('Parse Tree:');
   prettyPrintParseTreeElement(lexer, rootContext, '');
 }
 
-function prettyPrintParseTreeElement(lexer: CashScriptLexer, el: ParseTree, indent: string) {
+function prettyPrintParseTreeElement(
+  lexer: CashScriptLexer,
+  el: ParseTree,
+  indent: string,
+): void {
   if (el instanceof ParserRuleContext) {
     console.log(indent + el.constructor.name.replace('Context', ''));
     el.children && el.children.forEach((c) => {

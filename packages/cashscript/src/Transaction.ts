@@ -46,7 +46,7 @@ export class Transaction {
     toOrOutputs: string | Output[],
     amountOrOptions?: number | TxOptions,
     options?: TxOptions,
-  ) {
+  ): Promise<TxnDetailsResult> {
     if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
       return this.sendToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
     } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
@@ -56,7 +56,10 @@ export class Transaction {
     }
   }
 
-  private async sendToMany(outputs: Output[], options?: TxOptions) {
+  private async sendToMany(
+    outputs: Output[],
+    options?: TxOptions,
+  ): Promise<TxnDetailsResult> {
     const { tx } = await this.createTransaction(outputs, options);
     const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
     while (true) {
@@ -76,7 +79,7 @@ export class Transaction {
     toOrOutputs: string | Output[],
     amountOrOptions?: number | TxOptions,
     options?: TxOptions,
-  ) {
+  ): Promise<void> {
     if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
       await this.meepToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
     } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
@@ -84,12 +87,15 @@ export class Transaction {
     }
   }
 
-  private async meepToMany(outputs: Output[], options?: TxOptions) {
+  private async meepToMany(outputs: Output[], options?: TxOptions): Promise<void> {
     const { tx, inputs } = await this.createTransaction(outputs, options);
     await meep(tx, inputs, this.redeemScript);
   }
 
-  private async createTransaction(outs: Output[], options?: TxOptions) {
+  private async createTransaction(
+    outs: Output[],
+    options?: TxOptions,
+  ): Promise<{ tx: any, inputs: Utxo[]}> {
     const sequence = options && options.age
       ? this.builder.bip68.encode({ blocks: options.age })
       : 0xfffffffe;

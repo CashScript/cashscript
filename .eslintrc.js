@@ -47,5 +47,6 @@ module.exports = {
     'no-dupe-class-members': 0,
     'no-constant-condition': 0,
     'no-await-in-loop': 0,
+    '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true }],
   },
 }

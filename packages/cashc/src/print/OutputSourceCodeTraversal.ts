@@ -31,29 +31,29 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   private indentationLevel: number = 0;
   output: string = '';
 
-  private addOutput(s: string, indent: boolean = false) {
+  private addOutput(s: string, indent: boolean = false): void {
     s = indent ? `${this.getIndentation()}${s}` : s;
     this.output += s;
   }
 
-  private getIndentation() {
+  private getIndentation(): string {
     return '    '.repeat(this.indentationLevel);
   }
 
-  private indent() {
+  private indent(): void {
     this.indentationLevel += 1;
   }
 
-  private unindent() {
+  private unindent(): void {
     this.indentationLevel -= 1;
   }
 
-  private outputSymbolTable(symbolTable?: SymbolTable) {
+  private outputSymbolTable(symbolTable?: SymbolTable): void {
     if (!symbolTable) return;
     this.addOutput(` --> ST: ${symbolTable}`);
   }
 
-  visitContract(node: ContractNode) {
+  visitContract(node: ContractNode): Node {
     this.addOutput(`contract ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
     this.addOutput(') {');
@@ -68,7 +68,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitFunctionDefinition(node: FunctionDefinitionNode) {
+  visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
     this.addOutput(')');
@@ -81,7 +81,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitCommaList(list: Node[]) {
+  visitCommaList(list: Node[]): Node[] {
     return list.map((e, i) => {
       const visited = this.visit(e);
       if (i !== list.length - 1) {
@@ -91,12 +91,12 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     });
   }
 
-  visitParameter(node: ParameterNode) {
+  visitParameter(node: ParameterNode): Node {
     this.addOutput(`${node.type} ${node.name}`);
     return node;
   }
 
-  visitVariableDefinition(node: VariableDefinitionNode) {
+  visitVariableDefinition(node: VariableDefinitionNode): Node {
     this.addOutput(`${node.type} ${node.name} = `, true);
     this.visit(node.expression);
     this.addOutput(';\n');
@@ -104,7 +104,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitAssign(node: AssignNode) {
+  visitAssign(node: AssignNode): Node {
     this.addOutput('', true);
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     this.addOutput(' = ');
@@ -114,21 +114,21 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitTimeOp(node: TimeOpNode) {
+  visitTimeOp(node: TimeOpNode): Node {
     this.addOutput(`require(${node.timeOp} >= `, true);
     node.expression = this.visit(node.expression);
     this.addOutput(');\n');
     return node;
   }
 
-  visitRequire(node: RequireNode) {
+  visitRequire(node: RequireNode): Node {
     this.addOutput('require(', true);
     node.expression = this.visit(node.expression);
     this.addOutput(');\n');
     return node;
   }
 
-  visitBranch(node: BranchNode) {
+  visitBranch(node: BranchNode): Node {
     this.addOutput('if (', true);
     node.condition = this.visit(node.condition);
     this.addOutput(') ');
@@ -144,7 +144,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitBlock(node: BlockNode) {
+  visitBlock(node: BlockNode): Node {
     this.addOutput('{');
     this.outputSymbolTable(node.symbolTable);
     this.addOutput('\n');
@@ -157,14 +157,14 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitCast(node: CastNode) {
+  visitCast(node: CastNode): Node {
     this.addOutput(`${node.type}(`);
     node.expression = this.visit(node.expression);
     this.addOutput(')');
     return node;
   }
 
-  visitFunctionCall(node: FunctionCallNode) {
+  visitFunctionCall(node: FunctionCallNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
 
     this.addOutput('(');
@@ -174,19 +174,19 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitTupleIndexOp(node: TupleIndexOpNode) {
+  visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
     this.addOutput(`[${node.index}]`);
     return node;
   }
 
-  visitSizeOp(node: SizeOpNode) {
+  visitSizeOp(node: SizeOpNode): Node {
     node.object = this.visit(node.object);
     this.addOutput('.length');
     return node;
   }
 
-  visitSplitOp(node: SplitOpNode) {
+  visitSplitOp(node: SplitOpNode): Node {
     node.object = this.visit(node.object);
     this.addOutput('.split(');
     node.index = this.visit(node.index);
@@ -194,7 +194,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitBinaryOp(node: BinaryOpNode) {
+  visitBinaryOp(node: BinaryOpNode): Node {
     this.addOutput('(');
     node.left = this.visit(node.left);
     this.addOutput(` ${node.operator} `);
@@ -203,7 +203,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitUnaryOp(node: UnaryOpNode) {
+  visitUnaryOp(node: UnaryOpNode): Node {
     this.addOutput('(');
     this.addOutput(node.operator);
     node.expression = this.visit(node.expression);
@@ -211,34 +211,34 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitArray(node: ArrayNode) {
+  visitArray(node: ArrayNode): Node {
     this.addOutput('[');
     node.elements = this.visitCommaList(node.elements);
     this.addOutput(']');
     return node;
   }
 
-  visitIdentifier(node: IdentifierNode) {
+  visitIdentifier(node: IdentifierNode): Node {
     this.addOutput(node.name);
     return node;
   }
 
-  visitBoolLiteral(node: BoolLiteralNode) {
+  visitBoolLiteral(node: BoolLiteralNode): Node {
     this.addOutput(node.value.toString());
     return node;
   }
 
-  visitIntLiteral(node: IntLiteralNode) {
+  visitIntLiteral(node: IntLiteralNode): Node {
     this.addOutput(node.value.toString());
     return node;
   }
 
-  visitStringLiteral(node: StringLiteralNode) {
+  visitStringLiteral(node: StringLiteralNode): Node {
     this.addOutput(`${node.quote}${node.value}${node.quote}`);
     return node;
   }
 
-  visitHexLiteral(node: HexLiteralNode) {
+  visitHexLiteral(node: HexLiteralNode): Node {
     this.addOutput(`0x${node.value.toString('hex')}`);
     return node;
   }

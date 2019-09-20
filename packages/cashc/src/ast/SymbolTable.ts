@@ -15,11 +15,11 @@ export class Symbol {
     public parameters?: Type[],
   ) {}
 
-  static variable(node: VariableDefinitionNode) {
+  static variable(node: VariableDefinitionNode): Symbol {
     return new Symbol(node.name, node.type, node);
   }
 
-  static parameter(node: ParameterNode) {
+  static parameter(node: ParameterNode): Symbol {
     return new Symbol(node.name, node.type, node);
   }
 
