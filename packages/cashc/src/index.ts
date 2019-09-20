@@ -8,4 +8,4 @@ export {
   CashCompiler,
 } from './util';
 
-export const version = 'v0.1.2-beta';
+export const version = 'v0.2.0-beta';

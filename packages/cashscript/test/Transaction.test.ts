@@ -58,27 +58,6 @@ describe('Transaction', () => {
         const txOutputs = getTxOutputs(tx);
         assert.deepInclude(txOutputs, { to, amount });
       });
-
-      it('should support OP_RETURN data as an output', async () => {
-        // given
-        const outputs = [
-          { opReturn: ['0x6d02', 'Hello, World!'] },
-          { to: p2pkhInstance.address, amount: 10000 },
-          { to: p2pkhInstance.address, amount: 20000 },
-        ];
-
-        // when
-        const tx = await p2pkhInstance.functions
-          .spend(alicePk, new Sig(alice, 0x01))
-          .send(outputs);
-
-        // then
-        const txOutputs = getTxOutputs(tx);
-        const expectedOutputs = outputs.map(o => (
-          isOpReturn(o) ? { to: createOpReturnScript(o), amount: 0 } : o
-        ));
-        assert.includeDeepMembers(txOutputs, expectedOutputs);
-      });
     });
 
     describe('send (to many)', () => {
@@ -113,6 +92,27 @@ describe('Transaction', () => {
         // then
         const txOutputs = getTxOutputs(tx);
         assert.includeDeepMembers(txOutputs, outputs);
+      });
+
+      it('should support OP_RETURN data as an output', async () => {
+        // given
+        const outputs = [
+          { opReturn: ['0x6d02', 'Hello, World!'] },
+          { to: p2pkhInstance.address, amount: 10000 },
+          { to: p2pkhInstance.address, amount: 20000 },
+        ];
+
+        // when
+        const tx = await p2pkhInstance.functions
+          .spend(alicePk, new Sig(alice, 0x01))
+          .send(outputs);
+
+        // then
+        const txOutputs = getTxOutputs(tx);
+        const expectedOutputs = outputs.map(o => (
+          isOpReturn(o) ? { to: createOpReturnScript(o), amount: 0 } : o
+        ));
+        assert.includeDeepMembers(txOutputs, expectedOutputs);
       });
     });
 

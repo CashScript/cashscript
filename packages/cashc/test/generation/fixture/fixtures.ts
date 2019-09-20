@@ -16,7 +16,7 @@ export const fixtures: Fixture[] = [
       constructorInputs: [{ name: 'pkh', type: 'bytes20' }],
       abi: [{ name: 'spend', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
-        'OP_OVER OP_HASH160 OP_SWAP OP_EQUALVERIFY '
+        'OP_OVER OP_HASH160 OP_EQUALVERIFY '
         + 'OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, 'p2pkh.cash'), { encoding: 'utf-8' }),
       networks: {},
@@ -36,7 +36,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         'OP_10 OP_4 OP_SUB '
         + '14 OP_SWAP OP_2 OP_MOD OP_ADD '
-        + 'OP_SWAP OP_GREATERTHAN OP_VERIFY '
+        + 'OP_LESSTHAN OP_VERIFY '
         + '48656c6c6f20576f726c64 '
         + 'OP_DUP OP_ROT OP_CAT '
         + 'OP_2 OP_PICK OP_RIPEMD160 OP_SWAP OP_RIPEMD160 OP_EQUALVERIFY '
@@ -58,12 +58,12 @@ export const fixtures: Fixture[] = [
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'int' }],
       abi: [{ name: 'hello', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }] }],
       bytecode:
-        'OP_2OVER OP_SWAP OP_ADD '
+        'OP_2OVER OP_ADD '
         + 'OP_DUP OP_4 OP_PICK OP_SUB '
         + 'OP_DUP OP_3 OP_ROLL OP_2 OP_SUB OP_NUMEQUAL OP_IF '
         + 'OP_DUP OP_5 OP_PICK OP_ADD '
         + 'OP_4 OP_PICK OP_OVER OP_ADD OP_ROT OP_DROP OP_SWAP '
-        + 'OP_2DUP OP_SWAP OP_GREATERTHAN OP_VERIFY '
+        + 'OP_2DUP OP_LESSTHAN OP_VERIFY '
         + 'OP_DROP OP_ELSE '
         + 'OP_DUP OP_4 OP_PICK OP_NUMEQUALVERIFY OP_ENDIF '
         + 'OP_DUP OP_4 OP_ROLL OP_ADD '
@@ -114,9 +114,9 @@ export const fixtures: Fixture[] = [
         + 'OP_DUP OP_3 OP_ROLL OP_NUMEQUAL OP_IF '
         + 'OP_DUP OP_6 OP_PICK OP_ADD '
         + 'OP_5 OP_PICK OP_OVER OP_ADD OP_ROT OP_DROP OP_SWAP '
-        + 'OP_2DUP OP_SWAP OP_GREATERTHAN OP_VERIFY '
+        + 'OP_2DUP OP_LESSTHAN OP_VERIFY '
         + 'OP_DROP OP_ELSE '
-        + 'OP_4 OP_PICK OP_SWAP OP_DROP OP_ENDIF '
+        + 'OP_4 OP_PICK OP_NIP OP_ENDIF '
         + 'OP_DUP OP_5 OP_ROLL OP_ADD '
         + 'OP_3 OP_ROLL OP_NUMEQUAL '
         + 'OP_NIP OP_NIP OP_NIP OP_NIP OP_ELSE '
@@ -124,8 +124,8 @@ export const fixtures: Fixture[] = [
         + 'OP_2 OP_PICK OP_DUP OP_2 OP_ADD '
         + 'OP_DUP OP_3 OP_ROLL OP_NUMEQUAL OP_IF '
         + 'OP_DUP OP_4 OP_PICK OP_ADD '
-        + 'OP_2DUP OP_SWAP OP_ADD OP_ROT OP_DROP OP_SWAP '
-        + 'OP_2DUP OP_SWAP OP_GREATERTHAN OP_VERIFY '
+        + 'OP_2DUP OP_ADD OP_ROT OP_DROP OP_SWAP '
+        + 'OP_2DUP OP_LESSTHAN OP_VERIFY '
         + 'OP_DROP OP_ENDIF '
         + ''
         + 'OP_2SWAP OP_NUMEQUAL '
@@ -165,8 +165,8 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', inputs: [] }],
       bytecode:
         'OP_DUP OP_OVER OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP '
-        + 'OP_2DUP OP_SWAP OP_EQUAL OP_NOT OP_VERIFY '
-        + 'OP_SWAP OP_4 OP_SPLIT OP_DROP OP_SWAP OP_EQUAL OP_NOT',
+        + 'OP_2DUP OP_EQUAL OP_NOT OP_VERIFY '
+        + 'OP_SWAP OP_4 OP_SPLIT OP_DROP OP_EQUAL OP_NOT',
       source: fs.readFileSync(path.join(__dirname, 'split_size.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {

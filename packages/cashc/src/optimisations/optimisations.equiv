@@ -5,6 +5,7 @@
 # OP_NOT OP_IF                         <=> OP_NOTIF;
 OP_1 OP_ADD                            <=> OP_1ADD;
 OP_1 OP_SUB                            <=> OP_1SUB;
+OP_1 OP_NEGATE                         <=> OP_1NEGATE;
 OP_0 OP_EQUAL OP_NOT                   <=> OP_0NOTEQUAL;
 OP_NUMEQUAL OP_NOT                     <=> OP_NUMNOTEQUAL;
 OP_SHA256 OP_SHA256                    <=> OP_HASH256;
@@ -41,3 +42,17 @@ OP_NUMEQUAL OP_VERIFY                  <=> OP_NUMEQUALVERIFY;
 OP_CHECKSIG OP_VERIFY                  <=> OP_CHECKSIGVERIFY;
 # OP_CHECKMULTISIG OP_VERIFY           <=> OP_CHECKMULTISIGVERIFY;
 OP_CHECKDATASIG OP_VERIFY              <=> OP_CHECKDATASIGVERIFY;
+
+# Remove/replace extraneous OP_SWAP
+# OP_SWAP OP_AND                         <=> OP_AND;
+# OP_SWAP OP_OR                          <=> OP_OR;
+# OP_SWAP OP_XOR                         <=> OP_XOR;
+OP_SWAP OP_ADD                         <=> OP_ADD;
+OP_SWAP OP_EQUAL                       <=> OP_EQUAL;
+OP_SWAP OP_NUMEQUAL                    <=> OP_NUMEQUAL;
+OP_SWAP OP_NUMNOTEQUAL                 <=> OP_NUMNOTEQUAL;
+OP_SWAP OP_GREATERTHANOREQUAL          <=> OP_LESSTHANOREQUAL;
+OP_SWAP OP_LESSTHANOREQUAL             <=> OP_GREATERTHANOREQUAL;
+OP_SWAP OP_GREATERTHAN                 <=> OP_LESSTHAN;
+OP_SWAP OP_LESSTHAN                    <=> OP_GREATERTHAN;
+OP_SWAP OP_DROP                        <=> OP_NIP;
