@@ -1,0 +1,43 @@
+# This file can be run with CashProof to prove that the optimisations preserve exact functionality
+# This includes most of CashScript's bytecode optimisations, although some are incompatible with CashProof
+
+# Hardcoded arithmetic
+# OP_NOT OP_IF                         <=> OP_NOTIF;
+OP_1 OP_ADD                            <=> OP_1ADD;
+OP_1 OP_SUB                            <=> OP_1SUB;
+OP_0 OP_EQUAL OP_NOT                   <=> OP_0NOTEQUAL;
+OP_NUMEQUAL OP_NOT                     <=> OP_NUMNOTEQUAL;
+OP_SHA256 OP_SHA256                    <=> OP_HASH256;
+OP_SHA256 OP_RIPEMD160                 <=> OP_HASH160;
+
+# Hardcoded stackops
+OP_2 OP_PICK OP_1 OP_PICK OP_3 OP_PICK <=> OP_3DUP OP_SWAP;
+OP_2 OP_PICK OP_2 OP_PICK OP_2 OP_PICK <=> OP_3DUP;
+
+OP_0 OP_PICK OP_2 OP_PICK              <=> OP_2DUP OP_SWAP;
+OP_1 OP_PICK OP_1 OP_PICK              <=> OP_2DUP;
+OP_2 OP_PICK OP_4 OP_PICK              <=> OP_2OVER OP_SWAP;
+OP_3 OP_PICK OP_3 OP_PICK              <=> OP_2OVER;
+
+OP_2 OP_ROLL OP_3 OP_ROLL              <=> OP_2SWAP OP_SWAP;
+OP_3 OP_ROLL OP_3 OP_ROLL              <=> OP_2SWAP;
+OP_4 OP_ROLL OP_5 OP_ROLL              <=> OP_2ROT OP_SWAP;
+OP_5 OP_ROLL OP_5 OP_ROLL              <=> OP_2ROT;
+
+OP_0 OP_PICK                           <=> OP_DUP;
+OP_1 OP_PICK                           <=> OP_OVER;
+# /[ ]?OP_0 OP_ROLL[ ]?/g              <=> ' ';
+OP_1 OP_ROLL                           <=> OP_SWAP;
+OP_2 OP_ROLL                           <=> OP_ROT;
+OP_DROP OP_DROP                        <=> OP_2DROP;
+
+# Secondary effects
+OP_DUP OP_SWAP                         <=> OP_DUP;
+# /[ ]?OP_SWAP OP_SWAP[ ]?/g           <=> ' ';
+
+# Merge OP_VERIFY
+OP_EQUAL OP_VERIFY                     <=> OP_EQUALVERIFY;
+OP_NUMEQUAL OP_VERIFY                  <=> OP_NUMEQUALVERIFY;
+OP_CHECKSIG OP_VERIFY                  <=> OP_CHECKSIGVERIFY;
+# OP_CHECKMULTISIG OP_VERIFY           <=> OP_CHECKMULTISIGVERIFY;
+OP_CHECKDATASIG OP_VERIFY              <=> OP_CHECKDATASIGVERIFY;
