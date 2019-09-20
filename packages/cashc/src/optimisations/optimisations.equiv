@@ -26,14 +26,14 @@ OP_5 OP_ROLL OP_5 OP_ROLL              <=> OP_2ROT;
 
 OP_0 OP_PICK                           <=> OP_DUP;
 OP_1 OP_PICK                           <=> OP_OVER;
-# /[ ]?OP_0 OP_ROLL[ ]?/g              <=> ' ';
+OP_0 OP_ROLL                           <=> ;
 OP_1 OP_ROLL                           <=> OP_SWAP;
 OP_2 OP_ROLL                           <=> OP_ROT;
 OP_DROP OP_DROP                        <=> OP_2DROP;
 
 # Secondary effects
 OP_DUP OP_SWAP                         <=> OP_DUP;
-# /[ ]?OP_SWAP OP_SWAP[ ]?/g           <=> ' ';
+OP_SWAP OP_SWAP                        <=> ;
 
 # Merge OP_VERIFY
 OP_EQUAL OP_VERIFY                     <=> OP_EQUALVERIFY;

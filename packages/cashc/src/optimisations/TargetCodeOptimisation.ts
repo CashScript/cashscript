@@ -37,14 +37,14 @@ export default class TargetCodeOptimisation {
       asm = asm.replace(new RegExp(optim[0], 'g'), optim[1]);
     });
 
-    // Add optimisations that are not  compatible with CashProof
+    // Add optimisations that are not compatible with CashProof
     // CashProof can't prove OP_IF without parameters
     asm = asm.replace(/OP_NOT OP_IF/g, 'OP_NOTIF');
-    // We can't encode optional spaces in a .equiv file
-    asm = asm.replace(/[ ]?OP_0 OP_ROLL[ ]?/g, ' ');
-    asm = asm.replace(/[ ]?OP_SWAP OP_SWAP[ ]?/g, ' ');
     // CashProof can't prove OP_CHECKMULTISIG without specifying N
     asm = asm.replace(/OP_CHECKMULTISIG OP_VERIFY/g, 'OP_CHECKMULTISIGVERIFY');
+
+    // Remove any double spaces as a result of opcode removal
+    asm = asm.replace(/\s+/g, ' ');
 
     return Data.asmToScript(asm);
   }
