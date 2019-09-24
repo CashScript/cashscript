@@ -1,0 +1,11 @@
+pragma cashscript ^0.1.0;
+
+contract Test() {
+    function hello(sig s, pubkey pk) {
+        require(checkSig(s, pk));
+    }
+
+    function world(int a) {
+        require(a + 5 == 10);
+    }
+}

@@ -1,6 +1,7 @@
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
+import * as semver from 'semver';
 import {
   Node,
   SourceFileNode,
@@ -56,11 +57,15 @@ import {
   LiteralExpressionContext,
   TupleIndexOpContext,
   RequireStatementContext,
+  PragmaDirectiveContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
 import { NumberUnit, TimeOp } from './Globals';
 import { getPrimitiveTypeFromCtx } from './Type';
+import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
+import { version } from '..';
+import { VersionError } from '../Errors';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>
@@ -78,10 +83,30 @@ export default class AstBuilder
   }
 
   visitSourceFile(ctx: SourceFileContext): SourceFileNode {
+    ctx.pragmaDirective().forEach((pragma) => {
+      this.processPragma(pragma);
+    });
+
     const contract = this.visit(ctx.contractDefinition()) as ContractNode;
     const sourceFileNode = new SourceFileNode(contract);
     sourceFileNode.location = Location.fromCtx(ctx);
     return sourceFileNode;
+  }
+
+  processPragma(ctx: PragmaDirectiveContext): void {
+    const pragmaName = getPragmaName(ctx.pragmaName().text);
+    if (pragmaName !== PragmaName.CASHSCRIPT) throw new Error(); // Shouldn't happen
+
+    // Strip any -beta tags
+    const actualVersion = version.replace(/-.*/g, '');
+
+    ctx.pragmaValue().versionConstraint().forEach((constraint) => {
+      const op = getVersionOpFromCtx(constraint.versionOperator());
+      const versionConstraint = `${op}${constraint.VersionLiteral().text}`;
+      if (!semver.satisfies(actualVersion, versionConstraint)) {
+        throw new VersionError(actualVersion, versionConstraint);
+      }
+    });
   }
 
   visitContractDefinition(ctx: ContractDefinitionContext): ContractNode {

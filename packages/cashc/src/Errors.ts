@@ -186,3 +186,16 @@ export class PrimitiveTypeError extends TypeError {
     super(node, undefined, undefined, 'Expected primitive type');
   }
 }
+
+export class VersionError extends Error {
+  constructor(
+    actual: string,
+    constraint: string,
+  ) {
+    const message = `cashc version ${actual} does not satisfy version constraint ${constraint}`;
+    super(message);
+
+    this.name = this.constructor.name;
+    Error.captureStackTrace(this, this.constructor);
+  }
+}

@@ -1,4 +1,4 @@
-// Generated from src/compiler/grammar/CashScript.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/grammar/CashScript.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
@@ -15,6 +15,11 @@ import { ArrayContext } from "./CashScriptParser";
 import { IdentifierContext } from "./CashScriptParser";
 import { LiteralExpressionContext } from "./CashScriptParser";
 import { SourceFileContext } from "./CashScriptParser";
+import { PragmaDirectiveContext } from "./CashScriptParser";
+import { PragmaNameContext } from "./CashScriptParser";
+import { PragmaValueContext } from "./CashScriptParser";
+import { VersionConstraintContext } from "./CashScriptParser";
+import { VersionOperatorContext } from "./CashScriptParser";
 import { ContractDefinitionContext } from "./CashScriptParser";
 import { FunctionDefinitionContext } from "./CashScriptParser";
 import { ParameterListContext } from "./CashScriptParser";
@@ -136,6 +141,41 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitSourceFile?: (ctx: SourceFileContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.pragmaDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPragmaDirective?: (ctx: PragmaDirectiveContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.pragmaName`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPragmaName?: (ctx: PragmaNameContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.pragmaValue`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitPragmaValue?: (ctx: PragmaValueContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.versionConstraint`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVersionConstraint?: (ctx: VersionConstraintContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.versionOperator`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVersionOperator?: (ctx: VersionOperatorContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.contractDefinition`.

@@ -1,7 +1,27 @@
 grammar CashScript;
 
 sourceFile
-    : contractDefinition EOF
+    : pragmaDirective* contractDefinition EOF
+    ;
+
+pragmaDirective
+    : 'pragma' pragmaName pragmaValue ';'
+    ;
+
+pragmaName
+    : 'cashscript'
+    ;
+
+pragmaValue
+    : versionConstraint versionConstraint?
+    ;
+
+versionConstraint
+    : versionOperator? VersionLiteral
+    ;
+
+versionOperator
+    : '^' | '~' | '>=' | '>' | '<' | '<=' | '='
     ;
 
 contractDefinition
@@ -102,6 +122,10 @@ numberLiteral
 typeName
     // : 'int' | 'bool' | 'string' | 'address' | 'pubkey' | 'sig' | Bytes
     : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | 'datasig' | Bytes
+    ;
+
+VersionLiteral
+    : [0-9]+ '.' [0-9]+ '.' [0-9]+
     ;
 
 Bytes

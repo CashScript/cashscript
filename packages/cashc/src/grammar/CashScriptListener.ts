@@ -1,4 +1,4 @@
-// Generated from src/compiler/grammar/CashScript.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/grammar/CashScript.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
@@ -15,6 +15,11 @@ import { ArrayContext } from "./CashScriptParser";
 import { IdentifierContext } from "./CashScriptParser";
 import { LiteralExpressionContext } from "./CashScriptParser";
 import { SourceFileContext } from "./CashScriptParser";
+import { PragmaDirectiveContext } from "./CashScriptParser";
+import { PragmaNameContext } from "./CashScriptParser";
+import { PragmaValueContext } from "./CashScriptParser";
+import { VersionConstraintContext } from "./CashScriptParser";
+import { VersionOperatorContext } from "./CashScriptParser";
 import { ContractDefinitionContext } from "./CashScriptParser";
 import { FunctionDefinitionContext } from "./CashScriptParser";
 import { ParameterListContext } from "./CashScriptParser";
@@ -192,6 +197,61 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSourceFile?: (ctx: SourceFileContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.pragmaDirective`.
+	 * @param ctx the parse tree
+	 */
+	enterPragmaDirective?: (ctx: PragmaDirectiveContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.pragmaDirective`.
+	 * @param ctx the parse tree
+	 */
+	exitPragmaDirective?: (ctx: PragmaDirectiveContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.pragmaName`.
+	 * @param ctx the parse tree
+	 */
+	enterPragmaName?: (ctx: PragmaNameContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.pragmaName`.
+	 * @param ctx the parse tree
+	 */
+	exitPragmaName?: (ctx: PragmaNameContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.pragmaValue`.
+	 * @param ctx the parse tree
+	 */
+	enterPragmaValue?: (ctx: PragmaValueContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.pragmaValue`.
+	 * @param ctx the parse tree
+	 */
+	exitPragmaValue?: (ctx: PragmaValueContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.versionConstraint`.
+	 * @param ctx the parse tree
+	 */
+	enterVersionConstraint?: (ctx: VersionConstraintContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.versionConstraint`.
+	 * @param ctx the parse tree
+	 */
+	exitVersionConstraint?: (ctx: VersionConstraintContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `CashScriptParser.versionOperator`.
+	 * @param ctx the parse tree
+	 */
+	enterVersionOperator?: (ctx: VersionOperatorContext) => void;
+	/**
+	 * Exit a parse tree produced by `CashScriptParser.versionOperator`.
+	 * @param ctx the parse tree
+	 */
+	exitVersionOperator?: (ctx: VersionOperatorContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `CashScriptParser.contractDefinition`.
