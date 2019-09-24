@@ -90,8 +90,8 @@ export const fixtures: Fixture[] = [
         + 'OP_NIP OP_NIP OP_NIP OP_ELSE '
         + 'OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_IF '
         + 'OP_3 OP_ROLL OP_SWAP OP_CHECKSIGVERIFY '
-        + 'OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP OP_1 '
-        + 'OP_NIP OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
+        + 'OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 '
+        + 'OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
       source: fs.readFileSync(path.join(__dirname, 'multifunction.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -164,7 +164,7 @@ export const fixtures: Fixture[] = [
       constructorInputs: [{ name: 'b', type: 'bytes' }],
       abi: [{ name: 'spend', inputs: [] }],
       bytecode:
-        'OP_DUP OP_OVER OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP '
+        'OP_DUP OP_DUP OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP '
         + 'OP_2DUP OP_EQUAL OP_NOT OP_VERIFY '
         + 'OP_SWAP OP_4 OP_SPLIT OP_DROP OP_EQUAL OP_NOT',
       source: fs.readFileSync(path.join(__dirname, 'split_size.cash'), { encoding: 'utf-8' }),
