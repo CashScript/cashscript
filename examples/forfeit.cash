@@ -1,3 +1,5 @@
+pragma cashscript ^0.2.0;
+
 contract Forfeit(
     bytes20 inputPkh,
     bytes20 customerPkh
@@ -11,6 +13,6 @@ contract Forfeit(
         require(hash160(pk) == inputPkh);
         require(message1 != message2);
         require(checkDataSig(datasig(s1), message1, pk));
-        require(checkDataSig(datasig(s2), message2, pk);
+        require(checkDataSig(datasig(s2), message2, pk));
     }
 }

@@ -1,3 +1,5 @@
+pragma cashscript ^0.2.0;
+
 contract TransferWithTimeout(
     pubkey sender,
     pubkey recipient,

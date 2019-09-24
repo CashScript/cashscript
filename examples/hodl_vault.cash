@@ -1,3 +1,5 @@
+pragma cashscript ^0.2.0;
+
 // This contract forces HODLing until a certain price target has been reached
 // A minimum block is provided to ensure that oracle price entries from before this block are disregarded
 // i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used.

@@ -1,3 +1,5 @@
+pragma cashscript ^0.2.0;
+
 contract Escrow(
   bytes20 sellerPHK, // Hash160 of seller's public key
   bytes20 buyerPKH, // Hash160 of buyer's public key
