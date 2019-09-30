@@ -33,7 +33,7 @@ export class SourceFileNode extends Node {
 }
 
 export class ContractNode extends Node implements Named {
-  symbolTable?: SymbolTable
+  symbolTable?: SymbolTable;
 
   constructor(
     public name: string,

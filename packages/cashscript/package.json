@@ -10,17 +10,16 @@
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
   "dependencies": {
-    "bitbox-sdk": "^8.4.0",
+    "bitbox-sdk": "^8.8.0",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
     "cashc": "^0.2.0-beta",
-    "delay": "^4.2.0"
+    "delay": "^4.3.0"
   },
   "devDependencies": {
     "bignumber.js": "^9.0.0",
     "eslint": "^5.16.0",
-    "mocha": "^6.1.4",
     "nyc": "^14.1.1",
-    "typescript": "^3.5.1"
+    "typescript": "3.5.3"
   },
   "directories": {
     "lib": "src",

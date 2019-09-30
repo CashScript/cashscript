@@ -71,4 +71,4 @@ export class Contract {
   }
 }
 
-export type ContractFunction = (...parameters: Parameter[]) => Transaction
+export type ContractFunction = (...parameters: Parameter[]) => Transaction;

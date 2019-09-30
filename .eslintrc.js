@@ -14,7 +14,7 @@ module.exports = {
     project: './tsconfig.build.json'
   },
   rules: {
-    'import/no-cycle': false, // Needed for AST -> AstVisitor -> AST
+    'import/no-cycle': 0, // Needed for AST -> AstVisitor -> AST
     'class-methods-use-this': 0, // I don't like this rule
     'no-underscore-dangle': 0, // antlr4ts automatically uses this
     'no-else-return': 0, // I think it looks clearer with else-ifs, rather than many ifs
@@ -35,18 +35,14 @@ module.exports = {
     ],
     'import/prefer-default-export': 0,
     'import/no-unresolved': 0,
-    'import/no-extraneous-dependencies': context => [
-      'error',
-      {
-        devDependencies: true,
-        packageDir: [context.getFilename(), __dirname]
-      }
-    ],
+    'import/no-extraneous-dependencies': 0,
     'no-bitwise': 0,
     'no-restricted-syntax': 0,
     'no-dupe-class-members': 0,
     'no-constant-condition': 0,
     'no-await-in-loop': 0,
     '@typescript-eslint/explicit-function-return-type': ['error', { allowExpressions: true }],
+    '@typescript-eslint/no-use-before-define': 0, // I want to read top-bottom
+    'max-classes-per-file': 0, // Multiple classes in one file (e.g. Type)
   },
 }
