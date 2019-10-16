@@ -2,7 +2,7 @@ import { TimeOp } from './Globals';
 import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
-import { Type, PrimitiveType } from './Type';
+import { Type, PrimitiveType, BytesType } from './Type';
 import { SymbolTable, Symbol } from './SymbolTable';
 
 export type Ast = SourceFileNode;
@@ -67,7 +67,7 @@ export class FunctionDefinitionNode extends Node implements Named {
 
 export class ParameterNode extends Node implements Named, Typed {
   constructor(
-    public type: PrimitiveType,
+    public type: Type,
     public name: string,
   ) {
     super();
@@ -166,7 +166,7 @@ export abstract class ExpressionNode extends Node {
 
 export class CastNode extends ExpressionNode implements Typed {
   constructor(
-    public type: PrimitiveType,
+    public type: Type,
     public expression: ExpressionNode,
   ) {
     super();
@@ -328,7 +328,7 @@ export class HexLiteralNode extends LiteralNode {
     public value: Buffer,
   ) {
     super();
-    this.type = PrimitiveType.BYTES;
+    this.type = new BytesType(value.byteLength);
   }
 
   accept<T>(visitor: AstVisitor<T>): T {

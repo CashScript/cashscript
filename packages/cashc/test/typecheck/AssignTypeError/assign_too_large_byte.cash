@@ -1,0 +1,6 @@
+contract Test() {
+    function hello() {
+        bytes1 byte = 0x1234;
+        require(byte.length == 1);
+    }
+}

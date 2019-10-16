@@ -128,10 +128,6 @@ VersionLiteral
     : [0-9]+ '.' [0-9]+ '.' [0-9]+
     ;
 
-Bytes
-    : 'bytes' ('20' | '32')?
-    ;
-
 BooleanLiteral
     : 'true' | 'false'
     ;
@@ -143,6 +139,14 @@ NumberUnit
 
 NumberLiteral
     : [-]?[0-9]+ ([eE] [0-9]+)?
+    ;
+
+Bytes
+    : 'bytes' Bound?
+    ;
+
+Bound
+    : [1-9] [0-9]*
     ;
 
 StringLiteral

@@ -1,7 +1,7 @@
 import { Script as BScript } from 'bitbox-sdk';
 import { UnaryOperator, BinaryOperator } from '../ast/Operator';
 import { GlobalFunction, TimeOp } from '../ast/Globals';
-import { PrimitiveType } from '../ast/Type';
+import { PrimitiveType, Type, BytesType } from '../ast/Type';
 import { Data } from '../util';
 
 export const Op = new BScript().opcodes;
@@ -19,9 +19,9 @@ export class toOps {
     return mapping[op];
   }
 
-  static fromCast(from: PrimitiveType, to: PrimitiveType): Script {
-    if (from === PrimitiveType.INT && to !== PrimitiveType.INT) {
-      return [Data.encodeInt(8), Op.OP_NUM2BIN]; // TODO: Fix proper sized int casting
+  static fromCast(from: Type, to: Type): Script {
+    if (from === PrimitiveType.INT && to instanceof BytesType) {
+      return [Data.encodeInt(to.bound || 8), Op.OP_NUM2BIN];
     } else if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
       return [Op.OP_BIN2NUM];
     } else if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {

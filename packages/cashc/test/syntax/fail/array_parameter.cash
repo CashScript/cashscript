@@ -1,0 +1,7 @@
+contract Test(int x, string y) {
+    function hello(int[] a) {
+    }
+
+    function world(int a) {
+    }
+}

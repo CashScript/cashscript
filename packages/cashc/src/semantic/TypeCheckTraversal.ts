@@ -37,7 +37,7 @@ import {
   ArrayType,
   TupleType,
   isPrimitive,
-  isBytes,
+  BytesType,
 } from '../ast/Type';
 import { BinaryOperator, UnaryOperator } from '../ast/Operator';
 import { GlobalFunction } from '../ast/Globals';
@@ -151,10 +151,10 @@ export default class TypeCheckTraversal extends AstTraversal {
   visitSizeOp(node: SizeOpNode): Node {
     node.object = this.visit(node.object);
 
-    if (!implicitlyCastable(node.object.type, PrimitiveType.BYTES)
+    if (!implicitlyCastable(node.object.type, new BytesType())
      && !implicitlyCastable(node.object.type, PrimitiveType.STRING)
     ) { // Should support Bytes and String
-      throw new UnsupportedTypeError(node, node.object.type, PrimitiveType.BYTES);
+      throw new UnsupportedTypeError(node, node.object.type, new BytesType());
     }
 
     node.type = PrimitiveType.INT;
@@ -165,21 +165,20 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
 
-    if (!node.object.type || !isPrimitive(node.object.type)) {
-      throw new PrimitiveTypeError(node);
-    }
-
-    if (!implicitlyCastable(node.object.type, PrimitiveType.BYTES)
+    if (!implicitlyCastable(node.object.type, new BytesType())
      && !implicitlyCastable(node.object.type, PrimitiveType.STRING)
     ) { // Should support Bytes and String
-      throw new UnsupportedTypeError(node, node.object.type, PrimitiveType.BYTES);
+      throw new UnsupportedTypeError(node, node.object.type, new BytesType());
     }
 
     if (!implicitlyCastable(node.index.type, PrimitiveType.INT)) {
       throw new UnsupportedTypeError(node, node.object.type, PrimitiveType.INT);
     }
 
-    const elementType = isBytes(node.object.type) ? PrimitiveType.BYTES : PrimitiveType.STRING;
+    // Result of split are two unbounded bytes types (could be improved to do type inference)
+    const elementType = node.object.type instanceof BytesType
+      ? new BytesType()
+      : PrimitiveType.STRING;
     node.type = new TupleType(elementType);
     return node;
   }
@@ -197,11 +196,17 @@ export default class TypeCheckTraversal extends AstTraversal {
       case BinaryOperator.PLUS:
         if (!implicitlyCastable(resType, PrimitiveType.INT)
          && !implicitlyCastable(resType, PrimitiveType.STRING)
-         && !implicitlyCastable(resType, PrimitiveType.BYTES)
+         && !implicitlyCastable(resType, new BytesType())
         ) { // Should support int, string, bytes
           throw new UnsupportedTypeError(node, resType, PrimitiveType.INT);
         }
         node.type = resType;
+        // Infer new bounded bytes type if both operands are bounded bytes types
+        if (node.left.type instanceof BytesType && node.right.type instanceof BytesType) {
+          if (node.left.type.bound && node.right.type.bound) {
+            node.type = new BytesType(node.left.type.bound + node.right.type.bound);
+          }
+        }
         break;
       case BinaryOperator.DIV:
       case BinaryOperator.MOD:
@@ -263,6 +268,8 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.elements = this.visitList(node.elements);
 
     const elementTypes = node.elements.map((e) => {
+      // Effectively only pk and sig are supported because the only
+      // use of arrays is checkMultiSig
       if (!e.type || !isPrimitive(e.type)) {
         throw new PrimitiveTypeError(node);
       }

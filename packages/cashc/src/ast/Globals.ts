@@ -1,5 +1,5 @@
 import { SymbolTable, Symbol } from './SymbolTable';
-import { PrimitiveType, ArrayType } from './Type';
+import { PrimitiveType, ArrayType, BytesType } from './Type';
 
 export const NumberUnit: { [index:string] : number } = {
   SATOSHIS: 1,
@@ -54,23 +54,23 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(
   [PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.RIPEMD160, PrimitiveType.BYTES20, undefined,
+  GlobalFunction.RIPEMD160, new BytesType(20), undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.SHA1, PrimitiveType.BYTES32, undefined,
+  GlobalFunction.SHA1, new BytesType(32), undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.SHA256, PrimitiveType.BYTES32, undefined,
+  GlobalFunction.SHA256, new BytesType(32), undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.HASH160, PrimitiveType.BYTES20, undefined,
+  GlobalFunction.HASH160, new BytesType(20), undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
-  GlobalFunction.HASH256, PrimitiveType.BYTES32, undefined,
+  GlobalFunction.HASH256, new BytesType(32), undefined,
   [PrimitiveType.ANY],
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
@@ -83,5 +83,5 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(
 ));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
   GlobalFunction.CHECKDATASIG, PrimitiveType.BOOL, undefined,
-  [PrimitiveType.DATASIG, PrimitiveType.BYTES, PrimitiveType.PUBKEY],
+  [PrimitiveType.DATASIG, new BytesType(), PrimitiveType.PUBKEY],
 ));
