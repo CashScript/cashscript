@@ -33,8 +33,7 @@ export type Data = typeof Data;
 
 export const Artifacts = {
   require(artifactFile: string): Artifact {
-    const artifactString = fs.readFileSync(artifactFile, { encoding: 'utf-8' });
-    return JSON.parse(artifactString);
+    return JSON.parse(fs.readFileSync(artifactFile, { encoding: 'utf-8' }));
   },
   export(artifact: Artifact, targetFile: string): void {
     const jsonString = JSON.stringify(artifact, null, 2);

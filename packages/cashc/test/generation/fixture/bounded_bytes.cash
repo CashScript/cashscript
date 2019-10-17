@@ -1,0 +1,5 @@
+contract BoundedBytes() {
+    function spend(bytes4 b, int i) {
+        require(b == bytes4(i));
+    }
+}

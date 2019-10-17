@@ -1,5 +1,3 @@
-import { TypeNameContext } from '../grammar/CashScriptParser';
-
 export type Type = PrimitiveType | ArrayType | TupleType | BytesType;
 
 export class ArrayType {
@@ -17,6 +15,11 @@ export class BytesType {
   constructor(
     public bound?: number,
   ) {}
+
+  static fromString(str: string): BytesType {
+    const bound = Number.parseInt(str.substring(5), 10) || undefined;
+    return new BytesType(bound);
+  }
 
   toString(): string {
     return `bytes${this.bound || ''}`;
@@ -56,16 +59,6 @@ const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
   [PrimitiveType.ANY]: [],
 };
 
-const PrimitiveTypeMinSize: { [key in PrimitiveType]: number } = {
-  [PrimitiveType.INT]: 1,
-  [PrimitiveType.BOOL]: 1,
-  [PrimitiveType.STRING]: 0,
-  [PrimitiveType.PUBKEY]: 65,
-  [PrimitiveType.SIG]: 65,
-  [PrimitiveType.DATASIG]: 64,
-  [PrimitiveType.ANY]: 0,
-};
-
 export function explicitlyCastable(from?: Type, to?: Type): boolean {
   if (!from || !to) return false;
 
@@ -83,6 +76,8 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
   if (to instanceof BytesType) {
     // Can't cast bool to bytes
     if (from === PrimitiveType.BOOL) return false;
+    // Can cast int to any size bytes
+    if (from === PrimitiveType.INT) return true;
 
     // Can freely cast to unbounded bytes
     if (!to.bound) return true;
@@ -90,13 +85,12 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
     if (from instanceof BytesType) {
       // Can freely cast from unbounded bytes
       if (!from.bound) return true;
-      // Can only cast bounded bytes to bounded bytes if `from` fits in `to`
-      return from.bound <= to.bound;
+      // Can only cast bounded bytes to bounded bytes if bounds are equal
+      return from.bound === to.bound;
     }
 
-    // Can only cast primitive type to bounded bytes if `from` fits in `to`
-    const fromSize = PrimitiveTypeMinSize[from];
-    return fromSize <= to.bound;
+    // Cannot cast other primitive types directly to bounded bytes types
+    return false;
   }
 
   if (from instanceof BytesType) {
@@ -105,28 +99,15 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
     // Can't cast bytes to bool or string
     if (to === PrimitiveType.BOOL) return false;
     if (to === PrimitiveType.STRING) return false;
-    // Can cast unbounded or properly sized bytes to pubkey, sig, datasig
-    if (to === PrimitiveType.PUBKEY) return !from.bound || from.bound <= 65;
-    if (to === PrimitiveType.SIG) return !from.bound || from.bound <= 65;
-    if (to === PrimitiveType.DATASIG) return !from.bound || from.bound <= 64;
+    // Can cast any bytes to pubkey, sig, datasig
+    if (to === PrimitiveType.PUBKEY) return true;
+    if (to === PrimitiveType.SIG) return true;
+    if (to === PrimitiveType.DATASIG) return true;
     return true;
   }
 
   return ExplicitlyCastableTo[from].includes(to);
 }
-
-// export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
-//   if (!actual || !expected) return false;
-//   if (actual instanceof TupleType || expected instanceof TupleType) return false;
-
-//   if (actual instanceof ArrayType && expected instanceof ArrayType) {
-//     return implicitlyCastable(actual.elementType, expected.elementType);
-//   }
-
-//   if (actual instanceof ArrayType || expected instanceof ArrayType) return false;
-
-//   return ImplicitlyCastableTo[actual].includes(expected);
-// }
 
 export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (!actual || !expected) return false;
@@ -157,13 +138,12 @@ export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
     if (actual instanceof BytesType) {
       // Cannot implicitly cast from unbounded bytes
       if (!actual.bound) return false;
-      // Can only cast bounded bytes to bounded bytes if `actual` fits in `expxected`
-      return actual.bound <= expected.bound;
+      // Can only cast bounded bytes to bounded bytes if bounds are equal
+      return actual.bound === expected.bound;
     }
 
-    // Can only cast primitive type to bounded bytes if `from` fits in `to`
-    const actualSize = PrimitiveTypeMinSize[actual];
-    return actualSize <= expected.bound;
+    // Cannot cast other primitive types directly to bounded bytes types
+    return false;
   }
 
   // Other primitive types can only be implicitly cast to themselves
@@ -196,17 +176,9 @@ export function implicitlyCastableSignature(
   return expected.every((t, i) => implicitlyCastable(actual[i], t));
 }
 
-export function getTypeFromCtx(ctx: TypeNameContext): Type {
-  if (ctx. text .startsWith('bytes')) {
-    const bound = Number.parseInt(ctx.text.substring(5), 10) || undefined;
-    return new BytesType(bound);
-  }
-  if (ctx.text) return getPrimitiveType(ctx.text);
-  throw new Error(); // Shouldn't happen
-}
-
-export function getPrimitiveType(name: string): PrimitiveType {
-  return PrimitiveType[name.toUpperCase() as keyof typeof PrimitiveType];
+export function parseType(str: string): Type {
+  if (str.startsWith('bytes')) return BytesType.fromString(str);
+  return PrimitiveType[str.toUpperCase() as keyof typeof PrimitiveType];
 }
 
 export function isPrimitive(type: Type): type is PrimitiveType {

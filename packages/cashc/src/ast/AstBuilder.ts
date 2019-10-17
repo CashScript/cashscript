@@ -62,10 +62,10 @@ import {
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
 import { NumberUnit, TimeOp } from './Globals';
-import { getTypeFromCtx } from './Type';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
 import { VersionError } from '../Errors';
+import { parseType } from './Type';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>
@@ -131,7 +131,7 @@ export default class AstBuilder
   }
 
   visitParameter(ctx: ParameterContext): ParameterNode {
-    const type = getTypeFromCtx(ctx.typeName());
+    const type = parseType(ctx.typeName().text);
     const name = ctx.Identifier().text;
     const parameter = new ParameterNode(type, name);
     parameter.location = Location.fromCtx(ctx);
@@ -139,7 +139,7 @@ export default class AstBuilder
   }
 
   visitVariableDefinition(ctx: VariableDefinitionContext): VariableDefinitionNode {
-    const type = getTypeFromCtx(ctx.typeName());
+    const type = parseType(ctx.typeName().text);
     const name = ctx.Identifier().text;
     const expression = this.visit(ctx.expression());
     const variableDefinition = new VariableDefinitionNode(type, name, expression);
@@ -193,7 +193,7 @@ export default class AstBuilder
   }
 
   visitCast(ctx: CastContext): CastNode {
-    const type = getTypeFromCtx(ctx.typeName());
+    const type = parseType(ctx.typeName().text);
     const expression = this.visit(ctx.expression());
     const cast = new CastNode(type, expression);
     cast.location = Location.fromCtx(ctx);

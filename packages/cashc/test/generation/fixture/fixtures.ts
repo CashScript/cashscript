@@ -264,4 +264,34 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'bounded_bytes.cash',
+    artifact: {
+      contractName: 'BoundedBytes',
+      constructorInputs: [],
+      abi: [
+        {
+          name: 'spend',
+          inputs: [
+            {
+              name: 'b',
+              type: 'bytes4',
+            },
+            {
+              name: 'i',
+              type: 'int',
+            },
+          ],
+        },
+      ],
+      bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
+      source: 'contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == bytes4(i));\n    }\n}\n',
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];
