@@ -44,7 +44,7 @@ export default class TargetCodeOptimisation {
     asm = asm.replace(/OP_CHECKMULTISIG OP_VERIFY/g, 'OP_CHECKMULTISIGVERIFY');
 
     // Remove any double spaces as a result of opcode removal
-    asm = asm.replace(/\s+/g, ' ');
+    asm = asm.replace(/\s+/g, ' ').trim();
 
     return Data.asmToScript(asm);
   }
