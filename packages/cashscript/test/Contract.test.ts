@@ -93,6 +93,12 @@ describe('Contract', () => {
       assert.throws(() => {
         P2PKH.new(Buffer.alloc(20, 0), Buffer.alloc(20, 0));
       });
+      assert.throws(() => {
+        P2PKH.new(Buffer.alloc(19, 0));
+      });
+      assert.throws(() => {
+        P2PKH.new(Buffer.alloc(21, 0));
+      });
     });
 
     it('should create new P2PKH instance', () => {

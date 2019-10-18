@@ -8,3 +8,4 @@ export {
   AbiFunction,
   AbiInput,
 } from 'cashc';
+export * from './interfaces';

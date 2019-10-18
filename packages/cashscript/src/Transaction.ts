@@ -2,7 +2,7 @@ import { BITBOX, TransactionBuilder } from 'bitbox-sdk';
 import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import * as delay from 'delay';
 import { Script, AbiFunction } from 'cashc';
-import { Parameter, Sig } from './Parameter';
+import { Sig } from './Parameter';
 import { bitbox, ScriptUtil, BitcoinCashUtil } from './BITBOX';
 import {
   TxOptions,
@@ -32,7 +32,7 @@ export class Transaction {
     private network: string,
     private redeemScript: Script,
     private abiFunction: AbiFunction,
-    private parameters: Parameter[],
+    private parameters: (Buffer | Sig)[],
     private selector?: number,
   ) {
     this.bitbox = bitbox[network];
@@ -121,7 +121,7 @@ export class Transaction {
     // Convert all Sig objects to valid tx signatures for current tx
     const tx = this.builder.transaction.buildIncomplete();
     inputs.forEach((utxo: Utxo, vin: number) => {
-      const cleanedPs = this.parameters.map((p) => {
+      const completePs = this.parameters.map((p) => {
         if (!(p instanceof Sig)) return p;
 
         // Bitcoin cash replay protection
@@ -134,9 +134,7 @@ export class Transaction {
           .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
       });
 
-      const inputScript = createInputScript(
-        this.redeemScript, this.abiFunction, cleanedPs, this.selector,
-      );
+      const inputScript = createInputScript(this.redeemScript, completePs, this.selector);
       inputScripts.push({ vout: vin, script: inputScript });
     });
 
@@ -156,7 +154,6 @@ export class Transaction {
     // for correct size calculation of inputs
     const placeholderScript = createInputScript(
       this.redeemScript,
-      this.abiFunction,
       this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
       this.selector,
     );

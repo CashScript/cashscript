@@ -39,7 +39,7 @@
   "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.2.0-beta"
+    "version": "0.2.1-beta"
   },
   "updatedAt": "2019-09-27T04:11:08.188Z"
 }

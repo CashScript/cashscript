@@ -9,7 +9,7 @@ import {
 } from './BITBOX';
 import { Transaction } from './Transaction';
 import { ContractFunction } from './Contract';
-import { Parameter, typecheckParameter } from './Parameter';
+import { Parameter, encodeParameter } from './Parameter';
 
 export class Instance {
   name: string;
@@ -51,8 +51,8 @@ export class Instance {
       if (f.inputs.length !== ps.length) {
         throw new Error(`Incorrect number of arguments passed to function ${f.name}`);
       }
-      ps.forEach((p, i) => typecheckParameter(p, f.inputs[i].type));
-      return new Transaction(this.address, this.network, this.redeemScript, f, ps, selector);
+      const encodedPs = ps.map((p, i) => encodeParameter(p, f.inputs[i].type));
+      return new Transaction(this.address, this.network, this.redeemScript, f, encodedPs, selector);
     };
   }
 }

@@ -488,4 +488,51 @@ describe('Transaction', () => {
       });
     });
   });
+
+  describe('BoundedBytes', () => {
+    let bbInstance: Instance;
+    before(() => {
+      const BoundedBytes = Contract.fromArtifact(path.join(__dirname, 'fixture', 'bounded_bytes.json'), 'testnet');
+      bbInstance = BoundedBytes.new();
+    });
+
+    describe('send (to one)', () => {
+      it('should fail when using incorrect function parameters', async () => {
+        // given
+        const to = bbInstance.address;
+        const amount = 10000;
+
+        // then
+        await assert.isRejected(
+          // when
+          bbInstance.functions
+            .spend(Buffer.from('12345678', 'hex'), 1000)
+            .send(to, amount),
+        );
+
+        // then
+        await assert.isRejected(
+          // when
+          bbInstance.functions
+            .spend(Buffer.from('000003e8', 'hex'), 1000)
+            .send(to, amount),
+        );
+      });
+
+      it('should succeed when using correct function parameters', async () => {
+        // given
+        const to = bbInstance.address;
+        const amount = 10000;
+
+        // when
+        const tx = await bbInstance.functions
+          .spend(Buffer.from('e8030000', 'hex'), 1000)
+          .send(to, amount);
+
+        // then
+        const txOutputs = getTxOutputs(tx);
+        assert.deepInclude(txOutputs, { to, amount });
+      });
+    });
+  });
 });

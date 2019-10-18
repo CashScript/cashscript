@@ -1,12 +1,10 @@
 import {
-  AbiFunction,
   Script,
   Data,
   Op,
 } from 'cashc';
 import { Utxo, OpReturn } from './interfaces';
 import { ScriptUtil, CryptoUtil } from './BITBOX';
-import { Parameter, encodeParameter } from './Parameter';
 
 export function inputSize(script: Buffer): number {
   const scriptSize = script.byteLength;
@@ -16,14 +14,11 @@ export function inputSize(script: Buffer): number {
 
 export function createInputScript(
   redeemScript: Script,
-  abiFunction: AbiFunction,
-  parameters: Parameter[],
+  encodedParameters: Buffer[],
   selector?: number,
 ): Buffer {
   // Create unlock script / redeemScriptSig
-  const unlockScript = parameters
-    .map((p, i) => encodeParameter(p, abiFunction.inputs[i].type))
-    .reverse();
+  const unlockScript = encodedParameters.reverse();
   if (selector !== undefined) unlockScript.push(Data.encodeInt(selector));
 
   // Create total input script / scriptSig

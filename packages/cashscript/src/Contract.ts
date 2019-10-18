@@ -6,7 +6,7 @@ import {
 } from 'cashc';
 import { Transaction } from './Transaction';
 import { Instance } from './Instance';
-import { Parameter, encodeParameter } from './Parameter';
+import { Parameter, encodeParameter, Sig } from './Parameter';
 
 export class Contract {
   name: string;
@@ -47,7 +47,15 @@ export class Contract {
         .map((p, i) => encodeParameter(p, artifact.constructorInputs[i].type))
         .reverse();
 
-      const redeemScript = [...encodedParameters, ...Data.asmToScript(this.artifact.bytecode)];
+      // Check there's no sigs in the constructor
+      if (encodedParameters.some(p => p instanceof Sig)) {
+        throw new Error('Cannot use signatures in constructor');
+      }
+
+      const redeemScript = [
+        ...encodedParameters as Buffer[],
+        ...Data.asmToScript(this.artifact.bytecode),
+      ];
       const instance = new Instance(this.artifact, redeemScript, this.network);
 
       const deployedContracts = this.artifact.networks[this.network] || {};

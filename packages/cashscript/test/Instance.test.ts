@@ -31,9 +31,12 @@ describe('Instance', () => {
 
   describe('Contract functions', () => {
     let instance: Instance;
+    let bbInstance: Instance;
     beforeEach(() => {
       const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
       instance = P2PKH.deployed();
+      const BoundedBytes = Contract.fromArtifact(path.join(__dirname, 'fixture', 'bounded_bytes.json'), 'testnet');
+      bbInstance = BoundedBytes.new();
     });
 
     it('can\'t call spend with incorrect parameter signature', () => {
@@ -46,20 +49,35 @@ describe('Instance', () => {
       assert.throws(() => {
         instance.functions.spend(alicePk, new Sig(alice, 0x01), 0);
       });
+      assert.throws(() => {
+        bbInstance.functions.spend(Buffer.from('e803', 'hex'), 1000);
+      });
+      assert.throws(() => {
+        bbInstance.functions.spend(Buffer.from('e803000000', 'hex'), 1000);
+      });
     });
 
-    it('can call spend with incorrect tx signature or pk', () => {
+    it('can call spend with incorrect parameters', () => {
       assert.doesNotThrow(() => {
         instance.functions.spend(alicePk, new Sig(bob, 0x01));
       });
       assert.doesNotThrow(() => {
         instance.functions.spend(bobPk, new Sig(alice, 0x01));
       });
+      assert.doesNotThrow(() => {
+        instance.functions.spend(bobPk, Buffer.alloc(65, 0));
+      });
+      assert.doesNotThrow(() => {
+        bbInstance.functions.spend(Buffer.from('e8031234', 'hex'), 1000);
+      });
     });
 
-    it('can call spend with correct tx signature and pk', () => {
+    it('can call spend with correct parameters', () => {
       assert.doesNotThrow(() => {
         instance.functions.spend(alicePk, new Sig(alice, 0x01));
+      });
+      assert.doesNotThrow(() => {
+        bbInstance.functions.spend(Buffer.from('e8030000', 'hex'), 1000);
       });
     });
   });
