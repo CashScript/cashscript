@@ -86,14 +86,7 @@ export async function run(): Promise<void> {
     const addy: string = 'bchtest:qpg8pv6zj0l8hr56sh6tn65ufmcfrnswxg36t63jpr';
 
     const tx: TxnDetailsResult = await instance.functions
-      .spend(
-        new Sig(bobKP, 0x01),
-        bobPK,
-        oracleMessage,
-        oracleSignature,
-        alicePK,
-        actionByte,
-      )
+      .spend(new Sig(bobKP), bobPK, oracleMessage, oracleSignature, alicePK, actionByte)
       .send(addy, 1000);
     console.log(tx);
   } catch (error) {

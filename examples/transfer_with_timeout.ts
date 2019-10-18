@@ -39,13 +39,13 @@ export async function run(): Promise<void> {
 
   // Call the transfer function with bob's signature
   // Allows bob to claim the money that alice sent him
-  const transferTx: TxnDetailsResult = await instance.functions.transfer(new Sig(bob, 0x01))
+  const transferTx: TxnDetailsResult = await instance.functions.transfer(new Sig(bob))
     .send(instance.address, 10000);
   console.log('transfer transaction details:', transferTx);
 
   // Call the timeout function with alice's signature
   // Allows alice to reclaim the money she sent as the timeout is in the past
-  const timeoutTx: TxnDetailsResult = await instance.functions.timeout(new Sig(alice, 0x01))
+  const timeoutTx: TxnDetailsResult = await instance.functions.timeout(new Sig(alice))
     .send(instance.address, 10000);
   console.log('timeout transaction details:', timeoutTx);
 }

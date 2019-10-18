@@ -39,7 +39,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           p2pkhInstance.functions
-            .spend(alicePk, new Sig(bob, 0x01))
+            .spend(alicePk, new Sig(bob))
             .send(to, amount),
         );
       });
@@ -51,7 +51,7 @@ describe('Transaction', () => {
 
         // when
         const tx = await p2pkhInstance.functions
-          .spend(alicePk, new Sig(alice, 0x01))
+          .spend(alicePk, new Sig(alice))
           .send(to, amount);
 
         // then
@@ -72,7 +72,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           p2pkhInstance.functions
-            .spend(alicePk, new Sig(bob, 0x01))
+            .spend(alicePk, new Sig(bob))
             .send(outputs),
         );
       });
@@ -86,7 +86,7 @@ describe('Transaction', () => {
 
         // when
         const tx = await p2pkhInstance.functions
-          .spend(alicePk, new Sig(alice, 0x01))
+          .spend(alicePk, new Sig(alice))
           .send(outputs);
 
         // then
@@ -104,7 +104,7 @@ describe('Transaction', () => {
 
         // when
         const tx = await p2pkhInstance.functions
-          .spend(alicePk, new Sig(alice, 0x01))
+          .spend(alicePk, new Sig(alice))
           .send(outputs);
 
         // then
@@ -119,27 +119,27 @@ describe('Transaction', () => {
     describe('meep (to one)', () => {
       it('should succeed when using incorrect function parameters', async () => {
         await p2pkhInstance.functions
-          .spend(alicePk, new Sig(bob, 0x01))
+          .spend(alicePk, new Sig(bob))
           .meep(p2pkhInstance.address, 10000);
       });
 
       it('should succeed when using correct function parameters', async () => {
         await p2pkhInstance.functions
-          .spend(alicePk, new Sig(alice, 0x01))
+          .spend(alicePk, new Sig(alice))
           .meep(p2pkhInstance.address, 10000);
       });
     });
 
     describe('meep (to many)', () => {
       it('should succeed when using incorrect function parameters', async () => {
-        await p2pkhInstance.functions.spend(alicePk, new Sig(bob, 0x01)).meep([
+        await p2pkhInstance.functions.spend(alicePk, new Sig(bob)).meep([
           { to: p2pkhInstance.address, amount: 15000 },
           { to: p2pkhInstance.address, amount: 15000 },
         ]);
       });
 
       it('should succeed when using correct function parameters', async () => {
-        await p2pkhInstance.functions.spend(alicePk, new Sig(alice, 0x01)).meep([
+        await p2pkhInstance.functions.spend(alicePk, new Sig(alice)).meep([
           { to: p2pkhInstance.address, amount: 15000 },
           { to: p2pkhInstance.address, amount: 15000 },
         ]);
@@ -166,7 +166,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           twtInstancePast.functions
-            .transfer(new Sig(alice, 0x01))
+            .transfer(new Sig(alice))
             .send(to, amount),
         );
 
@@ -174,7 +174,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           twtInstancePast.functions
-            .timeout(new Sig(bob, 0x01))
+            .timeout(new Sig(bob))
             .send(to, amount),
         );
       });
@@ -188,7 +188,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           twtInstanceFuture.functions
-            .timeout(new Sig(alice, 0x01))
+            .timeout(new Sig(alice))
             .send(to, amount),
         );
       });
@@ -201,15 +201,15 @@ describe('Transaction', () => {
 
         // when
         const tx1 = await twtInstancePast.functions
-          .transfer(new Sig(bob, 0x01))
+          .transfer(new Sig(bob))
           .send(toPast, amount);
 
         const tx2 = await twtInstanceFuture.functions
-          .transfer(new Sig(bob, 0x01))
+          .transfer(new Sig(bob))
           .send(toFuture, amount);
 
         const tx3 = await twtInstancePast.functions
-          .timeout(new Sig(alice, 0x01))
+          .timeout(new Sig(alice))
           .send(toPast, amount);
 
         // then
@@ -235,7 +235,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           twtInstancePast.functions
-            .transfer(new Sig(alice, 0x01))
+            .transfer(new Sig(alice))
             .send(outputs),
         );
 
@@ -243,7 +243,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           twtInstancePast.functions
-            .timeout(new Sig(bob, 0x01))
+            .timeout(new Sig(bob))
             .send(outputs),
         );
       });
@@ -259,7 +259,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           twtInstanceFuture.functions
-            .timeout(new Sig(alice, 0x01))
+            .timeout(new Sig(alice))
             .send(outputs),
         );
       });
@@ -278,15 +278,15 @@ describe('Transaction', () => {
 
         // when
         const tx1 = await twtInstancePast.functions
-          .transfer(new Sig(bob, 0x01))
+          .transfer(new Sig(bob))
           .send(outputsPast);
 
         const tx2 = await twtInstanceFuture.functions
-          .transfer(new Sig(bob, 0x01))
+          .transfer(new Sig(bob))
           .send(outputsFuture);
 
         const tx3 = await twtInstancePast.functions
-          .timeout(new Sig(alice, 0x01))
+          .timeout(new Sig(alice))
           .send(outputsPast);
 
         // then
@@ -303,67 +303,67 @@ describe('Transaction', () => {
     describe('meep (to one)', () => {
       it('should succeed when using incorrect function parameters', async () => {
         await twtInstancePast.functions
-          .transfer(new Sig(alice, 0x01))
+          .transfer(new Sig(alice))
           .meep(twtInstancePast.address, 10000);
 
         await twtInstancePast.functions
-          .timeout(new Sig(bob, 0x01))
+          .timeout(new Sig(bob))
           .meep(twtInstancePast.address, 10000);
       });
 
       it('should succeed when called before timeout', async () => {
         await twtInstanceFuture.functions
-          .timeout(new Sig(alice, 0x01))
+          .timeout(new Sig(alice))
           .meep(twtInstancePast.address, 10000);
       });
 
       it('should succeed when using correct function parameters', async () => {
         await twtInstancePast.functions
-          .transfer(new Sig(bob, 0x01))
+          .transfer(new Sig(bob))
           .meep(twtInstancePast.address, 10000);
 
         await twtInstanceFuture.functions
-          .transfer(new Sig(bob, 0x01))
+          .transfer(new Sig(bob))
           .meep(twtInstanceFuture.address, 10000);
 
         await twtInstancePast.functions
-          .timeout(new Sig(alice, 0x01))
+          .timeout(new Sig(alice))
           .meep(twtInstancePast.address, 10000);
       });
     });
 
     describe('meep (to many)', () => {
       it('should succeed when using incorrect function parameters', async () => {
-        await twtInstancePast.functions.transfer(new Sig(alice, 0x01)).meep([
+        await twtInstancePast.functions.transfer(new Sig(alice)).meep([
           { to: twtInstancePast.address, amount: 10000 },
           { to: twtInstancePast.address, amount: 10000 },
         ]);
 
-        await twtInstancePast.functions.timeout(new Sig(bob, 0x01)).meep([
+        await twtInstancePast.functions.timeout(new Sig(bob)).meep([
           { to: twtInstancePast.address, amount: 10000 },
           { to: twtInstancePast.address, amount: 10000 },
         ]);
       });
 
       it('should succeed when called before timeout', async () => {
-        await twtInstanceFuture.functions.timeout(new Sig(alice, 0x01)).meep([
+        await twtInstanceFuture.functions.timeout(new Sig(alice)).meep([
           { to: twtInstanceFuture.address, amount: 10000 },
           { to: twtInstanceFuture.address, amount: 10000 },
         ]);
       });
 
       it('should succeed when using correct function parameters', async () => {
-        await twtInstancePast.functions.transfer(new Sig(bob, 0x01)).meep([
+        await twtInstancePast.functions.transfer(new Sig(bob)).meep([
           { to: twtInstancePast.address, amount: 10000 },
           { to: twtInstancePast.address, amount: 10000 },
         ]);
 
-        await twtInstanceFuture.functions.transfer(new Sig(bob, 0x01)).meep([
+        await twtInstanceFuture.functions.transfer(new Sig(bob)).meep([
           { to: twtInstanceFuture.address, amount: 10000 },
           { to: twtInstanceFuture.address, amount: 10000 },
         ]);
 
-        await twtInstancePast.functions.timeout(new Sig(alice, 0x01)).meep([
+        await twtInstancePast.functions.timeout(new Sig(alice)).meep([
           { to: twtInstancePast.address, amount: 10000 },
           { to: twtInstancePast.address, amount: 10000 },
         ]);
@@ -391,7 +391,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           hodlVault.functions
-            .spend(new Sig(alice, 0x01), wrongSig, message)
+            .spend(new Sig(alice), wrongSig, message)
             .send(to, amount),
         );
       });
@@ -407,7 +407,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           hodlVault.functions
-            .spend(new Sig(alice, 0x01), oracleSig, message)
+            .spend(new Sig(alice), oracleSig, message)
             .send(to, amount),
         );
       });
@@ -421,7 +421,7 @@ describe('Transaction', () => {
 
         // when
         const tx = await hodlVault.functions
-          .spend(new Sig(alice, 0x01), oracleSig, message)
+          .spend(new Sig(alice), oracleSig, message)
           .send(to, amount);
 
         // then
@@ -445,7 +445,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           hodlVault.functions
-            .spend(new Sig(alice, 0x01), wrongSig, message)
+            .spend(new Sig(alice), wrongSig, message)
             .send(outputs),
         );
       });
@@ -463,7 +463,7 @@ describe('Transaction', () => {
         await assert.isRejected(
           // when
           hodlVault.functions
-            .spend(new Sig(alice, 0x01), oracleSig, message)
+            .spend(new Sig(alice), oracleSig, message)
             .send(outputs),
         );
       });
@@ -479,7 +479,7 @@ describe('Transaction', () => {
 
         // when
         const tx = await hodlVault.functions
-          .spend(new Sig(alice, 0x01), oracleSig, message)
+          .spend(new Sig(alice), oracleSig, message)
           .send(outputs);
 
         // then

@@ -33,7 +33,7 @@ export async function run(): Promise<void> {
   // Call the spend function with alice's signature + pk
   // And use it to post to memo
   try {
-    const tx2: TxnDetailsResult = await instance.functions.spend(alicePk, new Sig(alice, 0x01))
+    const tx2: TxnDetailsResult = await instance.functions.spend(alicePk, new Sig(alice))
       .send([
         { opReturn: ['0x6d02', 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.'] },
       ]);

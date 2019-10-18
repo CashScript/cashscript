@@ -6,11 +6,15 @@ import {
   parseType,
 } from 'cashc';
 import { TypeError } from './Errors';
+import { HashType } from './interfaces';
 
 export type Parameter = number | boolean | string | Buffer | Sig;
 
 export class Sig {
-  constructor(public keypair: ECPair, public hashtype: number) {}
+  constructor(
+    public keypair: ECPair,
+    public hashtype: HashType = HashType.SIGHASH_ALL,
+  ) {}
 }
 
 export function encodeParameter(parameter: Parameter, typeStr: string): Buffer | Sig {

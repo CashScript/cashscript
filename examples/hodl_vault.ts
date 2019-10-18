@@ -41,7 +41,7 @@ export async function run(): Promise<void> {
 
   // Spend from the vault
   const tx: TxnDetailsResult = await instance.functions
-    .spend(new Sig(owner, 0x01), oracleSignature, oracleMessage)
+    .spend(new Sig(owner), oracleSignature, oracleMessage)
     .send(instance.address, 1000);
 
   console.log(tx);

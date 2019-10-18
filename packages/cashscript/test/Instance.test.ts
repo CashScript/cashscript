@@ -47,7 +47,7 @@ describe('Instance', () => {
         instance.functions.spend(0, 1);
       });
       assert.throws(() => {
-        instance.functions.spend(alicePk, new Sig(alice, 0x01), 0);
+        instance.functions.spend(alicePk, new Sig(alice), 0);
       });
       assert.throws(() => {
         bbInstance.functions.spend(Buffer.from('e803', 'hex'), 1000);
@@ -59,10 +59,10 @@ describe('Instance', () => {
 
     it('can call spend with incorrect parameters', () => {
       assert.doesNotThrow(() => {
-        instance.functions.spend(alicePk, new Sig(bob, 0x01));
+        instance.functions.spend(alicePk, new Sig(bob));
       });
       assert.doesNotThrow(() => {
-        instance.functions.spend(bobPk, new Sig(alice, 0x01));
+        instance.functions.spend(bobPk, new Sig(alice));
       });
       assert.doesNotThrow(() => {
         instance.functions.spend(bobPk, Buffer.alloc(65, 0));
@@ -74,7 +74,7 @@ describe('Instance', () => {
 
     it('can call spend with correct parameters', () => {
       assert.doesNotThrow(() => {
-        instance.functions.spend(alicePk, new Sig(alice, 0x01));
+        instance.functions.spend(alicePk, new Sig(alice));
       });
       assert.doesNotThrow(() => {
         bbInstance.functions.spend(Buffer.from('e8030000', 'hex'), 1000);

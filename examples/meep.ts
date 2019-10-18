@@ -26,6 +26,6 @@ export async function run(): Promise<void> {
 
   // Call .meep instead of .send, which prints the meep command that can be
   // executed to debug the transaction
-  await instance.functions.spend(alicePk, new Sig(alice, 0x01))
+  await instance.functions.spend(alicePk, new Sig(alice))
     .meep(instance.address, 10000);
 }
