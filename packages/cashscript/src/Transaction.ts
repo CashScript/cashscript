@@ -22,6 +22,7 @@ import {
   createOpReturnScript,
 } from './transaction-util';
 import { DUST_LIMIT } from './constants';
+import { FailedTransactionError } from './Errors';
 
 export class Transaction {
   private bitbox: BITBOX;
@@ -60,8 +61,16 @@ export class Transaction {
     outputs: Output[],
     options?: TxOptions,
   ): Promise<TxnDetailsResult> {
-    const { tx } = await this.createTransaction(outputs, options);
-    const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
+    const { tx, inputs } = await this.createTransaction(outputs, options);
+    try {
+      const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
+      return this.getTxDetails(txid);
+    } catch (e) {
+      throw new FailedTransactionError(e.error, meep(tx, inputs, this.redeemScript));
+    }
+  }
+
+  private async getTxDetails(txid: string): Promise<TxnDetailsResult> {
     while (true) {
       await delay(500);
       try {
@@ -89,7 +98,7 @@ export class Transaction {
 
   private async meepToMany(outputs: Output[], options?: TxOptions): Promise<void> {
     const { tx, inputs } = await this.createTransaction(outputs, options);
-    await meep(tx, inputs, this.redeemScript);
+    console.log(meep(tx, inputs, this.redeemScript));
   }
 
   private async createTransaction(

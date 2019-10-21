@@ -14,6 +14,7 @@ import {
 import { getTxOutputs } from './test-util';
 import { isOpReturn } from '../src/interfaces';
 import { createOpReturnScript } from '../src/transaction-util';
+import { FailedTransactionError } from '../src/Errors';
 
 chai.use(chaiAsPromised);
 const { assert } = chai;
@@ -41,6 +42,8 @@ describe('Transaction', () => {
           p2pkhInstance.functions
             .spend(alicePk, new Sig(bob))
             .send(to, amount),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -74,6 +77,8 @@ describe('Transaction', () => {
           p2pkhInstance.functions
             .spend(alicePk, new Sig(bob))
             .send(outputs),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -168,6 +173,8 @@ describe('Transaction', () => {
           twtInstancePast.functions
             .transfer(new Sig(alice))
             .send(to, amount),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
 
         // then
@@ -176,6 +183,8 @@ describe('Transaction', () => {
           twtInstancePast.functions
             .timeout(new Sig(bob))
             .send(to, amount),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -190,6 +199,8 @@ describe('Transaction', () => {
           twtInstanceFuture.functions
             .timeout(new Sig(alice))
             .send(to, amount),
+          FailedTransactionError,
+          '64: non-mandatory-script-verify-flag (Locktime requirement not satisfied)',
         );
       });
 
@@ -237,6 +248,8 @@ describe('Transaction', () => {
           twtInstancePast.functions
             .transfer(new Sig(alice))
             .send(outputs),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
 
         // then
@@ -245,6 +258,8 @@ describe('Transaction', () => {
           twtInstancePast.functions
             .timeout(new Sig(bob))
             .send(outputs),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -261,6 +276,8 @@ describe('Transaction', () => {
           twtInstanceFuture.functions
             .timeout(new Sig(alice))
             .send(outputs),
+          FailedTransactionError,
+          '64: non-mandatory-script-verify-flag (Locktime requirement not satisfied)',
         );
       });
 
@@ -393,6 +410,8 @@ describe('Transaction', () => {
           hodlVault.functions
             .spend(new Sig(alice), wrongSig, message)
             .send(to, amount),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -409,6 +428,8 @@ describe('Transaction', () => {
           hodlVault.functions
             .spend(new Sig(alice), oracleSig, message)
             .send(to, amount),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -447,6 +468,8 @@ describe('Transaction', () => {
           hodlVault.functions
             .spend(new Sig(alice), wrongSig, message)
             .send(outputs),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -465,6 +488,8 @@ describe('Transaction', () => {
           hodlVault.functions
             .spend(new Sig(alice), oracleSig, message)
             .send(outputs),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -508,6 +533,8 @@ describe('Transaction', () => {
           bbInstance.functions
             .spend(Buffer.from('12345678', 'hex'), 1000)
             .send(to, amount),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
         );
 
         // then
@@ -516,6 +543,8 @@ describe('Transaction', () => {
           bbInstance.functions
             .spend(Buffer.from('000003e8', 'hex'), 1000)
             .send(to, amount),
+          FailedTransactionError,
+          '16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
         );
       });
 

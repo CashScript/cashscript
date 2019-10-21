@@ -9,3 +9,4 @@ export {
   AbiInput,
 } from 'cashc';
 export * from './interfaces';
+export * from './Errors';

@@ -44,11 +44,11 @@ function toBuffer(output: string): Buffer {
   return Buffer.from(data, format);
 }
 
-export function meep(tx: any, utxos: Utxo[], script: Script): void {
+export function meep(tx: any, utxos: Utxo[], script: Script): string {
   const scriptPubkey: string = ScriptUtil.encodeP2SHOutput(
     CryptoUtil.hash160(
       ScriptUtil.encode(script),
     ),
   ).toString('hex');
-  console.log(`meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`);
+  return `meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
