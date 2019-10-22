@@ -207,7 +207,7 @@ describe('Transaction', () => {
       it('should succeed when using correct function parameters', async () => {
         // given
         const toFuture = twtInstanceFuture.address;
-        const toPast = twtInstanceFuture.address;
+        const toPast = twtInstancePast.address;
         const amount = 10000;
 
         // when
