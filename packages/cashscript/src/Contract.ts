@@ -4,6 +4,7 @@ import {
   CashCompiler,
   Data,
 } from 'cashc';
+import * as fs from 'fs';
 import { Transaction } from './Transaction';
 import { Instance } from './Instance';
 import { Parameter, encodeParameter, Sig } from './Parameter';
@@ -13,18 +14,35 @@ export class Contract {
   new: (...params: Parameter[]) => Instance;
   deployed: (at?: string) => Instance;
 
-  static fromCashFile(fn: string, network?: string): Contract {
-    const artifact = CashCompiler.compileFile(fn);
+  static compile(fnOrString: string, network?: string): Contract {
+    const artifact = fs.existsSync(fnOrString)
+      ? CashCompiler.compileFile(fnOrString)
+      : CashCompiler.compileString(fnOrString);
+
     return new Contract(artifact, network);
   }
 
-  static fromArtifact(fn: string, network?: string): Contract {
-    const artifact = Artifacts.require(fn);
+  static import(fnOrArtifact: string | Artifact, network?: string): Contract {
+    const artifact = typeof fnOrArtifact === 'string'
+      ? Artifacts.require(fnOrArtifact)
+      : fnOrArtifact;
+
     return new Contract(artifact, network);
   }
 
-  export(fn: string): void {
-    Artifacts.export(this.artifact, fn);
+  // @deprecated
+  static fromCashFile(fnOrString: string, network?: string): Contract {
+    return this.compile(fnOrString, network);
+  }
+
+  // @deprecated
+  static fromArtifact(fnOrArtifact: string | Artifact, network?: string): Contract {
+    return this.import(fnOrArtifact, network);
+  }
+
+  export(fn?: string): Artifact {
+    if (typeof fn !== 'undefined') Artifacts.export(this.artifact, fn);
+    return this.artifact;
   }
 
   constructor(

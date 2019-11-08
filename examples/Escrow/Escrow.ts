@@ -59,10 +59,7 @@ export async function run(): Promise<void> {
     const oracle: Oracle = new Oracle(bitbox.HDNode.toKeyPair(alice));
 
     // Compile and instantiate Escrow contract
-    const Escrow: Contract = Contract.fromCashFile(
-      path.join(__dirname, 'Escrow.cash'),
-      network,
-    );
+    const Escrow: Contract = Contract.compile(path.join(__dirname, 'Escrow.cash'), network);
     const escrowKey: Buffer = Buffer.from('01', 'hex');
     const actionByte: Buffer = Buffer.from('01', 'hex');
     const instance: Instance = Escrow.new(

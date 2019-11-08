@@ -26,7 +26,7 @@ describe('Transaction', () => {
   describe('P2PKH', () => {
     let p2pkhInstance: Instance;
     before(() => {
-      const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
       p2pkhInstance = P2PKH.new(alicePkh);
     });
 
@@ -156,7 +156,7 @@ describe('Transaction', () => {
     let twtInstancePast: Instance;
     let twtInstanceFuture: Instance;
     before(() => {
-      const TWT = Contract.fromArtifact(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), 'testnet');
+      const TWT = Contract.import(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), 'testnet');
       twtInstancePast = TWT.new(alicePk, bobPk, 1000000);
       twtInstanceFuture = TWT.new(alicePk, bobPk, 2000000);
     });
@@ -391,7 +391,7 @@ describe('Transaction', () => {
   describe('HodlVault', () => {
     let hodlVault: Instance;
     before(() => {
-      const HodlVault = Contract.fromArtifact(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
+      const HodlVault = Contract.import(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
       hodlVault = HodlVault.new(alicePk, oraclePk, 597000, 30000);
     });
 
@@ -517,7 +517,7 @@ describe('Transaction', () => {
   describe('BoundedBytes', () => {
     let bbInstance: Instance;
     before(() => {
-      const BoundedBytes = Contract.fromArtifact(path.join(__dirname, 'fixture', 'bounded_bytes.json'), 'testnet');
+      const BoundedBytes = Contract.import(path.join(__dirname, 'fixture', 'bounded_bytes.json'), 'testnet');
       bbInstance = BoundedBytes.new();
     });
 

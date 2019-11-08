@@ -39,7 +39,7 @@ Using the CashScript SDK, you can import / compile existing cash contract files,
 ```ts
 ...
   // Compile the P2PKH Cash Contract
-  const P2PKH: Contract = Contract.fromCashFile(path.join(__dirname, 'p2pkh.cash'), 'testnet');
+  const P2PKH: Contract = Contract.compile(path.join(__dirname, 'p2pkh.cash'), 'testnet');
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
   const instance: Instance = P2PKH.new(pkh);

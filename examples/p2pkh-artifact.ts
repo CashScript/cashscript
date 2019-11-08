@@ -20,7 +20,7 @@ export async function run(): Promise<void> {
   const alicePkh: Buffer = bitbox.Crypto.hash160(alicePk);
 
   // Import the P2PKH Cash Contract from Artifact file, including deployed contract details
-  const P2PKH: Contract = Contract.fromArtifact(path.join(__dirname, 'p2pkh.json'), network);
+  const P2PKH: Contract = Contract.import(path.join(__dirname, 'p2pkh.json'), network);
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: alicePkh }
   let instance: Instance = P2PKH.new(alicePkh);

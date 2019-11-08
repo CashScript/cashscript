@@ -22,7 +22,7 @@ export async function run(): Promise<void> {
   );
 
   // Compile and instantiate HODL Vault
-  const HodlVault: Contract = Contract.fromCashFile(path.join(__dirname, 'hodl_vault.cash'), 'testnet');
+  const HodlVault: Contract = Contract.compile(path.join(__dirname, 'hodl_vault.cash'), 'testnet');
   const instance: Instance = HodlVault.new(
     bitbox.ECPair.toPublicKey(owner),
     bitbox.ECPair.toPublicKey(oracle.keypair),

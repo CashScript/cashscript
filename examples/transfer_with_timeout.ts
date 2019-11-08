@@ -23,7 +23,7 @@ export async function run(): Promise<void> {
   const bobPk: Buffer = bitbox.ECPair.toPublicKey(bob);
 
   // Compile the TransferWithTimeout Cash Contract
-  const TransferWithTimeout: Contract = Contract.fromCashFile(
+  const TransferWithTimeout: Contract = Contract.compile(
     path.join(__dirname, 'transfer_with_timeout.cash'), network,
   );
 

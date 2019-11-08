@@ -13,7 +13,7 @@ describe('Instance', () => {
   describe('getBalance', () => {
     // Not very robust, as this depends on the example P2PKH contract having balance
     it('should return balance for existing contract', async () => {
-      const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
       const instance = P2PKH.deployed();
       const otherInstance = P2PKH.new(alicePkh);
 
@@ -22,7 +22,7 @@ describe('Instance', () => {
     });
 
     it('should return zero balance for new contract', async () => {
-      const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
       const instance = P2PKH.new(Buffer.alloc(20, 0));
 
       assert.equal(await instance.getBalance(), 0);
@@ -33,9 +33,9 @@ describe('Instance', () => {
     let instance: Instance;
     let bbInstance: Instance;
     beforeEach(() => {
-      const P2PKH = Contract.fromArtifact(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
       instance = P2PKH.deployed();
-      const BoundedBytes = Contract.fromArtifact(path.join(__dirname, 'fixture', 'bounded_bytes.json'), 'testnet');
+      const BoundedBytes = Contract.import(path.join(__dirname, 'fixture', 'bounded_bytes.json'), 'testnet');
       bbInstance = BoundedBytes.new();
     });
 
