@@ -1,7 +1,7 @@
 {
   "name": "cashscript",
   "description": "⚖️ Easily write and interact with Cash Contracts on Bitcoin Cash",
-  "version": "0.2.1-beta",
+  "version": "0.2.2-beta",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
   "bugs": {
     "url": "https://github.com/Bitcoin-com/cashscript/issues"

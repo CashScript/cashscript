@@ -27,6 +27,7 @@ export function createInputScript(
     ScriptUtil.encode(redeemScript),
   );
 }
+
 export function createOpReturnScript(
   opReturnOutput: OpReturn,
 ): Buffer {
@@ -35,7 +36,7 @@ export function createOpReturnScript(
     ...opReturnOutput.opReturn.map((output: string) => toBuffer(output)),
   ];
 
-  return ScriptUtil.encode(script);
+  return encodeNullDataScript(script);
 }
 
 function toBuffer(output: string): Buffer {
@@ -52,3 +53,48 @@ export function meep(tx: any, utxos: Utxo[], script: Script): string {
   ).toString('hex');
   return `meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
+
+// ////////////////////////////////////////////////////////////////////////////
+// For encoding OP_RETURN data (doesn't require BIP62.3)
+// These functions are a mashup between those found in these libs:
+// - https://github.com/simpleledger/slpjs/blob/master/lib/utils.ts
+// - https://github.com/Bitcoin-com/bitcoincashjs-lib/blob/master/src/script.js
+
+function encodeNullDataScript(chunks: (number | Buffer)[]): Buffer {
+  const bufferSize = chunks.reduce((acc: number, chunk: number | Buffer) => {
+    if (Buffer.isBuffer(chunk)) {
+      const pushdataOpcode = getPushDataOpcode(chunk);
+      return acc + chunk.length + pushdataOpcode.length;
+    }
+    return acc + 1;
+  }, 0);
+
+  const buffer = Buffer.allocUnsafe(bufferSize);
+  let offset = 0;
+
+  chunks.forEach((chunk: number | Buffer) => {
+    if (Buffer.isBuffer(chunk)) {
+      const pushdataOpcode = getPushDataOpcode(chunk);
+      pushdataOpcode.copy(buffer, offset);
+      offset += pushdataOpcode.length;
+
+      chunk.copy(buffer, offset);
+      offset += chunk.length;
+    } else {
+      buffer.writeUInt8(chunk, offset);
+      offset += 1;
+    }
+  });
+
+  return buffer;
+}
+
+function getPushDataOpcode(data: Buffer): Buffer {
+  const { length } = data;
+
+  if (length === 0) return Buffer.from([0x4c, 0x00]);
+  if (length < 76) return Buffer.from([length]);
+  if (length < 256) return Buffer.from([0x4c, length]);
+  throw Error('Pushdata too large');
+}
+// ////////////////////////////////////////////////////////////////////////////
