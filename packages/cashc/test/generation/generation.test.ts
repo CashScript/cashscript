@@ -3,7 +3,8 @@
  * - This file is used to test the IR and target code generation
  */
 
-import { assert } from 'chai';
+import * as chai from 'chai';
+import chaiExclude from 'chai-exclude';
 import * as path from 'path';
 import * as fs from 'fs';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
@@ -14,6 +15,9 @@ import { fixtures } from './fixtures';
 import GenerateTargetTraversal from '../../src/generation/GenerateTargetTraversal';
 import { generateArtifact } from '../../src/artifact/Artifact';
 import TargetCodeOptimisation from '../../src/optimisations/TargetCodeOptimisation';
+
+chai.use(chaiExclude);
+const { assert } = chai;
 
 describe('Code generation & target code optimisation', () => {
   fixtures.forEach((fixture) => {
@@ -28,13 +32,7 @@ describe('Code generation & target code optimisation', () => {
       const optimisedScript = TargetCodeOptimisation.optimise(traversal.output);
       const artifact = generateArtifact(ast, optimisedScript, code);
 
-      // Disregard updatedAt
-      fixture.artifact.updatedAt = artifact.updatedAt;
-      assert.deepEqual(
-        artifact,
-        fixture.artifact,
-      );
-
+      assert.deepEqualExcluding(artifact, fixture.artifact, 'updatedAt');
       assert.deepEqual(traversal.stack, ['(value)']);
     });
   });

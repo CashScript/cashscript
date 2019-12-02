@@ -21,6 +21,7 @@
     "yargs": "^14.0.0"
   },
   "devDependencies": {
+    "chai-exclude": "^2.0.2",
     "copyfiles": "^2.1.1",
     "eslint": "^5.16.0",
     "mocha": "^6.2.0",
