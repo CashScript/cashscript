@@ -104,6 +104,7 @@ expression
     | left=expression op='&&' right=expression # BinaryOp
     | left=expression op='||' right=expression # BinaryOp
     | '[' (expression (',' expression)*)? ']' # Array
+    | PreimageField # PreimageField
     | Identifier # Identifier
     | literal # LiteralExpression
     ;
@@ -161,6 +162,20 @@ HexLiteral
 TxVar
     : 'tx.age'
     | 'tx.time'
+    ;
+
+PreimageField
+    : 'tx.version'
+    | 'tx.hashPrevouts'
+    | 'tx.hashSequence'
+    | 'tx.outpoint'
+    | 'tx.scriptCode'
+    | 'tx.value'
+    | 'tx.sequence'
+    | 'tx.hashOutputs'
+    | 'tx.locktime'
+    | 'tx.hashtype'
+    | 'tx.preimage'
     ;
 
 Identifier

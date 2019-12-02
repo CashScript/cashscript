@@ -36,7 +36,35 @@ export enum TimeOp {
   CHECK_LOCKTIME = 'tx.time',
 }
 
+export enum PreimageField {
+  VERSION = 'tx.version', // bytes4
+  HASHPREVOUTS = 'tx.hashPrevouts', // bytes32
+  HASHSEQUENCE = 'tx.hashSequence', // bytes32
+  OUTPOINT = 'tx.outpoint', // bytes36
+  SCRIPTCODE = 'tx.scriptCode', // bytes
+  VALUE = 'tx.value', // bytes8
+  SEQUENCE = 'tx.sequence', // bytes4
+  HASHOUTPUTS = 'tx.hashOutputs', // bytes32
+  LOCKTIME = 'tx.locktime', // bytes4
+  HASHTYPE = 'tx.hashtype', // bytes4
+  FULL = 'tx.preimage' // full preimage
+}
+
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
+// Preimage fields
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.VERSION, new BytesType(4)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHOUTPUTS, new BytesType(32)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHSEQUENCE, new BytesType(32)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.OUTPOINT, new BytesType(36)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.SCRIPTCODE, new BytesType()));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.VALUE, new BytesType(8)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.SEQUENCE, new BytesType(4)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHOUTPUTS, new BytesType(32)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.LOCKTIME, new BytesType(4)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHTYPE, new BytesType(4)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.FULL, new BytesType()));
+
+// Global functions
 GLOBAL_SYMBOL_TABLE.set(new Symbol(
   GlobalFunction.ABS, PrimitiveType.INT, undefined,
   [PrimitiveType.INT],

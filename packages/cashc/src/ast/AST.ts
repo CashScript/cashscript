@@ -1,4 +1,4 @@
-import { TimeOp } from './Globals';
+import { TimeOp, PreimageField } from './Globals';
 import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
@@ -56,6 +56,7 @@ export class FunctionDefinitionNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
+    public preimageFields: PreimageField[],
   ) {
     super();
   }
