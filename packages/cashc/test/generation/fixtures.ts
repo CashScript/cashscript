@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { version } from '../../../src';
-import { Artifact } from '../../../src/artifact/Artifact';
+import { version } from '../../src';
+import { Artifact } from '../../src/artifact/Artifact';
 
 interface Fixture {
   fn: string,
@@ -18,7 +18,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         'OP_OVER OP_HASH160 OP_EQUALVERIFY '
         + 'OP_CHECKSIG',
-      source: fs.readFileSync(path.join(__dirname, 'p2pkh.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'p2pkh.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -42,7 +42,7 @@ export const fixtures: Fixture[] = [
         + 'OP_2 OP_PICK OP_RIPEMD160 OP_SWAP OP_RIPEMD160 OP_EQUALVERIFY '
         + 'OP_ROT OP_ROT OP_CHECKSIG '
         + 'OP_NIP',
-      source: fs.readFileSync(path.join(__dirname, 'reassignment.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'reassignment.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -69,7 +69,7 @@ export const fixtures: Fixture[] = [
         + 'OP_DUP OP_4 OP_ROLL OP_ADD '
         + 'OP_3 OP_ROLL OP_NUMEQUAL '
         + 'OP_NIP OP_NIP OP_NIP',
-      source: fs.readFileSync(path.join(__dirname, 'if_statement.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'if_statement.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -92,7 +92,7 @@ export const fixtures: Fixture[] = [
         + 'OP_3 OP_ROLL OP_SWAP OP_CHECKSIGVERIFY '
         + 'OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 '
         + 'OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
-      source: fs.readFileSync(path.join(__dirname, 'multifunction.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'multifunction.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -130,7 +130,7 @@ export const fixtures: Fixture[] = [
         + ''
         + 'OP_2SWAP OP_NUMEQUAL '
         + 'OP_NIP OP_NIP OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
-      source: fs.readFileSync(path.join(__dirname, 'multifunction_if_statements.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'multifunction_if_statements.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -148,7 +148,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         'OP_0 OP_3 OP_ROLL OP_4 OP_ROLL OP_2 '
         + 'OP_3 OP_ROLL OP_2ROT OP_SWAP OP_3 OP_CHECKMULTISIG',
-      source: fs.readFileSync(path.join(__dirname, '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -167,7 +167,7 @@ export const fixtures: Fixture[] = [
         'OP_DUP OP_DUP OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP '
         + 'OP_2DUP OP_EQUAL OP_NOT OP_VERIFY '
         + 'OP_SWAP OP_4 OP_SPLIT OP_DROP OP_EQUAL OP_NOT',
-      source: fs.readFileSync(path.join(__dirname, 'split_size.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'split_size.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -185,7 +185,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         'OP_DUP OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_EQUALVERIFY '
         + 'OP_CHECKSIG',
-      source: fs.readFileSync(path.join(__dirname, 'cast_hash_checksig.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'cast_hash_checksig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -204,7 +204,7 @@ export const fixtures: Fixture[] = [
         'OP_2DUP OP_CHECKSIGVERIFY '
         + 'OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
         + 'OP_ROT OP_ROT OP_CHECKDATASIG',
-      source: fs.readFileSync(path.join(__dirname, 'checkdatasig.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'checkdatasig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -232,7 +232,7 @@ export const fixtures: Fixture[] = [
         + 'OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY '
         + 'OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY '
         + 'OP_CHECKSIG',
-      source: fs.readFileSync(path.join(__dirname, 'hodl_vault.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'hodl_vault.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -255,7 +255,7 @@ export const fixtures: Fixture[] = [
         + 'OP_FROMALTSTACK OP_FROMALTSTACK OP_ENDIF '
         + 'OP_2ROT OP_5 OP_ROLL OP_ADD OP_4 OP_ROLL OP_ADD '
         + 'OP_3 OP_ROLL OP_ADD OP_ROT OP_ADD OP_GREATERTHAN',
-      source: fs.readFileSync(path.join(__dirname, 'deep_replace.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'deep_replace.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -285,7 +285,7 @@ export const fixtures: Fixture[] = [
         },
       ],
       bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
-      source: 'contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == bytes4(i));\n    }\n}\n',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'bounded_bytes.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',

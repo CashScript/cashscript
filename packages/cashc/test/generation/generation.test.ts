@@ -10,7 +10,7 @@ import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import { Ast } from '../../src/ast/AST';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/util';
-import { fixtures } from './fixture/fixtures';
+import { fixtures } from './fixtures';
 import GenerateTargetTraversal from '../../src/generation/GenerateTargetTraversal';
 import { generateArtifact } from '../../src/artifact/Artifact';
 import TargetCodeOptimisation from '../../src/optimisations/TargetCodeOptimisation';
@@ -18,7 +18,7 @@ import TargetCodeOptimisation from '../../src/optimisations/TargetCodeOptimisati
 describe('Code generation & target code optimisation', () => {
   fixtures.forEach((fixture) => {
     it(`should compile ${fixture.fn} to correct Script and artifact`, () => {
-      const code = fs.readFileSync(path.join(__dirname, 'fixture', fixture.fn), { encoding: 'utf-8' });
+      const code = fs.readFileSync(path.join(__dirname, '..', 'fixture', fixture.fn), { encoding: 'utf-8' });
       let ast = parseCode(code);
       ast = ast.accept(new SymbolTableTraversal()) as Ast;
       ast = ast.accept(new TypeCheckTraversal()) as Ast;
