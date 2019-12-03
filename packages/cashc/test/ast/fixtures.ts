@@ -458,4 +458,171 @@ export const fixtures: Fixture[] = [
       ),
     ),
   },
+  {
+    fn: 'mecenas.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'Mecenas',
+        [
+          new ParameterNode(new BytesType(20), 'recipient'),
+          new ParameterNode(new BytesType(20), 'funder'),
+          new ParameterNode(PrimitiveType.INT, 'pledge'),
+        ],
+        [
+          new FunctionDefinitionNode(
+            'receive',
+            [
+              new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
+              new ParameterNode(PrimitiveType.SIG, 's'),
+            ],
+            new BlockNode([
+              new RequireNode(
+                new FunctionCallNode(
+                  new IdentifierNode('checkSig'),
+                  [
+                    new IdentifierNode('s'),
+                    new IdentifierNode('pk'),
+                  ],
+                ),
+              ),
+              new VariableDefinitionNode(
+                PrimitiveType.INT,
+                'fee',
+                new IntLiteralNode(1000),
+              ),
+              new VariableDefinitionNode(
+                new BytesType(8),
+                'amount1',
+                new CastNode(
+                  new BytesType(8),
+                  new BinaryOpNode(
+                    new BinaryOpNode(
+                      new CastNode(PrimitiveType.INT, new IdentifierNode(PreimageField.VALUE)),
+                      BinaryOperator.MINUS,
+                      new IdentifierNode('pledge'),
+                    ),
+                    BinaryOperator.MINUS,
+                    new IdentifierNode('fee'),
+                  ),
+                ),
+              ),
+              new VariableDefinitionNode(
+                new BytesType(8),
+                'amount2',
+                new CastNode(new BytesType(8), new IdentifierNode('pledge')),
+              ),
+              new VariableDefinitionNode(
+                new BytesType(),
+                'contractBytecode',
+                new TupleIndexOpNode(
+                  new SplitOpNode(
+                    new IdentifierNode(PreimageField.SCRIPTCODE),
+                    new IntLiteralNode(3),
+                  ),
+                  1,
+                ),
+              ),
+              new TimeOpNode(
+                TimeOp.CHECK_SEQUENCE,
+                new IntLiteralNode(30 * 24 * 60 * 60),
+              ),
+              new RequireNode(
+                new BinaryOpNode(
+                  new CastNode(PrimitiveType.INT, new IdentifierNode(PreimageField.VERSION)),
+                  BinaryOperator.GE,
+                  new IntLiteralNode(2),
+                ),
+              ),
+              new VariableDefinitionNode(
+                new BytesType(),
+                'out1',
+                new BinaryOpNode(
+                  new BinaryOpNode(
+                    new BinaryOpNode(
+                      new IdentifierNode('amount1'),
+                      BinaryOperator.PLUS,
+                      new HexLiteralNode(Buffer.from('17a914', 'hex')),
+                    ),
+                    BinaryOperator.PLUS,
+                    new FunctionCallNode(
+                      new IdentifierNode('hash160'),
+                      [new IdentifierNode('contractBytecode')],
+                    ),
+                  ),
+                  BinaryOperator.PLUS,
+                  new HexLiteralNode(Buffer.from('87', 'hex')),
+                ),
+              ),
+              new VariableDefinitionNode(
+                new BytesType(),
+                'out2',
+                new BinaryOpNode(
+                  new BinaryOpNode(
+                    new BinaryOpNode(
+                      new IdentifierNode('amount2'),
+                      BinaryOperator.PLUS,
+                      new HexLiteralNode(Buffer.from('1976a914', 'hex')),
+                    ),
+                    BinaryOperator.PLUS,
+                    new IdentifierNode('recipient'),
+                  ),
+                  BinaryOperator.PLUS,
+                  new HexLiteralNode(Buffer.from('88ac', 'hex')),
+                ),
+              ),
+              new RequireNode(
+                new BinaryOpNode(
+                  new FunctionCallNode(
+                    new IdentifierNode('hash256'),
+                    [new BinaryOpNode(
+                      new IdentifierNode('out1'),
+                      BinaryOperator.PLUS,
+                      new IdentifierNode('out2'),
+                    )],
+                  ),
+                  BinaryOperator.EQ,
+                  new IdentifierNode(PreimageField.HASHOUTPUTS),
+                ),
+              ),
+            ]),
+            [
+              PreimageField.VALUE,
+              PreimageField.SCRIPTCODE,
+              PreimageField.VERSION,
+              PreimageField.HASHOUTPUTS,
+            ],
+          ),
+          new FunctionDefinitionNode(
+            'reclaim',
+            [
+              new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
+              new ParameterNode(PrimitiveType.SIG, 's'),
+            ],
+            new BlockNode([
+              new RequireNode(
+                new BinaryOpNode(
+                  new FunctionCallNode(
+                    new IdentifierNode('hash160'),
+                    [new IdentifierNode('pk')],
+                  ),
+                  BinaryOperator.EQ,
+                  new IdentifierNode('funder'),
+                ),
+              ),
+              new RequireNode(
+                new FunctionCallNode(
+                  new IdentifierNode('checkSig'),
+                  [
+                    new IdentifierNode('s'),
+                    new IdentifierNode('pk'),
+                  ],
+                ),
+              ),
+            ]),
+            [],
+          ),
+        ],
+      ),
+    ),
+  },
 ];
