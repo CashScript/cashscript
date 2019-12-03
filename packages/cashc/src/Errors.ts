@@ -199,3 +199,11 @@ export class VersionError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+export class UnverifiedCovenantError extends CashScriptError {
+  constructor(
+    node: IdentifierNode,
+  ) {
+    super(node, `Covenant variable ${node.name} was used without signature check`);
+  }
+}

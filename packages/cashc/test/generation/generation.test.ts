@@ -15,6 +15,7 @@ import { fixtures } from './fixtures';
 import GenerateTargetTraversal from '../../src/generation/GenerateTargetTraversal';
 import { generateArtifact } from '../../src/artifact/Artifact';
 import TargetCodeOptimisation from '../../src/optimisations/TargetCodeOptimisation';
+import VerifyCovenantTraversal from '../../src/semantic/VerifyCovenantTraversal';
 
 chai.use(chaiExclude);
 const { assert } = chai;
@@ -26,6 +27,7 @@ describe('Code generation & target code optimisation', () => {
       let ast = parseCode(code);
       ast = ast.accept(new SymbolTableTraversal()) as Ast;
       ast = ast.accept(new TypeCheckTraversal()) as Ast;
+      ast = ast.accept(new VerifyCovenantTraversal()) as Ast;
 
       const traversal = new GenerateTargetTraversal();
       ast.accept(traversal);
