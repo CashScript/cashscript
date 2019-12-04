@@ -53,7 +53,7 @@ export enum PreimageField {
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 // Preimage fields
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.VERSION, new BytesType(4)));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHOUTPUTS, new BytesType(32)));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHPREVOUTS, new BytesType(32)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHSEQUENCE, new BytesType(32)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.OUTPOINT, new BytesType(36)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.SCRIPTCODE, new BytesType()));
