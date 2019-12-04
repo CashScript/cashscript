@@ -25,7 +25,7 @@ import {
   Node,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
-import { GlobalFunction } from '../ast/Globals';
+import { GlobalFunction, PreimageField } from '../ast/Globals';
 import { resultingType, PrimitiveType } from '../ast/Type';
 import {
   Op,
@@ -126,6 +126,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.currentFunction = node;
+
+    if (node.preimageFields.length > 0) {
+      this.handlePreimage(node.preimageFields);
+    }
+
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
 
@@ -140,6 +145,214 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.pushToStack('(value)');
     this.cleanStack();
     return node;
+  }
+
+  handlePreimage(fields: PreimageField[]): void {
+    // Preimage is first arg after selector
+    this.pushToStack('$preimage', true);
+    this.emit(Data.encodeInt(this.getStackIndex('$preimage')));
+    this.emit(Op.OP_PICK);
+
+    const currentBounds = {
+      start: 0,
+      end: 0,
+    };
+
+    // Cutting from the start
+    if (fields.includes(PreimageField.VERSION)) {
+      const start = 0 - currentBounds.start;
+      if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(4));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.VERSION);
+      currentBounds.start = 4;
+    }
+
+    if (fields.includes(PreimageField.HASHPREVOUTS)) {
+      const start = 4 - currentBounds.start;
+      if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(32));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.HASHPREVOUTS);
+      currentBounds.start = 4 + 32;
+    }
+
+    if (fields.includes(PreimageField.HASHSEQUENCE)) {
+      const start = 4 + 32 - currentBounds.start;
+      if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(32));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.HASHSEQUENCE);
+      currentBounds.start = 4 + 32 + 32;
+    }
+
+    if (fields.includes(PreimageField.OUTPOINT)) {
+      const start = 4 + 32 + 32 - currentBounds.start;
+      if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(36));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.OUTPOINT);
+      currentBounds.start = 4 + 32 + 32 + 36;
+    }
+
+    if (fields.includes(PreimageField.SCRIPTCODE)) {
+      const start = 4 + 32 + 32 + 36 - currentBounds.start;
+      if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Op.OP_SIZE);
+      this.emit(Data.encodeInt(52));
+      this.emit(Op.OP_SUB);
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.SCRIPTCODE);
+      currentBounds.start = 0;
+      currentBounds.end = 52;
+    }
+
+    if (fields.includes(PreimageField.VALUE)) {
+      const start = 0 - currentBounds.start;
+      const end = 52 - currentBounds.end;
+      if (end > 0) {
+        this.emit(Op.OP_SIZE);
+        this.emit(Data.encodeInt(end));
+        this.emit(Op.OP_SUB);
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      } else if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(8));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.VALUE);
+      currentBounds.start = 8;
+      currentBounds.end = 52 - 8;
+    }
+
+    if (fields.includes(PreimageField.SEQUENCE)) {
+      const start = 8 - currentBounds.start;
+      const end = 52 - 8 - currentBounds.end;
+      if (end > 0) {
+        this.emit(Op.OP_SIZE);
+        this.emit(Data.encodeInt(end));
+        this.emit(Op.OP_SUB);
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      } else if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(4));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.SEQUENCE);
+      currentBounds.start = 8 + 4;
+      currentBounds.end = 52 - 8 - 4;
+    }
+
+    if (fields.includes(PreimageField.HASHOUTPUTS)) {
+      const start = 8 + 4 - currentBounds.start;
+      const end = 52 - 8 - 4 - currentBounds.end;
+      if (end > 0) {
+        this.emit(Op.OP_SIZE);
+        this.emit(Data.encodeInt(end));
+        this.emit(Op.OP_SUB);
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      } else if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(32));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.HASHOUTPUTS);
+      currentBounds.start = 8 + 4 + 32;
+      currentBounds.end = 52 - 8 - 4 - 32;
+    }
+
+    if (fields.includes(PreimageField.LOCKTIME)) {
+      const start = 8 + 4 + 32 - currentBounds.start;
+      const end = 52 - 8 - 4 - 32 - currentBounds.end;
+      if (end > 0) {
+        this.emit(Op.OP_SIZE);
+        this.emit(Data.encodeInt(end));
+        this.emit(Op.OP_SUB);
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      } else if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      this.emit(Data.encodeInt(4));
+      this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.LOCKTIME);
+      currentBounds.start = 8 + 4 + 32 + 4;
+      currentBounds.end = 52 - 8 - 4 - 32 - 4;
+    }
+
+    if (fields.includes(PreimageField.HASHTYPE)) {
+      const start = 8 + 4 + 32 + 4 - currentBounds.start;
+      const end = 52 - 8 - 4 - 32 - 4 - currentBounds.end;
+      if (end > 0) {
+        this.emit(Op.OP_SIZE);
+        this.emit(Data.encodeInt(end));
+        this.emit(Op.OP_SUB);
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      } else if (start !== 0) {
+        this.emit(Data.encodeInt(start));
+        this.emit(Op.OP_SPLIT);
+        this.emit(Op.OP_NIP);
+      }
+
+      // this.emit(Data.encodeInt(4));
+      // this.emit(Op.OP_SPLIT);
+
+      this.pushToStack(PreimageField.HASHTYPE);
+      // currentBounds.start = 8 + 4 + 32 + 4;
+      // currentBounds.end = 52 - 8 - 4 - 32 - 4;
+    } else {
+      this.emit(Op.OP_DROP);
+    }
   }
 
   cleanStack(): void {
