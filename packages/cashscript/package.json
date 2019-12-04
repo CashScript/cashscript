@@ -1,7 +1,7 @@
 {
   "name": "cashscript",
   "description": "⚖️ Easily write and interact with Cash Contracts on Bitcoin Cash",
-  "version": "0.2.2-beta",
+  "version": "0.2.3-beta",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
   "bugs": {
     "url": "https://github.com/Bitcoin-com/cashscript/issues"
@@ -12,7 +12,7 @@
   "dependencies": {
     "bitbox-sdk": "^8.8.0",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
-    "cashc": "^0.2.1-beta",
+    "cashc": "^0.2.3-beta",
     "delay": "^4.3.0"
   },
   "devDependencies": {
