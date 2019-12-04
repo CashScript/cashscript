@@ -43,7 +43,7 @@ describe('Transaction', () => {
             .spend(alicePk, new Sig(bob))
             .send(to, amount),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
+          'mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -78,7 +78,7 @@ describe('Transaction', () => {
             .spend(alicePk, new Sig(bob))
             .send(outputs),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
+          'mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -174,7 +174,7 @@ describe('Transaction', () => {
             .transfer(new Sig(alice))
             .send(to, amount),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
+          'mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
 
         // then
@@ -184,7 +184,7 @@ describe('Transaction', () => {
             .timeout(new Sig(bob))
             .send(to, amount),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
+          'mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -200,7 +200,7 @@ describe('Transaction', () => {
             .timeout(new Sig(alice))
             .send(to, amount),
           FailedTransactionError,
-          '64: non-mandatory-script-verify-flag (Locktime requirement not satisfied)',
+          'non-mandatory-script-verify-flag (Locktime requirement not satisfied)',
         );
       });
 
@@ -249,7 +249,7 @@ describe('Transaction', () => {
             .transfer(new Sig(alice))
             .send(outputs),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
+          'mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
 
         // then
@@ -259,7 +259,7 @@ describe('Transaction', () => {
             .timeout(new Sig(bob))
             .send(outputs),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
+          'mandatory-script-verify-flag-failed (Signature must be zero for failed CHECK(MULTI)SIG operation)',
         );
       });
 
@@ -277,7 +277,7 @@ describe('Transaction', () => {
             .timeout(new Sig(alice))
             .send(outputs),
           FailedTransactionError,
-          '64: non-mandatory-script-verify-flag (Locktime requirement not satisfied)',
+          'non-mandatory-script-verify-flag (Locktime requirement not satisfied)',
         );
       });
 
@@ -411,7 +411,7 @@ describe('Transaction', () => {
             .spend(new Sig(alice), wrongSig, message)
             .send(to, amount),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
+          'mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -429,7 +429,7 @@ describe('Transaction', () => {
             .spend(new Sig(alice), oracleSig, message)
             .send(to, amount),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
+          'mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -469,7 +469,7 @@ describe('Transaction', () => {
             .spend(new Sig(alice), wrongSig, message)
             .send(outputs),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
+          'mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -489,7 +489,7 @@ describe('Transaction', () => {
             .spend(new Sig(alice), oracleSig, message)
             .send(outputs),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
+          'mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation)',
         );
       });
 
@@ -534,7 +534,7 @@ describe('Transaction', () => {
             .spend(Buffer.from('12345678', 'hex'), 1000)
             .send(to, amount),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
+          'mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
         );
 
         // then
@@ -544,7 +544,7 @@ describe('Transaction', () => {
             .spend(Buffer.from('000003e8', 'hex'), 1000)
             .send(to, amount),
           FailedTransactionError,
-          '16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
+          'mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
         );
       });
 
