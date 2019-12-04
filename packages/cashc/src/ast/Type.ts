@@ -156,6 +156,9 @@ export function resultingType(
 ): Type | undefined {
   if (implicitlyCastable(left, right)) return right;
   if (implicitlyCastable(right, left)) return left;
+  if (left instanceof BytesType && right instanceof BytesType) {
+    return new BytesType();
+  }
   return undefined;
 }
 
