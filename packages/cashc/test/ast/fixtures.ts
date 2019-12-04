@@ -497,7 +497,10 @@ export const fixtures: Fixture[] = [
                   new BytesType(8),
                   new BinaryOpNode(
                     new BinaryOpNode(
-                      new CastNode(PrimitiveType.INT, new IdentifierNode(PreimageField.VALUE)),
+                      new CastNode(
+                        PrimitiveType.INT,
+                        new CastNode(new BytesType(), new IdentifierNode(PreimageField.VALUE)),
+                      ),
                       BinaryOperator.MINUS,
                       new IdentifierNode('pledge'),
                     ),

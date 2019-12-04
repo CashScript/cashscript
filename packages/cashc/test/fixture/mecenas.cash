@@ -5,7 +5,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
         require(checkSig(s, pk));
 
         int fee = 1000;
-        bytes8 amount1 = bytes8(int(tx.value) - pledge - fee);
+        bytes8 amount1 = bytes8(int(bytes(tx.value)) - pledge - fee);
         bytes8 amount2 = bytes8(pledge);
 
         bytes contractBytecode = tx.scriptCode.split(3)[1];
