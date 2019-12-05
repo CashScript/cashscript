@@ -10,6 +10,7 @@ export interface AbiInput {
 
 export interface AbiFunction {
   name: string;
+  covenant: boolean;
   inputs: AbiInput[];
 }
 
@@ -37,6 +38,7 @@ export function generateArtifact(ast: Ast, script: Script, source: string): Arti
     .map(p => ({ name: p.name, type: p.type.toString() }));
   const abi = contract.functions.map(f => ({
     name: f.name,
+    covenant: f.preimageFields.length > 0,
     inputs: f.parameters.map(p => ({ name: p.name, type: p.type.toString() })),
   }));
 

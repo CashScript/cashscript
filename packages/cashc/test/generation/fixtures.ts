@@ -14,7 +14,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'P2PKH',
       constructorInputs: [{ name: 'pkh', type: 'bytes20' }],
-      abi: [{ name: 'spend', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
+      abi: [{ name: 'spend', covenant: false, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_OVER OP_HASH160 OP_EQUALVERIFY '
         + 'OP_CHECKSIG',
@@ -32,7 +32,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'Reassignment',
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'string' }],
-      abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
+      abi: [{ name: 'hello', covenant: false, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_10 OP_4 OP_SUB '
         + '14 OP_SWAP OP_2 OP_MOD OP_ADD '
@@ -56,7 +56,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'IfStatement',
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'int' }],
-      abi: [{ name: 'hello', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }] }],
+      abi: [{ name: 'hello', covenant: false, inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }] }],
       bytecode:
         'OP_2OVER OP_ADD '
         + 'OP_DUP OP_4 OP_PICK OP_SUB '
@@ -83,7 +83,10 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'MultiFunction',
       constructorInputs: [{ name: 'sender', type: 'pubkey' }, { name: 'recipient', type: 'pubkey' }, { name: 'timeout', type: 'int' }],
-      abi: [{ name: 'transfer', inputs: [{ name: 'recipientSig', type: 'sig' }] }, { name: 'timeout', inputs: [{ name: 'senderSig', type: 'sig' }] }],
+      abi: [
+        { name: 'transfer', covenant: false, inputs: [{ name: 'recipientSig', type: 'sig' }] },
+        { name: 'timeout', covenant: false, inputs: [{ name: 'senderSig', type: 'sig' }] },
+      ],
       bytecode:
         'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
         + 'OP_4 OP_ROLL OP_ROT OP_CHECKSIG '
@@ -106,7 +109,10 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'MultiFunctionIfStatements',
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'int' }],
-      abi: [{ name: 'transfer', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }] }, { name: 'timeout', inputs: [{ name: 'b', type: 'int' }] }],
+      abi: [
+        { name: 'transfer', covenant: false, inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }] },
+        { name: 'timeout', covenant: false, inputs: [{ name: 'b', type: 'int' }] },
+      ],
       bytecode:
         'OP_2 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
         + 'OP_3 OP_PICK OP_5 OP_PICK OP_ADD '
@@ -144,7 +150,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'MultiSig',
       constructorInputs: [{ name: 'pk1', type: 'pubkey' }, { name: 'pk2', type: 'pubkey' }, { name: 'pk3', type: 'pubkey' }],
-      abi: [{ name: 'spend', inputs: [{ name: 's1', type: 'sig' }, { name: 's2', type: 'sig' }] }],
+      abi: [{ name: 'spend', covenant: false, inputs: [{ name: 's1', type: 'sig' }, { name: 's2', type: 'sig' }] }],
       bytecode:
         'OP_0 OP_3 OP_ROLL OP_4 OP_ROLL OP_2 '
         + 'OP_3 OP_ROLL OP_2ROT OP_SWAP OP_3 OP_CHECKMULTISIG',
@@ -162,7 +168,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'SplitSize',
       constructorInputs: [{ name: 'b', type: 'bytes' }],
-      abi: [{ name: 'spend', inputs: [] }],
+      abi: [{ name: 'spend', covenant: false, inputs: [] }],
       bytecode:
         'OP_DUP OP_DUP OP_SIZE OP_NIP OP_2 OP_DIV OP_SPLIT OP_NIP '
         + 'OP_2DUP OP_EQUAL OP_NOT OP_VERIFY '
@@ -181,7 +187,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'CastHashChecksig',
       constructorInputs: [],
-      abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
+      abi: [{ name: 'hello', covenant: false, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_DUP OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_EQUALVERIFY '
         + 'OP_CHECKSIG',
@@ -199,7 +205,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'CheckDataSig',
       constructorInputs: [],
-      abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }, { name: 'data', type: 'bytes' }] }],
+      abi: [{ name: 'hello', covenant: false, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }, { name: 'data', type: 'bytes' }] }],
       bytecode:
         'OP_2DUP OP_CHECKSIGVERIFY '
         + 'OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
@@ -223,7 +229,17 @@ export const fixtures: Fixture[] = [
         { name: 'minBlock', type: 'int' },
         { name: 'priceTarget', type: 'int' },
       ],
-      abi: [{ name: 'spend', inputs: [{ name: 'ownerSig', type: 'sig' }, { name: 'oracleSig', type: 'datasig' }, { name: 'oracleMessage', type: 'bytes' }] }],
+      abi: [
+        {
+          name: 'spend',
+          covenant: false,
+          inputs: [
+            { name: 'ownerSig', type: 'sig' },
+            { name: 'oracleSig', type: 'datasig' },
+            { name: 'oracleMessage', type: 'bytes' },
+          ],
+        },
+      ],
       bytecode:
         'OP_6 OP_PICK OP_4 OP_SPLIT OP_DROP OP_BIN2NUM '
         + 'OP_7 OP_PICK OP_4 OP_SPLIT OP_NIP OP_BIN2NUM '
@@ -246,7 +262,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'DeepReplace',
       constructorInputs: [],
-      abi: [{ name: 'hello', inputs: [] }],
+      abi: [{ name: 'hello', covenant: false, inputs: [] }],
       bytecode:
         'OP_1 OP_2 OP_3 OP_4 OP_5 OP_6 '
         + 'OP_5 OP_PICK OP_3 OP_LESSTHAN OP_IF '
@@ -269,21 +285,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'BoundedBytes',
       constructorInputs: [],
-      abi: [
-        {
-          name: 'spend',
-          inputs: [
-            {
-              name: 'b',
-              type: 'bytes4',
-            },
-            {
-              name: 'i',
-              type: 'int',
-            },
-          ],
-        },
-      ],
+      abi: [{ name: 'spend', covenant: false, inputs: [{ name: 'b', type: 'bytes4' }, { name: 'i', type: 'int' }] }],
       bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'bounded_bytes.cash'), { encoding: 'utf-8' }),
       networks: {},
@@ -304,21 +306,7 @@ export const fixtures: Fixture[] = [
           type: 'bytes4',
         },
       ],
-      abi: [
-        {
-          name: 'spend',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
-      ],
+      abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_OVER OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
         + 'OP_SWAP OP_ROT OP_EQUALVERIFY 00 OP_EQUALVERIFY '
@@ -342,21 +330,7 @@ export const fixtures: Fixture[] = [
           type: 'bytes4',
         },
       ],
-      abi: [
-        {
-          name: 'spend',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
-      ],
+      abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_OVER OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
         + 'OP_5 OP_PICK OP_5 OP_PICK OP_CHECKSIG OP_NOT OP_VERIFY '
@@ -377,21 +351,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'Covenant',
       constructorInputs: [],
-      abi: [
-        {
-          name: 'spend',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
-      ],
+      abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_DUP OP_SIZE OP_4 OP_SUB OP_SPLIT OP_NIP OP_1 OP_EQUALVERIFY '
         + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
@@ -409,21 +369,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'Covenant',
       constructorInputs: [],
-      abi: [
-        {
-          name: 'spend',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
-      ],
+      abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_DUP OP_4 OP_SPLIT OP_DROP OP_1 OP_EQUALVERIFY '
         + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
@@ -441,21 +387,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'Covenant',
       constructorInputs: [],
-      abi: [
-        {
-          name: 'spend',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
-      ],
+      abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT 20 OP_SPLIT OP_4 OP_SPLIT '
@@ -479,21 +411,7 @@ export const fixtures: Fixture[] = [
     artifact: {
       contractName: 'Covenant',
       constructorInputs: [],
-      abi: [
-        {
-          name: 'spend',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
-      ],
+      abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT 20 OP_SPLIT OP_4 OP_SPLIT '
@@ -531,32 +449,8 @@ export const fixtures: Fixture[] = [
         },
       ],
       abi: [
-        {
-          name: 'receive',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
-        {
-          name: 'reclaim',
-          inputs: [
-            {
-              name: 'pk',
-              type: 'pubkey',
-            },
-            {
-              name: 's',
-              type: 'sig',
-            },
-          ],
-        },
+        { name: 'receive', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
+        { name: 'reclaim', covenant: false, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
       ],
       bytecode:
         'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
