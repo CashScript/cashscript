@@ -34,6 +34,7 @@ import {
   toOps,
 } from './Script';
 import { Data } from '../util';
+import { PreimageParts } from './preimage';
 
 export default class GenerateTargetTraversal extends AstTraversal {
   output: Script = [];
@@ -128,7 +129,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.currentFunction = node;
 
     if (node.preimageFields.length > 0) {
-      this.handlePreimage(node.preimageFields);
+      this.decodePreimage(node.preimageFields);
     }
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
@@ -147,80 +148,44 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  handlePreimage(fields: PreimageField[]): void {
+  decodePreimage(fields: PreimageField[]): void {
     // Preimage is first arg after selector
     this.pushToStack('$preimage', true);
     this.emit(Data.encodeInt(this.getStackIndex('$preimage')));
     this.emit(Op.OP_PICK);
 
-    const currentBounds = {
-      start: 0,
-      end: 0,
+    const cuts = {
+      fromStart: 0,
+      fromEnd: 0,
     };
 
-    // Cutting from the start
-    if (fields.includes(PreimageField.VERSION)) {
-      const start = 0 - currentBounds.start;
+    // Fields before scriptCode need to be cut from the front
+    const beforeScriptCode = [
+      PreimageField.VERSION, PreimageField.HASHPREVOUTS,
+      PreimageField.HASHSEQUENCE, PreimageField.OUTPOINT,
+    ].filter(field => fields.includes(field));
+
+    beforeScriptCode.forEach((field) => {
+      const part = PreimageParts[field];
+      const start = part.fromStart - cuts.fromStart;
       if (start !== 0) {
         this.emit(Data.encodeInt(start));
         this.emit(Op.OP_SPLIT);
         this.emit(Op.OP_NIP);
       }
 
-      this.emit(Data.encodeInt(4));
+      this.emit(Data.encodeInt(part.size));
       this.emit(Op.OP_SPLIT);
 
-      this.pushToStack(PreimageField.VERSION);
-      currentBounds.start = 4;
-    }
+      this.pushToStack(field);
+      cuts.fromStart = part.fromStart + part.size;
+    });
 
-    if (fields.includes(PreimageField.HASHPREVOUTS)) {
-      const start = 4 - currentBounds.start;
-      if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.emit(Data.encodeInt(32));
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.HASHPREVOUTS);
-      currentBounds.start = 4 + 32;
-    }
-
-    if (fields.includes(PreimageField.HASHSEQUENCE)) {
-      const start = 4 + 32 - currentBounds.start;
-      if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.emit(Data.encodeInt(32));
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.HASHSEQUENCE);
-      currentBounds.start = 4 + 32 + 32;
-    }
-
-    if (fields.includes(PreimageField.OUTPOINT)) {
-      const start = 4 + 32 + 32 - currentBounds.start;
-      if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.emit(Data.encodeInt(36));
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.OUTPOINT);
-      currentBounds.start = 4 + 32 + 32 + 36;
-    }
-
+    // scriptCode potentially needs a cut from the front and from the back
     if (fields.includes(PreimageField.SCRIPTCODE)) {
-      const start = 4 + 32 + 32 + 36 - currentBounds.start;
+      const part = PreimageParts[PreimageField.SCRIPTCODE];
+      const start = part.fromStart - cuts.fromStart;
+
       if (start !== 0) {
         this.emit(Data.encodeInt(start));
         this.emit(Op.OP_SPLIT);
@@ -228,18 +193,27 @@ export default class GenerateTargetTraversal extends AstTraversal {
       }
 
       this.emit(Op.OP_SIZE);
-      this.emit(Data.encodeInt(52));
+      this.emit(Data.encodeInt(part.size));
       this.emit(Op.OP_SUB);
       this.emit(Op.OP_SPLIT);
 
       this.pushToStack(PreimageField.SCRIPTCODE);
-      currentBounds.start = 0;
-      currentBounds.end = 52;
+      cuts.fromStart = 0;
+      cuts.fromEnd = part.size;
     }
 
-    if (fields.includes(PreimageField.VALUE)) {
-      const start = 0 - currentBounds.start;
-      const end = 52 - currentBounds.end;
+    // Fields after scriptCode potentially need a cut from the back,
+    // after which they go back to cutting from the front
+    const afterScriptCode = [
+      PreimageField.VALUE, PreimageField.SEQUENCE, PreimageField.HASHOUTPUTS,
+      PreimageField.LOCKTIME, PreimageField.HASHTYPE,
+    ].filter(field => fields.includes(field));
+
+    afterScriptCode.forEach((field) => {
+      const part = PreimageParts[field];
+      const start = part.fromStart - cuts.fromStart;
+      const end = part.fromEnd - cuts.fromEnd;
+
       if (end > 0) {
         this.emit(Op.OP_SIZE);
         this.emit(Data.encodeInt(end));
@@ -252,105 +226,18 @@ export default class GenerateTargetTraversal extends AstTraversal {
         this.emit(Op.OP_NIP);
       }
 
-      this.emit(Data.encodeInt(8));
+      this.pushToStack(field);
+      if (field === PreimageField.HASHTYPE) return;
+
+      this.emit(Data.encodeInt(part.size));
       this.emit(Op.OP_SPLIT);
 
-      this.pushToStack(PreimageField.VALUE);
-      currentBounds.start = 8;
-      currentBounds.end = 52 - 8;
-    }
+      cuts.fromStart = part.fromStart + part.size;
+      cuts.fromEnd = part.fromEnd - part.size;
+    });
 
-    if (fields.includes(PreimageField.SEQUENCE)) {
-      const start = 8 - currentBounds.start;
-      const end = 52 - 8 - currentBounds.end;
-      if (end > 0) {
-        this.emit(Op.OP_SIZE);
-        this.emit(Data.encodeInt(end));
-        this.emit(Op.OP_SUB);
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      } else if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.emit(Data.encodeInt(4));
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.SEQUENCE);
-      currentBounds.start = 8 + 4;
-      currentBounds.end = 52 - 8 - 4;
-    }
-
-    if (fields.includes(PreimageField.HASHOUTPUTS)) {
-      const start = 8 + 4 - currentBounds.start;
-      const end = 52 - 8 - 4 - currentBounds.end;
-      if (end > 0) {
-        this.emit(Op.OP_SIZE);
-        this.emit(Data.encodeInt(end));
-        this.emit(Op.OP_SUB);
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      } else if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.emit(Data.encodeInt(32));
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.HASHOUTPUTS);
-      currentBounds.start = 8 + 4 + 32;
-      currentBounds.end = 52 - 8 - 4 - 32;
-    }
-
-    if (fields.includes(PreimageField.LOCKTIME)) {
-      const start = 8 + 4 + 32 - currentBounds.start;
-      const end = 52 - 8 - 4 - 32 - currentBounds.end;
-      if (end > 0) {
-        this.emit(Op.OP_SIZE);
-        this.emit(Data.encodeInt(end));
-        this.emit(Op.OP_SUB);
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      } else if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.emit(Data.encodeInt(4));
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.LOCKTIME);
-      currentBounds.start = 8 + 4 + 32 + 4;
-      currentBounds.end = 52 - 8 - 4 - 32 - 4;
-    }
-
-    if (fields.includes(PreimageField.HASHTYPE)) {
-      const start = 8 + 4 + 32 + 4 - currentBounds.start;
-      const end = 52 - 8 - 4 - 32 - 4 - currentBounds.end;
-      if (end > 0) {
-        this.emit(Op.OP_SIZE);
-        this.emit(Data.encodeInt(end));
-        this.emit(Op.OP_SUB);
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      } else if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      // this.emit(Data.encodeInt(4));
-      // this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.HASHTYPE);
-      // currentBounds.start = 8 + 4 + 32 + 4;
-      // currentBounds.end = 52 - 8 - 4 - 32 - 4;
-    } else {
+    // Drop remainder
+    if (!fields.includes(PreimageField.HASHTYPE)) {
       this.emit(Op.OP_DROP);
     }
   }

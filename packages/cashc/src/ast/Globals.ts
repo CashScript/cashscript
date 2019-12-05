@@ -47,7 +47,6 @@ export enum PreimageField {
   HASHOUTPUTS = 'tx.hashOutputs', // bytes32
   LOCKTIME = 'tx.locktime', // bytes4
   HASHTYPE = 'tx.hashtype', // bytes4
-  FULL = 'tx.preimage' // full preimage
 }
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();

@@ -428,6 +428,44 @@ export const fixtures: Fixture[] = [
     },
   },
   {
+    fn: 'covenant_shuffled_fields.cash',
+    artifact: {
+      contractName: 'Covenant',
+      constructorInputs: [],
+      abi: [
+        {
+          name: 'spend',
+          inputs: [
+            {
+              name: 'pk',
+              type: 'pubkey',
+            },
+            {
+              name: 's',
+              type: 'sig',
+            },
+          ],
+        },
+      ],
+      bytecode:
+        'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_SIZE 34 OP_SUB OP_SPLIT '
+        + 'OP_8 OP_SPLIT OP_4 OP_SPLIT 20 OP_SPLIT OP_4 OP_SPLIT '
+        + 'OP_1 OP_EQUALVERIFY OP_4 OP_ROLL OP_1 OP_EQUALVERIFY '
+        + 'OP_6 OP_ROLL OP_1 OP_EQUALVERIFY OP_6 OP_ROLL OP_1 OP_EQUALVERIFY '
+        + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
+        + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_SWAP OP_1 OP_EQUALVERIFY '
+        + 'OP_SWAP OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
+        + 'OP_ROT OP_ROT OP_CHECKSIG OP_NIP',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_shuffled_fields.cash'), { encoding: 'utf-8' }),
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
     fn: 'mecenas.cash',
     artifact: {
       contractName: 'Mecenas',
