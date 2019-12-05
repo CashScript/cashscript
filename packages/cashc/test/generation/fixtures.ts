@@ -319,8 +319,51 @@ export const fixtures: Fixture[] = [
           ],
         },
       ],
-      bytecode: 'OP_OVER OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP OP_SWAP OP_ROT OP_EQUALVERIFY 00 OP_EQUALVERIFY OP_ROT OP_ROT OP_CHECKSIG OP_NIP',
+      bytecode:
+        'OP_OVER OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
+        + 'OP_SWAP OP_ROT OP_EQUALVERIFY 00 OP_EQUALVERIFY '
+        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant.cash'), { encoding: 'utf-8' }),
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'covenant_multiple_checksig.cash',
+    artifact: {
+      contractName: 'Covenant',
+      constructorInputs: [
+        {
+          name: 'requiredVersion',
+          type: 'bytes4',
+        },
+      ],
+      abi: [
+        {
+          name: 'spend',
+          inputs: [
+            {
+              name: 'pk',
+              type: 'pubkey',
+            },
+            {
+              name: 's',
+              type: 'sig',
+            },
+          ],
+        },
+      ],
+      bytecode:
+        'OP_OVER OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
+        + 'OP_5 OP_PICK OP_5 OP_PICK OP_CHECKSIG OP_NOT OP_VERIFY '
+        + 'OP_SWAP OP_ROT OP_EQUALVERIFY 00 OP_EQUALVERIFY '
+        + 'OP_2 OP_PICK OP_2 OP_PICK OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
+        + 'OP_CHECKSIG',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_multiple_checksig.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
         name: 'cashc',
@@ -349,7 +392,9 @@ export const fixtures: Fixture[] = [
           ],
         },
       ],
-      bytecode: 'OP_DUP OP_SIZE OP_4 OP_SUB OP_SPLIT OP_NIP OP_1 OP_EQUALVERIFY OP_ROT OP_ROT OP_CHECKSIG OP_NIP',
+      bytecode:
+        'OP_DUP OP_SIZE OP_4 OP_SUB OP_SPLIT OP_NIP OP_1 OP_EQUALVERIFY '
+        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_only_hashtype.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -379,7 +424,9 @@ export const fixtures: Fixture[] = [
           ],
         },
       ],
-      bytecode: 'OP_DUP OP_4 OP_SPLIT OP_DROP OP_1 OP_EQUALVERIFY OP_ROT OP_ROT OP_CHECKSIG OP_NIP',
+      bytecode:
+        'OP_DUP OP_4 OP_SPLIT OP_DROP OP_1 OP_EQUALVERIFY '
+        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_only_version.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -417,7 +464,7 @@ export const fixtures: Fixture[] = [
         + 'OP_5 OP_ROLL OP_1 OP_EQUALVERIFY OP_4 OP_ROLL OP_1 OP_EQUALVERIFY '
         + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_ROT OP_1 OP_EQUALVERIFY '
         + 'OP_SWAP OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
-        + 'OP_ROT OP_ROT OP_CHECKSIG OP_NIP',
+        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -455,7 +502,7 @@ export const fixtures: Fixture[] = [
         + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
         + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_SWAP OP_1 OP_EQUALVERIFY '
         + 'OP_SWAP OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
-        + 'OP_ROT OP_ROT OP_CHECKSIG OP_NIP',
+        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_shuffled_fields.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -515,7 +562,7 @@ export const fixtures: Fixture[] = [
         'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
         + 'OP_4 OP_PICK OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
-        + 'OP_10 OP_ROLL OP_10 OP_ROLL OP_CHECKSIGVERIFY '
+        + 'OP_10 OP_ROLL OP_10 OP_ROLL OP_2DUP OP_12 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
         + 'e803 '
         + 'OP_ROT OP_BIN2NUM OP_7 OP_PICK OP_SUB OP_SWAP OP_SUB OP_8 OP_NUM2BIN '
         + 'OP_6 OP_ROLL OP_8 OP_NUM2BIN '
@@ -524,7 +571,7 @@ export const fixtures: Fixture[] = [
         + 'OP_4 OP_ROLL OP_BIN2NUM OP_2 OP_GREATERTHANOREQUAL OP_VERIFY '
         + 'OP_ROT 17a914 OP_CAT OP_SWAP OP_HASH160 OP_CAT 87 OP_CAT '
         + 'OP_SWAP 1976a914 OP_CAT OP_3 OP_ROLL OP_CAT 88ac OP_CAT '
-        + 'OP_CAT OP_HASH256 OP_EQUAL OP_NIP OP_NIP OP_NIP '
+        + 'OP_CAT OP_HASH256 OP_EQUAL OP_NIP OP_NIP '
         + 'OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_IF '
         + 'OP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY '
         + 'OP_2SWAP OP_CHECKSIG OP_NIP OP_NIP '

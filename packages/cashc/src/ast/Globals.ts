@@ -61,7 +61,6 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.SEQUENCE, new BytesType(4)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHOUTPUTS, new BytesType(32)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.LOCKTIME, new BytesType(4)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHTYPE, new BytesType(4)));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.FULL, new BytesType()));
 
 // Global functions
 GLOBAL_SYMBOL_TABLE.set(new Symbol(

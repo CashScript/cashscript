@@ -42,6 +42,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
+  private isCheckSigVerify = false;
+  private covenantNeedsToBeVerified = false;
 
   private emit(op: OpOrData | OpOrData[]): void {
     if (Array.isArray(op)) {
@@ -129,6 +131,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.currentFunction = node;
 
     if (node.preimageFields.length > 0) {
+      this.covenantNeedsToBeVerified = true;
       this.decodePreimage(node.preimageFields);
     }
 
@@ -300,10 +303,19 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitRequire(node: RequireNode): Node {
+    if (this.containsCheckSig(node)) this.isCheckSigVerify = true;
     node.expression = this.visit(node.expression);
+    this.isCheckSigVerify = false;
+
     this.emit(Op.OP_VERIFY);
     this.popFromStack();
     return node;
+  }
+
+  containsCheckSig(node: RequireNode): boolean {
+    if (!(node.expression instanceof FunctionCallNode)) return false;
+    if (node.expression.identifier.name !== GlobalFunction.CHECKSIG) return false;
+    return true;
   }
 
   visitBranch(node: BranchNode): Node {
@@ -351,6 +363,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
 
     node.parameters = this.visitList(node.parameters);
+
+    if (this.needsToVerifyCovenant(node)) this.verifyCovenant();
+
     this.emit(toOps.fromFunction(node.identifier.name as GlobalFunction));
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
@@ -368,6 +383,31 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.pushToStack('(value)');
 
     return node;
+  }
+
+  needsToVerifyCovenant(node: FunctionCallNode): boolean {
+    if (node.identifier.name !== GlobalFunction.CHECKSIG) return false;
+    if (!this.isCheckSigVerify) return false;
+    if (!this.covenantNeedsToBeVerified) return false;
+    return true;
+  }
+
+  verifyCovenant(): void {
+    this.emit(Op.OP_2DUP);
+    this.pushToStack('(value)');
+    this.pushToStack('(value)');
+
+    const preimageIndex = this.getStackIndex('$preimage');
+    this.removeFromStack(preimageIndex);
+    this.emit(Data.encodeInt(preimageIndex));
+    this.emit(Op.OP_ROLL);
+    this.pushToStack('(value)');
+
+    this.emit(Op.OP_SWAP);
+    this.emit(Op.OP_CHECKDATASIGVERIFY);
+    this.popFromStack(3);
+
+    this.covenantNeedsToBeVerified = false;
   }
 
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
