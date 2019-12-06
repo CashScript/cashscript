@@ -10,6 +10,9 @@ import {
   bobPk,
   oraclePk,
   oracle,
+  bobPkh,
+  aliceAddress,
+  bobAddress,
 } from './fixture/vars';
 import { getTxOutputs } from './test-util';
 import { isOpReturn } from '../src/interfaces';
@@ -557,6 +560,80 @@ describe('Transaction', () => {
         const tx = await bbInstance.functions
           .spend(Buffer.from('e8030000', 'hex'), 1000)
           .send(to, amount);
+
+        // then
+        const txOutputs = getTxOutputs(tx);
+        assert.deepInclude(txOutputs, { to, amount });
+      });
+    });
+  });
+
+  // Mecenas has tx.age check omitted for testing
+  describe('Mecenas', () => {
+    let mecenas: Instance;
+    const pledge = 10000;
+    before(() => {
+      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas.json'), 'testnet');
+      mecenas = Mecenas.new(alicePkh, bobPkh, pledge);
+    });
+
+    describe('send (to one)', () => {
+      it('should fail when trying to send more than pledge', async () => {
+        // given
+        const to = aliceAddress;
+        const amount = pledge + 10;
+
+        // then
+        await assert.isRejected(
+          // when
+          mecenas.functions
+            .receive(alicePk, new Sig(alice))
+            .send(to, amount, { fee: 1000 }),
+          FailedTransactionError,
+          'mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
+        );
+      });
+
+      it('should fail when trying to send to wrong person', async () => {
+        // given
+        const to = bobAddress;
+        const amount = pledge;
+
+        // then
+        await assert.isRejected(
+          // when
+          mecenas.functions
+            .receive(alicePk, new Sig(alice))
+            .send(to, amount, { fee: 1000 }),
+          FailedTransactionError,
+          'mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
+        );
+      });
+      it('should fail when trying to send to multiple people', async () => {
+        // given
+        const to = aliceAddress;
+        const amount = pledge;
+
+        // then
+        await assert.isRejected(
+          // when
+          mecenas.functions
+            .receive(alicePk, new Sig(alice))
+            .send([{ to, amount }, { to, amount }], { fee: 1000 }),
+          FailedTransactionError,
+          'mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
+        );
+      });
+
+      it('should succeed when sending pledge to receiver', async () => {
+        // given
+        const to = aliceAddress;
+        const amount = pledge;
+
+        // when
+        const tx = await mecenas.functions
+          .receive(alicePk, new Sig(alice))
+          .send(to, amount, { fee: 1000 });
 
         // then
         const txOutputs = getTxOutputs(tx);

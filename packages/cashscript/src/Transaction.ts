@@ -22,6 +22,8 @@ import {
 import { DUST_LIMIT, P2PKH_OUTPUT_SIZE } from './constants';
 import { FailedTransactionError } from './Errors';
 
+const cramer = require('cramer-bch');
+
 export class Transaction {
   private bitbox: BITBOX;
   private builder: TransactionBuilder;
@@ -128,11 +130,14 @@ export class Transaction {
     // Convert all Sig objects to valid tx signatures for current tx
     const tx = this.builder.transaction.buildIncomplete();
     inputs.forEach((utxo: Utxo, vin: number) => {
+      let covenantHashType = -1;
       const completePs = this.parameters.map((p) => {
         if (!(p instanceof Sig)) return p;
 
-        // Bitcoin cash replay protection
         const hashtype = p.hashtype | tx.constructor.SIGHASH_BITCOINCASHBIP143;
+        // First signature is used for sighash (maybe not the best way)
+        if (covenantHashType < 0) covenantHashType = hashtype;
+
         const sighash = tx.hashForCashSignature(
           vin, ScriptUtil.encode(this.redeemScript), utxo.satoshis, hashtype,
         );
@@ -141,7 +146,14 @@ export class Transaction {
           .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
       });
 
-      const inputScript = createInputScript(this.redeemScript, completePs, this.selector);
+      // This is shitty because sigHashPreimageBuf is only in James Cramer's fork
+      // Will fix once it gets merged into main bitcoincashjs-lib
+      const preimageTx = cramer.Transaction.fromHex(tx.toHex());
+      const prevout = ScriptUtil.encode(this.redeemScript);
+      const preimage = this.abiFunction.covenant
+        ? preimageTx.sigHashPreimageBuf(vin, prevout, utxo.satoshis, covenantHashType)
+        : undefined;
+      const inputScript = createInputScript(this.redeemScript, completePs, this.selector, preimage);
       inputScripts.push({ vout: vin, script: inputScript });
     });
 

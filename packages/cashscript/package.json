@@ -13,6 +13,7 @@
     "bitbox-sdk": "^8.8.0",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
     "cashc": "^0.3.0-beta",
+    "cramer-bch": "https://github.com/jcramer/bitcoincashjs-lib",
     "delay": "^4.3.0"
   },
   "devDependencies": {

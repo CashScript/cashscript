@@ -48,9 +48,11 @@ export function createInputScript(
   redeemScript: Script,
   encodedParameters: Buffer[],
   selector?: number,
+  preimage?: Buffer,
 ): Buffer {
   // Create unlock script / redeemScriptSig
   const unlockScript = encodedParameters.reverse();
+  if (preimage !== undefined) unlockScript.push(preimage);
   if (selector !== undefined) unlockScript.push(Data.encodeInt(selector));
 
   // Create total input script / scriptSig

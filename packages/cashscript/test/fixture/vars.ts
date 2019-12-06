@@ -19,3 +19,6 @@ export const oraclePk: Buffer = bitbox.ECPair.toPublicKey(oracle.keypair);
 
 export const alicePkh: Buffer = bitbox.Crypto.hash160(alicePk);
 export const bobPkh: Buffer = bitbox.Crypto.hash160(bobPk);
+
+export const aliceAddress: string = bitbox.ECPair.toCashAddress(alice);
+export const bobAddress: string = bitbox.ECPair.toCashAddress(bob);
