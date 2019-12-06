@@ -310,7 +310,8 @@ export const fixtures: Fixture[] = [
       bytecode:
         'OP_OVER OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
         + 'OP_SWAP OP_ROT OP_EQUALVERIFY 00 OP_EQUALVERIFY '
-        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
+        + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -326,16 +327,17 @@ export const fixtures: Fixture[] = [
       contractName: 'Covenant',
       constructorInputs: [
         {
-          name: 'requiredVersion',
-          type: 'bytes4',
+          name: 'requiredHS',
+          type: 'bytes32',
         },
       ],
       abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
-        'OP_OVER OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
+        'OP_OVER 24 OP_SPLIT OP_NIP 20 OP_SPLIT 24 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
         + 'OP_5 OP_PICK OP_5 OP_PICK OP_CHECKSIG OP_NOT OP_VERIFY '
         + 'OP_SWAP OP_ROT OP_EQUALVERIFY 00 OP_EQUALVERIFY '
-        + 'OP_2 OP_PICK OP_2 OP_PICK OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
+        + 'OP_2 OP_PICK OP_2 OP_PICK OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
         + 'OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_multiple_checksig.cash'), { encoding: 'utf-8' }),
       networks: {},
@@ -354,7 +356,8 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_DUP OP_SIZE OP_4 OP_SUB OP_SPLIT OP_NIP OP_1 OP_EQUALVERIFY '
-        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
+        + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_only_hashtype.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -372,7 +375,8 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         'OP_DUP OP_4 OP_SPLIT OP_DROP OP_1 OP_EQUALVERIFY '
-        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
+        + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_only_version.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -396,7 +400,8 @@ export const fixtures: Fixture[] = [
         + 'OP_5 OP_ROLL OP_1 OP_EQUALVERIFY OP_4 OP_ROLL OP_1 OP_EQUALVERIFY '
         + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_ROT OP_1 OP_EQUALVERIFY '
         + 'OP_SWAP OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
-        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
+        + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -420,7 +425,8 @@ export const fixtures: Fixture[] = [
         + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
         + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_SWAP OP_1 OP_EQUALVERIFY '
         + 'OP_SWAP OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
-        + 'OP_ROT OP_ROT OP_2DUP OP_4 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIG',
+        + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_shuffled_fields.cash'), { encoding: 'utf-8' }),
       networks: {},
       compiler: {
@@ -456,7 +462,8 @@ export const fixtures: Fixture[] = [
         'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
         + 'OP_4 OP_PICK OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
-        + 'OP_10 OP_ROLL OP_10 OP_ROLL OP_2DUP OP_12 OP_ROLL OP_SWAP OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
+        + 'OP_10 OP_ROLL OP_10 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_12 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
         + 'e803 '
         + 'OP_ROT OP_BIN2NUM OP_7 OP_PICK OP_SUB OP_SWAP OP_SUB OP_8 OP_NUM2BIN '
         + 'OP_6 OP_ROLL OP_8 OP_NUM2BIN '

@@ -393,17 +393,28 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   verifyCovenant(): void {
+    // Duplicate [s, pk] that are on stack
     this.emit(Op.OP_2DUP);
     this.pushToStack('(value)');
     this.pushToStack('(value)');
 
+    // Turn sig into datasig
+    this.emit(Op.OP_SWAP);
+    this.emit(Op.OP_SIZE);
+    this.emit(Op.OP_1SUB);
+    this.emit(Op.OP_SPLIT);
+    this.emit(Op.OP_DROP);
+
+    // Retrieve preimage from stack and hash it
     const preimageIndex = this.getStackIndex('$preimage');
     this.removeFromStack(preimageIndex);
     this.emit(Data.encodeInt(preimageIndex));
     this.emit(Op.OP_ROLL);
+    this.emit(Op.OP_SHA256);
     this.pushToStack('(value)');
 
-    this.emit(Op.OP_SWAP);
+    // Order arguments and perform OP_CDSV
+    this.emit(Op.OP_ROT);
     this.emit(Op.OP_CHECKDATASIGVERIFY);
     this.popFromStack(3);
 
