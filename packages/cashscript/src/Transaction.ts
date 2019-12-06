@@ -3,25 +3,23 @@ import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import * as delay from 'delay';
 import { Script, AbiFunction } from 'cashc';
 import { Sig } from './Parameter';
-import { bitbox, ScriptUtil, BitcoinCashUtil } from './BITBOX';
+import { bitbox, ScriptUtil } from './BITBOX';
 import {
   TxOptions,
   Output,
   SignatureAlgorithm,
   Utxo,
-  Recipient,
   isRecipient,
-  isOpReturn,
-  OpReturn,
   OutputForBuilder,
 } from './interfaces';
 import {
   meep,
   createInputScript,
-  inputSize,
-  createOpReturnScript,
+  getInputSize,
+  createOpReturnOutput,
+  getTxSizeWithoutInputs,
 } from './transaction-util';
-import { DUST_LIMIT } from './constants';
+import { DUST_LIMIT, P2PKH_OUTPUT_SIZE } from './constants';
 import { FailedTransactionError } from './Errors';
 
 export class Transaction {
@@ -166,30 +164,24 @@ export class Transaction {
       this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
       this.selector,
     );
-    const inputScriptSize = inputSize(placeholderScript);
 
-    // Split outputs into regular recipients and op return outputs
-    const recipients = outs
-      .filter(output => isRecipient(output)) as Recipient[];
-    const opReturnScripts = outs
-      .filter(output => isOpReturn(output))
-      .map(output => createOpReturnScript(output as OpReturn));
+    // Add one extra byte per input to over-estimate txin count
+    const inputSize = getInputSize(placeholderScript) + 1;
 
-    // Calculate byte size of recipient outputs
-    let initialFee = BitcoinCashUtil.getByteCount({}, { P2PKH: recipients.length + 1 });
-    // Calculate byte size of OP_RETURNs (+ 10 to account for ammount of 0000000000000000)
-    initialFee = opReturnScripts.reduce((acc, script) => acc + script.byteLength + 10, initialFee);
-    // Calculate fee = byte size * sats/byte
-    initialFee = Math.ceil(initialFee * satsPerByte);
+    const outputs = outs.map(output => (
+      isRecipient(output) ? output : createOpReturnOutput(output)
+    ));
 
-    let satsNeeded = recipients.reduce((acc, output) => acc + output.amount, initialFee);
+    const initialFee = Math.ceil(getTxSizeWithoutInputs(outputs) * satsPerByte);
+
+    let satsNeeded = outputs.reduce((acc, output) => acc + output.amount, initialFee);
     let satsAvailable = 0;
 
     const inputs: Utxo[] = [];
     for (const utxo of utxos) {
       inputs.push(utxo);
       satsAvailable += utxo.satoshis;
-      satsNeeded += inputScriptSize;
+      satsNeeded += inputSize;
       if (satsAvailable > satsNeeded) break;
     }
 
@@ -197,12 +189,9 @@ export class Transaction {
 
     if (change < 0) {
       throw new Error(`Insufficient balance: available (${satsAvailable}) < needed (${satsNeeded}).`);
-    } else if (change >= DUST_LIMIT) {
-      recipients.push({ to: this.address, amount: change });
+    } else if (change >= DUST_LIMIT + P2PKH_OUTPUT_SIZE) {
+      outputs.push({ to: this.address, amount: change - P2PKH_OUTPUT_SIZE });
     }
-
-    const outputs = (opReturnScripts.map(o => ({ to: o, amount: 0 })) as OutputForBuilder[])
-      .concat(recipients);
 
     return { inputs, outputs };
   }

@@ -13,7 +13,7 @@ import {
 } from './fixture/vars';
 import { getTxOutputs } from './test-util';
 import { isOpReturn } from '../src/interfaces';
-import { createOpReturnScript } from '../src/transaction-util';
+import { createOpReturnOutput } from '../src/transaction-util';
 import { FailedTransactionError } from '../src/Errors';
 
 chai.use(chaiAsPromised);
@@ -115,7 +115,7 @@ describe('Transaction', () => {
         // then
         const txOutputs = getTxOutputs(tx);
         const expectedOutputs = outputs.map(o => (
-          isOpReturn(o) ? { to: createOpReturnScript(o), amount: 0 } : o
+          isOpReturn(o) ? createOpReturnOutput(o) : o
         ));
         assert.includeDeepMembers(txOutputs, expectedOutputs);
       });

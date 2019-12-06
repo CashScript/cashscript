@@ -3,13 +3,45 @@ import {
   Data,
   Op,
 } from 'cashc';
-import { Utxo, OpReturn } from './interfaces';
+import { Utxo, OpReturn, OutputForBuilder } from './interfaces';
 import { ScriptUtil, CryptoUtil } from './BITBOX';
+import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 
-export function inputSize(script: Buffer): number {
+export function getInputSize(script: Buffer): number {
   const scriptSize = script.byteLength;
   const scriptSizeSize = Data.encodeInt(scriptSize).byteLength;
   return 32 + 4 + scriptSizeSize + scriptSize + 4;
+}
+
+export function getTxSizeWithoutInputs(outputs: OutputForBuilder[]): number {
+  // Transaction format:
+  // Version (4 Bytes)
+  // TxIn Count (1 ~ 9B)
+  // For each TxIn:
+  //   Outpoint (36B)
+  //   Script Length (1 ~ 9B)
+  //   ScriptSig(?)
+  //   Sequence (4B)
+  // TxOut Count (1 ~ 9B)
+  // For each TxOut:
+  //   Value (8B)
+  //   Script Length(1 ~ 9B)*
+  //   Script (?)*
+  // LockTime (4B)
+
+  let size = VERSION_SIZE + LOCKTIME_SIZE;
+  size += outputs.reduce((acc, output) => {
+    if (typeof output.to === 'string') {
+      return acc + P2PKH_OUTPUT_SIZE;
+    } else {
+      // Size of an OP_RETURN output = byteLength + 8 (amount) + 2 (scriptSize)
+      return acc + output.to.byteLength + 8 + 2;
+    }
+  }, 0);
+  // Add txout count (accounting for a potential change output)
+  size += Data.encodeInt(outputs.length + 1).byteLength;
+
+  return size;
 }
 
 export function createInputScript(
@@ -28,15 +60,15 @@ export function createInputScript(
   );
 }
 
-export function createOpReturnScript(
+export function createOpReturnOutput(
   opReturnOutput: OpReturn,
-): Buffer {
+): OutputForBuilder {
   const script = [
     Op.OP_RETURN,
     ...opReturnOutput.opReturn.map((output: string) => toBuffer(output)),
   ];
 
-  return encodeNullDataScript(script);
+  return { to: encodeNullDataScript(script), amount: 0 };
 }
 
 function toBuffer(output: string): Buffer {
