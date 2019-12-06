@@ -12,7 +12,7 @@
   "dependencies": {
     "bitbox-sdk": "^8.8.0",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
-    "cashc": "^0.2.3-beta",
+    "cashc": "^0.3.0-beta",
     "delay": "^4.3.0"
   },
   "devDependencies": {
