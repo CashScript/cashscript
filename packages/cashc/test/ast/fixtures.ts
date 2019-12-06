@@ -493,6 +493,11 @@ export const fixtures: Fixture[] = [
               new VariableDefinitionNode(
                 new BytesType(8),
                 'amount1',
+                new CastNode(new BytesType(8), new IdentifierNode('pledge')),
+              ),
+              new VariableDefinitionNode(
+                new BytesType(8),
+                'amount2',
                 new CastNode(
                   new BytesType(8),
                   new BinaryOpNode(
@@ -510,17 +515,12 @@ export const fixtures: Fixture[] = [
                 ),
               ),
               new VariableDefinitionNode(
-                new BytesType(8),
-                'amount2',
-                new CastNode(new BytesType(8), new IdentifierNode('pledge')),
-              ),
-              new VariableDefinitionNode(
                 new BytesType(),
                 'contractBytecode',
                 new TupleIndexOpNode(
                   new SplitOpNode(
                     new IdentifierNode(PreimageField.SCRIPTCODE),
-                    new IntLiteralNode(3),
+                    new IntLiteralNode(1),
                   ),
                   1,
                 ),
@@ -544,16 +544,13 @@ export const fixtures: Fixture[] = [
                     new BinaryOpNode(
                       new IdentifierNode('amount1'),
                       BinaryOperator.PLUS,
-                      new HexLiteralNode(Buffer.from('17a914', 'hex')),
+                      new HexLiteralNode(Buffer.from('1976a914', 'hex')),
                     ),
                     BinaryOperator.PLUS,
-                    new FunctionCallNode(
-                      new IdentifierNode('hash160'),
-                      [new IdentifierNode('contractBytecode')],
-                    ),
+                    new IdentifierNode('recipient'),
                   ),
                   BinaryOperator.PLUS,
-                  new HexLiteralNode(Buffer.from('87', 'hex')),
+                  new HexLiteralNode(Buffer.from('88ac', 'hex')),
                 ),
               ),
               new VariableDefinitionNode(
@@ -564,13 +561,16 @@ export const fixtures: Fixture[] = [
                     new BinaryOpNode(
                       new IdentifierNode('amount2'),
                       BinaryOperator.PLUS,
-                      new HexLiteralNode(Buffer.from('1976a914', 'hex')),
+                      new HexLiteralNode(Buffer.from('17a914', 'hex')),
                     ),
                     BinaryOperator.PLUS,
-                    new IdentifierNode('recipient'),
+                    new FunctionCallNode(
+                      new IdentifierNode('hash160'),
+                      [new IdentifierNode('contractBytecode')],
+                    ),
                   ),
                   BinaryOperator.PLUS,
-                  new HexLiteralNode(Buffer.from('88ac', 'hex')),
+                  new HexLiteralNode(Buffer.from('87', 'hex')),
                 ),
               ),
               new RequireNode(
