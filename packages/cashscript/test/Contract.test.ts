@@ -1,6 +1,10 @@
-import { assert } from 'chai';
+import * as chai from 'chai';
+import chaiExclude from 'chai-exclude';
 import * as path from 'path';
 import { Contract, Artifacts } from '../src';
+
+chai.use(chaiExclude);
+const { assert } = chai;
 
 describe('Contract', () => {
   describe('compile', () => {
@@ -14,64 +18,18 @@ describe('Contract', () => {
       });
     });
 
-    it('should create P2PKH Contract object from file', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh.json'));
-      const P2PKH = Contract.compile(path.join(__dirname, 'fixture', 'p2pkh.cash'));
+    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas'].forEach((name) => {
+      it(`should create ${name} contract object from file`, () => {
+        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
+        const contract = Contract.compile(path.join(__dirname, 'fixture', `${name}.cash`));
+        assert.deepEqualExcluding(contract.artifact, expectedArtifact, ['updatedAt', 'networks']);
+      });
 
-      // Disregard updatedAt & networks
-      expectedArtifact.updatedAt = P2PKH.artifact.updatedAt;
-      expectedArtifact.networks = P2PKH.artifact.networks;
-      assert.deepEqual(P2PKH.artifact, expectedArtifact);
-    });
-
-    it('should create P2PKH Contract object from string', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh.json'));
-      const P2PKH = Contract.compile(expectedArtifact.source);
-
-      // Disregard updatedAt & networks
-      expectedArtifact.updatedAt = P2PKH.artifact.updatedAt;
-      expectedArtifact.networks = P2PKH.artifact.networks;
-      assert.deepEqual(P2PKH.artifact, expectedArtifact);
-    });
-
-    it('should create TransferWithTimeout Contract object from file', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'));
-      const TransferWithTimeout = Contract.compile(path.join(__dirname, 'fixture', 'transfer_with_timeout.cash'));
-
-      // Disregard updatedAt & networks
-      expectedArtifact.updatedAt = TransferWithTimeout.artifact.updatedAt;
-      expectedArtifact.networks = TransferWithTimeout.artifact.networks;
-      assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
-    });
-
-    it('should create TransferWithTimeout Contract object from string', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'));
-      const TransferWithTimeout = Contract.compile(expectedArtifact.source);
-
-      // Disregard updatedAt & networks
-      expectedArtifact.updatedAt = TransferWithTimeout.artifact.updatedAt;
-      expectedArtifact.networks = TransferWithTimeout.artifact.networks;
-      assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
-    });
-
-    it('should create HodlVault Contract object from file', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'hodl_vault.json'));
-      const HodlVault = Contract.compile(path.join(__dirname, 'fixture', 'hodl_vault.cash'));
-
-      // Disregard updatedAt & networks
-      expectedArtifact.updatedAt = HodlVault.artifact.updatedAt;
-      expectedArtifact.networks = HodlVault.artifact.networks;
-      assert.deepEqual(HodlVault.artifact, expectedArtifact);
-    });
-
-    it('should create HodlVault Contract object', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'hodl_vault.json'));
-      const HodlVault = Contract.compile(expectedArtifact.source);
-
-      // Disregard updatedAt & networks
-      expectedArtifact.updatedAt = HodlVault.artifact.updatedAt;
-      expectedArtifact.networks = HodlVault.artifact.networks;
-      assert.deepEqual(HodlVault.artifact, expectedArtifact);
+      it(`should create ${name} contract object from string`, () => {
+        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
+        const contract = Contract.compile(expectedArtifact.source);
+        assert.deepEqualExcluding(contract.artifact, expectedArtifact, ['updatedAt', 'networks']);
+      });
     });
   });
 
@@ -87,64 +45,38 @@ describe('Contract', () => {
       });
     });
 
-    it('should create P2PKH Contract object from file', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh.json'));
-      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas'].forEach((name) => {
+      it(`should create ${name} contract object from file`, () => {
+        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
+        const contract = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), 'testnet');
+        assert.deepEqual(contract.artifact, expectedArtifact);
+      });
 
-      assert.deepEqual(P2PKH.artifact, expectedArtifact);
-    });
-
-    it('should create P2PKH Contract object from object', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh.json'));
-      const P2PKH = Contract.import(expectedArtifact, 'testnet');
-
-      assert.deepEqual(P2PKH.artifact, expectedArtifact);
-    });
-
-    it('should create TransferWithTimeout Contract object from file', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'));
-      const TransferWithTimeout = Contract.import(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), 'testnet');
-
-      assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
-    });
-
-    it('should create TransferWithTimeout Contract object from object', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'));
-      const TransferWithTimeout = Contract.import(expectedArtifact, 'testnet');
-
-      assert.deepEqual(TransferWithTimeout.artifact, expectedArtifact);
-    });
-
-    it('should create HodlVault Contract object from file', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'hodl_vault.json'));
-      const HodlVault = Contract.import(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
-
-      assert.deepEqual(HodlVault.artifact, expectedArtifact);
-    });
-
-    it('should create HodlVault Contract object from object', () => {
-      const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'hodl_vault.json'));
-      const HodlVault = Contract.import(expectedArtifact, 'testnet');
-
-      assert.deepEqual(HodlVault.artifact, expectedArtifact);
+      it(`should create ${name} contract object from string`, () => {
+        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
+        const contract = Contract.import(expectedArtifact, 'testnet');
+        assert.deepEqual(contract.artifact, expectedArtifact);
+      });
     });
   });
 
   describe('export', () => {
-    it('should export Artifact file', () => {
-      const initial = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
-      const returnedArtifact = initial.export(path.join(__dirname, 'fixture', 'p2pkh.json'));
-      const exportedArtifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh.json'));
+    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas'].forEach((name) => {
+      it(`should export artifact file for ${name}`, () => {
+        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), 'testnet');
+        const returnedArtifact = initial.export(path.join(__dirname, 'fixture', `${name}.json`));
+        const exportedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
 
-      assert.deepEqual(initial.artifact, exportedArtifact);
-      assert.deepEqual(initial.artifact, returnedArtifact);
-    });
+        assert.deepEqual(initial.artifact, exportedArtifact);
+        assert.deepEqual(initial.artifact, returnedArtifact);
+      });
 
-    it('should export Artifact object', () => {
-      const initial = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
-      const artifact = initial.export();
+      it(`should export artifact object for ${name}`, () => {
+        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), 'testnet');
+        const artifact = initial.export();
 
-      assert.deepEqual(initial.artifact, artifact);
+        assert.deepEqual(initial.artifact, artifact);
+      });
     });
   });
 
@@ -171,7 +103,6 @@ describe('Contract', () => {
 
     it('should create new P2PKH instance', () => {
       const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
-
       const instance = P2PKH.new(Buffer.alloc(20, 0));
 
       assert.exists(instance.address);
@@ -181,7 +112,6 @@ describe('Contract', () => {
 
     it('should create new TransferWithTimeout instance', () => {
       const TransferWithTimeout = Contract.import(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), 'testnet');
-
       const instance = TransferWithTimeout.new(Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000);
 
       assert.exists(instance.address);
@@ -192,12 +122,21 @@ describe('Contract', () => {
 
     it('should create new HodlVault instance', () => {
       const HodlVault = Contract.import(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
-
       const instance = HodlVault.new(Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000, 10000);
 
       assert.exists(instance.address);
       assert.exists(instance.functions.spend);
       assert.equal(instance.name, HodlVault.name);
+    });
+
+    it('should create new Mecenas instance', () => {
+      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas.json'), 'testnet');
+      const instance = Mecenas.new(Buffer.alloc(20, 0), Buffer.alloc(20, 0), 1000000);
+
+      assert.exists(instance.address);
+      assert.exists(instance.functions.receive);
+      assert.exists(instance.functions.reclaim);
+      assert.equal(instance.name, Mecenas.name);
     });
   });
 
