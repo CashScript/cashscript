@@ -29,6 +29,7 @@ export interface OpReturn {
 export interface TxOptions {
   time?: number;
   age?: number;
+  fee?: number;
 }
 
 export enum SignatureAlgorithm {

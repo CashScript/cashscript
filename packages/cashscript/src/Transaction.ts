@@ -112,7 +112,7 @@ export class Transaction {
 
     this.builder.setLockTime(locktime);
 
-    const { inputs, outputs } = await this.getInputsAndOutputs(outs);
+    const { inputs, outputs } = await this.getInputsAndOutputs(outs, options && options.fee);
 
     inputs.forEach((utxo) => {
       this.builder.addInput(utxo.txid, utxo.vout, sequence);
@@ -153,6 +153,7 @@ export class Transaction {
 
   private async getInputsAndOutputs(
     outs: Output[],
+    hardcodedFee?: number,
     satsPerByte: number = 1.0,
   ): Promise<{ inputs: Utxo[], outputs: OutputForBuilder[] }> {
     const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
@@ -172,24 +173,27 @@ export class Transaction {
       isRecipient(output) ? output : createOpReturnOutput(output)
     ));
 
-    const initialFee = Math.ceil(getTxSizeWithoutInputs(outputs) * satsPerByte);
-
-    let satsNeeded = outputs.reduce((acc, output) => acc + output.amount, initialFee);
+    const amount = outputs.reduce((acc, output) => acc + output.amount, 0);
+    let fee = Math.ceil(getTxSizeWithoutInputs(outputs) * satsPerByte);
+    if (hardcodedFee) fee = hardcodedFee;
     let satsAvailable = 0;
 
     const inputs: Utxo[] = [];
     for (const utxo of utxos) {
       inputs.push(utxo);
       satsAvailable += utxo.satoshis;
-      satsNeeded += inputSize;
-      if (satsAvailable > satsNeeded) break;
+      if (!hardcodedFee) fee += inputSize;
+      if (satsAvailable > amount + fee) break;
     }
-
-    const change = satsAvailable - satsNeeded;
+    const change = satsAvailable - amount - fee;
 
     if (change < 0) {
-      throw new Error(`Insufficient balance: available (${satsAvailable}) < needed (${satsNeeded}).`);
-    } else if (change >= DUST_LIMIT + P2PKH_OUTPUT_SIZE) {
+      throw new Error(`Insufficient balance: available (${satsAvailable}) < needed (${amount + fee}).`);
+    }
+
+    if (hardcodedFee && change >= DUST_LIMIT) {
+      outputs.push({ to: this.address, amount: change });
+    } else if (!hardcodedFee && change >= DUST_LIMIT + P2PKH_OUTPUT_SIZE) {
       outputs.push({ to: this.address, amount: change - P2PKH_OUTPUT_SIZE });
     }
 
