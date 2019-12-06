@@ -342,7 +342,7 @@ export const fixtures: Fixture[] = [
           [
             new ParameterNode(PrimitiveType.SIG, 'ownerSig'),
             new ParameterNode(PrimitiveType.DATASIG, 'oracleSig'),
-            new ParameterNode(new BytesType(), 'oracleMessage'),
+            new ParameterNode(new BytesType(8), 'oracleMessage'),
           ],
           new BlockNode([
             new VariableDefinitionNode(

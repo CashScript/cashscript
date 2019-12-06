@@ -1,5 +1,3 @@
-pragma cashscript ^0.2.0;
-
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
     function receive() {
         int fee = 1000;

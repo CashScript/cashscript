@@ -17,6 +17,7 @@
   "abi": [
     {
       "name": "transfer",
+      "covenant": false,
       "inputs": [
         {
           "name": "recipientSig",
@@ -26,6 +27,7 @@
     },
     {
       "name": "timeout",
+      "covenant": false,
       "inputs": [
         {
           "name": "senderSig",
@@ -39,7 +41,7 @@
   "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.2.1-beta"
+    "version": "0.3.0-beta"
   },
-  "updatedAt": "2019-09-27T04:11:08.188Z"
+  "updatedAt": "2019-12-06T11:44:06.434Z"
 }

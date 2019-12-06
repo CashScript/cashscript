@@ -4,6 +4,7 @@
   "abi": [
     {
       "name": "spend",
+      "covenant": false,
       "inputs": [
         {
           "name": "b",
@@ -21,7 +22,7 @@
   "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.2.1-beta"
+    "version": "0.3.0-beta"
   },
-  "updatedAt": "2019-10-16T07:18:25.420Z"
+  "updatedAt": "2019-12-06T11:47:26.913Z"
 }

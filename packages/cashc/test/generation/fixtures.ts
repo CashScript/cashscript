@@ -236,7 +236,7 @@ export const fixtures: Fixture[] = [
           inputs: [
             { name: 'ownerSig', type: 'sig' },
             { name: 'oracleSig', type: 'datasig' },
-            { name: 'oracleMessage', type: 'bytes' },
+            { name: 'oracleMessage', type: 'bytes8' },
           ],
         },
       ],
