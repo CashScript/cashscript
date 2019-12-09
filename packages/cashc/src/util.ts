@@ -11,6 +11,7 @@ import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import { Script } from './generation/Script';
 import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
+import ReplaceBytecodeNop from './generation/ReplaceBytecodeNop';
 
 export const Data = {
   encodeBool(b: boolean): Buffer {
@@ -18,6 +19,9 @@ export const Data = {
   },
   encodeInt(i: number): Buffer {
     return new BScript().encodeNumber(i);
+  },
+  decodeInt(i: Buffer): number {
+    return new BScript().decodeNumber(i);
   },
   encodeString(s: string): Buffer {
     return Buffer.from(s, 'ascii');
@@ -49,10 +53,11 @@ export const CashCompiler = {
     ast = ast.accept(new TypeCheckTraversal()) as Ast;
     const traversal = new GenerateTargetTraversal();
     ast.accept(traversal);
-    const targetCode = traversal.output;
-    const optimisedCode = TargetCodeOptimisation.optimise(targetCode);
+    let bytecode = traversal.output;
+    bytecode = TargetCodeOptimisation.optimise(bytecode);
+    bytecode = ReplaceBytecodeNop.replace(bytecode);
 
-    return generateArtifact(ast, optimisedCode, code);
+    return generateArtifact(ast, bytecode, code);
   },
   compileFile(codeFile: string): Artifact {
     const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });

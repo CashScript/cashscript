@@ -1,6 +1,6 @@
 contract Covenant(bytes4 requiredVersion) {
     function spend() {
         require(tx.version == requiredVersion);
-        require(tx.scriptCode == 0x00);
+        require(tx.bytecode == 0x00);
     }
 }

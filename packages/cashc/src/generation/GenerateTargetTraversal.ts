@@ -164,13 +164,13 @@ export default class GenerateTargetTraversal extends AstTraversal {
       fromEnd: 0,
     };
 
-    // Fields before scriptCode need to be cut from the front
-    const beforeScriptCode = [
+    // Fields before bytecode needs to be cut from the front
+    const beforeBytecode = [
       PreimageField.VERSION, PreimageField.HASHPREVOUTS,
       PreimageField.HASHSEQUENCE, PreimageField.OUTPOINT,
     ].filter(field => fields.includes(field));
 
-    beforeScriptCode.forEach((field) => {
+    beforeBytecode.forEach((field) => {
       const part = PreimageParts[field];
       const start = part.fromStart - cuts.fromStart;
       if (start !== 0) {
@@ -186,35 +186,36 @@ export default class GenerateTargetTraversal extends AstTraversal {
       cuts.fromStart = part.fromStart + part.size;
     });
 
-    // scriptCode potentially needs a cut from the front and from the back
-    if (fields.includes(PreimageField.SCRIPTCODE)) {
-      const part = PreimageParts[PreimageField.SCRIPTCODE];
+    // Bytecode potentially needs a cut from the front and from the back
+    if (fields.includes(PreimageField.BYTECODE)) {
+      const part = PreimageParts[PreimageField.BYTECODE];
       const start = part.fromStart - cuts.fromStart;
 
-      if (start !== 0) {
-        this.emit(Data.encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
+      // Always add this split, since the VarInt needs to be cut off any way
+      // See ReplaceBytecodeNop.ts
+      this.emit(Op.OP_NOP);
+      this.emit(Data.encodeInt(start));
+      this.emit(Op.OP_SPLIT);
+      this.emit(Op.OP_NIP);
 
       this.emit(Op.OP_SIZE);
       this.emit(Data.encodeInt(part.size));
       this.emit(Op.OP_SUB);
       this.emit(Op.OP_SPLIT);
 
-      this.pushToStack(PreimageField.SCRIPTCODE);
+      this.pushToStack(PreimageField.BYTECODE);
       cuts.fromStart = 0;
       cuts.fromEnd = part.size;
     }
 
-    // Fields after scriptCode potentially need a cut from the back,
+    // Fields after bytecode potentially need a cut from the back,
     // after which they go back to cutting from the front
-    const afterScriptCode = [
+    const afterBytecode = [
       PreimageField.VALUE, PreimageField.SEQUENCE, PreimageField.HASHOUTPUTS,
       PreimageField.LOCKTIME, PreimageField.HASHTYPE,
     ].filter(field => fields.includes(field));
 
-    afterScriptCode.forEach((field) => {
+    afterBytecode.forEach((field) => {
       const part = PreimageParts[field];
       const start = part.fromStart - cuts.fromStart;
       const end = part.fromEnd - cuts.fromEnd;

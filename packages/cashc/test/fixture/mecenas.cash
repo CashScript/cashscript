@@ -13,12 +13,8 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
         } else {
             bytes8 amount1 = bytes8(pledge);
             bytes8 amount2 = bytes8(int(bytes(tx.value)) - pledge - fee);
-
-            bytes contractBytecode = tx.scriptCode.split(1)[1];
-
             bytes34 out1 = new OutputP2PKH(amount1, recipient);
-            bytes32 out2 = new OutputP2SH(amount2, hash160(contractBytecode));
-
+            bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode));
             require(hash256(out1 + out2) == tx.hashOutputs);
         }
     }

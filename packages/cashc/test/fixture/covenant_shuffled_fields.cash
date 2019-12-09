@@ -1,7 +1,7 @@
 contract Covenant() {
     function spend(pubkey pk, sig s) {
         require(tx.hashtype == bytes(0x01));
-        require(tx.scriptCode == bytes(0x01));
+        require(tx.bytecode == bytes(0x01));
         require(tx.hashPrevouts == bytes(0x01));
         require(tx.version == bytes(0x01));
         require(tx.value == bytes(0x01));

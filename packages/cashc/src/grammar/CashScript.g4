@@ -170,7 +170,7 @@ PreimageField
     | 'tx.hashPrevouts'
     | 'tx.hashSequence'
     | 'tx.outpoint'
-    | 'tx.scriptCode'
+    | 'tx.bytecode'
     | 'tx.value'
     | 'tx.sequence'
     | 'tx.hashOutputs'

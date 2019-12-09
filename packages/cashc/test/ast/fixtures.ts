@@ -439,7 +439,7 @@ export const fixtures: Fixture[] = [
             ),
             new RequireNode(
               new BinaryOpNode(
-                new IdentifierNode(PreimageField.SCRIPTCODE),
+                new IdentifierNode(PreimageField.BYTECODE),
                 BinaryOperator.EQ,
                 new HexLiteralNode(Buffer.from('00', 'hex')),
               ),
@@ -454,7 +454,7 @@ export const fixtures: Fixture[] = [
               ),
             ),
           ]),
-          [PreimageField.VERSION, PreimageField.SCRIPTCODE],
+          [PreimageField.VERSION, PreimageField.BYTECODE],
         )],
       ),
     ),
@@ -484,6 +484,17 @@ export const fixtures: Fixture[] = [
                     new IdentifierNode('s'),
                     new IdentifierNode('pk'),
                   ],
+                ),
+              ),
+              new TimeOpNode(
+                TimeOp.CHECK_SEQUENCE,
+                new IntLiteralNode(30 * 24 * 60 * 60),
+              ),
+              new RequireNode(
+                new BinaryOpNode(
+                  new CastNode(PrimitiveType.INT, new IdentifierNode(PreimageField.VERSION)),
+                  BinaryOperator.GE,
+                  new IntLiteralNode(2),
                 ),
               ),
               new VariableDefinitionNode(
@@ -516,28 +527,6 @@ export const fixtures: Fixture[] = [
                 ),
               ),
               new VariableDefinitionNode(
-                new BytesType(),
-                'contractBytecode',
-                new TupleIndexOpNode(
-                  new SplitOpNode(
-                    new IdentifierNode(PreimageField.SCRIPTCODE),
-                    new IntLiteralNode(1),
-                  ),
-                  1,
-                ),
-              ),
-              new TimeOpNode(
-                TimeOp.CHECK_SEQUENCE,
-                new IntLiteralNode(30 * 24 * 60 * 60),
-              ),
-              new RequireNode(
-                new BinaryOpNode(
-                  new CastNode(PrimitiveType.INT, new IdentifierNode(PreimageField.VERSION)),
-                  BinaryOperator.GE,
-                  new IntLiteralNode(2),
-                ),
-              ),
-              new VariableDefinitionNode(
                 new BytesType(34),
                 'out1',
                 new InstantiationNode(
@@ -553,7 +542,7 @@ export const fixtures: Fixture[] = [
                   [
                     new IdentifierNode('amount2'), new FunctionCallNode(
                       new IdentifierNode('hash160'),
-                      [new IdentifierNode('contractBytecode')],
+                      [new IdentifierNode(PreimageField.BYTECODE)],
                     ),
                   ],
                 ),
@@ -574,9 +563,9 @@ export const fixtures: Fixture[] = [
               ),
             ]),
             [
-              PreimageField.VALUE,
-              PreimageField.SCRIPTCODE,
               PreimageField.VERSION,
+              PreimageField.VALUE,
+              PreimageField.BYTECODE,
               PreimageField.HASHOUTPUTS,
             ],
           ),
@@ -719,17 +708,6 @@ export const fixtures: Fixture[] = [
                     ),
                   ),
                   new VariableDefinitionNode(
-                    new BytesType(),
-                    'contractBytecode',
-                    new TupleIndexOpNode(
-                      new SplitOpNode(
-                        new IdentifierNode(PreimageField.SCRIPTCODE),
-                        new IntLiteralNode(1),
-                      ),
-                      1,
-                    ),
-                  ),
-                  new VariableDefinitionNode(
                     new BytesType(34),
                     'out1',
                     new InstantiationNode(
@@ -745,7 +723,7 @@ export const fixtures: Fixture[] = [
                       [
                         new IdentifierNode('amount2'), new FunctionCallNode(
                           new IdentifierNode('hash160'),
-                          [new IdentifierNode('contractBytecode')],
+                          [new IdentifierNode(PreimageField.BYTECODE)],
                         ),
                       ],
                     ),
@@ -771,7 +749,7 @@ export const fixtures: Fixture[] = [
               PreimageField.VERSION,
               PreimageField.VALUE,
               PreimageField.HASHOUTPUTS,
-              PreimageField.SCRIPTCODE,
+              PreimageField.BYTECODE,
             ],
           ),
           new FunctionDefinitionNode(

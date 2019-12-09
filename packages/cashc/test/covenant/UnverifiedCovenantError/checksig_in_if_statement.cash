@@ -3,7 +3,7 @@ contract Covenant(bytes4 requiredVersion) {
         if (checkSig(s, pk)) {
             require(tx.version == requiredVersion);
         } else {
-            require(tx.scriptCode == 0x00);
+            require(tx.bytecode == 0x00);
         }
     }
 }

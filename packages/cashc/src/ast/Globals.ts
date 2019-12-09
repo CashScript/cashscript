@@ -46,7 +46,7 @@ export enum PreimageField {
   HASHPREVOUTS = 'tx.hashPrevouts', // bytes32
   HASHSEQUENCE = 'tx.hashSequence', // bytes32
   OUTPOINT = 'tx.outpoint', // bytes36
-  SCRIPTCODE = 'tx.scriptCode', // bytes
+  BYTECODE = 'tx.bytecode', // bytes
   VALUE = 'tx.value', // bytes8
   SEQUENCE = 'tx.sequence', // bytes4
   HASHOUTPUTS = 'tx.hashOutputs', // bytes32
@@ -61,7 +61,7 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.VERSION, new BytesType(4)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHPREVOUTS, new BytesType(32)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHSEQUENCE, new BytesType(32)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.OUTPOINT, new BytesType(36)));
-GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.SCRIPTCODE, new BytesType()));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.BYTECODE, new BytesType()));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.VALUE, new BytesType(8)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.SEQUENCE, new BytesType(4)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHOUTPUTS, new BytesType(32)));

@@ -27,7 +27,7 @@ export const PreimageParts: { [key in PreimageField]: Part } = {
     fromEnd: 0,
     size: 36,
   },
-  [PreimageField.SCRIPTCODE]: {
+  [PreimageField.BYTECODE]: {
     fromStart: 4 + 32 + 32 + 36,
     fromEnd: 0,
     size: 52,

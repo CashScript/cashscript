@@ -4,7 +4,7 @@ contract Covenant() {
         require(tx.hashPrevouts == bytes(0x01));
         require(tx.hashSequence == bytes(0x01));
         require(tx.outpoint == bytes(0x01));
-        require(tx.scriptCode == bytes(0x01));
+        require(tx.bytecode == bytes(0x01));
         require(tx.value == bytes(0x01));
         require(tx.sequence == bytes(0x01));
         require(tx.hashOutputs == bytes(0x01));
