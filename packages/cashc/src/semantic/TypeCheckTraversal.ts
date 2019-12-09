@@ -14,6 +14,7 @@ import {
   TupleIndexOpNode,
   RequireNode,
   Node,
+  InstantiationNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -38,6 +39,7 @@ import {
   TupleType,
   isPrimitive,
   BytesType,
+  Type,
 } from '../ast/Type';
 import { BinaryOperator, UnaryOperator } from '../ast/Operator';
 import { GlobalFunction } from '../ast/Globals';
@@ -114,7 +116,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // aready checked in symbol table
 
-    const parameterTypes = node.parameters.map(p => p.type as PrimitiveType);
+    const parameterTypes = node.parameters.map(p => p.type as Type);
 
     if (!implicitlyCastableSignature(parameterTypes, definition.parameters)) {
       throw new InvalidParameterTypeError(node, parameterTypes, definition.parameters);
@@ -127,6 +129,23 @@ export default class TypeCheckTraversal extends AstTraversal {
       if (sigs.elements.length > pks.elements.length) {
         throw new ArrayElementError(pks);
       }
+    }
+
+    node.type = type;
+    return node;
+  }
+
+  visitInstantiation(node: InstantiationNode): Node {
+    node.identifier = this.visit(node.identifier) as IdentifierNode;
+    node.parameters = this.visitList(node.parameters);
+
+    const { definition, type } = node.identifier;
+    if (!definition || !definition.parameters) return node; // aready checked in symbol table
+
+    const parameterTypes = node.parameters.map(p => p.type as Type);
+
+    if (!implicitlyCastableSignature(parameterTypes, definition.parameters)) {
+      throw new InvalidParameterTypeError(node, parameterTypes, definition.parameters);
     }
 
     node.type = type;

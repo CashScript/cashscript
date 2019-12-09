@@ -36,6 +36,11 @@ export enum TimeOp {
   CHECK_LOCKTIME = 'tx.time',
 }
 
+export enum Class {
+  OUTPUT_P2SH = 'OutputP2SH',
+  OUTPUT_P2PKH = 'OutputP2PKH',
+}
+
 export enum PreimageField {
   VERSION = 'tx.version', // bytes4
   HASHPREVOUTS = 'tx.hashPrevouts', // bytes32
@@ -50,6 +55,7 @@ export enum PreimageField {
 }
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
+
 // Preimage fields
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.VERSION, new BytesType(4)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHPREVOUTS, new BytesType(32)));
@@ -61,6 +67,16 @@ GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.SEQUENCE, new BytesType(4)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHOUTPUTS, new BytesType(32)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.LOCKTIME, new BytesType(4)));
 GLOBAL_SYMBOL_TABLE.set(new Symbol(PreimageField.HASHTYPE, new BytesType(4)));
+
+// Classes
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  Class.OUTPUT_P2SH, new BytesType(32), undefined,
+  [new BytesType(8), new BytesType(20)],
+));
+GLOBAL_SYMBOL_TABLE.set(new Symbol(
+  Class.OUTPUT_P2PKH, new BytesType(34), undefined,
+  [new BytesType(8), new BytesType(20)],
+));
 
 // Global functions
 GLOBAL_SYMBOL_TABLE.set(new Symbol(

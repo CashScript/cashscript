@@ -9,8 +9,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*,  int period */
         int fee = 1000;
 
         if (int(bytes(tx.value)) <= pledge + fee) {
-            // out1 = <value> + <25 bytes> + DUP HASH160 <public key hash> EQUALVERIFY CHECKSIG
-            bytes out1 = tx.value + 0x1976a914 + recipient + 0x88ac;
+            bytes out1 = new OutputP2PKH(tx.value, recipient);
             require(hash256(out1) == tx.hashOutputs);
         } else {
             bytes8 amount1 = bytes8(pledge);
@@ -18,10 +17,8 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*,  int period */
 
             bytes contractBytecode = tx.scriptCode.split(1)[1];
 
-            // out1 = <amount1> + <25 bytes> + DUP HASH160 <public key hash> EQUALVERIFY CHECKSIG
-            // out2 = <amount2> + <23 bytes> + HASH160 <redeem script hash> EQUAL
-            bytes out1 = amount1 + 0x1976a914 + recipient + 0x88ac;
-            bytes out2 = amount2 + 0x17a914 + hash160(contractBytecode) + 0x87;
+            bytes out1 = new OutputP2PKH(amount1, recipient);
+            bytes out2 = new OutputP2SH(amount2, hash160(contractBytecode));
 
             require(hash256(out1 + out2) == tx.hashOutputs);
         }

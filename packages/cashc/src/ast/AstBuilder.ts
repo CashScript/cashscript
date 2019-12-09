@@ -30,6 +30,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  InstantiationNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import {
@@ -59,10 +60,15 @@ import {
   RequireStatementContext,
   PragmaDirectiveContext,
   PreimageFieldContext,
+  InstantationContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
-import { NumberUnit, TimeOp, PreimageField } from './Globals';
+import {
+  NumberUnit,
+  TimeOp,
+  PreimageField,
+} from './Globals';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
 import { VersionError } from '../Errors';
@@ -216,6 +222,15 @@ export default class AstBuilder
     const functionCall = new FunctionCallNode(identifier, parameters);
     functionCall.location = Location.fromCtx(ctx);
     return functionCall;
+  }
+
+  visitInstantation(ctx: InstantationContext): InstantiationNode {
+    const identifier = new IdentifierNode(ctx.Identifier().text as string);
+    identifier.location = Location.fromToken(ctx.Identifier().symbol);
+    const parameters = ctx.expressionList().expression().map(e => this.visit(e));
+    const instantiation = new InstantiationNode(identifier, parameters);
+    instantiation.location = Location.fromCtx(ctx);
+    return instantiation;
   }
 
   visitTupleIndexOp(ctx: TupleIndexOpContext): TupleIndexOpNode {

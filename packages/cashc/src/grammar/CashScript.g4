@@ -85,6 +85,7 @@ expression
     : '(' expression ')' # Parenthesised
     | typeName '(' expression ')' # Cast
     | functionCall # FunctionCallExpression
+    | 'new' Identifier expressionList #Instantation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
     | expression '.length' # SizeOp
     | obj=expression '.split' '(' index=expression ')' # SplitOp

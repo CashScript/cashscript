@@ -24,6 +24,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  InstantiationNode,
 } from './AST';
 import AstVisitor from './AstVisitor';
 
@@ -88,6 +89,12 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitFunctionCall(node: FunctionCallNode): Node {
+    node.identifier = this.visit(node.identifier) as IdentifierNode;
+    node.parameters = this.visitList(node.parameters);
+    return node;
+  }
+
+  visitInstantiation(node: InstantiationNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
     return node;

@@ -191,6 +191,19 @@ export class FunctionCallNode extends ExpressionNode {
   }
 }
 
+export class InstantiationNode extends ExpressionNode {
+  constructor(
+    public identifier: IdentifierNode,
+    public parameters: ExpressionNode[],
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitInstantiation(this);
+  }
+}
+
 export class TupleIndexOpNode extends ExpressionNode {
   constructor(
     public tuple: ExpressionNode,

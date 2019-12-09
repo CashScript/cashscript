@@ -21,9 +21,10 @@ import {
   SplitOpNode,
   TimeOpNode,
   HexLiteralNode,
+  InstantiationNode,
 } from '../../src/ast/AST';
 import { BinaryOperator } from '../../src/ast/Operator';
-import { TimeOp, PreimageField } from '../../src/ast/Globals';
+import { TimeOp, PreimageField, Class } from '../../src/ast/Globals';
 
 interface Fixture {
   fn: string,
@@ -537,40 +538,24 @@ export const fixtures: Fixture[] = [
                 ),
               ),
               new VariableDefinitionNode(
-                new BytesType(),
+                new BytesType(34),
                 'out1',
-                new BinaryOpNode(
-                  new BinaryOpNode(
-                    new BinaryOpNode(
-                      new IdentifierNode('amount1'),
-                      BinaryOperator.PLUS,
-                      new HexLiteralNode(Buffer.from('1976a914', 'hex')),
-                    ),
-                    BinaryOperator.PLUS,
-                    new IdentifierNode('recipient'),
-                  ),
-                  BinaryOperator.PLUS,
-                  new HexLiteralNode(Buffer.from('88ac', 'hex')),
+                new InstantiationNode(
+                  new IdentifierNode(Class.OUTPUT_P2PKH),
+                  [new IdentifierNode('amount1'), new IdentifierNode('recipient')],
                 ),
               ),
               new VariableDefinitionNode(
-                new BytesType(),
+                new BytesType(32),
                 'out2',
-                new BinaryOpNode(
-                  new BinaryOpNode(
-                    new BinaryOpNode(
-                      new IdentifierNode('amount2'),
-                      BinaryOperator.PLUS,
-                      new HexLiteralNode(Buffer.from('17a914', 'hex')),
-                    ),
-                    BinaryOperator.PLUS,
-                    new FunctionCallNode(
+                new InstantiationNode(
+                  new IdentifierNode(Class.OUTPUT_P2SH),
+                  [
+                    new IdentifierNode('amount2'), new FunctionCallNode(
                       new IdentifierNode('hash160'),
                       [new IdentifierNode('contractBytecode')],
                     ),
-                  ),
-                  BinaryOperator.PLUS,
-                  new HexLiteralNode(Buffer.from('87', 'hex')),
+                  ],
                 ),
               ),
               new RequireNode(
@@ -690,20 +675,11 @@ export const fixtures: Fixture[] = [
                 ),
                 new BlockNode([
                   new VariableDefinitionNode(
-                    new BytesType(),
+                    new BytesType(34),
                     'out1',
-                    new BinaryOpNode(
-                      new BinaryOpNode(
-                        new BinaryOpNode(
-                          new IdentifierNode(PreimageField.VALUE),
-                          BinaryOperator.PLUS,
-                          new HexLiteralNode(Buffer.from('1976a914', 'hex')),
-                        ),
-                        BinaryOperator.PLUS,
-                        new IdentifierNode('recipient'),
-                      ),
-                      BinaryOperator.PLUS,
-                      new HexLiteralNode(Buffer.from('88ac', 'hex')),
+                    new InstantiationNode(
+                      new IdentifierNode(Class.OUTPUT_P2PKH),
+                      [new IdentifierNode(PreimageField.VALUE), new IdentifierNode('recipient')],
                     ),
                   ),
                   new RequireNode(
@@ -754,40 +730,24 @@ export const fixtures: Fixture[] = [
                     ),
                   ),
                   new VariableDefinitionNode(
-                    new BytesType(),
+                    new BytesType(34),
                     'out1',
-                    new BinaryOpNode(
-                      new BinaryOpNode(
-                        new BinaryOpNode(
-                          new IdentifierNode('amount1'),
-                          BinaryOperator.PLUS,
-                          new HexLiteralNode(Buffer.from('1976a914', 'hex')),
-                        ),
-                        BinaryOperator.PLUS,
-                        new IdentifierNode('recipient'),
-                      ),
-                      BinaryOperator.PLUS,
-                      new HexLiteralNode(Buffer.from('88ac', 'hex')),
+                    new InstantiationNode(
+                      new IdentifierNode(Class.OUTPUT_P2PKH),
+                      [new IdentifierNode('amount1'), new IdentifierNode('recipient')],
                     ),
                   ),
                   new VariableDefinitionNode(
-                    new BytesType(),
+                    new BytesType(32),
                     'out2',
-                    new BinaryOpNode(
-                      new BinaryOpNode(
-                        new BinaryOpNode(
-                          new IdentifierNode('amount2'),
-                          BinaryOperator.PLUS,
-                          new HexLiteralNode(Buffer.from('17a914', 'hex')),
-                        ),
-                        BinaryOperator.PLUS,
-                        new FunctionCallNode(
+                    new InstantiationNode(
+                      new IdentifierNode(Class.OUTPUT_P2SH),
+                      [
+                        new IdentifierNode('amount2'), new FunctionCallNode(
                           new IdentifierNode('hash160'),
                           [new IdentifierNode('contractBytecode')],
                         ),
-                      ),
-                      BinaryOperator.PLUS,
-                      new HexLiteralNode(Buffer.from('87', 'hex')),
+                      ],
                     ),
                   ),
                   new RequireNode(

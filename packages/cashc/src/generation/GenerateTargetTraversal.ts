@@ -23,9 +23,10 @@ import {
   RequireNode,
   SourceFileNode,
   Node,
+  InstantiationNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
-import { GlobalFunction, PreimageField } from '../ast/Globals';
+import { GlobalFunction, PreimageField, Class } from '../ast/Globals';
 import { resultingType, PrimitiveType } from '../ast/Type';
 import {
   Op,
@@ -400,11 +401,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.pushToStack('(value)');
 
     // Turn sig into datasig
-    this.emit(Op.OP_SWAP);
-    this.emit(Op.OP_SIZE);
-    this.emit(Op.OP_1SUB);
-    this.emit(Op.OP_SPLIT);
-    this.emit(Op.OP_DROP);
+    this.emit([Op.OP_SWAP, Op.OP_SIZE, Op.OP_1SUB, Op.OP_SPLIT, Op.OP_DROP]);
 
     // Retrieve preimage from stack and hash it
     const preimageIndex = this.getStackIndex('$preimage');
@@ -420,6 +417,31 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.popFromStack(3);
 
     this.covenantNeedsToBeVerified = false;
+  }
+
+  visitInstantiation(node: InstantiationNode): Node {
+    if (node.parameters.length !== 2) throw new Error(); // Should not happen
+    if (node.identifier.name === Class.OUTPUT_P2PKH) {
+      this.visit(node.parameters[0]);
+      this.emit(Buffer.from('1976a914', 'hex'));
+      this.emit(Op.OP_CAT);
+      this.visit(node.parameters[1]);
+      this.emit(Op.OP_CAT);
+      this.emit(Buffer.from('88ac', 'hex'));
+      this.emit(Op.OP_CAT);
+    } else if (node.identifier.name === Class.OUTPUT_P2SH) {
+      this.visit(node.parameters[0]);
+      this.emit(Buffer.from('17a914', 'hex'));
+      this.emit(Op.OP_CAT);
+      this.visit(node.parameters[1]);
+      this.emit(Op.OP_CAT);
+      this.emit(Buffer.from('87', 'hex'));
+      this.emit(Op.OP_CAT);
+    }
+    this.popFromStack(2);
+    this.pushToStack('(value)');
+
+    return node;
   }
 
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
