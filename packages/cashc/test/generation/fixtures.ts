@@ -437,22 +437,13 @@ export const fixtures: Fixture[] = [
     },
   },
   {
-    fn: 'mecenas.cash',
+    fn: 'mecenas_v1.cash',
     artifact: {
       contractName: 'Mecenas',
       constructorInputs: [
-        {
-          name: 'recipient',
-          type: 'bytes20',
-        },
-        {
-          name: 'funder',
-          type: 'bytes20',
-        },
-        {
-          name: 'pledge',
-          type: 'int',
-        },
+        { name: 'recipient', type: 'bytes20' },
+        { name: 'funder', type: 'bytes20' },
+        { name: 'pledge', type: 'int' },
       ],
       abi: [
         { name: 'receive', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
@@ -476,6 +467,53 @@ export const fixtures: Fixture[] = [
         + 'OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_IF '
         + 'OP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY '
         + 'OP_2SWAP OP_CHECKSIG OP_NIP OP_NIP '
+        + 'OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'mecenas_v1.cash'), { encoding: 'utf-8' }),
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'mecenas.cash',
+    artifact: {
+      contractName: 'Mecenas',
+      constructorInputs: [
+        { name: 'recipient', type: 'bytes20' },
+        { name: 'funder', type: 'bytes20' },
+        { name: 'pledge', type: 'int' },
+        { name: 'period', type: 'int' },
+      ],
+      abi: [
+        { name: 'receive', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
+        { name: 'reclaim', covenant: false, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
+      ],
+      bytecode:
+        'OP_4 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
+        + 'OP_5 OP_PICK OP_4 OP_SPLIT 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
+        + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
+        + 'OP_11 OP_ROLL OP_11 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_13 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
+        + 'OP_7 OP_ROLL OP_CHECKSEQUENCEVERIFY OP_DROP '
+        + 'OP_3 OP_ROLL OP_BIN2NUM OP_2 OP_GREATERTHANOREQUAL OP_VERIFY '
+        + 'e803 '
+        + 'OP_2 OP_PICK OP_BIN2NUM OP_7 OP_PICK OP_2 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF '
+        + 'OP_2 OP_PICK 1976a914 OP_CAT OP_5 OP_PICK OP_CAT 88ac OP_CAT '
+        + 'OP_DUP OP_HASH256 OP_3 OP_PICK OP_EQUALVERIFY OP_DROP '
+        + 'OP_ELSE '
+        + 'OP_6 OP_PICK OP_8 OP_NUM2BIN '
+        + 'OP_3 OP_PICK OP_BIN2NUM OP_8 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB OP_8 OP_NUM2BIN '
+        + 'OP_5 OP_PICK OP_1 OP_SPLIT OP_NIP '
+        + 'OP_2 OP_PICK 1976a914 OP_CAT OP_8 OP_PICK OP_CAT 88ac OP_CAT '
+        + 'OP_2 OP_PICK 17a914 OP_CAT OP_2 OP_PICK OP_HASH160 OP_CAT 87 OP_CAT '
+        + 'OP_2DUP OP_CAT OP_HASH256 OP_7 OP_PICK OP_EQUALVERIFY OP_2DROP OP_DROP OP_ENDIF '
+        + 'OP_2DROP OP_2DROP OP_2DROP OP_2DROP OP_2DROP OP_1 '
+        + 'OP_ELSE OP_4 OP_ROLL OP_1 OP_NUMEQUAL OP_IF '
+        + 'OP_4 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY '
+        + 'OP_4 OP_ROLL OP_4 OP_ROLL OP_CHECKSIG OP_NIP OP_NIP OP_NIP '
         + 'OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'mecenas.cash'), { encoding: 'utf-8' }),
       networks: {},

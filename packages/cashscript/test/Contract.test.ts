@@ -18,7 +18,7 @@ describe('Contract', () => {
       });
     });
 
-    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas'].forEach((name) => {
+    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas_v1', 'mecenas'].forEach((name) => {
       it(`should create ${name} contract object from file`, () => {
         const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
         const contract = Contract.compile(path.join(__dirname, 'fixture', `${name}.cash`));
@@ -45,7 +45,7 @@ describe('Contract', () => {
       });
     });
 
-    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas'].forEach((name) => {
+    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas_v1', 'mecenas'].forEach((name) => {
       it(`should create ${name} contract object from file`, () => {
         const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
         const contract = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), 'testnet');

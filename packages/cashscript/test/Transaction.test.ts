@@ -124,7 +124,7 @@ describe('Transaction', () => {
       });
     });
 
-    describe('meep (to one)', () => {
+    describe.skip('meep (to one)', () => {
       it('should succeed when using incorrect function parameters', async () => {
         await p2pkhInstance.functions
           .spend(alicePk, new Sig(bob))
@@ -138,7 +138,7 @@ describe('Transaction', () => {
       });
     });
 
-    describe('meep (to many)', () => {
+    describe.skip('meep (to many)', () => {
       it('should succeed when using incorrect function parameters', async () => {
         await p2pkhInstance.functions.spend(alicePk, new Sig(bob)).meep([
           { to: p2pkhInstance.address, amount: 15000 },
@@ -320,7 +320,7 @@ describe('Transaction', () => {
       });
     });
 
-    describe('meep (to one)', () => {
+    describe.skip('meep (to one)', () => {
       it('should succeed when using incorrect function parameters', async () => {
         await twtInstancePast.functions
           .transfer(new Sig(alice))
@@ -352,7 +352,7 @@ describe('Transaction', () => {
       });
     });
 
-    describe('meep (to many)', () => {
+    describe.skip('meep (to many)', () => {
       it('should succeed when using incorrect function parameters', async () => {
         await twtInstancePast.functions.transfer(new Sig(alice)).meep([
           { to: twtInstancePast.address, amount: 10000 },
@@ -569,15 +569,15 @@ describe('Transaction', () => {
   });
 
   // Mecenas has tx.age check omitted for testing
-  describe('Mecenas', () => {
+  describe('Mecenas v1', () => {
     let mecenas: Instance;
     const pledge = 10000;
     before(() => {
-      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas.json'), 'testnet');
+      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas_v1.json'), 'testnet');
       mecenas = Mecenas.new(alicePkh, bobPkh, pledge);
     });
 
-    describe('send (to one)', () => {
+    describe('send', () => {
       it('should fail when trying to send more than pledge', async () => {
         // given
         const to = aliceAddress;
@@ -622,6 +622,80 @@ describe('Transaction', () => {
             .send([{ to, amount }, { to, amount }], { fee: 1000 }),
           FailedTransactionError,
           'mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)',
+        );
+      });
+
+      it('should succeed when sending pledge to receiver', async () => {
+        // given
+        const to = aliceAddress;
+        const amount = pledge;
+
+        // when
+        const tx = await mecenas.functions
+          .receive(alicePk, new Sig(alice))
+          .send(to, amount, { fee: 1000 });
+
+        // then
+        const txOutputs = getTxOutputs(tx);
+        assert.deepInclude(txOutputs, { to, amount });
+      });
+    });
+  });
+
+  // Mecenas has tx.age check omitted for testing
+  describe('Mecenas', () => {
+    let mecenas: Instance;
+    const pledge = 10000;
+    before(() => {
+      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas.json'), 'testnet');
+      mecenas = Mecenas.new(alicePkh, bobPkh, pledge);
+    });
+
+    describe('send', () => {
+      it('should fail when trying to send more than pledge', async () => {
+        // given
+        const to = aliceAddress;
+        const amount = pledge + 10;
+
+        // then
+        await assert.isRejected(
+          // when
+          mecenas.functions
+            .receive(alicePk, new Sig(alice))
+            .send(to, amount, { fee: 1000 }),
+          FailedTransactionError,
+          'mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)',
+        );
+      });
+
+      it('should fail when trying to send to wrong person', async () => {
+        // given
+        const to = bobAddress;
+        const amount = pledge;
+
+        // then
+        await assert.isRejected(
+          // when
+          mecenas.functions
+            .receive(alicePk, new Sig(alice))
+            .send(to, amount, { fee: 1000 }),
+          FailedTransactionError,
+          'mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)',
+        );
+      });
+      it('should fail when trying to send to multiple people', async () => {
+        // given
+        const to = aliceAddress;
+        const amount = pledge;
+
+        // then
+        await assert.isRejected(
+          // when
+          mecenas.functions
+            .receive(alicePk, new Sig(alice))
+            .send([{ to, amount }, { to, amount }], { fee: 1000 }),
+          FailedTransactionError,
+          'mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)',
         );
       });
 
