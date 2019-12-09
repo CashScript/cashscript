@@ -140,9 +140,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     // Remove final OP_VERIFY
     // If the final opcodes are OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP
+    // Or if the final opcode is OP_ENDIF
     //   then push it back to the script, and push OP_TRUE to the stack
     const finalOp = this.output.pop();
-    if (finalOp === Op.OP_DROP) {
+    if (finalOp === Op.OP_DROP || finalOp === Op.OP_ENDIF) {
       this.emit(finalOp);
       this.emit(Op.OP_TRUE);
     }
