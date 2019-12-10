@@ -1940,15 +1940,6 @@ cashaddrjs@^0.2.9:
   version "0.0.0"
   resolved "https://github.com/eyeofpython/cashproof#ff92615faa338e025a9d3a5dd98112233f6daf76"
 
-cashscript@^0.3.0-beta:
-  version "0.2.3-beta"
-  dependencies:
-    bitbox-sdk "^8.8.0"
-    bitcoincashjs-lib Bitcoin-com/bitcoincashjs-lib#v4.0.1
-    cashc "^0.3.0-beta"
-    cramer-bch "https://github.com/jcramer/bitcoincashjs-lib"
-    delay "^4.3.0"
-
 chai-as-promised@^7.1.1:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/chai-as-promised/-/chai-as-promised-7.1.1.tgz#08645d825deb8696ee61725dbf590c012eb00ca0"
