@@ -31,7 +31,7 @@
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.3.0-beta"
+    "version": "0.3.0"
   },
   "updatedAt": "2019-12-06T11:41:36.620Z"
 }
