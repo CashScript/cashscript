@@ -34,4 +34,4 @@ Options:
 ```
 
 ## The CashScript Language
-CashScript is a high-level language that allows you to write cash contracts in a straightforward and familiar way. It is inspired by Ethereum's Solidity, but it is not the same, and cash contracts work very differently from Ethereum's smart contracts. See the [Language Documentation](/docs/language.md) for more information on the language itself.
+CashScript is a high-level language that allows you to write cash contracts in a straightforward and familiar way. It is inspired by Ethereum's Solidity, but it is not the same, and cash contracts work very differently from Ethereum's smart contracts. See the [Language Documentation](https://developer.bitcoin.com/cashscript/docs/language) for more information on the language itself.

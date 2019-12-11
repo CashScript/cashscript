@@ -10,7 +10,7 @@ CashScript is a high level language enabling basic smart contract functionality 
 
 ---
 
-The CashScript JavaScript SDK allows you to easily integrate cash contracts written with CashScript into JavaScript or TypeScript applications. The CashScript SDK uses cash contract `.cash` files or `.json` artifact files to generate a JavaScript `Contract` object that can be used to instantiated and interact with these cash contracts. See the [SDK documentation](/docs/sdk.md) for a full reference of the SDK.
+The CashScript JavaScript SDK allows you to easily integrate cash contracts written with CashScript into JavaScript or TypeScript applications. The CashScript SDK uses cash contract `.cash` files or `.json` artifact files to generate a JavaScript `Contract` object that can be used to instantiated and interact with these cash contracts. See the [SDK documentation](https://developer.bitcoin.com/cashscript/docs/sdk) for a full reference of the SDK.
 
 **Note:** The CashScript currently only supports NodeJS, as it uses some NodeJS-specific functionality (fs, path). We are working on making the library compatible with the browser as well as NodeJS, but this is **currently not supported**.
 
@@ -85,4 +85,4 @@ node p2pkh.js
 ```
 
 ## The CashScript Language
-CashScript is a high-level language that allows you to write Cash Contracts in a straightforward and familiar way. It is inspired by Ethereum's Solidity, but it is not the same, and cash contracts work very differently from Ethereum's smart contracts. See the [Language documentation](/docs/language.md) for a full reference of the language.
+CashScript is a high-level language that allows you to write Cash Contracts in a straightforward and familiar way. It is inspired by Ethereum's Solidity, but it is not the same, and cash contracts work very differently from Ethereum's smart contracts. See the [Language documentation](https://developer.bitcoin.com/cashscript/docs/language) for a full reference of the language.
