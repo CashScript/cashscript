@@ -1,4 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
+import { AddressUtxoResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import { Contract, Instance, Sig } from 'cashscript';
 import * as path from 'path';
@@ -45,5 +46,38 @@ export async function run(): Promise<void> {
 
   // Get UTXO's of players
   const playerUtxo = await bitbox.Address.utxo(playerAddr);
-  console.log("Player UTXOs", playerUtxo);
+  const playerUtxos = playerUtxo as AddressUtxoResult;
+  const playerLastUtxo = playerUtxos.utxos[0];
+  console.log("Player's last UTXO", playerLastUtxo);
+
+  // get byte count to calculate fee. paying 1.2 sat/byte
+  const satoshisPerByte = 1.0;
+  const byteCount = bitbox.BitcoinCash.getByteCount(
+    { P2PKH: 1 },
+    { P2PKH: 2 }
+  )
+  const txFee = Math.floor(satoshisPerByte * byteCount);
+  const remainder = playerLastUtxo.satoshis - 10 - txFee;
+
+  // Build transaction & send
+  let redeemScript;
+  const transactionBuilder = new bitbox.TransactionBuilder('testnet');
+  transactionBuilder.addInput(playerLastUtxo.txid, playerLastUtxo.vout);
+  transactionBuilder.addOutput(instance.address, 10);
+  transactionBuilder.addOutput(playerAddr, remainder);
+  transactionBuilder.sign(
+    0,
+    playerPk,
+    redeemScript,
+    transactionBuilder.hashTypes.SIGHASH_ALL,
+    playerLastUtxo.satoshis
+  );
+
+  const tx = transactionBuilder.build();
+  const hex = tx.toHex()
+  console.log('Tx hex:', hex);
+
+  // Broadcast
+  const txId = await bitbox.RawTransactions.sendRawTransaction([hex])
+  console.log('Tx ID:', txId);
 }
