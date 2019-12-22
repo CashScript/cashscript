@@ -1,0 +1,14 @@
+pragma cashscript ^0.3.0;
+
+contract Prophet(pubkey playerPk, pubkey challengerPk, pubkey oraclePk) {
+
+  function playerSpend(sig playerSig, datasig oracleSig, bytes oracleMsg) {
+    require(checkDataSig(oracleSig, oracleMsg, oraclePk));
+    require(checkSig(playerSig, playerPk));
+  }
+
+  function challengerSpend(sig challengerSig, datasig oracleSig, bytes oracleMsg) {
+    require(checkDataSig(oracleSig, oracleMsg, oraclePk));
+    require(checkSig(challengerSig, challengerPk));
+  }
+}
