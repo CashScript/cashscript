@@ -30,7 +30,11 @@ async function run(): Promise<void> {
   console.log('contract balance:', contractBalance);
 
   // Call the spend function with alice's signature + pk
-  // And use it to post to memo
+  // And use it to create a new token.
+  //    Output #0 - OP RETURN
+  //    Output #1 - Mint 0.00000001 tokens
+  //    Output #2 - The mint baton
+  //    Output #3 - Change output (implicit)
   try {
     const tx2: TxnDetailsResult = await instance.functions
       .spend(alicePk, new SignatureTemplate(alice))
