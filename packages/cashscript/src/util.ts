@@ -9,8 +9,14 @@ import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 
 export function getInputSize(script: Buffer): number {
   const scriptSize = script.byteLength;
-  const scriptSizeSize = Data.encodeInt(scriptSize).byteLength;
-  return 32 + 4 + scriptSizeSize + scriptSize + 4;
+  const varIntSize = scriptSize > 252 ? 3 : 1;
+  return 32 + 4 + varIntSize + scriptSize + 4;
+}
+
+export function getPreimageSize(script: Buffer): number {
+  const scriptSize = script.byteLength;
+  const varIntSize = scriptSize > 252 ? 3 : 1;
+  return 4 + 32 + 32 + 36 + varIntSize + scriptSize + 8 + 4 + 32 + 4 + 4;
 }
 
 export function getTxSizeWithoutInputs(outputs: OutputForBuilder[]): number {

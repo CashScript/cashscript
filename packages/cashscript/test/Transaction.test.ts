@@ -568,6 +568,31 @@ describe('Transaction', () => {
     });
   });
 
+  describe('Simple Covenant', () => {
+    let covenant: Instance;
+    before(() => {
+      const Covenant = Contract.import(path.join(__dirname, 'fixture', 'simple_covenant.json'), 'testnet');
+      covenant = Covenant.new();
+    });
+
+    describe('send', () => {
+      it('should succeed', async () => {
+        // given
+        const to = aliceAddress;
+        const amount = 1000;
+
+        // when
+        const tx = await covenant.functions
+          .spend(alicePk, new Sig(alice))
+          .send(to, amount);
+
+        // then
+        const txOutputs = getTxOutputs(tx);
+        assert.deepInclude(txOutputs, { to, amount });
+      });
+    });
+  });
+
   // Mecenas has tx.age check omitted for testing
   describe('Mecenas v1', () => {
     let mecenas: Instance;

@@ -18,6 +18,7 @@ import {
   getInputSize,
   createOpReturnOutput,
   getTxSizeWithoutInputs,
+  getPreimageSize,
 } from './util';
 import { DUST_LIMIT, P2PKH_OUTPUT_SIZE } from './constants';
 import { FailedTransactionError } from './Errors';
@@ -171,11 +172,16 @@ export class Transaction {
     const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
 
     // Use a placeholder script with 65-length Buffer in the place of signatures
+    // and a correctly sized preimage Buffer if the function is a covenant
     // for correct size calculation of inputs
+    const placeholderPreimage = this.abiFunction.covenant
+      ? Buffer.alloc(getPreimageSize(ScriptUtil.encode(this.redeemScript)), 0)
+      : undefined;
     const placeholderScript = createInputScript(
       this.redeemScript,
       this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
       this.selector,
+      placeholderPreimage,
     );
 
     // Add one extra byte per input to over-estimate txin count

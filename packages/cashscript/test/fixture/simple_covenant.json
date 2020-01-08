@@ -1,0 +1,28 @@
+{
+  "contractName": "Covenant",
+  "constructorInputs": [],
+  "abi": [
+    {
+      "name": "spend",
+      "covenant": true,
+      "inputs": [
+        {
+          "name": "pk",
+          "type": "pubkey"
+        },
+        {
+          "name": "s",
+          "type": "sig"
+        }
+      ]
+    }
+  ],
+  "bytecode": "OP_DUP OP_4 OP_SPLIT OP_DROP OP_2SWAP OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP OP_5 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY OP_BIN2NUM OP_2 OP_GREATERTHANOREQUAL",
+  "source": "contract Covenant() {\n    function spend(pubkey pk, sig s) {\n        require(checkSig(s, pk));\n        require(int(tx.version) >= 2);\n    }\n}\n",
+  "networks": {},
+  "compiler": {
+    "name": "cashc",
+    "version": "0.3.1"
+  },
+  "updatedAt": "2020-01-08T15:45:09.668Z"
+}
