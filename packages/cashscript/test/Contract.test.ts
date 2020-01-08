@@ -22,13 +22,13 @@ describe('Contract', () => {
       it(`should create ${name} contract object from file`, () => {
         const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
         const contract = Contract.compile(path.join(__dirname, 'fixture', `${name}.cash`));
-        assert.deepEqualExcluding(contract.artifact, expectedArtifact, ['updatedAt', 'networks']);
+        assert.deepEqualExcluding(contract.artifact, expectedArtifact, ['updatedAt', 'networks', 'compiler']);
       });
 
       it(`should create ${name} contract object from string`, () => {
         const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
         const contract = Contract.compile(expectedArtifact.source);
-        assert.deepEqualExcluding(contract.artifact, expectedArtifact, ['updatedAt', 'networks']);
+        assert.deepEqualExcluding(contract.artifact, expectedArtifact, ['updatedAt', 'networks', 'compiler']);
       });
     });
   });

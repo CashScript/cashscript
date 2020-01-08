@@ -346,7 +346,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   removeScopedVariables(depthBeforeScope: number): void {
-    for (let i = 0; i < this.stack.length - depthBeforeScope; i += 1) {
+    const dropCount = this.stack.length - depthBeforeScope;
+    for (let i = 0; i < dropCount; i += 1) {
       this.emit(Op.OP_DROP);
       this.popFromStack();
     }

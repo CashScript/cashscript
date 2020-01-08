@@ -646,15 +646,17 @@ export const fixtures: Fixture[] = [
                 'fee',
                 new IntLiteralNode(1000),
               ),
+              new VariableDefinitionNode(
+                PrimitiveType.INT,
+                'intValue',
+                new CastNode(
+                  PrimitiveType.INT,
+                  new CastNode(new BytesType(), new IdentifierNode(PreimageField.VALUE)),
+                ),
+              ),
               new BranchNode(
                 new BinaryOpNode(
-                  new CastNode(
-                    PrimitiveType.INT,
-                    new CastNode(
-                      new BytesType(),
-                      new IdentifierNode(PreimageField.VALUE),
-                    ),
-                  ),
+                  new IdentifierNode('intValue'),
                   BinaryOperator.LE,
                   new BinaryOpNode(
                     new IdentifierNode('pledge'),
@@ -662,13 +664,26 @@ export const fixtures: Fixture[] = [
                     new IdentifierNode('fee'),
                   ),
                 ),
+                // bytes8(int(bytes(tx.value)) - fee);
                 new BlockNode([
+                  new VariableDefinitionNode(
+                    new BytesType(8),
+                    'amount1',
+                    new CastNode(
+                      new BytesType(8),
+                      new BinaryOpNode(
+                        new IdentifierNode('intValue'),
+                        BinaryOperator.MINUS,
+                        new IdentifierNode('fee'),
+                      ),
+                    ),
+                  ),
                   new VariableDefinitionNode(
                     new BytesType(34),
                     'out1',
                     new InstantiationNode(
                       new IdentifierNode(Class.OUTPUT_P2PKH),
-                      [new IdentifierNode(PreimageField.VALUE), new IdentifierNode('recipient')],
+                      [new IdentifierNode('amount1'), new IdentifierNode('recipient')],
                     ),
                   ),
                   new RequireNode(
@@ -695,10 +710,7 @@ export const fixtures: Fixture[] = [
                       new BytesType(8),
                       new BinaryOpNode(
                         new BinaryOpNode(
-                          new CastNode(
-                            PrimitiveType.INT,
-                            new CastNode(new BytesType(), new IdentifierNode(PreimageField.VALUE)),
-                          ),
+                          new IdentifierNode('intValue'),
                           BinaryOperator.MINUS,
                           new IdentifierNode('pledge'),
                         ),
