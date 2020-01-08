@@ -37,6 +37,8 @@ export async function run(): Promise<void> {
   const contractBalance = await instance.getBalance();
   console.log('contract address:', instance.address);
   console.log('contract balance:', contractBalance);
+  console.log('contract opcount:', instance.opcount);
+  console.log('contract bytesize:', instance.bytesize);
 
   // Call the transfer function with any signature
   // Will send one pledge amount to alice, and send change back to the contract

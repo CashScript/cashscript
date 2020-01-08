@@ -88,6 +88,18 @@ export function meep(tx: any, utxos: Utxo[], script: Script): string {
   return `meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
+
+export function countOpcodes(script: Script): number {
+  return script
+    .filter(opOrData => typeof opOrData === 'number')
+    .filter(op => op > Op.OP_16)
+    .length;
+}
+
+export function calculateBytesize(script: Script): number {
+  return ScriptUtil.encode(script).byteLength;
+}
+
 // ////////////////////////////////////////////////////////////////////////////
 // For encoding OP_RETURN data (doesn't require BIP62.3)
 // These functions are a mashup between those found in these libs:

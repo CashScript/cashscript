@@ -16,7 +16,7 @@ import {
 } from './fixture/vars';
 import { getTxOutputs } from './test-util';
 import { isOpReturn } from '../src/interfaces';
-import { createOpReturnOutput } from '../src/transaction-util';
+import { createOpReturnOutput } from '../src/util';
 import { FailedTransactionError } from '../src/Errors';
 
 chai.use(chaiAsPromised);

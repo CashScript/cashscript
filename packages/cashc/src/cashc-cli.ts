@@ -3,6 +3,7 @@ import * as yargs from 'yargs';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CashCompiler, Artifacts, version } from '.';
+import { countOpcodes, Data, calculateBytesize } from './util';
 
 const { argv } = yargs
   .usage('Usage: $0 [options] [source_file]')
@@ -23,6 +24,17 @@ ensure(fs.existsSync(sourceFile) && fs.statSync(sourceFile).isFile(), 'Please pr
 
 try {
   const artifact = CashCompiler.compileFile(sourceFile);
+
+  const script = Data.asmToScript(artifact.bytecode);
+  const opcount = countOpcodes(script);
+  const bytesize = calculateBytesize(script);
+  if (opcount > 201) {
+    console.warn('Warning: Your contract\'s opcount is over the limit of 201 and will not be accepted by the BCH network');
+  }
+  if (bytesize > 520) {
+    console.warn('Warning: Your contract\'s bytesize is over the limit of 520 and will not be accepted by the BCH network');
+  }
+
   const outputDir = path.dirname(outputFile);
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });

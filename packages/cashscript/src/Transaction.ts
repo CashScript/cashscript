@@ -18,7 +18,7 @@ import {
   getInputSize,
   createOpReturnOutput,
   getTxSizeWithoutInputs,
-} from './transaction-util';
+} from './util';
 import { DUST_LIMIT, P2PKH_OUTPUT_SIZE } from './constants';
 import { FailedTransactionError } from './Errors';
 

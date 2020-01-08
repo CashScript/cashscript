@@ -9,7 +9,7 @@ import { generateArtifact, Artifact } from './artifact/Artifact';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal';
-import { Script } from './generation/Script';
+import { Script, Op } from './generation/Script';
 import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
 import ReplaceBytecodeNop from './generation/ReplaceBytecodeNop';
 
@@ -73,4 +73,15 @@ export function parseCode(code: string): Ast {
   const parser: CashScriptParser = new CashScriptParser(tokenStream);
   const ast: Ast = new AstBuilder(parser.sourceFile()).build() as Ast;
   return ast;
+}
+
+export function countOpcodes(script: Script): number {
+  return script
+    .filter(opOrData => typeof opOrData === 'number')
+    .filter(op => op > Op.OP_16)
+    .length;
+}
+
+export function calculateBytesize(script: Script): number {
+  return new BScript().encode(script).byteLength;
 }

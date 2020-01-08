@@ -10,10 +10,14 @@ import {
 import { Transaction } from './Transaction';
 import { ContractFunction } from './Contract';
 import { Parameter, encodeParameter } from './Parameter';
+import { countOpcodes, calculateBytesize } from './util';
 
 export class Instance {
   name: string;
   address: string;
+  bytesize: number;
+  opcount: number;
+
   functions: {
     [name: string]: ContractFunction,
   };
@@ -44,6 +48,9 @@ export class Instance {
         this.functions[f.name] = this.createFunction(f, i);
       });
     }
+
+    this.bytesize = calculateBytesize(redeemScript);
+    this.opcount = countOpcodes(redeemScript);
   }
 
   private createFunction(f: AbiFunction, selector?: number): ContractFunction {
