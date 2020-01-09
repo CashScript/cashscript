@@ -490,13 +490,6 @@ export const fixtures: Fixture[] = [
                 TimeOp.CHECK_SEQUENCE,
                 new IntLiteralNode(30 * 24 * 60 * 60),
               ),
-              new RequireNode(
-                new BinaryOpNode(
-                  new CastNode(PrimitiveType.INT, new IdentifierNode(PreimageField.VERSION)),
-                  BinaryOperator.GE,
-                  new IntLiteralNode(2),
-                ),
-              ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
                 'fee',
@@ -563,7 +556,6 @@ export const fixtures: Fixture[] = [
               ),
             ]),
             [
-              PreimageField.VERSION,
               PreimageField.VALUE,
               PreimageField.BYTECODE,
               PreimageField.HASHOUTPUTS,
@@ -633,13 +625,6 @@ export const fixtures: Fixture[] = [
               new TimeOpNode(
                 TimeOp.CHECK_SEQUENCE,
                 new IdentifierNode('period'),
-              ),
-              new RequireNode(
-                new BinaryOpNode(
-                  new CastNode(PrimitiveType.INT, new IdentifierNode(PreimageField.VERSION)),
-                  BinaryOperator.GE,
-                  new IntLiteralNode(2),
-                ),
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
@@ -758,7 +743,6 @@ export const fixtures: Fixture[] = [
               ),
             ]),
             [
-              PreimageField.VERSION,
               PreimageField.VALUE,
               PreimageField.HASHOUTPUTS,
               PreimageField.BYTECODE,

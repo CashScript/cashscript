@@ -4,7 +4,6 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
 
         // Skip age check for simpler testing
         // require(tx.age >= 30 days);
-        require(int(tx.version) >= 2);
 
         int fee = 1000;
         bytes8 amount1 = bytes8(pledge);

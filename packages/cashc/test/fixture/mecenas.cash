@@ -3,7 +3,6 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
         require(checkSig(s, pk));
 
         require(tx.age >= period);
-        require(int(tx.version) >= 2);
 
         int fee = 1000;
         int intValue = int(bytes(tx.value))

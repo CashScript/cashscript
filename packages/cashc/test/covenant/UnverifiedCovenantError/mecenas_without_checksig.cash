@@ -5,7 +5,6 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
         bytes8 amount2 = bytes8(pledge);
 
         require(tx.age >= 30 days);
-        require(int(tx.version) >= 2);
 
         // out1 = <amount1> + <23 bytes> + HASH160 <redeem script hash> EQUAL
         // out2 = <amount2> + <25 bytes> + DUP HASH160 <public key hash> EQUALVERIFY CHECKSIG
