@@ -9,6 +9,7 @@
         "strictPropertyInitialization": false,
         "experimentalDecorators": true,
         "moduleResolution": "node",
+        "esModuleInterop": true,
     },
     "exclude": [
         "node_modules",

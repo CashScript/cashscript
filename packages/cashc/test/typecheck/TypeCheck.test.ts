@@ -4,7 +4,6 @@
  * - It has three different test categories: success, undefined and redefinition.
  */
 
-import { assert } from 'chai';
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
@@ -42,9 +41,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw InvalidParameterTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, InvalidParameterTypeError);
+        expect(() => ast.accept(traversal)).toThrow(InvalidParameterTypeError);
       });
     });
   });
@@ -54,9 +51,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw AssignTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, AssignTypeError);
+        expect(() => ast.accept(traversal)).toThrow(AssignTypeError);
       });
     });
   });
@@ -66,9 +61,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw CastTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, CastTypeError);
+        expect(() => ast.accept(traversal)).toThrow(CastTypeError);
       });
     });
   });
@@ -78,9 +71,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw UnequalTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, UnequalTypeError);
+        expect(() => ast.accept(traversal)).toThrow(UnequalTypeError);
       });
     });
   });
@@ -90,9 +81,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw UnsupportedTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, UnsupportedTypeError);
+        expect(() => ast.accept(traversal)).toThrow(UnsupportedTypeError);
       });
     });
   });
@@ -102,9 +91,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw ArrayElementError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, ArrayElementError);
+        expect(() => ast.accept(traversal)).toThrow(ArrayElementError);
       });
     });
   });
@@ -114,9 +101,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw IndexOutOfBoundsError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, IndexOutOfBoundsError);
+        expect(() => ast.accept(traversal)).toThrow(IndexOutOfBoundsError);
       });
     });
   });
@@ -126,9 +111,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw PrimitiveTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, PrimitiveTypeError);
+        expect(() => ast.accept(traversal)).toThrow(PrimitiveTypeError);
       });
     });
   });
@@ -138,9 +121,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw TypeError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, TypeError);
+        expect(() => ast.accept(traversal)).toThrow(TypeError);
       });
     });
   });
@@ -150,9 +131,7 @@ describe('Type Check', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should succeed`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.doesNotThrow(() => {
-          ast.accept(traversal);
-        });
+        expect(() => ast.accept(traversal)).not.toThrow();
       });
     });
   });

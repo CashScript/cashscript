@@ -5,7 +5,6 @@
  *   they don't include any require(checkSig(...)) calls.
  */
 
-import { assert } from 'chai';
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
 import { Ast } from '../../src/ast/AST';
@@ -31,13 +30,10 @@ function setup(input: string): TestSetup {
 
 describe('Covenant Check', () => {
   describe('UnverifiedCovenantError', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'UnverifiedCovenantError'));
-    testCases.forEach((f) => {
+    readCashFiles(path.join(__dirname, 'UnverifiedCovenantError')).forEach((f) => {
       it(`${f.fn} should throw UnverifiedCovenantError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, UnverifiedCovenantError);
+        expect(() => ast.accept(traversal)).toThrow(UnverifiedCovenantError);
       });
     });
   });

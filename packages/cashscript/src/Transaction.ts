@@ -1,6 +1,6 @@
 import { BITBOX, TransactionBuilder } from 'bitbox-sdk';
 import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
-import * as delay from 'delay';
+import delay from 'delay';
 import { Script, AbiFunction } from 'cashc';
 import { Sig } from './Parameter';
 import { bitbox, ScriptUtil } from './BITBOX';

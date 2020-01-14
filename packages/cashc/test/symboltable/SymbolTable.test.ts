@@ -4,7 +4,6 @@
  * - It has three different test categories: success, undefined and redefinition.
  */
 
-import { assert } from 'chai';
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
@@ -26,25 +25,19 @@ function setup(input: string): TestSetup {
 
 describe('Symbol Table', () => {
   describe('RedefinitionError', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'RedefinitionError'));
-    testCases.forEach((f) => {
+    readCashFiles(path.join(__dirname, 'RedefinitionError')).forEach((f) => {
       it(`${f.fn} should throw RedefinitionError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, RedefinitionError);
+        expect(() => ast.accept(traversal)).toThrow(RedefinitionError);
       });
     });
   });
 
   describe('UndefinedReferenceError', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'UndefinedReferenceError'));
-    testCases.forEach((f) => {
+    readCashFiles(path.join(__dirname, 'UndefinedReferenceError')).forEach((f) => {
       it(`${f.fn} should throw UndefinedReferenceError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, UndefinedReferenceError);
+        expect(() => ast.accept(traversal)).toThrow(UndefinedReferenceError);
       });
     });
   });
@@ -54,9 +47,7 @@ describe('Symbol Table', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should throw UnusedVariableError`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.throws(() => {
-          ast.accept(traversal);
-        }, UnusedVariableError);
+        expect(() => ast.accept(traversal)).toThrow(UnusedVariableError);
       });
     });
   });
@@ -66,9 +57,7 @@ describe('Symbol Table', () => {
     testCases.forEach((f) => {
       it(`${f.fn} should succeed`, () => {
         const { ast, traversal } = setup(f.contents);
-        assert.doesNotThrow(() => {
-          ast.accept(traversal);
-        });
+        expect(() => ast.accept(traversal)).not.toThrow();
       });
     });
   });

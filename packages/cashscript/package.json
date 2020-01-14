@@ -19,7 +19,6 @@
   "devDependencies": {
     "bignumber.js": "^9.0.0",
     "eslint": "^5.16.0",
-    "nyc": "^14.1.1",
     "typescript": "3.5.3"
   },
   "directories": {
@@ -50,7 +49,7 @@
     "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
-    "test": "nyc mocha --opts ../../mocha.opts"
+    "test": "jest --config=../../jest.config.js packages/cashscript"
   },
   "types": "dist/index"
 }

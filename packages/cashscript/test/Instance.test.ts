@@ -1,11 +1,9 @@
 import * as path from 'path';
-import { assert } from 'chai';
 import { Contract, Instance, Sig } from '../src';
 import {
   alicePk,
   alice,
   bob,
-  bobPk,
   alicePkh,
 } from './fixture/vars';
 
@@ -17,15 +15,15 @@ describe('Instance', () => {
       const instance = P2PKH.deployed();
       const otherInstance = P2PKH.new(alicePkh);
 
-      assert.isAbove(await instance.getBalance(), 0);
-      assert.isAbove(await otherInstance.getBalance(), 0);
+      expect(await instance.getBalance()).toBeGreaterThan(0);
+      expect(await otherInstance.getBalance()).toBeGreaterThan(0);
     });
 
     it('should return zero balance for new contract', async () => {
       const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
       const instance = P2PKH.new(Buffer.alloc(20, 0));
 
-      assert.equal(await instance.getBalance(), 0);
+      expect(await instance.getBalance()).toBe(0);
     });
   });
 
@@ -40,45 +38,22 @@ describe('Instance', () => {
     });
 
     it('can\'t call spend with incorrect parameter signature', () => {
-      assert.throws(() => {
-        instance.functions.spend();
-      });
-      assert.throws(() => {
-        instance.functions.spend(0, 1);
-      });
-      assert.throws(() => {
-        instance.functions.spend(alicePk, new Sig(alice), 0);
-      });
-      assert.throws(() => {
-        bbInstance.functions.spend(Buffer.from('e803', 'hex'), 1000);
-      });
-      assert.throws(() => {
-        bbInstance.functions.spend(Buffer.from('e803000000', 'hex'), 1000);
-      });
+      expect(() => instance.functions.spend()).toThrow();
+      expect(() => instance.functions.spend(0, 1)).toThrow();
+      expect(() => instance.functions.spend(alicePk, new Sig(alice), 0)).toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e803', 'hex'), 1000)).toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e803000000', 'hex'), 1000)).toThrow();
     });
 
     it('can call spend with incorrect parameters', () => {
-      assert.doesNotThrow(() => {
-        instance.functions.spend(alicePk, new Sig(bob));
-      });
-      assert.doesNotThrow(() => {
-        instance.functions.spend(bobPk, new Sig(alice));
-      });
-      assert.doesNotThrow(() => {
-        instance.functions.spend(bobPk, Buffer.alloc(65, 0));
-      });
-      assert.doesNotThrow(() => {
-        bbInstance.functions.spend(Buffer.from('e8031234', 'hex'), 1000);
-      });
+      expect(() => instance.functions.spend(alicePk, new Sig(bob))).not.toThrow();
+      expect(() => instance.functions.spend(alicePk, Buffer.alloc(65, 0))).not.toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e8031234', 'hex'), 1000)).not.toThrow();
     });
 
     it('can call spend with correct parameters', () => {
-      assert.doesNotThrow(() => {
-        instance.functions.spend(alicePk, new Sig(alice));
-      });
-      assert.doesNotThrow(() => {
-        bbInstance.functions.spend(Buffer.from('e8030000', 'hex'), 1000);
-      });
+      expect(() => instance.functions.spend(alicePk, new Sig(alice))).not.toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e8030000', 'hex'), 1000)).not.toThrow();
     });
   });
 });

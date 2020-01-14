@@ -8,7 +8,7 @@ module.exports = {
     sourceType: 'module',  // Allows for the use of imports
   },
   env: {
-    'mocha': true,
+    'jest': true,
   },
   parserOptions: {
     project: './tsconfig.build.json'

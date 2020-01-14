@@ -9,8 +9,6 @@
  *   fixtures.
  */
 
-import * as chai from 'chai';
-import chaiExclude from 'chai-exclude';
 import * as path from 'path';
 import * as fs from 'fs';
 import { fixtures } from './fixtures';
@@ -19,17 +17,13 @@ import { readCashFiles } from '../test-util';
 import { Ast } from '../../src/ast/AST';
 import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal';
 
-chai.use(chaiExclude);
-
-const { assert } = chai;
-
 describe('AST Builder', () => {
   describe('AST correctness', () => {
     fixtures.forEach((fixture) => {
       it(`should build correct AST for ${fixture.fn}`, () => {
         const code = fs.readFileSync(path.join(__dirname, '..', 'fixture', fixture.fn), { encoding: 'utf-8' });
         const ast = parseCode(code);
-        assert.deepEqualExcludingEvery(ast, fixture.ast, 'location');
+        expect(ast).toMatchObject(fixture.ast);
       });
     });
   });
@@ -47,12 +41,11 @@ describe('AST Builder', () => {
       return { ast, sourceOutput: traversal.output };
     }
 
-    const testCases = readCashFiles(path.join(__dirname, '..', 'syntax', 'success'));
-    testCases.forEach((f) => {
+    readCashFiles(path.join(__dirname, '..', 'syntax', 'success')).forEach((f) => {
       it(`rebuilt AST should match initial AST for ${f.fn}`, () => {
         const { sourceOutput: initialOutput } = setup(f.contents);
         const { sourceOutput: rerunOutput } = setup(initialOutput);
-        assert.equal(rerunOutput, initialOutput);
+        expect(rerunOutput).toEqual(initialOutput);
       });
     });
   });

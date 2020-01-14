@@ -7,11 +7,10 @@
  */
 
 import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy } from 'antlr4ts';
-import { assert } from 'chai';
 import * as path from 'path';
 import { CashScriptParser } from '../../src/grammar/CashScriptParser';
 import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
-import { readCashFiles, prettyPrintTokenStream } from '../test-util';
+import { readCashFiles } from '../test-util';
 
 interface TestSetup {
   lexer: CashScriptLexer,
@@ -30,34 +29,21 @@ function setup(input: string): TestSetup {
 }
 
 describe('Grammar', () => {
-  let testSetup: TestSetup;
   describe('Fail', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'fail'));
-    testCases.forEach((f) => {
+    readCashFiles(path.join(__dirname, 'fail')).forEach((f) => {
       it(`${f.fn} should fail`, () => {
-        testSetup = setup(f.contents);
-        assert.throws(() => {
-          testSetup.parser.sourceFile();
-        });
+        const testSetup = setup(f.contents);
+        expect(() => testSetup.parser.sourceFile()).toThrow();
       });
     });
   });
 
   describe('Success', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'success'));
-    testCases.forEach((f) => {
+    readCashFiles(path.join(__dirname, 'success')).forEach((f) => {
       it(`${f.fn} should succeed`, () => {
-        testSetup = setup(f.contents);
-        assert.doesNotThrow(() => {
-          testSetup.parser.sourceFile();
-        });
+        const testSetup = setup(f.contents);
+        expect(() => testSetup.parser.sourceFile()).not.toThrow();
       });
     });
-  });
-
-  afterEach(function () {
-    if (this.currentTest && this.currentTest.state === 'failed') {
-      prettyPrintTokenStream(testSetup.lexer, testSetup.tokenStream);
-    }
   });
 });

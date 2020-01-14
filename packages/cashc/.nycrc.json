@@ -1,8 +1,0 @@
-{
-    "extends": "../../.nycrc.json",
-    "exclude": [
-        "**/*.d.ts",
-        "**/index.ts",
-        "src/grammar/"
-    ]
-}

@@ -21,11 +21,8 @@
     "yargs": "^14.0.0"
   },
   "devDependencies": {
-    "chai-exclude": "^2.0.2",
     "copyfiles": "^2.1.1",
     "eslint": "^5.16.0",
-    "mocha": "^6.2.0",
-    "nyc": "^14.1.1",
     "typescript": "3.5.3"
   },
   "directories": {
@@ -58,7 +55,7 @@
     "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
-    "test": "nyc mocha --opts ../../mocha.opts"
+    "test": "jest --config=../../jest.config.js packages/cashc"
   },
   "type": "dist/index"
 }

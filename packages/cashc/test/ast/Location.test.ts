@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import * as path from 'path';
 import * as fs from 'fs';
 import { Ast } from '../../src/ast/AST';
@@ -19,10 +18,8 @@ describe('Location', () => {
     const code = fs.readFileSync(path.join(__dirname, '..', 'syntax', 'success', 'simple_functions.cash'), { encoding: 'utf-8' });
     const ast = setup(code);
     const f = ast.contract.functions[0];
-    assert.exists(f.location);
-    assert.equal(
-      (f.location as Location).text(code),
-      'function hello(sig s, pubkey pk) {\n        require(checkSig(s, pk));\n    }',
-    );
+    expect(f.location).toBeDefined();
+    expect((f.location as Location).text(code))
+      .toEqual('function hello(sig s, pubkey pk) {\n        require(checkSig(s, pk));\n    }');
   });
 });
