@@ -9,7 +9,7 @@ import {
 import { getTxOutputs } from '../test-util';
 import { isOpReturn } from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
-import { FailedTransactionError } from '../../src/Errors';
+import { FailedSigCheckError, Reason } from '../../src/Errors';
 
 describe('P2PKH', () => {
   let p2pkhInstance: Instance;
@@ -24,14 +24,16 @@ describe('P2PKH', () => {
       const to = p2pkhInstance.address;
       const amount = 10000;
 
-      // then TODO
+      // when
       const expectPromise = expect(
         p2pkhInstance.functions
           .spend(alicePk, new Sig(bob))
           .send(to, amount),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Signature must be zero for failed CHECK(MULTI)SIG operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedSigCheckError);
+      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
     it('should succeed when using correct function parameters', async () => {
@@ -58,14 +60,16 @@ describe('P2PKH', () => {
         { to: p2pkhInstance.address, amount: 20000 },
       ];
 
-      // then
+      // when
       const expectPromise = expect(
         p2pkhInstance.functions
           .spend(alicePk, new Sig(bob))
           .send(outputs),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Signature must be zero for failed CHECK(MULTI)SIG operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedSigCheckError);
+      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
     it('should succeed when using correct function parameters', async () => {

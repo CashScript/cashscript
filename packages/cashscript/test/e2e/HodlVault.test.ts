@@ -7,7 +7,7 @@ import {
   oracle,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { FailedTransactionError } from '../../src/Errors';
+import { FailedRequireError, Reason } from '../../src/Errors';
 
 describe('HodlVault', () => {
   let hodlVault: Instance;
@@ -25,14 +25,16 @@ describe('HodlVault', () => {
       const to = hodlVault.address;
       const amount = 10000;
 
-      // then
+      // when
       const expectPromise = expect(
         hodlVault.functions
           .spend(new Sig(alice), wrongSig, message)
           .send(to, amount),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script failed an OP_VERIFY operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.VERIFY);
     });
 
     it('should fail when price is too low', async () => {
@@ -42,14 +44,16 @@ describe('HodlVault', () => {
       const to = hodlVault.address;
       const amount = 10000;
 
-      // then
+      // when
       const expectPromise = expect(
         hodlVault.functions
           .spend(new Sig(alice), oracleSig, message)
           .send(to, amount),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script failed an OP_VERIFY operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.VERIFY);
     });
 
     it('should succeed when price is high enough', async () => {
@@ -81,14 +85,16 @@ describe('HodlVault', () => {
         { to: hodlVault.address, amount: 20000 },
       ];
 
-      // then
+      // when
       const expectPromise = expect(
         hodlVault.functions
           .spend(new Sig(alice), wrongSig, message)
           .send(outputs),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script failed an OP_VERIFY operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.VERIFY);
     });
 
     it('should fail when price is too low', async () => {
@@ -100,14 +106,16 @@ describe('HodlVault', () => {
         { to: hodlVault.address, amount: 20000 },
       ];
 
-      // then
+      // when
       const expectPromise = expect(
         hodlVault.functions
           .spend(new Sig(alice), oracleSig, message)
           .send(outputs),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script failed an OP_VERIFY operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.VERIFY);
     });
 
     it('should succeed when price is high enough', async () => {

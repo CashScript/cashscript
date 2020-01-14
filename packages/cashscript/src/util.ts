@@ -6,6 +6,13 @@ import {
 import { Utxo, OpReturn, OutputForBuilder } from './interfaces';
 import { ScriptUtil, CryptoUtil } from './BITBOX';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
+import {
+  Reason,
+  FailedTransactionError,
+  FailedRequireError,
+  FailedTimeCheckError,
+  FailedSigCheckError,
+} from './Errors';
 
 export function getInputSize(script: Buffer): number {
   const scriptSize = script.byteLength;
@@ -104,6 +111,31 @@ export function countOpcodes(script: Script): number {
 
 export function calculateBytesize(script: Script): number {
   return ScriptUtil.encode(script).byteLength;
+}
+
+export function buildError(reason: string, meepStr: string): FailedTransactionError {
+  const require = [
+    Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
+    Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
+  ];
+  const timeCheck = [Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME];
+  const sigCheck = [
+    Reason.SIG_COUNT, Reason.PUBKEY_COUNT, Reason.SIG_HASHTYPE, Reason.SIG_DER,
+    Reason.SIG_HIGH_S, Reason.SIG_NULLFAIL, Reason.SIG_BADLENGTH, Reason.SIG_NONSCHNORR,
+  ];
+  if (toRegExp(require).test(reason)) {
+    return new FailedRequireError(reason, meepStr);
+  } else if (toRegExp(timeCheck).test(reason)) {
+    return new FailedTimeCheckError(reason, meepStr);
+  } else if (toRegExp(sigCheck).test(reason)) {
+    return new FailedSigCheckError(reason, meepStr);
+  } else {
+    return new FailedTransactionError(reason, meepStr);
+  }
+}
+
+function toRegExp(reasons: string[]): RegExp {
+  return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
 }
 
 // ////////////////////////////////////////////////////////////////////////////

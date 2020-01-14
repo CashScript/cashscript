@@ -7,7 +7,7 @@ import {
   bobPk,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { FailedTransactionError } from '../../src/Errors';
+import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors';
 
 describe('TransferWithTimeout', () => {
   let twtInstancePast: Instance;
@@ -24,23 +24,27 @@ describe('TransferWithTimeout', () => {
       const to = twtInstancePast.address;
       const amount = 10000;
 
-      // then
+      // when
       const expectPromise = expect(
         twtInstancePast.functions
           .transfer(new Sig(alice))
           .send(to, amount),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Signature must be zero for failed CHECK(MULTI)SIG operation');
 
       // then
+      await expectPromise.rejects.toThrow(FailedSigCheckError);
+      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
+
+      // when
       const expectPromise2 = expect(
         twtInstancePast.functions
           .timeout(new Sig(bob))
           .send(to, amount),
       );
-      await expectPromise2.rejects.toThrow(FailedTransactionError);
-      await expectPromise2.rejects.toThrow('Signature must be zero for failed CHECK(MULTI)SIG operation');
+
+      // then
+      await expectPromise2.rejects.toThrow(FailedSigCheckError);
+      await expectPromise2.rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
     it('should fail when called before timeout', async () => {
@@ -48,14 +52,16 @@ describe('TransferWithTimeout', () => {
       const to = twtInstanceFuture.address;
       const amount = 10000;
 
-      // then
+      // when
       const expectPromise = await expect(
         twtInstanceFuture.functions
           .timeout(new Sig(alice))
           .send(to, amount),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Locktime requirement not satisfied');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedTimeCheckError);
+      await expectPromise.rejects.toThrow(Reason.UNSATISFIED_LOCKTIME);
     });
 
     it('should succeed when using correct function parameters', async () => {
@@ -101,17 +107,21 @@ describe('TransferWithTimeout', () => {
           .transfer(new Sig(alice))
           .send(outputs),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Signature must be zero for failed CHECK(MULTI)SIG operation');
 
       // then
+      await expectPromise.rejects.toThrow(FailedSigCheckError);
+      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
+
+      // when
       const expectPromise2 = expect(
         twtInstancePast.functions
           .timeout(new Sig(bob))
           .send(outputs),
       );
-      await expectPromise2.rejects.toThrow(FailedTransactionError);
-      await expectPromise2.rejects.toThrow('Signature must be zero for failed CHECK(MULTI)SIG operation');
+
+      // then
+      await expectPromise2.rejects.toThrow(FailedSigCheckError);
+      await expectPromise2.rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
     it('should fail when called before timeout', async () => {
@@ -121,14 +131,16 @@ describe('TransferWithTimeout', () => {
         { to: twtInstanceFuture.address, amount: 20000 },
       ];
 
-      // then
+      // when
       const expectPromise = expect(
         twtInstanceFuture.functions
           .timeout(new Sig(alice))
           .send(outputs),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Locktime requirement not satisfied');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedTimeCheckError);
+      await expectPromise.rejects.toThrow(Reason.UNSATISFIED_LOCKTIME);
     });
 
     it('should succeed when using correct function parameters', async () => {

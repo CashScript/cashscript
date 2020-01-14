@@ -43,7 +43,6 @@ describe('Contract', () => {
 
       expect(() => {
         const artifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh-invalid.json'));
-        artifact.abi = []; // TODO
         Contract.import(artifact);
       }).toThrow();
     });

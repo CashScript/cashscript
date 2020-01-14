@@ -19,9 +19,9 @@ import {
   createOpReturnOutput,
   getTxSizeWithoutInputs,
   getPreimageSize,
+  buildError,
 } from './util';
 import { DUST_LIMIT, P2PKH_OUTPUT_SIZE } from './constants';
-import { FailedTransactionError } from './Errors';
 
 const cramer = require('cramer-bch');
 
@@ -67,7 +67,7 @@ export class Transaction {
       const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
       return this.getTxDetails(txid);
     } catch (e) {
-      throw new FailedTransactionError(e.error, meep(tx, inputs, this.redeemScript));
+      throw buildError(e.error, meep(tx, inputs, this.redeemScript));
     }
   }
 

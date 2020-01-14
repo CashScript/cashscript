@@ -9,7 +9,7 @@ import {
   bobAddress,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { FailedTransactionError } from '../../src/Errors';
+import { FailedRequireError, Reason } from '../../src/Errors';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas v1', () => {
@@ -26,14 +26,16 @@ describe('Mecenas v1', () => {
       const to = aliceAddress;
       const amount = pledge + 10;
 
-      // then
+      // when
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
           .send(to, amount, { fee: 1000 }),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script evaluated without error but finished with a false/empty top stack element');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.EVAL_FALSE);
     });
 
     it('should fail when trying to send to wrong person', async () => {
@@ -41,14 +43,16 @@ describe('Mecenas v1', () => {
       const to = bobAddress;
       const amount = pledge;
 
-      // then
+      // when
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
           .send(to, amount, { fee: 1000 }),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script evaluated without error but finished with a false/empty top stack element');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.EVAL_FALSE);
     });
 
     it('should fail when trying to send to multiple people', async () => {
@@ -56,14 +60,16 @@ describe('Mecenas v1', () => {
       const to = aliceAddress;
       const amount = pledge;
 
-      // then
+      // when
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
           .send([{ to, amount }, { to, amount }], { fee: 1000 }),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script evaluated without error but finished with a false/empty top stack element');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.EVAL_FALSE);
     });
 
     it('should succeed when sending pledge to receiver', async () => {
@@ -98,14 +104,16 @@ describe('Mecenas', () => {
       const to = aliceAddress;
       const amount = pledge + 10;
 
-      // then
+      // when
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
           .send(to, amount, { fee: 1000 }),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script failed an OP_EQUALVERIFY operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should fail when trying to send to wrong person', async () => {
@@ -113,14 +121,16 @@ describe('Mecenas', () => {
       const to = bobAddress;
       const amount = pledge;
 
-      // then
+      // when
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
           .send(to, amount, { fee: 1000 }),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script failed an OP_EQUALVERIFY operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should fail when trying to send to multiple people', async () => {
@@ -128,14 +138,16 @@ describe('Mecenas', () => {
       const to = aliceAddress;
       const amount = pledge;
 
-      // then
+      // when
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
           .send([{ to, amount }, { to, amount }], { fee: 1000 }),
       );
-      await expectPromise.rejects.toThrow(FailedTransactionError);
-      await expectPromise.rejects.toThrow('Script failed an OP_EQUALVERIFY operation');
+
+      // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should succeed when sending pledge to receiver', async () => {

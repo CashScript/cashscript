@@ -5,7 +5,7 @@ import {
   alice,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { FailedTransactionError } from '../../src/Errors';
+import { FailedRequireError, Reason } from '../../src/Errors';
 
 describe('BoundedBytes', () => {
   let bbInstance: Instance;
@@ -20,23 +20,27 @@ describe('BoundedBytes', () => {
       const to = bbInstance.address;
       const amount = 10000;
 
-      // then
+      // when
       const expectPromise = expect(
         bbInstance.functions
           .spend(Buffer.from('12345678', 'hex'), 1000)
           .send(to, amount),
       );
-      expectPromise.rejects.toThrow(FailedTransactionError);
-      expectPromise.rejects.toThrow('Script evaluated without error but finished with a false/empty top stack element');
 
       // then
+      await expectPromise.rejects.toThrow(FailedRequireError);
+      await expectPromise.rejects.toThrow(Reason.EVAL_FALSE);
+
+      // when
       const expectPromise2 = expect(
         bbInstance.functions
           .spend(Buffer.from('000003e8', 'hex'), 1000)
           .send(to, amount),
       );
-      await expectPromise2.rejects.toThrow(FailedTransactionError);
-      await expectPromise2.rejects.toThrow('Script evaluated without error but finished with a false/empty top stack element');
+
+      // then
+      await expectPromise2.rejects.toThrow(FailedRequireError);
+      await expectPromise2.rejects.toThrow(Reason.EVAL_FALSE);
     });
 
     it('should succeed when using correct function parameters', async () => {
