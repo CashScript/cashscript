@@ -7,7 +7,7 @@ module.exports = {
     './jest/summary-reporter.js',
   ],
   setupFilesAfterEnv: ['./jest.setup.js'],
-  collectCoverage: false,
+  collectCoverage: true,
   collectCoverageFrom: [
     '**/src/**/*.ts',
     '!**/*.d.ts',

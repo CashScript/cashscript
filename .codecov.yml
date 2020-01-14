@@ -1,11 +1,3 @@
 ignore:
   - packages/cashc/src/grammar/
   - '**/test/'
-
-status:
-  project:
-    default:
-      target: 90
-  patch:
-    default:
-      target: 80
