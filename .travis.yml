@@ -13,7 +13,7 @@ before_install:
 script:
   - yarn test
   - yarn lint
-  # - yarn cashproof
+  # - yarn proof
 
 after_success:
   - yarn coverage

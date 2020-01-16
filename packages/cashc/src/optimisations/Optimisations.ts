@@ -1,4 +1,5 @@
-export default `# This file can be run with CashProof to prove that the optimisations preserve exact functionality
+export default `
+# This file can be run with CashProof to prove that the optimisations preserve exact functionality
 # This includes most of CashScript's bytecode optimisations, although some are incompatible with CashProof
 
 # Hardcoded arithmetic
