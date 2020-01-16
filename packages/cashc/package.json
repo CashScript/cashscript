@@ -1,7 +1,7 @@
 {
   "name": "cashc",
   "description": "Compile Cash Contracts to Bitcoin Cash Script or artifacts",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
   "bin": {
     "cashc": "dist/cashc-cli.js"
@@ -22,7 +22,9 @@
   },
   "devDependencies": {
     "copyfiles": "^2.1.1",
-    "eslint": "^5.16.0",
+    "eslint": "^6.6.0",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.3.0",
     "typescript": "3.5.3"
   },
   "directories": {
