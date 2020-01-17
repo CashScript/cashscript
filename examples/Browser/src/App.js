@@ -5,25 +5,39 @@ import logo from './logo.svg';
 import './App.css';
 
 function App() {
-    async function run(setResult, setLoading) {
+    async function spend(instance, keyPair, address, amount, setResult, setLoading) {
+	console.log(address);
+	console.log(amount);
+	const bitbox = new BITBOX({ restURL: network === 'testnet' ? 'https://trest.bitcoin.com/v2/' : 'https://rest.bitcoin.com/v2/' });
+
 	setLoading(true);
-	let cashFile = `
-    contract P2PKH(bytes20 pkh) {
-      // Require pk to match stored pkh and signature to match
-      function spend(pubkey pk, sig s) {
-	  require(hash160(pk) == pkh);
-	  require(checkSig(s, pk));
-      }
-  }`
 	const result = {};
+	const alicePk = bitbox.ECPair.toPublicKey(keyPair);
+
+	// Call the spend function with alice's signature + pk
+	// And use it to send 0. 000 100 00 BCH back to the contract's address
+	const tx = await instance.functions.spend(alicePk, new Sig(keyPair))
+	    .send(address, Number(amount));
+	result.tx = tx;
+	setResult(result);
+	setLoading(false);
+    }
+
+    async function compileAndInstantiate(setInstance, setKeyPair, setLoading, seed, network) {
+	setLoading(true);
+	// Fetch CashFile
+	const cashFileFetch = await fetch("p2pkh.cash");
+	const cashFile = await cashFileFetch.text();
+	console.log(cashFile);
+  
 	// Initialise BITBOX
-	const network = 'testnet';
-	const bitbox = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
+	const bitbox = new BITBOX({ restURL: network === 'testnet' ? 'https://trest.bitcoin.com/v2/' : 'https://rest.bitcoin.com/v2/' });
 
 	// Initialise HD node and alice's keypair
-	const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
+	const rootSeed = bitbox.Mnemonic.toSeed(seed);
 	const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
 	const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
+	setKeyPair(alice);
 
 	// Derive alice's public key and public key hash
 	const alicePk = bitbox.ECPair.toPublicKey(alice);
@@ -34,7 +48,6 @@ function App() {
 
 	// Instantiate a new P2PKH contract with constructor arguments: { pkh: alicePkh }
 	const instance = P2PKH.new(alicePkh);
-
 	// Get contract balance & output address + balance
 	let contractBalance;
 	try {
@@ -43,38 +56,45 @@ function App() {
 	    console.log(e);
 	}
 
-	result.contractBalance = contractBalance;
-	result.contractAddress = instance.address;
+        instance.balance = contractBalance;	
 
-	// Call the spend function with alice's signature + pk
-	// And use it to send 0. 000 100 00 BCH back to the contract's address
-	const tx = await instance.functions.spend(alicePk, new Sig(alice))
-	    .send(instance.address, 10000);
-	result.tx = tx;
-	// Call the spend function with alice's signature + pk
-	// And use it to send two outputs of 0. 000 150 00 BCH back to the contract's address
-	const tx2 = await instance.functions.spend(alicePk, new Sig(alice))
-    .send([
-      { to: instance.address, amount: 15000 },
-      { to: instance.address, amount: 15000 },
-    ]);
-	result.tx2 = tx2;
-	console.log(result);
+	setInstance(instance);
+
 	setLoading(false);
-	setResult(result);
-	return result;
     }
 
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [seed, setSeed] = useState('CashScript');
+    const [network, setNetwork] = useState('testnet');
+    const [instance, setInstance] = useState(null);
+    const [address, setAddress] = useState(null);
+    const [amount, setAmount] = useState(null);
+    const [keyPair, setKeyPair] = useState();
 
     return (
     <div className="App">
-	<button onClick={() => run(setResult, setLoading)}>Run Contract</button>
+	<h1>CashScript P2PKH Example</h1>
+	<label>Network</label>
+	<select selected={network} onChange={(e) => setNetwork(e.target.value)}>
+	    <option value="testnet">testnet</option>
+	    <option value="mainnet">mainnet</option>
+	</select>
+	<label>Seed Words (caution!)</label>
+	<textarea onChange={(e) => setSeed(e.target.value)}>{seed}</textarea>
+	<button onClick={() => compileAndInstantiate(setInstance, setKeyPair, setLoading, seed, network)}>Compile and Instantiate Contract</button>
+	<label>Amount to spend from Contract</label>
+	<input type="number" onChange={(e) => setAmount(e.target.value)} />
+	<label>Address to send satoshis from Contract</label>
+	<input type="text" onChange={(e) => setAddress(e.target.value)} />
+	<button onClick={() => spend(instance, keyPair, address, amount, setResult, setLoading)}>Run Contract</button>
 	{loading && <p>Loading...</p>}
-	{!loading && result && result.tx && result.tx2 && <div>
-	<p><a target="_blank" href={`https://explorer.bitcoin.com/tbch/tx/${result.tx.txid}`}>Transaction 1</a></p>
-	<p><a target="_blank" href={`https://explorer.bitcoin.com/tbch/tx/${result.tx2.txid}`}>Transaction 2</a></p>
+	{!loading && instance && <div>
+	<p>Contract Address: {instance.address}</p>
+	<p>Contract Balance: {instance.balance}</p>
+	</div>}
+	{!loading && result && result.tx && <div>
+	<p><a target="_blank" href={`https://explorer.bitcoin.com/tbch/tx/${result.tx.txid}`}>Transaction Details</a></p>
 	</div>}
     </div>
   );
