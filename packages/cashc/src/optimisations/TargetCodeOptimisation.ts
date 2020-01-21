@@ -1,12 +1,10 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import { Script } from '../generation/Script';
+import OptimisationsEquivFile from './Optimisations';
 import { Data } from '../util';
 
 export default class TargetCodeOptimisation {
   static optimise(script: Script, runs: number = 1000): Script {
-    const equivFile = fs.readFileSync(path.join(__dirname, 'optimisations.equiv')).toString('utf-8');
-    const optimisations = equivFile
+    const optimisations = OptimisationsEquivFile
       // Split by line and filter all line comments (#)
       .split('\n')
       .map(equiv => equiv.trim())

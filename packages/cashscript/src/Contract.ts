@@ -15,7 +15,7 @@ export class Contract {
   deployed: (at?: string) => Instance;
 
   static compile(fnOrString: string, network?: string): Contract {
-    const artifact = fs.existsSync(fnOrString)
+    const artifact = fs && fs.existsSync && fs.existsSync(fnOrString)
       ? CashCompiler.compileFile(fnOrString)
       : CashCompiler.compileString(fnOrString);
 

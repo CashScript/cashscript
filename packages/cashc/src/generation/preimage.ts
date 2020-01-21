@@ -4,7 +4,7 @@ type Part = {
   fromStart: number
   fromEnd: number
   size: number
-}
+};
 
 export const PreimageParts: { [key in PreimageField]: Part } = {
   [PreimageField.VERSION]: {
