@@ -11,7 +11,7 @@ before_install:
   - pip3 install z3-solver
 
 script:
-  - yarn test
+  - yarn test --coverage
   - yarn lint
   # - yarn proof
 

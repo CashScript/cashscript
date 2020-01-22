@@ -5,7 +5,7 @@ export class Location {
   constructor(public start: Point, public end: Point) {}
 
   static fromCtx(ctx: ParserRuleContext): Location | undefined {
-    const stop = ctx.stop && ctx.stop.text ? ctx.stop : ctx.start;
+    const stop = ctx.stop?.text ? ctx.stop : ctx.start;
     const textLength = (stop.text || '').length;
 
     const start = new Point(ctx.start.line, ctx.start.charPositionInLine);

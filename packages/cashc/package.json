@@ -21,11 +21,10 @@
     "yargs": "^14.0.0"
   },
   "devDependencies": {
-    "copyfiles": "^2.1.1",
     "eslint": "^6.6.0",
     "jest": "^24.9.0",
     "ts-jest": "^24.3.0",
-    "typescript": "3.5.3"
+    "typescript": "3.7.5"
   },
   "directories": {
     "lib": "src",
@@ -50,10 +49,9 @@
   },
   "scripts": {
     "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
-    "build": "npm run clean && npm run compile && npm run copyfiles",
+    "build": "npm run clean && npm run compile",
     "clean": "rm -rf ./dist",
     "compile": "tsc -p tsconfig.build.json",
-    "copyfiles": "copyfiles -f src/optimisations/*.equiv dist/optimisations/",
     "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",

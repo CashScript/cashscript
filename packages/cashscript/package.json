@@ -19,7 +19,7 @@
   "devDependencies": {
     "bignumber.js": "^9.0.0",
     "eslint": "^6.6.0",
-    "typescript": "3.5.3"
+    "typescript": "3.7.5"
   },
   "directories": {
     "lib": "src",

@@ -10,9 +10,6 @@ module.exports = {
   env: {
     'jest': true,
   },
-  parserOptions: {
-    project: './tsconfig.build.json'
-  },
   rules: {
     'arrow-parens': ['error', 'as-needed', { "requireForBlockBody": true }],
     'import/no-cycle': 0, // Needed for AST -> AstVisitor -> AST

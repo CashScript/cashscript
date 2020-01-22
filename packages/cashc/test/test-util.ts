@@ -46,7 +46,7 @@ function prettyPrintParseTreeElement(
 ): void {
   if (el instanceof ParserRuleContext) {
     console.log(indent + el.constructor.name.replace('Context', ''));
-    el.children && el.children.forEach((c) => {
+    el.children?.forEach((c) => {
       prettyPrintParseTreeElement(lexer, c, `${indent}  `);
     });
   } else if (el instanceof TerminalNode) {

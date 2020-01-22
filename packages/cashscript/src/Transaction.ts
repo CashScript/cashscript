@@ -106,16 +106,16 @@ export class Transaction {
     outs: Output[],
     options?: TxOptions,
   ): Promise<{ tx: any, inputs: Utxo[]}> {
-    const sequence = options && options.age
+    const sequence = options?.age
       ? this.builder.bip68.encode({ blocks: options.age })
       : 0xfffffffe;
-    const locktime = options && options.time
+    const locktime = options?.time
       ? options.time
       : await this.bitbox.Blockchain.getBlockCount();
 
     this.builder.setLockTime(locktime);
 
-    const { inputs, outputs } = await this.getInputsAndOutputs(outs, options && options.fee);
+    const { inputs, outputs } = await this.getInputsAndOutputs(outs, options?.fee);
 
     inputs.forEach((utxo) => {
       this.builder.addInput(utxo.txid, utxo.vout, sequence);

@@ -45,7 +45,7 @@ export class SymbolTable {
 
   get(name: string): Symbol | undefined {
     let symbol = this.symbols.get(name);
-    symbol = symbol || (this.parent && this.parent.get(name));
+    symbol = symbol || this.parent?.get(name);
     return symbol;
   }
 

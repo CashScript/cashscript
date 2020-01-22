@@ -34,8 +34,7 @@ export class CashScriptError extends Error {
     super(message);
 
     this.name = this.constructor.name;
-    Error.captureStackTrace(this, this.constructor);
-
+    this.stack = new Error().stack;
     this.node = node;
   }
 }
