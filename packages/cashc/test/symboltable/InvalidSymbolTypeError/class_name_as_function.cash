@@ -1,0 +1,5 @@
+contract Test() {
+    function hello() {
+        require(OutputP2PKH(bytes8(0), bytes20(0)) == bytes34(0));
+    }
+}

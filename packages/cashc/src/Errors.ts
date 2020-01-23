@@ -18,7 +18,7 @@ import {
   RequireNode,
 } from './ast/AST';
 import { Type, PrimitiveType } from './ast/Type';
-import { Symbol } from './ast/SymbolTable';
+import { Symbol, SymbolType } from './ast/SymbolTable';
 
 export class CashScriptError extends Error {
   node: Node;
@@ -44,6 +44,15 @@ export class UndefinedReferenceError extends CashScriptError {
     public node: IdentifierNode,
   ) {
     super(node, `Undefined reference to symbol ${node.name}`);
+  }
+}
+
+export class InvalidSymbolTypeError extends CashScriptError {
+  constructor(
+    public node: IdentifierNode,
+    public expected: SymbolType,
+  ) {
+    super(node, `Found symbol ${node.name} with type ${node.definition?.symbolType} where type ${expected} was expected`);
   }
 }
 

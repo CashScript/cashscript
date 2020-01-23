@@ -8,19 +8,28 @@ import { Type } from './Type';
 
 export class Symbol {
   references: IdentifierNode[] = [];
-  constructor(
+  private constructor(
     public name: string,
     public type: Type,
+    public symbolType: SymbolType,
     public definition?: Node,
     public parameters?: Type[],
   ) {}
 
-  static variable(node: VariableDefinitionNode): Symbol {
-    return new Symbol(node.name, node.type, node);
+  static variable(node: VariableDefinitionNode | ParameterNode): Symbol {
+    return new Symbol(node.name, node.type, SymbolType.VARIABLE, node);
   }
 
-  static parameter(node: ParameterNode): Symbol {
-    return new Symbol(node.name, node.type, node);
+  static global(name: string, type: Type): Symbol {
+    return new Symbol(name, type, SymbolType.VARIABLE);
+  }
+
+  static function(name: string, type: Type, parameters: Type[]): Symbol {
+    return new Symbol(name, type, SymbolType.FUNCTION, undefined, parameters);
+  }
+
+  static class(name: string, type: Type, parameters: Type[]): Symbol {
+    return new Symbol(name, type, SymbolType.CLASS, undefined, parameters);
   }
 
   toString(): string {
@@ -30,6 +39,12 @@ export class Symbol {
     }
     return str;
   }
+}
+
+export enum SymbolType {
+  VARIABLE = 'variable',
+  FUNCTION = 'function',
+  CLASS = 'class',
 }
 
 export class SymbolTable {

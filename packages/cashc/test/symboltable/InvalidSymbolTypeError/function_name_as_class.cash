@@ -1,0 +1,5 @@
+contract Test() {
+    function hello() {
+        require(new min(0, 1) == 0);
+    }
+}

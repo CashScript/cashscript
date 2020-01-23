@@ -439,6 +439,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.emit(Op.OP_CAT);
       this.emit(Buffer.from('87', 'hex'));
       this.emit(Op.OP_CAT);
+    } else {
+      throw new Error(); // Should not happen
     }
     this.popFromStack(2);
     this.pushToStack('(value)');

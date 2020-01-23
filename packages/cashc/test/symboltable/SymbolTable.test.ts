@@ -1,14 +1,16 @@
 /*   SymbolTable.test.ts
  *
  * - This file is used to test the functioning of the symbol table.
- * - It has three different test categories: success, undefined and redefinition.
  */
 
 import * as path from 'path';
 import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import { Ast } from '../../src/ast/AST';
-import { UndefinedReferenceError, RedefinitionError, UnusedVariableError } from '../../src/Errors';
+import {
+  UndefinedReferenceError,
+  RedefinitionError,
+  UnusedVariableError, InvalidSymbolTypeError } from '../../src/Errors';
 import { parseCode } from '../../src/util';
 
 interface TestSetup {
@@ -24,6 +26,15 @@ function setup(input: string): TestSetup {
 }
 
 describe('Symbol Table', () => {
+  describe('InvalidSymbolTypeError', () => {
+    readCashFiles(path.join(__dirname, 'InvalidSymbolTypeError')).forEach((f) => {
+      it(`${f.fn} should throw InvalidSymbolTypeError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        expect(() => ast.accept(traversal)).toThrow(InvalidSymbolTypeError);
+      });
+    });
+  });
+
   describe('RedefinitionError', () => {
     readCashFiles(path.join(__dirname, 'RedefinitionError')).forEach((f) => {
       it(`${f.fn} should throw RedefinitionError`, () => {

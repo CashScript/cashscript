@@ -1,0 +1,9 @@
+contract Test(int x) {
+    function hello() {
+        require(withn(1, 0, 2));
+    }
+
+    function world(int a) {
+        require(a + 5 == 10);
+    }
+}

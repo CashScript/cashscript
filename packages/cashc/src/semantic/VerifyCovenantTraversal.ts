@@ -1,4 +1,4 @@
-import { PreimageField } from '../ast/Globals';
+import { PreimageField, GlobalFunction } from '../ast/Globals';
 import {
   ContractNode,
   ParameterNode,
@@ -33,10 +33,9 @@ export default class VerifyCovenantTraversal extends AstTraversal {
   visitRequire(node: RequireNode): Node {
     node.expression = this.visit(node.expression);
     const exp = node.expression;
-    if (exp instanceof FunctionCallNode && exp.identifier.name === 'checkSig') {
+    if (exp instanceof FunctionCallNode && exp.identifier.name === GlobalFunction.CHECKSIG) {
       this.checkSigVerify = true;
     }
-
     return node;
   }
 
