@@ -12,6 +12,7 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import { Script, Op } from './generation/Script';
 import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
 import ReplaceBytecodeNop from './generation/ReplaceBytecodeNop';
+import VerifyCovenantTraversal from './semantic/VerifyCovenantTraversal';
 
 export const Data = {
   encodeBool(b: boolean): Buffer {
@@ -51,6 +52,7 @@ export const CashCompiler = {
     let ast = parseCode(code);
     ast = ast.accept(new SymbolTableTraversal()) as Ast;
     ast = ast.accept(new TypeCheckTraversal()) as Ast;
+    ast = ast.accept(new VerifyCovenantTraversal()) as Ast;
     const traversal = new GenerateTargetTraversal();
     ast.accept(traversal);
     let bytecode = traversal.output;
