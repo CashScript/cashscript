@@ -162,7 +162,7 @@ export function resultingType(
   return undefined;
 }
 
-export function arrayType(types: PrimitiveType[]): Type | undefined {
+export function arrayType(types: Type[]): Type | undefined {
   if (types.length === 0) return undefined;
   let resType: Type | undefined = types[0];
   types.forEach((t) => {

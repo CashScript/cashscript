@@ -32,9 +32,7 @@ export class CashScriptError extends Error {
     }
 
     super(message);
-
     this.name = this.constructor.name;
-    this.stack = new Error().stack;
     this.node = node;
   }
 }
@@ -184,14 +182,6 @@ export class IndexOutOfBoundsError extends CashScriptError {
     node: TupleIndexOpNode,
   ) {
     super(node, `Index ${node.index} out of bounds`);
-  }
-}
-
-export class PrimitiveTypeError extends TypeError {
-  constructor(
-    node: Node,
-  ) {
-    super(node, undefined, undefined, 'Expected primitive type');
   }
 }
 

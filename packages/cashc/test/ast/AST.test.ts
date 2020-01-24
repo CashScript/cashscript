@@ -27,6 +27,7 @@ describe('AST Builder', () => {
       });
     });
   });
+
   describe('AST consistency', () => {
     interface TestSetup {
       ast: Ast,

@@ -10,7 +10,9 @@ import { Ast } from '../../src/ast/AST';
 import {
   UndefinedReferenceError,
   RedefinitionError,
-  UnusedVariableError, InvalidSymbolTypeError } from '../../src/Errors';
+  UnusedVariableError,
+  InvalidSymbolTypeError,
+} from '../../src/Errors';
 import { parseCode } from '../../src/util';
 
 interface TestSetup {

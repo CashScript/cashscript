@@ -16,7 +16,6 @@ import {
   AssignTypeError,
   ArrayElementError,
   IndexOutOfBoundsError,
-  PrimitiveTypeError,
   TypeError,
 } from '../../src/Errors';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
@@ -102,16 +101,6 @@ describe('Type Check', () => {
       it(`${f.fn} should throw IndexOutOfBoundsError`, () => {
         const { ast, traversal } = setup(f.contents);
         expect(() => ast.accept(traversal)).toThrow(IndexOutOfBoundsError);
-      });
-    });
-  });
-
-  describe('PrimitiveTypeError', () => {
-    const testCases = readCashFiles(path.join(__dirname, 'PrimitiveTypeError'));
-    testCases.forEach((f) => {
-      it(`${f.fn} should throw PrimitiveTypeError`, () => {
-        const { ast, traversal } = setup(f.contents);
-        expect(() => ast.accept(traversal)).toThrow(PrimitiveTypeError);
       });
     });
   });

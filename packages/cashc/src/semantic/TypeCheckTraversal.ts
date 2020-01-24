@@ -26,7 +26,6 @@ import {
   AssignTypeError,
   ArrayElementError,
   IndexOutOfBoundsError,
-  PrimitiveTypeError,
 } from '../Errors';
 import {
   PrimitiveType,
@@ -37,7 +36,6 @@ import {
   arrayType,
   ArrayType,
   TupleType,
-  isPrimitive,
   BytesType,
   Type,
 } from '../ast/Type';
@@ -287,11 +285,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.elements = this.visitList(node.elements);
 
     const elementTypes = node.elements.map((e) => {
-      // Effectively only pk and sig are supported because the only
-      // use of arrays is checkMultiSig
-      if (!e.type || !isPrimitive(e.type)) {
-        throw new PrimitiveTypeError(node);
-      }
+      if (!e.type) throw new ArrayElementError(node);
       return e.type;
     });
 
