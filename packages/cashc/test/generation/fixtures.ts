@@ -522,4 +522,51 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'announcement.cash',
+    artifact: {
+      contractName: 'Announcement',
+      constructorInputs: [],
+      abi: [
+        { name: 'announce', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
+      ],
+      bytecode:
+        // Preimage deserialisation
+        'OP_DUP 69 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
+        + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
+        // require(checkSig(s, pk)) + covenant verification
+        + 'OP_2ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_7 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
+        // bytes announcement = new OutputNullData(...)
+        + '0000000000000000 6a 6d02 OP_SIZE OP_DUP 4b OP_GREATERTHAN OP_IF '
+        + '4c OP_SWAP OP_CAT OP_ENDIF OP_SWAP OP_CAT OP_CAT '
+        + '4120636f6e7472616374206d6179206e6f7420696e6a75726520612068756d616e20626'
+        + '5696e67206f722c207468726f75676820696e616374696f6e2c20616c6c6f77206120687'
+        + '56d616e206265696e6720746f20636f6d6520746f206861726d2e '
+        + 'OP_SIZE OP_DUP 4b OP_GREATERTHAN OP_IF 4c OP_SWAP OP_CAT OP_ENDIF OP_SWAP OP_CAT OP_CAT '
+        + 'OP_SIZE OP_SWAP OP_CAT OP_CAT '
+        // int minerFee = 1000
+        + 'e803 '
+        // int changeAmount = int(tx.value) - minerFee
+        + 'OP_3 OP_ROLL OP_BIN2NUM OP_OVER OP_SUB '
+        // if (changeAmount >= minerFee)
+        + 'OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_IF '
+        // bytes32 change = new OutputP2SH(...)
+        + 'OP_DUP OP_8 OP_NUM2BIN 17a914 OP_CAT OP_4 OP_PICK OP_HASH160 OP_CAT 87 OP_CAT '
+        // require(tx.hashOutputs == hash256(announcement + change))
+        + 'OP_2OVER OP_2 OP_PICK OP_CAT OP_HASH256 OP_EQUALVERIFY OP_DROP '
+        + 'OP_ELSE '
+        // require(tx.hashOutputs == hash256(announcement))
+        + 'OP_2 OP_PICK OP_2 OP_PICK OP_HASH256 OP_EQUALVERIFY '
+        // Stack cleanup
+        + 'OP_ENDIF OP_2DROP OP_2DROP OP_1',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'announcement.cash'), { encoding: 'utf-8' }),
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];

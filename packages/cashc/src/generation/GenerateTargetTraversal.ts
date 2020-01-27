@@ -422,27 +422,66 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitInstantiation(node: InstantiationNode): Node {
-    if (node.parameters.length !== 2) throw new Error(); // Should not happen
     if (node.identifier.name === Class.OUTPUT_P2PKH) {
+      // <output amount>
       this.visit(node.parameters[0]);
+      // <VarInt 25 bytes> OP_DUP OP_HASH160 OP_PUSH<20>
       this.emit(Buffer.from('1976a914', 'hex'));
       this.emit(Op.OP_CAT);
+      // <pkh>
       this.visit(node.parameters[1]);
       this.emit(Op.OP_CAT);
+      // OP_EQUAL OP_CHECKSIG
       this.emit(Buffer.from('88ac', 'hex'));
       this.emit(Op.OP_CAT);
+      this.popFromStack(2);
     } else if (node.identifier.name === Class.OUTPUT_P2SH) {
+      // <output amount>
       this.visit(node.parameters[0]);
+      // <VarInt 23 bytes> OP_HASH160 OP_PUSH<20>
       this.emit(Buffer.from('17a914', 'hex'));
       this.emit(Op.OP_CAT);
+      // <script hash>
       this.visit(node.parameters[1]);
       this.emit(Op.OP_CAT);
+      // OP_EQUAL
       this.emit(Buffer.from('87', 'hex'));
       this.emit(Op.OP_CAT);
+      this.popFromStack(2);
+    } else if (node.identifier.name === Class.OUTPUT_NULLDATA) {
+      // Total script = bytes8(0) <VarInt> OP_RETURN (<VarInt> <chunk>)+
+      // <output amount (0)>
+      this.emit(Buffer.from('0000000000000000', 'hex'));
+      // OP_RETURN
+      this.emit(Buffer.from('6a', 'hex'));
+      this.pushToStack('(value)');
+      this.pushToStack('(value)');
+      const { elements } = node.parameters[0] as ArrayNode;
+      // <VarInt data chunk size (dynamic)>
+      elements.forEach((el) => {
+        this.visit(el);
+        this.emit(Op.OP_SIZE);
+        this.emit(Op.OP_DUP);
+        this.emit(Data.encodeInt(75));
+        this.emit(Op.OP_GREATERTHAN);
+        this.emit(Op.OP_IF);
+        this.emit(Buffer.from('4c', 'hex'));
+        this.emit(Op.OP_SWAP);
+        this.emit(Op.OP_CAT);
+        this.emit(Op.OP_ENDIF);
+        this.emit(Op.OP_SWAP);
+        this.emit(Op.OP_CAT);
+        this.emit(Op.OP_CAT);
+      });
+      // <VarInt total script size>
+      this.emit(Op.OP_SIZE);
+      this.emit(Op.OP_SWAP);
+      this.emit(Op.OP_CAT);
+      this.emit(Op.OP_CAT);
+      this.popFromStack(2 + elements.length);
     } else {
       throw new Error(); // Should not happen
     }
-    this.popFromStack(2);
     this.pushToStack('(value)');
 
     return node;

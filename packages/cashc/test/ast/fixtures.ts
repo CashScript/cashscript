@@ -24,7 +24,12 @@ import {
   InstantiationNode,
 } from '../../src/ast/AST';
 import { BinaryOperator } from '../../src/ast/Operator';
-import { TimeOp, PreimageField, Class } from '../../src/ast/Globals';
+import {
+  TimeOp,
+  PreimageField,
+  Class,
+  GlobalFunction,
+} from '../../src/ast/Globals';
 
 interface Fixture {
   fn: string,
@@ -778,6 +783,116 @@ export const fixtures: Fixture[] = [
             [],
           ),
         ],
+      ),
+    ),
+  },
+  {
+    fn: 'announcement.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'Announcement',
+        [],
+        [new FunctionDefinitionNode(
+          'announce',
+          [
+            new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
+            new ParameterNode(PrimitiveType.SIG, 's'),
+          ],
+          new BlockNode([
+            new RequireNode(new FunctionCallNode(
+              new IdentifierNode(GlobalFunction.CHECKSIG),
+              [new IdentifierNode('s'), new IdentifierNode('pk')],
+            )),
+            new VariableDefinitionNode(
+              new BytesType(),
+              'announcement',
+              new InstantiationNode(
+                new IdentifierNode(Class.OUTPUT_NULLDATA),
+                [new ArrayNode([
+                  new HexLiteralNode(Buffer.from('6d02', 'hex')),
+                  new CastNode(
+                    new BytesType(),
+                    new StringLiteralNode('A contract may not injure a human being or, through inaction, allow a human being to come to harm.', '\''),
+                  ),
+                ])],
+              ),
+            ),
+            new VariableDefinitionNode(
+              PrimitiveType.INT,
+              'minerFee',
+              new IntLiteralNode(1000),
+            ),
+            new VariableDefinitionNode(
+              PrimitiveType.INT,
+              'changeAmount',
+              new BinaryOpNode(
+                new CastNode(
+                  PrimitiveType.INT,
+                  new CastNode(new BytesType(), new IdentifierNode(PreimageField.VALUE)),
+                ),
+                BinaryOperator.MINUS,
+                new IdentifierNode('minerFee'),
+              ),
+            ),
+            new BranchNode(
+              new BinaryOpNode(
+                new IdentifierNode('changeAmount'),
+                BinaryOperator.GE,
+                new IdentifierNode('minerFee'),
+              ),
+              new BlockNode([
+                new VariableDefinitionNode(
+                  new BytesType(32),
+                  'change',
+                  new InstantiationNode(
+                    new IdentifierNode(Class.OUTPUT_P2SH),
+                    [
+                      new CastNode(
+                        new BytesType(8),
+                        new IdentifierNode('changeAmount'),
+                      ),
+                      new FunctionCallNode(
+                        new IdentifierNode(GlobalFunction.HASH160),
+                        [new IdentifierNode(PreimageField.BYTECODE)],
+                      ),
+                    ],
+                  ),
+                ),
+                new RequireNode(
+                  new BinaryOpNode(
+                    new IdentifierNode(PreimageField.HASHOUTPUTS),
+                    BinaryOperator.EQ,
+                    new FunctionCallNode(
+                      new IdentifierNode(GlobalFunction.HASH256),
+                      [new BinaryOpNode(
+                        new IdentifierNode('announcement'),
+                        BinaryOperator.PLUS,
+                        new IdentifierNode('change'),
+                      )],
+                    ),
+                  ),
+                ),
+              ]),
+              new BlockNode([
+                new RequireNode(
+                  new BinaryOpNode(
+                    new IdentifierNode(PreimageField.HASHOUTPUTS),
+                    BinaryOperator.EQ,
+                    new FunctionCallNode(
+                      new IdentifierNode(GlobalFunction.HASH256),
+                      [new IdentifierNode('announcement')],
+                    ),
+                  ),
+                ),
+              ]),
+            ),
+          ]),
+          [
+            PreimageField.VALUE,
+            PreimageField.BYTECODE,
+            PreimageField.HASHOUTPUTS,
+          ],
+        )],
       ),
     ),
   },

@@ -39,6 +39,7 @@ export enum TimeOp {
 export enum Class {
   OUTPUT_P2SH = 'OutputP2SH',
   OUTPUT_P2PKH = 'OutputP2PKH',
+  OUTPUT_NULLDATA = 'OutputNullData'
 }
 
 export enum PreimageField {
@@ -74,6 +75,9 @@ GLOBAL_SYMBOL_TABLE.set(
 );
 GLOBAL_SYMBOL_TABLE.set(
   Symbol.class(Class.OUTPUT_P2PKH, new BytesType(34), [new BytesType(8), new BytesType(20)]),
+);
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.class(Class.OUTPUT_NULLDATA, new BytesType(), [new ArrayType(new BytesType())]),
 );
 
 // Global functions
