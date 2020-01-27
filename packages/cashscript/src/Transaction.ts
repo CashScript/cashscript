@@ -21,7 +21,7 @@ import {
   getPreimageSize,
   buildError,
 } from './util';
-import { DUST_LIMIT, P2PKH_OUTPUT_SIZE } from './constants';
+import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
 
 const cramer = require('cramer-bch');
 
@@ -167,6 +167,7 @@ export class Transaction {
   private async getInputsAndOutputs(
     outs: Output[],
     hardcodedFee?: number,
+    minChange: number = DUST_LIMIT,
     satsPerByte: number = 1.0,
   ): Promise<{ inputs: Utxo[], outputs: OutputForBuilder[] }> {
     const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
@@ -203,16 +204,18 @@ export class Transaction {
       if (!hardcodedFee) fee += inputSize;
       if (satsAvailable > amount + fee) break;
     }
-    const change = satsAvailable - amount - fee;
+    let change = satsAvailable - amount - fee;
 
     if (change < 0) {
       throw new Error(`Insufficient balance: available (${satsAvailable}) < needed (${amount + fee}).`);
     }
 
-    if (hardcodedFee && change >= DUST_LIMIT) {
+    if (!hardcodedFee) {
+      change -= P2SH_OUTPUT_SIZE;
+    }
+
+    if (change >= DUST_LIMIT && change >= minChange) {
       outputs.push({ to: this.address, amount: change });
-    } else if (!hardcodedFee && change >= DUST_LIMIT + P2PKH_OUTPUT_SIZE) {
-      outputs.push({ to: this.address, amount: change - P2PKH_OUTPUT_SIZE });
     }
 
     return { inputs, outputs };

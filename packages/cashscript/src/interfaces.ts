@@ -30,6 +30,7 @@ export interface TxOptions {
   time?: number;
   age?: number;
   fee?: number;
+  minChange?: number;
 }
 
 export enum SignatureAlgorithm {

@@ -14,6 +14,7 @@ import {
   FailedSigCheckError,
 } from './Errors';
 
+// ////////// SIZE CALCULATIONS ///////////////////////////////////////////////
 export function getInputSize(script: Buffer): number {
   const scriptSize = script.byteLength;
   const varIntSize = scriptSize > 252 ? 3 : 1;
@@ -57,6 +58,18 @@ export function getTxSizeWithoutInputs(outputs: OutputForBuilder[]): number {
   return size;
 }
 
+export function countOpcodes(script: Script): number {
+  return script
+    .filter(opOrData => typeof opOrData === 'number')
+    .filter(op => op > Op.OP_16)
+    .length;
+}
+
+export function calculateBytesize(script: Script): number {
+  return ScriptUtil.encode(script).byteLength;
+}
+
+// ////////// BUILD OBJECTS ///////////////////////////////////////////////////
 export function createInputScript(
   redeemScript: Script,
   encodedParameters: Buffer[],
@@ -92,27 +105,6 @@ function toBuffer(output: string): Buffer {
   return Buffer.from(data, format);
 }
 
-export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey: string = ScriptUtil.encodeP2SHOutput(
-    CryptoUtil.hash160(
-      ScriptUtil.encode(script),
-    ),
-  ).toString('hex');
-  return `meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
-}
-
-
-export function countOpcodes(script: Script): number {
-  return script
-    .filter(opOrData => typeof opOrData === 'number')
-    .filter(op => op > Op.OP_16)
-    .length;
-}
-
-export function calculateBytesize(script: Script): number {
-  return ScriptUtil.encode(script).byteLength;
-}
-
 export function buildError(reason: string, meepStr: string): FailedTransactionError {
   const require = [
     Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
@@ -136,6 +128,16 @@ export function buildError(reason: string, meepStr: string): FailedTransactionEr
 
 function toRegExp(reasons: string[]): RegExp {
   return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
+}
+
+// ////////// MISC ////////////////////////////////////////////////////////////
+export function meep(tx: any, utxos: Utxo[], script: Script): string {
+  const scriptPubkey: string = ScriptUtil.encodeP2SHOutput(
+    CryptoUtil.hash160(
+      ScriptUtil.encode(script),
+    ),
+  ).toString('hex');
+  return `meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
 // ////////////////////////////////////////////////////////////////////////////
