@@ -11,7 +11,6 @@ const { argv } = yargs
     alias: 'o',
     describe: 'Specify a file to output the generated artifact.',
     type: 'string',
-    demand: true,
   })
   .showHelpOnFail(true)
   .help()
@@ -19,7 +18,7 @@ const { argv } = yargs
 
 ensure(argv._.length === 1, 'Please provide exactly one source file');
 const sourceFile = path.resolve(argv._[0]);
-const outputFile = path.resolve(argv.output);
+const outputFile = argv.output && argv.output !== '-' && path.resolve(argv.output);
 ensure(fs.existsSync(sourceFile) && fs.statSync(sourceFile).isFile(), 'Please provide a valid source file');
 
 try {
@@ -35,11 +34,15 @@ try {
     console.warn('Warning: Your contract\'s bytesize is over the limit of 520 and will not be accepted by the BCH network');
   }
 
-  const outputDir = path.dirname(outputFile);
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+  if (!outputFile) {
+    console.log(JSON.stringify(artifact, null, 2));
+  } else {
+    const outputDir = path.dirname(outputFile);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+    Artifacts.export(artifact, outputFile);
   }
-  Artifacts.export(artifact, outputFile);
 } catch (e) {
   abort(e.message);
 }

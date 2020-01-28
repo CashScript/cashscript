@@ -27,8 +27,7 @@ The `cashc` CLI tool can be used to compile `.cash` files to JSON artifact files
 Usage: cashc [options] [source_file]
 
 Options:
-  --output, -o  Specify a file to output the generated artifact.
-                                                             [string] [required]
+  --output, -o  Specify a file to output the generated artifact.        [string]
   --help        Show help                                              [boolean]
   --version     Show version number                                    [boolean]
 ```

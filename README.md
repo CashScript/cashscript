@@ -32,8 +32,7 @@ npm install -g cashc
 Usage: cashc [options] [source_file]
 
 Options:
-  --output, -o  Specify a file to output the generated artifact.
-                                                             [string] [required]
+  --output, -o  Specify a file to output the generated artifact.        [string]
   --help        Show help                                              [boolean]
   --version     Show version number                                    [boolean]
 ```
