@@ -1,6 +1,6 @@
 import { BITBOX } from 'bitbox-sdk';
 import { Contract, Sig } from 'cashscript';
-import * as path from 'path';
+import path from 'path';
 
 run();
 export async function run(): Promise<void> {

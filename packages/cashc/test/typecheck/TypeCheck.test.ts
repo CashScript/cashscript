@@ -4,7 +4,7 @@
  * - It has three different test categories: success, undefined and redefinition.
  */
 
-import * as path from 'path';
+import path from 'path';
 import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import { Node, Ast } from '../../src/ast/AST';

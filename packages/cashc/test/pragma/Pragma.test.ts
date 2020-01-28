@@ -3,7 +3,7 @@
  * - This file is used to test the functioning of the pragma directives.
  */
 
-import * as path from 'path';
+import path from 'path';
 import { readCashFiles } from '../test-util';
 import { parseCode } from '../../src/util';
 import { VersionError } from '../../src';

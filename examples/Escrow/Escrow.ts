@@ -2,7 +2,7 @@ import { BITBOX, Crypto } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import { Contract, Instance, Sig } from 'cashscript';
-import * as path from 'path';
+import path from 'path';
 
 class Oracle {
   constructor(public keypair: ECPair) {}

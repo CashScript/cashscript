@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import { version } from '../../src';
 import { Artifact } from '../../src/artifact/Artifact';
 

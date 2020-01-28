@@ -1,6 +1,6 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import { Script as BScript } from 'bitbox-sdk';
-import * as fs from 'fs';
+import fs from 'fs';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
 import { CashScriptParser } from './grammar/CashScriptParser';

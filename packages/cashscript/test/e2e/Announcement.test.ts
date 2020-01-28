@@ -1,4 +1,4 @@
-import * as path from 'path';
+import path from 'path';
 import { Contract, Instance, Sig } from '../../src';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';

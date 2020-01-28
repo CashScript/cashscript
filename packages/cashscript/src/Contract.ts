@@ -4,7 +4,7 @@ import {
   CashCompiler,
   Data,
 } from 'cashc';
-import * as fs from 'fs';
+import fs from 'fs';
 import { Transaction } from './Transaction';
 import { Instance } from './Instance';
 import { Parameter, encodeParameter, Sig } from './Parameter';

@@ -3,7 +3,7 @@
  * - This file is used to test the IR and target code generation
  */
 
-import * as path from 'path';
+import path from 'path';
 import { CashCompiler } from '../../src/util';
 import { fixtures } from './fixtures';
 

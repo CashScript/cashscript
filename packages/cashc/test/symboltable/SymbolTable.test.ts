@@ -3,7 +3,7 @@
  * - This file is used to test the functioning of the symbol table.
  */
 
-import * as path from 'path';
+import path from 'path';
 import { readCashFiles } from '../test-util';
 import SymbolTableTraversal from '../../src/semantic/SymbolTableTraversal';
 import { Ast } from '../../src/ast/AST';

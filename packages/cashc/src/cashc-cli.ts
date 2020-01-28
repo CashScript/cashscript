@@ -1,7 +1,7 @@
 #! /usr/bin/env node
-import * as yargs from 'yargs';
-import * as fs from 'fs';
-import * as path from 'path';
+import yargs from 'yargs';
+import fs from 'fs';
+import path from 'path';
 import { CashCompiler, Artifacts, version } from '.';
 import { countOpcodes, Data, calculateBytesize } from './util';
 

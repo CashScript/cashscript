@@ -1,7 +1,7 @@
 import { BITBOX } from 'bitbox-sdk';
 import { ECPair, HDNode } from 'bitcoincashjs-lib';
 import { Contract, Instance, Sig } from 'cashscript';
-import * as path from 'path';
+import path from 'path';
 
 run();
 export async function run(): Promise<void> {

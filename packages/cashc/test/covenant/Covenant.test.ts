@@ -5,7 +5,7 @@
  *   they don't include any require(checkSig(...)) calls.
  */
 
-import * as path from 'path';
+import path from 'path';
 import { readCashFiles } from '../test-util';
 import { Ast } from '../../src/ast/AST';
 import { UnverifiedCovenantError } from '../../src/Errors';

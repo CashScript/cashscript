@@ -7,7 +7,7 @@
  */
 
 import { ANTLRInputStream, CommonTokenStream, BailErrorStrategy } from 'antlr4ts';
-import * as path from 'path';
+import path from 'path';
 import { CashScriptParser } from '../../src/grammar/CashScriptParser';
 import { CashScriptLexer } from '../../src/grammar/CashScriptLexer';
 import { readCashFiles } from '../test-util';

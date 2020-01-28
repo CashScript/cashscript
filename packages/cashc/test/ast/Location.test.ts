@@ -1,5 +1,5 @@
-import * as path from 'path';
-import * as fs from 'fs';
+import path from 'path';
+import fs from 'fs';
 import { Ast } from '../../src/ast/AST';
 import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal';
 import { parseCode } from '../../src/util';

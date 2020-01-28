@@ -9,8 +9,8 @@
  *   fixtures.
  */
 
-import * as path from 'path';
-import * as fs from 'fs';
+import path from 'path';
+import fs from 'fs';
 import { fixtures } from './fixtures';
 import { parseCode } from '../../src/util';
 import { readCashFiles } from '../test-util';
