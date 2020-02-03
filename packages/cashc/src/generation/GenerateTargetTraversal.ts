@@ -452,9 +452,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
       // Total script = bytes8(0) <VarInt> OP_RETURN (<VarInt> <chunk>)+
       // <output amount (0)>
       this.emit(Buffer.from('0000000000000000', 'hex'));
+      this.pushToStack('(value)');
       // OP_RETURN
       this.emit(Buffer.from('6a', 'hex'));
-      this.pushToStack('(value)');
       this.pushToStack('(value)');
       const { elements } = node.parameters[0] as ArrayNode;
       // <VarInt data chunk size (dynamic)>
@@ -472,13 +472,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
         this.emit(Op.OP_SWAP);
         this.emit(Op.OP_CAT);
         this.emit(Op.OP_CAT);
+        this.popFromStack();
       });
       // <VarInt total script size>
       this.emit(Op.OP_SIZE);
       this.emit(Op.OP_SWAP);
       this.emit(Op.OP_CAT);
       this.emit(Op.OP_CAT);
-      this.popFromStack(2 + elements.length);
+      this.popFromStack(2);
     } else {
       throw new Error(); // Should not happen
     }
