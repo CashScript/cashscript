@@ -12,6 +12,7 @@ describe('BoundedBytes', () => {
   beforeAll(() => {
     const BoundedBytes = Contract.import(path.join(__dirname, '..', 'fixture', 'bounded_bytes.json'), 'testnet');
     bbInstance = BoundedBytes.new();
+    console.log(bbInstance.address);
   });
 
   describe('send (to one)', () => {
@@ -65,6 +66,7 @@ describe('Simple Covenant', () => {
   beforeAll(() => {
     const Covenant = Contract.import(path.join(__dirname, '..', 'fixture', 'simple_covenant.json'), 'testnet');
     covenant = Covenant.new();
+    console.log(covenant.address);
   });
 
   describe('send', () => {
