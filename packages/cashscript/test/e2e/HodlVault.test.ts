@@ -14,6 +14,7 @@ describe('HodlVault', () => {
   beforeAll(() => {
     const HodlVault = Contract.import(path.join(__dirname, '..', 'fixture', 'hodl_vault.json'), 'testnet');
     hodlVault = HodlVault.new(alicePk, oraclePk, 597000, 30000);
+    console.log(hodlVault.address);
   });
 
   describe('send (to one)', () => {

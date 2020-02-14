@@ -16,6 +16,8 @@ describe('TransferWithTimeout', () => {
     const TWT = Contract.import(path.join(__dirname, '..', 'fixture', 'transfer_with_timeout.json'), 'testnet');
     twtInstancePast = TWT.new(alicePk, bobPk, 1000000);
     twtInstanceFuture = TWT.new(alicePk, bobPk, 2000000);
+    console.log(twtInstancePast.address);
+    console.log(twtInstanceFuture.address);
   });
 
   describe('send (to one)', () => {

@@ -16,6 +16,7 @@ describe('P2PKH', () => {
   beforeAll(() => {
     const P2PKH = Contract.import(path.join(__dirname, '..', 'fixture', 'p2pkh.json'), 'testnet');
     p2pkhInstance = P2PKH.new(alicePkh);
+    console.log(p2pkhInstance.address);
   });
 
   describe('send (to one)', () => {

@@ -108,21 +108,28 @@ export default class GenerateTargetTraversal extends AstTraversal {
           this.emit(Op.OP_PICK);
         }
 
+        // All functions are if-else statements, except the final one which is
+        // enforced with NUMEQUALVERIFY
         this.emit(Data.encodeInt(i));
         this.emit(Op.OP_NUMEQUAL);
-        this.emit(Op.OP_IF);
-        f = this.visit(f) as FunctionDefinitionNode;
-
-        this.emit(Op.OP_ELSE);
         if (i < node.functions.length - 1) {
-          this.stack = [...stackCopy];
+          this.emit(Op.OP_IF);
+        } else {
+          this.emit(Op.OP_VERIFY);
         }
 
+        f = this.visit(f) as FunctionDefinitionNode;
+
+        if (i < node.functions.length - 1) {
+          this.emit(Op.OP_ELSE);
+        }
+
+        this.stack = [...stackCopy];
         return f;
       });
-
-      this.emit(Op.OP_FALSE);
-      node.functions.forEach(() => this.emit(Op.OP_ENDIF));
+      for (let i = 0; i < node.functions.length - 1; i += 1) {
+        this.emit(Op.OP_ENDIF);
+      }
     }
 
     return node;
@@ -142,13 +149,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // Remove final OP_VERIFY
     // If the final opcodes are OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP
     // Or if the final opcode is OP_ENDIF
+    // Or if the remaining stack size >=5 (2DROP 2DROP 1 < NIP NIP NIP NIP)
     //   then push it back to the script, and push OP_TRUE to the stack
     const finalOp = this.output.pop();
-    if (finalOp === Op.OP_DROP || finalOp === Op.OP_ENDIF) {
+    this.pushToStack('(value)');
+    if (finalOp === Op.OP_DROP || finalOp === Op.OP_ENDIF || (finalOp && this.stack.length >= 5)) {
       this.emit(finalOp);
       this.emit(Op.OP_TRUE);
     }
-    this.pushToStack('(value)');
     this.cleanStack();
     return node;
   }
@@ -460,15 +468,27 @@ export default class GenerateTargetTraversal extends AstTraversal {
       // <VarInt data chunk size (dynamic)>
       elements.forEach((el) => {
         this.visit(el);
+        // Push the element's size (and calculate VarInt)
         this.emit(Op.OP_SIZE);
-        this.emit(Op.OP_DUP);
-        this.emit(Data.encodeInt(75));
-        this.emit(Op.OP_GREATERTHAN);
-        this.emit(Op.OP_IF);
-        this.emit(Buffer.from('4c', 'hex'));
-        this.emit(Op.OP_SWAP);
-        this.emit(Op.OP_CAT);
-        this.emit(Op.OP_ENDIF);
+        if (el instanceof HexLiteralNode) {
+          // If the argument is a literal, we know its size
+          if (el.value.byteLength > 75) {
+            this.emit(Buffer.from('4c', 'hex'));
+            this.emit(Op.OP_SWAP);
+            this.emit(Op.OP_CAT);
+          }
+        } else {
+          // If the argument is not a literal, the script needs to check size
+          this.emit(Op.OP_DUP);
+          this.emit(Data.encodeInt(75));
+          this.emit(Op.OP_GREATERTHAN);
+          this.emit(Op.OP_IF);
+          this.emit(Buffer.from('4c', 'hex'));
+          this.emit(Op.OP_SWAP);
+          this.emit(Op.OP_CAT);
+          this.emit(Op.OP_ENDIF);
+        }
+        // Concat size and arguments
         this.emit(Op.OP_SWAP);
         this.emit(Op.OP_CAT);
         this.emit(Op.OP_CAT);
