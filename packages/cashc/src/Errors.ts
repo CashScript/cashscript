@@ -16,6 +16,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ExpressionNode,
 } from './ast/AST';
 import { Type, PrimitiveType } from './ast/Type';
 import { Symbol, SymbolType } from './ast/SymbolTable';
@@ -205,3 +206,15 @@ export class UnverifiedCovenantError extends CashScriptError {
     super(node, `Covenant variable ${node.name} was used without signature check`);
   }
 }
+
+export class SimulationError extends CashScriptError {}
+
+export class WillCauseFailureError extends SimulationError {
+  constructor(
+    node: ExpressionNode,
+  ) {
+    super(node, 'Statement will cause a transaction error');
+  }
+}
+
+export class ExecutionError extends Error {}

@@ -18,14 +18,20 @@ export const Data = {
   encodeBool(b: boolean): Buffer {
     return b ? this.encodeInt(1) : this.encodeInt(0);
   },
+  decodeBool(b: Buffer): boolean {
+    return this.decodeInt(b) !== 0;
+  },
   encodeInt(i: number): Buffer {
     return new BScript().encodeNumber(i);
   },
-  decodeInt(i: Buffer): number {
-    return new BScript().decodeNumber(i);
+  decodeInt(i: Buffer, maxLength?: number): number {
+    return new BScript().decodeNumber(i, maxLength);
   },
   encodeString(s: string): Buffer {
     return Buffer.from(s, 'ascii');
+  },
+  decodeString(s: Buffer): string {
+    return s.toString('ascii');
   },
   scriptToAsm(s: Script): string {
     return new BScript().toASM(new BScript().encode(s));
