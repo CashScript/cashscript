@@ -52,7 +52,7 @@ export class toOps {
   }
 
   static fromBinaryOp(op: BinaryOperator, numeric: boolean = false): Script {
-    const mapping = {
+    const mapping: { [key in BinaryOperator]: Script } = {
       [BinaryOperator.DIV]: [Op.OP_DIV],
       [BinaryOperator.MOD]: [Op.OP_MOD],
       [BinaryOperator.PLUS]: [Op.OP_CAT],
@@ -68,17 +68,11 @@ export class toOps {
     };
 
     if (numeric) {
-      switch (op) {
-        case BinaryOperator.PLUS:
-          return [Op.OP_ADD];
-        case BinaryOperator.EQ:
-          return [Op.OP_NUMEQUAL];
-        case BinaryOperator.NE:
-          return [Op.OP_NUMNOTEQUAL];
-        default:
-          return mapping[op];
-      }
+      mapping[BinaryOperator.PLUS] = [Op.OP_ADD];
+      mapping[BinaryOperator.EQ] = [Op.OP_NUMEQUAL];
+      mapping[BinaryOperator.NE] = [Op.OP_NUMNOTEQUAL];
     }
+
     return mapping[op];
   }
 
@@ -90,4 +84,22 @@ export class toOps {
 
     return mapping[op];
   }
+}
+
+export function returnsBool(op: GlobalFunction | BinaryOperator | UnaryOperator): boolean {
+  return [
+    GlobalFunction.CHECKDATASIG,
+    GlobalFunction.CHECKMULTISIG,
+    GlobalFunction.CHECKSIG,
+    GlobalFunction.WITHIN,
+    BinaryOperator.LT,
+    BinaryOperator.LE,
+    BinaryOperator.GT,
+    BinaryOperator.GE,
+    BinaryOperator.EQ,
+    BinaryOperator.NE,
+    BinaryOperator.AND,
+    BinaryOperator.OR,
+    UnaryOperator.NOT,
+  ].includes(op);
 }
