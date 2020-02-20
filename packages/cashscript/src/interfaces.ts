@@ -7,6 +7,18 @@ export interface Utxo {
   confirmations: number;
 }
 
+export interface UnconfirmedUtxo {
+  txid: string;
+  vout: number;
+  scriptPubKey: string;
+  amount: number;
+  satoshis: number;
+  confirmations: number;
+  ts: number;
+  legacyAddress: string;
+  cashAddress: string;
+}
+
 export type Output = Recipient | OpReturn;
 
 export interface OutputForBuilder {
@@ -31,6 +43,7 @@ export interface TxOptions {
   age?: number;
   fee?: number;
   minChange?: number;
+  inputs?: Utxo[];
 }
 
 export enum SignatureAlgorithm {

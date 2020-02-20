@@ -105,7 +105,7 @@ export class Transaction {
   private async createTransaction(
     outs: Output[],
     options?: TxOptions,
-  ): Promise<{ tx: any, inputs: Utxo[]}> {
+  ): Promise<{ tx: any, inputs: Utxo[] }> {
     const sequence = options?.age
       ? this.builder.bip68.encode({ blocks: options.age })
       : 0xfffffffe;
@@ -169,8 +169,12 @@ export class Transaction {
     hardcodedFee?: number,
     minChange: number = DUST_LIMIT,
     satsPerByte: number = 1.0,
+    _utxos?: Utxo[],
   ): Promise<{ inputs: Utxo[], outputs: OutputForBuilder[] }> {
-    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+    let utxos = _utxos;
+    if (!utxos) {
+      ({ utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult);
+    }
 
     // Use a placeholder script with 65-length Buffer in the place of signatures
     // and a correctly sized preimage Buffer if the function is a covenant

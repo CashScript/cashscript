@@ -3,7 +3,12 @@ import {
   Data,
   Op,
 } from 'cashc';
-import { Utxo, OpReturn, OutputForBuilder } from './interfaces';
+import {
+  Utxo,
+  OpReturn,
+  OutputForBuilder,
+  UnconfirmedUtxo,
+} from './interfaces';
 import { ScriptUtil, CryptoUtil } from './BITBOX';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {
@@ -184,3 +189,14 @@ function getPushDataOpcode(data: Buffer): Buffer {
   throw Error('Pushdata too large');
 }
 // ////////////////////////////////////////////////////////////////////////////
+
+export function unconfirmedToUtxo(unconfirmed: UnconfirmedUtxo): Utxo {
+  return {
+    txid: unconfirmed.txid,
+    vout: unconfirmed.vout,
+    amount: unconfirmed.amount,
+    satoshis: unconfirmed.satoshis,
+    confirmations: 0,
+    height: 0,
+  };
+}

@@ -1,6 +1,14 @@
 import { BITBOX } from 'bitbox-sdk';
-import { AddressDetailsResult } from 'bitcoin-com-rest';
+import {
+  AddressDetailsResult,
+  AddressUtxoResult,
+  AddressUnconfirmedResult,
+} from 'bitcoin-com-rest';
 import { Artifact, Script, AbiFunction } from 'cashc';
+import {
+  Utxo,
+  UnconfirmedUtxo,
+} from './interfaces';
 import {
   bitbox,
   AddressUtil,
@@ -10,7 +18,11 @@ import {
 import { Transaction } from './Transaction';
 import { ContractFunction } from './Contract';
 import { Parameter, encodeParameter } from './Parameter';
-import { countOpcodes, calculateBytesize } from './util';
+import {
+  countOpcodes,
+  calculateBytesize,
+  unconfirmedToUtxo,
+} from './util';
 
 export class Instance {
   name: string;
@@ -27,6 +39,26 @@ export class Instance {
   async getBalance(): Promise<number> {
     const details = await this.bitbox.Address.details(this.address) as AddressDetailsResult;
     return details.balanceSat + details.unconfirmedBalanceSat;
+  }
+
+  async getUnconfirmed(): Promise<UnconfirmedUtxo[]> {
+    const { utxos } = await this.bitbox.Address
+      .unconfirmed(this.address) as AddressUnconfirmedResult;
+    return utxos;
+  }
+
+  async getUtxo(): Promise<Utxo[]> {
+    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+    return utxos;
+  }
+
+  async getUtxos(excludeUnconfirmed?: boolean): Promise<Utxo[]> {
+    const promises = [this.getUtxo()];
+    if (!excludeUnconfirmed) {
+      promises.push(this.getUnconfirmed().then(unconfirmed => unconfirmed.map(unconfirmedToUtxo)));
+    }
+    const results = await Promise.all(promises);
+    return results.reduce((memo, utxos) => memo.concat(utxos), []);
   }
 
   constructor(

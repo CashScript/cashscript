@@ -1,6 +1,9 @@
 import path from 'path';
 import { Contract, Instance, Sig } from '../src';
 import {
+  unconfirmedToUtxo,
+} from '../src/util';
+import {
   alicePk,
   alice,
   bob,
@@ -24,6 +27,19 @@ describe('Instance', () => {
       const instance = P2PKH.new(Buffer.alloc(20, 0));
 
       expect(await instance.getBalance()).toBe(0);
+    });
+  });
+
+  describe('Contract Utxo inputs', () => {
+    it('should return an address\'s utxos', async () => {
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+      const instance = P2PKH.new(alicePkh);
+
+      const unconfirmed = await instance.getUnconfirmed();
+      const utxos = await instance.getUtxo();
+      expect(await instance.getUtxos()).toEqual(utxos.concat(
+        unconfirmed.map(unconfirmedToUtxo),
+      ));
     });
   });
 
