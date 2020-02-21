@@ -115,7 +115,13 @@ export class Transaction {
 
     this.builder.setLockTime(locktime);
 
-    const { inputs, outputs } = await this.getInputsAndOutputs(outs, options?.fee);
+    const { inputs, outputs } = await this.getInputsAndOutputs(
+      outs,
+      options?.fee,
+      DUST_LIMIT,
+      1.0,
+      options?.inputs,
+    );
 
     inputs.forEach((utxo) => {
       this.builder.addInput(utxo.txid, utxo.vout, sequence);

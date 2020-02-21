@@ -38,6 +38,39 @@ export interface OpReturn {
   opReturn: string[];
 }
 
+export interface ScriptSigDetails {
+  asm: string;
+  hex: string;
+}
+
+export interface TxnDetailValueIn {
+  cashAddress: string;
+  legacyAddress: string;
+  n: number;
+  scriptSig: ScriptSigDetails;
+  sequence: number;
+  txid: string;
+  value: number;
+  vout: number;
+}
+
+export interface ScriptPubKeyDetails {
+  addresses: string[];
+  cashAddrs: string[];
+  asm: string;
+  hex: string;
+  type: string;
+}
+
+export interface TxnDetailValueOut {
+  n: number;
+  scriptPubKey: ScriptPubKeyDetails;
+  spendHeight: null | number;
+  spendIndex: null | number;
+  spendTxId: null | number;
+  value: string;
+}
+
 export interface TxOptions {
   time?: number;
   age?: number;

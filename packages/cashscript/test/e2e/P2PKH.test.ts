@@ -7,7 +7,12 @@ import {
   bob,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { isOpReturn } from '../../src/interfaces';
+import {
+  isOpReturn,
+  Utxo,
+  TxnDetailValueOut,
+  TxnDetailValueIn,
+} from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
 
@@ -49,6 +54,40 @@ describe('P2PKH', () => {
       // then
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+    });
+
+    it('should succeed when defining its own utxos', async () => {
+      expect.hasAssertions();
+
+      // given
+      const to = p2pkhInstance.address;
+      const amount = 1000;
+      const utxos = await p2pkhInstance.getUtxos();
+      utxos.sort((a, b) => a.satoshis > b.satoshis ? 1 : -1);
+      const targetUtxos: Utxo[] = [];
+      let available = 0;
+      for (const utxo of utxos) {
+        // 1000 for fees
+        if (available - 1000 > amount) break;
+        available += utxo.satoshis;
+        targetUtxos.push(utxo);
+      }
+
+      // when
+      const tx = await p2pkhInstance.functions
+        .spend(alicePk, new Sig(alice))
+        .send(to, amount, {
+          inputs: targetUtxos,
+        });
+
+      for (const _input of tx.vin) {
+        const input = _input as TxnDetailValueIn;
+        expect(targetUtxos.find((utxo) =>
+          utxo.txid === input.txid &&
+          utxo.vout === input.vout &&
+          utxo.satoshis === input.value
+        )).toBeTruthy()
+      }
     });
   });
 
