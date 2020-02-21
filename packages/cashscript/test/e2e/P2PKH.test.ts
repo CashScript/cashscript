@@ -10,7 +10,6 @@ import { getTxOutputs } from '../test-util';
 import {
   isOpReturn,
   Utxo,
-  TxnDetailValueOut,
   TxnDetailValueIn,
 } from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
@@ -63,30 +62,38 @@ describe('P2PKH', () => {
       const to = p2pkhInstance.address;
       const amount = 1000;
       const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort((a, b) => a.satoshis > b.satoshis ? 1 : -1);
+      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1));
       const targetUtxos: Utxo[] = [];
       let available = 0;
+      let tooHigh = 0;
       for (const utxo of utxos) {
         // 1000 for fees
+        tooHigh += utxo.satoshis;
         if (available - 1000 > amount) break;
         available += utxo.satoshis;
         targetUtxos.push(utxo);
       }
 
       // when
-      const tx = await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
+      const transaction = p2pkhInstance.functions
+        .spend(alicePk, new Sig(alice));
+
+      expect(transaction.send(to, tooHigh, {
+        inputs: targetUtxos,
+      })).rejects.toThrow();
+
+      const tx = await transaction
         .send(to, amount, {
           inputs: targetUtxos,
         });
 
       for (const _input of tx.vin) {
         const input = _input as TxnDetailValueIn;
-        expect(targetUtxos.find((utxo) =>
-          utxo.txid === input.txid &&
-          utxo.vout === input.vout &&
-          utxo.satoshis === input.value
-        )).toBeTruthy()
+        expect(targetUtxos.find(utxo => (
+          utxo.txid === input.txid
+          && utxo.vout === input.vout
+          && utxo.satoshis === input.value
+        ))).toBeTruthy();
       }
     });
   });

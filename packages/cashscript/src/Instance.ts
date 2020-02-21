@@ -1,4 +1,6 @@
-import { BITBOX } from 'bitbox-sdk';
+import {
+  BITBOX,
+} from 'bitbox-sdk';
 import {
   AddressDetailsResult,
   AddressUtxoResult,
@@ -55,9 +57,9 @@ export class Instance {
   async getUtxos(excludeUnconfirmed?: boolean): Promise<Utxo[]> {
     const promises = [this.getUtxo()];
     if (!excludeUnconfirmed) {
-      promises.push(this.getUnconfirmed().then(unconfirmed =>
+      promises.push(this.getUnconfirmed().then(unconfirmed => (
         unconfirmed.map(unconfirmedToUtxo)
-      ));
+      )));
     }
     const results = await Promise.all(promises);
     return results.reduce((memo, utxos) => memo.concat(utxos), []);
