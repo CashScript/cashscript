@@ -3,20 +3,9 @@ export interface Utxo {
   vout: number;
   amount: number;
   satoshis: number;
-  height: number;
   confirmations: number;
-}
-
-export interface UnconfirmedUtxo {
-  txid: string;
-  vout: number;
-  scriptPubKey: string;
-  amount: number;
-  satoshis: number;
-  confirmations: number;
-  ts: number;
-  legacyAddress: string;
-  cashAddress: string;
+  height?: number;
+  ts?: number;
 }
 
 export type Output = Recipient | OpReturn;

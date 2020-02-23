@@ -54,6 +54,32 @@ describe('P2PKH', () => {
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
+    
+    it('should fail when not enough satoshis are provided in utoxos', async () => {
+      // when
+      const to = p2pkhInstance.address;
+      const amount = 1000;
+      const utxos = await p2pkhInstance.getUtxos(true);
+      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1))
+      const { utxos: gathered, failureAmount } = gatherUtxos(utxos, {
+        amount
+      });
+
+      // send
+      expect(
+        p2pkhInstance.functions
+          .spend(alicePk, new Sig(alice))
+          .send(to, failureAmount, {
+            inputs: gathered,
+          })
+      ).rejects.toThrow();
+
+      expect(
+        p2pkhInstance.functions
+          .spend(alicePk, new Sig(alice))
+          .send(to, failureAmount)
+      ).rejects.not.toThrow()
+    })
 
     it('should succeed when defining its own utxos', async () => {
       expect.hasAssertions();
@@ -61,35 +87,22 @@ describe('P2PKH', () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000;
-      const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1));
-      const targetUtxos: Utxo[] = [];
-      let available = 0;
-      let tooHigh = 0;
-      for (const utxo of utxos) {
-        // 1000 for fees
-        tooHigh += utxo.satoshis;
-        if (available - 1000 > amount) break;
-        available += utxo.satoshis;
-        targetUtxos.push(utxo);
-      }
-
+      const utxos = await p2pkhInstance.getUtxos(true);
+      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1))
+      const { utxos: gathered, total } = gatherUtxos(utxos, {
+        amount
+      });
+      
       // when
-      const transaction = p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice));
-
-      expect(transaction.send(to, tooHigh, {
-        inputs: targetUtxos,
-      })).rejects.toThrow();
-
-      const tx = await transaction
-        .send(to, amount, {
-          inputs: targetUtxos,
+      const receipt = await p2pkhInstance.functions
+        .spend(alicePk, new Sig(alice))
+        .send(to, total, {
+          inputs: gathered,
         });
 
-      for (const _input of tx.vin) {
-        const input = _input as TxnDetailValueIn;
-        expect(targetUtxos.find(utxo => (
+      // then
+      for (const input of receipt.vin as TxnDetailValueIn[]) {
+        expect(gathered.find(utxo => (
           utxo.txid === input.txid
           && utxo.vout === input.vout
           && utxo.satoshis === input.value
@@ -188,3 +201,29 @@ describe('P2PKH', () => {
     });
   });
 });
+
+function gatherUtxos(utxos, options?: { 
+  amount?: number, 
+  fees?: number 
+}): { 
+  utxos: Utxo[], 
+  total: number, 
+  failureAmount: number 
+} {
+  const targetUtxos: Utxo[] = [];
+  let total = 0;
+  let failureAmount = 0;
+  // 1000 for fees
+  const { amount = 0, fees = 1000 } = options || {};
+  for (const utxo of utxos) {
+    failureAmount += utxo.satoshis;
+    if (total - fees > amount) break;
+    total += utxo.satoshis;
+    targetUtxos.push(utxo);
+  }
+  return {
+    utxos: targetUtxos,
+    total,
+    failureAmount
+  }
+}

@@ -9,7 +9,6 @@ import {
 import { Artifact, Script, AbiFunction } from 'cashc';
 import {
   Utxo,
-  UnconfirmedUtxo,
 } from './interfaces';
 import {
   bitbox,
@@ -23,7 +22,6 @@ import { Parameter, encodeParameter } from './Parameter';
 import {
   countOpcodes,
   calculateBytesize,
-  unconfirmedToUtxo,
 } from './util';
 
 export class Instance {
@@ -43,13 +41,13 @@ export class Instance {
     return details.balanceSat + details.unconfirmedBalanceSat;
   }
 
-  async getUnconfirmed(): Promise<UnconfirmedUtxo[]> {
+  private async getUnconfirmed(): Promise<Utxo[]> {
     const { utxos } = await this.bitbox.Address
       .unconfirmed(this.address) as AddressUnconfirmedResult;
     return utxos;
   }
 
-  async getUtxo(): Promise<Utxo[]> {
+  private async getUtxo(): Promise<Utxo[]> {
     const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
     return utxos;
   }
@@ -57,9 +55,7 @@ export class Instance {
   async getUtxos(excludeUnconfirmed?: boolean): Promise<Utxo[]> {
     const promises = [this.getUtxo()];
     if (!excludeUnconfirmed) {
-      promises.push(this.getUnconfirmed().then(unconfirmed => (
-        unconfirmed.map(unconfirmedToUtxo)
-      )));
+      promises.push(this.getUnconfirmed());
     }
     const results = await Promise.all(promises);
     return results.reduce((memo, utxos) => memo.concat(utxos), []);

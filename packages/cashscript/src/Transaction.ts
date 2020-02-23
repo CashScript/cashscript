@@ -118,8 +118,7 @@ export class Transaction {
     const { inputs, outputs } = await this.getInputsAndOutputs(
       outs,
       options?.fee,
-      DUST_LIMIT,
-      1.0,
+      options?.minChange,
       options?.inputs,
     );
 
@@ -174,10 +173,10 @@ export class Transaction {
     outs: Output[],
     hardcodedFee?: number,
     minChange: number = DUST_LIMIT,
+    hardcodedUtxos?: Utxo[],
     satsPerByte: number = 1.0,
-    _utxos?: Utxo[],
   ): Promise<{ inputs: Utxo[], outputs: OutputForBuilder[] }> {
-    let utxos = _utxos;
+    let utxos = hardcodedUtxos;
     if (!utxos) {
       ({ utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult);
     }
