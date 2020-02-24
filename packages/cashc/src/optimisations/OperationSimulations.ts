@@ -14,10 +14,14 @@ import {
   IntLiteralNode,
   HexLiteralNode,
   StringLiteralNode,
+  FunctionCallNode,
+  Node,
 } from '../ast/AST';
+import { GlobalFunction } from '../ast/Globals';
 import { Data } from '../util';
-import { Script, toOps, returnsBool } from '../generation/Script';
+import { Script, toOps, returnType } from '../generation/Script';
 import { ExecutionError } from '../Errors';
+import { PrimitiveType, BytesType } from '../ast/Type';
 
 type BCH_VM = AuthenticationVirtualMachine<AuthenticationProgramBCH, AuthenticationProgramStateBCH>;
 let vm: BCH_VM;
@@ -107,7 +111,7 @@ function applyBinaryOperatorToInt(
   const script: Script = ([Data.encodeInt(left.value), Data.encodeInt(right.value)] as Script)
     .concat(toOps.fromBinaryOp(op, true));
   const res = executeScriptOnVM(script)[0];
-  return returnsBool(op)
+  return returnType(op) === PrimitiveType.BOOL
     ? new BoolLiteralNode(Data.decodeBool(Buffer.from(res)))
     : new IntLiteralNode(Data.decodeInt(Buffer.from(res), 5));
 }
@@ -120,7 +124,7 @@ function applyBinaryOperatorToString(
   const script: Script = ([Data.encodeString(left.value), Data.encodeString(right.value)] as Script)
     .concat(toOps.fromBinaryOp(op));
   const res = executeScriptOnVM(script)[0];
-  return returnsBool(op)
+  return returnType(op) === PrimitiveType.BOOL
     ? new BoolLiteralNode(Data.decodeBool(Buffer.from(res)))
     : new StringLiteralNode(Data.decodeString(Buffer.from(res)), left.quote);
 }
@@ -133,7 +137,45 @@ function applyBinaryOperatorToHex(
   const script: Script = ([left.value, right.value] as Script)
     .concat(toOps.fromBinaryOp(op));
   const res = executeScriptOnVM(script)[0];
-  return returnsBool(op)
+  return returnType(op) === PrimitiveType.BOOL
     ? new BoolLiteralNode(Data.decodeBool(Buffer.from(res)))
     : new HexLiteralNode(Buffer.from(res));
+}
+
+export function applyGlobalFunction(node: FunctionCallNode): Node {
+  const { parameters } = node;
+  const fn = node.identifier.name as GlobalFunction;
+
+  // Don't apply checkMultiSig or require for now
+  if (fn === GlobalFunction.CHECKMULTISIG || fn === GlobalFunction.REQUIRE) {
+    return node;
+  }
+
+  let script: Script = parameters.map((p) => {
+    if (p instanceof BoolLiteralNode) {
+      return Data.encodeBool(p.value);
+    } else if (p instanceof IntLiteralNode) {
+      return Data.encodeInt(p.value);
+    } else if (p instanceof StringLiteralNode) {
+      return Data.encodeString(p.value);
+    } else if (p instanceof HexLiteralNode) {
+      return p.value;
+    } else {
+      throw new Error(); // Already checked in typecheck
+    }
+  });
+  script = script.concat(toOps.fromFunction(node.identifier.name as GlobalFunction));
+
+  const res = executeScriptOnVM(script)[0];
+  if (returnType(fn) === PrimitiveType.BOOL) {
+    return new BoolLiteralNode(Data.decodeBool(Buffer.from(res)));
+  } else if (returnType(fn) === PrimitiveType.INT) {
+    return new IntLiteralNode(Data.decodeInt(Buffer.from(res)));
+  } else if (returnType(fn) === PrimitiveType.STRING) {
+    return new StringLiteralNode(Data.decodeString(Buffer.from(res)), '"');
+  } else if (returnType(fn) instanceof BytesType) {
+    return new HexLiteralNode(Buffer.from(res));
+  } else {
+    throw new Error(); // Already checked in typecheck
+  }
 }

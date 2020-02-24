@@ -4,16 +4,19 @@
  */
 
 import delay from 'delay';
-import { applyUnaryOperator, applyBinaryOperator } from '../../src/optimisations/OperationSimulations';
+import { applyUnaryOperator, applyBinaryOperator, applyGlobalFunction } from '../../src/optimisations/OperationSimulations';
 import { UnaryOperator, BinaryOperator } from '../../src/ast/Operator';
 import {
   IntLiteralNode,
   BoolLiteralNode,
   StringLiteralNode,
   HexLiteralNode,
+  FunctionCallNode,
+  IdentifierNode,
 } from '../../src/ast/AST';
 import { fixtures } from './fixtures';
 import { ExecutionError } from '../../src/Errors';
+import { literalToNode } from '../test-util';
 
 describe('Operation simulation', () => {
   beforeAll(async () => {
@@ -168,6 +171,44 @@ describe('Operation simulation', () => {
               op as BinaryOperator,
               new HexLiteralNode(Buffer.from(right, 'hex')),
             );
+
+            // then
+          }).toThrow(new ExecutionError(expected as string));
+        });
+      });
+  });
+
+  describe('applyGlobalFunction', () => {
+    fixtures.applyGlobalFunction.success
+      .forEach(([should, fn, parameters, expected]: any) => {
+        it(should as string, () => {
+          // given
+          const parameterNodes = (parameters as (boolean | number | string)[]).map(literalToNode);
+          const expectedNode = typeof expected === 'undefined' ? undefined : literalToNode(expected);
+
+          // when
+          const res = applyGlobalFunction(new FunctionCallNode(
+            new IdentifierNode(fn as string),
+            parameterNodes,
+          ));
+
+          // then
+          expect(res).toEqual(expectedNode);
+        });
+      });
+
+    fixtures.applyGlobalFunction.fail
+      .forEach(([should, fn, parameters, expected]: any) => {
+        it(should as string, () => {
+          expect(() => {
+            // given
+            const parameterNodes = (parameters as (boolean | number | string)[]).map(literalToNode);
+
+            // when
+            applyGlobalFunction(new FunctionCallNode(
+              new IdentifierNode(fn as string),
+              parameterNodes,
+            ));
 
             // then
           }).toThrow(new ExecutionError(expected as string));
