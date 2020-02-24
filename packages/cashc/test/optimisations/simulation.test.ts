@@ -20,7 +20,7 @@ import { literalToNode } from '../test-util';
 
 describe('Operation simulation', () => {
   beforeAll(async () => {
-    await delay(100);
+    await delay(1000);
   });
 
   describe('applyUnaryOperator', () => {
