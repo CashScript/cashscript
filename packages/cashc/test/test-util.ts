@@ -5,6 +5,25 @@ import fs from 'fs';
 import path from 'path';
 import { CashScriptParser } from '../src/grammar/CashScriptParser';
 import { CashScriptLexer } from '../src/grammar/CashScriptLexer';
+import {
+  LiteralNode,
+  BoolLiteralNode,
+  IntLiteralNode,
+  HexLiteralNode,
+  StringLiteralNode,
+} from '../src/ast/AST';
+
+export function literalToNode(literal: boolean | number | string): LiteralNode {
+  if (typeof literal === 'boolean') {
+    return new BoolLiteralNode(literal);
+  } else if (typeof literal === 'number') {
+    return new IntLiteralNode(literal);
+  } else if (literal.startsWith('0x')) {
+    return new HexLiteralNode(Buffer.from(literal.slice(2), 'hex'));
+  } else {
+    return new StringLiteralNode(literal, '"');
+  }
+}
 
 export function getSubdirectories(directory: string): string[] {
   return fs.readdirSync(directory)
