@@ -41,38 +41,52 @@ export function executeScriptOnVM(script: Script): Uint8Array[] {
   return res.stack;
 }
 
-export function applyUnaryOperator(
-  op: UnaryOperator,
-  expr: LiteralNode,
-): LiteralNode {
-  if (expr instanceof BoolLiteralNode) {
-    return applyUnaryOperatorToBool(op, expr);
-  } else if (expr instanceof IntLiteralNode) {
-    return applyUnaryOperatorToInt(op, expr);
+// TODO: RequireNode
+// TODO: BranchNode
+// TODO: CastNode
+
+export function applyGlobalFunction(node: FunctionCallNode): Node {
+  const { parameters } = node;
+  const fn = node.identifier.name as GlobalFunction;
+
+  // TODO: Apply checkMultiSig (requires code generation refactor)
+  // This is not very important, since checkMultiSig likely requires external args
+  if (fn === GlobalFunction.CHECKMULTISIG) {
+    return node;
+  }
+
+  let script: Script = parameters.map((p) => {
+    if (p instanceof BoolLiteralNode) {
+      return Data.encodeBool(p.value);
+    } else if (p instanceof IntLiteralNode) {
+      return Data.encodeInt(p.value);
+    } else if (p instanceof StringLiteralNode) {
+      return Data.encodeString(p.value);
+    } else if (p instanceof HexLiteralNode) {
+      return p.value;
+    } else {
+      throw new Error(); // Already checked in typecheck
+    }
+  });
+  script = script.concat(toOps.fromFunction(node.identifier.name as GlobalFunction));
+
+  const res = executeScriptOnVM(script)[0];
+  if (returnType(fn) === PrimitiveType.BOOL) {
+    return new BoolLiteralNode(Data.decodeBool(Buffer.from(res)));
+  } else if (returnType(fn) === PrimitiveType.INT) {
+    return new IntLiteralNode(Data.decodeInt(Buffer.from(res)));
+  } else if (returnType(fn) === PrimitiveType.STRING) {
+    return new StringLiteralNode(Data.decodeString(Buffer.from(res)), '"');
+  } else if (returnType(fn) instanceof BytesType) {
+    return new HexLiteralNode(Buffer.from(res));
   } else {
     throw new Error(); // Already checked in typecheck
   }
 }
 
-function applyUnaryOperatorToBool(
-  op: UnaryOperator,
-  expr: BoolLiteralNode,
-): BoolLiteralNode {
-  const script: Script = ([Data.encodeBool(expr.value)] as Script)
-    .concat(toOps.fromUnaryOp(op));
-  const res = executeScriptOnVM(script)[0];
-  return new BoolLiteralNode(Data.decodeBool(Buffer.from(res)));
-}
-
-function applyUnaryOperatorToInt(
-  op: UnaryOperator,
-  expr: IntLiteralNode,
-): IntLiteralNode {
-  const script: Script = ([Data.encodeInt(expr.value)] as Script)
-    .concat(toOps.fromUnaryOp(op));
-  const res = executeScriptOnVM(script)[0];
-  return new IntLiteralNode(Data.decodeInt(Buffer.from(res)));
-}
+// TODO: InstantiationNode
+// TODO: TupleIndexOpNode + SplitOpNode
+// TODO: SizeOpNode
 
 export function applyBinaryOperator(
   left: LiteralNode,
@@ -142,40 +156,35 @@ function applyBinaryOperatorToHex(
     : new HexLiteralNode(Buffer.from(res));
 }
 
-export function applyGlobalFunction(node: FunctionCallNode): Node {
-  const { parameters } = node;
-  const fn = node.identifier.name as GlobalFunction;
-
-  // Don't apply checkMultiSig or require for now
-  if (fn === GlobalFunction.CHECKMULTISIG || fn === GlobalFunction.REQUIRE) {
-    return node;
-  }
-
-  let script: Script = parameters.map((p) => {
-    if (p instanceof BoolLiteralNode) {
-      return Data.encodeBool(p.value);
-    } else if (p instanceof IntLiteralNode) {
-      return Data.encodeInt(p.value);
-    } else if (p instanceof StringLiteralNode) {
-      return Data.encodeString(p.value);
-    } else if (p instanceof HexLiteralNode) {
-      return p.value;
-    } else {
-      throw new Error(); // Already checked in typecheck
-    }
-  });
-  script = script.concat(toOps.fromFunction(node.identifier.name as GlobalFunction));
-
-  const res = executeScriptOnVM(script)[0];
-  if (returnType(fn) === PrimitiveType.BOOL) {
-    return new BoolLiteralNode(Data.decodeBool(Buffer.from(res)));
-  } else if (returnType(fn) === PrimitiveType.INT) {
-    return new IntLiteralNode(Data.decodeInt(Buffer.from(res)));
-  } else if (returnType(fn) === PrimitiveType.STRING) {
-    return new StringLiteralNode(Data.decodeString(Buffer.from(res)), '"');
-  } else if (returnType(fn) instanceof BytesType) {
-    return new HexLiteralNode(Buffer.from(res));
+export function applyUnaryOperator(
+  op: UnaryOperator,
+  expr: LiteralNode,
+): LiteralNode {
+  if (expr instanceof BoolLiteralNode) {
+    return applyUnaryOperatorToBool(op, expr);
+  } else if (expr instanceof IntLiteralNode) {
+    return applyUnaryOperatorToInt(op, expr);
   } else {
     throw new Error(); // Already checked in typecheck
   }
+}
+
+function applyUnaryOperatorToBool(
+  op: UnaryOperator,
+  expr: BoolLiteralNode,
+): BoolLiteralNode {
+  const script: Script = ([Data.encodeBool(expr.value)] as Script)
+    .concat(toOps.fromUnaryOp(op));
+  const res = executeScriptOnVM(script)[0];
+  return new BoolLiteralNode(Data.decodeBool(Buffer.from(res)));
+}
+
+function applyUnaryOperatorToInt(
+  op: UnaryOperator,
+  expr: IntLiteralNode,
+): IntLiteralNode {
+  const script: Script = ([Data.encodeInt(expr.value)] as Script)
+    .concat(toOps.fromUnaryOp(op));
+  const res = executeScriptOnVM(script)[0];
+  return new IntLiteralNode(Data.decodeInt(Buffer.from(res)));
 }

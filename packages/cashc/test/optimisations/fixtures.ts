@@ -205,8 +205,6 @@ export const fixtures = {
   },
   applyGlobalFunction: {
     success: [
-      // TODO REQUIRE (require statements are handled differently)
-      // ['should apply require(true)', GlobalFunction.REQUIRE, [true], undefined],
       // ABS
       ['should apply abs(1)', GlobalFunction.ABS, [1], 1],
       ['should apply abs(-1)', GlobalFunction.ABS, [-1], 1],
@@ -269,8 +267,6 @@ export const fixtures = {
       [`should apply checkDataSig(0x, ${SigCheck.message}, ${SigCheck.publicKey})`, GlobalFunction.CHECKDATASIG, ['0x', SigCheck.message, SigCheck.publicKey], false],
     ],
     fail: [
-      // REQUIRE
-      // ['should fail on require(false)', GlobalFunction.REQUIRE, [false], 'TODOERROR'],
       // ABS
       ['should fail on abs(MAXINT + 1)', GlobalFunction.ABS, [MAXINT + 1], Error.INVALID_SCRIPT_NUMBER],
       ['should fail on abs(-MAXINT - 1)', GlobalFunction.ABS, [-MAXINT - 1], Error.INVALID_SCRIPT_NUMBER],
