@@ -96,7 +96,7 @@ export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator):
     [GlobalFunction.MAX]: PrimitiveType.INT,
     [GlobalFunction.MIN]: PrimitiveType.INT,
     [GlobalFunction.RIPEMD160]: new BytesType(20),
-    [GlobalFunction.SHA1]: new BytesType(32),
+    [GlobalFunction.SHA1]: new BytesType(20),
     [GlobalFunction.SHA256]: new BytesType(32),
     [GlobalFunction.WITHIN]: PrimitiveType.BOOL,
     [BinaryOperator.DIV]: PrimitiveType.INT,

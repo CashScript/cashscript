@@ -97,7 +97,7 @@ GLOBAL_SYMBOL_TABLE.set(
   Symbol.function(GlobalFunction.RIPEMD160, new BytesType(20), [PrimitiveType.ANY]),
 );
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.SHA1, new BytesType(32), [PrimitiveType.ANY]),
+  Symbol.function(GlobalFunction.SHA1, new BytesType(20), [PrimitiveType.ANY]),
 );
 GLOBAL_SYMBOL_TABLE.set(
   Symbol.function(GlobalFunction.SHA256, new BytesType(32), [PrimitiveType.ANY]),
