@@ -54,24 +54,20 @@ describe('P2PKH', () => {
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
-    
-    it('should fail when not enough satoshis are provided in utoxos', async () => {
+
+    it('should fail when not enough satoshis are provided in utxos', async () => {
       // when
       const to = p2pkhInstance.address;
       const amount = 1000;
-      const utxos = await p2pkhInstance.getUtxos(true);
+      const utxos = await p2pkhInstance.getUtxos();
       utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1))
-      const { utxos: gathered, failureAmount } = gatherUtxos(utxos, {
-        amount
-      });
+      const { utxos: gathered, failureAmount } = gatherUtxos(utxos, { amount });
 
       // send
       expect(
         p2pkhInstance.functions
           .spend(alicePk, new Sig(alice))
-          .send(to, failureAmount, {
-            inputs: gathered,
-          })
+          .send(to, failureAmount, { inputs: gathered })
       ).rejects.toThrow();
 
       expect(
@@ -87,18 +83,14 @@ describe('P2PKH', () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000;
-      const utxos = await p2pkhInstance.getUtxos(true);
+      const utxos = await p2pkhInstance.getUtxos();
       utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1))
-      const { utxos: gathered, total } = gatherUtxos(utxos, {
-        amount
-      });
-      
+      const { utxos: gathered } = gatherUtxos(utxos, { amount });
+
       // when
       const receipt = await p2pkhInstance.functions
         .spend(alicePk, new Sig(alice))
-        .send(to, total, {
-          inputs: gathered,
-        });
+        .send(to, amount, { inputs: gathered });
 
       // then
       for (const input of receipt.vin as TxnDetailValueIn[]) {
@@ -202,13 +194,13 @@ describe('P2PKH', () => {
   });
 });
 
-function gatherUtxos(utxos, options?: { 
-  amount?: number, 
-  fees?: number 
-}): { 
-  utxos: Utxo[], 
-  total: number, 
-  failureAmount: number 
+function gatherUtxos(utxos: Utxo[], options?: {
+  amount?: number,
+  fees?: number
+}): {
+  utxos: Utxo[],
+  total: number,
+  failureAmount: number
 } {
   const targetUtxos: Utxo[] = [];
   let total = 0;
