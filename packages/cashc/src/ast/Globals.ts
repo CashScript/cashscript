@@ -16,7 +16,6 @@ export const NumberUnit: { [index:string] : number } = {
 
 
 export enum GlobalFunction {
-  REQUIRE = 'require',
   ABS = 'abs',
   MIN = 'min',
   MAX = 'max',

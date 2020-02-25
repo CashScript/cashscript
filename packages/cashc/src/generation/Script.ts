@@ -39,7 +39,6 @@ export class toOps {
       [GlobalFunction.CHECKSIG]: [Op.OP_CHECKSIG],
       [GlobalFunction.MAX]: [Op.OP_MAX],
       [GlobalFunction.MIN]: [Op.OP_MIN],
-      [GlobalFunction.REQUIRE]: [Op.OP_VERIFY],
       [GlobalFunction.RIPEMD160]: [Op.OP_RIPEMD160],
       [GlobalFunction.SHA1]: [Op.OP_SHA1],
       [GlobalFunction.SHA256]: [Op.OP_SHA256],
@@ -96,7 +95,6 @@ export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator):
     [GlobalFunction.HASH256]: new BytesType(32),
     [GlobalFunction.MAX]: PrimitiveType.INT,
     [GlobalFunction.MIN]: PrimitiveType.INT,
-    [GlobalFunction.REQUIRE]: PrimitiveType.ANY, // TODO: void
     [GlobalFunction.RIPEMD160]: new BytesType(20),
     [GlobalFunction.SHA1]: new BytesType(32),
     [GlobalFunction.SHA256]: new BytesType(32),
