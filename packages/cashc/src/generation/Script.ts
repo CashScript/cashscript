@@ -20,8 +20,8 @@ export class toOps {
   }
 
   static fromCast(from: Type, to: Type): Script {
-    if (from === PrimitiveType.INT && to instanceof BytesType) {
-      return [Data.encodeInt(to.bound || 8), Op.OP_NUM2BIN];
+    if (from === PrimitiveType.INT && to instanceof BytesType && to.bound !== undefined) {
+      return [Data.encodeInt(to.bound), Op.OP_NUM2BIN];
     } else if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
       return [Op.OP_BIN2NUM];
     } else if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
