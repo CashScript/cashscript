@@ -9,6 +9,7 @@ import {
   applyBinaryOperator,
   applyGlobalFunction,
   applySizeOp,
+  applyCast,
 } from '../../src/optimisations/OperationSimulations';
 import { UnaryOperator, BinaryOperator } from '../../src/ast/Operator';
 import {
@@ -26,6 +27,36 @@ import { literalToNode } from '../test-util';
 describe('Operation simulation', () => {
   beforeAll(async () => {
     await delay(1000);
+  });
+
+  describe('applyCast', () => {
+    fixtures.applyCast.success.forEach(([should, castType, input, expected]: any) => {
+      it(should as string, () => {
+        // given
+        const inputNode = literalToNode(input);
+        const expectedNode = literalToNode(expected);
+
+        // when
+        const res = applyCast(inputNode, castType);
+
+        // then
+        expect(res).toEqual(expectedNode);
+      });
+    });
+
+    fixtures.applyCast.fail.forEach(([should, castType, input, expected]: any) => {
+      it(should as string, () => {
+        // given
+        const inputNode = literalToNode(input);
+
+        expect(() => {
+          // when
+          applyCast(inputNode, castType);
+
+          // then
+        }).toThrow(new ExecutionError(expected as string));
+      });
+    });
   });
 
   describe('applyGlobalFunction', () => {

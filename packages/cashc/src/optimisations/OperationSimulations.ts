@@ -26,7 +26,7 @@ import {
   Op,
 } from '../generation/Script';
 import { ExecutionError } from '../Errors';
-import { PrimitiveType, Type } from '../ast/Type';
+import { PrimitiveType, Type, BytesType } from '../ast/Type';
 
 type BCH_VM = AuthenticationVirtualMachine<AuthenticationProgramBCH, AuthenticationProgramStateBCH>;
 let vm: BCH_VM;
@@ -74,7 +74,18 @@ export function decodeLiteralNode(value: Buffer, type: Type): LiteralNode {
 
 // TODO: RequireNode
 // TODO: BranchNode
-// TODO: CastNode
+
+export function applyCast(node: LiteralNode, castType: Type): LiteralNode {
+  let sourceType = new BytesType();
+  if (node instanceof BoolLiteralNode) sourceType = PrimitiveType.BOOL;
+  if (node instanceof IntLiteralNode) sourceType = PrimitiveType.INT;
+  if (node instanceof StringLiteralNode) sourceType = PrimitiveType.STRING;
+
+  const script: Script = ([encodeLiteralNode(node)] as Script)
+    .concat(toOps.fromCast(sourceType, castType));
+  const res = executeScriptOnVM(script)[0];
+  return decodeLiteralNode(Buffer.from(res), castType);
+}
 
 export function applyGlobalFunction(node: FunctionCallNode): Node {
   const { parameters } = node;
@@ -124,4 +135,3 @@ export function applyUnaryOperator(
   const res = executeScriptOnVM(script)[0];
   return decodeLiteralNode(Buffer.from(res), returnType(op));
 }
-

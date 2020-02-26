@@ -1,5 +1,6 @@
 import { BinaryOperator, UnaryOperator } from '../../src/ast/Operator';
 import { GlobalFunction } from '../../src/ast/Globals';
+import { PrimitiveType, BytesType } from '../../src';
 
 const MAXINT = 2147483647;
 
@@ -10,6 +11,8 @@ enum Error {
   FAILED_VERIFY = 'Program failed an OP_VERIFY operation.',
   IMPROPERLY_ENCODED_SIG = 'Encountered an improperly encoded signature.',
   NULLFAIL = 'Program failed a signature verification with a non-null signature (violating the "NULLFAIL" rule).',
+  NUM2BIN = 'Program called an OP_NUM2BIN operation with an insufficient byte length to re-encode the provided number.',
+  BIN2NUM = 'Program attempted an OP_BIN2NUM operation on a byte sequence which cannot be encoded within the maximum Script Number length (4 bytes).',
 }
 
 // (https://kjur.github.io/jsrsasign/sample/sample-ecdsa.html)
@@ -21,6 +24,43 @@ const SigCheck = {
 };
 
 export const fixtures = {
+  applyCast: {
+    success: [
+      ['should apply bool(-12)', PrimitiveType.BOOL, -12, true],
+      ['should apply bool(MAXINT + 1)', PrimitiveType.BOOL, MAXINT + 1, true],
+      ['should apply bool(0)', PrimitiveType.BOOL, 0, false],
+      ['should apply bool(maxlen_x)', PrimitiveType.BOOL, `0x${'58'.repeat(520)}`, true],
+      ['should apply bool(0x)', PrimitiveType.BOOL, '0x', false],
+      ['should apply bool(0x00)', PrimitiveType.BOOL, '0x00', false],
+      ['should apply bool(0x0080)', PrimitiveType.BOOL, '0x0080', false],
+      ['should apply bool(0x01)', PrimitiveType.BOOL, '0x01', true],
+      ['should apply int(true)', PrimitiveType.INT, true, 1],
+      ['should apply int(false)', PrimitiveType.INT, false, 0],
+      ['should apply int(0x)', PrimitiveType.INT, '0x', 0],
+      ['should apply int(0x0000)', PrimitiveType.INT, '0x0000', 0],
+      ['should apply int(0x0080)', PrimitiveType.INT, '0x0080', 0],
+      ['should apply int(0xe803)', PrimitiveType.INT, '0xe803', 1000],
+      ['should apply int(0xe8030000)', PrimitiveType.INT, '0xe8030000', 1000],
+      ['should apply int(0xe80300000080)', PrimitiveType.INT, '0xe80300000080', -1000],
+      ['should apply int(0xffffff7f)', PrimitiveType.INT, '0xffffff7f', MAXINT],
+      ['should apply int(0xffffffff)', PrimitiveType.INT, '0xffffffff', -MAXINT],
+      ['should apply bytes(true)', new BytesType(), true, '0x01'],
+      ['should apply bytes(false)', new BytesType(), false, '0x'],
+      ['should apply bytes(true)', new BytesType(), true, '0x01'],
+      ['should apply bytes(-12)', new BytesType(), -12, '0x8c'],
+      ['should apply bytes(MAXINT + 1)', new BytesType(), MAXINT + 1, '0x0000008000'],
+      ['should apply bytes(0)', new BytesType(), 0, '0x'],
+      ['should apply bytes4(MAXINT)', new BytesType(4), MAXINT, '0xffffff7f'],
+      ['should apply bytes4(1000)', new BytesType(4), 1000, '0xe8030000'],
+      ['should apply bytes2(1000)', new BytesType(2), 1000, '0xe803'],
+      ['should apply bytes("BCH")', new BytesType(), 'BCH', '0x424348'],
+    ],
+    fail: [
+      ['should fail on int(0xffffffffff)', PrimitiveType.INT, '0xffffffffff', Error.BIN2NUM],
+      ['should fail on bytes4(MAXINT + 1)', new BytesType(4), MAXINT + 1, Error.NUM2BIN],
+      ['should fail on bytes4(MAXINT)', new BytesType(521), MAXINT, Error.ATTEMPTED_BIG_PUSH],
+    ],
+  },
   applyGlobalFunction: {
     success: [
       // ABS
