@@ -19,7 +19,15 @@ export const Data = {
     return b ? this.encodeInt(1) : this.encodeInt(0);
   },
   decodeBool(b: Buffer): boolean {
-    return this.decodeInt(b) !== 0;
+    // Any encoding of 0 is false, else true
+    for (let i = 0; i < b.byteLength; i += 1) {
+      if (b[i] !== 0) {
+        // Can be negative zero
+        if (i === b.byteLength - 1 && b[i] === 0x80) return false;
+        return true;
+      }
+    }
+    return false;
   },
   encodeInt(i: number): Buffer {
     return new BScript().encodeNumber(i);
