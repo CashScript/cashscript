@@ -94,8 +94,12 @@ export function applyGlobalFunction(node: FunctionCallNode): Node {
 
 // TODO: InstantiationNode
 // TODO: TupleIndexOpNode + SplitOpNode
-// TODO: SizeOpNode
 
+export function applySizeOp(node: StringLiteralNode | HexLiteralNode): LiteralNode {
+  const script: Script = [encodeLiteralNode(node), Op.OP_SIZE, Op.OP_NIP];
+  const res = executeScriptOnVM(script)[0];
+  return decodeLiteralNode(Buffer.from(res), PrimitiveType.INT);
+}
 
 export function applyBinaryOperator(
   left: LiteralNode,

@@ -66,6 +66,22 @@ describe('Operation simulation', () => {
       });
   });
 
+  describe('applySizeOp', () => {
+    fixtures.applySizeOp.success.forEach(([should, input, expected]: any) => {
+      it(should as string, () => {
+        // given
+        const inputNode = literalToNode(input as string);
+        const expectedNode = literalToNode(expected);
+
+        // when
+        const res = applySizeOp(inputNode as StringLiteralNode | HexLiteralNode);
+
+        // then
+        expect(res).toEqual(expectedNode);
+      });
+    });
+  });
+
   describe('applyBinaryOperator', () => {
     fixtures.applyBinaryOperator.success.forEach(([should, left, op, right, expected]: any) => {
       it(should as string, () => {

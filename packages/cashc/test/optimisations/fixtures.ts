@@ -105,6 +105,14 @@ export const fixtures = {
       [`should fail on checkDataSig(${SigCheck.signature.slice(0, -2)}00, ${SigCheck.message}, ${SigCheck.publicKey})`, GlobalFunction.CHECKDATASIG, [`${SigCheck.signature.slice(0, -2)}00`, SigCheck.message, SigCheck.publicKey], Error.NULLFAIL],
     ],
   },
+  applySizeOp: {
+    success: [
+      ['should apply "Bitcoin Cash".length', 'Bitcoin Cash', 12],
+      ['should apply 0xbeef.length', '0xbeef', 2],
+      ['should apply maxlen_x.length', `0x${'58'.repeat(520)}`, 520],
+      ['should apply maxlen_x.length', 'X'.repeat(520), 520],
+    ],
+  },
   applyBinaryOperator: {
     success: [
       // AND
