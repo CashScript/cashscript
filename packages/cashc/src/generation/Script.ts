@@ -85,7 +85,10 @@ export class toOps {
   }
 }
 
-export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator): Type {
+export function returnType(
+  op: GlobalFunction | BinaryOperator | UnaryOperator,
+  operandType?: Type,
+): Type {
   const mapping = {
     [GlobalFunction.ABS]: PrimitiveType.INT,
     [GlobalFunction.CHECKDATASIG]: PrimitiveType.BOOL,
@@ -102,7 +105,7 @@ export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator):
     [BinaryOperator.DIV]: PrimitiveType.INT,
     [BinaryOperator.MINUS]: PrimitiveType.INT,
     [BinaryOperator.MOD]: PrimitiveType.INT,
-    [BinaryOperator.PLUS]: PrimitiveType.ANY, // TODO: int/string/bytes
+    [BinaryOperator.PLUS]: new BytesType(),
     [BinaryOperator.LT]: PrimitiveType.BOOL,
     [BinaryOperator.LE]: PrimitiveType.BOOL,
     [BinaryOperator.GT]: PrimitiveType.BOOL,
@@ -114,5 +117,12 @@ export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator):
     [UnaryOperator.NOT]: PrimitiveType.BOOL,
     [UnaryOperator.NEGATE]: PrimitiveType.INT,
   };
+
+  if (operandType === PrimitiveType.INT) {
+    mapping[BinaryOperator.PLUS] = PrimitiveType.INT;
+  } else if (operandType === PrimitiveType.STRING) {
+    mapping[BinaryOperator.PLUS] = PrimitiveType.STRING;
+  }
+
   return mapping[op];
 }
