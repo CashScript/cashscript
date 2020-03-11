@@ -144,7 +144,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
-    node.body = this.visit(node.body) as BlockNode;
+
+    // Don't visit block node, just its children, to skip the scope cleanup
+    // of the block node. End-of-function cleanup is done separately below.
+    node.body = new BlockNode(this.visitList(node.body.statements));
 
     // Remove final OP_VERIFY
     // If the final opcodes are OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP
@@ -333,23 +336,25 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.condition = this.visit(node.condition);
     this.popFromStack();
 
-    this.scopeDepth += 1;
     this.emit(Op.OP_IF);
-
-    let stackDepth = this.stack.length;
-    node.ifBlock = this.visit(node.ifBlock);
-    this.removeScopedVariables(stackDepth);
+    node.ifBlock = this.visit(node.ifBlock) as BlockNode;
 
     if (node.elseBlock) {
       this.emit(Op.OP_ELSE);
-      stackDepth = this.stack.length;
-      node.elseBlock = this.visit(node.elseBlock);
-      this.removeScopedVariables(stackDepth);
+      node.elseBlock = this.visit(node.elseBlock) as BlockNode;
     }
 
     this.emit(Op.OP_ENDIF);
-    this.scopeDepth -= 1;
 
+    return node;
+  }
+
+  visitBlock(node: BlockNode): Node {
+    this.scopeDepth += 1;
+    const stackDepth = this.stack.length;
+    node.statements = this.visitList(node.statements);
+    this.removeScopedVariables(stackDepth);
+    this.scopeDepth -= 1;
     return node;
   }
 
@@ -572,8 +577,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
     const stackIndex = this.getStackIndex(node.name);
     this.emit(Data.encodeInt(stackIndex));
 
-    // If the final use is inside an if-statement, we still OP_PICK it
-    // We do this so that there's no difference in stack depths between execution paths
     if (this.isOpRoll(node)) {
       this.emit(Op.OP_ROLL);
       this.removeFromStack(stackIndex);
@@ -586,6 +589,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   isOpRoll(node: IdentifierNode): boolean {
+    // If the final use of a variable is inside a block, we still OP_PICK it
+    // We do this so that there's no difference in stack depths between execution paths
     return this.currentFunction.opRolls.get(node.name) === node && this.scopeDepth === 0;
   }
 

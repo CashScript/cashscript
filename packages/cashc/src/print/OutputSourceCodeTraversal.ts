@@ -150,7 +150,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput('\n');
 
     this.indent();
-    node.statements = this.visitOptionalList(node.statements) as StatementNode[];
+    node.statements = this.visitList(node.statements) as StatementNode[];
     this.unindent();
     this.addOutput('}', true);
 

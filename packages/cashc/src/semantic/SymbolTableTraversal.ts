@@ -66,7 +66,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.symbolTables.unshift(node.symbolTable);
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
-    node.body = this.visit(node.body);
+    node.body = this.visit(node.body) as BlockNode;
 
     const unusedSymbols = node.symbolTable.unusedSymbols();
     if (unusedSymbols.length !== 0) {
@@ -81,7 +81,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.symbolTable = new SymbolTable(this.symbolTables[0]);
     this.symbolTables.unshift(node.symbolTable);
 
-    node.statements = this.visitOptionalList(node.statements) as StatementNode[];
+    node.statements = this.visitList(node.statements) as StatementNode[];
 
     const unusedSymbols = node.symbolTable.unusedSymbols();
     if (unusedSymbols.length !== 0) {

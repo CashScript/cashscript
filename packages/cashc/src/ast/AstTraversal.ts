@@ -73,13 +73,13 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitBranch(node: BranchNode): Node {
     node.condition = this.visit(node.condition);
-    node.ifBlock = this.visit(node.ifBlock) as StatementNode;
-    node.elseBlock = this.visitOptional(node.elseBlock) as StatementNode;
+    node.ifBlock = this.visit(node.ifBlock) as BlockNode;
+    node.elseBlock = this.visitOptional(node.elseBlock) as BlockNode;
     return node;
   }
 
   visitBlock(node: BlockNode): Node {
-    node.statements = this.visitOptionalList(node.statements) as StatementNode[];
+    node.statements = this.visitList(node.statements) as StatementNode[];
     return node;
   }
 

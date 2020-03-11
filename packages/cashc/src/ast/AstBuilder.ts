@@ -185,8 +185,8 @@ export default class AstBuilder
 
   visitIfStatement(ctx: IfStatementContext): BranchNode {
     const condition = this.visit(ctx.expression());
-    const ifBlock = this.visit(ctx._ifBlock) as StatementNode;
-    const elseBlock = ctx._elseBlock && this.visit(ctx._elseBlock) as StatementNode;
+    const ifBlock = this.visit(ctx._ifBlock) as BlockNode;
+    const elseBlock = ctx._elseBlock && this.visit(ctx._elseBlock) as BlockNode;
     const branch = new BranchNode(condition, ifBlock, elseBlock);
     branch.location = Location.fromCtx(ctx);
     return branch;

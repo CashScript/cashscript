@@ -15,6 +15,7 @@ import {
   RequireNode,
   Node,
   InstantiationNode,
+  BlockNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -87,8 +88,8 @@ export default class TypeCheckTraversal extends AstTraversal {
 
   visitBranch(node: BranchNode): Node {
     node.condition = this.visit(node.condition);
-    node.ifBlock = this.visit(node.ifBlock);
-    node.elseBlock = this.visitOptional(node.elseBlock);
+    node.ifBlock = this.visit(node.ifBlock) as BlockNode;
+    node.elseBlock = this.visitOptional(node.elseBlock) as BlockNode;
 
     if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
       throw new TypeError(node, node.condition.type, PrimitiveType.BOOL);

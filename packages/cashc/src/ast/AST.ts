@@ -147,11 +147,11 @@ export class BranchNode extends StatementNode {
   }
 }
 
-export class BlockNode extends Node {
+export class BlockNode extends StatementNode {
   symbolTable?: SymbolTable;
 
   constructor(
-    public statements?: StatementNode[],
+    public statements: StatementNode[],
   ) {
     super();
   }
