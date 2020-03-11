@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-const { getConsoleOutput } = require('jest-util');
+const { getConsoleOutput } = require('@jest/console');
 const DefaultReporter = require('@jest/reporters/build/default_reporter').default;
 const getResultHeader = require('@jest/reporters/build/get_result_header').default;
 

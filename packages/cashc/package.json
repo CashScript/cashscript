@@ -1,7 +1,7 @@
 {
   "name": "cashc",
   "description": "Compile Cash Contracts to Bitcoin Cash Script or artifacts",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
   "bin": {
     "cashc": "dist/cashc-cli.js"
