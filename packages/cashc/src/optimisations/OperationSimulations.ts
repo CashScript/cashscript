@@ -16,6 +16,8 @@ import {
   StringLiteralNode,
   FunctionCallNode,
   Node,
+  BranchNode,
+  BlockNode,
 } from '../ast/AST';
 import { GlobalFunction } from '../ast/Globals';
 import { Data } from '../util';
@@ -73,7 +75,15 @@ export function decodeLiteralNode(value: Buffer, type: Type): LiteralNode {
 }
 
 // TODO: RequireNode
-// TODO: BranchNode
+
+export function applyBranch(node: BranchNode): BlockNode {
+  if (!(node.condition instanceof BoolLiteralNode)) throw new Error();
+  if (node.condition.value) {
+    return node.ifBlock;
+  } else {
+    return node.elseBlock || new BlockNode([]);
+  }
+}
 
 export function applyCast(node: LiteralNode, castType: Type): LiteralNode {
   let sourceType = new BytesType();

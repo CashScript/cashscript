@@ -10,6 +10,7 @@ import {
   applyGlobalFunction,
   applySizeOp,
   applyCast,
+  applyBranch,
 } from '../../src/optimisations/OperationSimulations';
 import { UnaryOperator, BinaryOperator } from '../../src/ast/Operator';
 import {
@@ -27,6 +28,18 @@ import { literalToNode } from '../test-util';
 describe('Operation simulation', () => {
   beforeAll(async () => {
     await delay(1000);
+  });
+
+  describe('applyBranch', () => {
+    fixtures.applyBranch.success.forEach(([should, branchNode, expectedNodes]: any) => {
+      it(should as string, () => {
+        // when
+        const res = applyBranch(branchNode);
+
+        // then
+        expect(res).toEqual(expectedNodes);
+      });
+    });
   });
 
   describe('applyCast', () => {

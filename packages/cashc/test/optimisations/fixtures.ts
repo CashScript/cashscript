@@ -1,6 +1,12 @@
 import { BinaryOperator, UnaryOperator } from '../../src/ast/Operator';
 import { GlobalFunction } from '../../src/ast/Globals';
 import { PrimitiveType, BytesType } from '../../src';
+import {
+  BranchNode,
+  BoolLiteralNode,
+  RequireNode,
+  BlockNode,
+} from '../../src/ast/AST';
 
 const MAXINT = 2147483647;
 
@@ -24,6 +30,44 @@ const SigCheck = {
 };
 
 export const fixtures = {
+  applyBranch: {
+    success: [
+      [
+        'should apply if (true) require(true)',
+        new BranchNode(
+          new BoolLiteralNode(true),
+          new BlockNode([new RequireNode(new BoolLiteralNode(true))]),
+        ),
+        new BlockNode([new RequireNode(new BoolLiteralNode(true))]),
+      ],
+      [
+        'should apply if (false) require(true)',
+        new BranchNode(
+          new BoolLiteralNode(false),
+          new BlockNode([new RequireNode(new BoolLiteralNode(true))]),
+        ),
+        new BlockNode([]),
+      ],
+      [
+        'should apply if (true) require(true) else require(false)',
+        new BranchNode(
+          new BoolLiteralNode(true),
+          new BlockNode([new RequireNode(new BoolLiteralNode(true))]),
+          new BlockNode([new RequireNode(new BoolLiteralNode(false))]),
+        ),
+        new BlockNode([new RequireNode(new BoolLiteralNode(true))]),
+      ],
+      [
+        'should apply if (false) require(true) else require(false)',
+        new BranchNode(
+          new BoolLiteralNode(false),
+          new BlockNode([new RequireNode(new BoolLiteralNode(true))]),
+          new BlockNode([new RequireNode(new BoolLiteralNode(false))]),
+        ),
+        new BlockNode([new RequireNode(new BoolLiteralNode(false))]),
+      ],
+    ],
+  },
   applyCast: {
     success: [
       ['should apply bool(-12)', PrimitiveType.BOOL, -12, true],
