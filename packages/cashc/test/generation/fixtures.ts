@@ -437,45 +437,6 @@ export const fixtures: Fixture[] = [
     },
   },
   {
-    fn: 'mecenas_v1.cash',
-    artifact: {
-      contractName: 'Mecenas',
-      constructorInputs: [
-        { name: 'recipient', type: 'bytes20' },
-        { name: 'funder', type: 'bytes20' },
-        { name: 'pledge', type: 'int' },
-      ],
-      abi: [
-        { name: 'receive', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
-        { name: 'reclaim', covenant: false, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
-      ],
-      bytecode:
-        'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
-        + 'OP_4 OP_PICK 69 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
-        + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
-        + 'OP_9 OP_ROLL OP_9 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-        + 'OP_11 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
-        + '008d27 OP_CHECKSEQUENCEVERIFY OP_DROP '
-        + 'e803 '
-        + 'OP_6 OP_PICK OP_8 OP_NUM2BIN '
-        + 'OP_3 OP_ROLL OP_BIN2NUM OP_7 OP_ROLL OP_SUB OP_ROT OP_SUB OP_8 OP_NUM2BIN '
-        + 'OP_SWAP 1976a914 OP_CAT OP_4 OP_ROLL OP_CAT 88ac OP_CAT '
-        + 'OP_SWAP 17a914 OP_CAT OP_3 OP_ROLL OP_HASH160 OP_CAT 87 OP_CAT '
-        + 'OP_CAT OP_HASH256 OP_EQUAL OP_NIP OP_NIP '
-        + 'OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_IF '
-        + 'OP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY '
-        + 'OP_2SWAP OP_CHECKSIG OP_NIP OP_NIP '
-        + 'OP_ELSE OP_0 OP_ENDIF OP_ENDIF',
-      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'mecenas_v1.cash'), { encoding: 'utf-8' }),
-      networks: {},
-      compiler: {
-        name: 'cashc',
-        version,
-      },
-      updatedAt: '',
-    },
-  },
-  {
     fn: 'mecenas.cash',
     artifact: {
       contractName: 'Mecenas',
