@@ -19,6 +19,7 @@ enum Error {
   NULLFAIL = 'Program failed a signature verification with a non-null signature (violating the "NULLFAIL" rule).',
   NUM2BIN = 'Program called an OP_NUM2BIN operation with an insufficient byte length to re-encode the provided number.',
   BIN2NUM = 'Program attempted an OP_BIN2NUM operation on a byte sequence which cannot be encoded within the maximum Script Number length (4 bytes).',
+  SPLIT_INDEX = 'Program called an OP_SPLIT operation with an invalid index.',
 }
 
 // (https://kjur.github.io/jsrsasign/sample/sample-ecdsa.html)
@@ -30,6 +31,12 @@ const SigCheck = {
 };
 
 export const fixtures = {
+  applyRequire: {
+    success: [
+      ['should apply require(true)', new RequireNode(new BoolLiteralNode(true)), new BlockNode([])],
+      ['should not apply require(false)', new RequireNode(new BoolLiteralNode(false)), new RequireNode(new BoolLiteralNode(false))],
+    ],
+  },
   applyBranch: {
     success: [
       [
@@ -195,6 +202,33 @@ export const fixtures = {
       ['should apply 0xbeef.length', '0xbeef', 2],
       ['should apply maxlen_x.length', `0x${'58'.repeat(520)}`, 520],
       ['should apply maxlen_x.length', 'X'.repeat(520), 520],
+    ],
+  },
+  applySplitAndIndex: {
+    success: [
+      ['should apply "Bitcoin Cash".split(7)[0]', 'Bitcoin Cash', 7, 0, 'Bitcoin'],
+      ['should apply "Bitcoin Cash".split(8)[1]', 'Bitcoin Cash', 8, 1, 'Cash'],
+      ['should apply "Bitcoin Cash".split(0)[0]', 'Bitcoin Cash', 0, 0, ''],
+      ['should apply "Bitcoin Cash".split(0)[1]', 'Bitcoin Cash', 0, 1, 'Bitcoin Cash'],
+      ['should apply "Bitcoin Cash".split(12)[0]', 'Bitcoin Cash', 12, 0, 'Bitcoin Cash'],
+      ['should apply "Bitcoin Cash".split(12)[1]', 'Bitcoin Cash', 12, 1, ''],
+      ['should apply "".split(0)[0]', '', 0, 0, ''],
+      ['should apply "".split(0)[1]', '', 0, 1, ''],
+      ['should apply 0xbeef.split(1)[0]', '0xbeef', 1, 0, '0xbe'],
+      ['should apply 0xbeef.split(1)[1]', '0xbeef', 1, 1, '0xef'],
+      ['should apply 0xbeef.split(0)[0]', '0xbeef', 0, 0, '0x'],
+      ['should apply 0xbeef.split(0)[1]', '0xbeef', 0, 1, '0xbeef'],
+      ['should apply 0xbeef.split(2)[0]', '0xbeef', 2, 0, '0xbeef'],
+      ['should apply 0xbeef.split(2)[1]', '0xbeef', 2, 1, '0x'],
+      ['should apply 0x.split(0)[0]', '0x', 0, 0, '0x'],
+      ['should apply 0x.split(0)[1]', '0x', 0, 1, '0x'],
+      ['should apply maxlen_x.split(200)[0]', `0x${'58'.repeat(520)}`, 200, 0, `0x${'58'.repeat(200)}`],
+      ['should apply maxlen_x.split(200)[0]', 'X'.repeat(520), 200, 0, 'X'.repeat(200)],
+    ],
+    fail: [
+      ['should fail on "Bitcoin Cash".split(-1)[0]', 'Bitcoin Cash', -1, 0, Error.SPLIT_INDEX],
+      ['should fail on "Bitcoin Cash".split(13)[0]', 'Bitcoin Cash', 13, 0, Error.SPLIT_INDEX],
+      ['should fail on "Bitcoin Cash".split(MAXINT + 1)[0]', 'Bitcoin Cash', MAXINT + 1, 0, Error.INVALID_SCRIPT_NUMBER],
     ],
   },
   applyBinaryOperator: {

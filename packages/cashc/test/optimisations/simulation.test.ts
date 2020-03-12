@@ -11,6 +11,8 @@ import {
   applySizeOp,
   applyCast,
   applyBranch,
+  applyRequire,
+  applySplitAndIndex,
 } from '../../src/optimisations/OperationSimulations';
 import { UnaryOperator, BinaryOperator } from '../../src/ast/Operator';
 import {
@@ -20,6 +22,8 @@ import {
   HexLiteralNode,
   FunctionCallNode,
   IdentifierNode,
+  TupleIndexOpNode,
+  SplitOpNode,
 } from '../../src/ast/AST';
 import { fixtures } from './fixtures';
 import { ExecutionError } from '../../src/Errors';
@@ -30,14 +34,26 @@ describe('Operation simulation', () => {
     await delay(1000);
   });
 
+  describe('applyRequire', () => {
+    fixtures.applyRequire.success.forEach(([should, requireNode, expectedNode]: any) => {
+      it(should as string, () => {
+        // when
+        const res = applyRequire(requireNode);
+
+        // then
+        expect(res).toEqual(expectedNode);
+      });
+    });
+  });
+
   describe('applyBranch', () => {
-    fixtures.applyBranch.success.forEach(([should, branchNode, expectedNodes]: any) => {
+    fixtures.applyBranch.success.forEach(([should, branchNode, expectedNode]: any) => {
       it(should as string, () => {
         // when
         const res = applyBranch(branchNode);
 
         // then
-        expect(res).toEqual(expectedNodes);
+        expect(res).toEqual(expectedNode);
       });
     });
   });
@@ -108,6 +124,40 @@ describe('Operation simulation', () => {
           }).toThrow(new ExecutionError(expected as string));
         });
       });
+  });
+
+  describe('applySplitAndIndex', () => {
+    fixtures.applySplitAndIndex.success.forEach(([should, input, split, index, expected]: any) => {
+      it(should as string, () => {
+        // given
+        const inputNode = literalToNode(input);
+        const splitNode = literalToNode(split);
+        const indexNode = new TupleIndexOpNode(new SplitOpNode(inputNode, splitNode), index);
+        const expectedNode = literalToNode(expected);
+
+        // when
+        const res = applySplitAndIndex(indexNode);
+
+        // then
+        expect(res).toEqual(expectedNode);
+      });
+    });
+
+    fixtures.applySplitAndIndex.fail.forEach(([should, input, split, index, expected]: any) => {
+      it(should as string, () => {
+        // given
+        const inputNode = literalToNode(input);
+        const splitNode = literalToNode(split);
+        const indexNode = new TupleIndexOpNode(new SplitOpNode(inputNode, splitNode), index);
+
+        expect(() => {
+          // when
+          applySplitAndIndex(indexNode);
+
+          // then
+        }).toThrow(new ExecutionError(expected));
+      });
+    });
   });
 
   describe('applySizeOp', () => {

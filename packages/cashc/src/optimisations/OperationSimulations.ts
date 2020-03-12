@@ -18,6 +18,9 @@ import {
   Node,
   BranchNode,
   BlockNode,
+  RequireNode,
+  TupleIndexOpNode,
+  SplitOpNode,
 } from '../ast/AST';
 import { GlobalFunction } from '../ast/Globals';
 import { Data } from '../util';
@@ -74,7 +77,11 @@ export function decodeLiteralNode(value: Buffer, type: Type): LiteralNode {
   }
 }
 
-// TODO: RequireNode
+export function applyRequire(node: RequireNode): Node {
+  if (!(node.expression instanceof BoolLiteralNode)) throw new Error();
+  // TODO: throw an error on "always failing require" (outside of branches)
+  return node.expression.value ? new BlockNode([]) : node;
+}
 
 export function applyBranch(node: BranchNode): BlockNode {
   if (!(node.condition instanceof BoolLiteralNode)) throw new Error();
@@ -113,8 +120,24 @@ export function applyGlobalFunction(node: FunctionCallNode): Node {
   return decodeLiteralNode(Buffer.from(res), returnType(fn));
 }
 
-// TODO: InstantiationNode
-// TODO: TupleIndexOpNode + SplitOpNode
+// Optimisation of InstantiationNode Literals is done in Target Code Generation
+// due to the more complex nature of these operations and possibility for
+// partial simplification.
+
+export function applySplitAndIndex(node: TupleIndexOpNode): LiteralNode {
+  if (!(node.tuple instanceof SplitOpNode)) throw new Error();
+  if (!(node.tuple.object instanceof LiteralNode)) throw new Error();
+  if (!(node.tuple.index instanceof LiteralNode)) throw new Error();
+  const indexOp = node.index === 0 ? Op.OP_DROP : Op.OP_NIP;
+  const type = node.tuple.object.type || new BytesType();
+  const script: Script = [
+    encodeLiteralNode(node.tuple.object),
+    encodeLiteralNode(node.tuple.index),
+    Op.OP_SPLIT, indexOp,
+  ];
+  const res = executeScriptOnVM(script)[0];
+  return decodeLiteralNode(Buffer.from(res), type);
+}
 
 export function applySizeOp(node: StringLiteralNode | HexLiteralNode): LiteralNode {
   const script: Script = [encodeLiteralNode(node), Op.OP_SIZE, Op.OP_NIP];
