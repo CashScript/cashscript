@@ -1,0 +1,43 @@
+pragma cashscript ^0.3.0;
+
+// This is an experimental contract for a more "streaming" Mecenas experience
+// Completely untested, just a concept
+contract Mecenas(bytes4 initialBlock, int pledgePerBlock, bytes20 recipient, bytes20 funder) {
+    function receive(pubkey pk, sig s, int pledge) {
+        require(checkSig(s, pk));
+
+        int initial = int(initialBlock);
+        require(tx.time >= initial);
+
+        // Pledge amount calculation is done in client, verified in contract
+        // When OP_MUL is enabled this can be done in contract
+        // Double require to account for integer division
+        int passedBlocks = int(tx.locktime) - initial;
+        require(pledge / passedBlocks == pledgePerBlock);
+        require((pledge - 1) / passedBlocks != pledgePerBlock);
+
+        // Cut out old initialBlock (PUSH1 0x04 <inheritor>)
+        // Insert new initialBlock (PUSH1 0x04 <newInheritor>)
+        bytes newContract = 0x4c04 + tx.locktime + tx.bytecode.split(6)[1];
+
+        int minerFee = 1000; // hardcoded fee
+        int intValue = int(bytes(tx.value));
+
+        if (intValue <= pledge + fee) {
+            bytes8 amount1 = bytes8(intValue - fee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            require(hash256(out1) == tx.hashOutputs);
+        } else {
+            bytes8 amount1 = bytes8(pledge);
+            bytes8 amount2 = bytes8(intValue - pledge - fee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            bytes32 out2 = new OutputP2SH(amount2, hash160(newContract));
+            require(hash256(out1 + out2) == tx.hashOutputs);
+        }
+    }
+
+    function reclaim(pubkey pk, sig s) {
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
+    }
+}
