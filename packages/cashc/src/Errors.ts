@@ -8,7 +8,6 @@ import {
   BinaryOpNode,
   UnaryOpNode,
   TimeOpNode,
-  SplitOpNode,
   CastNode,
   AssignNode,
   BranchNode,
@@ -116,22 +115,22 @@ export class UnequalTypeError extends TypeError {
 
 export class UnsupportedTypeError extends TypeError {
   constructor(
-    node: BinaryOpNode | UnaryOpNode | SplitOpNode | TimeOpNode | TupleIndexOpNode,
+    node: BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode,
     actual?: Type,
     expected?: Type,
   ) {
-    if (node instanceof BinaryOpNode) {
-      super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
-    } else if (node instanceof UnaryOpNode && node.operator.startsWith('.')) {
-      super(node, actual, expected, `Tried to access member '${node.operator}' on unsupported type '${actual}'`);
-    } else if (node instanceof UnaryOpNode) {
-      super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
-    } else if (node instanceof SplitOpNode) {
+    if (node instanceof BinaryOpNode && node.operator.startsWith('.')) {
       if (expected === PrimitiveType.INT) {
         super(node, actual, expected, `Tried to call member 'split' with unsupported parameter type '${actual}'`);
       } else {
         super(node, actual, expected, `Tried to call member 'split' on unsupported type '${actual}'`);
       }
+    } else if (node instanceof BinaryOpNode) {
+      super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
+    } else if (node instanceof UnaryOpNode && node.operator.startsWith('.')) {
+      super(node, actual, expected, `Tried to access member '${node.operator}' on unsupported type '${actual}'`);
+    } else if (node instanceof UnaryOpNode) {
+      super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof TimeOpNode) {
       super(node, actual, expected, `Tried to apply operator '>=' on unsupported type '${actual}'`);
     } else if (node instanceof TupleIndexOpNode) {

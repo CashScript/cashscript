@@ -16,7 +16,6 @@ import {
   StringLiteralNode,
   BlockNode,
   TimeOpNode,
-  SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
@@ -35,6 +34,7 @@ import {
 } from './Script';
 import { Data } from '../util';
 import { PreimageParts } from './preimage';
+import { BinaryOperator } from '../ast/Operator';
 
 export default class GenerateTargetTraversal extends AstTraversal {
   output: Script = [];
@@ -521,16 +521,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitSplitOp(node: SplitOpNode): Node {
-    node.object = this.visit(node.object);
-    node.index = this.visit(node.index);
-    this.emit(Op.OP_SPLIT);
-    this.popFromStack(2);
-    this.pushToStack('(value)');
-    this.pushToStack('(value)');
-    return node;
-  }
-
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
@@ -540,6 +530,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     ));
     this.popFromStack(2);
     this.pushToStack('(value)');
+    if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value');
     return node;
   }
 

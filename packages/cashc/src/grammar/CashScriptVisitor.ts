@@ -8,7 +8,6 @@ import { CastContext } from "./CashScriptParser";
 import { FunctionCallExpressionContext } from "./CashScriptParser";
 import { InstantationContext } from "./CashScriptParser";
 import { TupleIndexOpContext } from "./CashScriptParser";
-import { SplitOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
 import { ArrayContext } from "./CashScriptParser";
@@ -87,14 +86,6 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitTupleIndexOp?: (ctx: TupleIndexOpContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by the `SplitOp`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitSplitOp?: (ctx: SplitOpContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by the `UnaryOp`

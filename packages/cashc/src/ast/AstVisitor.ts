@@ -17,7 +17,6 @@ import {
   HexLiteralNode,
   StringLiteralNode,
   BlockNode,
-  SplitOpNode,
   TimeOpNode,
   ArrayNode,
   TupleIndexOpNode,
@@ -40,7 +39,6 @@ export default abstract class AstVisitor<T> {
   abstract visitFunctionCall(node: FunctionCallNode): T;
   abstract visitInstantiation(node: InstantiationNode): T;
   abstract visitTupleIndexOp(node: TupleIndexOpNode): T;
-  abstract visitSplitOp(node: SplitOpNode): T;
   abstract visitBinaryOp(node: BinaryOpNode): T;
   abstract visitUnaryOp(node: UnaryOpNode): T;
   abstract visitArray(node: ArrayNode): T;

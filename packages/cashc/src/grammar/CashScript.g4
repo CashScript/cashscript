@@ -87,13 +87,13 @@ expression
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
-    | obj=expression '.split' '(' index=expression ')' # SplitOp
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
     | expression op=('.reverse()' | '.length') # UnaryOp
     | op=('!' | '-') expression # UnaryOp
     // | expression '**' expression --- No power
     // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled
+    | left=expression op='.split' '(' right=expression ')' # BinaryOp
     | left=expression op=('/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
     // | expression ('>>' | '<<') expression --- OP_LSHIFT 7 RSHIFT are disabled

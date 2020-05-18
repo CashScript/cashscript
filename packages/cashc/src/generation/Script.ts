@@ -1,7 +1,12 @@
 import { Script as BScript } from 'bitbox-sdk';
 import { UnaryOperator, BinaryOperator } from '../ast/Operator';
 import { GlobalFunction, TimeOp } from '../ast/Globals';
-import { PrimitiveType, Type, BytesType } from '../ast/Type';
+import {
+  PrimitiveType,
+  Type,
+  BytesType,
+  TupleType,
+} from '../ast/Type';
 import { Data } from '../util';
 
 export const Op = new BScript().opcodes;
@@ -64,6 +69,7 @@ export class toOps {
       [BinaryOperator.NE]: [Op.OP_EQUAL, Op.OP_NOT],
       [BinaryOperator.AND]: [Op.OP_BOOLAND],
       [BinaryOperator.OR]: [Op.OP_BOOLOR],
+      [BinaryOperator.SPLIT]: [Op.OP_SPLIT],
     };
 
     if (numeric) {
@@ -113,6 +119,7 @@ export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator):
     [BinaryOperator.NE]: PrimitiveType.BOOL,
     [BinaryOperator.AND]: PrimitiveType.BOOL,
     [BinaryOperator.OR]: PrimitiveType.BOOL,
+    [BinaryOperator.SPLIT]: new TupleType(),
     [UnaryOperator.NOT]: PrimitiveType.BOOL,
     [UnaryOperator.NEGATE]: PrimitiveType.INT,
     [UnaryOperator.SIZE]: PrimitiveType.INT,

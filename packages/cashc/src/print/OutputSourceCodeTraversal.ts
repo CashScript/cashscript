@@ -19,7 +19,6 @@ import {
   StatementNode,
   BlockNode,
   TimeOpNode,
-  SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
@@ -179,15 +178,15 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitSplitOp(node: SplitOpNode): Node {
-    node.object = this.visit(node.object);
-    this.addOutput('.split(');
-    node.index = this.visit(node.index);
-    this.addOutput(')');
-    return node;
-  }
-
   visitBinaryOp(node: BinaryOpNode): Node {
+    if (node.operator.startsWith('.')) {
+      node.left = this.visit(node.left);
+      this.addOutput(`${node.operator}(`);
+      node.right = this.visit(node.right);
+      this.addOutput(')');
+      return node;
+    }
+
     this.addOutput('(');
     node.left = this.visit(node.left);
     this.addOutput(` ${node.operator} `);

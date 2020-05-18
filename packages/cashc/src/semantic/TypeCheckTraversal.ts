@@ -6,7 +6,6 @@ import {
   UnaryOpNode,
   BinaryOpNode,
   IdentifierNode,
-  SplitOpNode,
   TimeOpNode,
   VariableDefinitionNode,
   ArrayNode,
@@ -164,34 +163,12 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitSplitOp(node: SplitOpNode): Node {
-    node.object = this.visit(node.object);
-    node.index = this.visit(node.index);
-
-    if (!implicitlyCastable(node.object.type, new BytesType())
-     && !implicitlyCastable(node.object.type, PrimitiveType.STRING)
-    ) { // Should support Bytes and String
-      throw new UnsupportedTypeError(node, node.object.type, new BytesType());
-    }
-
-    if (!implicitlyCastable(node.index.type, PrimitiveType.INT)) {
-      throw new UnsupportedTypeError(node, node.object.type, PrimitiveType.INT);
-    }
-
-    // Result of split are two unbounded bytes types (could be improved to do type inference)
-    const elementType = node.object.type instanceof BytesType
-      ? new BytesType()
-      : PrimitiveType.STRING;
-    node.type = new TupleType(elementType);
-    return node;
-  }
-
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
 
     const resType = resultingType(node.left.type, node.right.type);
-    if (!resType) {
+    if (!resType && !node.operator.startsWith('.')) {
       throw new UnequalTypeError(node);
     }
 
@@ -210,7 +187,7 @@ export default class TypeCheckTraversal extends AstTraversal {
             node.type = new BytesType(node.left.type.bound + node.right.type.bound);
           }
         }
-        break;
+        return node;
       case BinaryOperator.DIV:
       case BinaryOperator.MOD:
       case BinaryOperator.MINUS:
@@ -218,7 +195,7 @@ export default class TypeCheckTraversal extends AstTraversal {
           throw new UnsupportedTypeError(node, resType, PrimitiveType.INT);
         }
         node.type = resType;
-        break;
+        return node;
       case BinaryOperator.LT:
       case BinaryOperator.LE:
       case BinaryOperator.GT:
@@ -227,22 +204,37 @@ export default class TypeCheckTraversal extends AstTraversal {
           throw new UnsupportedTypeError(node, resType, PrimitiveType.INT);
         }
         node.type = PrimitiveType.BOOL;
-        break;
+        return node;
       case BinaryOperator.EQ:
       case BinaryOperator.NE:
         node.type = PrimitiveType.BOOL;
-        break;
+        return node;
       case BinaryOperator.AND:
       case BinaryOperator.OR:
         if (!implicitlyCastable(resType, PrimitiveType.BOOL)) {
           throw new UnsupportedTypeError(node, resType, PrimitiveType.BOOL);
         }
         node.type = PrimitiveType.BOOL;
-        break;
-      default:
-    }
+        return node;
+      case BinaryOperator.SPLIT:
+        if (!implicitlyCastable(node.left.type, new BytesType())
+          && !implicitlyCastable(node.left.type, PrimitiveType.STRING)
+        ) { // Should support Bytes and String
+          throw new UnsupportedTypeError(node, node.left.type, new BytesType());
+        }
 
-    return node;
+        if (!implicitlyCastable(node.right.type, PrimitiveType.INT)) {
+          throw new UnsupportedTypeError(node, node.right.type, PrimitiveType.INT);
+        }
+
+        // Result of split are two unbounded bytes types (could be improved to do type inference)
+        node.type = new TupleType(
+          node.left.type instanceof BytesType ? new BytesType() : PrimitiveType.STRING,
+        );
+        return node;
+      default:
+        return node;
+    }
   }
 
   visitUnaryOp(node: UnaryOpNode): Node {

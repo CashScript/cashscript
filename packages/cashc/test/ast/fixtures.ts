@@ -18,7 +18,6 @@ import {
   ArrayNode,
   CastNode,
   TupleIndexOpNode,
-  SplitOpNode,
   TimeOpNode,
   HexLiteralNode,
   InstantiationNode,
@@ -357,8 +356,9 @@ export const fixtures: Fixture[] = [
               new CastNode(
                 PrimitiveType.INT,
                 new TupleIndexOpNode(
-                  new SplitOpNode(
+                  new BinaryOpNode(
                     new IdentifierNode('oracleMessage'),
+                    BinaryOperator.SPLIT,
                     new IntLiteralNode(4),
                   ),
                   0,
@@ -371,8 +371,9 @@ export const fixtures: Fixture[] = [
               new CastNode(
                 PrimitiveType.INT,
                 new TupleIndexOpNode(
-                  new SplitOpNode(
+                  new BinaryOpNode(
                     new IdentifierNode('oracleMessage'),
+                    BinaryOperator.SPLIT,
                     new IntLiteralNode(4),
                   ),
                   1,
