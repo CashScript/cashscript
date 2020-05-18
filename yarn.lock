@@ -3957,6 +3957,11 @@ bitbox-sdk@^8.11.1, bitbox-sdk@^8.11.2, bitbox-sdk@^8.8.0:
     socket.io-client "^2.2.0"
     wif "^2.0.6"
 
+bitcoin-ts@^1.12.0:
+  version "1.14.2"
+  resolved "https://registry.yarnpkg.com/bitcoin-ts/-/bitcoin-ts-1.14.2.tgz#332acf4039bacb126bb4ddef93fc28c8b711305c"
+  integrity sha512-jaePXvofeIIZlHV7cjlWeGtP4FA+s0+AyM5bX7PgjkXsFPd1iHv9ea0XXo8XSnnI6roDk1kYaENK7EswdaiPjA==
+
 bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0, "bitcoincash-ops@github:Bitcoin-com/bitcoincash-ops#2.0.0":
   version "2.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincash-ops/tar.gz/6ab82cc7326c67236f3b2d9d0457258ac2ef48e3"
