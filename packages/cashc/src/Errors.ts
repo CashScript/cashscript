@@ -14,6 +14,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  InstantiationNode,
 } from './ast/AST';
 import { Type, PrimitiveType } from './ast/Type';
 import { Symbol, SymbolType } from './ast/SymbolTable';
@@ -91,14 +92,14 @@ export class TypeError extends CashScriptError {
 
 export class InvalidParameterTypeError extends TypeError {
   constructor(
-    node: FunctionCallNode | RequireNode,
+    node: FunctionCallNode | RequireNode | InstantiationNode,
     actual: Type[],
     expected: Type[],
   ) {
-    const name = node instanceof FunctionCallNode ? node.identifier.name : 'require';
+    const name = node instanceof RequireNode ? 'require' : node.identifier.name;
     super(
       node, actual, expected,
-      `Found function parameters (${actual}) in call to function '${name}' where parameters (${expected}) were expected`,
+      `Found parameters (${actual}) in call to function '${name}' where parameters (${expected}) were expected`,
     );
   }
 }

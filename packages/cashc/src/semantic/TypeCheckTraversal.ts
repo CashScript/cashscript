@@ -43,43 +43,27 @@ import { GlobalFunction } from '../ast/Globals';
 export default class TypeCheckTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
-
-    if (!implicitlyCastable(node.expression.type, node.type)) {
-      throw new AssignTypeError(node);
-    }
-
+    expectAssignable(node, node.expression.type, node.type);
     return node;
   }
 
   visitAssign(node: AssignNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.expression = this.visit(node.expression);
-
-    if (!implicitlyCastable(node.expression.type, node.identifier.type)) {
-      throw new AssignTypeError(node);
-    }
-
+    expectAssignable(node, node.expression.type, node.identifier.type);
     return node;
   }
 
   visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
-
-    if (!implicitlyCastable(node.expression.type, PrimitiveType.INT)) {
-      throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.INT);
-    }
-
+    expectInt(node, node.expression.type);
     return node;
   }
 
   visitRequire(node: RequireNode): Node {
     node.expression = this.visit(node.expression);
-
-    if (!implicitlyCastable(node.expression.type, PrimitiveType.BOOL)) {
-      const actual = node.expression.type ? [node.expression.type] : [];
-      throw new InvalidParameterTypeError(node, actual, [PrimitiveType.BOOL]);
-    }
-
+    const parameters = node.expression.type ? [node.expression.type] : [];
+    expectParameters(node, parameters, [PrimitiveType.BOOL]);
     return node;
   }
 
@@ -113,10 +97,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     if (!definition || !definition.parameters) return node; // aready checked in symbol table
 
     const parameterTypes = node.parameters.map(p => p.type as Type);
-
-    if (!implicitlyCastableSignature(parameterTypes, definition.parameters)) {
-      throw new InvalidParameterTypeError(node, parameterTypes, definition.parameters);
-    }
+    expectParameters(node, parameterTypes, definition.parameters);
 
     // Additional array length check for checkMultiSig
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
@@ -139,10 +120,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     if (!definition || !definition.parameters) return node; // aready checked in symbol table
 
     const parameterTypes = node.parameters.map(p => p.type as Type);
-
-    if (!implicitlyCastableSignature(parameterTypes, definition.parameters)) {
-      throw new InvalidParameterTypeError(node, parameterTypes, definition.parameters);
-    }
+    expectParameters(node, parameterTypes, definition.parameters);
 
     node.type = type;
     return node;
@@ -151,15 +129,13 @@ export default class TypeCheckTraversal extends AstTraversal {
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
 
-    if (!(node.tuple.type instanceof TupleType)) {
-      throw new UnsupportedTypeError(node, node.tuple.type, new TupleType());
-    }
+    expectTuple(node, node.tuple.type);
 
     if (node.index !== 0 && node.index !== 1) {
       throw new IndexOutOfBoundsError(node);
     }
 
-    node.type = node.tuple.type.elementType;
+    node.type = (node.tuple.type as TupleType).elementType;
     return node;
   }
 
@@ -174,12 +150,7 @@ export default class TypeCheckTraversal extends AstTraversal {
 
     switch (node.operator) {
       case BinaryOperator.PLUS:
-        if (!implicitlyCastable(resType, PrimitiveType.INT)
-         && !implicitlyCastable(resType, PrimitiveType.STRING)
-         && !implicitlyCastable(resType, new BytesType())
-        ) { // Should support int, string, bytes
-          throw new UnsupportedTypeError(node, resType, PrimitiveType.INT);
-        }
+        expectAnyOfTypes(node, resType, [PrimitiveType.INT, PrimitiveType.STRING, new BytesType()]);
         node.type = resType;
         // Infer new bounded bytes type if both operands are bounded bytes types
         if (node.left.type instanceof BytesType && node.right.type instanceof BytesType) {
@@ -191,18 +162,14 @@ export default class TypeCheckTraversal extends AstTraversal {
       case BinaryOperator.DIV:
       case BinaryOperator.MOD:
       case BinaryOperator.MINUS:
-        if (!implicitlyCastable(resType, PrimitiveType.INT)) {
-          throw new UnsupportedTypeError(node, resType, PrimitiveType.INT);
-        }
+        expectInt(node, resType);
         node.type = resType;
         return node;
       case BinaryOperator.LT:
       case BinaryOperator.LE:
       case BinaryOperator.GT:
       case BinaryOperator.GE:
-        if (!implicitlyCastable(resType, PrimitiveType.INT)) {
-          throw new UnsupportedTypeError(node, resType, PrimitiveType.INT);
-        }
+        expectInt(node, resType);
         node.type = PrimitiveType.BOOL;
         return node;
       case BinaryOperator.EQ:
@@ -211,21 +178,12 @@ export default class TypeCheckTraversal extends AstTraversal {
         return node;
       case BinaryOperator.AND:
       case BinaryOperator.OR:
-        if (!implicitlyCastable(resType, PrimitiveType.BOOL)) {
-          throw new UnsupportedTypeError(node, resType, PrimitiveType.BOOL);
-        }
+        expectBool(node, resType);
         node.type = PrimitiveType.BOOL;
         return node;
       case BinaryOperator.SPLIT:
-        if (!implicitlyCastable(node.left.type, new BytesType())
-          && !implicitlyCastable(node.left.type, PrimitiveType.STRING)
-        ) { // Should support Bytes and String
-          throw new UnsupportedTypeError(node, node.left.type, new BytesType());
-        }
-
-        if (!implicitlyCastable(node.right.type, PrimitiveType.INT)) {
-          throw new UnsupportedTypeError(node, node.right.type, PrimitiveType.INT);
-        }
+        expectAnyOfTypes(node, node.left.type, [new BytesType(), PrimitiveType.STRING]);
+        expectInt(node, node.right.type);
 
         // Result of split are two unbounded bytes types (could be improved to do type inference)
         node.type = new TupleType(
@@ -242,31 +200,19 @@ export default class TypeCheckTraversal extends AstTraversal {
 
     switch (node.operator) {
       case UnaryOperator.NOT:
-        if (!implicitlyCastable(node.expression.type, PrimitiveType.BOOL)) {
-          throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.BOOL);
-        }
+        expectBool(node, node.expression.type);
         node.type = PrimitiveType.BOOL;
         return node;
       case UnaryOperator.NEGATE:
-        if (!implicitlyCastable(node.expression.type, PrimitiveType.INT)) {
-          throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.INT);
-        }
+        expectInt(node, node.expression.type);
         node.type = PrimitiveType.INT;
         return node;
       case UnaryOperator.SIZE:
-        if (!implicitlyCastable(node.expression.type, new BytesType())
-          && !implicitlyCastable(node.expression.type, PrimitiveType.STRING)
-        ) { // Should support Bytes and String
-          throw new UnsupportedTypeError(node, node.expression.type, new BytesType());
-        }
+        expectAnyOfTypes(node, node.expression.type, [new BytesType(), PrimitiveType.STRING]);
         node.type = PrimitiveType.INT;
         return node;
       case UnaryOperator.REVERSE:
-        if (!implicitlyCastable(node.expression.type, new BytesType())
-         && !implicitlyCastable(node.expression.type, PrimitiveType.STRING)
-        ) { // Should support Bytes and String
-          throw new UnsupportedTypeError(node, node.expression.type, new BytesType());
-        }
+        expectAnyOfTypes(node, node.expression.type, [new BytesType(), PrimitiveType.STRING]);
         // Type is preserved
         node.type = node.expression.type;
         return node;
@@ -297,5 +243,43 @@ export default class TypeCheckTraversal extends AstTraversal {
     if (!node.definition) return node;
     node.type = node.definition.type;
     return node;
+  }
+}
+
+type ExpectedNode = BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode;
+function expectAnyOfTypes(node: ExpectedNode, actual?: Type, expectedTypes?: Type[]): void {
+  if (!expectedTypes || expectedTypes.length === 0) return;
+  if (expectedTypes.find(expected => implicitlyCastable(actual, expected))) {
+    return;
+  }
+
+  throw new UnsupportedTypeError(node, actual, expectedTypes[0]);
+}
+
+function expectBool(node: ExpectedNode, actual?: Type): void {
+  expectAnyOfTypes(node, actual, [PrimitiveType.BOOL]);
+}
+
+function expectInt(node: ExpectedNode, actual?: Type): void {
+  expectAnyOfTypes(node, actual, [PrimitiveType.INT]);
+}
+
+function expectTuple(node: ExpectedNode, actual?: Type): void {
+  if (!(actual instanceof TupleType)) {
+    throw new UnsupportedTypeError(node, actual, new TupleType());
+  }
+}
+
+type AssigningNode = AssignNode | VariableDefinitionNode;
+function expectAssignable(node: AssigningNode, actual?: Type, expected?: Type): void {
+  if (!implicitlyCastable(actual, expected)) {
+    throw new AssignTypeError(node);
+  }
+}
+
+type ParameteredNode = FunctionCallNode | RequireNode | InstantiationNode;
+function expectParameters(node: ParameteredNode, actual: Type[], expected: Type[]): void {
+  if (!implicitlyCastableSignature(actual, expected)) {
+    throw new InvalidParameterTypeError(node, actual, expected);
   }
 }
