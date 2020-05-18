@@ -1,6 +1,7 @@
 export enum UnaryOperator {
   NOT = '!',
   NEGATE = '-',
+  SIZE = '.length',
   REVERSE = '.reverse()'
 }
 

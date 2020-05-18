@@ -25,7 +25,6 @@ import {
   LiteralNode,
   BlockNode,
   SplitOpNode,
-  SizeOpNode,
   TimeOpNode,
   ArrayNode,
   TupleIndexOpNode,
@@ -50,7 +49,6 @@ import {
   ArrayContext,
   ParenthesisedContext,
   FunctionCallExpressionContext,
-  SizeOpContext,
   SplitOpContext,
   UnaryOpContext,
   BinaryOpContext,
@@ -239,13 +237,6 @@ export default class AstBuilder
     const tupleIndexOp = new TupleIndexOpNode(tuple, index);
     tupleIndexOp.location = Location.fromCtx(ctx);
     return tupleIndexOp;
-  }
-
-  visitSizeOp(ctx: SizeOpContext): SizeOpNode {
-    const obj = this.visit(ctx.expression());
-    const sizeOp = new SizeOpNode(obj);
-    sizeOp.location = Location.fromCtx(ctx);
-    return sizeOp;
   }
 
   visitSplitOp(ctx: SplitOpContext): SplitOpNode {

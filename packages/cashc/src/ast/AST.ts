@@ -217,18 +217,6 @@ export class TupleIndexOpNode extends ExpressionNode {
   }
 }
 
-export class SizeOpNode extends ExpressionNode {
-  constructor(
-    public object: ExpressionNode,
-  ) {
-    super();
-  }
-
-  accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitSizeOp(this);
-  }
-}
-
 export class SplitOpNode extends ExpressionNode {
   constructor(
     public object: ExpressionNode,

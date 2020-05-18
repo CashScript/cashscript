@@ -8,7 +8,6 @@ import {
   BinaryOpNode,
   UnaryOpNode,
   TimeOpNode,
-  SizeOpNode,
   SplitOpNode,
   CastNode,
   AssignNode,
@@ -117,16 +116,16 @@ export class UnequalTypeError extends TypeError {
 
 export class UnsupportedTypeError extends TypeError {
   constructor(
-    node: BinaryOpNode | UnaryOpNode | SizeOpNode | SplitOpNode | TimeOpNode | TupleIndexOpNode,
+    node: BinaryOpNode | UnaryOpNode | SplitOpNode | TimeOpNode | TupleIndexOpNode,
     actual?: Type,
     expected?: Type,
   ) {
     if (node instanceof BinaryOpNode) {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
+    } else if (node instanceof UnaryOpNode && node.operator.startsWith('.')) {
+      super(node, actual, expected, `Tried to access member '${node.operator}' on unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode) {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
-    } else if (node instanceof SizeOpNode) {
-      super(node, actual, expected, `Tried to access member 'length' on unsupported type '${actual}'`);
     } else if (node instanceof SplitOpNode) {
       if (expected === PrimitiveType.INT) {
         super(node, actual, expected, `Tried to call member 'split' with unsupported parameter type '${actual}'`);

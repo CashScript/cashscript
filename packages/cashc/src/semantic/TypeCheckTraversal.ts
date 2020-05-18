@@ -6,7 +6,6 @@ import {
   UnaryOpNode,
   BinaryOpNode,
   IdentifierNode,
-  SizeOpNode,
   SplitOpNode,
   TimeOpNode,
   VariableDefinitionNode,
@@ -165,19 +164,6 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitSizeOp(node: SizeOpNode): Node {
-    node.object = this.visit(node.object);
-
-    if (!implicitlyCastable(node.object.type, new BytesType())
-     && !implicitlyCastable(node.object.type, PrimitiveType.STRING)
-    ) { // Should support Bytes and String
-      throw new UnsupportedTypeError(node, node.object.type, new BytesType());
-    }
-
-    node.type = PrimitiveType.INT;
-    return node;
-  }
-
   visitSplitOp(node: SplitOpNode): Node {
     node.object = this.visit(node.object);
     node.index = this.visit(node.index);
@@ -268,13 +254,21 @@ export default class TypeCheckTraversal extends AstTraversal {
           throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.BOOL);
         }
         node.type = PrimitiveType.BOOL;
-        break;
+        return node;
       case UnaryOperator.NEGATE:
         if (!implicitlyCastable(node.expression.type, PrimitiveType.INT)) {
           throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.INT);
         }
         node.type = PrimitiveType.INT;
-        break;
+        return node;
+      case UnaryOperator.SIZE:
+        if (!implicitlyCastable(node.expression.type, new BytesType())
+          && !implicitlyCastable(node.expression.type, PrimitiveType.STRING)
+        ) { // Should support Bytes and String
+          throw new UnsupportedTypeError(node, node.expression.type, new BytesType());
+        }
+        node.type = PrimitiveType.INT;
+        return node;
       case UnaryOperator.REVERSE:
         if (!implicitlyCastable(node.expression.type, new BytesType())
          && !implicitlyCastable(node.expression.type, PrimitiveType.STRING)
@@ -283,11 +277,10 @@ export default class TypeCheckTraversal extends AstTraversal {
         }
         // Type is preserved
         node.type = node.expression.type;
-        break;
+        return node;
       default:
+        return node;
     }
-
-    return node;
   }
 
   visitArray(node: ArrayNode): Node {

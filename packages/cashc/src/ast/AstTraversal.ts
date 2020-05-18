@@ -19,7 +19,6 @@ import {
   StatementNode,
   BlockNode,
   TimeOpNode,
-  SizeOpNode,
   SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
@@ -102,11 +101,6 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
-    return node;
-  }
-
-  visitSizeOp(node: SizeOpNode): Node {
-    node.object = this.visit(node.object);
     return node;
   }
 

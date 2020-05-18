@@ -16,7 +16,6 @@ import {
   StringLiteralNode,
   BlockNode,
   TimeOpNode,
-  SizeOpNode,
   SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
@@ -519,15 +518,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.nipFromStack();
     }
 
-    return node;
-  }
-
-  visitSizeOp(node: SizeOpNode): Node {
-    node.object = this.visit(node.object);
-    this.emit(Op.OP_SIZE);
-    this.emit(Op.OP_NIP);
-    this.popFromStack();
-    this.pushToStack('(value)');
     return node;
   }
 

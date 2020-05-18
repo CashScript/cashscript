@@ -87,11 +87,10 @@ expression
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
-    | expression '.length' # SizeOp
     | obj=expression '.split' '(' index=expression ')' # SplitOp
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
-    | expression op='.reverse()' # UnaryOp
+    | expression op=('.reverse()' | '.length') # UnaryOp
     | op=('!' | '-') expression # UnaryOp
     // | expression '**' expression --- No power
     // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled

@@ -19,7 +19,6 @@ import {
   StatementNode,
   BlockNode,
   TimeOpNode,
-  SizeOpNode,
   SplitOpNode,
   ArrayNode,
   TupleIndexOpNode,
@@ -177,12 +176,6 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
     this.addOutput(`[${node.index}]`);
-    return node;
-  }
-
-  visitSizeOp(node: SizeOpNode): Node {
-    node.object = this.visit(node.object);
-    this.addOutput('.length');
     return node;
   }
 
