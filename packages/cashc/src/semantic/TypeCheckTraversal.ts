@@ -275,6 +275,15 @@ export default class TypeCheckTraversal extends AstTraversal {
         }
         node.type = PrimitiveType.INT;
         break;
+      case UnaryOperator.REVERSE:
+        if (!implicitlyCastable(node.expression.type, new BytesType())
+         && !implicitlyCastable(node.expression.type, PrimitiveType.STRING)
+        ) { // Should support Bytes and String
+          throw new UnsupportedTypeError(node, node.expression.type, new BytesType());
+        }
+        // Type is preserved
+        node.type = node.expression.type;
+        break;
       default:
     }
 

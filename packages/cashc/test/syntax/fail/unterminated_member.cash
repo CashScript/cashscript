@@ -1,0 +1,6 @@
+contract Test() {
+    function hello(bytes a) {
+        bytes b = a.reverse(
+        require(b == a);
+    }
+}

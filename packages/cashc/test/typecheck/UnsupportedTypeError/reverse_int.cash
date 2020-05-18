@@ -1,0 +1,5 @@
+contract Test(int x) {
+    function hello() {
+        require(x.reverse() == x);
+    }
+}

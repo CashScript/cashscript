@@ -1,6 +1,7 @@
 export enum UnaryOperator {
   NOT = '!',
-  NEGATE = '-'
+  NEGATE = '-',
+  REVERSE = '.reverse()'
 }
 
 export enum BinaryOperator {

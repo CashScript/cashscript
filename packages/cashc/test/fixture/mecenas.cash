@@ -5,7 +5,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
         require(tx.age >= period);
 
         int fee = 1000;
-        int intValue = int(bytes(tx.value))
+        int intValue = int(bytes(tx.value));
 
         if (intValue <= pledge + fee) {
             bytes8 amount1 = bytes8(intValue - fee);

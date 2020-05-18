@@ -79,6 +79,7 @@ export class toOps {
     const mapping = {
       [UnaryOperator.NOT]: [Op.OP_NOT],
       [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
+      [UnaryOperator.REVERSE]: [188], // TODO: Replace with OP_REVERSE
     };
 
     return mapping[op];
@@ -113,6 +114,7 @@ export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator):
     [BinaryOperator.OR]: PrimitiveType.BOOL,
     [UnaryOperator.NOT]: PrimitiveType.BOOL,
     [UnaryOperator.NEGATE]: PrimitiveType.INT,
+    [UnaryOperator.REVERSE]: new BytesType(), // TODO: string / bounded bytes
   };
   return mapping[op];
 }

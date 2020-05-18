@@ -204,6 +204,12 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitUnaryOp(node: UnaryOpNode): Node {
+    if (node.operator.startsWith('.')) {
+      this.visit(node.expression);
+      this.addOutput(node.operator);
+      return node;
+    }
+
     this.addOutput('(');
     this.addOutput(node.operator);
     node.expression = this.visit(node.expression);

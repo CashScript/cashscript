@@ -629,4 +629,22 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'p2palindrome.cash',
+    artifact: {
+      contractName: 'P2Palindrome',
+      constructorInputs: [],
+      abi: [
+        { name: 'spend', covenant: false, inputs: [{ name: 'palindrome', type: 'string' }] },
+      ],
+      bytecode: 'OP_DUP OP_REVERSEBYTES OP_EQUAL',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'p2palindrome.cash'), { encoding: 'utf-8' }),
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];
