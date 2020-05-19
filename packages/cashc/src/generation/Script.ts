@@ -9,7 +9,8 @@ import {
 } from '../ast/Type';
 import { Data } from '../util';
 
-export const Op = new BScript().opcodes;
+// TODO: Update this some tie when a library has OP_REVERSEBYTES support
+export const Op = { ...new BScript().opcodes, OP_REVERSEBYTES: 188 };
 export type Op = number;
 export type OpOrData = Op | Buffer;
 export type Script = OpOrData[];
@@ -89,7 +90,7 @@ export class toOps {
       [UnaryOperator.NOT]: [Op.OP_NOT],
       [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
       [UnaryOperator.SIZE]: [Op.OP_SIZE, Op.OP_NIP],
-      [UnaryOperator.REVERSE]: [188], // TODO: Replace with OP_REVERSE
+      [UnaryOperator.REVERSE]: [Op.OP_REVERSEBYTES],
     };
 
     return mapping[op];
