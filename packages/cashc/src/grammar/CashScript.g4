@@ -99,9 +99,9 @@ expression
     // | expression ('>>' | '<<') expression --- OP_LSHIFT 7 RSHIFT are disabled
     | left=expression op=('<' | '<=' | '>' | '>=') right=expression # BinaryOp
     | left=expression op=('==' | '!=') right=expression # BinaryOp
-    // | left=expression op='&' right=expression --- Disabled bitwise logic for now
-    // | left=expression op='^' right=expression
-    // | left=expression op='|' right=expression
+    | left=expression op='&' right=expression # BinaryOp
+    | left=expression op='^' right=expression # BinaryOp
+    | left=expression op='|' right=expression # BinaryOp
     | left=expression op='&&' right=expression # BinaryOp
     | left=expression op='||' right=expression # BinaryOp
     | '[' (expression (',' expression)*)? ']' # Array

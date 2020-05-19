@@ -181,6 +181,12 @@ export default class TypeCheckTraversal extends AstTraversal {
         expectBool(node, resType);
         node.type = PrimitiveType.BOOL;
         return node;
+      case BinaryOperator.BIT_AND:
+      case BinaryOperator.BIT_OR:
+      case BinaryOperator.BIT_XOR:
+        expectSameSizeBytes(node, node.left.type, node.right.type);
+        node.type = node.left.type;
+        return node;
       case BinaryOperator.SPLIT:
         expectAnyOfTypes(node, node.left.type, [new BytesType(), PrimitiveType.STRING]);
         expectInt(node, node.right.type);
@@ -262,6 +268,16 @@ function expectBool(node: ExpectedNode, actual?: Type): void {
 
 function expectInt(node: ExpectedNode, actual?: Type): void {
   expectAnyOfTypes(node, actual, [PrimitiveType.INT]);
+}
+
+function expectSameSizeBytes(node: BinaryOpNode, left?: Type, right?: Type): void {
+  if (!(left instanceof BytesType) || !(right instanceof BytesType)) {
+    throw new UnsupportedTypeError(node, left, new BytesType());
+  }
+
+  if (left.bound !== right.bound) {
+    throw new UnequalTypeError(node);
+  }
 }
 
 function expectTuple(node: ExpectedNode, actual?: Type): void {

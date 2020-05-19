@@ -69,6 +69,9 @@ export class toOps {
       [BinaryOperator.NE]: [Op.OP_EQUAL, Op.OP_NOT],
       [BinaryOperator.AND]: [Op.OP_BOOLAND],
       [BinaryOperator.OR]: [Op.OP_BOOLOR],
+      [BinaryOperator.BIT_AND]: [Op.OP_AND],
+      [BinaryOperator.BIT_OR]: [Op.OP_OR],
+      [BinaryOperator.BIT_XOR]: [Op.OP_XOR],
       [BinaryOperator.SPLIT]: [Op.OP_SPLIT],
     };
 
@@ -119,6 +122,9 @@ export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator):
     [BinaryOperator.NE]: PrimitiveType.BOOL,
     [BinaryOperator.AND]: PrimitiveType.BOOL,
     [BinaryOperator.OR]: PrimitiveType.BOOL,
+    [BinaryOperator.BIT_AND]: new BytesType(),
+    [BinaryOperator.BIT_OR]: new BytesType(),
+    [BinaryOperator.BIT_XOR]: new BytesType(),
     [BinaryOperator.SPLIT]: new TupleType(),
     [UnaryOperator.NOT]: PrimitiveType.BOOL,
     [UnaryOperator.NEGATE]: PrimitiveType.INT,
