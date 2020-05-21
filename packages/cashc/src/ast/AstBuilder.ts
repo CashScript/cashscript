@@ -201,8 +201,9 @@ export default class AstBuilder
 
   visitCast(ctx: CastContext): CastNode {
     const type = parseType(ctx.typeName().text);
-    const expression = this.visit(ctx.expression());
-    const cast = new CastNode(type, expression);
+    const expression = this.visit(ctx._castable);
+    const size = ctx._size && this.visit(ctx._size);
+    const cast = new CastNode(type, expression, size);
     cast.location = Location.fromCtx(ctx);
     return cast;
   }

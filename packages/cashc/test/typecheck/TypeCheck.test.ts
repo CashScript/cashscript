@@ -17,6 +17,7 @@ import {
   ArrayElementError,
   IndexOutOfBoundsError,
   TypeError,
+  CastSizeError,
 } from '../../src/Errors';
 import TypeCheckTraversal from '../../src/semantic/TypeCheckTraversal';
 import { parseCode } from '../../src/util';
@@ -61,6 +62,16 @@ describe('Type Check', () => {
       it(`${f.fn} should throw CastTypeError`, () => {
         const { ast, traversal } = setup(f.contents);
         expect(() => ast.accept(traversal)).toThrow(CastTypeError);
+      });
+    });
+  });
+
+  describe('CastSizeError', () => {
+    const testCases = readCashFiles(path.join(__dirname, 'CastSizeError'));
+    testCases.forEach((f) => {
+      it(`${f.fn} should throw CastSizeError`, () => {
+        const { ast, traversal } = setup(f.contents);
+        expect(() => ast.accept(traversal)).toThrow(CastSizeError);
       });
     });
   });

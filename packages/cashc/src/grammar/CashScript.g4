@@ -83,7 +83,7 @@ expressionList
 
 expression
     : '(' expression ')' # Parenthesised
-    | typeName '(' expression ')' # Cast
+    | typeName '(' castable=expression (',' size=expression)? ')' # Cast
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp

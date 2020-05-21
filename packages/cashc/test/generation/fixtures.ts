@@ -647,4 +647,22 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'num2bin_variable.cash',
+    artifact: {
+      contractName: 'Num2Bin',
+      constructorInputs: [],
+      abi: [
+        { name: 'spend', covenant: false, inputs: [{ name: 'size', type: 'int' }] },
+      ],
+      bytecode: 'OP_10 OP_SWAP OP_NUM2BIN OP_BIN2NUM OP_10 OP_NUMEQUAL',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'num2bin_variable.cash'), { encoding: 'utf-8' }),
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];

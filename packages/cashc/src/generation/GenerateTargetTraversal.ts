@@ -362,6 +362,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
+
+    // Special case for sized bytes cast, since it has another node to traverse
+    if (node.size) {
+      node.size = this.visit(node.size);
+      this.emit(Op.OP_NUM2BIN);
+      this.popFromStack();
+    }
+
     this.emit(toOps.fromCast(node.expression.type as PrimitiveType, node.type));
     this.popFromStack();
     this.pushToStack('(value)');

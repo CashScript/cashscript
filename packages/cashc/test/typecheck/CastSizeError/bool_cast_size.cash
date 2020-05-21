@@ -1,0 +1,5 @@
+contract Test(int y) {
+    function hello() {
+        require(bool(y, 2) == true);
+    }
+}

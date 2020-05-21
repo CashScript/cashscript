@@ -83,6 +83,7 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
+    node.size = this.visitOptional(node.size);
     return node;
   }
 
