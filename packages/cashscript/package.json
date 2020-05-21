@@ -11,10 +11,10 @@
   ],
   "dependencies": {
     "bitbox-sdk": "^8.8.0",
-    "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
     "cashc": "^0.3.4",
     "cramer-bch": "https://github.com/jcramer/bitcoincashjs-lib",
-    "delay": "^4.3.0"
+    "delay": "^4.3.0",
+    "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b"
   },
   "devDependencies": {
     "bignumber.js": "^9.0.0",

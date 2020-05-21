@@ -1,6 +1,5 @@
-import { Script as BScript } from 'bitbox-sdk';
 import { Script, Op } from './Script';
-import { Data } from '../util';
+import { Data, calculateBytesize } from '../util';
 
 export default class ReplaceBytecodeNop {
   // When cutting out preimage scriptCode, it inserts an OP_NOP
@@ -24,7 +23,7 @@ export default class ReplaceBytecodeNop {
     }
 
     script[index] = Data.encodeInt(oldCut + 1);
-    const bytecodeSize = new BScript().encode(script).byteLength;
+    const bytecodeSize = calculateBytesize(script);
     if (bytecodeSize > 252) {
       script[index] = Data.encodeInt(oldCut + 3);
     }

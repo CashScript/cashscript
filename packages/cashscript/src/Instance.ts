@@ -7,15 +7,7 @@ import {
   AddressUnconfirmedResult,
 } from 'bitcoin-com-rest';
 import { Artifact, Script, AbiFunction } from 'cashc';
-import {
-  Utxo,
-} from './interfaces';
-import {
-  bitbox,
-  AddressUtil,
-  ScriptUtil,
-  CryptoUtil,
-} from './BITBOX';
+import { bitbox, AddressUtil } from './BITBOX';
 import { Transaction } from './Transaction';
 import { ContractFunction } from './Contract';
 import { Parameter, encodeParameter } from './Parameter';
@@ -23,6 +15,9 @@ import {
   countOpcodes,
   calculateBytesize,
 } from './util';
+import { Utxo } from './interfaces';
+
+const bch = require('trout-bch');
 
 export class Instance {
   name: string;
@@ -98,9 +93,9 @@ export class Instance {
 
 function scriptToAddress(script: Script, network: string): string {
   return AddressUtil.fromOutputScript(
-    ScriptUtil.encodeP2SHOutput(
-      CryptoUtil.hash160(
-        ScriptUtil.encode(script),
+    bch.script.scriptHash.output.encode(
+      bch.crypto.hash160(
+        bch.script.compile(script),
       ),
     ),
     network,

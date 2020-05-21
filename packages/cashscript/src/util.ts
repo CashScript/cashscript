@@ -3,12 +3,7 @@ import {
   Data,
   Op,
 } from 'cashc';
-import {
-  Utxo,
-  OpReturn,
-  OutputForBuilder,
-} from './interfaces';
-import { ScriptUtil, CryptoUtil } from './BITBOX';
+import { Utxo, OpReturn, OutputForBuilder } from './interfaces';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {
   Reason,
@@ -17,6 +12,8 @@ import {
   FailedTimeCheckError,
   FailedSigCheckError,
 } from './Errors';
+
+const bch = require('trout-bch');
 
 // ////////// SIZE CALCULATIONS ///////////////////////////////////////////////
 export function getInputSize(script: Buffer): number {
@@ -70,7 +67,7 @@ export function countOpcodes(script: Script): number {
 }
 
 export function calculateBytesize(script: Script): number {
-  return ScriptUtil.encode(script).byteLength;
+  return bch.script.compile(script).byteLength;
 }
 
 // ////////// BUILD OBJECTS ///////////////////////////////////////////////////
@@ -86,9 +83,9 @@ export function createInputScript(
   if (selector !== undefined) unlockScript.push(Data.encodeInt(selector));
 
   // Create total input script / scriptSig
-  return ScriptUtil.encodeP2SHInput(
-    ScriptUtil.encode(unlockScript),
-    ScriptUtil.encode(redeemScript),
+  return bch.script.scriptHash.input.encode(
+    bch.script.compile(unlockScript),
+    bch.script.compile(redeemScript),
   );
 }
 
@@ -136,9 +133,9 @@ function toRegExp(reasons: string[]): RegExp {
 
 // ////////// MISC ////////////////////////////////////////////////////////////
 export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey: string = ScriptUtil.encodeP2SHOutput(
-    CryptoUtil.hash160(
-      ScriptUtil.encode(script),
+  const scriptPubkey = bch.script.scriptHash.output.encode(
+    bch.crypto.hash160(
+      bch.script.compile(script),
     ),
   ).toString('hex');
   return `meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;

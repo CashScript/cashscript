@@ -1,5 +1,4 @@
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
-import { Script as BScript } from 'bitbox-sdk';
 import fs from 'fs';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
@@ -13,6 +12,8 @@ import { Script, Op } from './generation/Script';
 import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
 import ReplaceBytecodeNop from './generation/ReplaceBytecodeNop';
 import VerifyCovenantTraversal from './semantic/VerifyCovenantTraversal';
+
+const bch = require('trout-bch');
 
 export const Data = {
   encodeBool(b: boolean): Buffer {
@@ -30,10 +31,10 @@ export const Data = {
     return false;
   },
   encodeInt(i: number): Buffer {
-    return new BScript().encodeNumber(i);
+    return bch.script.number.encode(i);
   },
   decodeInt(i: Buffer, maxLength?: number): number {
-    return new BScript().decodeNumber(i, maxLength);
+    return bch.script.number.decode(i, maxLength);
   },
   encodeString(s: string): Buffer {
     return Buffer.from(s, 'ascii');
@@ -42,10 +43,10 @@ export const Data = {
     return s.toString('ascii');
   },
   scriptToAsm(s: Script): string {
-    return new BScript().toASM(new BScript().encode(s));
+    return bch.script.toASM(bch.script.compile(s));
   },
   asmToScript(s: string): Script {
-    return new BScript().decode(new BScript().fromASM(s));
+    return bch.script.decompile(bch.script.fromASM(s));
   },
 };
 export type Data = typeof Data;
@@ -99,5 +100,5 @@ export function countOpcodes(script: Script): number {
 }
 
 export function calculateBytesize(script: Script): number {
-  return new BScript().encode(script).byteLength;
+  return bch.script.compile(script).byteLength;
 }

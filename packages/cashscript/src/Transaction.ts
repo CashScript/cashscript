@@ -3,7 +3,7 @@ import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import delay from 'delay';
 import { Script, AbiFunction } from 'cashc';
 import { Sig } from './Parameter';
-import { bitbox, ScriptUtil } from './BITBOX';
+import { bitbox } from './BITBOX';
 import {
   TxOptions,
   Output,
@@ -24,6 +24,7 @@ import {
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
 
 const cramer = require('cramer-bch');
+const bch = require('trout-bch');
 
 export class Transaction {
   private bitbox: BITBOX;
@@ -145,7 +146,7 @@ export class Transaction {
         if (covenantHashType < 0) covenantHashType = hashtype;
 
         const sighash = tx.hashForCashSignature(
-          vin, ScriptUtil.encode(this.redeemScript), utxo.satoshis, hashtype,
+          vin, bch.script.compile(this.redeemScript), utxo.satoshis, hashtype,
         );
         return p.keypair
           .sign(sighash, SignatureAlgorithm.SCHNORR)
@@ -155,7 +156,7 @@ export class Transaction {
       // This is shitty because sigHashPreimageBuf is only in James Cramer's fork
       // Will fix once it gets merged into main bitcoincashjs-lib
       const preimageTx = cramer.Transaction.fromHex(tx.toHex());
-      const prevout = ScriptUtil.encode(this.redeemScript);
+      const prevout = bch.script.compile(this.redeemScript);
       const preimage = this.abiFunction.covenant
         ? preimageTx.sigHashPreimageBuf(vin, prevout, utxo.satoshis, covenantHashType)
         : undefined;
@@ -185,7 +186,7 @@ export class Transaction {
     // and a correctly sized preimage Buffer if the function is a covenant
     // for correct size calculation of inputs
     const placeholderPreimage = this.abiFunction.covenant
-      ? Buffer.alloc(getPreimageSize(ScriptUtil.encode(this.redeemScript)), 0)
+      ? Buffer.alloc(getPreimageSize(bch.script.compile(this.redeemScript)), 0)
       : undefined;
     const placeholderScript = createInputScript(
       this.redeemScript,

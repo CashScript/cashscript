@@ -2,9 +2,10 @@
 import yargs from 'yargs';
 import fs from 'fs';
 import path from 'path';
-import { Script as BScript } from 'bitbox-sdk';
 import { CashCompiler, Artifacts, version } from '.';
 import { countOpcodes, Data, calculateBytesize } from './util';
+
+const bch = require('trout-bch');
 
 const { argv } = yargs
   .parserConfiguration({ 'parse-numbers': false })
@@ -85,7 +86,7 @@ function run(): void {
     }
 
     if (argv.hex) {
-      console.log(new BScript().encode(script).toString('hex'));
+      console.log(bch.script.compile(script).toString('hex'));
       return;
     }
 
