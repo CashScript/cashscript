@@ -3,7 +3,11 @@ import {
   Data,
   Op,
 } from 'cashc';
-import { Utxo, OpReturn, OutputForBuilder } from './interfaces';
+import {
+  Utxo,
+  OpReturn,
+  OutputForBuilder,
+} from './interfaces';
 import { ScriptUtil, CryptoUtil } from './BITBOX';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {

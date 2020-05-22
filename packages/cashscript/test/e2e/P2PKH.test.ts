@@ -7,7 +7,11 @@ import {
   bob,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { isOpReturn } from '../../src/interfaces';
+import {
+  isOpReturn,
+  Utxo,
+  TxnDetailValueIn,
+} from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
 
@@ -49,6 +53,53 @@ describe('P2PKH', () => {
       // then
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+    });
+
+    it('should fail when not enough satoshis are provided in utxos', async () => {
+      // when
+      const to = p2pkhInstance.address;
+      const amount = 1000;
+      const utxos = await p2pkhInstance.getUtxos();
+      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1));
+      const { utxos: gathered, failureAmount } = gatherUtxos(utxos, { amount });
+
+      // send
+      await expect(
+        p2pkhInstance.functions
+          .spend(alicePk, new Sig(alice))
+          .send(to, failureAmount, { inputs: gathered }),
+      ).rejects.toThrow();
+
+      await expect(
+        p2pkhInstance.functions
+          .spend(alicePk, new Sig(alice))
+          .send(to, failureAmount),
+      ).resolves.toBeTruthy();
+    });
+
+    it('should succeed when defining its own utxos', async () => {
+      expect.hasAssertions();
+
+      // given
+      const to = p2pkhInstance.address;
+      const amount = 1000;
+      const utxos = await p2pkhInstance.getUtxos();
+      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1));
+      const { utxos: gathered } = gatherUtxos(utxos, { amount });
+
+      // when
+      const receipt = await p2pkhInstance.functions
+        .spend(alicePk, new Sig(alice))
+        .send(to, amount, { inputs: gathered });
+
+      // then
+      for (const input of receipt.vin as TxnDetailValueIn[]) {
+        expect(gathered.find(utxo => (
+          utxo.txid === input.txid
+          && utxo.vout === input.vout
+          && utxo.satoshis === input.value
+        ))).toBeTruthy();
+      }
     });
   });
 
@@ -142,3 +193,25 @@ describe('P2PKH', () => {
     });
   });
 });
+
+function gatherUtxos(utxos: Utxo[], options?: {
+  amount?: number,
+  fees?: number
+}): { utxos: Utxo[], total: number, failureAmount: number } {
+  const targetUtxos: Utxo[] = [];
+  let total = 0;
+  let failureAmount = 0;
+  // 1000 for fees
+  const { amount = 0, fees = 1000 } = options || {};
+  for (const utxo of utxos) {
+    failureAmount += utxo.satoshis;
+    if (total - fees > amount) break;
+    total += utxo.satoshis;
+    targetUtxos.push(utxo);
+  }
+  return {
+    utxos: targetUtxos,
+    total,
+    failureAmount,
+  };
+}
