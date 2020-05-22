@@ -5,7 +5,7 @@ The CashScript language allows you to write Bitcoin Cash contracts in a straight
 Take the following example contract:
 
 ```solidity
-pragma cashscript ^0.3.0;
+pragma cashscript ^0.4.0;
 
 contract TransferWithTimeout(
     pubkey sender,
