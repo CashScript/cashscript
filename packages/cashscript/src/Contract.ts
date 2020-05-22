@@ -30,16 +30,6 @@ export class Contract {
     return new Contract(artifact, network);
   }
 
-  // @deprecated
-  static fromCashFile(fnOrString: string, network?: string): Contract {
-    return this.compile(fnOrString, network);
-  }
-
-  // @deprecated
-  static fromArtifact(fnOrArtifact: string | Artifact, network?: string): Contract {
-    return this.import(fnOrArtifact, network);
-  }
-
   export(fn?: string): Artifact {
     if (typeof fn !== 'undefined') Artifacts.export(this.artifact, fn);
     return this.artifact;
