@@ -5,25 +5,22 @@ import {
   alicePk,
   alice,
   bob,
+  network,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import {
-  isOpReturn,
-  Utxo,
-  TxnDetailValueIn,
-} from '../../src/interfaces';
+import { Utxo, TxnDetailValueIn } from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
 
 describe('P2PKH', () => {
   let p2pkhInstance: Instance;
   beforeAll(() => {
-    const P2PKH = Contract.import(path.join(__dirname, '..', 'fixture', 'p2pkh.json'), 'testnet');
+    const P2PKH = Contract.import(path.join(__dirname, '..', 'fixture', 'p2pkh.json'), network);
     p2pkhInstance = P2PKH.new(alicePkh);
     console.log(p2pkhInstance.address);
   });
 
-  describe('send (to one)', () => {
+  describe('send', () => {
     it('should fail when using incorrect function parameters', async () => {
       // given
       const to = p2pkhInstance.address;
@@ -33,7 +30,8 @@ describe('P2PKH', () => {
       const expectPromise = expect(
         p2pkhInstance.functions
           .spend(alicePk, new Sig(bob))
-          .send(to, amount),
+          .to(to, amount)
+          .send(),
       );
 
       // then
@@ -49,7 +47,8 @@ describe('P2PKH', () => {
       // when
       const tx = await p2pkhInstance.functions
         .spend(alicePk, new Sig(alice))
-        .send(to, amount);
+        .to(to, amount)
+        .send();
 
       // then
       const txOutputs = getTxOutputs(tx);
@@ -68,19 +67,20 @@ describe('P2PKH', () => {
       await expect(
         p2pkhInstance.functions
           .spend(alicePk, new Sig(alice))
-          .send(to, failureAmount, { inputs: gathered }),
+          .from(gathered)
+          .to(to, failureAmount)
+          .send(),
       ).rejects.toThrow();
 
       await expect(
         p2pkhInstance.functions
           .spend(alicePk, new Sig(alice))
-          .send(to, failureAmount),
+          .to(to, failureAmount)
+          .send(),
       ).resolves.toBeTruthy();
     });
 
-    it('should succeed when defining its own utxos', async () => {
-      expect.hasAssertions();
-
+    it('should succeed when providing UTXOs', async () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000;
@@ -91,9 +91,12 @@ describe('P2PKH', () => {
       // when
       const receipt = await p2pkhInstance.functions
         .spend(alicePk, new Sig(alice))
-        .send(to, amount, { inputs: gathered });
+        .from(gathered)
+        .to(to, amount)
+        .send();
 
       // then
+      expect.hasAssertions();
       for (const input of receipt.vin as TxnDetailValueIn[]) {
         expect(gathered.find(utxo => (
           utxo.txid === input.txid
@@ -102,10 +105,8 @@ describe('P2PKH', () => {
         ))).toBeTruthy();
       }
     });
-  });
 
-  describe('send (to many)', () => {
-    it('should fail when using incorrect function parameters', async () => {
+    it('can send to multiple recipients', async () => {
       // given
       const outputs = [
         { to: p2pkhInstance.address, amount: 10000 },
@@ -113,84 +114,41 @@ describe('P2PKH', () => {
       ];
 
       // when
-      const expectPromise = expect(
-        p2pkhInstance.functions
-          .spend(alicePk, new Sig(bob))
-          .send(outputs),
-      );
+      const tx1 = await p2pkhInstance.functions
+        .spend(alicePk, new Sig(alice))
+        .to(outputs)
+        .send();
+
+      const tx2 = await p2pkhInstance.functions
+        .spend(alicePk, new Sig(alice))
+        .to(outputs[0].to, outputs[0].amount)
+        .to(outputs[1].to, outputs[1].amount)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedSigCheckError);
-      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
+      const txOutputs1 = getTxOutputs(tx1);
+      const txOutputs2 = getTxOutputs(tx2);
+      expect(txOutputs1).toEqual(expect.arrayContaining(outputs));
+      expect(txOutputs2).toEqual(expect.arrayContaining(outputs));
     });
 
-    it('should succeed when using correct function parameters', async () => {
+    it('can include OP_RETURN data as an output', async () => {
       // given
-      const outputs = [
-        { to: p2pkhInstance.address, amount: 10000 },
-        { to: p2pkhInstance.address, amount: 20000 },
-      ];
+      const opReturn = ['0x6d02', 'Hello, World!'];
+      const to = p2pkhInstance.address;
+      const amount = 10000;
 
       // when
       const tx = await p2pkhInstance.functions
         .spend(alicePk, new Sig(alice))
-        .send(outputs);
+        .to(to, amount)
+        .withOpReturn(opReturn)
+        .send();
 
       // then
       const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining(outputs));
-    });
-
-    it('should support OP_RETURN data as an output', async () => {
-      // given
-      const outputs = [
-        { opReturn: ['0x6d02', 'Hello, World!'] },
-        { to: p2pkhInstance.address, amount: 10000 },
-        { to: p2pkhInstance.address, amount: 20000 },
-      ];
-
-      // when
-      const tx = await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
-        .send(outputs);
-
-      // then
-      const txOutputs = getTxOutputs(tx);
-      const expectedOutputs = outputs.map(o => (
-        isOpReturn(o) ? createOpReturnOutput(o) : o
-      ));
-
+      const expectedOutputs = [{ to, amount }, createOpReturnOutput(opReturn)];
       expect(txOutputs).toEqual(expect.arrayContaining(expectedOutputs));
-    });
-  });
-
-  describe.skip('meep (to one)', () => {
-    it('should succeed when using incorrect function parameters', async () => {
-      await p2pkhInstance.functions
-        .spend(alicePk, new Sig(bob))
-        .meep(p2pkhInstance.address, 10000);
-    });
-
-    it('should succeed when using correct function parameters', async () => {
-      await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
-        .meep(p2pkhInstance.address, 10000);
-    });
-  });
-
-  describe.skip('meep (to many)', () => {
-    it('should succeed when using incorrect function parameters', async () => {
-      await p2pkhInstance.functions.spend(alicePk, new Sig(bob)).meep([
-        { to: p2pkhInstance.address, amount: 15000 },
-        { to: p2pkhInstance.address, amount: 15000 },
-      ]);
-    });
-
-    it('should succeed when using correct function parameters', async () => {
-      await p2pkhInstance.functions.spend(alicePk, new Sig(alice)).meep([
-        { to: p2pkhInstance.address, amount: 15000 },
-        { to: p2pkhInstance.address, amount: 15000 },
-      ]);
     });
   });
 });

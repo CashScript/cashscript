@@ -43,8 +43,11 @@ export async function run(): Promise<void> {
   // Call the transfer function with any signature
   // Will send one pledge amount to alice, and send change back to the contract
   // Manually set fee to 1000 because this is hardcoded in the contract
-  const tx = await instance.functions.receive(alicePk, new Sig(alice))
-    .send(aliceAddress, 10000, { fee: 1000 });
+  const tx = await instance.functions
+    .receive(alicePk, new Sig(alice))
+    .to(aliceAddress, 10000)
+    .withHardcodedFee(1000)
+    .send();
 
   console.log('transaction details:', tx);
 }

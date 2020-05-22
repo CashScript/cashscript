@@ -2,10 +2,10 @@ import { BITBOX } from 'bitbox-sdk';
 import { HDNode, ECPair } from 'bitcoincashjs-lib';
 import { PriceOracle } from '../../../../examples/PriceOracle';
 
-export const network: string = 'testnet';
-export const bitbox: BITBOX = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
+export const network: string = 'mainnet';
+export const bitbox: BITBOX = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
 
-const rootSeed: Buffer = bitbox.Mnemonic.toSeed('CashScript');
+const rootSeed: Buffer = bitbox.Mnemonic.toSeed('CashScript Tests');
 const hdNode: HDNode = bitbox.HDNode.fromSeed(rootSeed, network);
 
 export const alice: ECPair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));

@@ -5,6 +5,7 @@ import {
   alice,
   bob,
   bobPk,
+  network,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors';
@@ -13,14 +14,14 @@ describe('TransferWithTimeout', () => {
   let twtInstancePast: Instance;
   let twtInstanceFuture: Instance;
   beforeAll(() => {
-    const TWT = Contract.import(path.join(__dirname, '..', 'fixture', 'transfer_with_timeout.json'), 'testnet');
-    twtInstancePast = TWT.new(alicePk, bobPk, 1000000);
+    const TWT = Contract.import(path.join(__dirname, '..', 'fixture', 'transfer_with_timeout.json'), network);
+    twtInstancePast = TWT.new(alicePk, bobPk, 500000);
     twtInstanceFuture = TWT.new(alicePk, bobPk, 2000000);
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);
   });
 
-  describe('send (to one)', () => {
+  describe('send', () => {
     it('should fail when using incorrect function parameters', async () => {
       // given
       const to = twtInstancePast.address;
@@ -30,7 +31,8 @@ describe('TransferWithTimeout', () => {
       const expectPromise = expect(
         twtInstancePast.functions
           .transfer(new Sig(alice))
-          .send(to, amount),
+          .to(to, amount)
+          .send(),
       );
 
       // then
@@ -41,7 +43,8 @@ describe('TransferWithTimeout', () => {
       const expectPromise2 = expect(
         twtInstancePast.functions
           .timeout(new Sig(bob))
-          .send(to, amount),
+          .to(to, amount)
+          .send(),
       );
 
       // then
@@ -58,7 +61,8 @@ describe('TransferWithTimeout', () => {
       const expectPromise = await expect(
         twtInstanceFuture.functions
           .timeout(new Sig(alice))
-          .send(to, amount),
+          .to(to, amount)
+          .send(),
       );
 
       // then
@@ -75,15 +79,18 @@ describe('TransferWithTimeout', () => {
       // when
       const tx1 = await twtInstancePast.functions
         .transfer(new Sig(bob))
-        .send(toPast, amount);
+        .to(toPast, amount)
+        .send();
 
       const tx2 = await twtInstanceFuture.functions
         .transfer(new Sig(bob))
-        .send(toFuture, amount);
+        .to(toFuture, amount)
+        .send();
 
       const tx3 = await twtInstancePast.functions
         .timeout(new Sig(alice))
-        .send(toPast, amount);
+        .to(toPast, amount)
+        .send();
 
       // then
       const tx1Outputs = getTxOutputs(tx1);
@@ -93,160 +100,31 @@ describe('TransferWithTimeout', () => {
       expect(tx2Outputs).toEqual(expect.arrayContaining([{ to: toFuture, amount }]));
       expect(tx3Outputs).toEqual(expect.arrayContaining([{ to: toPast, amount }]));
     });
-  });
 
-  describe('send (to many)', () => {
-    it('should fail when using incorrect function parameters', async () => {
+    it('can send to multiple recipients', async () => {
       // given
       const outputs = [
         { to: twtInstancePast.address, amount: 10000 },
         { to: twtInstancePast.address, amount: 20000 },
-      ];
-
-      // then
-      const expectPromise = expect(
-        twtInstancePast.functions
-          .transfer(new Sig(alice))
-          .send(outputs),
-      );
-
-      // then
-      await expectPromise.rejects.toThrow(FailedSigCheckError);
-      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
-
-      // when
-      const expectPromise2 = expect(
-        twtInstancePast.functions
-          .timeout(new Sig(bob))
-          .send(outputs),
-      );
-
-      // then
-      await expectPromise2.rejects.toThrow(FailedSigCheckError);
-      await expectPromise2.rejects.toThrow(Reason.SIG_NULLFAIL);
-    });
-
-    it('should fail when called before timeout', async () => {
-      // given
-      const outputs = [
-        { to: twtInstanceFuture.address, amount: 10000 },
-        { to: twtInstanceFuture.address, amount: 20000 },
-      ];
-
-      // when
-      const expectPromise = expect(
-        twtInstanceFuture.functions
-          .timeout(new Sig(alice))
-          .send(outputs),
-      );
-
-      // then
-      await expectPromise.rejects.toThrow(FailedTimeCheckError);
-      await expectPromise.rejects.toThrow(Reason.UNSATISFIED_LOCKTIME);
-    });
-
-    it('should succeed when using correct function parameters', async () => {
-      // given
-      const outputsPast = [
-        { to: twtInstancePast.address, amount: 10000 },
-        { to: twtInstancePast.address, amount: 20000 },
-      ];
-
-      const outputsFuture = [
-        { to: twtInstanceFuture.address, amount: 10000 },
-        { to: twtInstanceFuture.address, amount: 20000 },
       ];
 
       // when
       const tx1 = await twtInstancePast.functions
         .transfer(new Sig(bob))
-        .send(outputsPast);
+        .to(outputs)
+        .send();
 
-      const tx2 = await twtInstanceFuture.functions
-        .transfer(new Sig(bob))
-        .send(outputsFuture);
-
-      const tx3 = await twtInstancePast.functions
+      const tx2 = await twtInstancePast.functions
         .timeout(new Sig(alice))
-        .send(outputsPast);
+        .to(outputs[0].to, outputs[0].amount)
+        .to(outputs[1].to, outputs[1].amount)
+        .send();
 
       // then
-      const tx1Outputs = getTxOutputs(tx1);
-      const tx2Outputs = getTxOutputs(tx2);
-      const tx3Outputs = getTxOutputs(tx3);
-      expect(tx1Outputs).toEqual(expect.arrayContaining(outputsPast));
-      expect(tx2Outputs).toEqual(expect.arrayContaining(outputsFuture));
-      expect(tx3Outputs).toEqual(expect.arrayContaining(outputsPast));
-    });
-  });
-
-  describe.skip('meep (to one)', () => {
-    it('should succeed when using incorrect function parameters', async () => {
-      await twtInstancePast.functions
-        .transfer(new Sig(alice))
-        .meep(twtInstancePast.address, 10000);
-
-      await twtInstancePast.functions
-        .timeout(new Sig(bob))
-        .meep(twtInstancePast.address, 10000);
-    });
-
-    it('should succeed when called before timeout', async () => {
-      await twtInstanceFuture.functions
-        .timeout(new Sig(alice))
-        .meep(twtInstancePast.address, 10000);
-    });
-
-    it('should succeed when using correct function parameters', async () => {
-      await twtInstancePast.functions
-        .transfer(new Sig(bob))
-        .meep(twtInstancePast.address, 10000);
-
-      await twtInstanceFuture.functions
-        .transfer(new Sig(bob))
-        .meep(twtInstanceFuture.address, 10000);
-
-      await twtInstancePast.functions
-        .timeout(new Sig(alice))
-        .meep(twtInstancePast.address, 10000);
-    });
-  });
-
-  describe.skip('meep (to many)', () => {
-    it('should succeed when using incorrect function parameters', async () => {
-      await twtInstancePast.functions.transfer(new Sig(alice)).meep([
-        { to: twtInstancePast.address, amount: 10000 },
-        { to: twtInstancePast.address, amount: 10000 },
-      ]);
-
-      await twtInstancePast.functions.timeout(new Sig(bob)).meep([
-        { to: twtInstancePast.address, amount: 10000 },
-        { to: twtInstancePast.address, amount: 10000 },
-      ]);
-    });
-
-    it('should succeed when called before timeout', async () => {
-      await twtInstanceFuture.functions.timeout(new Sig(alice)).meep([
-        { to: twtInstanceFuture.address, amount: 10000 },
-        { to: twtInstanceFuture.address, amount: 10000 },
-      ]);
-    });
-
-    it('should succeed when using correct function parameters', async () => {
-      await twtInstancePast.functions.transfer(new Sig(bob)).meep([
-        { to: twtInstancePast.address, amount: 10000 },
-        { to: twtInstancePast.address, amount: 10000 },
-      ]);
-
-      await twtInstanceFuture.functions.transfer(new Sig(bob)).meep([
-        { to: twtInstanceFuture.address, amount: 10000 },
-        { to: twtInstanceFuture.address, amount: 10000 },
-      ]);
-
-      await twtInstancePast.functions.timeout(new Sig(alice)).meep([
-        { to: twtInstancePast.address, amount: 10000 },
-        { to: twtInstancePast.address, amount: 10000 },
-      ]);
+      const txOutputs1 = getTxOutputs(tx1);
+      const txOutputs2 = getTxOutputs(tx2);
+      expect(txOutputs1).toEqual(expect.arrayContaining(outputs));
+      expect(txOutputs2).toEqual(expect.arrayContaining(outputs));
     });
   });
 });

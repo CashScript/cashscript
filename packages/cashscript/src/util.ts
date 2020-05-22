@@ -1,9 +1,5 @@
-import {
-  Script,
-  Data,
-  Op,
-} from 'cashc';
-import { Utxo, OpReturn, OutputForBuilder } from './interfaces';
+import { Script, Data, Op } from 'cashc';
+import { Utxo, Output } from './interfaces';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {
   Reason,
@@ -28,7 +24,7 @@ export function getPreimageSize(script: Buffer): number {
   return 4 + 32 + 32 + 36 + varIntSize + scriptSize + 8 + 4 + 32 + 4 + 4;
 }
 
-export function getTxSizeWithoutInputs(outputs: OutputForBuilder[]): number {
+export function getTxSizeWithoutInputs(outputs: Output[]): number {
   // Transaction format:
   // Version (4 Bytes)
   // TxIn Count (1 ~ 9B)
@@ -90,11 +86,11 @@ export function createInputScript(
 }
 
 export function createOpReturnOutput(
-  opReturnOutput: OpReturn,
-): OutputForBuilder {
+  opReturnData: string[],
+): Output {
   const script = [
     Op.OP_RETURN,
-    ...opReturnOutput.opReturn.map((output: string) => toBuffer(output)),
+    ...opReturnData.map((output: string) => toBuffer(output)),
   ];
 
   return { to: encodeNullDataScript(script), amount: 0 };
@@ -133,12 +129,9 @@ function toRegExp(reasons: string[]): RegExp {
 
 // ////////// MISC ////////////////////////////////////////////////////////////
 export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey = bch.script.scriptHash.output.encode(
-    bch.crypto.hash160(
-      bch.script.compile(script),
-    ),
-  ).toString('hex');
-  return `meep debug --tx=${tx.toHex()} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
+  const scriptHash = bch.crypto.hash160(bch.script.compile(script));
+  const scriptPubkey = bch.script.scriptHash.output.encode(scriptHash).toString('hex');
+  return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
 // ////////////////////////////////////////////////////////////////////////////

@@ -1,36 +1,30 @@
 import { BITBOX } from 'bitbox-sdk';
-import { TxnDetailsResult } from 'bitcoin-com-rest';
-import { ECPair, HDNode } from 'bitcoincashjs-lib';
-import {
-  Contract,
-  Instance,
-  Sig,
-} from 'cashscript';
+import { Contract, Sig } from 'cashscript';
 import path from 'path';
 
 run();
 export async function run(): Promise<void> {
   try {
     // Initialise BITBOX ---- ATTENTION: Set to mainnet
-    const network: string = 'mainnet';
-    const bitbox: BITBOX = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
+    const network = 'mainnet';
+    const bitbox = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
 
     // Initialise HD node and alice's keypair
-    const rootSeed: Buffer = bitbox.Mnemonic.toSeed('CashScript');
-    const hdNode: HDNode = bitbox.HDNode.fromSeed(rootSeed, network);
-    const alice: ECPair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
+    const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
+    const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
+    const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
 
     // Derive alice's public key
-    const alicePk: Buffer = bitbox.ECPair.toPublicKey(alice);
+    const alicePk = bitbox.ECPair.toPublicKey(alice);
 
     // Compile the Announcement contract
-    const Announcement: Contract = Contract.compile(path.join(__dirname, 'announcement.cash'), network);
+    const Announcement = Contract.compile(path.join(__dirname, 'announcement.cash'), network);
 
     // Instantiate a new Announcement contract
-    const instance: Instance = Announcement.new();
+    const instance = Announcement.new();
 
     // Get contract balance & output address + balance
-    const contractBalance: number = await instance.getBalance();
+    const contractBalance = await instance.getBalance();
     console.log('contract address:', instance.address);
     console.log('contract balance:', contractBalance);
     console.log('contract opcount:', instance.opcount);
@@ -41,9 +35,12 @@ export async function run(): Promise<void> {
     // change is only sent back to the contract if there's enough leftover
     // for another announcement.
     const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-    const tx: TxnDetailsResult = await instance.functions
+    const tx = await instance.functions
       .announce(alicePk, new Sig(alice))
-      .send([{ opReturn: ['0x6d02', str] }], { fee: 1000, minChange: 1000 });
+      .withOpReturn(['0x6d02', str])
+      .withHardcodedFee(1000)
+      .withMinChange(1000)
+      .send();
     console.log('transaction details:', tx);
   } catch (e) {
     console.log(e);

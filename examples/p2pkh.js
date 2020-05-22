@@ -30,20 +30,18 @@ async function run() {
 
   // Call the spend function with alice's signature + pk
   // And use it to send 0. 000 100 00 BCH back to the contract's address
-  const tx = await instance.functions.spend(alicePk, new Sig(alice))
-    .send(instance.address, 10000);
+  const tx = await instance.functions
+    .spend(alicePk, new Sig(alice))
+    .to(instance.address, 10000)
+    .send();
   console.log('transaction details:', tx);
 
   // Call the spend function with alice's signature + pk
   // And use it to send two outputs of 0. 000 150 00 BCH back to the contract's address
-  const tx2 = await instance.functions.spend(alicePk, new Sig(alice))
-    .send([
-      { to: instance.address, amount: 15000 },
-      { to: instance.address, amount: 15000 },
-    ]);
+  const tx2 = await instance.functions
+    .spend(alicePk, new Sig(alice))
+    .to(instance.address, 15000)
+    .to(instance.address, 15000)
+    .send();
   console.log('transaction details:', tx2);
 }
-
-module.exports = {
-  run,
-};

@@ -7,6 +7,7 @@ import {
   bobPkh,
   aliceAddress,
   bobAddress,
+  network,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
@@ -16,7 +17,7 @@ describe('Mecenas', () => {
   let mecenas: Instance;
   const pledge = 10000;
   beforeAll(() => {
-    const Mecenas = Contract.import(path.join(__dirname, '..', 'fixture', 'mecenas.json'), 'testnet');
+    const Mecenas = Contract.import(path.join(__dirname, '..', 'fixture', 'mecenas.json'), network);
     mecenas = Mecenas.new(alicePkh, bobPkh, pledge);
     console.log(mecenas.address);
   });
@@ -31,7 +32,9 @@ describe('Mecenas', () => {
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
-          .send(to, amount, { fee: 1000 }),
+          .to(to, amount)
+          .withHardcodedFee(1000)
+          .send(),
       );
 
       // then
@@ -48,7 +51,9 @@ describe('Mecenas', () => {
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
-          .send(to, amount, { fee: 1000 }),
+          .to(to, amount)
+          .withHardcodedFee(1000)
+          .send(),
       );
 
       // then
@@ -65,7 +70,10 @@ describe('Mecenas', () => {
       const expectPromise = expect(
         mecenas.functions
           .receive(alicePk, new Sig(alice))
-          .send([{ to, amount }, { to, amount }], { fee: 1000 }),
+          .to(to, amount)
+          .to(to, amount)
+          .withHardcodedFee(1000)
+          .send(),
       );
 
       // then
@@ -81,7 +89,9 @@ describe('Mecenas', () => {
       // when
       const tx = await mecenas.functions
         .receive(alicePk, new Sig(alice))
-        .send(to, amount, { fee: 1000 });
+        .to(to, amount)
+        .withHardcodedFee(1000)
+        .send();
 
       // then
       const txOutputs = getTxOutputs(tx);

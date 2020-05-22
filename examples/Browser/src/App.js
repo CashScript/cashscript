@@ -17,7 +17,8 @@ function App() {
     // And use it to send 0. 000 100 00 BCH back to the contract's address
     const tx = await instance.functions
             .spend(alicePk, new Sig(keyPair))
-            .send(address, Number(amount));
+            .to(address, Number(amount))
+            .send();
     result.tx = tx;
     setResult(result);
     setLoading(false);

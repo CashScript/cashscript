@@ -3,19 +3,21 @@ import { Contract, Instance, Sig } from '../../src';
 import {
   alicePk,
   alice,
+  network,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
+import { createOpReturnOutput } from '../../src/util';
 
 describe('BoundedBytes', () => {
   let bbInstance: Instance;
   beforeAll(() => {
-    const BoundedBytes = Contract.import(path.join(__dirname, '..', 'fixture', 'bounded_bytes.json'), 'testnet');
+    const BoundedBytes = Contract.import(path.join(__dirname, '..', 'fixture', 'bounded_bytes.json'), network);
     bbInstance = BoundedBytes.new();
     console.log(bbInstance.address);
   });
 
-  describe('send (to one)', () => {
+  describe('send', () => {
     it('should fail when using incorrect function parameters', async () => {
       // given
       const to = bbInstance.address;
@@ -25,7 +27,8 @@ describe('BoundedBytes', () => {
       const expectPromise = expect(
         bbInstance.functions
           .spend(Buffer.from('12345678', 'hex'), 1000)
-          .send(to, amount),
+          .to(to, amount)
+          .send(),
       );
 
       // then
@@ -36,7 +39,8 @@ describe('BoundedBytes', () => {
       const expectPromise2 = expect(
         bbInstance.functions
           .spend(Buffer.from('000003e8', 'hex'), 1000)
-          .send(to, amount),
+          .to(to, amount)
+          .send(),
       );
 
       // then
@@ -52,7 +56,8 @@ describe('BoundedBytes', () => {
       // when
       const tx = await bbInstance.functions
         .spend(Buffer.from('e8030000', 'hex'), 1000)
-        .send(to, amount);
+        .to(to, amount)
+        .send();
 
       // then
       const txOutputs = getTxOutputs(tx);
@@ -64,7 +69,7 @@ describe('BoundedBytes', () => {
 describe('Simple Covenant', () => {
   let covenant: Instance;
   beforeAll(() => {
-    const Covenant = Contract.import(path.join(__dirname, '..', 'fixture', 'simple_covenant.json'), 'testnet');
+    const Covenant = Contract.import(path.join(__dirname, '..', 'fixture', 'simple_covenant.json'), network);
     covenant = Covenant.new();
     console.log(covenant.address);
   });
@@ -78,11 +83,38 @@ describe('Simple Covenant', () => {
       // when
       const tx = await covenant.functions
         .spend(alicePk, new Sig(alice))
-        .send(to, amount);
+        .to(to, amount)
+        .send();
 
       // then
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+    });
+  });
+});
+
+describe('P2Palindrome', () => {
+  let p2palindrome: Instance;
+  beforeAll(() => {
+    const P2Palindrome = Contract.import(path.join(__dirname, '..', 'fixture', 'p2palindrome.json'), network);
+    p2palindrome = P2Palindrome.new();
+    console.log(p2palindrome.address);
+  });
+
+  describe('send', () => {
+    it('should succeed', async () => {
+      // given
+      const opReturn = ['0x6d02', 'A man, a plan, a canal, Panama!'];
+
+      // when
+      const tx = await p2palindrome.functions
+        .spend('amanaplanacanalpanama')
+        .withOpReturn(['0x6d02', 'A man, a plan, a canal, Panama!'])
+        .send();
+
+      // then
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toContainEqual(createOpReturnOutput(opReturn));
     });
   });
 });

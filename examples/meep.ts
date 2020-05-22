@@ -1,31 +1,33 @@
 import { BITBOX } from 'bitbox-sdk';
-import { ECPair, HDNode } from 'bitcoincashjs-lib';
-import { Contract, Instance, Sig } from 'cashscript';
+import { Contract, Sig } from 'cashscript';
 import path from 'path';
 
 run();
-export async function run(): Promise<void> {
+async function run(): Promise<void> {
   // Initialise BITBOX
-  const network: string = 'testnet';
-  const bitbox: BITBOX = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
+  const network = 'testnet';
+  const bitbox = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
 
   // Initialise HD node and alice's keypair
-  const rootSeed: Buffer = bitbox.Mnemonic.toSeed('CashScript');
-  const hdNode: HDNode = bitbox.HDNode.fromSeed(rootSeed, network);
-  const alice: ECPair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
+  const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
+  const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
+  const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
 
   // Derive alice's public key and public key hash
-  const alicePk: Buffer = bitbox.ECPair.toPublicKey(alice);
-  const alicePkh: Buffer = bitbox.Crypto.hash160(alicePk);
+  const alicePk = bitbox.ECPair.toPublicKey(alice);
+  const alicePkh = bitbox.Crypto.hash160(alicePk);
 
   // Compile the P2PKH Cash Contract
-  const P2PKH: Contract = Contract.compile(path.join(__dirname, 'p2pkh.cash'), network);
+  const P2PKH = Contract.compile(path.join(__dirname, 'p2pkh.cash'), network);
 
   // Instantiate a new P2PKH contract with constructor arguments: { pkh: alicePkh }
-  const instance: Instance = P2PKH.new(alicePkh);
+  const instance = P2PKH.new(alicePkh);
 
   // Call .meep instead of .send, which prints the meep command that can be
   // executed to debug the transaction
-  await instance.functions.spend(alicePk, new Sig(alice))
-    .meep(instance.address, 10000);
+  const meepStr = await instance.functions
+    .spend(alicePk, new Sig(alice))
+    .to(instance.address, 10000)
+    .meep();
+  console.log(meepStr);
 }

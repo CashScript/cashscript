@@ -1,6 +1,4 @@
-import {
-  BITBOX,
-} from 'bitbox-sdk';
+import { BITBOX } from 'bitbox-sdk';
 import {
   AddressDetailsResult,
   AddressUtxoResult,
@@ -11,10 +9,7 @@ import { bitbox, AddressUtil } from './BITBOX';
 import { Transaction } from './Transaction';
 import { ContractFunction } from './Contract';
 import { Parameter, encodeParameter } from './Parameter';
-import {
-  countOpcodes,
-  calculateBytesize,
-} from './util';
+import { countOpcodes, calculateBytesize } from './util';
 import { Utxo } from './interfaces';
 
 const bch = require('trout-bch');
@@ -36,24 +31,24 @@ export class Instance {
     return details.balanceSat + details.unconfirmedBalanceSat;
   }
 
-  private async getUnconfirmed(): Promise<Utxo[]> {
-    const { utxos } = await this.bitbox.Address
-      .unconfirmed(this.address) as AddressUnconfirmedResult;
-    return utxos;
-  }
-
-  private async getUtxo(): Promise<Utxo[]> {
-    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
-    return utxos;
-  }
-
   async getUtxos(excludeUnconfirmed?: boolean): Promise<Utxo[]> {
-    const promises = [this.getUtxo()];
+    const promises = [this.getConfirmed()];
     if (!excludeUnconfirmed) {
       promises.push(this.getUnconfirmed());
     }
     const results = await Promise.all(promises);
     return results.reduce((memo, utxos) => memo.concat(utxos), []);
+  }
+
+  private async getConfirmed(): Promise<Utxo[]> {
+    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+    return utxos;
+  }
+
+  private async getUnconfirmed(): Promise<Utxo[]> {
+    const { utxos } = await this.bitbox.Address
+      .unconfirmed(this.address) as AddressUnconfirmedResult;
+    return utxos;
   }
 
   constructor(
@@ -92,12 +87,8 @@ export class Instance {
 }
 
 function scriptToAddress(script: Script, network: string): string {
-  return AddressUtil.fromOutputScript(
-    bch.script.scriptHash.output.encode(
-      bch.crypto.hash160(
-        bch.script.compile(script),
-      ),
-    ),
-    network,
-  );
+  const scriptHash = bch.crypto.hash160(bch.script.compile(script));
+  const outputScript = bch.script.scriptHash.output.encode(scriptHash);
+  const address = AddressUtil.fromOutputScript(outputScript, network);
+  return address;
 }

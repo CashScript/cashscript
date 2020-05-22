@@ -1,0 +1,7 @@
+pragma cashscript ^0.3.0;
+
+contract P2Palindrome() {
+    function spend(string palindrome) {
+        require(palindrome.reverse() == palindrome);
+    }
+}

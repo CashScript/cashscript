@@ -3,12 +3,12 @@ import { Contract, Instance, Sig } from '../../src';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 import { createOpReturnOutput } from '../../src/util';
-import { alicePk, alice } from '../fixture/vars';
+import { alicePk, alice, network } from '../fixture/vars';
 
 describe('Announcement', () => {
   let announcement: Instance;
   beforeAll(() => {
-    const Announcement = Contract.import(path.join(__dirname, '..', 'fixture', 'announcement.json'), 'testnet');
+    const Announcement = Contract.import(path.join(__dirname, '..', 'fixture', 'announcement.json'), network);
     announcement = Announcement.new();
     console.log(announcement.address);
   });
@@ -17,13 +17,15 @@ describe('Announcement', () => {
     it('should fail when trying to send money', async () => {
       // given
       const to = announcement.address;
-      const amount = 10;
+      const amount = 1000;
 
       // when
       const expectPromise = expect(
         announcement.functions
           .announce(alicePk, new Sig(alice))
-          .send(to, amount, { fee: 1000 }),
+          .to(to, amount)
+          .withHardcodedFee(1000)
+          .send(),
       );
 
       // then
@@ -39,7 +41,10 @@ describe('Announcement', () => {
       const expectPromise = expect(
         announcement.functions
           .announce(alicePk, new Sig(alice))
-          .send([{ opReturn: ['0x6d02', str] }], { fee: 1000, minChange: 1000 }),
+          .withOpReturn(['0x6d02', str])
+          .withHardcodedFee(1000)
+          .withMinChange(1000)
+          .send(),
       );
 
       // then
@@ -54,11 +59,14 @@ describe('Announcement', () => {
       // when
       const tx = await announcement.functions
         .announce(alicePk, new Sig(alice))
-        .send([{ opReturn: ['0x6d02', str] }], { fee: 1000, minChange: 1000 });
+        .withOpReturn(['0x6d02', str])
+        .withHardcodedFee(1000)
+        .withMinChange(1000)
+        .send();
 
       // then
       const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining([createOpReturnOutput({ opReturn: ['0x6d02', str] })]));
+      expect(txOutputs).toEqual(expect.arrayContaining([createOpReturnOutput(['0x6d02', str])]));
     });
   });
 });

@@ -27,6 +27,9 @@
   "networks": {
     "testnet": {
       "bchtest:pzfsp649y00eay9mm3ky63ln72v3h6tx6gul8mlg93": "12b60afc04b42a6837bc590ec007eaf78b8e73cf OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG"
+    },
+    "mainnet": {
+      "bitcoincash:pzfsp649y00eay9mm3ky63ln72v3h6tx6gcdrualzd": "12b60afc04b42a6837bc590ec007eaf78b8e73cf OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG"
     }
   },
   "compiler": {

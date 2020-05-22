@@ -5,12 +5,10 @@ import { Script, AbiFunction } from 'cashc';
 import { Sig } from './Parameter';
 import { bitbox } from './BITBOX';
 import {
-  TxOptions,
-  Output,
   SignatureAlgorithm,
   Utxo,
-  isRecipient,
-  OutputForBuilder,
+  Output,
+  Recipient,
 } from './interfaces';
 import {
   meep,
@@ -30,6 +28,15 @@ export class Transaction {
   private bitbox: BITBOX;
   private builder: TransactionBuilder;
 
+  private inputs: Utxo[] = [];
+  private outputs: Output[] = [];
+
+  private sequence = 0xfffffffe;
+  private locktime: number;
+  private hardcodedFee: number;
+  private feePerByte = 1.0;
+  private minChange = DUST_LIMIT;
+
   constructor(
     private address: string,
     private network: string,
@@ -42,92 +49,68 @@ export class Transaction {
     this.builder = new this.bitbox.TransactionBuilder(this.network);
   }
 
-  async send(outputs: Output[], options?: TxOptions): Promise<TxnDetailsResult>;
-  async send(to: string, amount: number, options?: TxOptions): Promise<TxnDetailsResult>;
+  from(inputs: Utxo[]): this {
+    if (this.inputs.length > 0) {
+      throw new Error('Attempted to call \'from\' after inputs are already set');
+    }
+    this.inputs = inputs;
+    return this;
+  }
 
-  async send(
-    toOrOutputs: string | Output[],
-    amountOrOptions?: number | TxOptions,
-    options?: TxOptions,
-  ): Promise<TxnDetailsResult> {
-    if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
-      return this.sendToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
-    } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
-      return this.sendToMany(toOrOutputs, amountOrOptions);
+  to(to: string, amount: number): this;
+  to(outputs: Recipient[]): this;
+
+  to(toOrOutputs: string | Recipient[], amount?: number): this {
+    if (typeof toOrOutputs === 'string' && typeof amount === 'number') {
+      this.outputs.push({ to: toOrOutputs, amount });
+    } else if (Array.isArray(toOrOutputs) && amount === undefined) {
+      this.outputs = this.outputs.concat(toOrOutputs);
     } else {
-      throw new Error('Incorrect arguments passed to function send');
+      throw new Error('Incorrect arguments passed to function \'to\'');
     }
+    return this;
   }
 
-  private async sendToMany(
-    outputs: Output[],
-    options?: TxOptions,
-  ): Promise<TxnDetailsResult> {
-    const { tx, inputs } = await this.createTransaction(outputs, options);
-    try {
-      const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx.toHex());
-      return this.getTxDetails(txid);
-    } catch (e) {
-      throw buildError(e.error, meep(tx, inputs, this.redeemScript));
-    }
+  withOpReturn(chunks: string[]): this {
+    this.outputs.push(createOpReturnOutput(chunks));
+    return this;
   }
 
-  private async getTxDetails(txid: string): Promise<TxnDetailsResult> {
-    while (true) {
-      await delay(500);
-      try {
-        return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
-      } catch (e) {
-        // ignored
-      }
-    }
+  withAge(age: number): this {
+    this.sequence = this.builder.bip68.encode({ blocks: age });
+    return this;
   }
 
-  async meep(outputs: Output[], options?: TxOptions): Promise<void>;
-  async meep(to: string, amount: number, options?: TxOptions): Promise<void>;
-
-  async meep(
-    toOrOutputs: string | Output[],
-    amountOrOptions?: number | TxOptions,
-    options?: TxOptions,
-  ): Promise<void> {
-    if (typeof toOrOutputs === 'string' && typeof amountOrOptions === 'number') {
-      await this.meepToMany([{ to: toOrOutputs, amount: amountOrOptions }], options);
-    } else if (Array.isArray(toOrOutputs) && typeof amountOrOptions !== 'number') {
-      await this.meepToMany(toOrOutputs, amountOrOptions);
-    }
+  withTime(time: number): this {
+    this.locktime = time;
+    return this;
   }
 
-  private async meepToMany(outputs: Output[], options?: TxOptions): Promise<void> {
-    const { tx, inputs } = await this.createTransaction(outputs, options);
-    console.log(meep(tx, inputs, this.redeemScript));
+  withHardcodedFee(hardcodedFee: number): this {
+    this.hardcodedFee = hardcodedFee;
+    return this;
   }
 
-  private async createTransaction(
-    outs: Output[],
-    options?: TxOptions,
-  ): Promise<{ tx: any, inputs: Utxo[] }> {
-    const sequence = options?.age
-      ? this.builder.bip68.encode({ blocks: options.age })
-      : 0xfffffffe;
-    const locktime = options?.time
-      ? options.time
-      : await this.bitbox.Blockchain.getBlockCount();
+  withFeePerByte(feePerByte: number): this {
+    this.feePerByte = feePerByte;
+    return this;
+  }
 
-    this.builder.setLockTime(locktime);
+  withMinChange(minChange: number): this {
+    this.minChange = minChange;
+    return this;
+  }
 
-    const { inputs, outputs } = await this.getInputsAndOutputs(
-      outs,
-      options?.fee,
-      options?.minChange,
-      options?.inputs,
-    );
+  async build(): Promise<string> {
+    this.locktime = this.locktime || await this.bitbox.Blockchain.getBlockCount();
+    this.builder.setLockTime(this.locktime);
+    await this.setInputsAndOutputs();
 
-    inputs.forEach((utxo) => {
-      this.builder.addInput(utxo.txid, utxo.vout, sequence);
+    this.inputs.forEach((utxo) => {
+      this.builder.addInput(utxo.txid, utxo.vout, this.sequence);
     });
 
-    outputs.forEach((output) => {
+    this.outputs.forEach((output) => {
       this.builder.addOutput(output.to, output.amount);
     });
 
@@ -136,18 +119,19 @@ export class Transaction {
 
     // Convert all Sig objects to valid tx signatures for current tx
     const tx = this.builder.transaction.buildIncomplete();
-    inputs.forEach((utxo: Utxo, vin: number) => {
+    this.inputs.forEach((utxo: Utxo, vin: number) => {
       let covenantHashType = -1;
       const completePs = this.parameters.map((p) => {
         if (!(p instanceof Sig)) return p;
 
         const hashtype = p.hashtype | tx.constructor.SIGHASH_BITCOINCASHBIP143;
-        // First signature is used for sighash (maybe not the best way)
+        // First signature is used for sighash preimage (maybe not the best way)
         if (covenantHashType < 0) covenantHashType = hashtype;
 
         const sighash = tx.hashForCashSignature(
           vin, bch.script.compile(this.redeemScript), utxo.satoshis, hashtype,
         );
+
         return p.keypair
           .sign(sighash, SignatureAlgorithm.SCHNORR)
           .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
@@ -164,22 +148,39 @@ export class Transaction {
       inputScripts.push({ vout: vin, script: inputScript });
     });
 
-    // Add all generated input scripts to the transaction
     this.builder.addInputScripts(inputScripts);
-
-    return { tx: this.builder.build(), inputs };
+    return this.builder.build().toHex();
   }
 
-  private async getInputsAndOutputs(
-    outs: Output[],
-    hardcodedFee?: number,
-    minChange: number = DUST_LIMIT,
-    hardcodedUtxos?: Utxo[],
-    satsPerByte: number = 1.0,
-  ): Promise<{ inputs: Utxo[], outputs: OutputForBuilder[] }> {
-    let utxos = hardcodedUtxos;
-    if (!utxos) {
-      ({ utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult);
+  async send(): Promise<TxnDetailsResult> {
+    const tx = await this.build();
+    try {
+      const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx);
+      return this.getTxDetails(txid);
+    } catch (e) {
+      throw buildError(e.error, meep(tx, this.inputs, this.redeemScript));
+    }
+  }
+
+  private async getTxDetails(txid: string): Promise<TxnDetailsResult> {
+    while (true) {
+      await delay(500);
+      try {
+        return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+      } catch (ignored) {
+        // ignored
+      }
+    }
+  }
+
+  async meep(): Promise<string> {
+    const tx = await this.build();
+    return meep(tx, this.inputs, this.redeemScript);
+  }
+
+  private async setInputsAndOutputs(): Promise<void> {
+    if (this.outputs.length === 0) {
+      throw Error('Attempted to build a transaction without outputs');
     }
 
     // Use a placeholder script with 65-length Buffer in the place of signatures
@@ -198,36 +199,46 @@ export class Transaction {
     // Add one extra byte per input to over-estimate txin count
     const inputSize = getInputSize(placeholderScript) + 1;
 
-    const outputs = outs.map(output => (
-      isRecipient(output) ? output : createOpReturnOutput(output)
-    ));
+    // Calculate amount to send and base fee (excluding additional fees per UTXO)
+    const amount = this.outputs.reduce((acc, output) => acc + output.amount, 0);
+    let fee = this.hardcodedFee
+      ? this.hardcodedFee
+      : Math.ceil(getTxSizeWithoutInputs(this.outputs) * this.feePerByte);
 
-    const amount = outputs.reduce((acc, output) => acc + output.amount, 0);
-    let fee = Math.ceil(getTxSizeWithoutInputs(outputs) * satsPerByte);
-    if (hardcodedFee) fee = hardcodedFee;
+    // Select and gather UTXOs and calculate fees and available funds
     let satsAvailable = 0;
-
-    const inputs: Utxo[] = [];
-    for (const utxo of utxos) {
-      inputs.push(utxo);
-      satsAvailable += utxo.satoshis;
-      if (!hardcodedFee) fee += inputSize;
-      if (satsAvailable > amount + fee) break;
+    if (this.inputs.length > 0) {
+      // If inputs are already defined, the user provided the UTXOs
+      // and we perform no further UTXO selection
+      if (!this.hardcodedFee) fee += this.inputs.length * inputSize;
+      satsAvailable = this.inputs.reduce((acc, input) => acc + input.satoshis, 0);
+    } else {
+      // If inputs are not defined yet, we retrieve the contract's UTXOs
+      // and perform UTXO selection
+      const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+      for (const utxo of utxos) {
+        this.inputs.push(utxo);
+        satsAvailable += utxo.satoshis;
+        if (!this.hardcodedFee) fee += inputSize;
+        if (satsAvailable > amount + fee) break;
+      }
     }
+
+    // Calculate change and check available funds
     let change = satsAvailable - amount - fee;
 
     if (change < 0) {
-      throw new Error(`Insufficient balance: available (${satsAvailable}) < needed (${amount + fee}).`);
+      throw new Error(`Insufficient funds: available (${satsAvailable}) < needed (${amount + fee}).`);
     }
 
-    if (!hardcodedFee) {
+    // Account for the fee of a change output
+    if (!this.hardcodedFee) {
       change -= P2SH_OUTPUT_SIZE;
     }
 
-    if (change >= DUST_LIMIT && change >= minChange) {
-      outputs.push({ to: this.address, amount: change });
+    // Add a change output if applicable
+    if (change >= DUST_LIMIT && change >= this.minChange) {
+      this.outputs.push({ to: this.address, amount: change });
     }
-
-    return { inputs, outputs };
   }
 }

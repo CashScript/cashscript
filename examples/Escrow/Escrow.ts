@@ -1,7 +1,6 @@
 import { BITBOX, Crypto } from 'bitbox-sdk';
-import { TxnDetailsResult } from 'bitcoin-com-rest';
-import { ECPair, HDNode } from 'bitcoincashjs-lib';
-import { Contract, Instance, Sig } from 'cashscript';
+import { ECPair } from 'bitcoincashjs-lib';
+import { Contract, Sig } from 'cashscript';
 import path from 'path';
 
 class Oracle {
@@ -17,74 +16,64 @@ class Oracle {
 }
 
 run();
-export async function run(): Promise<void> {
+async function run(): Promise<void> {
   try {
     // Initialise BITBOX
-    const network: string = 'testnet';
-    const bitbox: BITBOX = new BITBOX({
-      restURL: 'https://trest.bitcoin.com/v2/',
-    });
+    const network = 'testnet';
+    const bitbox = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
 
     // Mnemonnic to root seed buffer
-    const rootSeed: Buffer = bitbox.Mnemonic.toSeed('');
+    const rootSeed = bitbox.Mnemonic.toSeed('');
 
     // root seed buffer to master hdnode
-    const masterHDNode: HDNode = bitbox.HDNode.fromSeed(rootSeed, network);
+    const masterHDNode = bitbox.HDNode.fromSeed(rootSeed, network);
 
-    // alice, bob, arbitrator and oracle hdnodes
-    const alice: HDNode = bitbox.HDNode.derivePath(masterHDNode, 'm/0\'');
-    const bob: HDNode = bitbox.HDNode.derivePath(masterHDNode, 'm/1\'');
-    const arbitrator: HDNode = bitbox.HDNode.derivePath(masterHDNode, 'm/2\'');
-    // const oracleNode: HDNode = bitbox.HDNode.derivePath(masterHDNode, 'm/3\'');
+    // alice, bob and arbitrator hdnodes
+    const alice = bitbox.HDNode.derivePath(masterHDNode, 'm/0\'');
+    const bob = bitbox.HDNode.derivePath(masterHDNode, 'm/1\'');
+    const arbitrator = bitbox.HDNode.derivePath(masterHDNode, 'm/2\'');
 
-    // alice, bob, arbitrator and oracle keypairs
-    const aliceKP: ECPair = bitbox.HDNode.toKeyPair(alice);
-    const bobKP: ECPair = bitbox.HDNode.toKeyPair(bob);
-    const arbitratorKP: ECPair = bitbox.HDNode.toKeyPair(arbitrator);
-    // const oracleKP: ECPair = bitbox.HDNode.toKeyPair(oracleNode);
+    // alice, bob and arbitrator keypairs
+    const aliceKP = bitbox.HDNode.toKeyPair(alice);
+    const bobKP = bitbox.HDNode.toKeyPair(bob);
+    const arbitratorKP = bitbox.HDNode.toKeyPair(arbitrator);
 
-    // alice, bob, arbitrator and oracle pubkeys
-    const alicePK: Buffer = bitbox.ECPair.toPublicKey(aliceKP);
-    const bobPK: Buffer = bitbox.ECPair.toPublicKey(bobKP);
-    const arbitratorPK: Buffer = bitbox.ECPair.toPublicKey(arbitratorKP);
-    // const oraclePK: Buffer = bitbox.ECPair.toPublicKey(oracleKP);
+    // alice, bob and arbitrator pubkeys
+    const alicePK = bitbox.ECPair.toPublicKey(aliceKP);
+    const bobPK = bitbox.ECPair.toPublicKey(bobKP);
+    const arbitratorPK = bitbox.ECPair.toPublicKey(arbitratorKP);
 
-    // alice, bob, arbitrator and oracle pubkeyhashes
-    const alicePKH: Buffer = bitbox.Crypto.hash160(alicePK);
-    const bobPKH: Buffer = bitbox.Crypto.hash160(bobPK);
-    const arbitratorPKH: Buffer = bitbox.Crypto.hash160(arbitratorPK);
-    // const oraclePKH: Buffer = bitbox.Crypto.hash160(oraclePK);
+    // alice, bob and arbitrator pubkeyhashes
+    const alicePKH = bitbox.Crypto.hash160(alicePK);
+    const bobPKH = bitbox.Crypto.hash160(bobPK);
+    const arbitratorPKH = bitbox.Crypto.hash160(arbitratorPK);
 
-    // Initialize oracle with oracle keypair
-    const oracle: Oracle = new Oracle(bitbox.HDNode.toKeyPair(alice));
+    // Initialize oracle with Alice's keypair
+    const oracle = new Oracle(aliceKP);
 
     // Compile and instantiate Escrow contract
-    const Escrow: Contract = Contract.compile(path.join(__dirname, 'Escrow.cash'), network);
-    const escrowKey: Buffer = Buffer.from('01', 'hex');
-    const actionByte: Buffer = Buffer.from('01', 'hex');
-    const instance: Instance = Escrow.new(
-      alicePKH,
-      bobPKH,
-      arbitratorPKH,
-      //   escrowKey
-    );
+    const Escrow = Contract.compile(path.join(__dirname, 'Escrow.cash'), network);
+    const escrowKey = Buffer.from('01', 'hex');
+    const actionByte = Buffer.from('01', 'hex');
+    const instance = Escrow.new(alicePKH, bobPKH, arbitratorPKH/* , escrowKey */);
     Escrow.export(path.join(__dirname, 'Escrow.json'));
 
     // Get contract balance & output address + balance
-    const contractBalance: number = await instance.getBalance();
+    const contractBalance = await instance.getBalance();
     console.log('contract address:', instance.address);
     console.log('contract balance:', contractBalance);
 
     // Produce new oracle message and signature
-    const oracleMessage: Buffer = oracle.createMessage(escrowKey, actionByte);
-    const oracleSignature: Buffer = oracle.signMessage(oracleMessage);
+    const oracleMessage = oracle.createMessage(escrowKey, actionByte);
+    const oracleSignature = oracle.signMessage(oracleMessage);
 
     // address to send funds to
-    const addy: string = 'bchtest:qpg8pv6zj0l8hr56sh6tn65ufmcfrnswxg36t63jpr';
+    const address = 'bchtest:qpg8pv6zj0l8hr56sh6tn65ufmcfrnswxg36t63jpr';
 
-    const tx: TxnDetailsResult = await instance.functions
+    const tx = await instance.functions
       .spend(new Sig(bobKP), bobPK, oracleMessage, oracleSignature, alicePK, actionByte)
-      .send(addy, 1000);
+      .to(address, 1000)
+      .send();
     console.log(tx);
   } catch (error) {
     console.log(error);

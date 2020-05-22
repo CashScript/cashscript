@@ -1,5 +1,6 @@
 import path from 'path';
 import { Contract, Artifacts } from '../src';
+import { network } from './fixture/vars';
 
 describe('Contract', () => {
   describe('compile', () => {
@@ -38,7 +39,7 @@ describe('Contract', () => {
 
   describe('import', () => {
     it('should fail with invalid Artifact file or object', () => {
-      expect(() => Contract.import(path.join(__dirname, 'fixture', 'p2pkh-invalid.json'), 'testnet'))
+      expect(() => Contract.import(path.join(__dirname, 'fixture', 'p2pkh-invalid.json'), network))
         .toThrow();
 
       expect(() => {
@@ -50,13 +51,13 @@ describe('Contract', () => {
     ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas', 'simple_covenant'].forEach((name) => {
       it(`should create ${name} contract object from file`, () => {
         const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
-        const contract = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), 'testnet');
+        const contract = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), network);
         expect(contract.artifact).toEqual(expectedArtifact);
       });
 
       it(`should create ${name} contract object from string`, () => {
         const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
-        const contract = Contract.import(expectedArtifact, 'testnet');
+        const contract = Contract.import(expectedArtifact, network);
         expect(contract.artifact).toEqual(expectedArtifact);
       });
     });
@@ -65,7 +66,7 @@ describe('Contract', () => {
   describe('export', () => {
     ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas', 'simple_covenant'].forEach((name) => {
       it(`should export artifact file for ${name}`, () => {
-        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), 'testnet');
+        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), network);
         const returnedArtifact = initial.export(path.join(__dirname, 'fixture', `${name}.json`));
         const exportedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
 
@@ -74,7 +75,7 @@ describe('Contract', () => {
       });
 
       it(`should export artifact object for ${name}`, () => {
-        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), 'testnet');
+        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), network);
         const artifact = initial.export();
         expect(initial.artifact).toEqual(artifact);
       });
@@ -83,7 +84,7 @@ describe('Contract', () => {
 
   describe('new', () => {
     it('should fail with incorrect constructor parameters', () => {
-      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), network);
 
       expect(() => P2PKH.new()).toThrow();
       expect(() => P2PKH.new(20)).toThrow();
@@ -93,7 +94,7 @@ describe('Contract', () => {
     });
 
     it('should create new P2PKH instance', () => {
-      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), network);
       const instance = P2PKH.new(Buffer.alloc(20, 0));
 
       expect(typeof instance.address).toBe('string');
@@ -102,7 +103,7 @@ describe('Contract', () => {
     });
 
     it('should create new TransferWithTimeout instance', () => {
-      const TransferWithTimeout = Contract.import(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), 'testnet');
+      const TransferWithTimeout = Contract.import(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), network);
       const instance = TransferWithTimeout.new(Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000);
 
       expect(typeof instance.address).toBe('string');
@@ -112,7 +113,7 @@ describe('Contract', () => {
     });
 
     it('should create new HodlVault instance', () => {
-      const HodlVault = Contract.import(path.join(__dirname, 'fixture', 'hodl_vault.json'), 'testnet');
+      const HodlVault = Contract.import(path.join(__dirname, 'fixture', 'hodl_vault.json'), network);
       const instance = HodlVault.new(Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000, 10000);
 
       expect(typeof instance.address).toBe('string');
@@ -121,7 +122,7 @@ describe('Contract', () => {
     });
 
     it('should create new Mecenas instance', () => {
-      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas.json'), 'testnet');
+      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas.json'), network);
       const instance = Mecenas.new(Buffer.alloc(20, 0), Buffer.alloc(20, 0), 1000000);
 
       expect(typeof instance.address).toBe('string');
@@ -133,7 +134,7 @@ describe('Contract', () => {
 
   describe('deployed', () => {
     it('should fail on new Contract', () => {
-      const P2PKH = Contract.compile(path.join(__dirname, 'fixture', 'p2pkh.cash'), 'testnet');
+      const P2PKH = Contract.compile(path.join(__dirname, 'fixture', 'p2pkh.cash'), network);
 
       expect(P2PKH.artifact.networks).toEqual({});
       expect(() => P2PKH.deployed()).toThrow();
@@ -141,10 +142,10 @@ describe('Contract', () => {
     });
 
     it('should return deployed P2PKH', () => {
-      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), 'testnet');
-      const deployedAddress = 'bchtest:pzfsp649y00eay9mm3ky63ln72v3h6tx6gul8mlg93';
+      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), network);
+      const deployedAddress = 'bitcoincash:pzfsp649y00eay9mm3ky63ln72v3h6tx6gcdrualzd';
 
-      expect(P2PKH.artifact.networks).toEqual({ testnet: expect.any(Object) });
+      expect(P2PKH.artifact.networks).toMatchObject({ [network]: expect.any(Object) });
       const instance1 = P2PKH.deployed();
       const instance2 = P2PKH.deployed(deployedAddress);
 
