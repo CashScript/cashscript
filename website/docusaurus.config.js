@@ -77,7 +77,7 @@ module.exports = {
           items: [
             {
               html: `
-                <a href="https://generalprotocols.com">
+                <a href="https://generalprotocols.com" target="_blank">
                   <img src="/img/general-protocols.png" alt="General Protocols"
                        style="border-radius: 5px; max-height: 55px" />
                 </a>
