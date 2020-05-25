@@ -92,7 +92,7 @@ module.exports = {
       trackingID: 'UA-26805430-6',
     },
     algolia: {
-      apiKey: '440b18c1b71e4e50ed7ba801c2e731aa',
+      apiKey: 'b0b29787f1ed36aa2c1057bf4f6e6dde',
       indexName: 'cashscript',
     },
   },
