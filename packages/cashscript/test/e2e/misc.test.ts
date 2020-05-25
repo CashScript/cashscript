@@ -93,7 +93,7 @@ describe('Simple Covenant', () => {
   });
 });
 
-describe('P2Palindrome', () => {
+describe.skip('P2Palindrome', () => {
   let p2palindrome: Instance;
   beforeAll(() => {
     const P2Palindrome = Contract.import(path.join(__dirname, '..', 'fixture', 'p2palindrome.json'), network);
@@ -109,7 +109,7 @@ describe('P2Palindrome', () => {
       // when
       const tx = await p2palindrome.functions
         .spend('amanaplanacanalpanama')
-        .withOpReturn(['0x6d02', 'A man, a plan, a canal, Panama!'])
+        .withOpReturn(opReturn)
         .send();
 
       // then
