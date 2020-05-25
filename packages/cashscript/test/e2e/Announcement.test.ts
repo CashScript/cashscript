@@ -24,7 +24,7 @@ describe('Announcement', () => {
         announcement.functions
           .announce(alicePk, new Sig(alice))
           .to(to, amount)
-          .withHardcodedFee(1000)
+          .withHardcodedFee(2000)
           .send(),
       );
 
@@ -42,7 +42,7 @@ describe('Announcement', () => {
         announcement.functions
           .announce(alicePk, new Sig(alice))
           .withOpReturn(['0x6d02', str])
-          .withHardcodedFee(1000)
+          .withHardcodedFee(2000)
           .withMinChange(1000)
           .send(),
       );
@@ -60,7 +60,7 @@ describe('Announcement', () => {
       const tx = await announcement.functions
         .announce(alicePk, new Sig(alice))
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(1000)
+        .withHardcodedFee(2000)
         .withMinChange(1000)
         .send();
 

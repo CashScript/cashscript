@@ -14,12 +14,12 @@ contract Announcement() {
             bytes('A contract may not injure a human being or, through inaction, allow a human being to come to harm.')
         ]);
 
-        // Calculate leftover money after fee (1000 sats)
-        // Add change output if there's enough leftover for another announcement
+        // Calculate leftover money after fee (2000 sats)
+        // Add change output if the remainder can be used
         // otherwise donate the remainder to the miner
-        int minerFee = 1000;
+        int minerFee = 2000;
         int changeAmount = int(bytes(tx.value)) - minerFee;
-        if (changeAmount >= minerFee) {
+        if (changeAmount >= (minerFee / 2)) {
             bytes32 change = new OutputP2SH(bytes8(changeAmount), hash160(tx.bytecode));
             require(tx.hashOutputs == hash256(announcement + change));
         } else {
