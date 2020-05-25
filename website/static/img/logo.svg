@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   inkscape:version="1.0 (4035a4f, 2020-05-01)"
+   sodipodi:docname="cashscript-ico.svg"
+   id="svg962"
+   preserveAspectRatio="xMidYMid meet"
+   viewBox="0 0 1262.000000 1238.000000"
+   height="1238.000000pt"
+   width="1262.000000pt"
+   version="1.0">
+  <defs
+     id="defs966" />
+  <sodipodi:namedview
+     inkscape:current-layer="svg962"
+     inkscape:window-maximized="0"
+     inkscape:window-y="23"
+     inkscape:window-x="0"
+     inkscape:cy="825.33333"
+     inkscape:cx="409.01587"
+     inkscape:zoom="0.44527464"
+     showgrid="false"
+     id="namedview964"
+     inkscape:window-height="1005"
+     inkscape:window-width="1680"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0"
+     guidetolerance="10"
+     gridtolerance="10"
+     objecttolerance="10"
+     borderopacity="1"
+     bordercolor="#666666"
+     pagecolor="#ffffff" />
+  <metadata
+     id="metadata956">
+Created by potrace 1.16, written by Peter Selinger 2001-2019
+<rdf:RDF>
+  <cc:Work
+     rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type
+       rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+    <dc:title></dc:title>
+  </cc:Work>
+</rdf:RDF>
+</metadata>
+  <path
+     d="M 610.5,30.6 C 564.3,32.9 530.9,37.6 492,47.1 378.8,74.7 281.4,131.1 200.5,216 117.3,303.3 62,417.1 44.6,537 c -4.6,31.3 -6,51.8 -6,87 0,60.4 7,110.3 23.4,166.8 23,79.8 66.4,159.5 121,222.2 11.7,13.4 38.2,40.4 51.8,52.6 97,87.6 219.1,139.8 352.7,150.5 19.3,1.6 69.7,1.6 89,0 79.9,-6.4 151.2,-26.1 220.5,-60.7 64.6,-32.4 116.6,-71 167.3,-124.2 64.4,-67.7 112.9,-153.1 138.7,-243.9 23.9,-84 29,-172.8 15,-259.3 C 1189.8,354.9 1087.4,204.6 935,113 921.8,105.1 894.6,91 877,82.9 816.5,55.4 745.1,37.1 678.5,32.1 664,31 621.4,30 610.5,30.6 Z M 747,357.2 c 0,1.2 -155.2,558 -155.7,558.7 C 591,916.4 520.8,893 519.7,892 519.3,891.6 553.3,767.9 595.4,616.9 637.4,466 672.3,340.5 673,338 c 0.7,-2.5 1.4,-4.8 1.6,-5.2 0.6,-1 72.4,23.2 72.4,24.4 z m -277.4,88.3 c 13.6,15 24.5,27.7 24.3,28.1 -0.1,0.5 -30.6,34.4 -67.6,75.2 -37,40.9 -67.3,74.7 -67.3,75.2 0,0.5 30.3,34.3 67.4,75.2 37.1,40.8 67.6,74.6 67.8,74.9 0.1,0.4 -11.6,13.8 -26.1,29.9 l -26.4,29.2 -2.2,-2.3 C 438.3,829.6 424.1,813.9 407.9,796 391.7,778.1 350,732.1 315.2,693.7 L 252,624 325.2,543.2 c 40.3,-44.4 82.9,-91.4 94.7,-104.4 20,-22.1 21.7,-23.6 23.3,-22.1 0.9,0.8 12.8,13.8 26.4,28.8 z m 415.5,40 c 34.8,38.5 77.2,85.3 94.1,104 16.9,18.7 30.8,34.2 30.8,34.5 0,0.3 -13.9,15.8 -30.8,34.5 -16.9,18.7 -59.3,65.5 -94.2,104 -34.8,38.5 -63.6,70 -64,70 -0.6,0 -51.1,-55.2 -52.4,-57.3 -0.3,-0.5 30,-34.7 67.4,-75.8 37.4,-41.1 68,-75.1 68,-75.4 0,-0.3 -28.2,-31.6 -62.6,-69.5 -34.4,-38 -65.1,-71.8 -68.1,-75.2 l -5.4,-6.2 26.3,-29 c 14.5,-16 26.6,-28.9 26.9,-28.8 0.3,0.1 29.1,31.7 64,70.2 z"
+     id="path958"
+     style="fill:#0ac18e;stroke:none;stroke-width:0.1;fill-opacity:1" />
+</svg>
