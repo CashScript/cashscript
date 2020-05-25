@@ -14,6 +14,7 @@
     "cashc": "^0.4.0",
     "cramer-bch": "https://github.com/jcramer/bitcoincashjs-lib",
     "delay": "^4.3.0",
+    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
     "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b"
   },
   "devDependencies": {

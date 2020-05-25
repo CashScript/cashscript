@@ -19,6 +19,7 @@
     "bitbox-sdk": "^8.8.0",
     "bitcoin-ts": "^1.12.0",
     "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b",
+    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
     "semver": "^6.3.0",
     "yargs": "^14.0.0"
   },

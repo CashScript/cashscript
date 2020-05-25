@@ -3974,7 +3974,7 @@ bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0, "bitcoincash-ops@github:Bitco
   version "2.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincash-ops/tar.gz/6ab82cc7326c67236f3b2d9d0457258ac2ef48e3"
 
-bitcoincash-ops@christroutner/bitcoincash-ops:
+bitcoincash-ops@christroutner/bitcoincash-ops, "bitcoincash-ops@github:christroutner/bitcoincash-ops":
   version "2.0.0"
   resolved "https://codeload.github.com/christroutner/bitcoincash-ops/tar.gz/0041f2d945aa0e893fbbb5c2ebdf6254f6ff0555"
 
