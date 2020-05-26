@@ -36,6 +36,7 @@ module.exports = {
       type: 'category',
       label: 'Guides',
       items: [
+        'guides/syntax-highlighting',
         'guides/covenants',
       ],
     },
