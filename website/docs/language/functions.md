@@ -120,7 +120,7 @@ An overview of all supported operators and their precedence is included below. N
 | 12         | Equality and inequality         | `==`, `!=`               |
 | 13         | Bitwise AND                     | `&`                      |
 | 14         | Bitwise XOR                     | `^`                      |
-| 15         | Bitwise OR                      | `|`                      |
+| 15         | Bitwise OR                      | \|                       |
 | 16         | Logical AND                     | `&&`                     |
-| 17         | Logical OR                      | `||`                     |
+| 17         | Logical OR                      | \|\|                     |
 | 18         | Assignment                      | `=`                      |
