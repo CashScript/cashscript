@@ -13,7 +13,7 @@ const redirects = [
 
 module.exports = function () {
   return {
-    name: 'docusaurus-plugin',
+    name: 'docusaurus-plugin-redirect',
     async contentLoaded({ actions }) {
       const { addRoute, createData } = actions;
 
