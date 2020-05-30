@@ -2,7 +2,7 @@ import { BITBOX, TransactionBuilder } from 'bitbox-sdk';
 import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import delay from 'delay';
 import { Script, AbiFunction } from 'cashc';
-import { Sig } from './Parameter';
+import { SignatureTemplate } from './Parameter';
 import { bitbox } from './BITBOX';
 import {
   SignatureAlgorithm,
@@ -42,7 +42,7 @@ export class Transaction {
     private network: string,
     private redeemScript: Script,
     private abiFunction: AbiFunction,
-    private parameters: (Buffer | Sig)[],
+    private parameters: (Buffer | SignatureTemplate)[],
     private selector?: number,
   ) {
     this.bitbox = bitbox[network];
@@ -117,12 +117,12 @@ export class Transaction {
     // Vout is a misnomer used in BITBOX, should be vin
     const inputScripts: { vout: number, script: Buffer }[] = [];
 
-    // Convert all Sig objects to valid tx signatures for current tx
+    // Convert all SignatureTemplate objects to valid tx signatures for current tx
     const tx = this.builder.transaction.buildIncomplete();
     this.inputs.forEach((utxo: Utxo, vin: number) => {
       let covenantHashType = -1;
       const completePs = this.parameters.map((p) => {
-        if (!(p instanceof Sig)) return p;
+        if (!(p instanceof SignatureTemplate)) return p;
 
         const hashtype = p.hashtype | tx.constructor.SIGHASH_BITCOINCASHBIP143;
         // First signature is used for sighash preimage (maybe not the best way)
@@ -191,7 +191,7 @@ export class Transaction {
       : undefined;
     const placeholderScript = createInputScript(
       this.redeemScript,
-      this.parameters.map(p => (p instanceof Sig ? Buffer.alloc(65, 0) : p)),
+      this.parameters.map(p => (p instanceof SignatureTemplate ? Buffer.alloc(65, 0) : p)),
       this.selector,
       placeholderPreimage,
     );

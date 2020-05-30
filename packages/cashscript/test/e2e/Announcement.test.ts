@@ -1,5 +1,5 @@
 import path from 'path';
-import { Contract, Instance, Sig } from '../../src';
+import { Contract, Instance, SignatureTemplate } from '../../src';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 import { createOpReturnOutput } from '../../src/util';
@@ -22,7 +22,7 @@ describe('Announcement', () => {
       // when
       const expectPromise = expect(
         announcement.functions
-          .announce(alicePk, new Sig(alice))
+          .announce(alicePk, new SignatureTemplate(alice))
           .to(to, amount)
           .withHardcodedFee(2000)
           .send(),
@@ -40,7 +40,7 @@ describe('Announcement', () => {
       // when
       const expectPromise = expect(
         announcement.functions
-          .announce(alicePk, new Sig(alice))
+          .announce(alicePk, new SignatureTemplate(alice))
           .withOpReturn(['0x6d02', str])
           .withHardcodedFee(2000)
           .withMinChange(1000)
@@ -58,7 +58,7 @@ describe('Announcement', () => {
 
       // when
       const tx = await announcement.functions
-        .announce(alicePk, new Sig(alice))
+        .announce(alicePk, new SignatureTemplate(alice))
         .withOpReturn(['0x6d02', str])
         .withHardcodedFee(2000)
         .withMinChange(1000)

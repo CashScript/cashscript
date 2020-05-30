@@ -1,5 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 
 run();
@@ -36,7 +36,7 @@ export async function run(): Promise<void> {
     // for another announcement.
     const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
     const tx = await instance.functions
-      .announce(alicePk, new Sig(alice))
+      .announce(alicePk, new SignatureTemplate(alice))
       .withOpReturn(['0x6d02', str])
       .withHardcodedFee(1000)
       .withMinChange(1000)

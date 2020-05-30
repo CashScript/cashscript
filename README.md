@@ -75,7 +75,7 @@ Using the CashScript SDK, you can import / compile existing contract files, crea
   // Call the spend function with the owner's signature
   // And use it to send 0. 000 100 00 BCH back to the contract's address
   const txDetails = await instance.functions
-    .spend(pk, new Sig(keypair))
+    .spend(pk, new SignatureTemplate(keypair))
     .to(instance.address, 10000)
     .send();
   console.log(txDetails);

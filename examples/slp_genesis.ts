@@ -1,6 +1,6 @@
 import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 
 run();
@@ -33,7 +33,7 @@ async function run(): Promise<void> {
   // And use it to post to memo
   try {
     const tx2: TxnDetailsResult = await instance.functions
-      .spend(alicePk, new Sig(alice))
+      .spend(alicePk, new SignatureTemplate(alice))
       .withOpReturn([
         '0x534c5000', // Lokad ID
         '0x01', // Token type

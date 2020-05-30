@@ -1,6 +1,6 @@
 import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 import { PriceOracle } from './PriceOracle';
 
@@ -39,7 +39,7 @@ async function run(): Promise<void> {
 
   // Spend from the vault
   const tx: TxnDetailsResult = await instance.functions
-    .spend(new Sig(owner), oracleSignature, oracleMessage)
+    .spend(new SignatureTemplate(owner), oracleSignature, oracleMessage)
     .to(instance.address, 1000)
     .send();
 

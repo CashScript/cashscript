@@ -7,7 +7,7 @@ import {
 import fs from 'fs';
 import { Transaction } from './Transaction';
 import { Instance } from './Instance';
-import { Parameter, encodeParameter, Sig } from './Parameter';
+import { Parameter, encodeParameter, SignatureTemplate } from './Parameter';
 
 export class Contract {
   name: string;
@@ -56,7 +56,7 @@ export class Contract {
         .reverse();
 
       // Check there's no sigs in the constructor
-      if (encodedParameters.some(p => p instanceof Sig)) {
+      if (encodedParameters.some(p => p instanceof SignatureTemplate)) {
         throw new Error('Cannot use signatures in constructor');
       }
 

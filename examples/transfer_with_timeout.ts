@@ -1,5 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 
 run();
@@ -38,7 +38,7 @@ async function run(): Promise<void> {
   // Call the transfer function with bob's signature
   // Allows bob to claim the money that alice sent him
   const transferTx = await instance.functions
-    .transfer(new Sig(bob))
+    .transfer(new SignatureTemplate(bob))
     .to(instance.address, 10000)
     .send();
   console.log('transfer transaction details:', transferTx);
@@ -46,7 +46,7 @@ async function run(): Promise<void> {
   // Call the timeout function with alice's signature
   // Allows alice to reclaim the money she sent as the timeout is in the past
   const timeoutTx = await instance.functions
-    .timeout(new Sig(alice))
+    .timeout(new SignatureTemplate(alice))
     .to(instance.address, 10000)
     .send();
   console.log('timeout transaction details:', timeoutTx);

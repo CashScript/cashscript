@@ -1,5 +1,5 @@
 import path from 'path';
-import { Contract, Instance, Sig } from '../../src';
+import { Contract, Instance, SignatureTemplate } from '../../src';
 import {
   alicePkh,
   alicePk,
@@ -29,7 +29,7 @@ describe('P2PKH', () => {
       // when
       const expectPromise = expect(
         p2pkhInstance.functions
-          .spend(alicePk, new Sig(bob))
+          .spend(alicePk, new SignatureTemplate(bob))
           .to(to, amount)
           .send(),
       );
@@ -46,7 +46,7 @@ describe('P2PKH', () => {
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
+        .spend(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
         .send();
 
@@ -66,7 +66,7 @@ describe('P2PKH', () => {
       // send
       await expect(
         p2pkhInstance.functions
-          .spend(alicePk, new Sig(alice))
+          .spend(alicePk, new SignatureTemplate(alice))
           .from(gathered)
           .to(to, failureAmount)
           .send(),
@@ -74,7 +74,7 @@ describe('P2PKH', () => {
 
       await expect(
         p2pkhInstance.functions
-          .spend(alicePk, new Sig(alice))
+          .spend(alicePk, new SignatureTemplate(alice))
           .to(to, failureAmount)
           .send(),
       ).resolves.toBeTruthy();
@@ -90,7 +90,7 @@ describe('P2PKH', () => {
 
       // when
       const receipt = await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
+        .spend(alicePk, new SignatureTemplate(alice))
         .from(gathered)
         .to(to, amount)
         .send();
@@ -115,12 +115,12 @@ describe('P2PKH', () => {
 
       // when
       const tx1 = await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
+        .spend(alicePk, new SignatureTemplate(alice))
         .to(outputs)
         .send();
 
       const tx2 = await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
+        .spend(alicePk, new SignatureTemplate(alice))
         .to(outputs[0].to, outputs[0].amount)
         .to(outputs[1].to, outputs[1].amount)
         .send();
@@ -140,7 +140,7 @@ describe('P2PKH', () => {
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new Sig(alice))
+        .spend(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
         .withOpReturn(opReturn)
         .send();

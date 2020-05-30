@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import './App.css';
 
 function App() {
@@ -16,7 +16,7 @@ function App() {
     // Call the spend function with alice's signature + pk
     // And use it to send 0. 000 100 00 BCH back to the contract's address
     const tx = await instance.functions
-            .spend(alicePk, new Sig(keyPair))
+            .spend(alicePk, new SignatureTemplate(keyPair))
             .to(address, Number(amount))
             .send();
     result.tx = tx;

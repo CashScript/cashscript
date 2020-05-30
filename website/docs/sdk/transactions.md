@@ -137,7 +137,7 @@ If the transaction fails, a meep command is automatically returned. This command
 import { alice } from './somehwere';
 
 const txDetails = await instance.functions
-  .transfer(new Sig(alice))
+  .transfer(new SignatureTemplate(alice))
   .withOpReturn(['0x6d02', 'Hello World!'])
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 200000)
   .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 100000)
@@ -155,7 +155,7 @@ After completing a transaction, the `build()` function can be used to build the 
 #### Example
 ```ts
 const txHex = await instance.functions
-  .transfer(new Sig(alice))
+  .transfer(new SignatureTemplate(alice))
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000)
   .withAge(10).withFeePerByte(10).build()
 ```
@@ -170,7 +170,7 @@ After completing a transaction, the `meep()` function can be used to return the 
 #### Example
 ```ts
 const meepStr = await instance.functions
-  .transfer(new Sig(alice))
+  .transfer(new SignatureTemplate(alice))
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000)
   .withTime(700000)
   .meep()

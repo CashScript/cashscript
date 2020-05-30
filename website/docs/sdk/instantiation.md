@@ -178,25 +178,25 @@ These contract functions return an incomplete `Transaction` object, which needs 
 import { alice } from './somehwere';
 
 const tx = await instance.functions
-  .transfer(new Sig(alice))
+  .transfer(new SignatureTemplate(alice))
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000)
   .send()
 ```
 
 #### Transaction signatures
 ```ts
-new Sig(keypair: ECPair, hashtype?: HashType)
+new SignatureTemplate(keypair: ECPair, hashtype?: HashType)
 ```
 
-You may notice the `Sig` object in the example above. When a contract function has a `sig` parameter, it expects a digital signature over the spending transaction. But the details of this transaction are unknown when calling a contract function. This is why there is a placeholder `Sig` class that is made up of a keypair and an optional `hashtype`. These placeholders are automatically replaced by the correct signature using the provided keypair.
+You may notice the `SignatureTemplate` object in the example above. When a contract function has a `sig` parameter, it expects a digital signature over the spending transaction. But the details of this transaction are unknown when calling a contract function. This is why there is a placeholder `SignatureTemplate` class that is made up of a keypair and an optional `hashtype`. These placeholders are automatically replaced by the correct signature using the provided keypair.
 
 :::caution
-When calling a covenant function, the first `Sig` parameter is used to generate the required sighash preimage. This is generally fine, but you should take extra care when using non-default hashtypes.
+When calling a covenant function, the first `SignatureTemplate` parameter is used to generate the required sighash preimage. This is generally fine, but you should take extra care when using non-default hashtypes.
 :::
 
 #### Example
 ```ts
-new Sig(keypair, HashType.SIGHASH_ALL)
+new SignatureTemplate(keypair, HashType.SIGHASH_ALL)
 ```
 
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API

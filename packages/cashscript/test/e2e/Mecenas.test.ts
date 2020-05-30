@@ -1,5 +1,5 @@
 import path from 'path';
-import { Contract, Instance, Sig } from '../../src';
+import { Contract, Instance, SignatureTemplate } from '../../src';
 import {
   alicePk,
   alice,
@@ -31,7 +31,7 @@ describe('Mecenas', () => {
       // when
       const expectPromise = expect(
         mecenas.functions
-          .receive(alicePk, new Sig(alice))
+          .receive(alicePk, new SignatureTemplate(alice))
           .to(to, amount)
           .withHardcodedFee(1000)
           .send(),
@@ -50,7 +50,7 @@ describe('Mecenas', () => {
       // when
       const expectPromise = expect(
         mecenas.functions
-          .receive(alicePk, new Sig(alice))
+          .receive(alicePk, new SignatureTemplate(alice))
           .to(to, amount)
           .withHardcodedFee(1000)
           .send(),
@@ -69,7 +69,7 @@ describe('Mecenas', () => {
       // when
       const expectPromise = expect(
         mecenas.functions
-          .receive(alicePk, new Sig(alice))
+          .receive(alicePk, new SignatureTemplate(alice))
           .to(to, amount)
           .to(to, amount)
           .withHardcodedFee(1000)
@@ -88,7 +88,7 @@ describe('Mecenas', () => {
 
       // when
       const tx = await mecenas.functions
-        .receive(alicePk, new Sig(alice))
+        .receive(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
         .withHardcodedFee(1000)
         .send();

@@ -8,16 +8,19 @@ import {
 import { TypeError } from './Errors';
 import { HashType } from './interfaces';
 
-export type Parameter = number | boolean | string | Buffer | Sig;
+export type Parameter = number | boolean | string | Buffer | SignatureTemplate;
 
-export class Sig {
+export class SignatureTemplate {
   constructor(
     public keypair: ECPair,
     public hashtype: HashType = HashType.SIGHASH_ALL,
   ) {}
 }
 
-export function encodeParameter(parameter: Parameter, typeStr: string): Buffer | Sig {
+// @deprecated in favour of SignatureTemplate
+export class Sig extends SignatureTemplate {}
+
+export function encodeParameter(parameter: Parameter, typeStr: string): Buffer | SignatureTemplate {
   const type = parseType(typeStr);
   if (type === PrimitiveType.BOOL) {
     if (typeof parameter !== 'boolean') {
@@ -35,7 +38,7 @@ export function encodeParameter(parameter: Parameter, typeStr: string): Buffer |
     }
     return Data.encodeString(parameter);
   } else {
-    if (type === PrimitiveType.SIG && parameter instanceof Sig) return parameter;
+    if (type === PrimitiveType.SIG && parameter instanceof SignatureTemplate) return parameter;
     // Convert string to Buffer
     if (typeof parameter === 'string') {
       if (parameter.startsWith('0x')) {

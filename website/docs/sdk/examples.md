@@ -25,7 +25,7 @@ Now to put this smart contract in use in a JavaScript application we have to use
 
 ```ts title="TransferWithTimeout.js"
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 
 async function run() {
   // Initialise BITBOX and generate an HD Node from a mnemonic
@@ -56,7 +56,7 @@ async function run() {
   // Call the transfer function with Bob's signature
   // i.e. Bob claims the money that Alice has sent him
   const txDetails = await instance.functions
-    .transfer(new Sig(bob))
+    .transfer(new SignatureTemplate(bob))
     .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000)
     .send();
   console.log(txDetails);
@@ -66,7 +66,7 @@ async function run() {
   // But because the timeout has not passed yet, the function fails and
   // we call the meep function so the transaction can be debugged instead
   const meepStr = await instance.functions
-    .timeout(new Sig(alice))
+    .timeout(new SignatureTemplate(alice))
     .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000)
     .meep();
   console.log(meepStr);
@@ -121,7 +121,7 @@ The CashScript code above ensures that the smart contract **can only** be used i
 
 ```ts title="Announcement.js"
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import { alice, alicePk } from './somwhere';
 
 export async function run(){
@@ -143,7 +143,7 @@ export async function run(){
     + 'through inaction, allow a human being to come to harm.';
   // Send the announcement transaction
   const txDetails = await instance.functions
-    .announce(alicePk, new Sig(alice))
+    .announce(alicePk, new SignatureTemplate(alice))
     // Add the announcement string as an OP_RETURN output
     .withOpReturn(['0x6d02', str])
     // Hardcodes the transaction fee (like the contract expects)

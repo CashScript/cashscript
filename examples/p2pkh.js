@@ -1,5 +1,5 @@
 const { BITBOX } = require('bitbox-sdk');
-const { Contract, Sig } = require('cashscript');
+const { Contract, SignatureTemplate } = require('cashscript');
 const path = require('path');
 
 run();
@@ -31,7 +31,7 @@ async function run() {
   // Call the spend function with alice's signature + pk
   // And use it to send 0. 000 100 00 BCH back to the contract's address
   const tx = await instance.functions
-    .spend(alicePk, new Sig(alice))
+    .spend(alicePk, new SignatureTemplate(alice))
     .to(instance.address, 10000)
     .send();
   console.log('transaction details:', tx);
@@ -39,7 +39,7 @@ async function run() {
   // Call the spend function with alice's signature + pk
   // And use it to send two outputs of 0. 000 150 00 BCH back to the contract's address
   const tx2 = await instance.functions
-    .spend(alicePk, new Sig(alice))
+    .spend(alicePk, new SignatureTemplate(alice))
     .to(instance.address, 15000)
     .to(instance.address, 15000)
     .send();

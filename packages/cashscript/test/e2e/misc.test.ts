@@ -1,5 +1,5 @@
 import path from 'path';
-import { Contract, Instance, Sig } from '../../src';
+import { Contract, Instance, SignatureTemplate } from '../../src';
 import {
   alicePk,
   alice,
@@ -82,7 +82,7 @@ describe('Simple Covenant', () => {
 
       // when
       const tx = await covenant.functions
-        .spend(alicePk, new Sig(alice))
+        .spend(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
         .send();
 

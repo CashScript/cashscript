@@ -1,6 +1,6 @@
 import { BITBOX } from 'bitbox-sdk';
 import { TxnDetailsResult } from 'bitcoin-com-rest';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 
 run();
@@ -32,7 +32,7 @@ async function run(): Promise<void> {
   // Call the spend function with alice's signature + pk
   // And use it to send 0. 000 100 00 BCH back to the contract's address
   const tx = await instance.functions
-    .spend(alicePk, new Sig(alice))
+    .spend(alicePk, new SignatureTemplate(alice))
     .to(instance.address, 10000)
     .send();
   console.log('transaction details:', tx);
@@ -40,7 +40,7 @@ async function run(): Promise<void> {
   // Call the spend function with alice's signature + pk
   // And use it to send two outputs of 0. 000 150 00 BCH back to the contract's address
   const tx2: TxnDetailsResult = await instance.functions
-    .spend(alicePk, new Sig(alice))
+    .spend(alicePk, new SignatureTemplate(alice))
     .to(instance.address, 15000)
     .to(instance.address, 15000)
     .send();

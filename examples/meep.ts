@@ -1,5 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 
 run();
@@ -26,7 +26,7 @@ async function run(): Promise<void> {
   // Call .meep instead of .send, which prints the meep command that can be
   // executed to debug the transaction
   const meepStr = await instance.functions
-    .spend(alicePk, new Sig(alice))
+    .spend(alicePk, new SignatureTemplate(alice))
     .to(instance.address, 10000)
     .meep();
   console.log(meepStr);

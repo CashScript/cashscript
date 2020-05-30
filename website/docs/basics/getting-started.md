@@ -49,7 +49,7 @@ While more detailed examples are available on GitHub, we show an integration of 
 
 ```javascript
 const { BITBOX } = require('bitbox-sdk');
-const { Contract, Sig } = require('cashscript');
+const { Contract, SignatureTemplate } = require('cashscript');
 const { alice, bob, alicePk, bobPk } = require('./keys');
 
 async function run() {
@@ -62,7 +62,7 @@ async function run() {
   // Call the transfer function with Bob's signature
   // i.e. Bob claims the money that Alice has sent him
   const transferDetails = await instance.functions
-    .transfer(new Sig(bob))
+    .transfer(new SignatureTemplate(bob))
     .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000)
     .send();
   console.log(transferDetails);
@@ -70,7 +70,7 @@ async function run() {
   // Call the timeout function with Alice's signature
   // i.e. Alice recovers the money that Bob has not claimed
   const timeoutDetails = await instance.functions
-    .timeout(new Sig(alice))
+    .timeout(new SignatureTemplate(alice))
     .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000)
     .send();
   console.log(timeoutDetails);

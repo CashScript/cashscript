@@ -1,5 +1,5 @@
 import path from 'path';
-import { Contract, Instance, Sig } from '../../src';
+import { Contract, Instance, SignatureTemplate } from '../../src';
 import {
   alicePk,
   alice,
@@ -30,7 +30,7 @@ describe('HodlVault', () => {
       // when
       const expectPromise = expect(
         hodlVault.functions
-          .spend(new Sig(alice), wrongSig, message)
+          .spend(new SignatureTemplate(alice), wrongSig, message)
           .to(to, amount)
           .send(),
       );
@@ -50,7 +50,7 @@ describe('HodlVault', () => {
       // when
       const expectPromise = expect(
         hodlVault.functions
-          .spend(new Sig(alice), oracleSig, message)
+          .spend(new SignatureTemplate(alice), oracleSig, message)
           .to(to, amount)
           .send(),
       );
@@ -69,7 +69,7 @@ describe('HodlVault', () => {
 
       // when
       const tx = await hodlVault.functions
-        .spend(new Sig(alice), oracleSig, message)
+        .spend(new SignatureTemplate(alice), oracleSig, message)
         .to(to, amount)
         .send();
 

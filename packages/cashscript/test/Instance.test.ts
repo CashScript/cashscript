@@ -1,5 +1,5 @@
 import path from 'path';
-import { Contract, Instance, Sig } from '../src';
+import { Contract, Instance, SignatureTemplate } from '../src';
 import {
   alicePk,
   alice,
@@ -41,19 +41,19 @@ describe('Instance', () => {
     it('can\'t call spend with incorrect parameter signature', () => {
       expect(() => instance.functions.spend()).toThrow();
       expect(() => instance.functions.spend(0, 1)).toThrow();
-      expect(() => instance.functions.spend(alicePk, new Sig(alice), 0)).toThrow();
+      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice), 0)).toThrow();
       expect(() => bbInstance.functions.spend(Buffer.from('e803', 'hex'), 1000)).toThrow();
       expect(() => bbInstance.functions.spend(Buffer.from('e803000000', 'hex'), 1000)).toThrow();
     });
 
     it('can call spend with incorrect parameters', () => {
-      expect(() => instance.functions.spend(alicePk, new Sig(bob))).not.toThrow();
+      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(bob))).not.toThrow();
       expect(() => instance.functions.spend(alicePk, Buffer.alloc(65, 0))).not.toThrow();
       expect(() => bbInstance.functions.spend(Buffer.from('e8031234', 'hex'), 1000)).not.toThrow();
     });
 
     it('can call spend with correct parameters', () => {
-      expect(() => instance.functions.spend(alicePk, new Sig(alice))).not.toThrow();
+      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice))).not.toThrow();
       expect(() => bbInstance.functions.spend(Buffer.from('e8030000', 'hex'), 1000)).not.toThrow();
     });
   });

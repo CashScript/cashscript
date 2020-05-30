@@ -1,5 +1,5 @@
 import path from 'path';
-import { Contract, Instance, Sig } from '../../src';
+import { Contract, Instance, SignatureTemplate } from '../../src';
 import {
   alicePk,
   alice,
@@ -30,7 +30,7 @@ describe('TransferWithTimeout', () => {
       // when
       const expectPromise = expect(
         twtInstancePast.functions
-          .transfer(new Sig(alice))
+          .transfer(new SignatureTemplate(alice))
           .to(to, amount)
           .send(),
       );
@@ -42,7 +42,7 @@ describe('TransferWithTimeout', () => {
       // when
       const expectPromise2 = expect(
         twtInstancePast.functions
-          .timeout(new Sig(bob))
+          .timeout(new SignatureTemplate(bob))
           .to(to, amount)
           .send(),
       );
@@ -60,7 +60,7 @@ describe('TransferWithTimeout', () => {
       // when
       const expectPromise = await expect(
         twtInstanceFuture.functions
-          .timeout(new Sig(alice))
+          .timeout(new SignatureTemplate(alice))
           .to(to, amount)
           .send(),
       );
@@ -78,17 +78,17 @@ describe('TransferWithTimeout', () => {
 
       // when
       const tx1 = await twtInstancePast.functions
-        .transfer(new Sig(bob))
+        .transfer(new SignatureTemplate(bob))
         .to(toPast, amount)
         .send();
 
       const tx2 = await twtInstanceFuture.functions
-        .transfer(new Sig(bob))
+        .transfer(new SignatureTemplate(bob))
         .to(toFuture, amount)
         .send();
 
       const tx3 = await twtInstancePast.functions
-        .timeout(new Sig(alice))
+        .timeout(new SignatureTemplate(alice))
         .to(toPast, amount)
         .send();
 
@@ -110,12 +110,12 @@ describe('TransferWithTimeout', () => {
 
       // when
       const tx1 = await twtInstancePast.functions
-        .transfer(new Sig(bob))
+        .transfer(new SignatureTemplate(bob))
         .to(outputs)
         .send();
 
       const tx2 = await twtInstancePast.functions
-        .timeout(new Sig(alice))
+        .timeout(new SignatureTemplate(alice))
         .to(outputs[0].to, outputs[0].amount)
         .to(outputs[1].to, outputs[1].amount)
         .send();

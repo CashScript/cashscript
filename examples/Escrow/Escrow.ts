@@ -1,6 +1,6 @@
 import { BITBOX, Crypto } from 'bitbox-sdk';
 import { ECPair } from 'bitcoincashjs-lib';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 
 class Oracle {
@@ -65,13 +65,13 @@ async function run(): Promise<void> {
 
     // Produce new oracle message and signature
     const oracleMessage = oracle.createMessage(escrowKey, actionByte);
-    const oracleSignature = oracle.signMessage(oracleMessage);
+    const oracleSig = oracle.signMessage(oracleMessage);
 
     // address to send funds to
     const address = 'bchtest:qpg8pv6zj0l8hr56sh6tn65ufmcfrnswxg36t63jpr';
 
     const tx = await instance.functions
-      .spend(new Sig(bobKP), bobPK, oracleMessage, oracleSignature, alicePK, actionByte)
+      .spend(new SignatureTemplate(bobKP), bobPK, oracleMessage, oracleSig, alicePK, actionByte)
       .to(address, 1000)
       .send();
     console.log(tx);

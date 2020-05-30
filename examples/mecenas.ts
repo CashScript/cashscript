@@ -1,5 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, Sig } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import path from 'path';
 
 run();
@@ -44,7 +44,7 @@ export async function run(): Promise<void> {
   // Will send one pledge amount to alice, and send change back to the contract
   // Manually set fee to 1000 because this is hardcoded in the contract
   const tx = await instance.functions
-    .receive(alicePk, new Sig(alice))
+    .receive(alicePk, new SignatureTemplate(alice))
     .to(aliceAddress, 10000)
     .withHardcodedFee(1000)
     .send();
