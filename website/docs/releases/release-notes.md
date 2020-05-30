@@ -26,6 +26,9 @@ title: Release Notes
 #### Migration
 This update contains several breaking changes. See the [migration notes](/docs/releases/migration-notes#v03-to-v04) for a full migration guide.
 
+---
+https://twitter.com/RoscoKalis/status/1264921879346917376
+
 ## v0.3.3
 #### cashc compiler
 - :bug: Fix bug where variables could not reliably be used inside `OutputNullData` instantiation.
