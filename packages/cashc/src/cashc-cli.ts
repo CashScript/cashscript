@@ -25,6 +25,16 @@ const { argv } = yargs
     describe: 'Compile the contract to ASM format rather than a full artifact',
     type: 'boolean',
   })
+  .option('opcount', {
+    alias: 'c',
+    describe: 'Display the number of opcodes in the compiled bytecode',
+    type: 'boolean',
+  })
+  .option('size', {
+    alias: 's',
+    describe: 'Display the size in bytes of the compiled bytecode',
+    type: 'boolean',
+  })
   .option('args', {
     alias: 'a',
     describe: 'List of constructor arguments to pass into the contract. '
@@ -87,6 +97,16 @@ function run(): void {
 
     if (argv.hex) {
       console.log(bch.script.compile(script).toString('hex'));
+      return;
+    }
+
+    if (argv.opcount || argv.size) {
+      if (argv.opcount) {
+        console.log('Opcode count:', opcount);
+      }
+      if (argv.size) {
+        console.log('Bytesize:', bytesize);
+      }
       return;
     }
 
