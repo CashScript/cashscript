@@ -50,9 +50,9 @@ OP_CHECKSIG OP_VERIFY                  <=> OP_CHECKSIGVERIFY;
 OP_CHECKDATASIG OP_VERIFY              <=> OP_CHECKDATASIGVERIFY;
 
 # Remove/replace extraneous OP_SWAP
-# OP_SWAP OP_AND                         <=> OP_AND;
-# OP_SWAP OP_OR                          <=> OP_OR;
-# OP_SWAP OP_XOR                         <=> OP_XOR;
+OP_SWAP OP_AND                         <=> OP_AND;
+OP_SWAP OP_OR                          <=> OP_OR;
+OP_SWAP OP_XOR                         <=> OP_XOR;
 OP_SWAP OP_ADD                         <=> OP_ADD;
 OP_SWAP OP_EQUAL                       <=> OP_EQUAL;
 OP_SWAP OP_NUMEQUAL                    <=> OP_NUMEQUAL;
