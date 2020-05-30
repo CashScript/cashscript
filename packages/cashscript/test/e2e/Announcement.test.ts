@@ -19,10 +19,15 @@ describe('Announcement', () => {
       const to = announcement.address;
       const amount = 1000;
 
+      const largestUtxo = (await announcement.getUtxos())
+        .sort((a, b) => b.satoshis - a.satoshis)
+        .slice(0, 1);
+
       // when
       const expectPromise = expect(
         announcement.functions
           .announce(alicePk, new SignatureTemplate(alice))
+          .from(largestUtxo)
           .to(to, amount)
           .withHardcodedFee(2000)
           .send(),
@@ -36,11 +41,15 @@ describe('Announcement', () => {
     it('should fail when trying to announce incorrect announcement', async () => {
       // given
       const str = 'A contract may injure a human being and, through inaction, allow a human being to come to harm.';
+      const largestUtxo = (await announcement.getUtxos())
+        .sort((a, b) => b.satoshis - a.satoshis)
+        .slice(0, 1);
 
       // when
       const expectPromise = expect(
         announcement.functions
           .announce(alicePk, new SignatureTemplate(alice))
+          .from(largestUtxo)
           .withOpReturn(['0x6d02', str])
           .withHardcodedFee(2000)
           .withMinChange(1000)
@@ -55,10 +64,14 @@ describe('Announcement', () => {
     it('should succeed when announcing correct announcement', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
+      const largestUtxo = (await announcement.getUtxos())
+        .sort((a, b) => b.satoshis - a.satoshis)
+        .slice(0, 1);
 
       // when
       const tx = await announcement.functions
         .announce(alicePk, new SignatureTemplate(alice))
+        .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
         .withHardcodedFee(2000)
         .withMinChange(1000)

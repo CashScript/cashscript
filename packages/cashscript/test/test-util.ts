@@ -4,7 +4,8 @@ import { Output } from '../src/interfaces';
 
 export function getTxOutputs(tx: TxnDetailsResult): Output[] {
   return tx.vout.map((o: any) => {
-    if (o.scriptPubKey.asm.startsWith('OP_RETURN')) {
+    const OP_RETURN = '6a';
+    if (o.scriptPubKey.hex?.startsWith(OP_RETURN)) {
       return { to: Buffer.from(o.scriptPubKey.hex, 'hex'), amount: 0 };
     } else {
       return {
