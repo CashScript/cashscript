@@ -2,11 +2,26 @@
 title: Release Notes
 ---
 
+## v0.4.1
+#### cashc compiler
+- :racehorse: Add optimisations to bitwise operators.
+- :shell: New CLI arguments.
+  - Add `--opcount|-c` flag that displays the number of opcodes in the compiled bytecode.
+  - Add `--size|-s` flag that displays the size in bytes of the compiled bytecode.
+- :symbols: Add trailing comma support.
+
+#### CashScript SDK
+- :name_badge: Rename `Sig` to `SignatureTemplate` to better convey its meaning.
+  - `Sig` still exists for backward compatibility, but is deprecated and will be removed in a later release.
+
+---
+https://twitter.com/RoscoKalis/status/1267440143624884227
+
 ## v0.4.0
 #### cashc compiler
-- :sparkles: - Add `.reverse()` member function to `bytes` and `string` types.
-- :sparkles: - Add bitwise operators `&`, `^`, `|`.
-- :sparkles: - Allow casting `int` to variable size `bytes` based on `size` parameter.
+- :sparkles: Add `.reverse()` member function to `bytes` and `string` types.
+- :sparkles: Add bitwise operators `&`, `^`, `|`.
+- :sparkles: Allow casting `int` to variable size `bytes` based on `size` parameter.
 - :boom: **BREAKING**: Casting from `int` to unbounded `bytes` type now does not perform `OP_NUM2BIN`. Instead it is a purely semantic cast to signal that an integer value should be treated as a bytes value.
 - :horse_racing: Compiler optimisations.
   - Use `NUMEQUALVERIFY` for the final function in a contract.
