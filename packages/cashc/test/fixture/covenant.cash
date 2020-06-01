@@ -1,5 +1,8 @@
 contract Covenant(bytes4 requiredVersion) {
-    function spend(pubkey pk, sig s) {
+    function spend(
+        pubkey pk,
+        sig s,
+    ) {
         require(tx.version == requiredVersion);
         require(tx.bytecode == 0x00);
         require(checkSig(s, pk));

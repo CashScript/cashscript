@@ -1,0 +1,24 @@
+contract Contract(
+    pubkey ownerPk,
+    pubkey oraclePk,
+) {
+    function spend(
+        sig ownerSig,
+        datasig oracleMsgSig,
+        sig oracleTxSig,
+    ) {
+        bytes oracleMessage = bytes('Spend') + bytes(12, 10,);
+        require(checkDataSig(
+            oracleMsgSig,
+            oracleMessage,
+            oraclePk,
+        ));
+        require(checkMultiSig([
+            ownerSig,
+            oracleTxSig,
+        ], [
+            ownerPk,
+            oraclePk,
+        ]));
+    }
+}

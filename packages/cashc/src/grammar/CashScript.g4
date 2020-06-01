@@ -33,7 +33,7 @@ functionDefinition
     ;
 
 parameterList
-    : '(' (parameter (',' parameter)*)? ')'
+    : '(' (parameter (',' parameter)* ','?)? ')'
     ;
 
 parameter
@@ -78,12 +78,12 @@ functionCall
     ;
 
 expressionList
-    : '(' (expression (',' expression)*)? ')'
+    : '(' (expression (',' expression)* ','?)? ')'
     ;
 
 expression
     : '(' expression ')' # Parenthesised
-    | typeName '(' castable=expression (',' size=expression)? ')' # Cast
+    | typeName '(' castable=expression (',' size=expression)? ','? ')' # Cast
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
@@ -104,7 +104,7 @@ expression
     | left=expression op='|' right=expression # BinaryOp
     | left=expression op='&&' right=expression # BinaryOp
     | left=expression op='||' right=expression # BinaryOp
-    | '[' (expression (',' expression)*)? ']' # Array
+    | '[' (expression (',' expression)* ','?)? ']' # Array
     | PreimageField # PreimageField
     | Identifier # Identifier
     | literal # LiteralExpression

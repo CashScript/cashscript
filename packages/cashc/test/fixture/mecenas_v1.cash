@@ -1,4 +1,8 @@
-contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
+contract Mecenas(
+    bytes20 recipient,
+    bytes20 funder,
+    int pledge,
+) {
     function receive(pubkey pk, sig s) {
         require(checkSig(s, pk));
 

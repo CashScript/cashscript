@@ -22,7 +22,11 @@ contract HodlVault(
         require(price >= priceTarget);
 
         // Handle necessary signature checks
-        require(checkDataSig(oracleSig, oracleMessage, oraclePk));
+        require(checkDataSig(
+            oracleSig,
+            oracleMessage,
+            oraclePk,
+        ));
         require(checkSig(ownerSig, ownerPk));
     }
 }
