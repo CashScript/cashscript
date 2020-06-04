@@ -81,9 +81,9 @@ function Home() {
   const {siteConfig = {}} = context;
   return (
     <Layout
-      title={siteConfig.title}
-      description='Smart contracts for Bitcoin Cash'
-      keywords={['cashscript','smart contracts','bitcoin cash']}>
+      title={`${siteConfig.title}: ${siteConfig.tagline}`}
+      description='A high-level smart contract language for Bitcoin Cash. Write complex smart contracts with a straighforward syntax and integrate them into your JavaScript applications.'
+      keywords={['cashscript','smart contracts','bitcoin cash', 'compiler', 'sdk', 'programming language']}>
       <header className={classnames('hero', styles.banner)}>
         <div className='container'>
           <div className='row'>

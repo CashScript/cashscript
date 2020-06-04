@@ -6,8 +6,8 @@ module.exports = {
   url: 'https://cashscript.org',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
-  organizationName: 'CashScript',
-  projectName: 'CashScript',
+  organizationName: 'Bitcoin-com',
+  projectName: 'cashscript',
   themeConfig: {
     prism: {
       theme: require('prism-react-renderer/themes/nightOwlLight'),
