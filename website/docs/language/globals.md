@@ -52,7 +52,7 @@ Because of the way covenants work in the underlying Bitcoin Script, the sighash 
 :::
 
 :::note
-The explanations below use the default `hashtype` of `0x41`. Other hashtypes could assign slightly different meaning to these variables. For more specific information on the sighash preimage, refer to [BIP143][bip143] and the [sighash docs][sighash-docs].
+The explanations below use the default `SIGHASH_ALL` *hashtype*. Other hashtypes could assign slightly different meaning to these variables. For more specific information on the sighash preimage, refer to [BIP143][bip143] and the [sighash docs][sighash-docs].
 :::
 
 ### tx.version
