@@ -89,9 +89,9 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
         int intValue = int(bytes(tx.value));
 
         // Check if the UTXO's value is higher than the pledge amount + fee
-        if (intValue <= pledge + fee) {
+        if (intValue <= pledge + minerFee) {
             // Create an Output that sends the remaining balance to the recipient
-            bytes34 out1 = new OutputP2PKH(bytes8(intValue - fee), recipient);
+            bytes34 out1 = new OutputP2PKH(bytes8(intValue - minerFee), recipient);
 
             // Enforce that this is the only output for the current transaction
             require(hash256(out1) == tx.hashOutputs);
@@ -100,7 +100,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
             bytes34 out1 = new OutputP2PKH(bytes8(pledge), recipient);
 
             // Create an Output that sends the remainder back to the contract
-            bytes8 remainder = bytes8(intValue - pledge - fee);
+            bytes8 remainder = bytes8(intValue - pledge - minerFee);
             bytes32 out2 = new OutputP2SH(remainder, hash160(tx.bytecode));
 
             // Enforce that these are the only outputs for the current transaction

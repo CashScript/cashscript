@@ -8,9 +8,9 @@ contract Mecenas(
 
         require(tx.age >= 30 days);
 
-        int fee = 1000;
+        int minerFee = 1000;
         bytes8 amount1 = bytes8(pledge);
-        bytes8 amount2 = bytes8(int(bytes(tx.value)) - pledge - fee);
+        bytes8 amount2 = bytes8(int(bytes(tx.value)) - pledge - minerFee);
 
         bytes34 out1 = new OutputP2PKH(amount1, recipient);
         bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode));

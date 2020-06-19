@@ -1,7 +1,7 @@
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
     function receive() {
-        int fee = 1000;
-        bytes8 amount1 = bytes8(int(bytes(tx.value)) - pledge - fee);
+        int minerFee = 1000;
+        bytes8 amount1 = bytes8(int(bytes(tx.value)) - pledge - minerFee);
         bytes8 amount2 = bytes8(pledge);
 
         require(tx.age >= 30 days);

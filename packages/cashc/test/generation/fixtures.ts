@@ -543,13 +543,13 @@ export const fixtures: Fixture[] = [
         + 'OP_12 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
         // require(tx.age >= period)
         + 'OP_6 OP_ROLL OP_CHECKSEQUENCEVERIFY OP_DROP '
-        // int fee = 1000
+        // int minerFee = 1000
         + 'e803 '
         // int intValue = int(bytes(tx.value))
         + 'OP_ROT OP_BIN2NUM '
-        // if (intValue <= pledge + fee) {
+        // if (intValue <= pledge + minerFee) {
         + 'OP_DUP OP_7 OP_PICK OP_3 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF '
-        // bytes8 amount1 = bytes8(intValue - fee)
+        // bytes8 amount1 = bytes8(intValue - minerFee)
         + 'OP_2DUP OP_SWAP OP_SUB OP_8 OP_NUM2BIN '
         // bytes34 out1 = new OutputP2PKH(amount1, recipient)
         + 'OP_DUP 1976a914 OP_CAT OP_6 OP_PICK OP_CAT 88ac OP_CAT '
@@ -559,7 +559,7 @@ export const fixtures: Fixture[] = [
         + 'OP_ELSE '
         // bytes8 amount1 = bytes8(pledge)
         + 'OP_6 OP_PICK OP_8 OP_NUM2BIN '
-        // bytes8 amount2 = bytes8(intValue - pledge - fee)
+        // bytes8 amount2 = bytes8(intValue - pledge - minerFee)
         + 'OP_OVER OP_8 OP_PICK OP_SUB OP_3 OP_PICK OP_SUB OP_8 OP_NUM2BIN '
         // bytes34 out1 = new OutputP2PKH(amount1, recipient)
         + 'OP_OVER 1976a914 OP_CAT OP_7 OP_PICK OP_CAT 88ac OP_CAT '

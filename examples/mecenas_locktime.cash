@@ -23,13 +23,13 @@ contract Mecenas(bytes4 initialBlock, int pledgePerBlock, bytes20 recipient, byt
         int minerFee = 1000; // hardcoded fee
         int intValue = int(bytes(tx.value));
 
-        if (intValue <= pledge + fee) {
-            bytes8 amount1 = bytes8(intValue - fee);
+        if (intValue <= pledge + minerFee) {
+            bytes8 amount1 = bytes8(intValue - minerFee);
             bytes34 out1 = new OutputP2PKH(amount1, recipient);
             require(hash256(out1) == tx.hashOutputs);
         } else {
             bytes8 amount1 = bytes8(pledge);
-            bytes8 amount2 = bytes8(intValue - pledge - fee);
+            bytes8 amount2 = bytes8(intValue - pledge - minerFee);
             bytes34 out1 = new OutputP2PKH(amount1, recipient);
             bytes32 out2 = new OutputP2SH(amount2, hash160(newContract));
             require(hash256(out1 + out2) == tx.hashOutputs);

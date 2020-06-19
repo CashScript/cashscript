@@ -499,7 +499,7 @@ export const fixtures: Fixture[] = [
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
-                'fee',
+                'minerFee',
                 new IntLiteralNode(1000),
               ),
               new VariableDefinitionNode(
@@ -517,10 +517,10 @@ export const fixtures: Fixture[] = [
                   new BinaryOpNode(
                     new IdentifierNode('pledge'),
                     BinaryOperator.PLUS,
-                    new IdentifierNode('fee'),
+                    new IdentifierNode('minerFee'),
                   ),
                 ),
-                // bytes8(int(bytes(tx.value)) - fee);
+                // bytes8(int(bytes(tx.value)) - minerFee);
                 new BlockNode([
                   new VariableDefinitionNode(
                     new BytesType(8),
@@ -530,7 +530,7 @@ export const fixtures: Fixture[] = [
                       new BinaryOpNode(
                         new IdentifierNode('intValue'),
                         BinaryOperator.MINUS,
-                        new IdentifierNode('fee'),
+                        new IdentifierNode('minerFee'),
                       ),
                     ),
                   ),
@@ -571,7 +571,7 @@ export const fixtures: Fixture[] = [
                           new IdentifierNode('pledge'),
                         ),
                         BinaryOperator.MINUS,
-                        new IdentifierNode('fee'),
+                        new IdentifierNode('minerFee'),
                       ),
                     ),
                   ),
