@@ -1,12 +1,7 @@
 import { Script as BScript } from 'bitbox-sdk';
 import { UnaryOperator, BinaryOperator } from '../ast/Operator';
 import { GlobalFunction, TimeOp } from '../ast/Globals';
-import {
-  PrimitiveType,
-  Type,
-  BytesType,
-  TupleType,
-} from '../ast/Type';
+import { PrimitiveType, Type, BytesType } from '../ast/Type';
 import { Data } from '../util';
 
 // TODO: Update this some tie when a library has OP_REVERSEBYTES support
@@ -95,42 +90,4 @@ export class toOps {
 
     return mapping[op];
   }
-}
-
-export function returnType(op: GlobalFunction | BinaryOperator | UnaryOperator): Type {
-  const mapping = {
-    [GlobalFunction.ABS]: PrimitiveType.INT,
-    [GlobalFunction.CHECKDATASIG]: PrimitiveType.BOOL,
-    [GlobalFunction.CHECKMULTISIG]: PrimitiveType.BOOL,
-    [GlobalFunction.CHECKSIG]: PrimitiveType.BOOL,
-    [GlobalFunction.HASH160]: new BytesType(20),
-    [GlobalFunction.HASH256]: new BytesType(32),
-    [GlobalFunction.MAX]: PrimitiveType.INT,
-    [GlobalFunction.MIN]: PrimitiveType.INT,
-    [GlobalFunction.RIPEMD160]: new BytesType(20),
-    [GlobalFunction.SHA1]: new BytesType(20),
-    [GlobalFunction.SHA256]: new BytesType(32),
-    [GlobalFunction.WITHIN]: PrimitiveType.BOOL,
-    [BinaryOperator.DIV]: PrimitiveType.INT,
-    [BinaryOperator.MINUS]: PrimitiveType.INT,
-    [BinaryOperator.MOD]: PrimitiveType.INT,
-    [BinaryOperator.PLUS]: PrimitiveType.ANY, // TODO: int/string/bytes
-    [BinaryOperator.LT]: PrimitiveType.BOOL,
-    [BinaryOperator.LE]: PrimitiveType.BOOL,
-    [BinaryOperator.GT]: PrimitiveType.BOOL,
-    [BinaryOperator.GE]: PrimitiveType.BOOL,
-    [BinaryOperator.EQ]: PrimitiveType.BOOL,
-    [BinaryOperator.NE]: PrimitiveType.BOOL,
-    [BinaryOperator.AND]: PrimitiveType.BOOL,
-    [BinaryOperator.OR]: PrimitiveType.BOOL,
-    [BinaryOperator.BIT_AND]: new BytesType(),
-    [BinaryOperator.BIT_OR]: new BytesType(),
-    [BinaryOperator.BIT_XOR]: new BytesType(),
-    [BinaryOperator.SPLIT]: new TupleType(),
-    [UnaryOperator.NOT]: PrimitiveType.BOOL,
-    [UnaryOperator.NEGATE]: PrimitiveType.INT,
-    [UnaryOperator.SIZE]: PrimitiveType.INT,
-    [UnaryOperator.REVERSE]: new BytesType(), // TODO: string/bounded bytes
-  };
-  return mapping[op];
 }
