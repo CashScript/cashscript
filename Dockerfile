@@ -8,6 +8,9 @@ COPY website/package.json /app/package.json
 COPY website/yarn.lock /app/yarn.lock
 RUN yarn
 
+# Invalidate cache from here on
+ADD "http://worldtimeapi.org/" skipcache
+
 # Remove potentially cached Docusaurus files
 RUN rm -rf /app/.docusaurus
 RUN rm -rf /app/build
