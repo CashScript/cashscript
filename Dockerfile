@@ -27,4 +27,5 @@ RUN yarn build
 FROM nginx:1.17.0-alpine
 
 # Copy build artifacts from the 'build environment'
+RUN rm -rf /usr/share/nginx/html/**
 COPY --from=build /app/build /usr/share/nginx/html
