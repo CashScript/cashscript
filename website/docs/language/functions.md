@@ -24,7 +24,7 @@ Returns the minimum value of arguments `a` and `b`.
 int max(int a, int b)
 ```
 
-Retuns the maximum value of arguments `a` and `b`.
+Returns the maximum value of arguments `a` and `b`.
 
 ### within()
 ```solidity
@@ -71,7 +71,7 @@ Returns the double SHA-256 hash of argument `x`.
 
 ## Signature checking functions
 :::caution
-All signature checking functions must comply with the [NULLFAIL](https://github.com/bitcoin/bips/blob/master/bip-0146.mediawiki) rule. This means that if you want to use the output of a signature check inside the condition of an if-statement, the input signature needs to either be correct, or an empty byte array. When you use an incorrect signature as an input, the script will fail.
+All signature checking functions must comply with the [NULLFAIL][bip146] rule. This means that if you want to use the output of a signature check inside the condition of an if-statement, the input signature needs to either be correct, or an empty byte array. When you use an incorrect signature as an input, the script will fail.
 :::
 
 ### checkSig()
@@ -89,7 +89,7 @@ bool checkMultiSig(sig[] sigs, pubkey[] pks)
 Performs a multi-signature check using a list of transaction signatures and public keys.
 
 :::note
-While this function can be used inside your smart contracts, it is not supported by the JavaScript SDK, so it is recommended not to use it. Instead a `checkMultisig` can be simulated using multiple `checkSig`s.
+While this function can be used inside your smart contracts, it is not supported by the JavaScript SDK, so it is recommended not to use it. Instead a `checkMultiSig()` call can be simulated using multiple `checkSig()` calls.
 :::
 
 ### checkDataSig()
@@ -124,3 +124,5 @@ An overview of all supported operators and their precedence is included below. N
 | 16         | Logical AND                     | `&&`                     |
 | 17         | Logical OR                      | \|\|                     |
 | 18         | Assignment                      | `=`                      |
+
+[bip146]: https://github.com/bitcoin/bips/blob/master/bip-0146.mediawiki

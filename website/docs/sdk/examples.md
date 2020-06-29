@@ -2,7 +2,7 @@
 title: Examples
 ---
 
-An extensive collection of examples is available in the [GitHub repository](https://github.com/Bitcoin-com/cashscript/tree/master/examples). Below we discuss a few of these examples in more details. These examples focus mainly on the use of the SDK, while the [Examples page](/docs/language/examples) in the language section focuses more on the CashScript syntax.
+An extensive collection of examples is available in the [GitHub repository][github-examples]. Below we discuss a few of these examples in more details. These examples focus mainly on the use of the SDK, while the [Examples page](/docs/language/examples) in the language section focuses more on the CashScript syntax.
 
 ## Transfer With Timeout
 The idea of this smart contract is explained on the [Language Examples page](/docs/language/examples#transfer-with-timeout). The gist is that it allows you to send an amount of BCH to someone, but if they don't claim the sent amount, it can be recovered by the sender.
@@ -122,7 +122,7 @@ The CashScript code above ensures that the smart contract **can only** be used i
 ```ts title="Announcement.js"
 import { BITBOX } from 'bitbox-sdk';
 import { Contract, SignatureTemplate } from 'cashscript';
-import { alice, alicePk } from './somwhere';
+import { alice, alicePk } from './somewhere';
 
 export async function run(){
   // Compile the Announcement contract
@@ -156,3 +156,4 @@ export async function run(){
 ```
 
 [bitbox]: https://developer.bitcoin.com/bitbox/
+[github-examples]: https://github.com/Bitcoin-com/cashscript/tree/master/examples

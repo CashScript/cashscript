@@ -26,7 +26,7 @@ https://twitter.com/RoscoKalis/status/1267440143624884227
 - :horse_racing: Compiler optimisations.
   - Use `NUMEQUALVERIFY` for the final function in a contract.
   - Only drop the final `VERIFY` if the remaining stack size is less than 5.
-  - Precalculate `OutputNullData` argument size.
+  - Pre-calculate `OutputNullData` argument size.
 - :bug: Fix a bug where return type of `sha1` was incorrectly marked as `bytes32`.
 - :bug: `Data.decodeBool` only treated numerical zero as false, now any zero-representation is considered false (e.g. 0x0000, -0, ...).
 
@@ -91,7 +91,7 @@ https://twitter.com/RoscoKalis/status/1217101473743544320
   * Available fields: `tx.version`, `tx.hashPrevouts`, `tx.hashSequence`, `tx.outpoint`, `tx.bytecode`, `tx.value`, `tx.sequence`, `tx.hashOutputs`, `tx.locktime`, `tx.hashtype`.
   * When any of these fields is used inside a function, this function is marked `covenant: true`, and requires a preimage as parameter (automatically passed by CashScript SDK).
   * The correct fields are efficiently cut out of the preimage and made available.
-  * The first occurrance of `require(checkSig(sig, pubkey));` is identified, and preimage verification is inserted using the same sig/pubkey. **Important**: if you have multiple `checkSig` statements, keep in mind that the first will be used for verification.
+  * The first occurrence of `require(checkSig(sig, pubkey));` is identified, and preimage verification is inserted using the same sig/pubkey. **Important**: if you have multiple `checkSig` statements, keep in mind that the first will be used for verification.
   * Automatically cuts off VarInt from `scriptCode`, so `tx.bytecode` contains the actual contract bytecode.
 * :sparkles: Output instantiation! Automatically construct output formats for covenant transactions.
   * `new OutputP2PKH(bytes8 amount, bytes20 pkh)`

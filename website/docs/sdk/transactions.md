@@ -1,9 +1,9 @@
 ---
 title: Sending Transactions
 ---
-All contract function calls return an incomplete `Transaction` object. This transaction can be completed by providing a number of outputs using the `to()` or `withOpReturn()` functions. Other chained functions are included to set other transaction parameters.
+All contract function calls return an incomplete `Transaction` object. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
 
-While there are many options options, the main functions that are used are `to()`, `withOpReturn()` and `send()`, although `withHardcodedFee()` can also be commonly used with covenant contracts.
+While there are many options options, the main functions that are used are [`to()`][to()], [`withOpReturn()`][withOpReturn()] and [`send()`][send()], although [`withHardcodedFee()`][withHardcodedFee()] can also be commonly used with covenant contracts.
 
 ## Transaction parameters
 
@@ -37,7 +37,7 @@ The `withOpReturn()` function allows you to add `OP_RETURN` outputs to the trans
 transaction.from(inputs: Utxo[]): this
 ```
 
-The `from()` function allows you to provide a hardcoded list of contract UTXOs to be used in the transaction. This overrides the regular UTXO selection performed by the CashScript SDK, so **no** further selection will be performed on the provided UTXOs. This function can only be called once per transaction.
+The `from()` function allows you to provide a hardcoded list of contract UTXOs to be used in the transaction. This overrides the regular UTXO selection performed by the CashScript SDK, so **no further selection will be performed** on the provided UTXOs. This function can only be called once per transaction.
 
 :::caution
 This function should generally not be used. Only in very specific cases would you want to override the regular UTXO selection.
@@ -84,7 +84,7 @@ transaction.withMinChange(minChange: number): this
 The `withMinChange()` function allows you to set a threshold for including a change output. Any remaining amount under this threshold will be added to the transaction fee instead.
 
 :::tip
-This is generally not useful, except in very specific use cases in covenant contracts.
+This is generally not useful, except in specific use cases in covenant contracts.
 :::
 
 #### Example
@@ -97,7 +97,7 @@ This is generally not useful, except in very specific use cases in covenant cont
 transaction.withAge(age: number): this
 ```
 
-The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to to use the `tx.age` CashScript functionality, and the `age` parameter passed into this function will be the value of `tx.age` inside the smart contract. For more information, refer to [BIP68](https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki).
+The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to to use the [`tx.age`][tx.age] CashScript functionality, and the `age` parameter passed into this function will be the value of [`tx.age`][tx.age] inside the smart contract. For more information, refer to [BIP68][bip68].
 
 #### Example
 ```ts
@@ -109,10 +109,10 @@ The `withAge()` function allows you to specify the minimum age of the transactio
 transaction.withTime(time: number): this
 ```
 
-The `withTime()` function allows you to specify the minimum block number that the transaction can be included in. The `time` parameter will be the value of `tx.time` inside the smart contract.
+The `withTime()` function allows you to specify the minimum block number that the transaction can be included in. The `time` parameter will be the value of [`tx.time`][tx.time] inside the smart contract.
 
 :::tip
-By default, the transaction's `time` variable is set to the most recent block number, which is generally what you want. So you only want to override this in specific use cases.
+By default, the transaction's `time` variable is set to the most recent block number, which is the most common use case. So you should only override this in specific use cases.
 :::
 
 #### Example
@@ -134,7 +134,7 @@ If the transaction fails, a meep command is automatically returned. This command
 
 #### Example
 ```ts
-import { alice } from './somehwere';
+import { alice } from './somewhere';
 
 const txDetails = await instance.functions
   .transfer(new SignatureTemplate(alice))
@@ -165,7 +165,7 @@ const txHex = await instance.functions
 async transaction.meep(): Promise<string>
 ```
 
-After completing a transaction, the `meep()` function can be used to return the required debugging command for the [meep deubgger][meep]. This command string can then be used to debug the transaction.
+After completing a transaction, the `meep()` function can be used to return the required debugging command for the [meep debugger][meep]. This command string can then be used to debug the transaction.
 
 #### Example
 ```ts
@@ -190,7 +190,7 @@ This `Reason` enum only includes errors that are related to smart contract execu
   * `Reason.CHECKSIGVERIFY`
   * `Reason.CHECKDATASIGVERIFY`
   * `Reason.NUMEQUALVERIFY`
-* **`FailedTimeCheckError`**, signifies a failed timecheck using `tx.time` or `tx.age`. This includes the following reasons:
+* **`FailedTimeCheckError`**, signifies a failed time check using `tx.time` or `tx.age`. This includes the following reasons:
   * `Reason.NEGATIVE_LOCKTIME`
   * `Reason.UNSATISFIED_LOCKTIME`
 * **`FailedSigCHeckError`**, signifies a failed signature check. This includes the following reasons:
@@ -233,7 +233,7 @@ enum Reason {
   DIV_BY_ZERO = 'Division by zero error',
   MOD_BY_ZERO = 'Modulo by zero error',
   INVALID_BITFIELD_SIZE = 'Bitfield of unexpected size error',
-  INVALID_BIT_RANGE = 'Bitfield\'s bit out of the expected range',
+  INVALID_BIT_RANGE = "Bitfield\'s bit out of the expected range",
   NEGATIVE_LOCKTIME = 'Negative locktime',
   UNSATISFIED_LOCKTIME = 'Locktime requirement not satisfied',
   SIG_HASHTYPE = 'Signature hash type missing or not understood',
@@ -257,3 +257,19 @@ enum Reason {
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [meep]: https://github.com/gcash/meep
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
+
+[tx.age]: /docs/language/globals#txage
+[tx.time]: /docs/language/globals#txtime
+
+[to()]: /docs/sdk/transactions#to
+[withOpReturn()]: /docs/sdk/transactions#withopreturn
+[from()]: /docs/sdk/transactions#from
+[withFeePerByte()]: /docs/sdk/transactions#withfeeperbyte
+[withHardcodedFee()]: /docs/sdk/transactions#withhardcodedfee
+[withMinChange()]: /docs/sdk/transactions#withminchange
+[withAge()]: /docs/sdk/transactions#withage
+[withTime()]: /docs/sdk/transactions#withtime
+
+[send()]: /docs/sdk/transactions#send
+[build()]: /docs/sdk/transactions#build
+[meep()]: /docs/sdk/transactions#meep

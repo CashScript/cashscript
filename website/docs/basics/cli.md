@@ -5,7 +5,7 @@ title: Command Line Interface
 The `cashc` command line interface is used to compile CashScript `.cash` files into `.json` artifact files. These artifacts can be imported and used by the JavaScript SDK or other libraries / applications that use CashScript. For more information on this artifact format refer to [Artifacts](/docs/language/artifacts).
 
 ## Installation
-You can use `npm` to install the `cashc` command line tool gloablly.
+You can use `npm` to install the `cashc` command line tool globally.
 
 ```bash
 npm install -g cashc

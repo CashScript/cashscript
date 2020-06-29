@@ -3,7 +3,7 @@ title: Global Variables
 ---
 
 ## Globally available units
-An integer literal can take a suffix of either monetary or temporary units to add smeantic value to these integers and to simplify arithmetic. When these units are used, the underlying integer is automatically multiplied by the value of the unit. The units `sats`, `finney`, `bits` and `bitcoin` are used to denote monetary value, while the units `seconds`, `minutes`, `hours`, `days` and `weeks` are used to denote time.
+An integer literal can take a suffix of either monetary or temporary units to add semantic value to these integers and to simplify arithmetic. When these units are used, the underlying integer is automatically multiplied by the value of the unit. The units `sats`, `finney`, `bits` and `bitcoin` are used to denote monetary value, while the units `seconds`, `minutes`, `hours`, `days` and `weeks` are used to denote time.
 
 :::caution
 Be careful when using these units in precise calendar calculations though, because not every year equals 365 days and not even every minute has 60 seconds because of [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
@@ -23,9 +23,14 @@ require(1 days == 24 hours);
 require(1 weeks == 7 days);
 ```
 
-## Global timelock variables
+## Global time lock variables
+Bitcoin Cash has support for different kinds of time locks, which can be used to specify time-based conditions inside Bitcoin Cash contracts. These time locks can be separated by **three main attributes**: location, targeting and metric. The *location* can be the *transaction level* or the *contract level*, but *contract level* locks also require you to use a corresponding *transaction level* lock. The targeting can be *relative* (e.g. at least 4 hours have passed) or *absolute* (e.g. the block number is at least 600,000). The metric can be blocks or seconds.
+
+It can be difficult to fully grasp the intricacies of time locks, so if you're starting out it is recommended to start off with the simplest version: absolute block-based time locks. If you do want to dive into the more advanced uses of time locks, James Prestwich wrote [**the best** article explaining time locks in Bitcoin](https://prestwi.ch/bitcoin-time-locks/) that also fully applies to Bitcoin Cash.
+
+
 ### tx.time
-`tx.time` generally represents the block number that the the spending transaction is included in. When comparing it with numbers higher than or equal to `500,000,000`, it is treated as a timestamp rather than blocknumber. However, in this case extra configuration is needed on the client side, which is currently not supported in the JavaScript SDK. So it is recommended to treat this variable only as a block number and compare it only with values under `500,000,000`.
+`tx.time` is used to create *absolute* time locks. The value of `tx.time` can either represent the block number of the spending transaction or its timestamp. When comparing it with values below `500,000,000`, it is treated as a blocknumber, while higher values are treated as a timestamp.
 
 Due to limitations in the underlying Bitcoin Script, `tx.time` can only be used in the following way:
 
@@ -33,14 +38,26 @@ Due to limitations in the underlying Bitcoin Script, `tx.time` can only be used 
 require(tx.time >= <expression>);
 ```
 
+Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. The CashScript SDK automatically sets this *transaction level* time lock to the most recent block number, as this is the most common use case. If you need to use a different block number or timestamp, this should be passed into the CashScript SDK using the [`withTime()`][withTime()] function. If the default matches your use case, **no additional actions are required**.
+
+:::note
+`tx.time` corresponds to the `nLocktime` field of the current transaction and the `OP_CHECKLOCKTIMEVERIFY` opcode.
+:::
+
 ### tx.age
-`tx.age` represents the block depth of the UTXO that is being spent by the current transaction. In other words it represents the UTXOs age in blocks. numbers higher than or equal to `500,000,000`, it is treated as an age in seconds rather than blocks. However, in this case extra configuration is needed on the client side, which is currently not supported in the JavaScript SDK. So it is recommended to treat this variable only as a block number and compare it only with values under `500,000,000`.
+`tx.age is used to create *relative* time locks. The value of `tx.age` can either represent a number of blocks, or a number of *chunks*, which are 512 seconds. The corresponding *transaction level* time lock determines which of the two options is used.
 
 Due to limitations in the underlying Bitcoin Script, `tx.age` can only be used in the following way:
 
 ```solidity
 require(tx.age >= <expression>);
 ```
+
+Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done in the CashScript SDK using the [`withAge()`][withAge()] function. However, the value passed into this function will always be treated as a number of blocks, so **it is currently not supported to use `tx.age` as a number of second chunks**.
+
+:::note
+`tx.age` corresponds to the `nSequence` field of the current *UTXO* and the `OP_CHECKSEQUENCEVERIFY` opcode.
+:::
 
 ## Global covenant variables
 Covenants are a technique used to put constraints on spending the money inside a smart contract. The main use case of this is limiting the addresses where money can be sent and the amount sent. This technique works by passing the so-called *sighash preimage* into the smart contract and extracting its individual fields. Using the JavaScript SDK this preimage is passed in automatically by the SDK, but when constructing transactions manually, be sure to include the preimage when working with covenants.
@@ -78,7 +95,7 @@ Represents the double sha256 of the serialisation of all input outpoints.
 bytes32 tx.hashSequence
 ```
 
-Represents the double sha256 of the serialisation of `nSequence` of all inputs.
+Represents the double sha256 of the serialisation of the `nSequence` field of all inputs.
 
 ### tx.outpoint
 ```solidity
@@ -144,7 +161,7 @@ bytes4 tx.locktime
 Represents the `nLocktime` field of the current input.
 
 :::note
-`tx.locktime` is similar to the `tx.time` global variable. But for safety it is recommended to use `tx.time` over `tx.locktime` in almost all cases.
+`tx.locktime` is similar to the [`tx.time`][tx.time] global variable. But for safety it is recommended to use [`tx.time`][tx.time] over `tx.locktime` in *almost* all cases.
 :::
 
 ### tx.hashtype
@@ -155,7 +172,7 @@ bytes4 tx.hashtype
 Represents the hashtype used for the generation of the sighash and transaction signature. Can be used to enforce that the spender uses a specific hashtype. See the [sighash docs][sighash-docs] for the implications of different hashtypes.
 
 ## Output instantiation
-One of the main use cases of covenants is enforcing transaction outputs (where money is sent and how much). To assist with enforcing these outputs, there is a number of `Output` objects that can be instantiated. These objects are then used in combination with `tx.hashOutputs` as shown in the [`tx.hashOutputs` section](#txhashoutputs).
+One of the main use cases of covenants is enforcing transaction outputs (where money is sent and how much). To assist with enforcing these outputs, there is a number of `Output` objects that can be instantiated. These objects are then used in combination with `tx.hashOutputs` as shown in the [`tx.hashOutputs` section][tx.hashOutputs].
 
 #### Example
 ```solidity
@@ -183,8 +200,14 @@ Creates new P2SH output serialisation for an output sending `amount` to `scriptH
 new OutputNullData(bytes[] chunks): bytes
 ```
 
-Creates new OP_RETURN output serialisation for an output containing an OP_RETURN script with `chunks`.
+Creates new OP_RETURN output serialisation for an output containing an OP_RETURN script with `chunks` as its data.
 
 [bip143]: https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [sighash-docs]: https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/replay-protected-sighash.md#digest-algorithm
+
+[tx.time]: /docs/language/globals#txtime
+[tx.hashOutputs]: /docs/language/globals#txhashoutputs
+
+[withAge()]: /docs/sdk/transactions#withage
+[withTime()]: /docs/sdk/transactions#withtime

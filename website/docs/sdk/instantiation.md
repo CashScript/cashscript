@@ -68,7 +68,7 @@ const artifact = HodlVault.export();
 contract.new(...parameters: Parameter[]): Instance
 ```
 
-After creating a `Contract` object through either compiling from source or importing from artifact, new instances of this contract can be created. This is done by calling the `new` function with the corresponding constructor parameters as expected by the smart contract.
+After creating a `Contract` object through either compiling from source or importing from artifact, new instances of this contract can be created. This is done by calling the `new()` function with the corresponding constructor parameters as expected by the smart contract.
 
 #### Example
 ```ts
@@ -175,7 +175,7 @@ These contract functions return an incomplete `Transaction` object, which needs 
 
 #### Example
 ```ts
-import { alice } from './somehwere';
+import { alice } from './somewhere';
 
 const tx = await instance.functions
   .transfer(new SignatureTemplate(alice))

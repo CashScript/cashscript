@@ -2,7 +2,7 @@
 title: Types
 ---
 
-CashScript is a statically typed language, which means that the type of each variable needs to be specified. Types can also be implicitly or explicitly casted to other types. For a quick reference of the various casting possibilities, see [Type Casting](#type-casting).
+CashScript is a statically typed language, which means that the type of each variable needs to be specified. Types can also be implicitly or explicitly cast to other types. For a quick reference of the various casting possibilities, see [Type Casting](#type-casting).
 
 ## Boolean
 `bool`: The possible values are constants `true` and `false`.
@@ -27,7 +27,7 @@ Operators:
 - Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (all evaluate to `bool`)
 - Arithmetic operators: `+`, `-`, unary `-`, `/`, `%` (modulo).
 
-Note the clear lack of the `*` and `**` (exponentation) operators as well as any bitwise operators.
+Note the clear lack of the `*` and `**` (exponentiation) operators as well as any bitwise operators.
 
 :::caution
 While integer sizes are limited to 32 bits, the output of arithmetic operations can exceed this size. This will not result in an overflow, but instead the script will fail when using this value in another integer operation.
@@ -122,7 +122,7 @@ string answer = question.split(15)[0].split(8)[1];
 Type casting can be done both explicitly and implicitly as illustrated below. `pubkey`, `sig` and `datasig` can be implicitly cast to `bytes`, meaning they can be used anywhere where you would normally use a `bytes` type. Explicit type casting can be done with a broader range of types, but is still limited. The syntax of this explicit type casting is illustrated below. Note that you can also cast to bounded `bytes` types.
 
 :::note
-When casting integer types to bytes of a certain size, the integer value is padded with zeros. e.g. `bytes4(0) == 00000000`. It is also possible to pad with a variable number of zeros, by passing in a `size` parameter, which indicates the size of the output. e.g. `bytes(0, 4 - 2) == 0000`.
+When casting integer types to bytes of a certain size, the integer value is padded with zeros. e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros, by passing in a `size` parameter, which indicates the size of the output. e.g. `bytes(0, 4 - 2) == 0x0000`.
 :::
 
 :::caution
