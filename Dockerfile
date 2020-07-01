@@ -9,7 +9,7 @@ COPY website/yarn.lock /app/yarn.lock
 RUN yarn
 
 # Invalidate cache from here on
-ADD "http://worldtimeapi.org/" skipcache
+ADD "http://worldtimeapi.org/api/timezone/Europe/Amsterdam.txt" skipcache
 
 # Remove potentially cached Docusaurus files
 RUN rm -rf /app/.docusaurus
@@ -25,6 +25,9 @@ RUN yarn build
 
 # PROD IMAGE
 FROM nginx:1.17.0-alpine
+
+# Invalidate cache
+ADD "http://worldtimeapi.org/api/timezone/Europe/Amsterdam.txt" skipcache
 
 # Copy build artifacts from the 'build environment'
 RUN rm -rf /usr/share/nginx/html/**
