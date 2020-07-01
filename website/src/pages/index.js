@@ -52,9 +52,9 @@ const features = [
       <>
         <p>
           Most DeFi applications are currently running on top of Ethereum. Bitcoin
-          Cash contracts use a very different, and functionally more limited
-          paradigm. But with techniques such as covenants, state simulation and
-          trust-minimised price oracles, DeFi is very much possible on Bitcoin Cash.
+          Cash contracts use a different and functionally more limited paradigm.
+          But with techniques such as covenants, state simulation and trust-minimised
+          price oracles, DeFi is very much possible on Bitcoin Cash.
         </p>
       </>
     ),
@@ -82,7 +82,7 @@ function Home() {
   return (
     <Layout
       title={`${siteConfig.title}: ${siteConfig.tagline}`}
-      description='A high-level smart contract language for Bitcoin Cash. Write complex smart contracts with a straighforward syntax and integrate them into your JavaScript applications.'
+      description='A high-level smart contract language for Bitcoin Cash. Write complex smart contracts with a straightforward syntax and integrate them into your JavaScript applications.'
       keywords={['cashscript','smart contracts','bitcoin cash', 'compiler', 'sdk', 'programming language']}>
       <header className={classnames('hero', styles.banner)}>
         <div className='container'>
