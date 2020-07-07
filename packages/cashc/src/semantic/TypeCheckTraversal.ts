@@ -103,7 +103,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters);
 
     const { definition, type } = node.identifier;
-    if (!definition || !definition.parameters) return node; // aready checked in symbol table
+    if (!definition || !definition.parameters) return node; // already checked in symbol table
 
     const parameterTypes = node.parameters.map(p => p.type as Type);
     expectParameters(node, parameterTypes, definition.parameters);
@@ -126,7 +126,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters);
 
     const { definition, type } = node.identifier;
-    if (!definition || !definition.parameters) return node; // aready checked in symbol table
+    if (!definition || !definition.parameters) return node; // already checked in symbol table
 
     const parameterTypes = node.parameters.map(p => p.type as Type);
     expectParameters(node, parameterTypes, definition.parameters);
@@ -302,8 +302,8 @@ function expectAssignable(node: AssigningNode, actual?: Type, expected?: Type): 
   }
 }
 
-type ParameteredNode = FunctionCallNode | RequireNode | InstantiationNode;
-function expectParameters(node: ParameteredNode, actual: Type[], expected: Type[]): void {
+type NodeWithParameters = FunctionCallNode | RequireNode | InstantiationNode;
+function expectParameters(node: NodeWithParameters, actual: Type[], expected: Type[]): void {
   if (!implicitlyCastableSignature(actual, expected)) {
     throw new InvalidParameterTypeError(node, actual, expected);
   }

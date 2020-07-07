@@ -1044,7 +1044,7 @@ export class CashScriptParser extends Parser {
 
 			case 4:
 				{
-				_localctx = new InstantationContext(_localctx);
+				_localctx = new InstantiationContext(_localctx);
 				this._ctx = _localctx;
 				_prevctx = _localctx;
 				this.state = 205;
@@ -2562,7 +2562,7 @@ export class FunctionCallExpressionContext extends ExpressionContext {
 		}
 	}
 }
-export class InstantationContext extends ExpressionContext {
+export class InstantiationContext extends ExpressionContext {
 	public Identifier(): TerminalNode { return this.getToken(CashScriptParser.Identifier, 0); }
 	public expressionList(): ExpressionListContext {
 		return this.getRuleContext(0, ExpressionListContext);
@@ -2573,20 +2573,20 @@ export class InstantationContext extends ExpressionContext {
 	}
 	// @Override
 	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterInstantation) {
-			listener.enterInstantation(this);
+		if (listener.enterInstantiation) {
+			listener.enterInstantiation(this);
 		}
 	}
 	// @Override
 	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitInstantation) {
-			listener.exitInstantation(this);
+		if (listener.exitInstantiation) {
+			listener.exitInstantiation(this);
 		}
 	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
-		if (visitor.visitInstantation) {
-			return visitor.visitInstantation(this);
+		if (visitor.visitInstantiation) {
+			return visitor.visitInstantiation(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

@@ -9,7 +9,7 @@ export default class ReplaceBytecodeNop {
     const index = script.findIndex(op => op === Op.OP_NOP);
     if (index < 0) return script;
 
-    // Retrive size of current cut
+    // Retrieve size of current cut
     script.splice(index, 1);
     let oldCut = script[index];
     if (oldCut instanceof Buffer) {

@@ -85,7 +85,7 @@ expression
     : '(' expression ')' # Parenthesised
     | typeName '(' castable=expression (',' size=expression)? ','? ')' # Cast
     | functionCall # FunctionCallExpression
-    | 'new' Identifier expressionList #Instantation
+    | 'new' Identifier expressionList #Instantiation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
     // | left=expression op=('++' | '--')
     // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
@@ -96,7 +96,7 @@ expression
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
     | left=expression op=('/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
-    // | expression ('>>' | '<<') expression --- OP_LSHIFT 7 RSHIFT are disabled
+    // | expression ('>>' | '<<') expression --- OP_LSHIFT & RSHIFT are disabled
     | left=expression op=('<' | '<=' | '>' | '>=') right=expression # BinaryOp
     | left=expression op=('==' | '!=') right=expression # BinaryOp
     | left=expression op='&' right=expression # BinaryOp

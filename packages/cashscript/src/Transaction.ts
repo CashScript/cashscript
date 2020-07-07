@@ -196,7 +196,7 @@ export class Transaction {
       placeholderPreimage,
     );
 
-    // Add one extra byte per input to over-estimate txin count
+    // Add one extra byte per input to over-estimate tx-in count
     const inputSize = getInputSize(placeholderScript) + 1;
 
     // Calculate amount to send and base fee (excluding additional fees per UTXO)

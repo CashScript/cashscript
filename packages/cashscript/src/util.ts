@@ -49,7 +49,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
       return acc + output.to.byteLength + 8 + 2;
     }
   }, 0);
-  // Add txout count (accounting for a potential change output)
+  // Add tx-out count (accounting for a potential change output)
   size += Data.encodeInt(outputs.length + 1).byteLength;
 
   return size;
@@ -136,7 +136,7 @@ export function meep(tx: any, utxos: Utxo[], script: Script): string {
 
 // ////////////////////////////////////////////////////////////////////////////
 // For encoding OP_RETURN data (doesn't require BIP62.3)
-// These functions are a mashup between those found in these libs:
+// These functions are a mash-up between those found in these libs:
 // - https://github.com/simpleledger/slpjs/blob/master/lib/utils.ts
 // - https://github.com/Bitcoin-com/bitcoincashjs-lib/blob/master/src/script.js
 

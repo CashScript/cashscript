@@ -618,7 +618,7 @@ export const fixtures: Fixture[] = [
         + 'OP_ELSE '
         // require(tx.hashOutputs == hash256(announcement))
         + 'OP_2 OP_PICK OP_2 OP_PICK OP_HASH256 OP_EQUALVERIFY '
-        // Stack cleanup
+        // Stack clean-up
         + 'OP_ENDIF OP_2DROP OP_2DROP OP_1',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'announcement.cash'), { encoding: 'utf-8' }),
       networks: {},

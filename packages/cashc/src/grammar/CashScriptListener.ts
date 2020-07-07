@@ -6,7 +6,7 @@ import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { ParenthesisedContext } from "./CashScriptParser";
 import { CastContext } from "./CashScriptParser";
 import { FunctionCallExpressionContext } from "./CashScriptParser";
-import { InstantationContext } from "./CashScriptParser";
+import { InstantiationContext } from "./CashScriptParser";
 import { TupleIndexOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
@@ -84,17 +84,17 @@ export interface CashScriptListener extends ParseTreeListener {
 	exitFunctionCallExpression?: (ctx: FunctionCallExpressionContext) => void;
 
 	/**
-	 * Enter a parse tree produced by the `Instantation`
+	 * Enter a parse tree produced by the `Instantiation`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
 	 */
-	enterInstantation?: (ctx: InstantationContext) => void;
+	enterInstantiation?: (ctx: InstantiationContext) => void;
 	/**
-	 * Exit a parse tree produced by the `Instantation`
+	 * Exit a parse tree produced by the `Instantiation`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
 	 */
-	exitInstantation?: (ctx: InstantationContext) => void;
+	exitInstantiation?: (ctx: InstantiationContext) => void;
 
 	/**
 	 * Enter a parse tree produced by the `TupleIndexOp`

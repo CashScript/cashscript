@@ -56,7 +56,7 @@ import {
   RequireStatementContext,
   PragmaDirectiveContext,
   PreimageFieldContext,
-  InstantationContext,
+  InstantiationContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -221,7 +221,7 @@ export default class AstBuilder
     return functionCall;
   }
 
-  visitInstantation(ctx: InstantationContext): InstantiationNode {
+  visitInstantiation(ctx: InstantiationContext): InstantiationNode {
     const identifier = new IdentifierNode(ctx.Identifier().text as string);
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
     const parameters = ctx.expressionList().expression().map(e => this.visit(e));

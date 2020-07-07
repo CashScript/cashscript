@@ -38,7 +38,7 @@ export async function run(): Promise<void> {
     const tx = await instance.functions
       .announce(alicePk, new SignatureTemplate(alice))
       .withOpReturn(['0x6d02', str])
-      .withHardcodedFee(1000)
+      .withHardcodedFee(2000)
       .withMinChange(1000)
       .send();
     console.log('transaction details:', tx);
