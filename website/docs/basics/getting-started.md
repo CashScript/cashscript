@@ -21,7 +21,7 @@ CashScript only offers a JavaScript SDK, but CashScript contracts can be integra
 :::
 
 ## Writing your first smart contract
-There are some examples available on the [Examples page](/docs/examples), that can be used to take inspiration from. Further examples of the JavaScript integration can be found on [GitHub](https://github.com/Bitcoin-com/cashscript/tree/master/examples). A simple example is included below.
+There are some examples available on the [Examples page](/docs/language/examples), that can be used to take inspiration from. Further examples of the JavaScript integration can be found on [GitHub](https://github.com/Bitcoin-com/cashscript/tree/master/examples). A simple example is included below.
 
 ```solidity
 pragma cashscript ^0.4.0;
@@ -41,7 +41,7 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 ```
 
 :::tip
-Read more about the CashScript language syntax in the [Language Description](/docs/language).
+Read more about the CashScript language syntax in the [Language Description](/docs/language/contracts).
 :::
 
 ## Integrating into JavaScript
@@ -78,5 +78,5 @@ async function run() {
 ```
 
 :::tip
-Read more about the JavaScript SDK in the [SDK documentation](/docs/sdk).
+Read more about the JavaScript SDK in the [SDK documentation](/docs/sdk/instantiation).
 :::

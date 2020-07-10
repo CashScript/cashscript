@@ -22,7 +22,7 @@ module.exports = {
         src: 'img/logo.svg',
       },
       links: [
-        {to: '/docs/', label: 'Docs', position: 'right'},
+        {to: '/docs/basics/about', label: 'Docs', position: 'right'},
         {
           href: 'https://github.com/Bitcoin-com/cashscript',
           label: 'GitHub',
@@ -38,11 +38,11 @@ module.exports = {
           items: [
             {
               label: 'Getting Started',
-              to: '/docs/getting-started',
+              to: '/docs/basics/getting-started',
             },
             {
               label: 'Examples',
-              to: '/docs/examples',
+              to: '/docs/language/examples',
             },
           ],
         },
@@ -112,6 +112,19 @@ module.exports = {
     ],
   ],
   plugins: [
-    path.resolve(__dirname, './src/plugins/redirects'),
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        fromExtensions: ['html'],
+        redirects: [
+          { from: ['/docs', '/docs/about', '/docs/basics'], to: '/docs/basics/about'},
+          { from: '/docs/language', to: '/docs/language/contracts' },
+          { from: '/docs/sdk', to: '/docs/sdk/instantiation' },
+          { from: '/docs/guides', to: '/docs/guides/covenants' },
+          { from: '/docs/getting-started', to: '/docs/basics/getting-started' },
+          { from: '/docs/examples', to: '/docs/language/examples' },
+        ],
+      },
+    ],
   ],
 };
