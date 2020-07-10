@@ -12,7 +12,7 @@ OP_NUMEQUAL OP_NOT                     <=> OP_NUMNOTEQUAL;
 OP_SHA256 OP_SHA256                    <=> OP_HASH256;
 OP_SHA256 OP_RIPEMD160                 <=> OP_HASH160;
 
-# Hardcoded stackops
+# Hardcoded stack ops
 OP_2 OP_PICK OP_1 OP_PICK OP_3 OP_PICK <=> OP_3DUP OP_SWAP;
 OP_2 OP_PICK OP_2 OP_PICK OP_2 OP_PICK <=> OP_3DUP;
 
@@ -35,6 +35,9 @@ OP_DROP OP_DROP                        <=> OP_2DROP;
 # Secondary effects
 OP_DUP OP_SWAP                         <=> OP_DUP;
 OP_SWAP OP_SWAP                        <=> ;
+OP_2SWAP OP_2SWAP                      <=> ;
+OP_ROT OP_ROT OP_ROT                   <=> ;
+OP_2ROT OP_2ROT OP_2ROT                <=> ;
 OP_OVER OP_OVER                        <=> OP_2DUP;
 OP_DUP OP_DROP                         <=> ;
 OP_DUP OP_NIP                          <=> ;
@@ -50,9 +53,9 @@ OP_CHECKSIG OP_VERIFY                  <=> OP_CHECKSIGVERIFY;
 OP_CHECKDATASIG OP_VERIFY              <=> OP_CHECKDATASIGVERIFY;
 
 # Remove/replace extraneous OP_SWAP
-OP_SWAP OP_AND                         <=> OP_AND;
-OP_SWAP OP_OR                          <=> OP_OR;
-OP_SWAP OP_XOR                         <=> OP_XOR;
+# OP_SWAP OP_AND                         <=> OP_AND;
+# OP_SWAP OP_OR                          <=> OP_OR;
+# OP_SWAP OP_XOR                         <=> OP_XOR;
 OP_SWAP OP_ADD                         <=> OP_ADD;
 OP_SWAP OP_EQUAL                       <=> OP_EQUAL;
 OP_SWAP OP_NUMEQUAL                    <=> OP_NUMEQUAL;
@@ -63,6 +66,12 @@ OP_SWAP OP_GREATERTHAN                 <=> OP_LESSTHAN;
 OP_SWAP OP_LESSTHAN                    <=> OP_GREATERTHAN;
 OP_SWAP OP_DROP                        <=> OP_NIP;
 OP_SWAP OP_NIP                         <=> OP_DROP;
+
+# Remove/replace extraneous OP_DUP
+# OP_DUP OP_AND                         <=> ;
+# OP_DUP OP_OR                          <=> ;
+OP_DUP OP_DROP                        <=> ;
+OP_DUP OP_NIP                         <=> ;
 
 # Random optimisations (don't know what I'm targeting with this)
 OP_2DUP OP_DROP                        <=> OP_OVER;
@@ -93,23 +102,23 @@ OP_DUP OP_ROT OP_DROP                  <=> OP_NIP OP_DUP;
 OP_OVER OP_ROT OP_DROP                 <=> OP_SWAP;
 OP_2 OP_PICK OP_ROT OP_DROP            <=> OP_NIP OP_OVER;
 
-OP_2 OP_PICK OP_SWAP OP_2 OP_PICK OP_NIP <=> OP_DROP OP_2DUP;
+OP_0 OP_NIP                            <=> OP_DROP OP_0;
+OP_1 OP_NIP                            <=> OP_DROP OP_1;
+OP_2 OP_NIP                            <=> OP_DROP OP_2;
+OP_3 OP_NIP                            <=> OP_DROP OP_3;
+OP_4 OP_NIP                            <=> OP_DROP OP_4;
+OP_5 OP_NIP                            <=> OP_DROP OP_5;
+OP_6 OP_NIP                            <=> OP_DROP OP_6;
+OP_7 OP_NIP                            <=> OP_DROP OP_7;
+OP_8 OP_NIP                            <=> OP_DROP OP_8;
+OP_9 OP_NIP                            <=> OP_DROP OP_9;
+OP_10 OP_NIP                           <=> OP_DROP OP_10;
+OP_11 OP_NIP                           <=> OP_DROP OP_11;
+OP_12 OP_NIP                           <=> OP_DROP OP_12;
+OP_13 OP_NIP                           <=> OP_DROP OP_13;
+OP_14 OP_NIP                           <=> OP_DROP OP_14;
+OP_15 OP_NIP                           <=> OP_DROP OP_15;
+OP_16 OP_NIP                           <=> OP_DROP OP_16;
 
-OP_0 OP_NIP                    <=> OP_DROP OP_0;
-OP_1 OP_NIP                    <=> OP_DROP OP_1;
-OP_2 OP_NIP                    <=> OP_DROP OP_2;
-OP_3 OP_NIP                    <=> OP_DROP OP_3;
-OP_4 OP_NIP                    <=> OP_DROP OP_4;
-OP_5 OP_NIP                    <=> OP_DROP OP_5;
-OP_6 OP_NIP                    <=> OP_DROP OP_6;
-OP_7 OP_NIP                    <=> OP_DROP OP_7;
-OP_8 OP_NIP                    <=> OP_DROP OP_8;
-OP_9 OP_NIP                    <=> OP_DROP OP_9;
-OP_10 OP_NIP                   <=> OP_DROP OP_10;
-OP_11 OP_NIP                   <=> OP_DROP OP_11;
-OP_12 OP_NIP                   <=> OP_DROP OP_12;
-OP_13 OP_NIP                   <=> OP_DROP OP_13;
-OP_14 OP_NIP                   <=> OP_DROP OP_14;
-OP_15 OP_NIP                   <=> OP_DROP OP_15;
-OP_16 OP_NIP                   <=> OP_DROP OP_16;
+OP_2 OP_PICK OP_SWAP OP_2 OP_PICK OP_NIP <=> OP_DROP OP_2DUP;
 `;

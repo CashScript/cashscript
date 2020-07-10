@@ -31,8 +31,8 @@ export default class TargetCodeOptimisation {
     let asm = Data.scriptToAsm(script);
 
     // Apply all optimisations in the .equiv file
-    optimisations.forEach((optim) => {
-      asm = asm.replace(new RegExp(optim[0], 'g'), optim[1]);
+    optimisations.forEach((optimisation) => {
+      asm = asm.replace(new RegExp(optimisation[0], 'g'), optimisation[1]);
     });
 
     // Add optimisations that are not compatible with CashProof
@@ -40,6 +40,12 @@ export default class TargetCodeOptimisation {
     asm = asm.replace(/OP_NOT OP_IF/g, 'OP_NOTIF');
     // CashProof can't prove OP_CHECKMULTISIG without specifying N
     asm = asm.replace(/OP_CHECKMULTISIG OP_VERIFY/g, 'OP_CHECKMULTISIGVERIFY');
+    // CashProof can't prove bitwise operators
+    asm = asm.replace(/OP_SWAP OP_AND/g, 'OP_AND');
+    asm = asm.replace(/OP_SWAP OP_OR/g, 'OP_OR');
+    asm = asm.replace(/OP_SWAP OP_XOR/g, 'OP_XOR');
+    asm = asm.replace(/OP_DUP OP_AND/g, '');
+    asm = asm.replace(/OP_DUP OP_OR/g, '');
 
     // Remove any double spaces as a result of opcode removal
     asm = asm.replace(/\s+/g, ' ').trim();
