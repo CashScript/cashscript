@@ -2,6 +2,13 @@
 title: Release Notes
 ---
 
+## v0.4.3
+#### cashc compiler
+- :racehorse: Add compiler optimisations.
+
+## v0.4.2
+- Re-add README files to NPM that were accidentally removed in the v0.4.0 release.
+
 ## v0.4.1
 #### cashc compiler
 - :racehorse: Add optimisations to bitwise operators.
