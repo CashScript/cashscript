@@ -3,17 +3,9 @@ language: node_js
 node_js:
   - '10'
 
-python:
-  - '3.7'
-
-before_install:
-  - pyenv global 3.7
-  - pip3 install z3-solver
-
 script:
   - yarn test --coverage
   - yarn lint
-  # - yarn proof
 
 after_success:
   - yarn coverage
