@@ -1,11 +1,18 @@
+import { ECPair } from 'bitcoincashjs-lib';
+
 export interface Utxo {
   txid: string;
   vout: number;
   amount: number;
   satoshis: number;
-  confirmations: number;
-  height?: number;
-  ts?: number;
+}
+
+export interface UtxoWithKeyPair extends Utxo {
+  keypair: ECPair;
+}
+
+export function isUtxoWithKeyPair(utxo: Utxo): utxo is UtxoWithKeyPair {
+  return 'keypair' in utxo;
 }
 
 export interface Recipient {

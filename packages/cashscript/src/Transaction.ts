@@ -1,3 +1,4 @@
+import { ECPair } from 'bitcoincashjs-lib';
 import { BITBOX, TransactionBuilder } from 'bitbox-sdk';
 import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import delay from 'delay';
@@ -9,6 +10,8 @@ import {
   Utxo,
   Output,
   Recipient,
+  isUtxoWithKeyPair,
+  HashType,
 } from './interfaces';
 import {
   meep,
@@ -49,11 +52,31 @@ export class Transaction {
     this.builder = new this.bitbox.TransactionBuilder(this.network);
   }
 
-  from(inputs: Utxo[]): this {
-    if (this.inputs.length > 0) {
-      throw new Error('Attempted to call \'from\' after inputs are already set');
+  from(input: Utxo): this;
+  from(inputs: Utxo[]): this;
+
+  from(inputOrInputs: Utxo | Utxo[]): this {
+    if (!Array.isArray(inputOrInputs)) {
+      inputOrInputs = [inputOrInputs];
     }
-    this.inputs = inputs;
+
+    this.inputs = this.inputs.concat(inputOrInputs);
+
+    return this;
+  }
+
+  experimentalFromP2PKH(input: Utxo, keypair: ECPair): this;
+  experimentalFromP2PKH(inputs: Utxo[], keypair: ECPair): this;
+
+  experimentalFromP2PKH(inputOrInputs: Utxo | Utxo[], keypair: ECPair): this {
+    if (!Array.isArray(inputOrInputs)) {
+      inputOrInputs = [inputOrInputs];
+    }
+
+    inputOrInputs = inputOrInputs.map(input => ({ ...input, keypair }));
+
+    this.inputs = this.inputs.concat(inputOrInputs);
+
     return this;
   }
 
@@ -120,6 +143,27 @@ export class Transaction {
     // Convert all SignatureTemplate objects to valid tx signatures for current tx
     const tx = this.builder.transaction.buildIncomplete();
     this.inputs.forEach((utxo: Utxo, vin: number) => {
+      // UTXO's with key pairs are signed with the key pair using P2PKH
+      if (isUtxoWithKeyPair(utxo)) {
+        const pubkey = utxo.keypair.getPublicKeyBuffer();
+        const pubkeyHash = bch.crypto.hash160(pubkey);
+        const prevOutScript = bch.script.pubKeyHash.output.encode(pubkeyHash);
+
+        const hashtype = HashType.SIGHASH_ALL | tx.constructor.SIGHASH_BITCOINCASHBIP143;
+        const sighash = tx.hashForCashSignature(
+          vin, prevOutScript, utxo.satoshis, hashtype,
+        );
+
+        const signature = utxo.keypair
+          .sign(sighash, SignatureAlgorithm.SCHNORR)
+          .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
+
+        const inputScript = bch.script.pubKeyHash.input.encode(signature, pubkey);
+        inputScripts.push({ vout: vin, script: inputScript });
+
+        return;
+      }
+
       let covenantHashType = -1;
       const completePs = this.parameters.map((p) => {
         if (!(p instanceof SignatureTemplate)) return p;

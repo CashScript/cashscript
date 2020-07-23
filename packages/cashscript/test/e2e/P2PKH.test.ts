@@ -1,3 +1,4 @@
+import { AddressUtxoResult } from 'bitcoin-com-rest';
 import path from 'path';
 import { Contract, Instance, SignatureTemplate } from '../../src';
 import {
@@ -6,11 +7,13 @@ import {
   alice,
   bob,
   network,
+  aliceAddress,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { Utxo, TxnDetailValueIn } from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
+import { bitbox } from '../../src/BITBOX';
 
 describe('P2PKH', () => {
   let p2pkhInstance: Instance;
@@ -61,7 +64,8 @@ describe('P2PKH', () => {
       const amount = 1000;
       const utxos = await p2pkhInstance.getUtxos();
       utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1));
-      const { utxos: gathered, failureAmount } = gatherUtxos(utxos, { amount });
+      const { utxos: gathered } = gatherUtxos(utxos, { amount });
+      const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, 0) + 1;
 
       // send
       await expect(
@@ -71,13 +75,6 @@ describe('P2PKH', () => {
           .to(to, failureAmount)
           .send(),
       ).rejects.toThrow();
-
-      await expect(
-        p2pkhInstance.functions
-          .spend(alicePk, new SignatureTemplate(alice))
-          .to(to, failureAmount)
-          .send(),
-      ).resolves.toBeTruthy();
     });
 
     it('should succeed when providing UTXOs', async () => {
@@ -150,20 +147,47 @@ describe('P2PKH', () => {
       const expectedOutputs = [{ to, amount }, createOpReturnOutput(opReturn)];
       expect(txOutputs).toEqual(expect.arrayContaining(expectedOutputs));
     });
+
+    it('can include UTXOs from P2PKH addresses', async () => {
+      // given
+      const to = aliceAddress;
+      const amount = 10000;
+
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const aliceUtxos = await getAddressUtxos(aliceAddress);
+
+      // when
+      const tx = await p2pkhInstance.functions
+        .spend(alicePk, new SignatureTemplate(alice))
+        .experimentalFromP2PKH(aliceUtxos[0], alice)
+        .from(contractUtxos[0])
+        .experimentalFromP2PKH(aliceUtxos[1], alice)
+        .from(contractUtxos[1])
+        .to(to, amount)
+        .to(to, amount)
+        .send();
+
+      // then
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+    });
   });
 });
+
+async function getAddressUtxos(address: string): Promise<Utxo[]> {
+  const { utxos } = await bitbox.mainnet.Address.utxo(address) as AddressUtxoResult;
+  return utxos;
+}
 
 function gatherUtxos(utxos: Utxo[], options?: {
   amount?: number,
   fees?: number
-}): { utxos: Utxo[], total: number, failureAmount: number } {
+}): { utxos: Utxo[], total: number } {
   const targetUtxos: Utxo[] = [];
   let total = 0;
-  let failureAmount = 0;
   // 1000 for fees
   const { amount = 0, fees = 1000 } = options || {};
   for (const utxo of utxos) {
-    failureAmount += utxo.satoshis;
     if (total - fees > amount) break;
     total += utxo.satoshis;
     targetUtxos.push(utxo);
@@ -171,6 +195,5 @@ function gatherUtxos(utxos: Utxo[], options?: {
   return {
     utxos: targetUtxos,
     total,
-    failureAmount,
   };
 }
