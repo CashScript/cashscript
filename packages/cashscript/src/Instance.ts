@@ -1,9 +1,5 @@
 import { BITBOX } from 'bitbox-sdk';
-import {
-  AddressDetailsResult,
-  AddressUtxoResult,
-  AddressUnconfirmedResult,
-} from 'bitcoin-com-rest';
+import { AddressDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import { Artifact, Script, AbiFunction } from 'cashc';
 import { bitbox, AddressUtil } from './BITBOX';
 import { Transaction } from './Transaction';
@@ -32,22 +28,11 @@ export class Instance {
   }
 
   async getUtxos(excludeUnconfirmed?: boolean): Promise<Utxo[]> {
-    const promises = [this.getConfirmed()];
-    if (!excludeUnconfirmed) {
-      promises.push(this.getUnconfirmed());
+    let { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+    if (excludeUnconfirmed) {
+      utxos = utxos.filter(utxo => utxo.confirmations > 0);
     }
-    const results = await Promise.all(promises);
-    return results.reduce((memo, utxos) => memo.concat(utxos), []);
-  }
 
-  private async getConfirmed(): Promise<Utxo[]> {
-    const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
-    return utxos;
-  }
-
-  private async getUnconfirmed(): Promise<Utxo[]> {
-    const { utxos } = await this.bitbox.Address
-      .unconfirmed(this.address) as AddressUnconfirmedResult;
     return utxos;
   }
 
