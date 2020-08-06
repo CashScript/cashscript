@@ -4509,6 +4509,18 @@ cashaddrjs@^0.2.9:
   version "0.0.0"
   resolved "https://github.com/eyeofpython/cashproof#ff92615faa338e025a9d3a5dd98112233f6daf76"
 
+cashscript@^0.4.0:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/cashscript/-/cashscript-0.4.3.tgz#6ef2669e50c74eb95cbfe0683bc59ff9cf8985b4"
+  integrity sha512-pFiUcxFa6xiCEWKmwhs5fz/3vNmNBfO0cCEGlU3No+8jStPUKFsi0OaW9n6g8vnaNP8H0DWwjLwbhCnhOKN57w==
+  dependencies:
+    bitbox-sdk "^8.8.0"
+    bitcoincash-ops "github:christroutner/bitcoincash-ops"
+    cashc "^0.4.3"
+    cramer-bch "https://github.com/jcramer/bitcoincashjs-lib"
+    delay "^4.3.0"
+    trout-bch "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b"
+
 chalk@2.4.2, chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.3.1, chalk@^2.4.1, chalk@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-2.4.2.tgz#cd42541677a54333cf541a49108c1432b44c9424"
@@ -5138,6 +5150,27 @@ cosmiconfig@^6.0.0:
     parse-json "^5.0.0"
     path-type "^4.0.0"
     yaml "^1.7.2"
+
+"cramer-bch@git+https://github.com/jcramer/bitcoincashjs-lib.git":
+  version "4.0.1"
+  uid "0c24341e7e3b877dd447672bdefe2200fa2be82f"
+  resolved "git+https://github.com/jcramer/bitcoincashjs-lib.git#0c24341e7e3b877dd447672bdefe2200fa2be82f"
+  dependencies:
+    bech32 "^1.1.2"
+    bigi "^1.4.0"
+    bip66 "^1.1.0"
+    bitcoincash-ops Bitcoin-com/bitcoincash-ops#2.0.0
+    bs58check "^2.0.0"
+    create-hash "^1.1.0"
+    create-hmac "^1.1.3"
+    ecurve "^1.0.0"
+    merkle-lib "^2.0.10"
+    pushdata-bitcoin Bitcoin-com/pushdata-bitcoin#1.2.1
+    randombytes "^2.0.1"
+    safe-buffer "^5.0.1"
+    typeforce "^1.11.3"
+    varuint-bitcoin "^1.0.4"
+    wif "^2.0.1"
 
 "cramer-bch@https://github.com/jcramer/bitcoincashjs-lib":
   version "4.0.1"
