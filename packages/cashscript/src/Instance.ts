@@ -1,14 +1,11 @@
-import { BITBOX } from 'bitbox-sdk';
-import { AddressDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
 import { Artifact, Script, AbiFunction } from 'cashc';
-import { bitbox, AddressUtil } from './BITBOX';
 import { Transaction } from './Transaction';
 import { ContractFunction } from './Contract';
 import { Parameter, encodeParameter } from './Parameter';
-import { countOpcodes, calculateBytesize } from './util';
+import { countOpcodes, calculateBytesize, scriptToAddress } from './util';
 import { Utxo } from './interfaces';
-
-const bch = require('trout-bch');
+import NetworkProvider from './network/NetworkProvider';
+import BitboxNetworkProvider from './network/BitboxNetworkProvider';
 
 export class Instance {
   name: string;
@@ -20,20 +17,15 @@ export class Instance {
     [name: string]: ContractFunction,
   };
 
-  private bitbox: BITBOX;
+  private provider: NetworkProvider;
 
   async getBalance(): Promise<number> {
-    const details = await this.bitbox.Address.details(this.address) as AddressDetailsResult;
-    return details.balanceSat + details.unconfirmedBalanceSat;
+    const utxos = await this.getUtxos();
+    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, 0);
   }
 
-  async getUtxos(excludeUnconfirmed?: boolean): Promise<Utxo[]> {
-    let { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
-    if (excludeUnconfirmed) {
-      utxos = utxos.filter(utxo => utxo.confirmations > 0);
-    }
-
-    return utxos;
+  async getUtxos(): Promise<Utxo[]> {
+    return this.provider.getUtxos(this.address);
   }
 
   constructor(
@@ -41,7 +33,7 @@ export class Instance {
     private redeemScript: Script,
     private network: string,
   ) {
-    this.bitbox = bitbox[network];
+    this.provider = new BitboxNetworkProvider();
 
     this.name = artifact.contractName;
     this.address = scriptToAddress(redeemScript, network);
@@ -69,11 +61,4 @@ export class Instance {
       return new Transaction(this.address, this.network, this.redeemScript, f, encodedPs, selector);
     };
   }
-}
-
-function scriptToAddress(script: Script, network: string): string {
-  const scriptHash = bch.crypto.hash160(bch.script.compile(script));
-  const outputScript = bch.script.scriptHash.output.encode(scriptHash);
-  const address = AddressUtil.fromOutputScript(outputScript, network);
-  return address;
 }

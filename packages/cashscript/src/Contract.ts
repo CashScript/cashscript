@@ -8,13 +8,14 @@ import fs from 'fs';
 import { Transaction } from './Transaction';
 import { Instance } from './Instance';
 import { Parameter, encodeParameter, SignatureTemplate } from './Parameter';
+import { Network } from './interfaces';
 
 export class Contract {
   name: string;
   new: (...params: Parameter[]) => Instance;
   deployed: (at?: string) => Instance;
 
-  static compile(fnOrString: string, network?: string): Contract {
+  static compile(fnOrString: string, network?: Network): Contract {
     const artifact = fs && fs.existsSync && fs.existsSync(fnOrString)
       ? CashCompiler.compileFile(fnOrString)
       : CashCompiler.compileString(fnOrString);
@@ -22,7 +23,7 @@ export class Contract {
     return new Contract(artifact, network);
   }
 
-  static import(fnOrArtifact: string | Artifact, network?: string): Contract {
+  static import(fnOrArtifact: string | Artifact, network?: Network): Contract {
     const artifact = typeof fnOrArtifact === 'string'
       ? Artifacts.require(fnOrArtifact)
       : fnOrArtifact;
@@ -37,7 +38,7 @@ export class Contract {
 
   constructor(
     public artifact: Artifact,
-    private network: string = 'testnet',
+    private network: Network = Network.MAINNET,
   ) {
     if (!artifact.abi || !artifact.bytecode
      || !artifact.constructorInputs || !artifact.contractName

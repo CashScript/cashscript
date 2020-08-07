@@ -1,8 +1,9 @@
 import { BITBOX } from 'bitbox-sdk';
 import { HDNode, ECPair } from 'bitcoincashjs-lib';
 import { PriceOracle } from '../../../../examples/PriceOracle';
+import { Network } from '../../src/interfaces';
 
-export const network: string = 'mainnet';
+export const network: Network = Network.MAINNET;
 export const bitbox: BITBOX = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
 
 const rootSeed: Buffer = bitbox.Mnemonic.toSeed('CashScript Tests');

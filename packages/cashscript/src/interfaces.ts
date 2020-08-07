@@ -3,7 +3,6 @@ import { ECPair } from 'bitcoincashjs-lib';
 export interface Utxo {
   txid: string;
   vout: number;
-  amount: number;
   satoshis: number;
 }
 
@@ -68,4 +67,9 @@ export enum HashType {
   SIGHASH_NONE = 0x02,
   SIGHASH_SINGLE = 0x03,
   SIGHASH_ANYONECANPAY = 0x80,
+}
+
+export enum Network {
+  MAINNET = 'mainnet',
+  TESTNET = 'testnet',
 }

@@ -1,10 +1,9 @@
 import { ECPair } from 'bitcoincashjs-lib';
-import { BITBOX, TransactionBuilder } from 'bitbox-sdk';
-import { TxnDetailsResult, AddressUtxoResult } from 'bitcoin-com-rest';
+import { TransactionBuilder } from 'bitbox-sdk';
+import { TxnDetailsResult } from 'bitcoin-com-rest';
 import delay from 'delay';
 import { Script, AbiFunction } from 'cashc';
 import { SignatureTemplate } from './Parameter';
-import { bitbox } from './BITBOX';
 import {
   SignatureAlgorithm,
   Utxo,
@@ -23,12 +22,14 @@ import {
   buildError,
 } from './util';
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
+import NetworkProvider from './network/NetworkProvider';
+import BitboxNetworkProvider from './network/BitboxNetworkProvider';
 
 const cramer = require('cramer-bch');
 const bch = require('trout-bch');
 
 export class Transaction {
-  private bitbox: BITBOX;
+  private provider: NetworkProvider;
   private builder: TransactionBuilder;
 
   private inputs: Utxo[] = [];
@@ -48,8 +49,8 @@ export class Transaction {
     private parameters: (Buffer | SignatureTemplate)[],
     private selector?: number,
   ) {
-    this.bitbox = bitbox[network];
-    this.builder = new this.bitbox.TransactionBuilder(this.network);
+    this.provider = new BitboxNetworkProvider();
+    this.builder = new TransactionBuilder(this.network);
   }
 
   from(input: Utxo): this;
@@ -125,7 +126,7 @@ export class Transaction {
   }
 
   async build(): Promise<string> {
-    this.locktime = this.locktime || await this.bitbox.Blockchain.getBlockCount();
+    this.locktime = this.locktime || await this.provider.getBlockHeight();
     this.builder.setLockTime(this.locktime);
     await this.setInputsAndOutputs();
 
@@ -196,21 +197,24 @@ export class Transaction {
     return this.builder.build().toHex();
   }
 
+  // TODO: Update return type after updating to libauth
   async send(): Promise<TxnDetailsResult> {
     const tx = await this.build();
     try {
-      const txid = await this.bitbox.RawTransactions.sendRawTransaction(tx);
+      const txid = await this.provider.sendRawTransaction(tx);
       return this.getTxDetails(txid);
     } catch (e) {
       throw buildError(e.error, meep(tx, this.inputs, this.redeemScript));
     }
   }
 
+  // TODO: Update return type after updating to libauth
   private async getTxDetails(txid: string): Promise<TxnDetailsResult> {
     while (true) {
       await delay(500);
       try {
-        return await this.bitbox.Transaction.details(txid) as TxnDetailsResult;
+        const txHex = await this.provider.getRawTransaction(txid);
+        return bch.Transaction.fromHex(txHex);
       } catch (ignored) {
         // ignored
       }
@@ -259,7 +263,7 @@ export class Transaction {
     } else {
       // If inputs are not defined yet, we retrieve the contract's UTXOs
       // and perform UTXO selection
-      const { utxos } = await this.bitbox.Address.utxo(this.address) as AddressUtxoResult;
+      const utxos = await this.provider.getUtxos(this.address);
       for (const utxo of utxos) {
         this.inputs.push(utxo);
         satsAvailable += utxo.satoshis;

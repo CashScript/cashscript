@@ -1,3 +1,4 @@
+import { Address } from 'bitbox-sdk';
 import { Script, Data, Op } from 'cashc';
 import { Utxo, Output } from './interfaces';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
@@ -132,6 +133,13 @@ export function meep(tx: any, utxos: Utxo[], script: Script): string {
   const scriptHash = bch.crypto.hash160(bch.script.compile(script));
   const scriptPubkey = bch.script.scriptHash.output.encode(scriptHash).toString('hex');
   return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
+}
+
+export function scriptToAddress(script: Script, network: string): string {
+  const scriptHash = bch.crypto.hash160(bch.script.compile(script));
+  const outputScript = bch.script.scriptHash.output.encode(scriptHash);
+  const address = new Address().fromOutputScript(outputScript, network);
+  return address;
 }
 
 // ////////////////////////////////////////////////////////////////////////////
