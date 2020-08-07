@@ -1,24 +1,23 @@
-import path from 'path';
-import { Contract, Instance, SignatureTemplate } from '../../src';
+import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
 import {
   alicePkh,
   alicePk,
   alice,
   bob,
-  network,
   aliceAddress,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { Utxo, TxnDetailValueIn } from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
-import BitboxNetworkProvider from '../../src/network/BitboxNetworkProvider';
 
 describe('P2PKH', () => {
-  let p2pkhInstance: Instance;
+  let p2pkhInstance: Contract;
   beforeAll(() => {
-    const P2PKH = Contract.import(path.join(__dirname, '..', 'fixture', 'p2pkh.json'), network);
-    p2pkhInstance = P2PKH.new(alicePkh);
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/p2pkh.json');
+    const provider = new BitboxNetworkProvider();
+    p2pkhInstance = new Contract(artifact, provider, [alicePkh]);
     console.log(p2pkhInstance.address);
   });
 

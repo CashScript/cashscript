@@ -46,10 +46,9 @@
   ],
   "bytecode": "OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_PICK 69 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP OP_9 OP_ROLL OP_9 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP OP_11 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY e803 OP_ROT OP_BIN2NUM OP_DUP OP_7 OP_PICK OP_3 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF OP_2DUP OP_SWAP OP_SUB OP_8 OP_NUM2BIN OP_DUP 1976a914 OP_CAT OP_6 OP_PICK OP_CAT 88ac OP_CAT OP_DUP OP_HASH256 OP_5 OP_PICK OP_EQUALVERIFY OP_2DROP OP_ELSE OP_6 OP_PICK OP_8 OP_NUM2BIN OP_OVER OP_8 OP_PICK OP_SUB OP_3 OP_PICK OP_SUB OP_8 OP_NUM2BIN OP_OVER 1976a914 OP_CAT OP_7 OP_PICK OP_CAT 88ac OP_CAT OP_OVER 17a914 OP_CAT OP_7 OP_PICK OP_HASH160 OP_CAT 87 OP_CAT OP_2DUP OP_CAT OP_HASH256 OP_7 OP_PICK OP_EQUALVERIFY OP_2DROP OP_2DROP OP_ENDIF OP_2DROP OP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY OP_2SWAP OP_CHECKSIG OP_NIP OP_NIP OP_ENDIF",
   "source": "pragma cashscript ^0.4.0;\n\n/* This is an unofficial CashScript port of Licho's Mecenas contract. It is\n * not compatible with Licho's EC plugin, but rather meant as a demonstration\n * of covenants in CashScript.\n * The time checking has been removed so it can be tested without time requirements.\n */\ncontract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period*/) {\n    function receive(pubkey pk, sig s) {\n        require(checkSig(s, pk));\n\n        // require(tx.age >= period);\n\n        int minerFee = 1000;\n        int intValue = int(bytes(tx.value));\n\n        if (intValue <= pledge + minerFee) {\n            bytes8 amount1 = bytes8(intValue - minerFee);\n            bytes34 out1 = new OutputP2PKH(amount1, recipient);\n            require(hash256(out1) == tx.hashOutputs);\n        } else {\n            bytes8 amount1 = bytes8(pledge);\n            bytes8 amount2 = bytes8(intValue - pledge - minerFee);\n            bytes34 out1 = new OutputP2PKH(amount1, recipient);\n            bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode));\n            require(hash256(out1 + out2) == tx.hashOutputs);\n        }\n    }\n\n    function reclaim(pubkey pk, sig s) {\n        require(hash160(pk) == funder);\n        require(checkSig(s, pk));\n    }\n}\n",
-  "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.4.0"
+    "version": "0.4.3"
   },
-  "updatedAt": "2020-05-25T10:29:24.422Z"
+  "updatedAt": "2020-08-07T09:57:04.877Z"
 }

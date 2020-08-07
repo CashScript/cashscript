@@ -1,15 +1,17 @@
-import path from 'path';
-import { Contract, Instance, SignatureTemplate } from '../../src';
+import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 import { createOpReturnOutput } from '../../src/util';
-import { alicePk, alice, network } from '../fixture/vars';
+import { alicePk, alice } from '../fixture/vars';
 
 describe('Announcement', () => {
-  let announcement: Instance;
+  let announcement: Contract;
+
   beforeAll(() => {
-    const Announcement = Contract.import(path.join(__dirname, '..', 'fixture', 'announcement.json'), network);
-    announcement = Announcement.new();
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/announcement.json');
+    const provider = new BitboxNetworkProvider();
+    announcement = new Contract(artifact, provider, []);
     console.log(announcement.address);
   });
 

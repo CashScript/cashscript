@@ -23,13 +23,11 @@ import {
 } from './util';
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
 import NetworkProvider from './network/NetworkProvider';
-import BitboxNetworkProvider from './network/BitboxNetworkProvider';
 
 const cramer = require('cramer-bch');
 const bch = require('trout-bch');
 
 export class Transaction {
-  private provider: NetworkProvider;
   private builder: TransactionBuilder;
 
   private inputs: Utxo[] = [];
@@ -43,14 +41,13 @@ export class Transaction {
 
   constructor(
     private address: string,
-    private network: string,
+    private provider: NetworkProvider,
     private redeemScript: Script,
     private abiFunction: AbiFunction,
     private parameters: (Buffer | SignatureTemplate)[],
     private selector?: number,
   ) {
-    this.provider = new BitboxNetworkProvider();
-    this.builder = new TransactionBuilder(this.network);
+    this.builder = new TransactionBuilder(this.provider.network);
   }
 
   from(input: Utxo): this;

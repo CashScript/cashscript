@@ -21,7 +21,6 @@ export const fixtures: Fixture[] = [
         // require(checkSig(s, pk))
         + 'OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'p2pkh.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -52,7 +51,6 @@ export const fixtures: Fixture[] = [
         + 'OP_ROT OP_ROT OP_CHECKSIG '
         + 'OP_NIP',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'reassignment.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -89,7 +87,6 @@ export const fixtures: Fixture[] = [
         + 'OP_3 OP_ROLL OP_NUMEQUAL '
         + 'OP_NIP OP_NIP OP_NIP',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'if_statement.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -120,7 +117,6 @@ export const fixtures: Fixture[] = [
         + 'OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 '
         + 'OP_ENDIF',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'multifunction.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -182,7 +178,6 @@ export const fixtures: Fixture[] = [
         + 'OP_2SWAP OP_NUMEQUAL '
         + 'OP_NIP OP_NIP OP_ENDIF',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'multifunction_if_statements.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -200,7 +195,6 @@ export const fixtures: Fixture[] = [
         // require(checkMultiSig([s1, s2], [pk1, pk2, pk3]))
         'OP_0 OP_3 OP_ROLL OP_4 OP_ROLL OP_2 OP_3 OP_ROLL OP_2ROT OP_SWAP OP_3 OP_CHECKMULTISIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -222,7 +216,6 @@ export const fixtures: Fixture[] = [
         // bytes x = b.split(b.length / 2)[1]
         + 'OP_SWAP OP_4 OP_SPLIT OP_DROP OP_EQUAL OP_NOT',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'split_size.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -242,7 +235,6 @@ export const fixtures: Fixture[] = [
         // require(checkSig(s, pk));
         + 'OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'cast_hash_checksig.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -262,7 +254,6 @@ export const fixtures: Fixture[] = [
         // require(checkDataSig(datasig(s), data, pk))
         + 'OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP OP_ROT OP_ROT OP_CHECKDATASIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'checkdatasig.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -307,7 +298,6 @@ export const fixtures: Fixture[] = [
         // require(checkSig(ownerSig, ownerPk));
         + 'OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'hodl_vault.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -334,7 +324,6 @@ export const fixtures: Fixture[] = [
         + 'OP_2ROT OP_5 OP_ROLL OP_ADD OP_4 OP_ROLL OP_ADD '
         + 'OP_3 OP_ROLL OP_ADD OP_ROT OP_ADD OP_GREATERTHAN',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'deep_replace.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -350,7 +339,6 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', covenant: false, inputs: [{ name: 'b', type: 'bytes4' }, { name: 'i', type: 'int' }] }],
       bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL', // require(b == bytes4(i))
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'bounded_bytes.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -380,7 +368,6 @@ export const fixtures: Fixture[] = [
         + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
         + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -414,7 +401,6 @@ export const fixtures: Fixture[] = [
         // require(checkSig(s, pk))
         + 'OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_multiple_checksig.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -437,7 +423,6 @@ export const fixtures: Fixture[] = [
         + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
         + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_only_hashtype.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -460,7 +445,6 @@ export const fixtures: Fixture[] = [
         + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
         + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_only_version.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -522,7 +506,6 @@ export const fixtures: Fixture[] = [
         + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
         + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -547,7 +530,6 @@ export const fixtures: Fixture[] = [
         + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
         + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_shuffled_fields.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -612,7 +594,6 @@ export const fixtures: Fixture[] = [
         // require(checkSig(s, pk))
         + 'OP_4 OP_ROLL OP_4 OP_ROLL OP_CHECKSIG OP_NIP OP_NIP OP_NIP OP_ENDIF',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'mecenas.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -658,7 +639,6 @@ export const fixtures: Fixture[] = [
         // Stack clean-up
         + 'OP_ENDIF OP_2DROP OP_2DROP OP_1',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'announcement.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -676,7 +656,6 @@ export const fixtures: Fixture[] = [
       ],
       bytecode: 'OP_DUP OP_REVERSEBYTES OP_EQUAL',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'p2palindrome.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,
@@ -694,7 +673,6 @@ export const fixtures: Fixture[] = [
       ],
       bytecode: 'OP_10 OP_SWAP OP_NUM2BIN OP_BIN2NUM OP_10 OP_NUMEQUAL',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'num2bin_variable.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,

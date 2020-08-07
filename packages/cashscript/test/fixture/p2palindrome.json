@@ -15,10 +15,9 @@
   ],
   "bytecode": "OP_DUP OP_REVERSEBYTES OP_EQUAL",
   "source": "pragma cashscript ^0.4.0;\n\ncontract P2Palindrome() {\n    function spend(string palindrome) {\n        require(palindrome.reverse() == palindrome);\n    }\n}\n",
-  "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.4.0"
+    "version": "0.4.3"
   },
-  "updatedAt": "2020-05-25T10:29:20.843Z"
+  "updatedAt": "2020-08-07T09:57:02.698Z"
 }

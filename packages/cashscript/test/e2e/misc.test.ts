@@ -1,19 +1,17 @@
-import path from 'path';
-import { Contract, Instance, SignatureTemplate } from '../../src';
-import {
-  alicePk,
-  alice,
-  network,
-} from '../fixture/vars';
+import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
+import { alicePk, alice } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 import { createOpReturnOutput } from '../../src/util';
 
 describe('BoundedBytes', () => {
-  let bbInstance: Instance;
+  let bbInstance: Contract;
+
   beforeAll(() => {
-    const BoundedBytes = Contract.import(path.join(__dirname, '..', 'fixture', 'bounded_bytes.json'), network);
-    bbInstance = BoundedBytes.new();
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/bounded_bytes.json');
+    const provider = new BitboxNetworkProvider();
+    bbInstance = new Contract(artifact, provider, []);
     console.log(bbInstance.address);
   });
 
@@ -67,10 +65,13 @@ describe('BoundedBytes', () => {
 });
 
 describe('Simple Covenant', () => {
-  let covenant: Instance;
+  let covenant: Contract;
+
   beforeAll(() => {
-    const Covenant = Contract.import(path.join(__dirname, '..', 'fixture', 'simple_covenant.json'), network);
-    covenant = Covenant.new();
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/simple_covenant.json');
+    const provider = new BitboxNetworkProvider();
+    covenant = new Contract(artifact, provider, []);
     console.log(covenant.address);
   });
 
@@ -94,10 +95,13 @@ describe('Simple Covenant', () => {
 });
 
 describe.skip('P2Palindrome', () => {
-  let p2palindrome: Instance;
+  let p2palindrome: Contract;
+
   beforeAll(() => {
-    const P2Palindrome = Contract.import(path.join(__dirname, '..', 'fixture', 'p2palindrome.json'), network);
-    p2palindrome = P2Palindrome.new();
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/p2palindrome.json');
+    const provider = new BitboxNetworkProvider();
+    p2palindrome = new Contract(artifact, provider, []);
     console.log(p2palindrome.address);
   });
 

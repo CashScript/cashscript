@@ -1,44 +1,31 @@
 import {
-  Artifacts,
   Artifact,
-  CashCompiler,
   Data,
+  Script,
+  AbiFunction,
 } from 'cashc';
-import fs from 'fs';
 import { Transaction } from './Transaction';
-import { Instance } from './Instance';
 import { Parameter, encodeParameter, SignatureTemplate } from './Parameter';
-import { Network } from './interfaces';
+import { Utxo } from './interfaces';
+import NetworkProvider from './network/NetworkProvider';
+import { scriptToAddress, calculateBytesize, countOpcodes } from './util';
 
 export class Contract {
   name: string;
-  new: (...params: Parameter[]) => Instance;
-  deployed: (at?: string) => Instance;
+  address: string;
+  bytesize: number;
+  opcount: number;
 
-  static compile(fnOrString: string, network?: Network): Contract {
-    const artifact = fs && fs.existsSync && fs.existsSync(fnOrString)
-      ? CashCompiler.compileFile(fnOrString)
-      : CashCompiler.compileString(fnOrString);
+  functions: {
+    [name: string]: ContractFunction,
+  };
 
-    return new Contract(artifact, network);
-  }
-
-  static import(fnOrArtifact: string | Artifact, network?: Network): Contract {
-    const artifact = typeof fnOrArtifact === 'string'
-      ? Artifacts.require(fnOrArtifact)
-      : fnOrArtifact;
-
-    return new Contract(artifact, network);
-  }
-
-  export(fn?: string): Artifact {
-    if (typeof fn !== 'undefined') Artifacts.export(this.artifact, fn);
-    return this.artifact;
-  }
+  private redeemScript: Script;
 
   constructor(
-    public artifact: Artifact,
-    private network: Network = Network.MAINNET,
+    private artifact: Artifact,
+    private provider: NetworkProvider,
+    constructorParameters: Parameter[],
   ) {
     if (!artifact.abi || !artifact.bytecode
      || !artifact.constructorInputs || !artifact.contractName
@@ -46,44 +33,70 @@ export class Contract {
       throw new Error('Invalid or incomplete artifact provided');
     }
 
+    if (artifact.constructorInputs.length !== constructorParameters.length) {
+      throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor`);
+    }
+
+    // Encode parameters (this also performs type checking)
+    const encodedParameters = constructorParameters
+      .map((p, i) => encodeParameter(p, artifact.constructorInputs[i].type))
+      .reverse();
+
+    // Check there's no signature templates in the constructor
+    if (encodedParameters.some(p => p instanceof SignatureTemplate)) {
+      throw new Error('Cannot use signatures in constructor');
+    }
+
+    this.redeemScript = [
+      ...encodedParameters as Buffer[],
+      ...Data.asmToScript(this.artifact.bytecode),
+    ];
+
+    // Populate the functions object with the contract's functions
+    // (with a special case for single function, which has no "function selector")
+    this.functions = {};
+    if (artifact.abi.length === 1) {
+      const f = artifact.abi[0];
+      this.functions[f.name] = this.createFunction(f);
+    } else {
+      artifact.abi.forEach((f, i) => {
+        this.functions[f.name] = this.createFunction(f, i);
+      });
+    }
+
     this.name = artifact.contractName;
+    this.address = scriptToAddress(this.redeemScript, this.provider.network);
+    this.bytesize = calculateBytesize(this.redeemScript);
+    this.opcount = countOpcodes(this.redeemScript);
+  }
 
-    this.new = (...ps: Parameter[]) => {
-      if (artifact.constructorInputs.length !== ps.length) {
-        throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor`);
+  async getBalance(): Promise<number> {
+    const utxos = await this.getUtxos();
+    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, 0);
+  }
+
+  async getUtxos(): Promise<Utxo[]> {
+    return this.provider.getUtxos(this.address);
+  }
+
+  private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
+    return (...parameters: Parameter[]) => {
+      if (abiFunction.inputs.length !== parameters.length) {
+        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}`);
       }
-      const encodedParameters = ps
-        .map((p, i) => encodeParameter(p, artifact.constructorInputs[i].type))
-        .reverse();
 
-      // Check there's no sigs in the constructor
-      if (encodedParameters.some(p => p instanceof SignatureTemplate)) {
-        throw new Error('Cannot use signatures in constructor');
-      }
+      // Encode passed parameters (this also performs type checking)
+      const encodedParameters = parameters
+        .map((p, i) => encodeParameter(p, abiFunction.inputs[i].type));
 
-      const redeemScript = [
-        ...encodedParameters as Buffer[],
-        ...Data.asmToScript(this.artifact.bytecode),
-      ];
-      const instance = new Instance(this.artifact, redeemScript, this.network);
-
-      const deployedContracts = this.artifact.networks[this.network] || {};
-      deployedContracts[instance.address] = Data.scriptToAsm(redeemScript);
-      this.artifact.networks[this.network] = deployedContracts;
-      this.artifact.updatedAt = new Date().toISOString();
-
-      return instance;
-    };
-
-    this.deployed = (at?: string) => {
-      if (!this.artifact.networks[this.network]) throw new Error('No registered deployed contracts');
-      const redeemScript = at
-        ? this.artifact.networks[this.network][at]
-        : Object.values(this.artifact.networks[this.network])[0];
-
-      if (!redeemScript) throw new Error(`No registered contract deployed at ${at}`);
-
-      return new Instance(this.artifact, Data.asmToScript(redeemScript), this.network);
+      return new Transaction(
+        this.address,
+        this.provider,
+        this.redeemScript,
+        abiFunction,
+        encodedParameters,
+        selector,
+      );
     };
   }
 }

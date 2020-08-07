@@ -20,11 +20,6 @@ export interface Artifact {
   abi: AbiFunction[];
   bytecode: string;
   source: string;
-  networks: {
-    [network: string]: {
-      [address: string]: string;
-    };
-  };
   compiler: {
     name: string;
     version: string;
@@ -50,7 +45,6 @@ export function generateArtifact(ast: Ast, script: Script, source: string): Arti
     abi,
     bytecode,
     source,
-    networks: {},
     compiler: {
       name: 'cashc',
       version,

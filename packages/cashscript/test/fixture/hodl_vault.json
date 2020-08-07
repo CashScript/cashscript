@@ -40,10 +40,9 @@
   ],
   "bytecode": "OP_6 OP_PICK OP_4 OP_SPLIT OP_DROP OP_BIN2NUM OP_7 OP_PICK OP_4 OP_SPLIT OP_NIP OP_BIN2NUM OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY OP_CHECKSIG",
   "source": "// This contract forces HODLing until a certain price target has been reached\n// A minimum block is provided to ensure that oracle price entries from before this block are disregarded\n// i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used.\n// Instead, a message with a block number and price from after the minBlock needs to be passed.\n// This contract serves as a simple example for checkDataSig-based contracts.\ncontract HodlVault(\n    pubkey ownerPk,\n    pubkey oraclePk,\n    int minBlock,\n    int priceTarget\n) {\n    function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {\n        // message: { blockheight, price }\n        int blockHeight = int(oracleMessage.split(4)[0]);\n        int price = int(oracleMessage.split(4)[1]);\n\n        // Check that blockHeight is after minBlock and not in the future\n        require(blockHeight >= minBlock);\n        require(tx.time >= blockHeight);\n\n        // Check that current price is at least priceTarget\n        require(price >= priceTarget);\n\n        // Handle necessary signature checks\n        require(checkDataSig(oracleSig, oracleMessage, oraclePk));\n        require(checkSig(ownerSig, ownerPk));\n    }\n}\n",
-  "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.4.0"
+    "version": "0.4.3"
   },
-  "updatedAt": "2020-05-25T10:29:19.759Z"
+  "updatedAt": "2020-08-07T09:57:02.295Z"
 }

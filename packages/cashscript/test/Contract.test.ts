@@ -1,160 +1,142 @@
-import path from 'path';
-import { Contract, Artifacts } from '../src';
-import { network } from './fixture/vars';
+import { Contract, BitboxNetworkProvider, SignatureTemplate } from '../src';
+import {
+  alicePkh,
+  alicePk,
+  alice,
+  bob,
+} from './fixture/vars';
 
 describe('Contract', () => {
-  describe('compile', () => {
-    it('should fail for invalid .cash file or string', () => {
-      expect(() => Contract.compile(path.join(__dirname, 'fixture', 'p2pkh-invalid.cash')))
-        .toThrow();
-
-      expect(() => Contract.compile('contract P2PKH(bytes20 pkh) {\n    // Require pk to match stored pkh and signature to match\n    functon spend(pubkey pk, sig s) {\n        require(hash160(pk) == pkh);\n        require(checkSig(s, pk));\n    }\n}\n'))
-        .toThrow();
-    });
-
-    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas', 'simple_covenant'].forEach((name) => {
-      it(`should create ${name} contract object from file`, () => {
-        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
-        const contract = Contract.compile(path.join(__dirname, 'fixture', `${name}.cash`));
-        expect(contract.artifact).toEqual({
-          ...expectedArtifact,
-          updatedAt: expect.any(String),
-          networks: expect.any(Object),
-          compiler: expect.any(Object),
-        });
-      });
-
-      it(`should create ${name} contract object from string`, () => {
-        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
-        const contract = Contract.compile(expectedArtifact.source);
-        expect(contract.artifact).toEqual({
-          ...expectedArtifact,
-          updatedAt: expect.any(String),
-          networks: expect.any(Object),
-          compiler: expect.any(Object),
-        });
-      });
-    });
-  });
-
-  describe('import', () => {
-    it('should fail with invalid Artifact file or object', () => {
-      expect(() => Contract.import(path.join(__dirname, 'fixture', 'p2pkh-invalid.json'), network))
-        .toThrow();
-
-      expect(() => {
-        const artifact = Artifacts.require(path.join(__dirname, 'fixture', 'p2pkh-invalid.json'));
-        Contract.import(artifact);
-      }).toThrow();
-    });
-
-    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas', 'simple_covenant'].forEach((name) => {
-      it(`should create ${name} contract object from file`, () => {
-        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
-        const contract = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), network);
-        expect(contract.artifact).toEqual(expectedArtifact);
-      });
-
-      it(`should create ${name} contract object from string`, () => {
-        const expectedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
-        const contract = Contract.import(expectedArtifact, network);
-        expect(contract.artifact).toEqual(expectedArtifact);
-      });
-    });
-  });
-
-  describe('export', () => {
-    ['p2pkh', 'transfer_with_timeout', 'hodl_vault', 'mecenas', 'simple_covenant'].forEach((name) => {
-      it(`should export artifact file for ${name}`, () => {
-        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), network);
-        const returnedArtifact = initial.export(path.join(__dirname, 'fixture', `${name}.json`));
-        const exportedArtifact = Artifacts.require(path.join(__dirname, 'fixture', `${name}.json`));
-
-        expect(initial.artifact).toEqual(exportedArtifact);
-        expect(initial.artifact).toEqual(returnedArtifact);
-      });
-
-      it(`should export artifact object for ${name}`, () => {
-        const initial = Contract.import(path.join(__dirname, 'fixture', `${name}.json`), network);
-        const artifact = initial.export();
-        expect(initial.artifact).toEqual(artifact);
-      });
-    });
-  });
-
   describe('new', () => {
     it('should fail with incorrect constructor parameters', () => {
-      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), network);
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/p2pkh.json');
+      const provider = new BitboxNetworkProvider();
 
-      expect(() => P2PKH.new()).toThrow();
-      expect(() => P2PKH.new(20)).toThrow();
-      expect(() => P2PKH.new(Buffer.alloc(20, 0), Buffer.alloc(20, 0))).toThrow();
-      expect(() => P2PKH.new(Buffer.alloc(19, 0))).toThrow();
-      expect(() => P2PKH.new(Buffer.alloc(21, 0))).toThrow();
+      expect(() => new Contract(artifact, provider, [])).toThrow();
+      expect(() => new Contract(artifact, provider, [20])).toThrow();
+      expect(
+        () => new Contract(artifact, provider, [Buffer.alloc(20, 0), Buffer.alloc(20, 0)]),
+      ).toThrow();
+      expect(() => new Contract(artifact, provider, [Buffer.alloc(19, 0)])).toThrow();
+      expect(() => new Contract(artifact, provider, [Buffer.alloc(21, 0)])).toThrow();
+    });
+
+    it('should fail with incomplete artifact', () => {
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/p2pkh.json');
+      const provider = new BitboxNetworkProvider();
+
+      expect(() => new Contract({ ...artifact, abi: undefined }, provider, [])).toThrow();
+      expect(() => new Contract({ ...artifact, bytecode: undefined }, provider, [])).toThrow();
+      expect(
+        () => new Contract({ ...artifact, constructorInputs: undefined }, provider, []),
+      ).toThrow();
+      expect(() => new Contract({ ...artifact, contractName: undefined }, provider, [])).toThrow();
     });
 
     it('should create new P2PKH instance', () => {
-      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), network);
-      const instance = P2PKH.new(Buffer.alloc(20, 0));
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/p2pkh.json');
+      const provider = new BitboxNetworkProvider();
+      const instance = new Contract(artifact, provider, [Buffer.alloc(20, 0)]);
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.spend).toBe('function');
-      expect(instance.name).toEqual(P2PKH.name);
+      expect(instance.name).toEqual(artifact.contractName);
     });
 
     it('should create new TransferWithTimeout instance', () => {
-      const TransferWithTimeout = Contract.import(path.join(__dirname, 'fixture', 'transfer_with_timeout.json'), network);
-      const instance = TransferWithTimeout.new(Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000);
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/transfer_with_timeout.json');
+      const provider = new BitboxNetworkProvider();
+      const constructorParameters = [Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000];
+      const instance = new Contract(artifact, provider, constructorParameters);
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.transfer).toBe('function');
       expect(typeof instance.functions.timeout).toBe('function');
-      expect(instance.name).toEqual(TransferWithTimeout.name);
+      expect(instance.name).toEqual(artifact.contractName);
     });
 
     it('should create new HodlVault instance', () => {
-      const HodlVault = Contract.import(path.join(__dirname, 'fixture', 'hodl_vault.json'), network);
-      const instance = HodlVault.new(Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000, 10000);
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/hodl_vault.json');
+      const provider = new BitboxNetworkProvider();
+      const constructorParameters = [Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000, 10000];
+      const instance = new Contract(artifact, provider, constructorParameters);
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.spend).toBe('function');
-      expect(instance.name).toEqual(HodlVault.name);
+      expect(instance.name).toEqual(artifact.contractName);
     });
 
     it('should create new Mecenas instance', () => {
-      const Mecenas = Contract.import(path.join(__dirname, 'fixture', 'mecenas.json'), network);
-      const instance = Mecenas.new(Buffer.alloc(20, 0), Buffer.alloc(20, 0), 1000000);
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/mecenas.json');
+      const provider = new BitboxNetworkProvider();
+      const constructorParameters = [Buffer.alloc(20, 0), Buffer.alloc(20, 0), 1000000];
+      const instance = new Contract(artifact, provider, constructorParameters);
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.receive).toBe('function');
       expect(typeof instance.functions.reclaim).toBe('function');
-      expect(instance.name).toEqual(Mecenas.name);
+      expect(instance.name).toEqual(artifact.contractName);
     });
   });
 
-  describe('deployed', () => {
-    it('should fail on new Contract', () => {
-      const P2PKH = Contract.compile(path.join(__dirname, 'fixture', 'p2pkh.cash'), network);
+  describe('getBalance', () => {
+    // Not very robust, as this depends on the example P2PKH contract having balance
+    it('should return balance for existing contract', async () => {
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/p2pkh.json');
+      const provider = new BitboxNetworkProvider();
+      const instance = new Contract(artifact, provider, [alicePkh]);
 
-      expect(P2PKH.artifact.networks).toEqual({});
-      expect(() => P2PKH.deployed()).toThrow();
-      expect(() => P2PKH.deployed('prpnwqy42crzhrt9dn3kkq6xr9d8qvlpecrnqgdka6')).toThrow();
+      expect(await instance.getBalance()).toBeGreaterThan(0);
     });
 
-    it('should return deployed P2PKH', () => {
-      const P2PKH = Contract.import(path.join(__dirname, 'fixture', 'p2pkh.json'), network);
-      const deployedAddress = 'bitcoincash:pzfsp649y00eay9mm3ky63ln72v3h6tx6gcdrualzd';
+    it('should return zero balance for new contract', async () => {
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/p2pkh.json');
+      const provider = new BitboxNetworkProvider();
+      const instance = new Contract(artifact, provider, [Buffer.alloc(20, 0)]);
 
-      expect(P2PKH.artifact.networks).toMatchObject({ [network]: expect.any(Object) });
-      const instance1 = P2PKH.deployed();
-      const instance2 = P2PKH.deployed(deployedAddress);
+      expect(await instance.getBalance()).toBe(0);
+    });
+  });
 
-      expect(instance1.address).toEqual(deployedAddress);
-      expect(instance2.address).toEqual(deployedAddress);
-      expect(typeof instance1.functions.spend).toBe('function');
-      expect(typeof instance2.functions.spend).toBe('function');
-      expect(instance1.name).toEqual(P2PKH.name);
-      expect(instance2.name).toEqual(P2PKH.name);
+  describe('Contract functions', () => {
+    let instance: Contract;
+    let bbInstance: Contract;
+    beforeEach(() => {
+      // eslint-disable-next-line global-require
+      const artifact = require('./fixture/p2pkh.json');
+      const provider = new BitboxNetworkProvider();
+      instance = new Contract(artifact, provider, [alicePkh]);
+
+      // eslint-disable-next-line global-require
+      const bbArtifact = require('./fixture/bounded_bytes.json');
+      bbInstance = new Contract(bbArtifact, provider, []);
+    });
+
+    it('can\'t call spend with incorrect parameter signature', () => {
+      expect(() => instance.functions.spend()).toThrow();
+      expect(() => instance.functions.spend(0, 1)).toThrow();
+      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice), 0)).toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e803', 'hex'), 1000)).toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e803000000', 'hex'), 1000)).toThrow();
+    });
+
+    it('can call spend with incorrect parameters', () => {
+      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(bob))).not.toThrow();
+      expect(() => instance.functions.spend(alicePk, Buffer.alloc(65, 0))).not.toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e8031234', 'hex'), 1000)).not.toThrow();
+    });
+
+    it('can call spend with correct parameters', () => {
+      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice))).not.toThrow();
+      expect(() => bbInstance.functions.spend(Buffer.from('e8030000', 'hex'), 1000)).not.toThrow();
     });
   });
 });

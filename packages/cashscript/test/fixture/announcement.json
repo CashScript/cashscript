@@ -19,10 +19,9 @@
   ],
   "bytecode": "OP_DUP 69 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP OP_2ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP OP_7 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY 0000000000000000 6a 6d02 OP_SIZE OP_SWAP OP_CAT OP_CAT 4120636f6e7472616374206d6179206e6f7420696e6a75726520612068756d616e206265696e67206f722c207468726f75676820696e616374696f6e2c20616c6c6f7720612068756d616e206265696e6720746f20636f6d6520746f206861726d2e OP_SIZE OP_DUP 4b OP_GREATERTHAN OP_IF 4c OP_SWAP OP_CAT OP_ENDIF OP_SWAP OP_CAT OP_CAT OP_SIZE OP_SWAP OP_CAT OP_CAT d007 OP_3 OP_ROLL OP_BIN2NUM OP_OVER OP_SUB OP_DUP OP_ROT OP_2 OP_DIV OP_GREATERTHANOREQUAL OP_IF OP_DUP OP_8 OP_NUM2BIN 17a914 OP_CAT OP_4 OP_PICK OP_HASH160 OP_CAT 87 OP_CAT OP_2OVER OP_2 OP_PICK OP_CAT OP_HASH256 OP_EQUALVERIFY OP_DROP OP_ELSE OP_2 OP_PICK OP_2 OP_PICK OP_HASH256 OP_EQUALVERIFY OP_ENDIF OP_2DROP OP_2DROP OP_1",
   "source": "pragma cashscript ^0.4.0;\n\n/* This is a contract showcasing covenants outside of regular transactional use.\n * It enforces the contract to make an \"announcement\" on Memo.cash, and send the\n * remainder of contract funds back to the contract.\n */\ncontract Announcement() {\n    function announce(pubkey pk, sig s) {\n        require(checkSig(s, pk));\n\n        // Create the memo.cash announcement output\n        bytes announcement = new OutputNullData([\n            0x6d02,\n            bytes('A contract may not injure a human being or, through inaction, allow a human being to come to harm.')\n        ]);\n\n        // Calculate leftover money after fee (2000 sats)\n        // Add change output if the remainder can be used\n        // otherwise donate the remainder to the miner\n        int minerFee = 2000;\n        int changeAmount = int(bytes(tx.value)) - minerFee;\n        if (changeAmount >= (minerFee / 2)) {\n            bytes32 change = new OutputP2SH(bytes8(changeAmount), hash160(tx.bytecode));\n            require(tx.hashOutputs == hash256(announcement + change));\n        } else {\n            require(tx.hashOutputs == hash256(announcement));\n        }\n    }\n}\n",
-  "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.4.0"
+    "version": "0.4.3"
   },
-  "updatedAt": "2020-05-25T10:29:18.672Z"
+  "updatedAt": "2020-08-07T09:57:01.881Z"
 }

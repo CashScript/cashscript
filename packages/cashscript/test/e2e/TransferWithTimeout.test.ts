@@ -1,22 +1,22 @@
-import path from 'path';
-import { Contract, Instance, SignatureTemplate } from '../../src';
+import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
 import {
   alicePk,
   alice,
   bob,
   bobPk,
-  network,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors';
 
 describe('TransferWithTimeout', () => {
-  let twtInstancePast: Instance;
-  let twtInstanceFuture: Instance;
+  let twtInstancePast: Contract;
+  let twtInstanceFuture: Contract;
   beforeAll(() => {
-    const TWT = Contract.import(path.join(__dirname, '..', 'fixture', 'transfer_with_timeout.json'), network);
-    twtInstancePast = TWT.new(alicePk, bobPk, 500000);
-    twtInstanceFuture = TWT.new(alicePk, bobPk, 2000000);
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/transfer_with_timeout.json');
+    const provider = new BitboxNetworkProvider();
+    twtInstancePast = new Contract(artifact, provider, [alicePk, bobPk, 500000]);
+    twtInstanceFuture = new Contract(artifact, provider, [alicePk, bobPk, 2000000]);
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);
   });

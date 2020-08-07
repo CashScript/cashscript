@@ -1,20 +1,21 @@
-import path from 'path';
-import { Contract, Instance, SignatureTemplate } from '../../src';
+import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
 import {
   alicePk,
   alice,
   oraclePk,
   oracle,
-  network,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 
 describe('HodlVault', () => {
-  let hodlVault: Instance;
+  let hodlVault: Contract;
+
   beforeAll(() => {
-    const HodlVault = Contract.import(path.join(__dirname, '..', 'fixture', 'hodl_vault.json'), network);
-    hodlVault = HodlVault.new(alicePk, oraclePk, 597000, 30000);
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/hodl_vault.json');
+    const provider = new BitboxNetworkProvider();
+    hodlVault = new Contract(artifact, provider, [alicePk, oraclePk, 597000, 30000]);
     console.log(hodlVault.address);
   });
 

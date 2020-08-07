@@ -1,5 +1,4 @@
 export { Contract } from './Contract';
-export { Instance } from './Instance';
 export { Transaction } from './Transaction';
 export { Parameter, SignatureTemplate, Sig } from './Parameter';
 export {
@@ -7,6 +6,7 @@ export {
   Artifact,
   AbiFunction,
   AbiInput,
+  CashCompiler,
 } from 'cashc';
 export {
   Utxo,
@@ -15,3 +15,4 @@ export {
   HashType,
 } from './interfaces';
 export * from './Errors';
+export * from './network';

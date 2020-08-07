@@ -19,10 +19,9 @@
   ],
   "bytecode": "OP_DUP OP_4 OP_SPLIT OP_DROP OP_2SWAP OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP OP_5 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY OP_BIN2NUM OP_2 OP_GREATERTHANOREQUAL",
   "source": "contract Covenant() {\n    function spend(pubkey pk, sig s) {\n        require(checkSig(s, pk));\n        require(int(tx.version) >= 2);\n    }\n}\n",
-  "networks": {},
   "compiler": {
     "name": "cashc",
-    "version": "0.4.0"
+    "version": "0.4.3"
   },
-  "updatedAt": "2020-05-25T10:29:22.472Z"
+  "updatedAt": "2020-08-07T09:57:03.563Z"
 }

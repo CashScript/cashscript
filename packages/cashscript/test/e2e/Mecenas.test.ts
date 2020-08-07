@@ -1,5 +1,4 @@
-import path from 'path';
-import { Contract, Instance, SignatureTemplate } from '../../src';
+import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
 import {
   alicePk,
   alice,
@@ -7,18 +6,20 @@ import {
   bobPkh,
   aliceAddress,
   bobAddress,
-  network,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {
-  let mecenas: Instance;
+  let mecenas: Contract;
   const pledge = 10000;
+
   beforeAll(() => {
-    const Mecenas = Contract.import(path.join(__dirname, '..', 'fixture', 'mecenas.json'), network);
-    mecenas = Mecenas.new(alicePkh, bobPkh, pledge);
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/mecenas.json');
+    const provider = new BitboxNetworkProvider();
+    mecenas = new Contract(artifact, provider, [alicePkh, bobPkh, pledge]);
     console.log(mecenas.address);
   });
 
