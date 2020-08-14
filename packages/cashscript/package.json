@@ -10,14 +10,17 @@
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
   "dependencies": {
+    "@bitauth/libauth": "^1.17.1",
     "bitbox-sdk": "^8.8.0",
-    "cashc": "^0.4.4",
+    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
+    "cashc": "^0.4.3",
     "cramer-bch": "https://github.com/jcramer/bitcoincashjs-lib",
     "delay": "^4.3.0",
-    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
+    "electrum-cash": "^2.0.1",
     "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b"
   },
   "devDependencies": {
+    "@psf/bch-js": "^3.5.3",
     "bignumber.js": "^9.0.0",
     "eslint": "^6.6.0",
     "jest": "^25.1.0",

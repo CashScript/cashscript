@@ -3,12 +3,10 @@ import { Utxo, Network } from '../interfaces';
 import NetworkProvider from './NetworkProvider';
 
 export default class BitboxNetworkProvider implements NetworkProvider {
-  network = Network.MAINNET;
-  private bitbox: BITBOX;
-
-  constructor() {
-    this.bitbox = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
-  }
+  constructor(
+    public network: Network,
+    private bitbox: BITBOX,
+  ) {}
 
   async getUtxos(address: string): Promise<Utxo[]> {
     const { utxos } = await this.bitbox.Address.utxo(address) as any;

@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import {
   alicePkh,
   alicePk,
@@ -16,7 +16,7 @@ describe('P2PKH', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2pkh.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     p2pkhInstance = new Contract(artifact, provider, [alicePkh]);
     console.log(p2pkhInstance.address);
   });
@@ -174,7 +174,7 @@ describe('P2PKH', () => {
 });
 
 async function getAddressUtxos(address: string): Promise<Utxo[]> {
-  return new BitboxNetworkProvider().getUtxos(address);
+  return new ElectrumNetworkProvider().getUtxos(address);
 }
 
 function gatherUtxos(utxos: Utxo[], options?: {

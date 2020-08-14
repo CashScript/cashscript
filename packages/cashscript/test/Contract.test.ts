@@ -1,4 +1,4 @@
-import { Contract, BitboxNetworkProvider, SignatureTemplate } from '../src';
+import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../src';
 import {
   alicePkh,
   alicePk,
@@ -11,7 +11,7 @@ describe('Contract', () => {
     it('should fail with incorrect constructor parameters', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
 
       expect(() => new Contract(artifact, provider, [])).toThrow();
       expect(() => new Contract(artifact, provider, [20])).toThrow();
@@ -25,7 +25,7 @@ describe('Contract', () => {
     it('should fail with incomplete artifact', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
 
       expect(() => new Contract({ ...artifact, abi: undefined }, provider, [])).toThrow();
       expect(() => new Contract({ ...artifact, bytecode: undefined }, provider, [])).toThrow();
@@ -38,7 +38,7 @@ describe('Contract', () => {
     it('should create new P2PKH instance', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
       const instance = new Contract(artifact, provider, [Buffer.alloc(20, 0)]);
 
       expect(typeof instance.address).toBe('string');
@@ -49,7 +49,7 @@ describe('Contract', () => {
     it('should create new TransferWithTimeout instance', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/transfer_with_timeout.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
       const constructorParameters = [Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000];
       const instance = new Contract(artifact, provider, constructorParameters);
 
@@ -62,7 +62,7 @@ describe('Contract', () => {
     it('should create new HodlVault instance', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/hodl_vault.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
       const constructorParameters = [Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000, 10000];
       const instance = new Contract(artifact, provider, constructorParameters);
 
@@ -74,7 +74,7 @@ describe('Contract', () => {
     it('should create new Mecenas instance', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/mecenas.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
       const constructorParameters = [Buffer.alloc(20, 0), Buffer.alloc(20, 0), 1000000];
       const instance = new Contract(artifact, provider, constructorParameters);
 
@@ -90,7 +90,7 @@ describe('Contract', () => {
     it('should return balance for existing contract', async () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
       const instance = new Contract(artifact, provider, [alicePkh]);
 
       expect(await instance.getBalance()).toBeGreaterThan(0);
@@ -99,7 +99,7 @@ describe('Contract', () => {
     it('should return zero balance for new contract', async () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
       const instance = new Contract(artifact, provider, [Buffer.alloc(20, 0)]);
 
       expect(await instance.getBalance()).toBe(0);
@@ -112,7 +112,7 @@ describe('Contract', () => {
     beforeEach(() => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
-      const provider = new BitboxNetworkProvider();
+      const provider = new ElectrumNetworkProvider();
       instance = new Contract(artifact, provider, [alicePkh]);
 
       // eslint-disable-next-line global-require

@@ -1,5 +1,6 @@
 import { Address } from 'bitbox-sdk';
 import { Script, Data, Op } from 'cashc';
+import { cashAddressToLockingBytecode } from '@bitauth/libauth';
 import { Utxo, Output } from './interfaces';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {
@@ -140,6 +141,21 @@ export function scriptToAddress(script: Script, network: string): string {
   const outputScript = bch.script.scriptHash.output.encode(scriptHash);
   const address = new Address().fromOutputScript(outputScript, network);
   return address;
+}
+
+/**
+* Helper function to convert an address to a locking script
+*
+* @param address   Address to convert to locking script
+*
+* @returns a locking script corresponding to the passed address
+*/
+export function addressToLockScript(address: string): Uint8Array {
+  const result = cashAddressToLockingBytecode(address);
+
+  if (typeof result === 'string') throw new Error(result);
+
+  return result.bytecode;
 }
 
 // ////////////////////////////////////////////////////////////////////////////

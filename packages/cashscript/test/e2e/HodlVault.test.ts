@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import {
   alicePk,
   alice,
@@ -14,7 +14,7 @@ describe('HodlVault', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/hodl_vault.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     hodlVault = new Contract(artifact, provider, [alicePk, oraclePk, 597000, 30000]);
     console.log(hodlVault.address);
   });

@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import {
   alicePk,
   alice,
@@ -18,7 +18,7 @@ describe('Mecenas', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/mecenas.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     mecenas = new Contract(artifact, provider, [alicePkh, bobPkh, pledge]);
     console.log(mecenas.address);
   });

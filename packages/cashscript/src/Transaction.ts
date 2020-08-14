@@ -201,7 +201,8 @@ export class Transaction {
       const txid = await this.provider.sendRawTransaction(tx);
       return this.getTxDetails(txid);
     } catch (e) {
-      throw buildError(e.error, meep(tx, this.inputs, this.redeemScript));
+      const reason = e.error || e.message;
+      throw buildError(reason, meep(tx, this.inputs, this.redeemScript));
     }
   }
 
@@ -258,9 +259,13 @@ export class Transaction {
       if (!this.hardcodedFee) fee += this.inputs.length * inputSize;
       satsAvailable = this.inputs.reduce((acc, input) => acc + input.satoshis, 0);
     } else {
-      // If inputs are not defined yet, we retrieve the contract's UTXOs
-      // and perform UTXO selection
+      // If inputs are not defined yet, we retrieve the contract's UTXOs and perform selection
       const utxos = await this.provider.getUtxos(this.address);
+
+      // We sort the UTXOs mainly so there is consistent behaviour between network providers
+      // even if they report UTXOs in a different order
+      utxos.sort((a, b) => b.satoshis - a.satoshis);
+
       for (const utxo of utxos) {
         this.inputs.push(utxo);
         satsAvailable += utxo.satoshis;

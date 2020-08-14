@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import {
   alicePk,
   alice,
@@ -14,7 +14,7 @@ describe('TransferWithTimeout', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/transfer_with_timeout.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     twtInstancePast = new Contract(artifact, provider, [alicePk, bobPk, 500000]);
     twtInstanceFuture = new Contract(artifact, provider, [alicePk, bobPk, 2000000]);
     console.log(twtInstancePast.address);

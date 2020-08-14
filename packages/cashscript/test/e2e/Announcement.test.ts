@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 import { createOpReturnOutput } from '../../src/util';
@@ -10,7 +10,7 @@ describe('Announcement', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/announcement.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     announcement = new Contract(artifact, provider, []);
     console.log(announcement.address);
   });

@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, BitboxNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import { alicePk, alice } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
@@ -10,7 +10,7 @@ describe('BoundedBytes', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/bounded_bytes.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     bbInstance = new Contract(artifact, provider, []);
     console.log(bbInstance.address);
   });
@@ -70,7 +70,7 @@ describe('Simple Covenant', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/simple_covenant.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     covenant = new Contract(artifact, provider, []);
     console.log(covenant.address);
   });
@@ -100,7 +100,7 @@ describe.skip('P2Palindrome', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2palindrome.json');
-    const provider = new BitboxNetworkProvider();
+    const provider = new ElectrumNetworkProvider();
     p2palindrome = new Contract(artifact, provider, []);
     console.log(p2palindrome.address);
   });
