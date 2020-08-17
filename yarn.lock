@@ -4193,11 +4193,6 @@ bitbox-sdk@^8.11.1, bitbox-sdk@^8.11.2, bitbox-sdk@^8.8.0:
     socket.io-client "^2.2.0"
     wif "^2.0.6"
 
-bitcoin-ts@^1.12.0:
-  version "1.14.2"
-  resolved "https://registry.yarnpkg.com/bitcoin-ts/-/bitcoin-ts-1.14.2.tgz#332acf4039bacb126bb4ddef93fc28c8b711305c"
-  integrity sha512-jaePXvofeIIZlHV7cjlWeGtP4FA+s0+AyM5bX7PgjkXsFPd1iHv9ea0XXo8XSnnI6roDk1kYaENK7EswdaiPjA==
-
 bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0, "bitcoincash-ops@github:Bitcoin-com/bitcoincash-ops#2.0.0":
   version "2.0.0"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincash-ops/tar.gz/6ab82cc7326c67236f3b2d9d0457258ac2ef48e3"
@@ -5166,6 +5161,11 @@ commander@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/commander/-/commander-3.0.2.tgz#6837c3fb677ad9933d1cfba42dd14d5117d6b39e"
   integrity sha512-Gar0ASD4BDyKC4hl4DwHqDrmvjoxWKZigVnAbn5H1owvm4CxCPdb0HQDehwNYMJpla5+M2tPmPARzhtYuwpHow==
+
+commander@^6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-6.0.0.tgz#2b270da94f8fb9014455312f829a1129dbf8887e"
+  integrity sha512-s7EA+hDtTYNhuXkTlhqew4txMZVdszBmKWSPEMxGr8ru8JXR7bLUFIAtPhcSuFdJQ0ILMxnJi8GkQL0yvDy/YA==
 
 commander@~2.19.0:
   version "2.19.0"
@@ -16682,7 +16682,7 @@ yargs@^13.2.4, yargs@^13.3.0:
     y18n "^4.0.0"
     yargs-parser "^13.1.2"
 
-yargs@^14.0.0, yargs@^14.2.2:
+yargs@^14.2.2:
   version "14.2.3"
   resolved "https://registry.yarnpkg.com/yargs/-/yargs-14.2.3.tgz#1a1c3edced1afb2a2fea33604bc6d1d8d688a414"
   integrity sha512-ZbotRWhF+lkjijC/VhmOT9wSgyBQ7+zr13+YLkhfsSiTriYsMzkTUFP18pFhWwBeMa5gUc1MzbhrO6/VB7c9Xg==

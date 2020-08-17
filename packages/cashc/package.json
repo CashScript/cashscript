@@ -1,40 +1,7 @@
 {
   "name": "cashc",
+  "version": "0.4.3",
   "description": "Compile Bitcoin Cash contracts to Bitcoin Cash Script or artifacts",
-  "version": "0.4.4",
-  "author": "Rosco Kalis <roscokalis@gmail.com>",
-  "bin": {
-    "cashc": "dist/cashc-cli.js"
-  },
-  "bugs": {
-    "url": "https://github.com/Bitcoin-com/cashscript/issues"
-  },
-  "contributors": [
-    "Gabriel Cardona <gabriel@bitcoin.com>"
-  ],
-  "dependencies": {
-    "@types/semver": "^6.0.2",
-    "@types/yargs": "^13.0.0",
-    "antlr4ts": "^0.5.0-alpha.3",
-    "bitbox-sdk": "^8.8.0",
-    "bitcoin-ts": "^1.12.0",
-    "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b",
-    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
-    "semver": "^6.3.0",
-    "yargs": "^14.0.0"
-  },
-  "devDependencies": {
-    "delay": "^4.3.0",
-    "eslint": "^6.6.0",
-    "jest": "^24.9.0",
-    "ts-jest": "^24.3.0",
-    "typescript": "3.7.5"
-  },
-  "directories": {
-    "lib": "src",
-    "test": "test"
-  },
-  "homepage": "https://cashscript.org",
   "keywords": [
     "bitcoin",
     "bitcoin cash",
@@ -42,11 +9,27 @@
     "compiler",
     "smart contracts"
   ],
-  "license": "MIT",
-  "main": "dist/index",
+  "homepage": "https://cashscript.org",
+  "bugs": {
+    "url": "https://github.com/Bitcoin-com/cashscript/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Bitcoin-com/cashscript.git"
+  },
+  "license": "MIT",
+  "author": "Rosco Kalis <roscokalis@gmail.com>",
+  "contributors": [
+    "Gabriel Cardona <gabriel@bitcoin.com>"
+  ],
+  "main": "dist/index",
+  "typings": "dist/index",
+  "bin": {
+    "cashc": "dist/cashc-cli.js"
+  },
+  "directories": {
+    "lib": "src",
+    "test": "test"
   },
   "scripts": {
     "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
@@ -58,5 +41,21 @@
     "prepublishOnly": "npm test && npm run lint",
     "test": "jest --config=../../jest.config.js packages/cashc"
   },
-  "type": "dist/index"
+  "dependencies": {
+    "@bitauth/libauth": "^1.17.1",
+    "@types/semver": "^6.0.2",
+    "antlr4ts": "^0.5.0-alpha.3",
+    "bitbox-sdk": "^8.8.0",
+    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
+    "commander": "^6.0.0",
+    "semver": "^6.3.0",
+    "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b"
+  },
+  "devDependencies": {
+    "delay": "^4.3.0",
+    "eslint": "^6.6.0",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.3.0",
+    "typescript": "3.7.5"
+  }
 }

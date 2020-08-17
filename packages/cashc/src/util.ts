@@ -45,6 +45,9 @@ export const Data = {
   scriptToAsm(s: Script): string {
     return bch.script.toASM(bch.script.compile(s));
   },
+  scriptToHex(s: Script): string {
+    return bch.script.compile(s).toString('hex');
+  },
   asmToScript(s: string): Script {
     return bch.script.decompile(bch.script.fromASM(s));
   },
