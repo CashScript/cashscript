@@ -1,4 +1,4 @@
-import { ECPair } from 'bitcoincashjs-lib';
+import SignatureTemplate from './SignatureTemplate';
 
 export interface Utxo {
   txid: string;
@@ -6,12 +6,12 @@ export interface Utxo {
   satoshis: number;
 }
 
-export interface UtxoWithKeyPair extends Utxo {
-  keypair: ECPair;
+export interface SignableUtxo extends Utxo {
+  template: SignatureTemplate;
 }
 
-export function isUtxoWithKeyPair(utxo: Utxo): utxo is UtxoWithKeyPair {
-  return 'keypair' in utxo;
+export function isSignableUtxo(utxo: Utxo): utxo is SignableUtxo {
+  return 'template' in utxo;
 }
 
 export interface Recipient {
@@ -22,39 +22,6 @@ export interface Recipient {
 export interface Output {
   to: string | Buffer;
   amount: number;
-}
-
-export interface ScriptSigDetails {
-  asm: string;
-  hex: string;
-}
-
-export interface TxnDetailValueIn {
-  cashAddress: string;
-  legacyAddress: string;
-  n: number;
-  scriptSig: ScriptSigDetails;
-  sequence: number;
-  txid: string;
-  value: number;
-  vout: number;
-}
-
-export interface ScriptPubKeyDetails {
-  addresses: string[];
-  cashAddrs: string[];
-  asm: string;
-  hex: string;
-  type: string;
-}
-
-export interface TxnDetailValueOut {
-  n: number;
-  scriptPubKey: ScriptPubKeyDetails;
-  spendHeight: null | number;
-  spendIndex: null | number;
-  spendTxId: null | number;
-  value: string;
 }
 
 export enum SignatureAlgorithm {

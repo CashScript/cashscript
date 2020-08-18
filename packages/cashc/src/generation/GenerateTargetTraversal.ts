@@ -149,12 +149,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // If the final opcodes are OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP
     // Or if the final opcode is OP_ENDIF
     // Or if the remaining stack size >=5 (2DROP 2DROP 1 < NIP NIP NIP NIP)
-    //   then push it back to the script, and push OP_TRUE to the stack
+    //   then push it back to the script, and push OP_TRUE (OP_1) to the stack
     const finalOp = this.output.pop();
     this.pushToStack('(value)');
     if (finalOp === Op.OP_DROP || finalOp === Op.OP_ENDIF || (finalOp && this.stack.length >= 5)) {
       this.emit(finalOp);
-      this.emit(Op.OP_TRUE);
+      this.emit(Op.OP_1);
     }
     this.cleanStack();
     return node;

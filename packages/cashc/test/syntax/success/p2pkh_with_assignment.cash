@@ -1,4 +1,4 @@
-pragma cashscript ^0.4.0;
+pragma cashscript ^0.5.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {

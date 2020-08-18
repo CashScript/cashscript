@@ -1,11 +1,10 @@
-import { Script as BScript } from 'bitbox-sdk';
+import { OpcodesBCH } from '@bitauth/libauth';
 import { UnaryOperator, BinaryOperator } from '../ast/Operator';
 import { GlobalFunction, TimeOp } from '../ast/Globals';
 import { PrimitiveType, Type, BytesType } from '../ast/Type';
 import { Data } from '../util';
 
-// TODO: Update this some tie when a library has OP_REVERSEBYTES support
-export const Op = { ...new BScript().opcodes, OP_REVERSEBYTES: 188 };
+export const Op = OpcodesBCH;
 export type Op = number;
 export type OpOrData = Op | Buffer;
 export type Script = OpOrData[];

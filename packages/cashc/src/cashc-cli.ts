@@ -1,4 +1,5 @@
 #! /usr/bin/env node
+import { binToHex } from '@bitauth/libauth';
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
@@ -73,7 +74,7 @@ function run(): void {
     }
 
     if (opts.hex) {
-      console.log(Data.scriptToHex(script));
+      console.log(binToHex(Data.scriptToBytecode(script)));
       return;
     }
 

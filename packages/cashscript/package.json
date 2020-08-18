@@ -1,7 +1,7 @@
 {
   "name": "cashscript",
   "description": "Easily write and interact with Bitcoin Cash contracts",
-  "version": "0.4.4-beta",
+  "version": "0.5.0",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
   "bugs": {
     "url": "https://github.com/Bitcoin-com/cashscript/issues"
@@ -11,17 +11,16 @@
   ],
   "dependencies": {
     "@bitauth/libauth": "^1.17.1",
-    "bitbox-sdk": "^8.8.0",
-    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
-    "cashc": "^0.4.3",
-    "cramer-bch": "https://github.com/jcramer/bitcoincashjs-lib",
+    "bip68": "^1.0.4",
+    "cashc": "^0.5.0",
     "delay": "^4.3.0",
     "electrum-cash": "^2.0.1",
-    "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b"
+    "hash.js": "^1.1.7"
   },
   "devDependencies": {
     "@psf/bch-js": "^3.5.3",
     "bignumber.js": "^9.0.0",
+    "bitbox-sdk": "^8.8.0",
     "eslint": "^6.6.0",
     "jest": "^25.1.0",
     "ts-jest": "^25.1.0",

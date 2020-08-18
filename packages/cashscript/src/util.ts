@@ -1,7 +1,17 @@
-import { Address } from 'bitbox-sdk';
 import { Script, Data, Op } from 'cashc';
-import { cashAddressToLockingBytecode } from '@bitauth/libauth';
-import { Utxo, Output } from './interfaces';
+import {
+  cashAddressToLockingBytecode,
+  AddressType,
+  addressContentsToLockingBytecode,
+  lockingBytecodeToCashAddress,
+  binToHex,
+  createTransactionContextCommon,
+  bigIntToBinUint64LE,
+  Transaction,
+  generateSigningSerializationBCH,
+} from '@bitauth/libauth';
+import hash from 'hash.js';
+import { Utxo, Output, Network } from './interfaces';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {
   Reason,
@@ -11,16 +21,14 @@ import {
   FailedSigCheckError,
 } from './Errors';
 
-const bch = require('trout-bch');
-
 // ////////// SIZE CALCULATIONS ///////////////////////////////////////////////
-export function getInputSize(script: Buffer): number {
-  const scriptSize = script.byteLength;
+export function getInputSize(inputScript: Uint8Array): number {
+  const scriptSize = inputScript.byteLength;
   const varIntSize = scriptSize > 252 ? 3 : 1;
   return 32 + 4 + varIntSize + scriptSize + 4;
 }
 
-export function getPreimageSize(script: Buffer): number {
+export function getPreimageSize(script: Uint8Array): number {
   const scriptSize = script.byteLength;
   const varIntSize = scriptSize > 252 ? 3 : 1;
   return 4 + 32 + 32 + 36 + varIntSize + scriptSize + 8 + 4 + 32 + 4 + 4;
@@ -65,7 +73,7 @@ export function countOpcodes(script: Script): number {
 }
 
 export function calculateBytesize(script: Script): number {
-  return bch.script.compile(script).byteLength;
+  return Data.scriptToBytecode(script).byteLength;
 }
 
 // ////////// BUILD OBJECTS ///////////////////////////////////////////////////
@@ -73,18 +81,16 @@ export function createInputScript(
   redeemScript: Script,
   encodedParameters: Buffer[],
   selector?: number,
-  preimage?: Buffer,
+  preimage?: Uint8Array,
 ): Buffer {
-  // Create unlock script / redeemScriptSig
+  // Create unlock script / redeemScriptSig (add potential preimage and selector)
   const unlockScript = encodedParameters.reverse();
-  if (preimage !== undefined) unlockScript.push(preimage);
+  if (preimage !== undefined) unlockScript.push(Buffer.from(preimage));
   if (selector !== undefined) unlockScript.push(Data.encodeInt(selector));
 
-  // Create total input script / scriptSig
-  return bch.script.scriptHash.input.encode(
-    bch.script.compile(unlockScript),
-    bch.script.compile(redeemScript),
-  );
+  // Create input script and compile it to bytecode
+  const inputScript = [...unlockScript, Buffer.from(Data.scriptToBytecode(redeemScript))];
+  return Buffer.from(Data.scriptToBytecode(inputScript));
 }
 
 export function createOpReturnOutput(
@@ -102,6 +108,39 @@ function toBuffer(output: string): Buffer {
   const data = output.replace(/^0x/, '');
   const format = data === output ? 'utf8' : 'hex';
   return Buffer.from(data, format);
+}
+
+export function createSighashPreimage(
+  transaction: Transaction,
+  input: { satoshis: number },
+  inputIndex: number,
+  coveredBytecode: Uint8Array,
+  hashtype: number,
+): Uint8Array {
+  const state = createTransactionContextCommon({
+    inputIndex,
+    sourceOutput: { satoshis: bigIntToBinUint64LE(BigInt(input.satoshis)) },
+    spendingTransaction: transaction,
+  });
+
+  const sighashPreimage = generateSigningSerializationBCH({
+    correspondingOutput: state.correspondingOutput,
+    coveredBytecode,
+    forkId: new Uint8Array([0, 0, 0]),
+    locktime: state.locktime,
+    outpointIndex: state.outpointIndex,
+    outpointTransactionHash: state.outpointTransactionHash,
+    outputValue: state.outputValue,
+    sequenceNumber: state.sequenceNumber,
+    sha256: { hash: sha256 },
+    signingSerializationType: new Uint8Array([hashtype]),
+    transactionOutpoints: state.transactionOutpoints,
+    transactionOutputs: state.transactionOutputs,
+    transactionSequenceNumbers: state.transactionSequenceNumbers,
+    version: 2,
+  });
+
+  return sighashPreimage;
 }
 
 export function buildError(reason: string, meepStr: string): FailedTransactionError {
@@ -129,18 +168,41 @@ function toRegExp(reasons: string[]): RegExp {
   return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
 }
 
+// ////////// HASH FUNCTIONS //////////////////////////////////////////////////
+export function sha256(payload: Uint8Array): Uint8Array {
+  return Uint8Array.from(hash.sha256().update(payload).digest());
+  // const hashFunction = await instantiateSha256();
+  // return hashFunction.hash(payload);
+}
+
+export function ripemd160(payload: Uint8Array): Uint8Array {
+  return Uint8Array.from(hash.ripemd160().update(payload).digest());
+  // const hashFunction = await instantiateRipemd160();
+  // return hashFunction.hash(payload);
+}
+
+export function hash160(payload: Uint8Array): Uint8Array {
+  return ripemd160(sha256(payload));
+}
+
 // ////////// MISC ////////////////////////////////////////////////////////////
 export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptHash = bch.crypto.hash160(bch.script.compile(script));
-  const scriptPubkey = bch.script.scriptHash.output.encode(scriptHash).toString('hex');
+  const scriptPubkey = binToHex(scriptToLockingBytecode(script));
   return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
 export function scriptToAddress(script: Script, network: string): string {
-  const scriptHash = bch.crypto.hash160(bch.script.compile(script));
-  const outputScript = bch.script.scriptHash.output.encode(scriptHash);
-  const address = new Address().fromOutputScript(outputScript, network);
+  const lockingBytecode = scriptToLockingBytecode(script);
+  const prefix = getNetworkPrefix(network);
+  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix) as string;
   return address;
+}
+
+export function scriptToLockingBytecode(script: Script): Uint8Array {
+  const scriptHash = hash160(Data.scriptToBytecode(script));
+  const addressContents = { payload: scriptHash, type: AddressType.p2sh };
+  const lockingBytecode = addressContentsToLockingBytecode(addressContents);
+  return lockingBytecode;
 }
 
 /**
@@ -156,6 +218,10 @@ export function addressToLockScript(address: string): Uint8Array {
   if (typeof result === 'string') throw new Error(result);
 
   return result.bytecode;
+}
+
+export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' {
+  return network === Network.MAINNET ? 'bitcoincash' : 'bchtest';
 }
 
 // ////////////////////////////////////////////////////////////////////////////

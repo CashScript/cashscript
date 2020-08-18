@@ -1,16 +1,22 @@
-import { ECPair } from 'bitcoincashjs-lib';
-import { TransactionBuilder } from 'bitbox-sdk';
-import { TxnDetailsResult } from 'bitcoin-com-rest';
-import delay from 'delay';
-import { Script, AbiFunction } from 'cashc';
-import { SignatureTemplate } from './Parameter';
 import {
-  SignatureAlgorithm,
+  bigIntToBinUint64LE,
+  hexToBin,
+  instantiateSha256,
+  binToHex,
+  encodeTransaction,
+  addressContentsToLockingBytecode,
+  AddressType,
+  decodeTransaction,
+  Transaction as LibauthTransaction,
+  instantiateSecp256k1,
+} from '@bitauth/libauth';
+import delay from 'delay';
+import { Script, AbiFunction, Data } from 'cashc';
+import {
   Utxo,
   Output,
   Recipient,
-  isUtxoWithKeyPair,
-  HashType,
+  isSignableUtxo,
 } from './interfaces';
 import {
   meep,
@@ -20,16 +26,18 @@ import {
   getTxSizeWithoutInputs,
   getPreimageSize,
   buildError,
+  hash160,
+  sha256,
+  addressToLockScript,
+  createSighashPreimage,
 } from './util';
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
 import NetworkProvider from './network/NetworkProvider';
+import SignatureTemplate from './SignatureTemplate';
 
-const cramer = require('cramer-bch');
-const bch = require('trout-bch');
+const bip68 = require('bip68');
 
 export class Transaction {
-  private builder: TransactionBuilder;
-
   private inputs: Utxo[] = [];
   private outputs: Output[] = [];
 
@@ -46,9 +54,7 @@ export class Transaction {
     private abiFunction: AbiFunction,
     private parameters: (Buffer | SignatureTemplate)[],
     private selector?: number,
-  ) {
-    this.builder = new TransactionBuilder(this.provider.network);
-  }
+  ) {}
 
   from(input: Utxo): this;
   from(inputs: Utxo[]): this;
@@ -63,15 +69,15 @@ export class Transaction {
     return this;
   }
 
-  experimentalFromP2PKH(input: Utxo, keypair: ECPair): this;
-  experimentalFromP2PKH(inputs: Utxo[], keypair: ECPair): this;
+  experimentalFromP2PKH(input: Utxo, template: SignatureTemplate): this;
+  experimentalFromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
 
-  experimentalFromP2PKH(inputOrInputs: Utxo | Utxo[], keypair: ECPair): this {
+  experimentalFromP2PKH(inputOrInputs: Utxo | Utxo[], template: SignatureTemplate): this {
     if (!Array.isArray(inputOrInputs)) {
       inputOrInputs = [inputOrInputs];
     }
 
-    inputOrInputs = inputOrInputs.map(input => ({ ...input, keypair }));
+    inputOrInputs = inputOrInputs.map(input => ({ ...input, template }));
 
     this.inputs = this.inputs.concat(inputOrInputs);
 
@@ -98,7 +104,7 @@ export class Transaction {
   }
 
   withAge(age: number): this {
-    this.sequence = this.builder.bip68.encode({ blocks: age });
+    this.sequence = bip68.encode({ blocks: age });
     return this;
   }
 
@@ -124,40 +130,54 @@ export class Transaction {
 
   async build(): Promise<string> {
     this.locktime = this.locktime || await this.provider.getBlockHeight();
-    this.builder.setLockTime(this.locktime);
     await this.setInputsAndOutputs();
 
-    this.inputs.forEach((utxo) => {
-      this.builder.addInput(utxo.txid, utxo.vout, this.sequence);
+    const secp256k1 = await instantiateSecp256k1();
+    const bytecode = Data.scriptToBytecode(this.redeemScript);
+
+    const inputs = this.inputs.map(utxo => ({
+      outpointIndex: utxo.vout,
+      outpointTransactionHash: hexToBin(utxo.txid),
+      sequenceNumber: this.sequence,
+      unlockingBytecode: new Uint8Array(),
+    }));
+
+    const outputs = this.outputs.map((output) => {
+      const lockingBytecode = typeof output.to === 'string'
+        ? addressToLockScript(output.to)
+        : output.to;
+
+      const satoshis = bigIntToBinUint64LE(BigInt(output.amount));
+
+      return { lockingBytecode, satoshis };
     });
 
-    this.outputs.forEach((output) => {
-      this.builder.addOutput(output.to, output.amount);
-    });
+    const transaction = {
+      inputs,
+      locktime: this.locktime,
+      outputs,
+      version: 2,
+    };
 
-    // Vout is a misnomer used in BITBOX, should be vin
-    const inputScripts: { vout: number, script: Buffer }[] = [];
+    const inputScripts: Uint8Array[] = [];
 
-    // Convert all SignatureTemplate objects to valid tx signatures for current tx
-    const tx = this.builder.transaction.buildIncomplete();
-    this.inputs.forEach((utxo: Utxo, vin: number) => {
-      // UTXO's with key pairs are signed with the key pair using P2PKH
-      if (isUtxoWithKeyPair(utxo)) {
-        const pubkey = utxo.keypair.getPublicKeyBuffer();
-        const pubkeyHash = bch.crypto.hash160(pubkey);
-        const prevOutScript = bch.script.pubKeyHash.output.encode(pubkeyHash);
+    this.inputs.forEach((utxo, i) => {
+      // UTXO's with signature templates are signed using P2PKH
+      if (isSignableUtxo(utxo)) {
+        const pubkey = utxo.template.getPublicKey(secp256k1);
+        const pubkeyHash = hash160(pubkey);
 
-        const hashtype = HashType.SIGHASH_ALL | tx.constructor.SIGHASH_BITCOINCASHBIP143;
-        const sighash = tx.hashForCashSignature(
-          vin, prevOutScript, utxo.satoshis, hashtype,
-        );
+        const addressContents = { payload: pubkeyHash, type: AddressType.p2pkh };
+        const prevOutScript = addressContentsToLockingBytecode(addressContents);
 
-        const signature = utxo.keypair
-          .sign(sighash, SignatureAlgorithm.SCHNORR)
-          .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
+        const hashtype = utxo.template.getHashType();
+        const preimage = createSighashPreimage(transaction, utxo, i, prevOutScript, hashtype);
+        const sighash = sha256(sha256(preimage));
 
-        const inputScript = bch.script.pubKeyHash.input.encode(signature, pubkey);
-        inputScripts.push({ vout: vin, script: inputScript });
+        const signature = utxo.template.generateSignature(sighash, secp256k1);
+
+        const inputScript = Data.scriptToBytecode([Buffer.from(signature), Buffer.from(pubkey)]);
+        inputScripts.push(inputScript);
 
         return;
       }
@@ -166,53 +186,52 @@ export class Transaction {
       const completePs = this.parameters.map((p) => {
         if (!(p instanceof SignatureTemplate)) return p;
 
-        const hashtype = p.hashtype | tx.constructor.SIGHASH_BITCOINCASHBIP143;
         // First signature is used for sighash preimage (maybe not the best way)
-        if (covenantHashType < 0) covenantHashType = hashtype;
+        if (covenantHashType < 0) covenantHashType = p.getHashType();
 
-        const sighash = tx.hashForCashSignature(
-          vin, bch.script.compile(this.redeemScript), utxo.satoshis, hashtype,
-        );
+        const preimage = createSighashPreimage(transaction, utxo, i, bytecode, p.getHashType());
+        const sighash = sha256(sha256(preimage));
 
-        return p.keypair
-          .sign(sighash, SignatureAlgorithm.SCHNORR)
-          .toScriptSignature(hashtype, SignatureAlgorithm.SCHNORR);
+        return Buffer.from(p.generateSignature(sighash, secp256k1));
       });
 
-      // This is shitty because sigHashPreimageBuf is only in James Cramer's fork
-      // Will fix once it gets merged into main bitcoincashjs-lib
-      const preimageTx = cramer.Transaction.fromHex(tx.toHex());
-      const prevout = bch.script.compile(this.redeemScript);
       const preimage = this.abiFunction.covenant
-        ? preimageTx.sigHashPreimageBuf(vin, prevout, utxo.satoshis, covenantHashType)
+        ? createSighashPreimage(transaction, utxo, i, bytecode, covenantHashType)
         : undefined;
       const inputScript = createInputScript(this.redeemScript, completePs, this.selector, preimage);
-      inputScripts.push({ vout: vin, script: inputScript });
+      inputScripts.push(inputScript);
     });
 
-    this.builder.addInputScripts(inputScripts);
-    return this.builder.build().toHex();
+    inputScripts.forEach((script, i) => {
+      transaction.inputs[i].unlockingBytecode = script;
+    });
+
+    return binToHex(encodeTransaction(transaction));
   }
 
-  // TODO: Update return type after updating to libauth
-  async send(): Promise<TxnDetailsResult> {
+  async send(): Promise<LibauthTransaction>;
+  async send(): Promise<string>;
+
+  async send(raw?: true): Promise<LibauthTransaction | string> {
     const tx = await this.build();
     try {
       const txid = await this.provider.sendRawTransaction(tx);
-      return this.getTxDetails(txid);
+      return raw ? this.getTxDetails(txid, raw) : this.getTxDetails(txid);
     } catch (e) {
       const reason = e.error || e.message;
       throw buildError(reason, meep(tx, this.inputs, this.redeemScript));
     }
   }
 
-  // TODO: Update return type after updating to libauth
-  private async getTxDetails(txid: string): Promise<TxnDetailsResult> {
+  private async getTxDetails(txid: string): Promise<LibauthTransaction>
+  private async getTxDetails(txid: string, raw: true): Promise<string>;
+
+  private async getTxDetails(txid: string, raw?: true): Promise<LibauthTransaction | string> {
     while (true) {
       await delay(500);
       try {
         const txHex = await this.provider.getRawTransaction(txid);
-        return bch.Transaction.fromHex(txHex);
+        return raw ? txHex : decodeTransaction(hexToBin(txHex));
       } catch (ignored) {
         // ignored
       }
@@ -233,8 +252,9 @@ export class Transaction {
     // and a correctly sized preimage Buffer if the function is a covenant
     // for correct size calculation of inputs
     const placeholderPreimage = this.abiFunction.covenant
-      ? Buffer.alloc(getPreimageSize(bch.script.compile(this.redeemScript)), 0)
+      ? Buffer.alloc(getPreimageSize(Data.scriptToBytecode(this.redeemScript)), 0)
       : undefined;
+
     const placeholderScript = createInputScript(
       this.redeemScript,
       this.parameters.map(p => (p instanceof SignatureTemplate ? Buffer.alloc(65, 0) : p)),

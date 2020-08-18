@@ -1,3 +1,4 @@
+import { binToHex } from '@bitauth/libauth';
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import {
   alicePkh,
@@ -7,7 +8,7 @@ import {
   aliceAddress,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { Utxo, TxnDetailValueIn } from '../../src/interfaces';
+import { Utxo } from '../../src/interfaces';
 import { createOpReturnOutput } from '../../src/util';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
 
@@ -75,8 +76,7 @@ describe('P2PKH', () => {
       ).rejects.toThrow();
     });
 
-    // TODO: Skip this test for now while working on major changes
-    it.skip('should succeed when providing UTXOs', async () => {
+    it('should succeed when providing UTXOs', async () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000;
@@ -93,13 +93,12 @@ describe('P2PKH', () => {
 
       // then
       expect.hasAssertions();
-      for (const input of receipt.vin as TxnDetailValueIn[]) {
+      receipt.inputs.forEach((input) => {
         expect(gathered.find(utxo => (
-          utxo.txid === input.txid
-          && utxo.vout === input.vout
-          && utxo.satoshis === input.value
+          utxo.txid === binToHex(input.outpointTransactionHash)
+          && utxo.vout === input.outpointIndex
         ))).toBeTruthy();
-      }
+      });
     });
 
     it('can send to multiple recipients', async () => {
@@ -158,9 +157,9 @@ describe('P2PKH', () => {
       // when
       const tx = await p2pkhInstance.functions
         .spend(alicePk, new SignatureTemplate(alice))
-        .experimentalFromP2PKH(aliceUtxos[0], alice)
+        .experimentalFromP2PKH(aliceUtxos[0], new SignatureTemplate(alice))
         .from(contractUtxos[0])
-        .experimentalFromP2PKH(aliceUtxos[1], alice)
+        .experimentalFromP2PKH(aliceUtxos[1], new SignatureTemplate(alice))
         .from(contractUtxos[1])
         .to(to, amount)
         .to(to, amount)

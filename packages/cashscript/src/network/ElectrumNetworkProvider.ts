@@ -1,4 +1,4 @@
-import { Crypto } from 'bitbox-sdk';
+import { binToHex } from '@bitauth/libauth';
 import {
   ElectrumCluster,
   ElectrumTransport,
@@ -7,7 +7,7 @@ import {
 } from 'electrum-cash';
 import { Utxo, Network } from '../interfaces';
 import NetworkProvider from './NetworkProvider';
-import { addressToLockScript } from '../util';
+import { addressToLockScript, sha256 } from '../util';
 
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumCluster;
@@ -50,8 +50,6 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
 
     const result = await this.performRequest('blockchain.scripthash.listunspent', scripthash) as ElectrumUtxo[];
 
-    console.log(result);
-
     const utxos = result.map(utxo => ({
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
@@ -77,7 +75,11 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   async connectCluster(): Promise<boolean[]> {
-    return this.electrum.startup();
+    try {
+      return this.electrum.startup();
+    } catch (e) {
+      return [];
+    }
   }
 
   disconnectCluster(): boolean[] {
@@ -136,11 +138,11 @@ function addressToElectrumScriptHash(address: string): string {
   const lockScript = addressToLockScript(address);
 
   // Hash locking script
-  const scriptHash = new Crypto().sha256(Buffer.from(lockScript));
+  const scriptHash = sha256(lockScript);
 
   // Reverse scripthash
   scriptHash.reverse();
 
   // Return scripthash as a hex string
-  return scriptHash.toString('hex');
+  return binToHex(scriptHash);
 }

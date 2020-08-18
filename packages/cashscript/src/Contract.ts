@@ -5,10 +5,11 @@ import {
   AbiFunction,
 } from 'cashc';
 import { Transaction } from './Transaction';
-import { Parameter, encodeParameter, SignatureTemplate } from './Parameter';
+import { Parameter, encodeParameter } from './Parameter';
 import { Utxo } from './interfaces';
 import NetworkProvider from './network/NetworkProvider';
 import { scriptToAddress, calculateBytesize, countOpcodes } from './util';
+import SignatureTemplate from './SignatureTemplate';
 
 export class Contract {
   name: string;

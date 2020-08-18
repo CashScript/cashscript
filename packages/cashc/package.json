@@ -1,6 +1,6 @@
 {
   "name": "cashc",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Compile Bitcoin Cash contracts to Bitcoin Cash Script or artifacts",
   "keywords": [
     "bitcoin",
@@ -45,11 +45,8 @@
     "@bitauth/libauth": "^1.17.1",
     "@types/semver": "^6.0.2",
     "antlr4ts": "^0.5.0-alpha.3",
-    "bitbox-sdk": "^8.8.0",
-    "bitcoincash-ops": "github:christroutner/bitcoincash-ops",
     "commander": "^6.0.0",
-    "semver": "^6.3.0",
-    "trout-bch": "github:christroutner/bitcoincashjs-lib#34f23671b42f0ebcbeba9f1f9e7bcdba7c50d55b"
+    "semver": "^6.3.0"
   },
   "devDependencies": {
     "delay": "^4.3.0",

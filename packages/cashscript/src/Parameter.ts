@@ -1,4 +1,3 @@
-import { ECPair } from 'bitcoincashjs-lib';
 import {
   PrimitiveType,
   Data,
@@ -6,19 +5,9 @@ import {
   parseType,
 } from 'cashc';
 import { TypeError } from './Errors';
-import { HashType } from './interfaces';
+import SignatureTemplate from './SignatureTemplate';
 
 export type Parameter = number | boolean | string | Buffer | SignatureTemplate;
-
-export class SignatureTemplate {
-  constructor(
-    public keypair: ECPair,
-    public hashtype: HashType = HashType.SIGHASH_ALL,
-  ) {}
-}
-
-// @deprecated in favour of SignatureTemplate
-export class Sig extends SignatureTemplate {}
 
 export function encodeParameter(parameter: Parameter, typeStr: string): Buffer | SignatureTemplate {
   const type = parseType(typeStr);

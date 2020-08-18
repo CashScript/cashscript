@@ -1,4 +1,4 @@
-pragma cashscript ^0.4.0;
+pragma cashscript ^0.5.0;
 
 contract Test() {
     function hello(sig s, pubkey pk) {
