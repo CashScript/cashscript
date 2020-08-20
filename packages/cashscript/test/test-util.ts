@@ -14,7 +14,7 @@ export function getTxOutputs(tx: Transaction): Output[] {
     const OP_RETURN = '6a';
     const scriptHex = binToHex(o.lockingBytecode);
     if (scriptHex.startsWith(OP_RETURN)) {
-      return { to: Buffer.from(scriptHex, 'hex'), amount: 0 };
+      return { to: hexToBin(scriptHex), amount: 0 };
     } else {
       const prefix = getNetworkPrefix(network);
       const address = lockingBytecodeToCashAddress(hexToBin(scriptHex), prefix) as string;

@@ -1,3 +1,4 @@
+import { hexToBin } from '@bitauth/libauth';
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
@@ -325,7 +326,7 @@ export default class AstBuilder
 
   createHexLiteral(ctx: LiteralContext): HexLiteralNode {
     const hexString = (ctx.HexLiteral() as TerminalNode).text;
-    const hexValue = Buffer.from(hexString.substring(2), 'hex');
+    const hexValue = hexToBin(hexString.substring(2));
     const hexLiteral = new HexLiteralNode(hexValue);
     hexLiteral.location = Location.fromCtx(ctx);
     return hexLiteral;

@@ -1,7 +1,6 @@
 import {
   bigIntToBinUint64LE,
   hexToBin,
-  instantiateSha256,
   binToHex,
   encodeTransaction,
   addressContentsToLockingBytecode,
@@ -30,6 +29,7 @@ import {
   sha256,
   addressToLockScript,
   createSighashPreimage,
+  placeholder,
 } from './util';
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
 import NetworkProvider from './network/NetworkProvider';
@@ -52,7 +52,7 @@ export class Transaction {
     private provider: NetworkProvider,
     private redeemScript: Script,
     private abiFunction: AbiFunction,
-    private parameters: (Buffer | SignatureTemplate)[],
+    private parameters: (Uint8Array | SignatureTemplate)[],
     private selector?: number,
   ) {}
 
@@ -176,7 +176,7 @@ export class Transaction {
 
         const signature = utxo.template.generateSignature(sighash, secp256k1);
 
-        const inputScript = Data.scriptToBytecode([Buffer.from(signature), Buffer.from(pubkey)]);
+        const inputScript = Data.scriptToBytecode([signature, pubkey]);
         inputScripts.push(inputScript);
 
         return;
@@ -192,7 +192,7 @@ export class Transaction {
         const preimage = createSighashPreimage(transaction, utxo, i, bytecode, p.getHashType());
         const sighash = sha256(sha256(preimage));
 
-        return Buffer.from(p.generateSignature(sighash, secp256k1));
+        return p.generateSignature(sighash, secp256k1);
       });
 
       const preimage = this.abiFunction.covenant
@@ -248,16 +248,21 @@ export class Transaction {
       throw Error('Attempted to build a transaction without outputs');
     }
 
-    // Use a placeholder script with 65-length Buffer in the place of signatures
-    // and a correctly sized preimage Buffer if the function is a covenant
-    // for correct size calculation of inputs
+    // Replace all SignatureTemplate with 65-length placeholder Uint8Arrays
+    const placeholderParameters = this.parameters.map(p => (
+      p instanceof SignatureTemplate ? placeholder(65) : p
+    ));
+
+    // Create a placeholder preimage of the correct size
     const placeholderPreimage = this.abiFunction.covenant
-      ? Buffer.alloc(getPreimageSize(Data.scriptToBytecode(this.redeemScript)), 0)
+      ? placeholder(getPreimageSize(Data.scriptToBytecode(this.redeemScript)))
       : undefined;
 
+    // Create a placeholder input script for size calculation using the placeholder
+    // parameters and correctly sized placeholder preimage
     const placeholderScript = createInputScript(
       this.redeemScript,
-      this.parameters.map(p => (p instanceof SignatureTemplate ? Buffer.alloc(65, 0) : p)),
+      placeholderParameters,
       this.selector,
       placeholderPreimage,
     );

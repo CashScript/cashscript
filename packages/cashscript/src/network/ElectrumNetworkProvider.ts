@@ -76,7 +76,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
 
   async connectCluster(): Promise<boolean[]> {
     try {
-      return this.electrum.startup();
+      return await this.electrum.startup();
     } catch (e) {
       return [];
     }

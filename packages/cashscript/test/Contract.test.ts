@@ -1,3 +1,4 @@
+import { hexToBin } from '@bitauth/libauth';
 import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../src';
 import {
   alicePkh,
@@ -5,6 +6,7 @@ import {
   alice,
   bob,
 } from './fixture/vars';
+import { placeholder } from '../src/util';
 
 describe('Contract', () => {
   describe('new', () => {
@@ -16,10 +18,10 @@ describe('Contract', () => {
       expect(() => new Contract(artifact, provider, [])).toThrow();
       expect(() => new Contract(artifact, provider, [20])).toThrow();
       expect(
-        () => new Contract(artifact, provider, [Buffer.alloc(20, 0), Buffer.alloc(20, 0)]),
+        () => new Contract(artifact, provider, [placeholder(20), placeholder(20)]),
       ).toThrow();
-      expect(() => new Contract(artifact, provider, [Buffer.alloc(19, 0)])).toThrow();
-      expect(() => new Contract(artifact, provider, [Buffer.alloc(21, 0)])).toThrow();
+      expect(() => new Contract(artifact, provider, [placeholder(19)])).toThrow();
+      expect(() => new Contract(artifact, provider, [placeholder(21)])).toThrow();
     });
 
     it('should fail with incomplete artifact', () => {
@@ -39,7 +41,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
       const provider = new ElectrumNetworkProvider();
-      const instance = new Contract(artifact, provider, [Buffer.alloc(20, 0)]);
+      const instance = new Contract(artifact, provider, [placeholder(20)]);
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.spend).toBe('function');
@@ -50,7 +52,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/transfer_with_timeout.json');
       const provider = new ElectrumNetworkProvider();
-      const constructorParameters = [Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000];
+      const constructorParameters = [placeholder(65), placeholder(65), 1000000];
       const instance = new Contract(artifact, provider, constructorParameters);
 
       expect(typeof instance.address).toBe('string');
@@ -63,7 +65,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/hodl_vault.json');
       const provider = new ElectrumNetworkProvider();
-      const constructorParameters = [Buffer.alloc(65, 0), Buffer.alloc(65, 0), 1000000, 10000];
+      const constructorParameters = [placeholder(65), placeholder(65), 1000000, 10000];
       const instance = new Contract(artifact, provider, constructorParameters);
 
       expect(typeof instance.address).toBe('string');
@@ -75,7 +77,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/mecenas.json');
       const provider = new ElectrumNetworkProvider();
-      const constructorParameters = [Buffer.alloc(20, 0), Buffer.alloc(20, 0), 1000000];
+      const constructorParameters = [placeholder(20), placeholder(20), 1000000];
       const instance = new Contract(artifact, provider, constructorParameters);
 
       expect(typeof instance.address).toBe('string');
@@ -100,7 +102,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/p2pkh.json');
       const provider = new ElectrumNetworkProvider();
-      const instance = new Contract(artifact, provider, [Buffer.alloc(20, 0)]);
+      const instance = new Contract(artifact, provider, [placeholder(20)]);
 
       expect(await instance.getBalance()).toBe(0);
     });
@@ -124,19 +126,19 @@ describe('Contract', () => {
       expect(() => instance.functions.spend()).toThrow();
       expect(() => instance.functions.spend(0, 1)).toThrow();
       expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice), 0)).toThrow();
-      expect(() => bbInstance.functions.spend(Buffer.from('e803', 'hex'), 1000)).toThrow();
-      expect(() => bbInstance.functions.spend(Buffer.from('e803000000', 'hex'), 1000)).toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e803'), 1000)).toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e803000000'), 1000)).toThrow();
     });
 
     it('can call spend with incorrect parameters', () => {
       expect(() => instance.functions.spend(alicePk, new SignatureTemplate(bob))).not.toThrow();
-      expect(() => instance.functions.spend(alicePk, Buffer.alloc(65, 0))).not.toThrow();
-      expect(() => bbInstance.functions.spend(Buffer.from('e8031234', 'hex'), 1000)).not.toThrow();
+      expect(() => instance.functions.spend(alicePk, placeholder(65))).not.toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e8031234'), 1000)).not.toThrow();
     });
 
     it('can call spend with correct parameters', () => {
       expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice))).not.toThrow();
-      expect(() => bbInstance.functions.spend(Buffer.from('e8030000', 'hex'), 1000)).not.toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e8030000'), 1000)).not.toThrow();
     });
   });
 });

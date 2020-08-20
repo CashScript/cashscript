@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-import { binToHex } from '@bitauth/libauth';
+import { binToHex, hexToBin } from '@bitauth/libauth';
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
@@ -49,7 +49,7 @@ function run(): void {
         } else if (arg === 'false') {
           script.unshift(Data.encodeBool(false));
         } else if (arg.startsWith('0x')) {
-          script.unshift(Buffer.from(arg.substring(2), 'hex'));
+          script.unshift(hexToBin(arg.substring(2)));
         } else if (!Number.isNaN(Number(arg))) {
           script.unshift(Data.encodeInt(Number(arg)));
         } else {

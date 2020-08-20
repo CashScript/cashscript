@@ -8,6 +8,8 @@ import {
   disassembleBytecodeBCH,
   AuthenticationInstructions,
   hexToBin,
+  utf8ToBin,
+  binToUtf8,
 } from '@bitauth/libauth';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import fs from 'fs';
@@ -25,11 +27,11 @@ import ReplaceBytecodeNop from './generation/ReplaceBytecodeNop';
 import VerifyCovenantTraversal from './semantic/VerifyCovenantTraversal';
 
 export const Data = {
-  encodeBool(bool: boolean): Buffer {
+  encodeBool(bool: boolean): Uint8Array {
     return bool ? this.encodeInt(1) : this.encodeInt(0);
   },
 
-  decodeBool(encodedBool: Buffer): boolean {
+  decodeBool(encodedBool: Uint8Array): boolean {
     // Any encoding of 0 is false, else true
     for (let i = 0; i < encodedBool.byteLength; i += 1) {
       if (encodedBool[i] !== 0) {
@@ -41,11 +43,11 @@ export const Data = {
     return false;
   },
 
-  encodeInt(int: number): Buffer {
-    return Buffer.from(bigIntToScriptNumber(BigInt(int)));
+  encodeInt(int: number): Uint8Array {
+    return bigIntToScriptNumber(BigInt(int));
   },
 
-  decodeInt(encodedInt: Buffer, maxLength?: number): number {
+  decodeInt(encodedInt: Uint8Array, maxLength?: number): number {
     const options = { maximumScriptNumberByteLength: maxLength };
     const result = parseBytesAsScriptNumber(encodedInt, options);
 
@@ -56,12 +58,12 @@ export const Data = {
     return Number(result);
   },
 
-  encodeString(str: string): Buffer {
-    return Buffer.from(str, 'ascii');
+  encodeString(str: string): Uint8Array {
+    return utf8ToBin(str);
   },
 
-  decodeString(encodedString: Buffer): string {
-    return encodedString.toString('ascii');
+  decodeString(encodedString: Uint8Array): string {
+    return binToUtf8(encodedString);
   },
 
   scriptToAsm(script: Script): string {
@@ -75,7 +77,7 @@ export const Data = {
   scriptToBytecode(script: Script): Uint8Array {
     // Convert the script elements to AuthenticationInstructions
     const instructions = script.map((opOrData) => {
-      if (opOrData instanceof Buffer) {
+      if (opOrData instanceof Uint8Array) {
         return parseBytecode(encodeDataPush(opOrData))[0];
       } else {
         return { opcode: opOrData };
@@ -93,7 +95,7 @@ export const Data = {
     // Convert the AuthenticationInstructions to script elements
     const script = instructions.map((instruction) => {
       if ('data' in instruction) {
-        return Buffer.from(instruction.data);
+        return instruction.data;
       } else {
         return instruction.opcode;
       }

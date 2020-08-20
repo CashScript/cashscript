@@ -6,7 +6,7 @@ import { Data } from '../util';
 
 export const Op = OpcodesBCH;
 export type Op = number;
-export type OpOrData = Op | Buffer;
+export type OpOrData = Op | Uint8Array;
 export type Script = OpOrData[];
 
 export class toOps {

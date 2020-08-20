@@ -9,6 +9,9 @@ import {
   bigIntToBinUint64LE,
   Transaction,
   generateSigningSerializationBCH,
+  utf8ToBin,
+  hexToBin,
+  flattenBinArray,
 } from '@bitauth/libauth';
 import hash from 'hash.js';
 import { Utxo, Output, Network } from './interfaces';
@@ -65,6 +68,10 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   return size;
 }
 
+export function placeholder(size: number): Uint8Array {
+  return new Uint8Array(size).fill(0);
+}
+
 export function countOpcodes(script: Script): number {
   return script
     .filter(opOrData => typeof opOrData === 'number')
@@ -79,18 +86,18 @@ export function calculateBytesize(script: Script): number {
 // ////////// BUILD OBJECTS ///////////////////////////////////////////////////
 export function createInputScript(
   redeemScript: Script,
-  encodedParameters: Buffer[],
+  encodedParameters: Uint8Array[],
   selector?: number,
   preimage?: Uint8Array,
-): Buffer {
+): Uint8Array {
   // Create unlock script / redeemScriptSig (add potential preimage and selector)
   const unlockScript = encodedParameters.reverse();
-  if (preimage !== undefined) unlockScript.push(Buffer.from(preimage));
+  if (preimage !== undefined) unlockScript.push(preimage);
   if (selector !== undefined) unlockScript.push(Data.encodeInt(selector));
 
   // Create input script and compile it to bytecode
-  const inputScript = [...unlockScript, Buffer.from(Data.scriptToBytecode(redeemScript))];
-  return Buffer.from(Data.scriptToBytecode(inputScript));
+  const inputScript = [...unlockScript, Data.scriptToBytecode(redeemScript)];
+  return Data.scriptToBytecode(inputScript);
 }
 
 export function createOpReturnOutput(
@@ -98,16 +105,16 @@ export function createOpReturnOutput(
 ): Output {
   const script = [
     Op.OP_RETURN,
-    ...opReturnData.map((output: string) => toBuffer(output)),
+    ...opReturnData.map((output: string) => toBin(output)),
   ];
 
   return { to: encodeNullDataScript(script), amount: 0 };
 }
 
-function toBuffer(output: string): Buffer {
+function toBin(output: string): Uint8Array {
   const data = output.replace(/^0x/, '');
-  const format = data === output ? 'utf8' : 'hex';
-  return Buffer.from(data, format);
+  const encode = data === output ? utf8ToBin : hexToBin;
+  return encode(data);
 }
 
 export function createSighashPreimage(
@@ -171,14 +178,10 @@ function toRegExp(reasons: string[]): RegExp {
 // ////////// HASH FUNCTIONS //////////////////////////////////////////////////
 export function sha256(payload: Uint8Array): Uint8Array {
   return Uint8Array.from(hash.sha256().update(payload).digest());
-  // const hashFunction = await instantiateSha256();
-  // return hashFunction.hash(payload);
 }
 
 export function ripemd160(payload: Uint8Array): Uint8Array {
   return Uint8Array.from(hash.ripemd160().update(payload).digest());
-  // const hashFunction = await instantiateRipemd160();
-  // return hashFunction.hash(payload);
 }
 
 export function hash160(payload: Uint8Array): Uint8Array {
@@ -225,46 +228,26 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' {
 }
 
 // ////////////////////////////////////////////////////////////////////////////
-// For encoding OP_RETURN data (doesn't require BIP62.3)
-// These functions are a mash-up between those found in these libs:
-// - https://github.com/simpleledger/slpjs/blob/master/lib/utils.ts
-// - https://github.com/Bitcoin-com/bitcoincashjs-lib/blob/master/src/script.js
-
-function encodeNullDataScript(chunks: (number | Buffer)[]): Buffer {
-  const bufferSize = chunks.reduce((acc: number, chunk: number | Buffer) => {
-    if (Buffer.isBuffer(chunk)) {
-      const pushdataOpcode = getPushDataOpcode(chunk);
-      return acc + chunk.length + pushdataOpcode.length;
-    }
-    return acc + 1;
-  }, 0);
-
-  const buffer = Buffer.allocUnsafe(bufferSize);
-  let offset = 0;
-
-  chunks.forEach((chunk: number | Buffer) => {
-    if (Buffer.isBuffer(chunk)) {
-      const pushdataOpcode = getPushDataOpcode(chunk);
-      pushdataOpcode.copy(buffer, offset);
-      offset += pushdataOpcode.length;
-
-      chunk.copy(buffer, offset);
-      offset += chunk.length;
-    } else {
-      buffer.writeUInt8(chunk, offset);
-      offset += 1;
-    }
-  });
-
-  return buffer;
+// For encoding OP_RETURN data (doesn't require BIP62.3 / MINIMALDATA)
+function encodeNullDataScript(chunks: (number | Uint8Array)[]): Uint8Array {
+  return flattenBinArray(
+    chunks.map((chunk) => {
+      if (chunk instanceof Uint8Array) {
+        const pushdataOpcode = getPushDataOpcode(chunk);
+        return new Uint8Array([...pushdataOpcode, ...chunk]);
+      } else {
+        return new Uint8Array([chunk]);
+      }
+    }),
+  );
 }
 
-function getPushDataOpcode(data: Buffer): Buffer {
-  const { length } = data;
+function getPushDataOpcode(data: Uint8Array): Uint8Array {
+  const { byteLength } = data;
 
-  if (length === 0) return Buffer.from([0x4c, 0x00]);
-  if (length < 76) return Buffer.from([length]);
-  if (length < 256) return Buffer.from([0x4c, length]);
+  if (byteLength === 0) return Uint8Array.from([0x4c, 0x00]);
+  if (byteLength < 76) return Uint8Array.from([byteLength]);
+  if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
   throw Error('Pushdata too large');
 }
 // ////////////////////////////////////////////////////////////////////////////

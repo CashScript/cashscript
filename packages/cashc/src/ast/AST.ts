@@ -315,7 +315,7 @@ export class StringLiteralNode extends LiteralNode {
 
 export class HexLiteralNode extends LiteralNode {
   constructor(
-    public value: Buffer,
+    public value: Uint8Array,
   ) {
     super();
     this.type = new BytesType(value.byteLength);

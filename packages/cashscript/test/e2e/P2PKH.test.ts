@@ -129,7 +129,7 @@ describe('P2PKH', () => {
 
     it('can include OP_RETURN data as an output', async () => {
       // given
-      const opReturn = ['0x6d02', 'Hello, World!'];
+      const opReturn = ['0x6d02', 'Hello, World!', '0x01'];
       const to = p2pkhInstance.address;
       const amount = 10000;
 

@@ -1,3 +1,4 @@
+import { binToHex } from '@bitauth/libauth';
 import { SymbolTable } from '../ast/SymbolTable';
 import {
   Node,
@@ -237,7 +238,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitHexLiteral(node: HexLiteralNode): Node {
-    this.addOutput(`0x${node.value.toString('hex')}`);
+    this.addOutput(`0x${binToHex(node.value)}`);
     return node;
   }
 }

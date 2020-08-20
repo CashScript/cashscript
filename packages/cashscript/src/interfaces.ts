@@ -20,7 +20,7 @@ export interface Recipient {
 }
 
 export interface Output {
-  to: string | Buffer;
+  to: string | Uint8Array;
   amount: number;
 }
 

@@ -1,3 +1,4 @@
+import { hexToBin } from '@bitauth/libauth';
 import {
   PrimitiveType,
   Data,
@@ -7,9 +8,12 @@ import {
 import { TypeError } from './Errors';
 import SignatureTemplate from './SignatureTemplate';
 
-export type Parameter = number | boolean | string | Buffer | SignatureTemplate;
+export type Parameter = number | boolean | string | Uint8Array | SignatureTemplate;
 
-export function encodeParameter(parameter: Parameter, typeStr: string): Buffer | SignatureTemplate {
+export function encodeParameter(
+  parameter: Parameter,
+  typeStr: string,
+): Uint8Array | SignatureTemplate {
   const type = parseType(typeStr);
   if (type === PrimitiveType.BOOL) {
     if (typeof parameter !== 'boolean') {
@@ -28,15 +32,15 @@ export function encodeParameter(parameter: Parameter, typeStr: string): Buffer |
     return Data.encodeString(parameter);
   } else {
     if (type === PrimitiveType.SIG && parameter instanceof SignatureTemplate) return parameter;
-    // Convert string to Buffer
+    // Convert string to Uint8Array
     if (typeof parameter === 'string') {
       if (parameter.startsWith('0x')) {
         parameter = parameter.slice(2);
       }
-      parameter = Buffer.from(parameter, 'hex');
+      parameter = hexToBin(parameter);
     }
 
-    if (!(parameter instanceof Buffer)) throw Error(); // Shouldn't happen
+    if (!(parameter instanceof Uint8Array)) throw Error(); // Shouldn't happen
 
     // Bounded bytes types require a correctly sized parameter
     if (type instanceof BytesType && type.bound && parameter.byteLength !== type.bound) {

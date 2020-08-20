@@ -1,3 +1,4 @@
+import { hexToBin } from '@bitauth/libauth';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { CommonTokenStream, ParserRuleContext } from 'antlr4ts';
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
@@ -19,7 +20,7 @@ export function literalToNode(literal: boolean | number | string): LiteralNode {
   } else if (typeof literal === 'number') {
     return new IntLiteralNode(literal);
   } else if (literal.startsWith('0x')) {
-    return new HexLiteralNode(Buffer.from(literal.slice(2), 'hex'));
+    return new HexLiteralNode(hexToBin(literal.slice(2)));
   } else {
     return new StringLiteralNode(literal, '"');
   }

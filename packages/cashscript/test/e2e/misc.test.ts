@@ -1,68 +1,7 @@
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import { alicePk, alice } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { FailedRequireError, Reason } from '../../src/Errors';
 import { createOpReturnOutput } from '../../src/util';
-
-describe('BoundedBytes', () => {
-  let bbInstance: Contract;
-
-  beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/bounded_bytes.json');
-    const provider = new ElectrumNetworkProvider();
-    bbInstance = new Contract(artifact, provider, []);
-    console.log(bbInstance.address);
-  });
-
-  describe('send', () => {
-    it('should fail when using incorrect function parameters', async () => {
-      // given
-      const to = bbInstance.address;
-      const amount = 10000;
-
-      // when
-      const expectPromise = expect(
-        bbInstance.functions
-          .spend(Buffer.from('12345678', 'hex'), 1000)
-          .to(to, amount)
-          .send(),
-      );
-
-      // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.EVAL_FALSE);
-
-      // when
-      const expectPromise2 = expect(
-        bbInstance.functions
-          .spend(Buffer.from('000003e8', 'hex'), 1000)
-          .to(to, amount)
-          .send(),
-      );
-
-      // then
-      await expectPromise2.rejects.toThrow(FailedRequireError);
-      await expectPromise2.rejects.toThrow(Reason.EVAL_FALSE);
-    });
-
-    it('should succeed when using correct function parameters', async () => {
-      // given
-      const to = bbInstance.address;
-      const amount = 10000;
-
-      // when
-      const tx = await bbInstance.functions
-        .spend(Buffer.from('e8030000', 'hex'), 1000)
-        .to(to, amount)
-        .send();
-
-      // then
-      const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
-    });
-  });
-});
 
 describe('Simple Covenant', () => {
   let covenant: Contract;

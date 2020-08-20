@@ -49,7 +49,7 @@ export class Contract {
     }
 
     this.redeemScript = [
-      ...encodedParameters as Buffer[],
+      ...encodedParameters as Uint8Array[],
       ...Data.asmToScript(this.artifact.bytecode),
     ];
 

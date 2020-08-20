@@ -12,7 +12,7 @@ export default class ReplaceBytecodeNop {
     // Retrieve size of current cut
     script.splice(index, 1);
     let oldCut = script[index];
-    if (oldCut instanceof Buffer) {
+    if (oldCut instanceof Uint8Array) {
       oldCut = Data.decodeInt(oldCut);
     } else if (oldCut === Op.OP_0) {
       oldCut = 0;

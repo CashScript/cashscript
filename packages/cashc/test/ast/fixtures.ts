@@ -1,3 +1,4 @@
+import { hexToBin } from '@bitauth/libauth';
 import { BytesType, PrimitiveType } from '../../src';
 import {
   SourceFileNode,
@@ -447,7 +448,7 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new IdentifierNode(PreimageField.BYTECODE),
                 BinaryOperator.EQ,
-                new HexLiteralNode(Buffer.from('00', 'hex')),
+                new HexLiteralNode(hexToBin('00')),
               ),
             ),
             new RequireNode(
@@ -675,7 +676,7 @@ export const fixtures: Fixture[] = [
               new InstantiationNode(
                 new IdentifierNode(Class.OUTPUT_NULLDATA),
                 [new ArrayNode([
-                  new HexLiteralNode(Buffer.from('6d02', 'hex')),
+                  new HexLiteralNode(hexToBin('6d02')),
                   new CastNode(
                     new BytesType(),
                     new StringLiteralNode('A contract may not injure a human being or, through inaction, allow a human being to come to harm.', '\''),

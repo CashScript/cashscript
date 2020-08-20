@@ -5,6 +5,7 @@ import {
   createInputScript,
   getInputSize,
   getPreimageSize,
+  placeholder,
 } from '../src/util';
 import { Network } from '../src/interfaces';
 import { alicePk, alicePkh } from './fixture/vars';
@@ -54,7 +55,7 @@ describe('util', () => {
     it('should create an input script without selector or preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = Data.asmToScript(asm);
-      const parameters = [alicePk, Buffer.alloc(1)];
+      const parameters = [alicePk, placeholder(1)];
 
       const inputScript = createInputScript(redeemScript, parameters);
 
@@ -65,9 +66,9 @@ describe('util', () => {
     it('should create an input script with selector and preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = Data.asmToScript(asm);
-      const parameters = [alicePk, Buffer.alloc(1)];
+      const parameters = [alicePk, placeholder(1)];
       const selector = 1;
-      const preimage = Buffer.alloc(1);
+      const preimage = placeholder(1);
 
       const inputScript = createInputScript(redeemScript, parameters, selector, preimage);
 

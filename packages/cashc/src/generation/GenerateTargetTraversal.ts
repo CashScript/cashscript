@@ -1,3 +1,4 @@
+import { hexToBin } from '@bitauth/libauth';
 import {
   ContractNode,
   ParameterNode,
@@ -442,35 +443,35 @@ export default class GenerateTargetTraversal extends AstTraversal {
       // <output amount>
       this.visit(node.parameters[0]);
       // <VarInt 25 bytes> OP_DUP OP_HASH160 OP_PUSH<20>
-      this.emit(Buffer.from('1976a914', 'hex'));
+      this.emit(hexToBin('1976a914'));
       this.emit(Op.OP_CAT);
       // <pkh>
       this.visit(node.parameters[1]);
       this.emit(Op.OP_CAT);
       // OP_EQUAL OP_CHECKSIG
-      this.emit(Buffer.from('88ac', 'hex'));
+      this.emit(hexToBin('88ac'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
     } else if (node.identifier.name === Class.OUTPUT_P2SH) {
       // <output amount>
       this.visit(node.parameters[0]);
       // <VarInt 23 bytes> OP_HASH160 OP_PUSH<20>
-      this.emit(Buffer.from('17a914', 'hex'));
+      this.emit(hexToBin('17a914'));
       this.emit(Op.OP_CAT);
       // <script hash>
       this.visit(node.parameters[1]);
       this.emit(Op.OP_CAT);
       // OP_EQUAL
-      this.emit(Buffer.from('87', 'hex'));
+      this.emit(hexToBin('87'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
     } else if (node.identifier.name === Class.OUTPUT_NULLDATA) {
       // Total script = bytes8(0) <VarInt> OP_RETURN (<VarInt> <chunk>)+
       // <output amount (0)>
-      this.emit(Buffer.from('0000000000000000', 'hex'));
+      this.emit(hexToBin('0000000000000000'));
       this.pushToStack('(value)');
       // OP_RETURN
-      this.emit(Buffer.from('6a', 'hex'));
+      this.emit(hexToBin('6a'));
       this.pushToStack('(value)');
       const { elements } = node.parameters[0] as ArrayNode;
       // <VarInt data chunk size (dynamic)>
@@ -481,7 +482,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
         if (el instanceof HexLiteralNode) {
           // If the argument is a literal, we know its size
           if (el.value.byteLength > 75) {
-            this.emit(Buffer.from('4c', 'hex'));
+            this.emit(hexToBin('4c'));
             this.emit(Op.OP_SWAP);
             this.emit(Op.OP_CAT);
           }
@@ -491,7 +492,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
           this.emit(Data.encodeInt(75));
           this.emit(Op.OP_GREATERTHAN);
           this.emit(Op.OP_IF);
-          this.emit(Buffer.from('4c', 'hex'));
+          this.emit(hexToBin('4c'));
           this.emit(Op.OP_SWAP);
           this.emit(Op.OP_CAT);
           this.emit(Op.OP_ENDIF);
