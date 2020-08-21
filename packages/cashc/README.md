@@ -8,7 +8,7 @@
 
 CashScript is a high-level programming language for smart contracts on Bitcoin Cash. It offers a strong abstraction layer over Bitcoin Cash' native virtual machine, Bitcoin Script. Its syntax is based on Ethereum's smart contract language Solidity, but its functionality is very different since smart contracts on Bitcoin Cash differ greatly from smart contracts on Ethereum. For a detailed comparison of them, refer to the blog post [*Smart Contracts on Ethereum, Bitcoin and Bitcoin Cash*](https://kalis.me/smart-contracts-eth-btc-bch/).
 
-See the [GitHub repository](https://github.com/Bitcoin-com/cashscript) or the [CashScript website](https://cashscript.org) for full documentation and usage examples.
+See the [GitHub repository](https://github.com/Bitcoin-com/cashscript) and the [CashScript website](https://cashscript.org) for full documentation and usage examples.
 
 ## The CashScript Language
 CashScript is a high-level language that allows you to write Bitcoin Cash smart contracts in a straightforward and familiar way. Its syntax is inspired by Ethereum's Solidity language, but its functionality is different since the underlying systems have very different fundamentals. See the [language documentation](https://cashscript.org/docs/language/) for a full reference of the language.

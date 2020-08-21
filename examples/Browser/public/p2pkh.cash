@@ -1,7 +1,0 @@
-contract P2PKH(bytes20 pkh) {
-      // Require pk to match stored pkh and signature to match
-      function spend(pubkey pk, sig s) {
-	  require(hash160(pk) == pkh);
-	  require(checkSig(s, pk));
-      }
-}

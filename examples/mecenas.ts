@@ -1,16 +1,22 @@
+import { stringify } from '@bitauth/libauth';
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, SignatureTemplate } from 'cashscript';
+import {
+  Contract,
+  SignatureTemplate,
+  CashCompiler,
+  Network,
+  ElectrumNetworkProvider,
+} from 'cashscript';
 import path from 'path';
 
 run();
 export async function run(): Promise<void> {
   // Initialise BITBOX
-  const network = 'testnet';
-  const bitbox = new BITBOX({ restURL: 'https://trest.bitcoin.com/v2/' });
+  const bitbox = new BITBOX();
 
   // Initialise HD node
   const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
-  const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
+  const hdNode = bitbox.HDNode.fromSeed(rootSeed);
 
   // Create bob and alice's key pairs
   const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
@@ -25,29 +31,31 @@ export async function run(): Promise<void> {
   // Derive alice's address
   const aliceAddress = bitbox.ECPair.toCashAddress(alice);
 
-  // Compile the Mecenas contract
-  const Mecenas = Contract.compile(path.join(__dirname, 'mecenas.cash'), network);
+  // Compile the Mecenas contract to an artifact object
+  const artifact = CashCompiler.compileFile(path.join(__dirname, 'mecenas.cash'));
 
-  // Instantiate a new Mecenas contract with constructor arguments:
-  // { recipient: alicePkh, funder: bobPkh, pledge: 10000 }
-  // timeout value can only be block number, not timestamp
-  const instance = Mecenas.new(alicePkh, bobPkh, 10000);
+  // Initialise a network provider for network operations on TESTNET
+  const provider = new ElectrumNetworkProvider(Network.TESTNET);
+
+  // Instantiate a new contract using the compiled artifact and network provider
+  // AND providing the constructor parameters:
+  // (recipient: alicePkh, funder: bobPkh, pledge: 10000)
+  const contract = new Contract(artifact, [alicePkh, bobPkh, 10000], provider);
 
   // Get contract balance & output address + balance
-  const contractBalance = await instance.getBalance();
-  console.log('contract address:', instance.address);
-  console.log('contract balance:', contractBalance);
-  console.log('contract opcount:', instance.opcount);
-  console.log('contract bytesize:', instance.bytesize);
+  console.log('contract address:', contract.address);
+  console.log('contract balance:', await contract.getBalance());
+  console.log('contract opcount:', contract.opcount);
+  console.log('contract bytesize:', contract.bytesize);
 
   // Call the transfer function with any signature
   // Will send one pledge amount to alice, and send change back to the contract
   // Manually set fee to 1000 because this is hardcoded in the contract
-  const tx = await instance.functions
+  const tx = await contract.functions
     .receive(alicePk, new SignatureTemplate(alice))
     .to(aliceAddress, 10000)
     .withHardcodedFee(1000)
     .send();
 
-  console.log('transaction details:', tx);
+  console.log('transaction details:', stringify(tx));
 }

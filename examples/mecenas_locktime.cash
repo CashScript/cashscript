@@ -1,4 +1,4 @@
-pragma cashscript ^0.4.0;
+pragma cashscript ^0.5.0;
 
 // This is an experimental contract for a more "streaming" Mecenas experience
 // Completely untested, just a concept

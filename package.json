@@ -3,8 +3,7 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "examples",
-    "examples/Browser"
+    "examples"
   ],
   "devDependencies": {
     "@types/jest": "^24.0.25",

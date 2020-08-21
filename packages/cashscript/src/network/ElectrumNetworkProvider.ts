@@ -34,11 +34,11 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       this.electrum.addServer('bch.loping.net', 50004, ElectrumTransport.WSS.Scheme, false);
       this.electrum.addServer('electrum.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
     } else if (network === Network.TESTNET) {
-      // Initialise a 2-of-3 Electrum Cluster with 4 hardcoded servers
-      this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 2, 3);
-      this.electrum.addServer('blackie.c3-soft.com', 60004, ElectrumTransport.WSS.Scheme);
-      this.electrum.addServer('bch.loping.net', 60004, ElectrumTransport.WSS.Scheme);
-      this.electrum.addServer('electroncash.de', 60004, ElectrumTransport.WSS.Scheme);
+      // Initialise a 1-of-2 Electrum Cluster with 2 hardcoded servers
+      this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 2);
+      this.electrum.addServer('blackie.c3-soft.com', 60004, ElectrumTransport.WSS.Scheme, false);
+      this.electrum.addServer('electroncash.de', 60004, ElectrumTransport.WSS.Scheme, false);
+      // this.electrum.addServer('bch.loping.net', 60004, ElectrumTransport.WSS.Scheme, false);
       // this.electrum.addServer('testnet.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme);
     } else {
       throw new Error(`Tried to instantiate an ElectrumNetworkProvider for unknown network ${network}`);

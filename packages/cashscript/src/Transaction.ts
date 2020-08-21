@@ -52,7 +52,7 @@ export class Transaction {
     private provider: NetworkProvider,
     private redeemScript: Script,
     private abiFunction: AbiFunction,
-    private parameters: (Uint8Array | SignatureTemplate)[],
+    private args: (Uint8Array | SignatureTemplate)[],
     private selector?: number,
   ) {}
 
@@ -183,22 +183,26 @@ export class Transaction {
       }
 
       let covenantHashType = -1;
-      const completePs = this.parameters.map((p) => {
-        if (!(p instanceof SignatureTemplate)) return p;
+      const completeArgs = this.args.map((arg) => {
+        if (!(arg instanceof SignatureTemplate)) return arg;
 
         // First signature is used for sighash preimage (maybe not the best way)
-        if (covenantHashType < 0) covenantHashType = p.getHashType();
+        if (covenantHashType < 0) covenantHashType = arg.getHashType();
 
-        const preimage = createSighashPreimage(transaction, utxo, i, bytecode, p.getHashType());
+        const preimage = createSighashPreimage(transaction, utxo, i, bytecode, arg.getHashType());
         const sighash = sha256(sha256(preimage));
 
-        return p.generateSignature(sighash, secp256k1);
+        return arg.generateSignature(sighash, secp256k1);
       });
 
       const preimage = this.abiFunction.covenant
         ? createSighashPreimage(transaction, utxo, i, bytecode, covenantHashType)
         : undefined;
-      const inputScript = createInputScript(this.redeemScript, completePs, this.selector, preimage);
+
+      const inputScript = createInputScript(
+        this.redeemScript, completeArgs, this.selector, preimage,
+      );
+
       inputScripts.push(inputScript);
     });
 
@@ -210,7 +214,7 @@ export class Transaction {
   }
 
   async send(): Promise<LibauthTransaction>;
-  async send(): Promise<string>;
+  async send(raw: true): Promise<string>;
 
   async send(raw?: true): Promise<LibauthTransaction | string> {
     const tx = await this.build();
@@ -249,8 +253,8 @@ export class Transaction {
     }
 
     // Replace all SignatureTemplate with 65-length placeholder Uint8Arrays
-    const placeholderParameters = this.parameters.map(p => (
-      p instanceof SignatureTemplate ? placeholder(65) : p
+    const placeholderArgs = this.args.map(arg => (
+      arg instanceof SignatureTemplate ? placeholder(65) : arg
     ));
 
     // Create a placeholder preimage of the correct size
@@ -259,10 +263,10 @@ export class Transaction {
       : undefined;
 
     // Create a placeholder input script for size calculation using the placeholder
-    // parameters and correctly sized placeholder preimage
+    // arguments and correctly sized placeholder preimage
     const placeholderScript = createInputScript(
       this.redeemScript,
-      placeholderParameters,
+      placeholderArgs,
       this.selector,
       placeholderPreimage,
     );

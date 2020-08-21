@@ -53,11 +53,11 @@ npm install cashscript
 
 ### Usage
 ```ts
-import { Contract, ... } from 'cashscript';
+import { Contract, CashCompiler, ... } from 'cashscript';
 ```
 
 ```js
-const { Contract, ... } = require('cashscript');
+const { Contract, CashCompiler, ... } = require('cashscript');
 ```
 
 Using the CashScript SDK, you can import / compile existing contract files, create new instances of these contracts, and interact with these instances:
@@ -65,21 +65,25 @@ Using the CashScript SDK, you can import / compile existing contract files, crea
 ```ts
 ...
   // Compile the P2PKH contract
-  const P2PKH = Contract.compile('./p2pkh.cash', 'mainnet');
+  const P2PKH = CashCompiler.compileFile('./p2pkh.cash');
 
-  // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
-  const instance = P2PKH.new(pkh);
+  // Instantiate a network provider for CashScript's network operations
+  const provider = new ElectrumNetworkProvider('mainnet');
+
+  // Create a new P2PKH contract with constructor arguments: { pkh: pkh }
+  const contract = new Contract(P2PKH, [pkh], provider);
 
   // Get contract balance & output address + balance
-  console.log('contract address:', instance.address);
-  console.log('contract balance:', await instance.getBalance());
+  console.log('contract address:', contract.address);
+  console.log('contract balance:', await contract.getBalance());
 
   // Call the spend function with the owner's signature
   // And use it to send 0. 000 100 00 BCH back to the contract's address
-  const txDetails = await instance.functions
+  const txDetails = await contract.functions
     .spend(pk, new SignatureTemplate(keypair))
-    .to(instance.address, 10000)
+    .to(contract.address, 10000)
     .send();
+
   console.log(txDetails);
 ...
 ```

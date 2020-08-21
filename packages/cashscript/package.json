@@ -1,14 +1,41 @@
 {
   "name": "cashscript",
-  "description": "Easily write and interact with Bitcoin Cash contracts",
   "version": "0.5.0",
-  "author": "Rosco Kalis <roscokalis@gmail.com>",
+  "description": "Easily write and interact with Bitcoin Cash contracts",
+  "keywords": [
+    "bitcoin cash",
+    "cashscript",
+    "sdk",
+    "smart contracts"
+  ],
+  "homepage": "https://cashscript.org",
   "bugs": {
     "url": "https://github.com/Bitcoin-com/cashscript/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
+  },
+  "license": "MIT",
+  "author": "Rosco Kalis <roscokalis@gmail.com>",
   "contributors": [
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
+  "main": "dist/index",
+  "types": "dist/index",
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "scripts": {
+    "build": "npm run clean && npm run compile",
+    "clean": "rm -rf ./dist",
+    "compile": "tsc -p tsconfig.build.json",
+    "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint",
+    "test": "jest --config=../../jest.config.js packages/cashscript"
+  },
   "dependencies": {
     "@bitauth/libauth": "^1.17.1",
     "bip68": "^1.0.4",
@@ -25,31 +52,5 @@
     "jest": "^25.1.0",
     "ts-jest": "^25.1.0",
     "typescript": "3.7.5"
-  },
-  "directories": {
-    "lib": "src",
-    "test": "test"
-  },
-  "homepage": "https://cashscript.org",
-  "keywords": [
-    "bitcoin cash",
-    "cashscript",
-    "sdk",
-    "smart contracts"
-  ],
-  "license": "MIT",
-  "main": "dist/index",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
-  },
-  "scripts": {
-    "build": "npm run clean && npm run compile",
-    "clean": "rm -rf ./dist",
-    "compile": "tsc -p tsconfig.build.json",
-    "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
-    "prepare": "npm run build",
-    "test": "jest --config=../../jest.config.js packages/cashscript"
-  },
-  "types": "dist/index"
+  }
 }

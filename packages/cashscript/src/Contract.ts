@@ -5,11 +5,12 @@ import {
   AbiFunction,
 } from 'cashc';
 import { Transaction } from './Transaction';
-import { Parameter, encodeParameter } from './Parameter';
+import { Argument, encodeArgument } from './Argument';
 import { Utxo } from './interfaces';
 import NetworkProvider from './network/NetworkProvider';
 import { scriptToAddress, calculateBytesize, countOpcodes } from './util';
 import SignatureTemplate from './SignatureTemplate';
+import { ElectrumNetworkProvider } from './network';
 
 export class Contract {
   name: string;
@@ -25,8 +26,8 @@ export class Contract {
 
   constructor(
     private artifact: Artifact,
-    private provider: NetworkProvider,
-    constructorParameters: Parameter[],
+    constructorArgs: Argument[],
+    private provider: NetworkProvider = new ElectrumNetworkProvider(),
   ) {
     if (!artifact.abi || !artifact.bytecode
      || !artifact.constructorInputs || !artifact.contractName
@@ -34,22 +35,22 @@ export class Contract {
       throw new Error('Invalid or incomplete artifact provided');
     }
 
-    if (artifact.constructorInputs.length !== constructorParameters.length) {
+    if (artifact.constructorInputs.length !== constructorArgs.length) {
       throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor`);
     }
 
-    // Encode parameters (this also performs type checking)
-    const encodedParameters = constructorParameters
-      .map((p, i) => encodeParameter(p, artifact.constructorInputs[i].type))
+    // Encode arguments (this also performs type checking)
+    const encodedArgs = constructorArgs
+      .map((arg, i) => encodeArgument(arg, artifact.constructorInputs[i].type))
       .reverse();
 
     // Check there's no signature templates in the constructor
-    if (encodedParameters.some(p => p instanceof SignatureTemplate)) {
+    if (encodedArgs.some(arg => arg instanceof SignatureTemplate)) {
       throw new Error('Cannot use signatures in constructor');
     }
 
     this.redeemScript = [
-      ...encodedParameters as Uint8Array[],
+      ...encodedArgs as Uint8Array[],
       ...Data.asmToScript(this.artifact.bytecode),
     ];
 
@@ -81,25 +82,25 @@ export class Contract {
   }
 
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
-    return (...parameters: Parameter[]) => {
-      if (abiFunction.inputs.length !== parameters.length) {
+    return (...args: Argument[]) => {
+      if (abiFunction.inputs.length !== args.length) {
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}`);
       }
 
-      // Encode passed parameters (this also performs type checking)
-      const encodedParameters = parameters
-        .map((p, i) => encodeParameter(p, abiFunction.inputs[i].type));
+      // Encode passed args (this also performs type checking)
+      const encodedArgs = args
+        .map((arg, i) => encodeArgument(arg, abiFunction.inputs[i].type));
 
       return new Transaction(
         this.address,
         this.provider,
         this.redeemScript,
         abiFunction,
-        encodedParameters,
+        encodedArgs,
         selector,
       );
     };
   }
 }
 
-export type ContractFunction = (...parameters: Parameter[]) => Transaction;
+export type ContractFunction = (...args: Argument[]) => Transaction;

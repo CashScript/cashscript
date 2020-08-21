@@ -55,9 +55,9 @@ describe('util', () => {
     it('should create an input script without selector or preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = Data.asmToScript(asm);
-      const parameters = [alicePk, placeholder(1)];
+      const args = [alicePk, placeholder(1)];
 
-      const inputScript = createInputScript(redeemScript, parameters);
+      const inputScript = createInputScript(redeemScript, args);
 
       const expectedInputScriptAsm = `00 ${binToHex(alicePk)} ${binToHex(Data.asmToBytecode(asm))}`;
       expect(Data.bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
@@ -66,11 +66,11 @@ describe('util', () => {
     it('should create an input script with selector and preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = Data.asmToScript(asm);
-      const parameters = [alicePk, placeholder(1)];
+      const args = [alicePk, placeholder(1)];
       const selector = 1;
       const preimage = placeholder(1);
 
-      const inputScript = createInputScript(redeemScript, parameters, selector, preimage);
+      const inputScript = createInputScript(redeemScript, args, selector, preimage);
 
       const expectedInputScriptAsm = `00 ${binToHex(alicePk)} 00 OP_1 ${binToHex(Data.asmToBytecode(asm))}`;
       expect(Data.bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);

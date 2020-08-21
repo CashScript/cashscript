@@ -19,7 +19,7 @@ describe('Mecenas', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/mecenas.json');
     const provider = new ElectrumNetworkProvider();
-    mecenas = new Contract(artifact, provider, [alicePkh, bobPkh, pledge]);
+    mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
   });
 

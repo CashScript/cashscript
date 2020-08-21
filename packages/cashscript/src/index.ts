@@ -1,6 +1,6 @@
 export { Contract } from './Contract';
 export { Transaction } from './Transaction';
-export { Parameter } from './Parameter';
+export { Argument } from './Argument';
 export { default as SignatureTemplate } from './SignatureTemplate';
 export {
   Artifacts,
@@ -14,6 +14,7 @@ export {
   Recipient,
   SignatureAlgorithm,
   HashType,
+  Network,
 } from './interfaces';
 export * from './Errors';
 export * from './network';

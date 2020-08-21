@@ -1,33 +1,41 @@
 import { BITBOX } from 'bitbox-sdk';
-import { TxnDetailsResult } from 'bitcoin-com-rest';
-import { Contract, SignatureTemplate } from 'cashscript';
+import {
+  Contract,
+  SignatureTemplate,
+  CashCompiler,
+  ElectrumNetworkProvider,
+  Network,
+} from 'cashscript';
 import path from 'path';
+import { stringify } from '@bitauth/libauth';
 
 run();
 async function run(): Promise<void> {
-  // Initialise BITBOX ---- ATTENTION: Set to mainnet
-  const network = 'mainnet';
-  const bitbox = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
+  // Initialise BITBOX
+  const bitbox = new BITBOX();
 
   // Initialise HD node and alice's keypair
   const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
-  const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
+  const hdNode = bitbox.HDNode.fromSeed(rootSeed);
   const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
 
   // Derive alice's public key and public key hash
   const alicePk = bitbox.ECPair.toPublicKey(alice);
   const alicePkh = bitbox.Crypto.hash160(alicePk);
 
-  // Compile the P2PKH Cash Contract
-  const P2PKH = Contract.compile(path.join(__dirname, 'p2pkh.cash'), network);
+  // Compile the P2PKH contract to an artifact object
+  const artifact = CashCompiler.compileFile(path.join(__dirname, 'p2pkh.cash'));
 
-  // Instantiate a new P2PKH contract with constructor arguments: { pkh: alicePkh }
-  const instance = P2PKH.new(alicePkh);
+  // Initialise a network provider for network operations on MAINNET
+  const provider = new ElectrumNetworkProvider(Network.MAINNET);
+
+  // Instantiate a new contract using the compiled artifact and network provider
+  // AND providing the constructor parameters (pkh: alicePkh)
+  const contract = new Contract(artifact, [alicePkh], provider);
 
   // Get contract balance & output address + balance
-  const contractBalance = await instance.getBalance();
-  console.log('contract address:', instance.address);
-  console.log('contract balance:', contractBalance);
+  console.log('contract address:', contract.address);
+  console.log('contract balance:', await contract.getBalance());
 
   // Call the spend function with alice's signature + pk
   // And use it to create a new token.
@@ -36,7 +44,7 @@ async function run(): Promise<void> {
   //    Output #2 - The mint baton
   //    Output #3 - Change output (implicit)
   try {
-    const tx2: TxnDetailsResult = await instance.functions
+    const tx = await contract.functions
       .spend(alicePk, new SignatureTemplate(alice))
       .withOpReturn([
         '0x534c5000', // Lokad ID
@@ -50,10 +58,11 @@ async function run(): Promise<void> {
         '0x02', // Minting baton vout
         '0x0000000000000001', // Initial quantity
       ])
-      .to(instance.address, 546)
-      .to(instance.address, 1000)
+      .to(contract.address, 546)
+      .to(contract.address, 1000)
       .send();
-    console.log('transaction details:', tx2);
+
+    console.log('transaction details:', stringify(tx));
   } catch (e) {
     console.log(e);
   }

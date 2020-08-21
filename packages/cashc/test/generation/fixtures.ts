@@ -481,7 +481,6 @@ export const fixtures: Fixture[] = [
         // require(tx.version == requiredVersion) + cleanup
         + 'OP_EQUAL OP_NIP OP_NIP',
       source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_nested_verify.cash'), { encoding: 'utf-8' }),
-      networks: {},
       compiler: {
         name: 'cashc',
         version,

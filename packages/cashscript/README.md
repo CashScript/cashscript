@@ -8,7 +8,7 @@
 
 CashScript is a high-level programming language for smart contracts on Bitcoin Cash. It offers a strong abstraction layer over Bitcoin Cash' native virtual machine, Bitcoin Script. Its syntax is based on Ethereum's smart contract language Solidity, but its functionality is very different since smart contracts on Bitcoin Cash differ greatly from smart contracts on Ethereum. For a detailed comparison of them, refer to the blog post [*Smart Contracts on Ethereum, Bitcoin and Bitcoin Cash*](https://kalis.me/smart-contracts-eth-btc-bch/).
 
-See the [GitHub repository](https://github.com/Bitcoin-com/cashscript) or the [CashScript website](https://cashscript.org) for full documentation and usage examples.
+See the [GitHub repository](https://github.com/Bitcoin-com/cashscript) and the [CashScript website](https://cashscript.org) for full documentation and usage examples.
 
 ## The CashScript Language
 CashScript is a high-level language that allows you to write Bitcoin Cash smart contracts in a straightforward and familiar way. Its syntax is inspired by Ethereum's Solidity language, but its functionality is different since the underlying systems have very different fundamentals. See the [language documentation](https://cashscript.org/docs/language/) for a full reference of the language.
@@ -23,11 +23,11 @@ npm install cashscript
 
 ### Usage
 ```ts
-import { Contract, ... } from 'cashscript';
+import { Contract, CashCompiler, ... } from 'cashscript';
 ```
 
 ```js
-const { Contract, ... } = require('cashscript');
+const { Contract, CashCompiler, ... } = require('cashscript');
 ```
 
 Using the CashScript SDK, you can import / compile existing contract files, create new instances of these contracts, and interact with these instances:
@@ -35,21 +35,25 @@ Using the CashScript SDK, you can import / compile existing contract files, crea
 ```ts
 ...
   // Compile the P2PKH contract
-  const P2PKH = Contract.compile('./p2pkh.cash', 'mainnet');
+  const P2PKH = CashCompiler.compileFile('./p2pkh.cash');
 
-  // Instantiate a new P2PKH contract with constructor arguments: { pkh: pkh }
-  const instance = P2PKH.new(pkh);
+  // Instantiate a network provider for CashScript's network operations
+  const provider = new ElectrumNetworkProvider('mainnet');
+
+  // Create a new P2PKH contract with constructor arguments: { pkh: pkh }
+  const contract = new Contract(P2PKH, [pkh], provider);
 
   // Get contract balance & output address + balance
-  console.log('contract address:', instance.address);
-  console.log('contract balance:', await instance.getBalance());
+  console.log('contract address:', contract.address);
+  console.log('contract balance:', await contract.getBalance());
 
   // Call the spend function with the owner's signature
   // And use it to send 0. 000 100 00 BCH back to the contract's address
-  const txDetails = await instance.functions
+  const txDetails = await contract.functions
     .spend(pk, new SignatureTemplate(keypair))
-    .to(instance.address, 10000)
+    .to(contract.address, 10000)
     .send();
+
   console.log(txDetails);
 ...
 ```

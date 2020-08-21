@@ -16,4 +16,7 @@ module.exports = {
   coveragePathIgnorePatterns: [
     '<rootDir>/packages/cashc/src/grammar/',
   ],
+  testPathIgnorePatterns: [
+    '<rootDir>/examples',
+  ]
 };

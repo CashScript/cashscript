@@ -18,12 +18,12 @@ describe('P2PKH', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2pkh.json');
     const provider = new ElectrumNetworkProvider();
-    p2pkhInstance = new Contract(artifact, provider, [alicePkh]);
+    p2pkhInstance = new Contract(artifact, [alicePkh], provider);
     console.log(p2pkhInstance.address);
   });
 
   describe('send', () => {
-    it('should fail when using incorrect function parameters', async () => {
+    it('should fail when using incorrect function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 10000;
@@ -41,7 +41,7 @@ describe('P2PKH', () => {
       await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
-    it('should succeed when using correct function parameters', async () => {
+    it('should succeed when using correct function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 10000;

@@ -11,7 +11,7 @@ describe('Announcement', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/announcement.json');
     const provider = new ElectrumNetworkProvider();
-    announcement = new Contract(artifact, provider, []);
+    announcement = new Contract(artifact, [], provider);
     console.log(announcement.address);
   });
 

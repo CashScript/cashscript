@@ -10,7 +10,7 @@ describe('Simple Covenant', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/simple_covenant.json');
     const provider = new ElectrumNetworkProvider();
-    covenant = new Contract(artifact, provider, []);
+    covenant = new Contract(artifact, [], provider);
     console.log(covenant.address);
   });
 
@@ -40,7 +40,7 @@ describe.skip('P2Palindrome', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2palindrome.json');
     const provider = new ElectrumNetworkProvider();
-    p2palindrome = new Contract(artifact, provider, []);
+    p2palindrome = new Contract(artifact, [], provider);
     console.log(p2palindrome.address);
   });
 

@@ -23,7 +23,7 @@
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
   "main": "dist/index",
-  "typings": "dist/index",
+  "types": "dist/index",
   "bin": {
     "cashc": "dist/cashc-cli.js"
   },

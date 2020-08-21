@@ -6,10 +6,11 @@
   "author": "Rosco Kalis <rosco@bitcoin.com>",
   "license": "MIT",
   "dependencies": {
+    "@bitauth/libauth": "^1.17.1",
     "@types/node": "^12.7.8",
     "bitbox-sdk": "^8.11.1",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
-    "cashscript": "^0.4.0",
+    "cashscript": "^0.5.0",
     "typescript": "^3.6.4"
   }
 }
