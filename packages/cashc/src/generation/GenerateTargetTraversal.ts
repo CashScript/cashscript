@@ -408,6 +408,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     if (node.identifier.name !== GlobalFunction.CHECKSIG) return false;
     if (!this.isCheckSigVerify) return false;
     if (!this.covenantNeedsToBeVerified) return false;
+    if (this.scopeDepth > 0) return false;
     return true;
   }
 

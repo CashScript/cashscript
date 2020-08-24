@@ -1,0 +1,6 @@
+contract Test() {
+    function covenant(sig s, pubkey pk) {
+        require(checkSig(s, pk));
+        require(int(tx.version) == 2);
+    }
+}

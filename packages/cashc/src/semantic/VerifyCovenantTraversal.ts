@@ -7,6 +7,7 @@ import {
   Node,
   RequireNode,
   FunctionCallNode,
+  BranchNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { UnverifiedCovenantError } from '../Errors';
@@ -14,6 +15,7 @@ import { UnverifiedCovenantError } from '../Errors';
 export default class VerifyCovenantTraversal extends AstTraversal {
   private preimageIdentifierNode: IdentifierNode;
   private checkSigVerify: boolean;
+  private scopeDepth: number = 0;
 
   visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
@@ -30,12 +32,24 @@ export default class VerifyCovenantTraversal extends AstTraversal {
     return node;
   }
 
+  visitBranch(node: BranchNode): Node {
+    node.condition = this.visit(node.condition);
+
+    this.scopeDepth += 1;
+    node.ifBlock = this.visit(node.ifBlock);
+    node.elseBlock = this.visitOptional(node.elseBlock);
+    this.scopeDepth -= 1;
+
+    return node;
+  }
+
   visitRequire(node: RequireNode): Node {
     node.expression = this.visit(node.expression);
-    const exp = node.expression;
-    if (exp instanceof FunctionCallNode && exp.identifier.name === GlobalFunction.CHECKSIG) {
+
+    if (this.isValidCovenantVerification(node)) {
       this.checkSigVerify = true;
     }
+
     return node;
   }
 
@@ -45,5 +59,13 @@ export default class VerifyCovenantTraversal extends AstTraversal {
       this.preimageIdentifierNode = node;
     }
     return node;
+  }
+
+  isValidCovenantVerification(node: RequireNode): boolean {
+    if (!(node.expression instanceof FunctionCallNode)) return false;
+    if (node.expression.identifier.name !== GlobalFunction.CHECKSIG) return false;
+    if (this.scopeDepth > 0) return false;
+
+    return true;
   }
 }

@@ -469,6 +469,43 @@ export const fixtures: Fixture[] = [
     },
   },
   {
+    fn: 'covenant_nested_verify.cash',
+    artifact: {
+      contractName: 'Covenant',
+      constructorInputs: [
+        { name: 'requiredVersion', type: 'bytes4' },
+        { name: 'altPk', type: 'pubkey' },
+        { name: 'altPk2', type: 'pubkey' },
+      ],
+      abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
+      bytecode:
+        // preimage parsing
+        'OP_3 OP_PICK OP_4 OP_SPLIT OP_DROP '
+        // if (pk.length > 0) {
+        + 'OP_5 OP_PICK OP_SIZE OP_NIP OP_0 OP_GREATERTHAN OP_IF '
+        // require(checkSig(s, pk));
+        + 'OP_6 OP_PICK OP_6 OP_PICK OP_CHECKSIGVERIFY '
+        // } else {
+        + 'OP_ELSE '
+        // require(checkSig(s, altPk));
+        + 'OP_6 OP_PICK OP_3 OP_PICK OP_CHECKSIGVERIFY '
+        // }
+        + 'OP_ENDIF '
+        // require(checkSig(s, altPk2)) + preimage verification
+        + 'OP_6 OP_ROLL OP_4 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
+        + 'OP_7 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
+        // require(tx.version == requiredVersion) + cleanup
+        + 'OP_EQUAL OP_NIP OP_NIP',
+      source: fs.readFileSync(path.join(__dirname, '..', 'fixture', 'covenant_nested_verify.cash'), { encoding: 'utf-8' }),
+      networks: {},
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
     fn: 'covenant_all_fields.cash',
     artifact: {
       contractName: 'Covenant',

@@ -209,6 +209,6 @@ export class UnverifiedCovenantError extends CashScriptError {
   constructor(
     node: IdentifierNode,
   ) {
-    super(node, `Covenant variable ${node.name} was used without signature check`);
+    super(node, `Covenant variable ${node.name} was used without un-nested signature check`);
   }
 }
