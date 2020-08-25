@@ -128,6 +128,10 @@ export class Transaction {
     return this;
   }
 
+  withoutChange(): this {
+    return this.withMinChange(Number.MAX_VALUE);
+  }
+
   async build(): Promise<string> {
     this.locktime = this.locktime || await this.provider.getBlockHeight();
     await this.setInputsAndOutputs();
