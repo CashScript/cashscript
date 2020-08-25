@@ -3,7 +3,6 @@ import { stringify } from '@bitauth/libauth';
 import {
   Contract,
   SignatureTemplate,
-  Network,
   CashCompiler,
   ElectrumNetworkProvider,
 } from 'cashscript';
@@ -27,7 +26,7 @@ async function run(): Promise<void> {
   const artifact = CashCompiler.compileFile(path.join(__dirname, 'p2pkh.cash'));
 
   // Initialise a network provider for network operations on TESTNET
-  const provider = new ElectrumNetworkProvider(Network.TESTNET);
+  const provider = new ElectrumNetworkProvider('testnet');
 
   // Instantiate a new contract using the compiled artifact and network provider
   // AND providing the constructor parameters (pkh: alicePkh)

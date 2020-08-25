@@ -3,7 +3,6 @@ import {
   Contract,
   SignatureTemplate,
   CashCompiler,
-  Network,
   ElectrumNetworkProvider,
 } from 'cashscript';
 import path from 'path';
@@ -27,7 +26,7 @@ export async function run(): Promise<void> {
     const artifact = CashCompiler.compileFile(path.join(__dirname, 'announcement.cash'));
 
     // Initialise a network provider for network operations on MAINNET
-    const provider = new ElectrumNetworkProvider(Network.MAINNET);
+    const provider = new ElectrumNetworkProvider('mainnet');
 
     // Instantiate a new contract using the compiled artifact and network provider
     // AND providing the constructor parameters (none)

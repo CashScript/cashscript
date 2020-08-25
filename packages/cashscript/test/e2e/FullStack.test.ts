@@ -6,7 +6,6 @@ import {
   bob,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { Network } from '../../src/interfaces';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
 
 const BCHJS = require('@psf/bch-js');
@@ -16,7 +15,7 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2pkh.json');
-    const provider = new FullStackNetworkProvider(Network.MAINNET, new BCHJS({ restURL: 'https://free-main.fullstack.cash/v3/' }));
+    const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://free-main.fullstack.cash/v3/' }));
     p2pkhInstance = new Contract(artifact, [alicePkh], provider);
     console.log(p2pkhInstance.address);
   });

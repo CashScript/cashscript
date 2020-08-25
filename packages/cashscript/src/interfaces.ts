@@ -36,7 +36,12 @@ export enum HashType {
   SIGHASH_ANYONECANPAY = 0x80,
 }
 
-export enum Network {
-  MAINNET = 'mainnet',
-  TESTNET = 'testnet',
-}
+// Weird setup to allow both Enum parameters, as well as literal strings
+// https://stackoverflow.com/questions/51433319/typescript-constructor-accept-string-for-enum
+const literal = <L extends string>(l: L): L => l;
+export const Network = {
+  MAINNET: literal('mainnet'),
+  TESTNET: literal('testnet'),
+};
+
+export type Network = (typeof Network)[keyof typeof Network];

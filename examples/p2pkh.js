@@ -1,6 +1,6 @@
 const { BITBOX } = require('bitbox-sdk');
 const { stringify } = require('@bitauth/libauth');
-const { Contract, SignatureTemplate, Network, CashCompiler, ElectrumNetworkProvider } = require('cashscript');
+const { Contract, SignatureTemplate, CashCompiler, ElectrumNetworkProvider } = require('cashscript');
 const path = require('path');
 
 run();
@@ -21,7 +21,7 @@ async function run() {
   const artifact = CashCompiler.compileFile(path.join(__dirname, 'p2pkh.cash'));
 
   // Initialise a network provider for network operations on TESTNET
-  const provider = new ElectrumNetworkProvider(Network.TESTNET);
+  const provider = new ElectrumNetworkProvider('testnet');
 
   // Instantiate a new contract using the compiled artifact and network provider
   // AND providing the constructor parameters (pkh: alicePkh)

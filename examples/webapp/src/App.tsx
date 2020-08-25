@@ -5,7 +5,7 @@ import React from 'react'
 import { Container, Row, Col, Form, Button } from 'react-bootstrap'
 import { BITBOX, Crypto } from 'bitbox-sdk'
 import { ECPair } from 'bitcoincashjs-lib'
-import { CashCompiler, ElectrumNetworkProvider, Contract, Network, SignatureTemplate } from 'cashscript'
+import { CashCompiler, ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript'
 
 interface AppState {
   contract?: Contract
@@ -52,7 +52,7 @@ class App extends React.Component<{}, AppState> {
     const artifact = CashCompiler.compileString(source)
 
     // Initialise a network provider for network operations on TESTNET
-    const provider = new ElectrumNetworkProvider(Network.TESTNET)
+    const provider = new ElectrumNetworkProvider('testnet')
 
     // Instantiate a new contract using the compiled artifact and network provider
     // AND providing the constructor parameters (pkh: alicePkh)
