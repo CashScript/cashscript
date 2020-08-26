@@ -21,42 +21,30 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 }
 ```
 
-Now to put this smart contract in use in a JavaScript application we have to use the CashScript SDK in combination with the [BITBOX][bitbox] library. We use BITBOX to generate public/private keys for the smart contract participants, and then we use the CashScript SDK to call the smart contract functions and send transactions to the network.
+Now to put this smart contract in use in a JavaScript application we have to use the CashScript SDK in combination with a BCH library such as [BCHJS][bchjs], [bitcore-lib-cash][bitcore] or [Libauth][libauth]. These libraries are used to generate public/private keys for the contract participants. Then these keys can be used in the CashScript SDK. The key generation code is left out of this example, since this works differently for every library.
 
 ```ts title="TransferWithTimeout.js"
-import { BITBOX } from 'bitbox-sdk';
-import { Contract, SignatureTemplate } from 'cashscript';
+import { CashCompiler, Contract, SignatureTemplate } from 'cashscript';
+import { alicePriv, alicePub, bobPriv, bobPub } from './somewhere';
 
 async function run() {
-  // Initialise BITBOX and generate an HD Node from a mnemonic
-  const bitbox = new BITBOX();
-  const rootSeed = bitbox.Mnemonic.toSeed('candy maple cake sugar ...');
-  const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
+  // Compile the TransferWithTimeout contract
+  const artifact = CashCompiler.compileFile('./transfer_with_timeout.cash'));
 
-  // Create Alice and Bob's key pairs
-  const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
-  const bob = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1));
-
-  // Derive Alice and Bob's public keys
-  const alicePk = bitbox.ECPair.toPublicKey(alice);
-  const bobPk = bitbox.ECPair.toPublicKey(bob);
-
-  // Compile the TransferWithTimeout Contract
-  const TWT = Contract.compile('transfer_with_timeout.cash', 'mainnet');
-
-  // Instantiate a new TransferWithTimeout contract with constructor arguments:
-  // { sender: alicePk, recipient: bobPk, timeout: 9000000 } // timeout in future
-  // timeout value can only be block number, not timestamp
-  const instance = TWT.new(alicePk, bobPk, 900000);
+  // Instantiate a new contract using the compiled artifact
+  // and constructor arguments:
+  // { sender: alicePub, recipient: bobPub, timeout: 1000000 }
+  // No network provider is provided, so the default ElectrumNetworkProvider is used
+  const contract = new Contract(artifact, [alicePub, bobPub, 1000000]);
 
   // Display contract address and balance
-  console.log('contract address:', instance.address);
-  console.log('contract balance:', await instance.getBalance());
+  console.log('contract address:', contract.address);
+  console.log('contract balance:', await contract.getBalance());
 
   // Call the transfer function with Bob's signature
   // i.e. Bob claims the money that Alice has sent him
-  const txDetails = await instance.functions
-    .transfer(new SignatureTemplate(bob))
+  const txDetails = await contract.functions
+    .transfer(new SignatureTemplate(bobPriv))
     .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000)
     .send();
   console.log(txDetails);
@@ -65,8 +53,8 @@ async function run() {
   // i.e. Alice recovers the money that Bob has not claimed
   // But because the timeout has not passed yet, the function fails and
   // we call the meep function so the transaction can be debugged instead
-  const meepStr = await instance.functions
-    .timeout(new SignatureTemplate(alice))
+  const meepStr = await contract.functions
+    .timeout(new SignatureTemplate(alicePriv))
     .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000)
     .meep();
   console.log(meepStr);
@@ -117,33 +105,42 @@ contract Announcement() {
 }
 ```
 
-The CashScript code above ensures that the smart contract **can only** be used in the way specified in the code. But the transaction needs to be created by the SDK, and to ensure that it complies with the rules of the smart contract, we need to use some of the more advanced options of the SDK. We exclude some of the boilerplate BITBOX code that was present in the example above, just for brevity.
+The CashScript code above ensures that the smart contract **can only** be used in the way specified in the code. But the transaction needs to be created by the SDK, and to ensure that it complies with the rules of the smart contract, we need to use some of the more advanced options of the SDK.
 
 ```ts title="Announcement.js"
-import { BITBOX } from 'bitbox-sdk';
-import { Contract, SignatureTemplate } from 'cashscript';
-import { alice, alicePk } from './somewhere';
+import {
+  CashCompiler,
+  ElectrumNetworkProvider,
+  Contract,
+  SignatureTemplate,
+} from 'cashscript';
+import { alicePriv, alicePub } from './somewhere';
 
 export async function run(){
-  // Compile the Announcement contract
-  const Announcement = Contract.compile('./announcement.cash', 'mainnet');
+    // Compile the Announcement contract to an artifact object
+    const artifact = CashCompiler.compileFile('./announcement.cash');
 
-  // Instantiate a new Announcement contract
-  const instance = Announcement.new();
+    // Initialise a network provider for network operations on MAINNET
+    const provider = new ElectrumNetworkProvider('mainnet');
+
+    // Instantiate a new contract using the compiled artifact and network provider
+    // AND providing the constructor parameters (none)
+    const contract = new Contract(artifact, [], provider);
 
   // Display contract address, balance, opcount, and bytesize
-  console.log('contract address:', instance.address);
-  console.log('contract balance:', await instance.getBalance());
-  console.log('contract opcount:', instance.opcount);
-  console.log('contract bytesize:', instance.bytesize);
+  console.log('contract address:', contract.address);
+  console.log('contract balance:', await contract.getBalance());
+  console.log('contract opcount:', contract.opcount);
+  console.log('contract bytesize:', contract.bytesize);
 
   // Create the announcement string. Any other announcement will fail because
   // it does not comply with the smart contract.
   const str = 'A contract may not injure a human being or, '
     + 'through inaction, allow a human being to come to harm.';
+
   // Send the announcement transaction
-  const txDetails = await instance.functions
-    .announce(alicePk, new SignatureTemplate(alice))
+  const txDetails = await contract.functions
+    .announce(alicePub, new SignatureTemplate(alicePriv))
     // Add the announcement string as an OP_RETURN output
     .withOpReturn(['0x6d02', str])
     // Hardcodes the transaction fee (like the contract expects)
@@ -151,9 +148,15 @@ export async function run(){
     // Only add a "change" output if the remainder is higher than 1000
     .withMinChange(1000)
     .send();
+
   console.log(txDetails);
 }
 ```
 
 [bitbox]: https://developer.bitcoin.com/bitbox/
+[electrum-cash]: https://www.npmjs.com/package/electrum-cash
+[fullstack]: https://fullstack.cash/
+[bchjs]: https://bchjs.fullstack.cash/
+[bitcore]: https://github.com/bitpay/bitcore/tree/master/packages/bitcore-lib-cash
+[libauth]: https://libauth.org/
 [github-examples]: https://github.com/Bitcoin-com/cashscript/tree/master/examples

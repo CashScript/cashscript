@@ -65,7 +65,11 @@ Covenants are a technique used to put constraints on spending the money inside a
 To explore the possible uses of covenants inside smart contracts, read the [CashScript Covenants Guide](/docs/guides/covenants).
 
 :::note
-Because of the way covenants work in the underlying Bitcoin Script, the sighash preimage needs to be verified by the contract. This is done automatically by including a `require(checkSig(sig, pubkey));` statement anywhere in the code. This statement is then used by the compiler to verify the preimage.
+Because of the way covenants work in the underlying Bitcoin Script, the sighash preimage needs to be verified by the contract. This is done automatically by including a signature check statement anywhere in the code outside of if-statements. This statement is then used by the compiler to verify the preimage.
+
+```solidity
+require(checkSig(sig, pubkey));
+```
 :::
 
 :::note

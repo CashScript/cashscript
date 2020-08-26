@@ -2,6 +2,25 @@
 title: Release Notes
 ---
 
+## v0.5.0
+#### CashScript SDK
+CashScript used to be very tightly coupled with BITBOX. This proved to be problematic after maintenance for BITBOX was stopped. The main objective of this update is to allow CashScript to be used with many different BCH libraries.
+
+- :sparkles: Add `withoutChange()` function to disable change outputs for a transaction.
+- :sparkles: `SignatureTemplate` can now be used with BITBOX keypairs, `bitcore-lib-cash` private keys, WIF strings, and raw private key buffers, rather than *only* BITBOX.
+- :boom: Remove `Sig` alias for `SignatureTemplate` that was deprecated in v0.4.1.
+- :boom: **BREAKING**: Refactor contract instantiation flow
+  - A contract is now instantiated by providing a compiled artifact, constructor arguments and an optional network provider.
+  - Anyone can implement the NetworkProvider interface to create a custom provider. The CashScript SDK offers three providers out of the box: one based on electrum-cash (default), one based on FullStack.cash' infrastructure, and one based on BITBOX. See the [NetworkProvider docs](/docs/sdk/instantiation#networkprovider) for details.
+  - See the [migration notes](/docs/releases/migration-notes#v04-to-v05) for details on migrating from the old contract instantiation flow.
+- :boom: **BREAKING**: Remove the artifacts `'networks'` field and `.deployed()` functionality, This proved to be confusing and is better suited to be handled outside of the CashScript SDK.
+- :boom: **BREAKING**: `.send()` now returns a libauth Transaction instead of a BITBOX Transaction object. Alternatively a `raw` flag can be passed into the function to return a raw hex string.
+- :hammer_and_wrench: Removed BITBOX as a dependency in favour of libauth for utility functions.
+
+## v0.4.4
+#### cashc compiler
+- :bug: Fix a bug where covenants would not always get verified correctly when the first `require(checkSig(...))` statement was inside a branch.
+
 ## v0.4.3
 #### cashc compiler
 - :racehorse: Add compiler optimisations.

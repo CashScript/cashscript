@@ -1,9 +1,10 @@
 ---
 title: Sending Transactions
 ---
-All contract function calls return an incomplete `Transaction` object. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
 
-While there are many options options, the main functions that are used are [`to()`][to()], [`withOpReturn()`][withOpReturn()] and [`send()`][send()], although [`withHardcodedFee()`][withHardcodedFee()] can also be commonly used with covenant contracts.
+When calling a contract function on a Contract object, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
+
+Most of the available transaction options are only useful in very specific use cases, but the functions [`to()`][to()], [`withOpReturn()`][withOpReturn()] and [`send()`][send()] are commonly used. [`withHardcodedFee()`][withHardcodedFee()] is also commonly used with covenant contracts.
 
 ## Transaction parameters
 
@@ -37,10 +38,10 @@ The `withOpReturn()` function allows you to add `OP_RETURN` outputs to the trans
 transaction.from(inputs: Utxo[]): this
 ```
 
-The `from()` function allows you to provide a hardcoded list of contract UTXOs to be used in the transaction. This overrides the regular UTXO selection performed by the CashScript SDK, so **no further selection will be performed** on the provided UTXOs. This function can only be called once per transaction.
+The `from()` function allows you to provide a hardcoded list of contract UTXOs to be used in the transaction. This overrides the regular UTXO selection performed by the CashScript SDK, so **no further selection will be performed** on the provided UTXOs. This function can be called any number of times, and the provided UTXOs will be added to the list of earlier added UTXOs.
 
-:::caution
-This function should generally not be used. Only in very specific cases would you want to override the regular UTXO selection.
+:::tip
+The built-in UTXO selection is generally sufficient. But there are specific use cases for which it makes sense to use a custom selection algorithm.
 :::
 
 #### Example
@@ -84,12 +85,28 @@ transaction.withMinChange(minChange: number): this
 The `withMinChange()` function allows you to set a threshold for including a change output. Any remaining amount under this threshold will be added to the transaction fee instead.
 
 :::tip
-This is generally not useful, except in specific use cases in covenant contracts.
+This is generally only useful in specific covenant use cases.
 :::
 
 #### Example
 ```ts
 .withMinChange(1000)
+```
+
+### withoutChange()
+```ts
+transaction.withoutChange(): this
+```
+
+The `withoutChange()` function allows you to disable the change output. The remaining amount will be added to the transaction fee instead. This is equivalent to `withMinChange(Number.MAX_VALUE)`.
+
+:::caution
+Be sure to check that the remaining amount (sum of inputs - sum of outputs) is not too high. The difference will be added to the transaction fee and cannot be reclaimed.
+:::
+
+#### Example
+```ts
+.withoutChange()
 ```
 
 ### withAge()
@@ -123,10 +140,10 @@ By default, the transaction's `time` variable is set to the most recent block nu
 ## Transaction building
 ### send()
 ```ts
-async transaction.send(): Promise<TxnDetailsResult>
+async transaction.send(raw?: boolean): Promise<libauth.Transaction | string>
 ```
 
-After completing a transaction, the `send()` function can be used to send the transaction to the Bitcoin Cash network. An uncompleted transaction cannot be sent.
+After completing a transaction, the `send()` function can be used to send the transaction to the BCH network. An uncompleted transaction cannot be sent. An optional `raw` flag can be included to return the sent transaction as a raw hex string, rather than a decoded transaction object.
 
 :::tip
 If the transaction fails, a meep command is automatically returned. This command can be used to debug the transaction using the [meep debugger][meep]

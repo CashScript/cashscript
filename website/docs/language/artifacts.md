@@ -16,13 +16,6 @@ interface Artifact {
   abi: AbiFunction[] // functions that can be called
   bytecode: string // Compiled Script without constructor parameters added (in ASM format)
   source: string // Source code of the CashScript contract
-  networks: {
-    // Dictionary per network (testnet / mainnet)
-    [network: string]: {
-      // Dictionary of contract addresses with the corresponding compiled script (in ASM format)
-      [address: string]: string
-    }
-  }
   compiler: {
     name: string // Compiler used to compile this contract
     version: string // Compiler version used to compile this contract

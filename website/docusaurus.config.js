@@ -16,7 +16,6 @@ module.exports = {
     },
     image: 'img/logo.svg',
     navbar: {
-      title: 'CashScript',
       logo: {
         alt: 'CashScript',
         src: 'img/logo.svg',

@@ -48,20 +48,27 @@ Read more about the CashScript language syntax in the [Language Description](/do
 While more detailed examples are available on GitHub, we show an integration of the `TransferWithTimeout` contract in a JavaScript project.
 
 ```javascript
-const { BITBOX } = require('bitbox-sdk');
-const { Contract, SignatureTemplate } = require('cashscript');
+const {
+  CashCompiler,
+  ElectrumNetworkProvider,
+  Contract,
+  SignatureTemplate,
+} = require('cashscript');
 const { alice, bob, alicePk, bobPk } = require('./keys');
 
 async function run() {
   // Compile the TransferWithTimeout contract
-  const TWT = Contract.compile('./transfer_with_timeout.cash', 'mainnet');
+  const artifact = CashCompiler.compileFile('./transfer_with_timeout.cash');
+
+  // Initialise a network provider for network operations
+  const provider = new ElectrumNetworkProvider('mainnet');
 
   // Instantiate a new TransferWithTimeout contract
-  const instance = TWT.new(alicePk, bobPk, 600000);
+  const contract = new Contract(artifact, [alicePk, bobPk, 600000], provider);
 
   // Call the transfer function with Bob's signature
   // i.e. Bob claims the money that Alice has sent him
-  const transferDetails = await instance.functions
+  const transferDetails = await contract.functions
     .transfer(new SignatureTemplate(bob))
     .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000)
     .send();
@@ -69,7 +76,7 @@ async function run() {
 
   // Call the timeout function with Alice's signature
   // i.e. Alice recovers the money that Bob has not claimed
-  const timeoutDetails = await instance.functions
+  const timeoutDetails = await contract.functions
     .timeout(new SignatureTemplate(alice))
     .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000)
     .send();
