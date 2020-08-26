@@ -17,6 +17,9 @@ CashScript used to be very tightly coupled with BITBOX. This proved to be proble
 - :boom: **BREAKING**: `.send()` now returns a libauth Transaction instead of a BITBOX Transaction object. Alternatively a `raw` flag can be passed into the function to return a raw hex string.
 - :hammer_and_wrench: Removed BITBOX as a dependency in favour of libauth for utility functions.
 
+---
+https://twitter.com/RoscoKalis/status/1298645719272824833
+
 ## v0.4.4
 #### cashc compiler
 - :bug: Fix a bug where covenants would not always get verified correctly when the first `require(checkSig(...))` statement was inside a branch.

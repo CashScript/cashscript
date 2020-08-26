@@ -24,7 +24,7 @@ const { CashCompiler, ElectrumNetworkProvider, Contract } = require('cashscript'
 
 const Mecenas = CashCompiler.compileFile(path.join(__dirname, 'mecenas.cash'));
 const provider = new ElectrumNetworkProvider('testnet');
-const contract = new Contract(artifact, [alicePkh, bobPkh, 10000], provider);
+const contract = new Contract(Mecenas, [alicePkh, bobPkh, 10000], provider);
 ```
 
 ---
