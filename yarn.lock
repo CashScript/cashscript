@@ -2559,9 +2559,9 @@ bch-wallet-bridge-provider-interface@^0.1.1:
     bitcoincashjs "^0.1.10"
 
 bchaddrjs-slp@^0.2.5:
-  version "0.2.8"
-  resolved "https://registry.yarnpkg.com/bchaddrjs-slp/-/bchaddrjs-slp-0.2.8.tgz#ddad236daa0f5a10480f57d7ad082b54576ef153"
-  integrity sha512-Is4NQG0xhrmW8ml40n8IjQzYlg1gMqst2RkF20SWjuhiSA8VDx1F53krthFqZFp5hpB+Ig/NPx6NX4VEH9W32Q==
+  version "0.2.9"
+  resolved "https://registry.yarnpkg.com/bchaddrjs-slp/-/bchaddrjs-slp-0.2.9.tgz#fe1a90430a57f7d79b464a6b431557cb7cf74c94"
+  integrity sha512-+jWviCay+q8Kg73EpsKwHGipX3VBpyil4uGdLKEgj88sNqAM1fL7WZO0g+FbASF/n+TCYCPkBbM5TznRD1yHuA==
   dependencies:
     bs58check "^2.1.2"
     cashaddrjs-slp "^0.2.12"
@@ -2738,7 +2738,6 @@ bitbox-sdk@^8.11.1, bitbox-sdk@^8.8.0:
 
 bitcoincash-ops@Bitcoin-com/bitcoincash-ops#2.0.0, "bitcoincash-ops@github:Bitcoin-com/bitcoincash-ops#2.0.0":
   version "2.0.0"
-  uid "6ab82cc7326c67236f3b2d9d0457258ac2ef48e3"
   resolved "https://codeload.github.com/Bitcoin-com/bitcoincash-ops/tar.gz/6ab82cc7326c67236f3b2d9d0457258ac2ef48e3"
 
 bitcoincash-ops@christroutner/bitcoincash-ops, "bitcoincash-ops@github:christroutner/bitcoincash-ops":
@@ -4080,10 +4079,10 @@ ecurve@^1.0.0, ecurve@^1.0.6:
     bigi "^1.1.0"
     safe-buffer "^5.0.1"
 
-electrum-cash@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/electrum-cash/-/electrum-cash-2.0.1.tgz#83208508a27106e51e0b8d2cdc421dd0237adb83"
-  integrity sha512-Ox8lff2fxTNQQK5KRHXKVhMH/j47jomjgosNVVzHXj5C7Sw7VJpVqJlWxOZuuIU2Eylq/+GIVEyomBUMF7daCg==
+electrum-cash@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/electrum-cash/-/electrum-cash-2.0.2.tgz#a53475ad72e7923e847489d0f7626441dd93820d"
+  integrity sha512-b/mLctjwnmfp4cuvJbl9wgCxf4GWWiKPYZXEtekoyGPviZwOe2bnMC7LGOxAMpOW0YyU4W12kK6rbqskQc6EkA==
   dependencies:
     "@types/ws" "^7.2.6"
     async-mutex "^0.2.4"
@@ -4184,9 +4183,9 @@ env-paths@^2.2.0:
   integrity sha512-6u0VYSCo/OW6IoD5WCLLy9JUGARbamfSavcNXry/eu8aHVFei6CD3Sw+VGX5alea1i9pgPHW0mbu6Xj0uBh7gA==
 
 envinfo@^7.3.1:
-  version "7.7.2"
-  resolved "https://registry.yarnpkg.com/envinfo/-/envinfo-7.7.2.tgz#098f97a0e902f8141f9150553c92dbb282c4cabe"
-  integrity sha512-k3Eh5bKuQnZjm49/L7H4cHzs2FlL5QjbTB3JrPxoTI8aJG7hVMe4uKyJxSYH4ahseby2waUwk5OaKX/nAsaYgg==
+  version "7.7.3"
+  resolved "https://registry.yarnpkg.com/envinfo/-/envinfo-7.7.3.tgz#4b2d8622e3e7366afb8091b23ed95569ea0208cc"
+  integrity sha512-46+j5QxbPWza0PB1i15nZx0xQ4I/EfQxg9J8Had3b408SV63nEtor2e+oiY63amTo9KTuh2a3XLObNwduxYwwA==
 
 err-code@^1.0.0:
   version "1.1.2"
