@@ -5,100 +5,85 @@
  */
 
 :root {
-  --ifm-color-primary: #3578e5;
-  --ifm-color-primary-dark: #1d68e1;
-  --ifm-color-primary-darker: #1b62d4;
-  --ifm-color-primary-darkest: #1751af;
-  --ifm-color-primary-light: #4e89e8;
-  --ifm-color-primary-lighter: #5a91ea;
-  --ifm-color-primary-lightest: #80aaef;
+  /* Theme colours (MIN-studio) */
+  --ifm-color-primary: #1D64F2;
+  --ifm-color-secondary: #04FF84;
+  --ifm-color-light: #f4f4f4;
 
+  /* Dark theme colour in three different intensities */
+  --ifm-color-dark: #012335;
+  --ifm-color-darker: #01121c;
+  --ifm-color-darkest: #000203;
+
+  /* Default highlight colours */
   --ifm-color-danger: #ff6188;
-  --ifm-color-danger-dark: #ff3e6d;
-  --ifm-color-danger-darker: #ff2c60;
-  --ifm-color-danger-darkest: #f6003d;
-  --ifm-color-danger-light: #ff84a3;
-  --ifm-color-danger-lighter: #ff96b0;
-  --ifm-color-danger-lightest: #ffcbd8;
-
   --ifm-color-success: #a9dc76;
-  --ifm-color-success-dark: #98d55b;
-  --ifm-color-success-darker: #90d24e;
-  --ifm-color-success-darkest: #76bc30;
-  --ifm-color-success-light: #bae391;
-  --ifm-color-success-lighter: #c2e69e;
-  --ifm-color-success-lightest: #dcf1c7;
-
   --ifm-color-info: #78dce8;
-  --ifm-color-info-dark: #5ad4e3;
-  --ifm-color-info-darker: #4bd0e0;
-  --ifm-color-info-darkest: #24c0d3;
-  --ifm-color-info-light: #96e4ed;
-  --ifm-color-info-lighter: #a5e8f0;
-  --ifm-color-info-lightest: #d2f3f7;
-
   --ifm-color-warning: #ffd866;
-  --ifm-color-warning-dark: #ffcf42;
-  --ifm-color-warning-darker: #ffca30;
-  --ifm-color-warning-darkest: #faba00;
-  --ifm-color-warning-light: #ffe18a;
-  --ifm-color-warning-lighter: #ffe69c;
-  --ifm-color-warning-lightest: #fff3d1;
 
-  --ifm-navbar-background-color: #f9f9f9;
-  --ifm-background-surface-color: #f9f9f9;
-  --ifm-background-surface-color-secondary: #f3f3f3;
+  /* Links are primary colour */
+  --ifm-link-color: var(--ifm-color-primary);
+  --ifm-menu-color-active: var(--ifm-color-primary);
+  --ifm-toc-link-hover-color: var(--ifm-color-primary);
+
+  /* Navbar is dark, with secondary colour selected link */
+  --ifm-navbar-background-color: var(--ifm-color-dark);
+  --ifm-navbar-link-color: var(--ifm-color-light);
+  --ifm-navbar-link-hover-color: var(--ifm-color-secondary);
+
+  /* Background is white, while any accents in the background are light */
   --ifm-background-color: #ffffff;
+  --ifm-code-background: var(--ifm-color-light);
+  --ifm-background-surface-color: var(--ifm-color-light);
+  --ifm-footer-background-color: var(--ifm-color-light);
 
+  /* Heading text is black */
   --ifm-alert-color:#000000;
   --ifm-heading-color: #000000;
-  --ifm-blockquote-color: #3c3c3c;
 
+  /* Slightly smaller code font */
   --ifm-code-font-size: 95%;
 }
 
-.footer.footer--dark {
-  --ifm-footer-background-color: #272822;
-}
-
 html[data-theme="dark"] {
-  --ifm-color-primary: #3bd1ff;
-  --ifm-color-primary-dark: #1ccaff;
-  --ifm-color-primary-darker: #0cc6ff;
-  --ifm-color-primary-darkest: #00a8dc;
-  --ifm-color-primary-light: #5ad8ff;
-  --ifm-color-primary-lighter: #6adcff;
-  --ifm-color-primary-lightest: #99e7ff;
+  /* Theme colours inverted in dark mode */
+  --ifm-color-primary: #04FF84;
+  --ifm-color-secondary: #1D64F2;
 
-  --ifm-background-color: #1f201c;
-  --ifm-background-surface-color: #272822;
-  --ifm-background-surface-color-secondary: #2a2b25;
-  --ifm-navbar-background-color: #272822;
+  /* Extend navbar in dark mode */
+  --ifm-background-surface-color: var(--ifm-color-dark);
 
-  --ifm-code-background: #2e2f28;
-  --ifm-code-color: #ffffff;
+  /* Background colour in the same family as navbar but darker,
+   * while accent colours are another step darker */
+  --ifm-background-color: var(--ifm-color-darker);
+  --ifm-footer-background-color: var(--ifm-color-darkest);
+  --ifm-table-stripe-background: var(--ifm-color-darkest);
 
-  background-color: #1f201c;
+  /* Code background is the navbar colour blended with gray, code text is light */
+  --ifm-code-background: #3b515d;
+  --ifm-code-color: var(--ifm-color-light);
 
+  /* Always use green for the navbar links */
+  --ifm-navbar-link-hover-color: var(--ifm-color-primary);
+
+  /* Alert headings are black, while regular headings are white */
   --ifm-alert-color:#000000;
   --ifm-heading-color: #ffffff;
-  --ifm-color-secondary: #f0f0f0;
-  --ifm-blockquote-color: #c0c0c0;
 }
 
-a > code {
-  color: var(--ifm-link-color);
+/* NOTE admonitions should be light grey (instead of secondary colour) */
+.alert--secondary {
+  --ifm-alert-background-color: #ebedf0;
+  --ifm-alert-border-color: #ebedf0;
 }
 
-a.contents__link > code {
-  color: var(--ifm-code-color);
+/* Light/dark toggle colour should change depending on theme */
+.react-toggle--focus .react-toggle-thumb {
+  box-shadow: 0px 0px 2px 3px var(--ifm-color-primary) !important;
 }
-
-.menu--responsive > button {
-  background-color: var(--ifm-color-primary);
-  border-color: var(--ifm-color-primary);
+.react-toggle:active:not(.react-toggle--disabled) .react-toggle-thumb {
+  box-shadow: 0px 0px 5px 5px var(--ifm-color-primary) !important;
 }
-
 
 /* THIS IS A HACK TO GET ALERT TITLES TO BE BLACK WHILE NORMAL HEADINGS ARE WHITE IN DARK MODE */
 h5 {
