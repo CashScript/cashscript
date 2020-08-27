@@ -82,6 +82,14 @@ module.exports = {
                 </a>
               `,
             },
+            {
+              html: `
+                <a href="https://bitcoin.com" target="_blank">
+                  <img src="/img/bitcoin-com.png" alt="Bitcoin.com"
+                       style="border-radius: 5px; max-height: 55px" />
+                </a>
+              `,
+            },
           ],
         },
       ],
