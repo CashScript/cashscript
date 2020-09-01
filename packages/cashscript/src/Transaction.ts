@@ -16,6 +16,7 @@ import {
   Output,
   Recipient,
   isSignableUtxo,
+  TransactionDetails,
 } from './interfaces';
 import {
   meep,
@@ -217,10 +218,10 @@ export class Transaction {
     return binToHex(encodeTransaction(transaction));
   }
 
-  async send(): Promise<LibauthTransaction>;
+  async send(): Promise<TransactionDetails>;
   async send(raw: true): Promise<string>;
 
-  async send(raw?: true): Promise<LibauthTransaction | string> {
+  async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = await this.build();
     try {
       const txid = await this.provider.sendRawTransaction(tx);
@@ -231,15 +232,19 @@ export class Transaction {
     }
   }
 
-  private async getTxDetails(txid: string): Promise<LibauthTransaction>
+  private async getTxDetails(txid: string): Promise<TransactionDetails>
   private async getTxDetails(txid: string, raw: true): Promise<string>;
 
-  private async getTxDetails(txid: string, raw?: true): Promise<LibauthTransaction | string> {
+  private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {
     while (true) {
       await delay(500);
       try {
-        const txHex = await this.provider.getRawTransaction(txid);
-        return raw ? txHex : decodeTransaction(hexToBin(txHex));
+        const hex = await this.provider.getRawTransaction(txid);
+
+        if (raw) return hex;
+
+        const libauthTransaction = decodeTransaction(hexToBin(hex)) as LibauthTransaction;
+        return { ...libauthTransaction, txid, hex };
       } catch (ignored) {
         // ignored
       }

@@ -14,6 +14,7 @@ import { FailedSigCheckError, Reason } from '../../src/Errors';
 
 describe('P2PKH', () => {
   let p2pkhInstance: Contract;
+
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2pkh.json');
@@ -29,16 +30,14 @@ describe('P2PKH', () => {
       const amount = 10000;
 
       // when
-      const expectPromise = expect(
-        p2pkhInstance.functions
-          .spend(alicePk, new SignatureTemplate(bob))
-          .to(to, amount)
-          .send(),
-      );
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePk, new SignatureTemplate(bob))
+        .to(to, amount)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedSigCheckError);
-      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
+      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
+      await expect(txPromise).rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
     it('should succeed when using correct function arguments', async () => {
@@ -55,10 +54,11 @@ describe('P2PKH', () => {
       // then
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+      expect(tx.txid).toBeDefined();
     });
 
     it('should fail when not enough satoshis are provided in utxos', async () => {
-      // when
+      // given
       const to = p2pkhInstance.address;
       const amount = 1000;
       const utxos = await p2pkhInstance.getUtxos();
@@ -66,14 +66,15 @@ describe('P2PKH', () => {
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
       const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, 0) + 1;
 
-      // send
-      await expect(
-        p2pkhInstance.functions
-          .spend(alicePk, new SignatureTemplate(alice))
-          .from(gathered)
-          .to(to, failureAmount)
-          .send(),
-      ).rejects.toThrow();
+      // when
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePk, new SignatureTemplate(alice))
+        .from(gathered)
+        .to(to, failureAmount)
+        .send();
+
+      // then
+      await expect(txPromise).rejects.toThrow();
     });
 
     it('should succeed when providing UTXOs', async () => {

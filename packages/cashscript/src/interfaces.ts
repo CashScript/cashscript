@@ -1,3 +1,4 @@
+import { Transaction } from '@bitauth/libauth';
 import SignatureTemplate from './SignatureTemplate';
 
 export interface Utxo {
@@ -45,3 +46,8 @@ export const Network = {
 };
 
 export type Network = (typeof Network)[keyof typeof Network];
+
+export interface TransactionDetails extends Transaction {
+  txid: string;
+  hex: string;
+}

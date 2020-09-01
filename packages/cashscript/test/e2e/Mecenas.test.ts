@@ -30,17 +30,15 @@ describe('Mecenas', () => {
       const amount = pledge + 10;
 
       // when
-      const expectPromise = expect(
-        mecenas.functions
-          .receive(alicePk, new SignatureTemplate(alice))
-          .to(to, amount)
-          .withHardcodedFee(1000)
-          .send(),
-      );
+      const txPromise = mecenas.functions
+        .receive(alicePk, new SignatureTemplate(alice))
+        .to(to, amount)
+        .withHardcodedFee(1000)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should fail when trying to send to wrong person', async () => {
@@ -49,17 +47,15 @@ describe('Mecenas', () => {
       const amount = pledge;
 
       // when
-      const expectPromise = expect(
-        mecenas.functions
-          .receive(alicePk, new SignatureTemplate(alice))
-          .to(to, amount)
-          .withHardcodedFee(1000)
-          .send(),
-      );
+      const txPromise = mecenas.functions
+        .receive(alicePk, new SignatureTemplate(alice))
+        .to(to, amount)
+        .withHardcodedFee(1000)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should fail when trying to send to multiple people', async () => {
@@ -68,18 +64,16 @@ describe('Mecenas', () => {
       const amount = pledge;
 
       // when
-      const expectPromise = expect(
-        mecenas.functions
-          .receive(alicePk, new SignatureTemplate(alice))
-          .to(to, amount)
-          .to(to, amount)
-          .withHardcodedFee(1000)
-          .send(),
-      );
+      const txPromise = mecenas.functions
+        .receive(alicePk, new SignatureTemplate(alice))
+        .to(to, amount)
+        .to(to, amount)
+        .withHardcodedFee(1000)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should succeed when sending pledge to receiver', async () => {

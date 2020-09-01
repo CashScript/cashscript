@@ -12,6 +12,7 @@ const BCHJS = require('@psf/bch-js');
 
 describe('P2PKH (using FullStackNetworkProvider)', () => {
   let p2pkhInstance: Contract;
+
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2pkh.json');
@@ -27,16 +28,14 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
       const amount = 10000;
 
       // when
-      const expectPromise = expect(
-        p2pkhInstance.functions
-          .spend(alicePk, new SignatureTemplate(bob))
-          .to(to, amount)
-          .send(),
-      );
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePk, new SignatureTemplate(bob))
+        .to(to, amount)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedSigCheckError);
-      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
+      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
+      await expect(txPromise).rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
     it('should succeed when using correct function arguments', async () => {
@@ -53,6 +52,7 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
       // then
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+      expect(tx.txid).toBeDefined();
     });
   });
 });

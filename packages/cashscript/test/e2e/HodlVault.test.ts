@@ -29,16 +29,14 @@ describe('HodlVault', () => {
       const amount = 10000;
 
       // when
-      const expectPromise = expect(
-        hodlVault.functions
-          .spend(new SignatureTemplate(alice), wrongSig, message)
-          .to(to, amount)
-          .send(),
-      );
+      const txPromise = hodlVault.functions
+        .spend(new SignatureTemplate(alice), wrongSig, message)
+        .to(to, amount)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.VERIFY);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.VERIFY);
     });
 
     it('should fail when price is too low', async () => {
@@ -49,16 +47,14 @@ describe('HodlVault', () => {
       const amount = 10000;
 
       // when
-      const expectPromise = expect(
-        hodlVault.functions
-          .spend(new SignatureTemplate(alice), oracleSig, message)
-          .to(to, amount)
-          .send(),
-      );
+      const txPromise = hodlVault.functions
+        .spend(new SignatureTemplate(alice), oracleSig, message)
+        .to(to, amount)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.VERIFY);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.VERIFY);
     });
 
     it('should succeed when price is high enough', async () => {

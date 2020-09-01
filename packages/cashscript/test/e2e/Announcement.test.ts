@@ -26,18 +26,16 @@ describe('Announcement', () => {
         .slice(0, 1);
 
       // when
-      const expectPromise = expect(
-        announcement.functions
-          .announce(alicePk, new SignatureTemplate(alice))
-          .from(largestUtxo)
-          .to(to, amount)
-          .withHardcodedFee(2000)
-          .send(),
-      );
+      const txPromise = announcement.functions
+        .announce(alicePk, new SignatureTemplate(alice))
+        .from(largestUtxo)
+        .to(to, amount)
+        .withHardcodedFee(2000)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should fail when trying to announce incorrect announcement', async () => {
@@ -48,19 +46,17 @@ describe('Announcement', () => {
         .slice(0, 1);
 
       // when
-      const expectPromise = expect(
-        announcement.functions
-          .announce(alicePk, new SignatureTemplate(alice))
-          .from(largestUtxo)
-          .withOpReturn(['0x6d02', str])
-          .withHardcodedFee(2000)
-          .withMinChange(1000)
-          .send(),
-      );
+      const txPromise = announcement.functions
+        .announce(alicePk, new SignatureTemplate(alice))
+        .from(largestUtxo)
+        .withOpReturn(['0x6d02', str])
+        .withHardcodedFee(2000)
+        .withMinChange(1000)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedRequireError);
-      await expectPromise.rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
     });
 
     it('should succeed when announcing correct announcement', async () => {

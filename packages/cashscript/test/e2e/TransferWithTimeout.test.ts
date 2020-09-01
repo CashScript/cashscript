@@ -11,6 +11,7 @@ import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Err
 describe('TransferWithTimeout', () => {
   let twtInstancePast: Contract;
   let twtInstanceFuture: Contract;
+
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/transfer_with_timeout.json');
@@ -28,28 +29,21 @@ describe('TransferWithTimeout', () => {
       const amount = 10000;
 
       // when
-      const expectPromise = expect(
-        twtInstancePast.functions
-          .transfer(new SignatureTemplate(alice))
-          .to(to, amount)
-          .send(),
-      );
+      const txPromise = twtInstancePast.functions
+        .transfer(new SignatureTemplate(alice))
+        .to(to, amount)
+        .send();
+
+      const txPromise2 = twtInstancePast.functions
+        .timeout(new SignatureTemplate(bob))
+        .to(to, amount)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedSigCheckError);
-      await expectPromise.rejects.toThrow(Reason.SIG_NULLFAIL);
-
-      // when
-      const expectPromise2 = expect(
-        twtInstancePast.functions
-          .timeout(new SignatureTemplate(bob))
-          .to(to, amount)
-          .send(),
-      );
-
-      // then
-      await expectPromise2.rejects.toThrow(FailedSigCheckError);
-      await expectPromise2.rejects.toThrow(Reason.SIG_NULLFAIL);
+      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
+      await expect(txPromise).rejects.toThrow(Reason.SIG_NULLFAIL);
+      await expect(txPromise2).rejects.toThrow(FailedSigCheckError);
+      await expect(txPromise2).rejects.toThrow(Reason.SIG_NULLFAIL);
     });
 
     it('should fail when called before timeout', async () => {
@@ -58,16 +52,14 @@ describe('TransferWithTimeout', () => {
       const amount = 10000;
 
       // when
-      const expectPromise = await expect(
-        twtInstanceFuture.functions
-          .timeout(new SignatureTemplate(alice))
-          .to(to, amount)
-          .send(),
-      );
+      const txPromise = twtInstanceFuture.functions
+        .timeout(new SignatureTemplate(alice))
+        .to(to, amount)
+        .send();
 
       // then
-      await expectPromise.rejects.toThrow(FailedTimeCheckError);
-      await expectPromise.rejects.toThrow(Reason.UNSATISFIED_LOCKTIME);
+      await expect(txPromise).rejects.toThrow(FailedTimeCheckError);
+      await expect(txPromise).rejects.toThrow(Reason.UNSATISFIED_LOCKTIME);
     });
 
     it('should succeed when using correct function arguments', async () => {
