@@ -1,9 +1,9 @@
 import { Contract, SignatureTemplate, FullStackNetworkProvider } from '../../src';
 import {
-  alicePkh,
-  alicePk,
   alice,
   bob,
+  bobPkh,
+  bobPk,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
@@ -17,7 +17,7 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2pkh.json');
     const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://free-main.fullstack.cash/v3/' }));
-    p2pkhInstance = new Contract(artifact, [alicePkh], provider);
+    p2pkhInstance = new Contract(artifact, [bobPkh], provider);
     console.log(p2pkhInstance.address);
   });
 
@@ -29,7 +29,7 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
 
       // when
       const txPromise = p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(bob))
+        .spend(bobPk, new SignatureTemplate(alice))
         .to(to, amount)
         .send();
 
@@ -45,7 +45,7 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(bobPk, new SignatureTemplate(bob))
         .to(to, amount)
         .send();
 

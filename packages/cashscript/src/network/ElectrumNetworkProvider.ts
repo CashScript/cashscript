@@ -11,6 +11,7 @@ import { addressToLockScript, sha256 } from '../util';
 
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumCluster;
+  private concurrentRequests: number = 0;
 
   constructor(
     public network: Network = Network.MAINNET,
@@ -82,7 +83,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     }
   }
 
-  disconnectCluster(): boolean[] {
+  async disconnectCluster(): Promise<boolean[]> {
     return this.electrum.shutdown();
   }
 
@@ -90,9 +91,12 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     name: string,
     ...parameters: (string | number | boolean)[]
   ): Promise<RequestResponse> {
-    if (!this.manualConnectionManagement) {
+    // Only connect the cluster when no concurrent requests are running
+    if (this.shouldConnect()) {
       this.connectCluster();
     }
+
+    this.concurrentRequests += 1;
 
     await this.electrum.ready();
 
@@ -101,14 +105,28 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       result = await this.electrum.request(name, ...parameters);
     } finally {
       // Always disconnect the cluster, also if the request fails
-      if (!this.manualConnectionManagement) {
-        this.disconnectCluster();
+      if (this.shouldDisconnect()) {
+        await this.disconnectCluster();
       }
     }
+
+    this.concurrentRequests -= 1;
 
     if (result instanceof Error) throw result;
 
     return result;
+  }
+
+  private shouldConnect(): boolean {
+    if (this.manualConnectionManagement) return false;
+    if (this.concurrentRequests !== 0) return false;
+    return true;
+  }
+
+  private shouldDisconnect(): boolean {
+    if (this.manualConnectionManagement) return false;
+    if (this.concurrentRequests !== 1) return false;
+    return true;
   }
 }
 

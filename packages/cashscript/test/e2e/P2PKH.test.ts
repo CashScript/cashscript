@@ -102,7 +102,7 @@ describe('P2PKH', () => {
       });
     });
 
-    it('can send to multiple recipients', async () => {
+    it('can call to() multiple times', async () => {
       // given
       const outputs = [
         { to: p2pkhInstance.address, amount: 10000 },
@@ -110,22 +110,33 @@ describe('P2PKH', () => {
       ];
 
       // when
-      const tx1 = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
-        .to(outputs)
-        .send();
-
-      const tx2 = await p2pkhInstance.functions
+      const tx = await p2pkhInstance.functions
         .spend(alicePk, new SignatureTemplate(alice))
         .to(outputs[0].to, outputs[0].amount)
         .to(outputs[1].to, outputs[1].amount)
         .send();
 
       // then
-      const txOutputs1 = getTxOutputs(tx1);
-      const txOutputs2 = getTxOutputs(tx2);
-      expect(txOutputs1).toEqual(expect.arrayContaining(outputs));
-      expect(txOutputs2).toEqual(expect.arrayContaining(outputs));
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining(outputs));
+    });
+
+    it('can send to list of recipients', async () => {
+      // given
+      const outputs = [
+        { to: p2pkhInstance.address, amount: 10000 },
+        { to: p2pkhInstance.address, amount: 20000 },
+      ];
+
+      // when
+      const tx = await p2pkhInstance.functions
+        .spend(alicePk, new SignatureTemplate(alice))
+        .to(outputs)
+        .send();
+
+      // then
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining(outputs));
     });
 
     it('can include OP_RETURN data as an output', async () => {
