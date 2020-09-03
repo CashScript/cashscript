@@ -1,3 +1,4 @@
 ignore:
   - packages/cashc/src/grammar/
   - '**/test/'
+  - examples/
