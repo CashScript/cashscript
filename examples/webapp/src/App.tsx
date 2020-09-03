@@ -73,12 +73,10 @@ class App extends React.Component<{}, AppState> {
 
     // Send a transaction using the stored keypair (alice), passing true as the send()
     // function's "raw" parameter to receive the raw hex.
-    const txHex = await contract.functions
+    const { txid } = await contract.functions
       .spend(keypair.getPublicKeyBuffer(), new SignatureTemplate(keypair))
       .to(receiveAddress, 1000)
-      .send(true)
-
-    const txid = new Crypto().hash256(Buffer.from(txHex, 'hex')).reverse().toString('hex')
+      .send()
 
     const transactionLink = `https://explorer.bitcoin.com/tbch/tx/${txid}`
 

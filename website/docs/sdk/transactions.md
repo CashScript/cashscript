@@ -6,7 +6,7 @@ When calling a contract function on a Contract object, an incomplete Transaction
 
 Most of the available transaction options are only useful in very specific use cases, but the functions [`to()`][to()], [`withOpReturn()`][withOpReturn()] and [`send()`][send()] are commonly used. [`withHardcodedFee()`][withHardcodedFee()] is also commonly used with covenant contracts.
 
-## Transaction parameters
+## Transaction options
 
 ### to()
 ```ts
@@ -140,10 +140,21 @@ By default, the transaction's `time` variable is set to the most recent block nu
 ## Transaction building
 ### send()
 ```ts
-async transaction.send(raw?: boolean): Promise<libauth.Transaction | string>
+async transaction.send(): Promise<TransactionDetails>
 ```
 
-After completing a transaction, the `send()` function can be used to send the transaction to the BCH network. An uncompleted transaction cannot be sent. An optional `raw` flag can be included to return the sent transaction as a raw hex string, rather than a decoded transaction object.
+After completing a transaction, the `send()` function can be used to send the transaction to the BCH network. An uncompleted transaction cannot be sent.
+
+```ts
+interface TransactionDetails {
+  inputs: Uint8Array[];
+  locktime: number;
+  outputs: Uint8Array[];
+  version: number;
+  txid: string;
+  hex: string;
+}
+```
 
 :::tip
 If the transaction fails, a meep command is automatically returned. This command can be used to debug the transaction using the [meep debugger][meep]

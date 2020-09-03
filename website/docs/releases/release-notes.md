@@ -2,6 +2,16 @@
 title: Release Notes
 ---
 
+## v0.5.1
+#### CashScript SDK
+- :sparkles: The `.send()` function now returns a `TransactionDetails` object. This extends the libauth `Transaction` with added `txid` and `hex` fields.
+  - Because it extends the previous return type, this is backwards compatible.
+  - Since this now returns the transaction hex as a field, using `.send(true)` to return the transaction hex is deprecated and will be removed in a future release.
+- :bug: Improve reliability of the `ElectrumNetworkProvider` when sending multiple concurrent requests.
+
+---
+https://twitter.com/RoscoKalis/status/1301521593399685121
+
 ## v0.5.0
 #### CashScript SDK
 CashScript used to be very tightly coupled with BITBOX. This proved to be problematic after maintenance for BITBOX was stopped. The main objective of this update is to allow CashScript to be used with many different BCH libraries.
