@@ -22,13 +22,17 @@ export class toOps {
   static fromCast(from: Type, to: Type): Script {
     if (from === PrimitiveType.INT && to instanceof BytesType && to.bound !== undefined) {
       return [Data.encodeInt(to.bound), Op.OP_NUM2BIN];
-    } else if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
-      return [Op.OP_BIN2NUM];
-    } else if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
-      return [Op.OP_SIZE, Data.encodeInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP];
-    } else {
-      return [];
     }
+
+    if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
+      return [Op.OP_BIN2NUM];
+    }
+
+    if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
+      return [Op.OP_SIZE, Data.encodeInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP];
+    }
+
+    return [];
   }
 
   static fromFunction(fn: GlobalFunction): Script {

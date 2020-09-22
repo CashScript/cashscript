@@ -105,6 +105,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       result = await this.electrum.request(name, ...parameters);
     } finally {
       // Always disconnect the cluster, also if the request fails
+      // as long as no other concurrent requests are running
       if (this.shouldDisconnect()) {
         await this.disconnectCluster();
       }

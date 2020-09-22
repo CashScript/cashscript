@@ -1,5 +1,6 @@
 import { Script, Crypto } from 'bitbox-sdk';
 import { ECPair } from 'bitcoincashjs-lib';
+import { SignatureAlgorithm } from 'cashscript';
 
 export class PriceOracle {
   constructor(public keypair: ECPair) {}
@@ -14,6 +15,6 @@ export class PriceOracle {
   }
 
   signMessage(message: Buffer): Buffer {
-    return this.keypair.sign(new Crypto().sha256(message)).toDER();
+    return this.keypair.sign(new Crypto().sha256(message), SignatureAlgorithm.SCHNORR).toRSBuffer();
   }
 }

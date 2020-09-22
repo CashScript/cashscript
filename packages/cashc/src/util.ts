@@ -77,11 +77,11 @@ export const Data = {
   scriptToBytecode(script: Script): Uint8Array {
     // Convert the script elements to AuthenticationInstructions
     const instructions = script.map((opOrData) => {
-      if (opOrData instanceof Uint8Array) {
-        return parseBytecode(encodeDataPush(opOrData))[0];
-      } else {
+      if (typeof opOrData === 'number') {
         return { opcode: opOrData };
       }
+
+      return parseBytecode(encodeDataPush(opOrData))[0];
     });
 
     // Convert the AuthenticationInstructions to bytecode
@@ -93,13 +93,9 @@ export const Data = {
     const instructions = parseBytecode(bytecode) as AuthenticationInstructions;
 
     // Convert the AuthenticationInstructions to script elements
-    const script = instructions.map((instruction) => {
-      if ('data' in instruction) {
-        return instruction.data;
-      } else {
-        return instruction.opcode;
-      }
-    });
+    const script = instructions.map(instruction => (
+      'data' in instruction ? instruction.data : instruction.opcode
+    ));
 
     return script;
   },
@@ -112,9 +108,9 @@ export const Data = {
     const instructions = asm.split(' ').map((token) => {
       if (token.startsWith('OP_')) {
         return { opcode: Op[token as keyof typeof Op] };
-      } else {
-        return parseBytecode(encodeDataPush(hexToBin(token)))[0];
       }
+
+      return parseBytecode(encodeDataPush(hexToBin(token)))[0];
     });
 
     // Convert the AuthenticationInstructions to bytecode

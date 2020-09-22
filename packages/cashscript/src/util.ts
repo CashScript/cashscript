@@ -57,10 +57,10 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   size += outputs.reduce((acc, output) => {
     if (typeof output.to === 'string') {
       return acc + P2PKH_OUTPUT_SIZE;
-    } else {
-      // Size of an OP_RETURN output = byteLength + 8 (amount) + 2 (scriptSize)
-      return acc + output.to.byteLength + 8 + 2;
     }
+
+    // Size of an OP_RETURN output = byteLength + 8 (amount) + 2 (scriptSize)
+    return acc + output.to.byteLength + 8 + 2;
   }, 0);
   // Add tx-out count (accounting for a potential change output)
   size += Data.encodeInt(outputs.length + 1).byteLength;
@@ -160,15 +160,20 @@ export function buildError(reason: string, meepStr: string): FailedTransactionEr
     Reason.SIG_COUNT, Reason.PUBKEY_COUNT, Reason.SIG_HASHTYPE, Reason.SIG_DER,
     Reason.SIG_HIGH_S, Reason.SIG_NULLFAIL, Reason.SIG_BADLENGTH, Reason.SIG_NONSCHNORR,
   ];
+
   if (toRegExp(require).test(reason)) {
     return new FailedRequireError(reason, meepStr);
-  } else if (toRegExp(timeCheck).test(reason)) {
-    return new FailedTimeCheckError(reason, meepStr);
-  } else if (toRegExp(sigCheck).test(reason)) {
-    return new FailedSigCheckError(reason, meepStr);
-  } else {
-    return new FailedTransactionError(reason, meepStr);
   }
+
+  if (toRegExp(timeCheck).test(reason)) {
+    return new FailedTimeCheckError(reason, meepStr);
+  }
+
+  if (toRegExp(sigCheck).test(reason)) {
+    return new FailedSigCheckError(reason, meepStr);
+  }
+
+  return new FailedTransactionError(reason, meepStr);
 }
 
 function toRegExp(reasons: string[]): RegExp {
@@ -236,12 +241,12 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' {
 function encodeNullDataScript(chunks: (number | Uint8Array)[]): Uint8Array {
   return flattenBinArray(
     chunks.map((chunk) => {
-      if (chunk instanceof Uint8Array) {
-        const pushdataOpcode = getPushDataOpcode(chunk);
-        return new Uint8Array([...pushdataOpcode, ...chunk]);
-      } else {
+      if (typeof chunk === 'number') {
         return new Uint8Array([chunk]);
       }
+
+      const pushdataOpcode = getPushDataOpcode(chunk);
+      return new Uint8Array([...pushdataOpcode, ...chunk]);
     }),
   );
 }

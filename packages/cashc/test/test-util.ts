@@ -17,13 +17,17 @@ import {
 export function literalToNode(literal: boolean | number | string): LiteralNode {
   if (typeof literal === 'boolean') {
     return new BoolLiteralNode(literal);
-  } else if (typeof literal === 'number') {
-    return new IntLiteralNode(literal);
-  } else if (literal.startsWith('0x')) {
-    return new HexLiteralNode(hexToBin(literal.slice(2)));
-  } else {
-    return new StringLiteralNode(literal, '"');
   }
+
+  if (typeof literal === 'number') {
+    return new IntLiteralNode(literal);
+  }
+
+  if (literal.startsWith('0x')) {
+    return new HexLiteralNode(hexToBin(literal.slice(2)));
+  }
+
+  return new StringLiteralNode(literal, '"');
 }
 
 export function getSubdirectories(directory: string): string[] {

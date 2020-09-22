@@ -16,7 +16,6 @@ module.exports = {
     'import/no-cycle': 0, // Needed for AST -> AstVisitor -> AST
     'class-methods-use-this': 0, // I don't like this rule
     'no-underscore-dangle': 0, // antlr4ts automatically uses this
-    'no-else-return': 0, // I think it looks clearer with else-ifs, rather than many ifs
     'no-param-reassign': 0, // Makes visitors returning the node object easier
     'lines-between-class-members': [ // Makes defining interfaces / abstract classes easier
       'error',

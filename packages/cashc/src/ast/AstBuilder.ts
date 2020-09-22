@@ -285,15 +285,21 @@ export default class AstBuilder
   createLiteral(ctx: LiteralContext): LiteralNode {
     if (ctx.BooleanLiteral()) {
       return this.createBooleanLiteral(ctx);
-    } else if (ctx.numberLiteral()) {
-      return this.createIntLiteral(ctx);
-    } else if (ctx.StringLiteral()) {
-      return this.createStringLiteral(ctx);
-    } else if (ctx.HexLiteral()) {
-      return this.createHexLiteral(ctx);
-    } else {
-      throw new Error(); // Should not happen
     }
+
+    if (ctx.numberLiteral()) {
+      return this.createIntLiteral(ctx);
+    }
+
+    if (ctx.StringLiteral()) {
+      return this.createStringLiteral(ctx);
+    }
+
+    if (ctx.HexLiteral()) {
+      return this.createHexLiteral(ctx);
+    }
+
+    throw new Error(); // Should not happen
   }
 
   createBooleanLiteral(ctx: LiteralContext): BoolLiteralNode {
