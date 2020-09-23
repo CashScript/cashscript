@@ -6,7 +6,7 @@ export class Location {
 
   static fromCtx(ctx: ParserRuleContext): Location | undefined {
     const stop = ctx.stop?.text ? ctx.stop : ctx.start;
-    const textLength = (stop.text || '').length;
+    const textLength = (stop.text ?? '').length;
 
     const start = new Point(ctx.start.line, ctx.start.charPositionInLine);
     const end = new Point(stop.line, stop.charPositionInLine + textLength);
@@ -15,7 +15,7 @@ export class Location {
   }
 
   static fromToken(token: Token): Location | undefined {
-    const textLength = (token.text || '').length;
+    const textLength = (token.text ?? '').length;
 
     const start = new Point(token.line, token.charPositionInLine);
     const end = new Point(token.line, token.charPositionInLine + textLength);

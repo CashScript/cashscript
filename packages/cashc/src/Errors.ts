@@ -86,7 +86,7 @@ export class TypeError extends CashScriptError {
     public expected?: Type | Type[],
     message?: string,
   ) {
-    super(node, message || `Found type '${actual}' where type '${expected}' was expected`);
+    super(node, message ?? `Found type '${actual}' where type '${expected}' was expected`);
   }
 }
 

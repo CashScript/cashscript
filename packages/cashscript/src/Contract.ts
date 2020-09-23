@@ -29,9 +29,8 @@ export class Contract {
     constructorArgs: Argument[],
     private provider: NetworkProvider = new ElectrumNetworkProvider(),
   ) {
-    if (!artifact.abi || !artifact.bytecode
-     || !artifact.constructorInputs || !artifact.contractName
-    ) {
+    const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName'];
+    if (!expectedProperties.every((property) => property in artifact)) {
       throw new Error('Invalid or incomplete artifact provided');
     }
 

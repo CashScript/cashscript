@@ -134,7 +134,7 @@ export class Transaction {
   }
 
   async build(): Promise<string> {
-    this.locktime = this.locktime || await this.provider.getBlockHeight();
+    this.locktime = this.locktime ?? await this.provider.getBlockHeight();
     await this.setInputsAndOutputs();
 
     const secp256k1 = await instantiateSecp256k1();
@@ -227,7 +227,7 @@ export class Transaction {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? this.getTxDetails(txid, raw) : this.getTxDetails(txid);
     } catch (e) {
-      const reason = e.error || e.message;
+      const reason = e.error ?? e.message;
       throw buildError(reason, meep(tx, this.inputs, this.redeemScript));
     }
   }

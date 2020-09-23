@@ -188,14 +188,14 @@ async function getAddressUtxos(address: string): Promise<Utxo[]> {
   return new ElectrumNetworkProvider().getUtxos(address);
 }
 
-function gatherUtxos(utxos: Utxo[], options?: {
-  amount?: number,
-  fees?: number
-}): { utxos: Utxo[], total: number } {
+function gatherUtxos(
+  utxos: Utxo[],
+  options?: { amount?: number, fees?: number },
+): { utxos: Utxo[], total: number } {
   const targetUtxos: Utxo[] = [];
   let total = 0;
   // 1000 for fees
-  const { amount = 0, fees = 1000 } = options || {};
+  const { amount = 0, fees = 1000 } = options ?? {};
   for (const utxo of utxos) {
     if (total - fees > amount) break;
     total += utxo.satoshis;

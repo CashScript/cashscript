@@ -7,7 +7,7 @@ export class ArrayType {
   ) {}
 
   toString(): string {
-    return `${this.elementType}[${this.bound || ''}]`;
+    return `${this.elementType}[${this.bound ?? ''}]`;
   }
 }
 
@@ -22,7 +22,7 @@ export class BytesType {
   }
 
   toString(): string {
-    return `bytes${this.bound || ''}`;
+    return `bytes${this.bound ?? ''}`;
   }
 }
 
