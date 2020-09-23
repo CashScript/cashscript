@@ -7,15 +7,15 @@ export default class TargetCodeOptimisation {
     const optimisations = OptimisationsEquivFile
       // Split by line and filter all line comments (#)
       .split('\n')
-      .map(equiv => equiv.trim())
-      .filter(equiv => !equiv.startsWith('#'))
+      .map((equiv) => equiv.trim())
+      .filter((equiv) => !equiv.startsWith('#'))
       // Join back the lines, and split on semicolon
       .join('')
       .split(';')
       // Parse all optimisations in .equiv file
-      .map(equiv => equiv.trim())
-      .map(equiv => equiv.split('<=>').map(part => part.trim()))
-      .filter(equiv => equiv.length === 2);
+      .map((equiv) => equiv.trim())
+      .map((equiv) => equiv.split('<=>').map((part) => part.trim()))
+      .filter((equiv) => equiv.length === 2);
 
     for (let i = 0; i < runs; i += 1) {
       const oldScript = script;

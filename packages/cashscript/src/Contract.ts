@@ -45,7 +45,7 @@ export class Contract {
       .reverse();
 
     // Check there's no signature templates in the constructor
-    if (encodedArgs.some(arg => arg instanceof SignatureTemplate)) {
+    if (encodedArgs.some((arg) => arg instanceof SignatureTemplate)) {
       throw new Error('Cannot use signatures in constructor');
     }
 

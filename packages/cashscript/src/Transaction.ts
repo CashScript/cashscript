@@ -78,7 +78,7 @@ export class Transaction {
       inputOrInputs = [inputOrInputs];
     }
 
-    inputOrInputs = inputOrInputs.map(input => ({ ...input, template }));
+    inputOrInputs = inputOrInputs.map((input) => ({ ...input, template }));
 
     this.inputs = this.inputs.concat(inputOrInputs);
 
@@ -140,7 +140,7 @@ export class Transaction {
     const secp256k1 = await instantiateSecp256k1();
     const bytecode = Data.scriptToBytecode(this.redeemScript);
 
-    const inputs = this.inputs.map(utxo => ({
+    const inputs = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
       outpointTransactionHash: hexToBin(utxo.txid),
       sequenceNumber: this.sequence,
@@ -236,7 +236,7 @@ export class Transaction {
   private async getTxDetails(txid: string, raw: true): Promise<string>;
 
   private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {
-    while (true) {
+    for (let retries = 0; retries < 1200; retries += 1) {
       await delay(500);
       try {
         const hex = await this.provider.getRawTransaction(txid);
@@ -249,6 +249,9 @@ export class Transaction {
         // ignored
       }
     }
+
+    // Should not happen
+    throw new Error('Could not retrieve transaction details for over 10 minutes');
   }
 
   async meep(): Promise<string> {
@@ -262,7 +265,7 @@ export class Transaction {
     }
 
     // Replace all SignatureTemplate with 65-length placeholder Uint8Arrays
-    const placeholderArgs = this.args.map(arg => (
+    const placeholderArgs = this.args.map((arg) => (
       arg instanceof SignatureTemplate ? placeholder(65) : arg
     ));
 

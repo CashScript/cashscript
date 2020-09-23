@@ -51,7 +51,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
 
     const result = await this.performRequest('blockchain.scripthash.listunspent', scripthash) as ElectrumUtxo[];
 
-    const utxos = result.map(utxo => ({
+    const utxos = result.map((utxo) => ({
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
       satoshis: utxo.value,

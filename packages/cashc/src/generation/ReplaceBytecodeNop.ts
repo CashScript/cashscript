@@ -6,7 +6,7 @@ export default class ReplaceBytecodeNop {
   // to signify that the Bitcoin VarInt still needs to be cut off to get to bytecode.
   // Gets the bytecode size and adds either 1 or 3 to the cut
   static replace(script: Script): Script {
-    const index = script.findIndex(op => op === Op.OP_NOP);
+    const index = script.findIndex((op) => op === Op.OP_NOP);
     if (index < 0) return script;
 
     // Retrieve size of current cut

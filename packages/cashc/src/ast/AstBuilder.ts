@@ -117,20 +117,23 @@ export default class AstBuilder
 
   visitContractDefinition(ctx: ContractDefinitionContext): ContractNode {
     const name = ctx.Identifier().text;
-    const parameters = ctx.parameterList().parameter().map(p => this.visit(p) as ParameterNode);
-    const functions = ctx.functionDefinition().map(f => this.visit(f) as FunctionDefinitionNode);
+    const parameters = ctx.parameterList().parameter().map((p) => this.visit(p) as ParameterNode);
+    const functions = ctx.functionDefinition().map((f) => this.visit(f) as FunctionDefinitionNode);
     const contract = new ContractNode(name, parameters, functions);
     contract.location = Location.fromCtx(ctx);
     return contract;
   }
 
   visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
-    const name = ctx.Identifier().text;
-    const parameters = ctx.parameterList().parameter().map(p => this.visit(p) as ParameterNode);
     this.preimageFields = [];
-    const statements = ctx.statement().map(s => this.visit(s) as StatementNode);
+
+    const name = ctx.Identifier().text;
+    const parameters = ctx.parameterList().parameter().map((p) => this.visit(p) as ParameterNode);
+    const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
+
+    // Filter duplicate preimage fields
     const preimageFields = [...this.preimageFields].filter((v, i, a) => a.indexOf(v) === i);
 
     const functionDefinition = new FunctionDefinitionNode(name, parameters, block, preimageFields);
@@ -190,7 +193,7 @@ export default class AstBuilder
   }
 
   visitBlock(ctx: BlockContext): BlockNode {
-    const statements = ctx.statement().map(s => this.visit(s) as StatementNode);
+    const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
     return block;
@@ -216,7 +219,7 @@ export default class AstBuilder
   visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
     const identifier = new IdentifierNode(ctx.Identifier().text as string);
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
-    const parameters = ctx.expressionList().expression().map(e => this.visit(e));
+    const parameters = ctx.expressionList().expression().map((e) => this.visit(e));
     const functionCall = new FunctionCallNode(identifier, parameters);
     functionCall.location = Location.fromCtx(ctx);
     return functionCall;
@@ -225,7 +228,7 @@ export default class AstBuilder
   visitInstantiation(ctx: InstantiationContext): InstantiationNode {
     const identifier = new IdentifierNode(ctx.Identifier().text as string);
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
-    const parameters = ctx.expressionList().expression().map(e => this.visit(e));
+    const parameters = ctx.expressionList().expression().map((e) => this.visit(e));
     const instantiation = new InstantiationNode(identifier, parameters);
     instantiation.location = Location.fromCtx(ctx);
     return instantiation;
@@ -257,7 +260,7 @@ export default class AstBuilder
   }
 
   visitArray(ctx: ArrayContext): ArrayNode {
-    const elements = ctx.expression().map(e => this.visit(e));
+    const elements = ctx.expression().map((e) => this.visit(e));
     const array = new ArrayNode(elements);
     array.location = Location.fromCtx(ctx);
     return array;

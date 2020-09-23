@@ -93,7 +93,7 @@ export const Data = {
     const instructions = parseBytecode(bytecode) as AuthenticationInstructions;
 
     // Convert the AuthenticationInstructions to script elements
-    const script = instructions.map(instruction => (
+    const script = instructions.map((instruction) => (
       'data' in instruction ? instruction.data : instruction.opcode
     ));
 
@@ -187,8 +187,8 @@ export function parseCode(code: string): Ast {
 
 export function countOpcodes(script: Script): number {
   return script
-    .filter(opOrData => typeof opOrData === 'number')
-    .filter(op => op > Op.OP_16)
+    .filter((opOrData) => typeof opOrData === 'number')
+    .filter((op) => op > Op.OP_16)
     .length;
 }
 

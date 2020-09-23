@@ -44,7 +44,7 @@ function isKeypair(obj: any): obj is Keypair {
 }
 
 function decodeWif(wif: string): Uint8Array {
-  const result = decodePrivateKeyWif({ hash: input => sha256(input) }, wif);
+  const result = decodePrivateKeyWif({ hash: (input) => sha256(input) }, wif);
 
   if (typeof result === 'string') {
     throw new Error(result);

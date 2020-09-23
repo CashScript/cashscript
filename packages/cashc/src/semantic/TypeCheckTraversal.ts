@@ -105,7 +105,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // already checked in symbol table
 
-    const parameterTypes = node.parameters.map(p => p.type as Type);
+    const parameterTypes = node.parameters.map((p) => p.type as Type);
     expectParameters(node, parameterTypes, definition.parameters);
 
     // Additional array length check for checkMultiSig
@@ -128,7 +128,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // already checked in symbol table
 
-    const parameterTypes = node.parameters.map(p => p.type as Type);
+    const parameterTypes = node.parameters.map((p) => p.type as Type);
     expectParameters(node, parameterTypes, definition.parameters);
 
     node.type = type;
@@ -264,7 +264,7 @@ export default class TypeCheckTraversal extends AstTraversal {
 type ExpectedNode = BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode;
 function expectAnyOfTypes(node: ExpectedNode, actual?: Type, expectedTypes?: Type[]): void {
   if (!expectedTypes || expectedTypes.length === 0) return;
-  if (expectedTypes.find(expected => implicitlyCastable(actual, expected))) {
+  if (expectedTypes.find((expected) => implicitlyCastable(actual, expected))) {
     return;
   }
 

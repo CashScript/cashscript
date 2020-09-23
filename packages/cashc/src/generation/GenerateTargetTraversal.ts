@@ -176,7 +176,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     const beforeBytecode = [
       PreimageField.VERSION, PreimageField.HASHPREVOUTS,
       PreimageField.HASHSEQUENCE, PreimageField.OUTPOINT,
-    ].filter(field => fields.includes(field));
+    ].filter((field) => fields.includes(field));
 
     beforeBytecode.forEach((field) => {
       const part = PreimageParts[field];
@@ -221,7 +221,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     const afterBytecode = [
       PreimageField.VALUE, PreimageField.SEQUENCE, PreimageField.HASHOUTPUTS,
       PreimageField.LOCKTIME, PreimageField.HASHTYPE,
-    ].filter(field => fields.includes(field));
+    ].filter((field) => fields.includes(field));
 
     afterBytecode.forEach((field) => {
       const part = PreimageParts[field];

@@ -29,12 +29,17 @@ export interface Artifact {
 
 export function generateArtifact(ast: Ast, script: Script, source: string): Artifact {
   const { contract } = ast;
+
   const constructorInputs = contract.parameters
-    .map(p => ({ name: p.name, type: p.type.toString() }));
-  const abi = contract.functions.map(f => ({
-    name: f.name,
-    covenant: f.preimageFields.length > 0,
-    inputs: f.parameters.map(p => ({ name: p.name, type: p.type.toString() })),
+    .map((parameter) => ({ name: parameter.name, type: parameter.type.toString() }));
+
+  const abi = contract.functions.map((func) => ({
+    name: func.name,
+    covenant: func.preimageFields.length > 0,
+    inputs: func.parameters.map((parameter) => ({
+      name: parameter.name,
+      type: parameter.type.toString(),
+    })),
   }));
 
   const bytecode = Data.scriptToAsm(script);

@@ -95,7 +95,7 @@ describe('P2PKH', () => {
       // then
       expect.hasAssertions();
       receipt.inputs.forEach((input) => {
-        expect(gathered.find(utxo => (
+        expect(gathered.find((utxo) => (
           utxo.txid === binToHex(input.outpointTransactionHash)
           && utxo.vout === input.outpointIndex
         ))).toBeTruthy();

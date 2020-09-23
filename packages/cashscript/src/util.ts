@@ -74,8 +74,8 @@ export function placeholder(size: number): Uint8Array {
 
 export function countOpcodes(script: Script): number {
   return script
-    .filter(opOrData => typeof opOrData === 'number')
-    .filter(op => op > Op.OP_16)
+    .filter((opOrData) => typeof opOrData === 'number')
+    .filter((op) => op > Op.OP_16)
     .length;
 }
 
