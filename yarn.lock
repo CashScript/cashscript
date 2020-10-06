@@ -268,6 +268,11 @@
   resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.17.1.tgz#bc5731ce787fbcdebcade8ab6aa3a0bd8cba19e9"
   integrity sha512-9jwzk1Zr/WWzbDC74rWLaEmtkTIx0B7HbGplCuOENTkfeWzM1j+ifAMkFcbATi9IwBpgB4P0s5eN1Z5uG/5wbg==
 
+"@bitauth/libauth@^1.17.2":
+  version "1.17.2"
+  resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.17.2.tgz#8abc0917f03fe1fafb0814c787787e120a74a1c6"
+  integrity sha512-Jo3wFdhtEfJCi9lOPrHJL5Yvk3z68aBWlrf1Y8l4vWFox9rKjWnOnQYOSwwtKvBcd5kg54JrUpolq/H8hSVYLQ==
+
 "@bitcoin-dot-com/bitcoincashjs2-lib@^4.1.0":
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/@bitcoin-dot-com/bitcoincashjs2-lib/-/bitcoincashjs2-lib-4.1.0.tgz#c01025d99f6472bb298fd801f9e7e7b1519f66d4"
@@ -3143,6 +3148,17 @@ cashaddrjs@^0.3.3:
   dependencies:
     big-integer "1.6.36"
 
+cashc@^0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/cashc/-/cashc-0.5.2.tgz#daf3579107529da5f7b412cd5e3637ad2d79b015"
+  integrity sha512-aaAj/WnjRqUP0qNKTqPy8//RkI+fYMPNQtqdk4eTqCYpoqv2GLjULLKsCNOTUWnI/oiOwO/Y4BNQAsgbAPk0Fg==
+  dependencies:
+    "@bitauth/libauth" "^1.17.1"
+    "@types/semver" "^6.0.2"
+    antlr4ts "^0.5.0-alpha.3"
+    commander "^6.0.0"
+    semver "^6.3.0"
+
 "cashproof@https://github.com/eyeofpython/cashproof":
   version "0.0.0"
   resolved "https://github.com/eyeofpython/cashproof#ff92615faa338e025a9d3a5dd98112233f6daf76"
@@ -4078,10 +4094,10 @@ ecurve@^1.0.0, ecurve@^1.0.6:
     bigi "^1.1.0"
     safe-buffer "^5.0.1"
 
-electrum-cash@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/electrum-cash/-/electrum-cash-2.0.2.tgz#a53475ad72e7923e847489d0f7626441dd93820d"
-  integrity sha512-b/mLctjwnmfp4cuvJbl9wgCxf4GWWiKPYZXEtekoyGPviZwOe2bnMC7LGOxAMpOW0YyU4W12kK6rbqskQc6EkA==
+electrum-cash@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/electrum-cash/-/electrum-cash-2.0.4.tgz#926158323b9dbf6563298a32864d9a2a1a0deca0"
+  integrity sha512-9l4/MpHvJEvnfTqTM5/acPMosTC2lwmgl8JBAsOPJ417DgkUQV73yE3WqmTTvON+pBetj11hOUVAkpkaJv0X0A==
   dependencies:
     "@types/ws" "^7.2.6"
     async-mutex "^0.2.4"

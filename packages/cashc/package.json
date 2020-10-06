@@ -42,7 +42,7 @@
     "test": "jest --config=../../jest.config.js packages/cashc"
   },
   "dependencies": {
-    "@bitauth/libauth": "^1.17.1",
+    "@bitauth/libauth": "^1.17.2",
     "@types/semver": "^6.0.2",
     "antlr4ts": "^0.5.0-alpha.3",
     "commander": "^6.0.0",

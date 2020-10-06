@@ -1,3 +1,4 @@
+import { binToHex } from '@bitauth/libauth';
 import {
   Artifact,
   Data,
@@ -78,6 +79,10 @@ export class Contract {
 
   async getUtxos(): Promise<Utxo[]> {
     return this.provider.getUtxos(this.address);
+  }
+
+  getRedeemScriptHex(): string {
+    return binToHex(Data.scriptToBytecode(this.redeemScript));
   }
 
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
