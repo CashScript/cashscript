@@ -3,7 +3,7 @@
 
     "compilerOptions": {
       "outDir": "./dist/module",
-      "module": "esnext"
+      "module": "esnext",
     },
 
     "include": [
