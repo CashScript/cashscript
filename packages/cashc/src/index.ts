@@ -15,4 +15,4 @@ export {
   CashCompiler,
 } from './util';
 
-export const version = '0.5.3';
+export const version = '0.5.4';

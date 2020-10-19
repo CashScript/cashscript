@@ -1,6 +1,6 @@
 {
   "name": "cashscript",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Easily write and interact with Bitcoin Cash contracts",
   "keywords": [
     "bitcoin cash",
@@ -21,8 +21,9 @@
   "contributors": [
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
-  "main": "dist/index",
-  "types": "dist/index",
+  "main": "dist/main/index",
+  "module": "dist/module/index",
+  "types": "dist/module/index",
   "directories": {
     "lib": "src",
     "test": "test"
@@ -30,7 +31,9 @@
   "scripts": {
     "build": "npm run clean && npm run compile",
     "clean": "rm -rf ./dist",
-    "compile": "tsc -p tsconfig.build.json",
+    "compile": "npm run compile:main && npm run compile:module",
+    "compile:main": "tsc -p tsconfig.build.main.json",
+    "compile:module": "tsc -p tsconfig.build.module.json",
     "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
@@ -39,7 +42,7 @@
   "dependencies": {
     "@bitauth/libauth": "^1.17.2",
     "bip68": "^1.0.4",
-    "cashc": "^0.5.3",
+    "cashc": "^0.5.4",
     "delay": "^4.3.0",
     "electrum-cash": "^2.0.4",
     "hash.js": "^1.1.7"

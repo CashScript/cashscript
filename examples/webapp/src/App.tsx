@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 
 import React from 'react'
 import { Container, Row, Col, Form, Button } from 'react-bootstrap'
-import { BITBOX, Crypto } from 'bitbox-sdk'
+import { BITBOX } from 'bitbox-sdk'
 import { ECPair } from 'bitcoincashjs-lib'
 import { CashCompiler, ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript'
 
@@ -12,16 +12,13 @@ interface AppState {
   balance?: number
   seed: string
   keypair?: ECPair
-  loading: boolean
   receiveAddress: string
   transactionLink?: string
 }
 
-
 class App extends React.Component<{}, AppState> {
   state: AppState = {
     seed: 'CashScript',
-    loading: false,
     receiveAddress: 'bchtest:pzfsp649y00eay9mm3ky63ln72v3h6tx6gul8mlg93',
   }
 
@@ -32,7 +29,6 @@ class App extends React.Component<{}, AppState> {
   }
 
   async compileContract(seed: string) {
-    this.setState({ loading: true })
     // Fetch CashFile
     const source = await this.getContractSource()
 
@@ -61,7 +57,7 @@ class App extends React.Component<{}, AppState> {
     // Retrieve contract balance
     const balance = await contract.getBalance()
 
-    this.setState({ contract, balance, keypair: alice, loading: false })
+    this.setState({ contract, balance, keypair: alice })
   }
 
   async sendTestTransaction(receiveAddress: string) {

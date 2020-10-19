@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "examples"
+    "examples",
+    "examples/webapp"
   ],
   "devDependencies": {
     "@types/jest": "^24.0.25",

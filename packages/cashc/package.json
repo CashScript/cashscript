@@ -1,6 +1,6 @@
 {
   "name": "cashc",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Compile Bitcoin Cash contracts to Bitcoin Cash Script or artifacts",
   "keywords": [
     "bitcoin",
@@ -22,10 +22,11 @@
   "contributors": [
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
-  "main": "dist/index",
-  "types": "dist/index",
+  "main": "dist/main/index",
+  "module": "dist/module/index",
+  "types": "dist/module/index",
   "bin": {
-    "cashc": "dist/cashc-cli.js"
+    "cashc": "dist/main/cashc-cli.js"
   },
   "directories": {
     "lib": "src",
@@ -35,7 +36,9 @@
     "antlr": "antlr4ts -visitor -listener src/grammar/CashScript.g4",
     "build": "npm run clean && npm run compile",
     "clean": "rm -rf ./dist",
-    "compile": "tsc -p tsconfig.build.json",
+    "compile": "npm run compile:main && npm run compile:module",
+    "compile:main": "tsc -p tsconfig.build.main.json",
+    "compile:module": "tsc -p tsconfig.build.module.json",
     "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run lint",
