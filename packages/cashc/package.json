@@ -1,6 +1,6 @@
 {
   "name": "cashc",
-  "version": "0.5.4",
+  "version": "0.5.4-beta",
   "description": "Compile Bitcoin Cash contracts to Bitcoin Cash Script or artifacts",
   "keywords": [
     "bitcoin",

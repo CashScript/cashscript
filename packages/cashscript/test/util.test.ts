@@ -32,7 +32,7 @@ describe('util', () => {
   });
 
   describe('getPreimageSize', () => {
-    it('should calculate input size for small script', () => {
+    it('should calculate preimage size for small script', () => {
       const inputScript = new Uint8Array(100).fill(0);
 
       const size = getPreimageSize(inputScript);
@@ -41,7 +41,7 @@ describe('util', () => {
       expect(size).toEqual(expectedSize);
     });
 
-    it('should calculate input size for large script', () => {
+    it('should calculate preimage size for large script', () => {
       const inputScript = new Uint8Array(255).fill(0);
 
       const size = getPreimageSize(inputScript);
