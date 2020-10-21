@@ -24,6 +24,7 @@
   "main": "dist/main/index",
   "module": "dist/module/index",
   "types": "dist/module/index",
+  "sideEffects": false,
   "directories": {
     "lib": "src",
     "test": "test"

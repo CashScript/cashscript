@@ -25,6 +25,7 @@
   "main": "dist/main/index",
   "module": "dist/module/index",
   "types": "dist/module/index",
+  "sideEffects": false,
   "bin": {
     "cashc": "dist/main/cashc-cli.js"
   },
