@@ -73,12 +73,24 @@ contract.bytesize: number
 The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 520 bytes at most.
 
 :::note
-When writing covenant contracts, the de facto limit is actually closer to 400 bytes due to technical factors.
+When writing covenant contracts, the de facto limit is actually closer to 360 bytes due to technical factors.
 :::
 
 #### Example
 ```ts
 console.log(contract.bytesize)
+```
+
+### getRedeemScriptHex()
+```ts
+contract.getRedeemScriptHex: string
+```
+
+Returns the contract's redeem script encoded as a hex string.
+
+#### Example
+```ts
+console.log(contract.getRedeemScriptHex())
 ```
 
 ### getBalance()

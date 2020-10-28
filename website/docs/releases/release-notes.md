@@ -2,6 +2,19 @@
 title: Release Notes
 ---
 
+## v0.5.4
+- :package: Add dual build system (CommonJS and ES Modules) to accommodate tree-shaking.
+
+## v0.5.3
+#### CashScript SDK
+- :sparkles: Add `getRedeemScriptHex()` function to the `Contract` class.
+- :bug: Fix a bug where transaction locktime could not specifically be set to 0.
+- :bug: Fix a bug where signature buffers were not checked for size.
+
+## v0.5.2
+#### cashc compiler
+- :bug: Fix a bug where an incorrect error message was displayed in Firefox when an incompatible pragma version was used.
+
 ## v0.5.1
 #### CashScript SDK
 - :sparkles: The `.send()` function now returns a `TransactionDetails` object. This extends the libauth `Transaction` with added `txid` and `hex` fields.

@@ -31,7 +31,7 @@ const contract = new Contract(Mecenas, [alicePkh, bobPkh, 10000], provider);
 
 * Transaction object's `.send()` function now returns either a libauth Transaction or raw hex string rather than a BITBOX Transaction. If it is necessary, the raw hex string can be imported into libraries such as BITBOX to achieve similar functionality as before.
 
-* In v0.4.1, `Sig` was deprecated in favour of `SignatureTemplate`. In v0.5.0, the deprecated class has been removed. All occurrences of `Sigs should be replaced with `SignatureTemplate`.
+* In v0.4.1, `Sig` was deprecated in favour of `SignatureTemplate`. In v0.5.0, the deprecated class has been removed. All occurrences of `Sig` should be replaced with `SignatureTemplate`.
 
 See the [release notes](/docs/releases/release-notes#v050) for an overview of other new changes.
 
