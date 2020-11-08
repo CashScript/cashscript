@@ -43,6 +43,7 @@ const literal = <L extends string>(l: L): L => l;
 export const Network = {
   MAINNET: literal('mainnet'),
   TESTNET: literal('testnet'),
+  REGTEST: literal('regtest'),
 };
 
 export type Network = (typeof Network)[keyof typeof Network];
