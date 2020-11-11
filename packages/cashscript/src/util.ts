@@ -232,8 +232,17 @@ export function addressToLockScript(address: string): Uint8Array {
   return result.bytecode;
 }
 
-export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' {
-  return network === Network.MAINNET ? 'bitcoincash' : 'bchtest';
+export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | 'bchreg' {
+  switch (network) {
+    case Network.MAINNET:
+      return 'bitcoincash';
+    case Network.TESTNET:
+      return 'bchtest';
+    case Network.REGTEST:
+      return 'bchreg';
+    default:
+      return 'bitcoincash';
+  }
 }
 
 // ////////////////////////////////////////////////////////////////////////////

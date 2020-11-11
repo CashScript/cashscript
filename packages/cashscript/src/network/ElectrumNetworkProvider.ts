@@ -42,7 +42,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       // this.electrum.addServer('bch.loping.net', 60004, ElectrumTransport.WSS.Scheme, false);
       // this.electrum.addServer('testnet.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme);
     } else {
-      throw new Error(`Tried to instantiate an ElectrumNetworkProvider for unknown network ${network}`);
+      throw new Error(`Tried to instantiate an ElectrumNetworkProvider for unsupported network ${network}`);
     }
   }
 
