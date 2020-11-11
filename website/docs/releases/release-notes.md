@@ -2,6 +2,10 @@
 title: Release Notes
 ---
 
+## v0.5.5
+#### CashScript SDK
+- :sparkles: Add `'regtest'` as a possible network for NetworkProviders.
+
 ## v0.5.4
 - :package: Add dual build system (CommonJS and ES Modules) to accommodate tree-shaking.
 
