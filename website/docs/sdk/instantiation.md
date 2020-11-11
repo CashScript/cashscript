@@ -262,7 +262,7 @@ interface NetworkProvider {
   sendRawTransaction(txHex: string): Promise<string>;
 }
 
-type Network = 'mainnet' | 'testnet';
+type Network = 'mainnet' | 'testnet' | 'regtest';
 
 interface Utxo {
   txid: string;
