@@ -87,16 +87,14 @@ expression
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantiation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
-    // | left=expression op=('++' | '--')
-    // | op=('!' | '~' | '+' | '-' | '++' | '--') right=expression
     | expression op=('.reverse()' | '.length') # UnaryOp
     | op=('!' | '-') expression # UnaryOp
-    // | expression '**' expression --- No power
-    // | expression ('*' | '/' | '%') expression --- OP_MUL is still disabled
+    // | expression '**' expression --- OP_POW does not exist in BCH Script
+    // | expression ('*' | '/' | '%') expression --- OP_MUL is disabled in BCH Script
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
     | left=expression op=('/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
-    // | expression ('>>' | '<<') expression --- OP_LSHIFT & RSHIFT are disabled
+    // | expression ('>>' | '<<') expression --- OP_LSHIFT & RSHIFT are disabled in BCH Script
     | left=expression op=('<' | '<=' | '>' | '>=') right=expression # BinaryOp
     | left=expression op=('==' | '!=') right=expression # BinaryOp
     | left=expression op='&' right=expression # BinaryOp
@@ -122,7 +120,6 @@ numberLiteral
     ;
 
 typeName
-    // : 'int' | 'bool' | 'string' | 'address' | 'pubkey' | 'sig' | Bytes
     : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | 'datasig' | Bytes
     ;
 
@@ -157,7 +154,7 @@ StringLiteral
     ;
 
 HexLiteral
-    : '0' [xX] [0-9A-Fa-f]+
+    : '0' [xX] [0-9A-Fa-f]*
     ;
 
 TxVar

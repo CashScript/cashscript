@@ -111,7 +111,5 @@ function ensure(condition: boolean, msg: string, code?: number): void {
 
 function abort(msg: string, code: number = 1): void {
   console.error(msg);
-  console.error();
-  program.outputHelp();
   process.exit(code);
 }

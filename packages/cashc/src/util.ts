@@ -11,7 +11,7 @@ import {
   utf8ToBin,
   binToUtf8,
 } from '@bitauth/libauth';
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
+import { ANTLRInputStream, BailErrorStrategy, CommonTokenStream } from 'antlr4ts';
 import fs from 'fs';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
@@ -175,13 +175,18 @@ export type CashCompiler = typeof CashCompiler;
 
 export function parseCode(code: string): Ast {
   // Lexing
-  const inputStream: ANTLRInputStream = new ANTLRInputStream(code);
-  const lexer: CashScriptLexer = new CashScriptLexer(inputStream);
-  const tokenStream: CommonTokenStream = new CommonTokenStream(lexer);
+  const inputStream = new ANTLRInputStream(code);
+  const lexer = new CashScriptLexer(inputStream);
+  const tokenStream = new CommonTokenStream(lexer);
 
-  // Parsing + AST building
-  const parser: CashScriptParser = new CashScriptParser(tokenStream);
-  const ast: Ast = new AstBuilder(parser.sourceFile()).build() as Ast;
+  // Parsing using a strict bail-on-error strategy without any error recovery
+  const parser = new CashScriptParser(tokenStream);
+  parser.errorHandler = new BailErrorStrategy();
+  const parseTree = parser.sourceFile();
+
+  // AST building
+  const ast = new AstBuilder(parseTree).build() as Ast;
+
   return ast;
 }
 
