@@ -1136,10 +1136,10 @@
     lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
-"@bitauth/libauth@^1.17.1":
-  version "1.17.1"
-  resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.17.1.tgz#bc5731ce787fbcdebcade8ab6aa3a0bd8cba19e9"
-  integrity sha512-9jwzk1Zr/WWzbDC74rWLaEmtkTIx0B7HbGplCuOENTkfeWzM1j+ifAMkFcbATi9IwBpgB4P0s5eN1Z5uG/5wbg==
+"@bitauth/libauth@^1.17.2":
+  version "1.17.3"
+  resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.17.3.tgz#4a29ff6a8b157d10050f0ba3c0f5a062805536d6"
+  integrity sha512-F8RewY6td3fyIQaUTMO1lV/aWLotB3HZ0UWKRCC+4pJbNCKlh8WLNNkiIPAFn6Mf3sPgYgrUnS3YlLRqMhzv7g==
 
 "@bitcoin-dot-com/bitcoincashjs2-lib@^4.1.0":
   version "4.1.0"
@@ -3318,23 +3318,27 @@ cashaddrjs@^0.2.9:
   dependencies:
     big-integer "^1.6.34"
 
-"cashc@file:../../packages/cashc":
-  version "0.5.0"
+cashc@^0.5.6:
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/cashc/-/cashc-0.5.6.tgz#562e8b217a48bbb167d07539a06b19b1e17bce16"
+  integrity sha512-FAY/p7mxiF/WNucyBhyFA2j8w1UD0VO6mGJJij2VWZ90St5j4vO5XEx1Y3WHQEVTeUXRGocXRqBiWOaWTPM2gg==
   dependencies:
-    "@bitauth/libauth" "^1.17.1"
+    "@bitauth/libauth" "^1.17.2"
     "@types/semver" "^6.0.2"
     antlr4ts "^0.5.0-alpha.3"
     commander "^6.0.0"
     semver "^6.3.0"
 
-cashscript@../../packages/cashscript:
-  version "0.5.0"
+cashscript@^0.5.0:
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/cashscript/-/cashscript-0.5.6.tgz#8815b60d922e71881b430a96d36e14ae9736b1cd"
+  integrity sha512-4q8F5l9NDlR+5xmf4I2We7sz1C6rfmqzMUMNvf+Z5JYF/b6XTzoJywBro86Mjhu/U5sGZ/kaZKTw58MdGfo0Qg==
   dependencies:
-    "@bitauth/libauth" "^1.17.1"
+    "@bitauth/libauth" "^1.17.2"
     bip68 "^1.0.4"
-    cashc "file:../../../../../Library/Caches/Yarn/v6/npm-cashscript-0.5.0-b0046312-37cc-4271-9b18-d40bfa7b3662-1597999696199/node_modules/cashc"
+    cashc "^0.5.6"
     delay "^4.3.0"
-    electrum-cash "^2.0.1"
+    electrum-cash "^2.0.4"
     hash.js "^1.1.7"
 
 chalk@2.4.2, chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.1, chalk@^2.4.2:
@@ -4577,10 +4581,10 @@ electron-to-chromium@^1.3.378:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.379.tgz#81dc5e82a3e72bbb830d93e15bc35eda2bbc910e"
   integrity sha512-NK9DBBYEBb5f9D7zXI0hiE941gq3wkBeQmXs1ingigA/jnTg5mhwY2Z5egwA+ZI8OLGKCx0h1Cl8/xeuIBuLlg==
 
-electrum-cash@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/electrum-cash/-/electrum-cash-2.0.1.tgz#83208508a27106e51e0b8d2cdc421dd0237adb83"
-  integrity sha512-Ox8lff2fxTNQQK5KRHXKVhMH/j47jomjgosNVVzHXj5C7Sw7VJpVqJlWxOZuuIU2Eylq/+GIVEyomBUMF7daCg==
+electrum-cash@^2.0.4:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/electrum-cash/-/electrum-cash-2.0.5.tgz#e402bd767d0593611106e030bfd4ec92d5c8fe9c"
+  integrity sha512-3EoeJMgo2rHXvQqjdzwAemXWdFCO6ssmuaY2b9/AdVh4j7GFiJkgzLFptnjtjgWDZyaiP/miEuFYIbIq7ladGQ==
   dependencies:
     "@types/ws" "^7.2.6"
     async-mutex "^0.2.4"
