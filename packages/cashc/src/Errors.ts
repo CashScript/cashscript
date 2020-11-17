@@ -36,6 +36,8 @@ export class CashScriptError extends Error {
   }
 }
 
+export class ParseError extends Error {}
+
 export class UndefinedReferenceError extends CashScriptError {
   constructor(
     public node: IdentifierNode,

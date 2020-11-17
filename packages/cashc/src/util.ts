@@ -11,7 +11,7 @@ import {
   utf8ToBin,
   binToUtf8,
 } from '@bitauth/libauth';
-import { ANTLRInputStream, BailErrorStrategy, CommonTokenStream } from 'antlr4ts';
+import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import fs from 'fs';
 import { Ast } from './ast/AST';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
@@ -25,6 +25,7 @@ import { Script, Op } from './generation/Script';
 import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
 import ReplaceBytecodeNop from './generation/ReplaceBytecodeNop';
 import VerifyCovenantTraversal from './semantic/VerifyCovenantTraversal';
+import ThrowingErrorListener from './ast/ThrowingErrorListener';
 
 export const Data = {
   encodeBool(bool: boolean): Uint8Array {
@@ -174,14 +175,17 @@ export const CashCompiler = {
 export type CashCompiler = typeof CashCompiler;
 
 export function parseCode(code: string): Ast {
-  // Lexing
+  // Lexing (throwing on errors)
   const inputStream = new ANTLRInputStream(code);
   const lexer = new CashScriptLexer(inputStream);
+  lexer.removeErrorListeners();
+  lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
   const tokenStream = new CommonTokenStream(lexer);
 
-  // Parsing using a strict bail-on-error strategy without any error recovery
+  // Parsing (throwing on errors)
   const parser = new CashScriptParser(tokenStream);
-  parser.errorHandler = new BailErrorStrategy();
+  parser.removeErrorListeners();
+  parser.addErrorListener(ThrowingErrorListener.INSTANCE);
   const parseTree = parser.sourceFile();
 
   // AST building
