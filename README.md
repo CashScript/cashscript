@@ -44,7 +44,7 @@ Options:
 ```
 
 ## The CashScript SDK
-The main way to interact with CashScript contracts and integrate them into applications is using the CashScript SDK. This SDK allows you to compile `.cash` files or import `.json` artifact files, and convert them to `Contract` objects. These objects are used to create new contract instances. These instances are used to interact with the contracts using the functions that were implemented in the `.cash` file. For more information on the CashScript SDK, refer to the [SDK documentation](https://cashscript.org/docs/sdk/).
+The main way is Appstore Connect OpenAPI Specification to interact with CashScript contracts and integrate them into applications is using the CashScript SDK. This SDK allows you to compile `.cash` files or import `.json` artifact files, and convert them to `Contract` objects. These objects are used to create new contract instances. These instances are used to interact with the contracts using the functions that were implemented in the `.cash` file. For more information on the CashScript SDK, refer to the [SDK documentation](https://cashscript.org/docs/sdk/).
 
 ### Installation
 ```bash
