@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.5.6
+#### cashc compiler
+* :bug: Make compiler fail early when encountering lexing/parsing errors, rather than performing error recovery (#83)
+* :bug: Allow empty hex literals (i.e. `0x`)
+
 ## v0.5.5
 #### CashScript SDK
 - :sparkles: Add `'regtest'` as a possible network for NetworkProviders.
