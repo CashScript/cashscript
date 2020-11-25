@@ -23,6 +23,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  InstantiationNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -164,6 +165,17 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitFunctionCall(node: FunctionCallNode): Node {
+    node.identifier = this.visit(node.identifier) as IdentifierNode;
+
+    this.addOutput('(');
+    node.parameters = this.visitCommaList(node.parameters);
+    this.addOutput(')');
+
+    return node;
+  }
+
+  visitInstantiation(node: InstantiationNode): Node {
+    this.addOutput('new ');
     node.identifier = this.visit(node.identifier) as IdentifierNode;
 
     this.addOutput('(');

@@ -9,10 +9,7 @@ export {
   TupleType,
   parseType,
 } from './ast/Type';
-export {
-  Data,
-  Artifacts,
-  CashCompiler,
-} from './util';
+export { Data, Artifacts } from './util';
+export { CashCompiler } from './CashCompiler';
 
 export const version = '0.5.7';
