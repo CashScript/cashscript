@@ -1,17 +1,17 @@
 {
-    "compilerOptions": {
-        "target": "es2015",
-        "declaration": true,
-        "lib": ["es2017", "dom"],
-        "sourceMap": true,
-        "strict": true,
-        "strictPropertyInitialization": false,
-        "experimentalDecorators": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-    },
-    "exclude": [
-        "node_modules",
-        "dist"
-    ]
+  "compilerOptions": {
+    "target": "es2015",
+    "declaration": true,
+    "lib": ["es2017", "dom"],
+    "sourceMap": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+  },
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

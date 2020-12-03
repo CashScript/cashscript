@@ -1,12 +1,12 @@
 {
-    "extends": "../../tsconfig.build.json",
+  "extends": "../../tsconfig.build.json",
 
-    "compilerOptions": {
-      "outDir": "./dist/main",
-      "module": "commonjs",
-    },
+  "compilerOptions": {
+    "outDir": "./dist/main",
+    "module": "commonjs",
+  },
 
-    "include": [
-      "src/**/*"
-    ]
-  }
+  "include": [
+    "src/**/*"
+  ]
+}

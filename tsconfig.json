@@ -1,11 +1,11 @@
 {
-    "extends": "./tsconfig.build.json",
+  "extends": "./tsconfig.build.json",
 
-    "compilerOptions": {
-      "baseUrl": "./packages",
-      "paths": {
-        "cashc": ["cashc/src"],
-        "cashscript": ["cashscript/src"]
-      }
+  "compilerOptions": {
+    "baseUrl": "./packages",
+    "paths": {
+      "cashc": ["cashc/src"],
+      "cashscript": ["cashscript/src"]
     }
   }
+}
