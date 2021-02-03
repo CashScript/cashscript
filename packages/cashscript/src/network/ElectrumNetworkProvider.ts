@@ -75,7 +75,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
   }
 
-  async connectCluster(): Promise<boolean[]> {
+  async connectCluster(): Promise<void[]> {
     try {
       return await this.electrum.startup();
     } catch (e) {
