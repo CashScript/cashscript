@@ -1,3 +1,4 @@
+/* eslint-disable */
 declare module 'bitcoin-rpc-promise-retry';
 
 interface ListUnspentItem {

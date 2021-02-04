@@ -10,16 +10,19 @@ export default class BitcoinRpcNetworkProvider implements NetworkProvider {
     url: string,
     opts?: object,
   ) {
-      this.rpcClient = new RpcClientRetry(url, opts);
+    this.rpcClient = new RpcClientRetry(url, opts);
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
-    return (await this.rpcClient.listUnspent(0, 9999999, [ address ]))
-      .map((u) => ({
-        txid: u.txid,
-        vout: u.vout,
-        satoshis: u.amount * 100000000,
-      }));
+    const result = await this.rpcClient.listUnspent(0, 9999999, [address]);
+
+    const utxos = result.map((utxo) => ({
+      txid: utxo.txid,
+      vout: utxo.vout,
+      satoshis: utxo.amount * 1e8,
+    }));
+
+    return utxos;
   }
 
   async getBlockHeight(): Promise<number> {
@@ -35,6 +38,6 @@ export default class BitcoinRpcNetworkProvider implements NetworkProvider {
   }
 
   getClient(): RpcClientRetry {
-      return this.rpcClient;
+    return this.rpcClient;
   }
 }
