@@ -1,0 +1,12 @@
+contract Test() {
+    function hello(sig s, pubkey pk) {
+        string v = 'hello';
+
+        if (v == 'hello') {
+            int v = 10;
+            require(v > 1);
+        }
+
+        require(checkSig(s, pk));
+    }
+}
