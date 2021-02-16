@@ -45,7 +45,7 @@
     "bip68": "^1.0.4",
     "cashc": "^0.5.7",
     "delay": "^4.3.0",
-    "electrum-cash": "^2.0.4",
+    "electrum-cash": "^2.0.6",
     "hash.js": "^1.1.7"
   },
   "devDependencies": {
