@@ -15,6 +15,8 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
+  StatementNode,
+  ContractNode,
 } from './ast/AST';
 import { Type, PrimitiveType } from './ast/Type';
 import { Symbol, SymbolType } from './ast/SymbolTable';
@@ -78,6 +80,30 @@ export class UnusedVariableError extends CashScriptError {
     public symbol: Symbol,
   ) {
     super(symbol.definition as Node, `Unused variable ${symbol.name}`);
+  }
+}
+
+export class EmptyContractError extends CashScriptError {
+  constructor(
+    public node: ContractNode,
+  ) {
+    super(node, `Contract ${node.name} contains no functions`);
+  }
+}
+
+export class EmptyFunctionError extends CashScriptError {
+  constructor(
+    public node: FunctionDefinitionNode,
+  ) {
+    super(node, `Function ${node.name} contains no statements`);
+  }
+}
+
+export class FinalRequireStatementError extends CashScriptError {
+  constructor(
+    public node: StatementNode,
+  ) {
+    super(node, 'Final statement is expected to be a require() statement');
   }
 }
 

@@ -146,18 +146,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
 
-    // Remove final OP_VERIFY
-    // If the final opcodes are OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP
-    // Or if the final opcode is OP_ENDIF
-    // Or if the remaining stack size >=5 (2DROP 2DROP 1 < NIP NIP NIP NIP)
-    //   then push it back to the script, and push OP_TRUE (OP_1) to the stack
-    const finalOp = this.output.pop();
-    this.pushToStack('(value)');
-    if (finalOp === Op.OP_DROP || finalOp === Op.OP_ENDIF || (finalOp && this.stack.length >= 5)) {
-      this.emit(finalOp);
-      this.emit(Op.OP_1);
-    }
+    this.removeFinalVerify();
     this.cleanStack();
+
     return node;
   }
 
@@ -253,6 +244,31 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // Drop remainder
     if (!fields.includes(PreimageField.HASHTYPE)) {
       this.emit(Op.OP_DROP);
+    }
+  }
+
+  removeFinalVerify(): void {
+    // After EnsureFinalRequireTraversal, we know that the final opcodes are either
+    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
+
+    const finalOp = this.output.pop() as Op;
+
+    // If the final op is OP_VERIFY and the stack size is less than 4 we remove it from the script
+    // - We have the stack size check because it is more efficient to use 2DROP rather than NIP
+    //   if >= 4 elements are left (5 including final value) (e.g. 2DROP 2DROP 1 < NIP NIP NIP NIP)
+    if (finalOp === Op.OP_VERIFY && this.stack.length < 4) {
+      // Since the final value is no longer popped from the stack by OP_VERIFY,
+      // we add it back to the stack
+      this.pushToStack('(value)');
+    } else {
+      this.emit(finalOp);
+
+      // At this point there is no verification value left on the stack:
+      //  - scoped stack is cleared inside branch ended by OP_ENDIF
+      //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
+      // so we add OP_1 to the script (indicating success)
+      this.emit(Op.OP_1);
+      this.pushToStack('(value)');
     }
   }
 
