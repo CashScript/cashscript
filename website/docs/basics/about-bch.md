@@ -23,7 +23,7 @@ Bitcoin Cash transactions are created using chunks of BCH called transaction out
 
 The most used locking/unlocking script pattern is called *Pay-to-Public-Key-Hash (P2PKH)*, where the locking script contains the hash of a public key and expects the unlocking script to contain a public key and transaction signature. The locking script then checks that the provided public key matches the stored hash, and that the transaction signature is valid. This pattern is used in regular Bitcoin Cash wallets. And the user's balance is simply the sum of all UTXOs that can be spent by the user's public keys.
 
-UTXOs are used as inputs to Bitcoin Cash transactions and produce new UTXOs as outputs. UTXOs need to be spent in their entirety within a transactioon. So whenever the user wishes to use a 10 BCH UTXO to send someone 1 BCH, they need to send 9 BCH back to themselves. Realistically, part of the funds would be
+UTXOs are used as inputs to Bitcoin Cash transactions and produce new UTXOs as outputs. UTXOs need to be spent in their entirety within a transaction. So whenever the user wishes to use a 10 BCH UTXO to send someone 1 BCH, they need to send 9 BCH back to themselves. Realistically, part of the funds would be
 reserved for transaction fees as well.
 
 ## Smart Contracts

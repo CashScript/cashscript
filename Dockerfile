@@ -4,7 +4,7 @@ FROM node:10 as build
 WORKDIR /app
 
 # Invalidate cache
-ADD "http://worldtimeapi.org/api/timezone/Europe/Amsterdam.txt" skipcache
+ADD "http://worldtimeapi.org/api/timezone/Europe/Amsterdam.txt" skipCache
 
 # Add app
 COPY website /app
@@ -23,7 +23,7 @@ RUN yarn build
 FROM nginx:1.17.0-alpine
 
 # Invalidate cache
-ADD "http://worldtimeapi.org/api/timezone/Europe/Amsterdam.txt" skipcache
+ADD "http://worldtimeapi.org/api/timezone/Europe/Amsterdam.txt" skipCache
 
 # Copy build artifacts from the 'build environment'
 RUN rm -rf /usr/share/nginx/html/**

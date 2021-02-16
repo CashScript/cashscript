@@ -12,7 +12,7 @@ contract HodlVault(
     int priceTarget
 ) {
     function spend(sig ownerSig, datasig oracleSig, bytes oracleMessage) {
-        // message: { blockheight, price }
+        // message: { blockHeight, price }
         int blockHeight = int(oracleMessage.split(4)[0]);
         int price = int(oracleMessage.split(4)[1]);
 
