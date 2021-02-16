@@ -1,7 +1,7 @@
 const chalk = require('chalk');
 const { getConsoleOutput } = require('@jest/console');
-const DefaultReporter = require('@jest/reporters/build/default_reporter').default;
-const getResultHeader = require('@jest/reporters/build/get_result_header').default;
+const DefaultReporter = require('@jest/reporters/build/DefaultReporter').default;
+const getResultHeader = require('@jest/reporters/build/getResultHeader').default;
 
 const TITLE_BULLET = chalk.bold('\u25cf ');
 

@@ -16,7 +16,7 @@ module.exports = {
     'class-methods-use-this': 0, // I don't like this rule
     'no-underscore-dangle': 0, // antlr4ts automatically uses this
     'no-param-reassign': 0, // Makes visitors returning the node object easier
-    'lines-between-class-members': [ // Makes defining interfaces / abstract classes easier
+    '@typescript-eslint/lines-between-class-members': [ // Makes defining interfaces / abstract classes easier
       'error',
       'always',
       { exceptAfterSingleLine: true }
@@ -40,5 +40,6 @@ module.exports = {
       { allowExpressions: true }
     ],
     'max-classes-per-file': 0, // Multiple classes in one file are allowed (e.g. Errors)
+    '@typescript-eslint/no-redeclare': 0, // I sometimes name variables an types the same
   },
 }

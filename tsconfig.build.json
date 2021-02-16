@@ -9,6 +9,7 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "skipLibCheck": true,
   },
   "exclude": [
     "node_modules",

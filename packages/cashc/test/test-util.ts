@@ -6,7 +6,7 @@ export function getSubdirectories(directory: string): string[] {
     .filter((fn) => fs.statSync(path.join(directory, fn)).isDirectory());
 }
 
-export function readCashFiles(directory: string): {fn: string, contents: string}[] {
+export function readCashFiles(directory: string): { fn: string, contents: string }[] {
   return fs.readdirSync(directory)
     .filter((fn) => fn.endsWith('.cash'))
     .map((fn) => ({ fn, contents: fs.readFileSync(path.join(directory, fn), { encoding: 'utf-8' }) }));

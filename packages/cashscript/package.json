@@ -41,21 +41,20 @@
     "test": "jest --config=../../jest.config.js packages/cashscript"
   },
   "dependencies": {
-    "@bitauth/libauth": "^1.17.2",
+    "@bitauth/libauth": "^1.18.0",
     "bip68": "^1.0.4",
     "bitcoin-rpc-promise-retry": "^1.3.0",
     "cashc": "^0.5.7",
-    "delay": "^4.3.0",
+    "delay": "^5.0.0",
     "electrum-cash": "^2.0.6",
     "hash.js": "^1.1.7"
   },
   "devDependencies": {
-    "@psf/bch-js": "^3.5.3",
-    "bignumber.js": "^9.0.0",
-    "bitbox-sdk": "^8.8.0",
-    "eslint": "^6.6.0",
-    "jest": "^25.1.0",
-    "ts-jest": "^25.1.0",
-    "typescript": "3.7.5"
+    "@psf/bch-js": "^4.15.0",
+    "bitbox-sdk": "^8.11.2",
+    "eslint": "^7.20.0",
+    "jest": "^26.6.3",
+    "ts-jest": "^26.5.1",
+    "typescript": "^4.1.5"
   }
 }

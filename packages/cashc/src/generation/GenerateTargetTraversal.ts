@@ -31,7 +31,7 @@ import {
   Op,
   OpOrData,
   Script,
-  toOps,
+  ToOps,
 } from './Script';
 import { Data } from '../util';
 import { PreimageParts } from './preimage';
@@ -324,7 +324,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(toOps.fromTimeOp(node.timeOp));
+    this.emit(ToOps.fromTimeOp(node.timeOp));
     this.popFromStack();
     return node;
   }
@@ -387,7 +387,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.popFromStack();
     }
 
-    this.emit(toOps.fromCast(node.expression.type as PrimitiveType, node.type));
+    this.emit(ToOps.fromCast(node.expression.type as PrimitiveType, node.type));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -402,7 +402,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     if (this.needsToVerifyCovenant(node)) this.verifyCovenant();
 
-    this.emit(toOps.fromFunction(node.identifier.name as GlobalFunction));
+    this.emit(ToOps.fromFunction(node.identifier.name as GlobalFunction));
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
 
@@ -550,7 +550,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    this.emit(toOps.fromBinaryOp(
+    this.emit(ToOps.fromBinaryOp(
       node.operator,
       resultingType(node.left.type, node.right.type) === PrimitiveType.INT,
     ));
@@ -562,7 +562,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(toOps.fromUnaryOp(node.operator));
+    this.emit(ToOps.fromUnaryOp(node.operator));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;

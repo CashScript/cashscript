@@ -37,7 +37,7 @@ export enum TimeOp {
 export enum Class {
   OUTPUT_P2SH = 'OutputP2SH',
   OUTPUT_P2PKH = 'OutputP2PKH',
-  OUTPUT_NULLDATA = 'OutputNullData'
+  OUTPUT_NULLDATA = 'OutputNullData',
 }
 
 export enum PreimageField {
