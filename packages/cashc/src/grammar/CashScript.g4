@@ -112,6 +112,7 @@ literal
     : BooleanLiteral
     | numberLiteral
     | StringLiteral
+    | DateLiteral
     | HexLiteral
     ;
 
@@ -120,7 +121,7 @@ numberLiteral
     ;
 
 typeName
-    : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | 'datasig' | Bytes
+    : 'int' | 'bool' | 'string' | 'date' | 'pubkey' | 'sig' | 'datasig' | Bytes
     ;
 
 VersionLiteral
@@ -151,6 +152,10 @@ Bound
 StringLiteral
     : '"' ('\\"' | ~["\r\n])*? '"'
     | '\'' ('\\\'' | ~['\r\n])*? '\''
+    ;
+
+DateLiteral
+    : 'date(' StringLiteral ')'
     ;
 
 HexLiteral

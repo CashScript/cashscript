@@ -68,7 +68,7 @@ import {
 } from './Globals';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
-import { VersionError } from '../Errors';
+import { ParseError, VersionError } from '../Errors';
 import { parseType } from './Type';
 
 export default class AstBuilder
@@ -298,6 +298,10 @@ export default class AstBuilder
       return this.createStringLiteral(ctx);
     }
 
+    if(ctx.DateLiteral()){
+      return this.createDateLiteral(ctx);
+    }
+
     if (ctx.HexLiteral()) {
       return this.createHexLiteral(ctx);
     }
@@ -331,6 +335,16 @@ export default class AstBuilder
     const stringLiteral = new StringLiteralNode(stringValue, quote);
     stringLiteral.location = Location.fromCtx(ctx);
     return stringLiteral;
+  }
+
+  createDateLiteral(ctx: LiteralContext): IntLiteralNode{
+    const rawString = (ctx.DateLiteral() as TerminalNode).text;
+    const stringValue = rawString.substring(6, rawString.length - 2);
+    const timestamp = (Date.parse(stringValue)/1000);
+    if(isNaN(timestamp)) throw new ParseError();
+    const intLiteral = new IntLiteralNode(timestamp);
+    intLiteral.location = Location.fromCtx(ctx);
+    return intLiteral;
   }
 
   createHexLiteral(ctx: LiteralContext): HexLiteralNode {
