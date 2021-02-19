@@ -31,7 +31,7 @@ import {
   Op,
   OpOrData,
   Script,
-  toOps,
+  ToOps,
 } from './Script';
 import { Data } from '../util';
 import { PreimageParts } from './preimage';
@@ -146,18 +146,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
 
-    // Remove final OP_VERIFY
-    // If the final opcodes are OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP
-    // Or if the final opcode is OP_ENDIF
-    // Or if the remaining stack size >=5 (2DROP 2DROP 1 < NIP NIP NIP NIP)
-    //   then push it back to the script, and push OP_TRUE (OP_1) to the stack
-    const finalOp = this.output.pop();
-    this.pushToStack('(value)');
-    if (finalOp === Op.OP_DROP || finalOp === Op.OP_ENDIF || (finalOp && this.stack.length >= 5)) {
-      this.emit(finalOp);
-      this.emit(Op.OP_1);
-    }
+    this.removeFinalVerify();
     this.cleanStack();
+
     return node;
   }
 
@@ -256,6 +247,31 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
   }
 
+  removeFinalVerify(): void {
+    // After EnsureFinalRequireTraversal, we know that the final opcodes are either
+    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
+
+    const finalOp = this.output.pop() as Op;
+
+    // If the final op is OP_VERIFY and the stack size is less than 4 we remove it from the script
+    // - We have the stack size check because it is more efficient to use 2DROP rather than NIP
+    //   if >= 4 elements are left (5 including final value) (e.g. 2DROP 2DROP 1 < NIP NIP NIP NIP)
+    if (finalOp === Op.OP_VERIFY && this.stack.length < 4) {
+      // Since the final value is no longer popped from the stack by OP_VERIFY,
+      // we add it back to the stack
+      this.pushToStack('(value)');
+    } else {
+      this.emit(finalOp);
+
+      // At this point there is no verification value left on the stack:
+      //  - scoped stack is cleared inside branch ended by OP_ENDIF
+      //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
+      // so we add OP_1 to the script (indicating success)
+      this.emit(Op.OP_1);
+      this.pushToStack('(value)');
+    }
+  }
+
   cleanStack(): void {
     // Keep final verification value, OP_NIP the other stack values
     const stackSize = this.stack.length;
@@ -308,7 +324,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(toOps.fromTimeOp(node.timeOp));
+    this.emit(ToOps.fromTimeOp(node.timeOp));
     this.popFromStack();
     return node;
   }
@@ -371,7 +387,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.popFromStack();
     }
 
-    this.emit(toOps.fromCast(node.expression.type as PrimitiveType, node.type));
+    this.emit(ToOps.fromCast(node.expression.type as PrimitiveType, node.type));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -386,7 +402,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     if (this.needsToVerifyCovenant(node)) this.verifyCovenant();
 
-    this.emit(toOps.fromFunction(node.identifier.name as GlobalFunction));
+    this.emit(ToOps.fromFunction(node.identifier.name as GlobalFunction));
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
 
@@ -534,7 +550,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    this.emit(toOps.fromBinaryOp(
+    this.emit(ToOps.fromBinaryOp(
       node.operator,
       resultingType(node.left.type, node.right.type) === PrimitiveType.INT,
     ));
@@ -546,7 +562,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(toOps.fromUnaryOp(node.operator));
+    this.emit(ToOps.fromUnaryOp(node.operator));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;

@@ -1,7 +1,7 @@
 # This file includes several examples CashScript contracts as compiled with 0.1.2 and 0.2.0
 # to verify their equivalence. These Scripts contain the exact output as compiled by Cashc,
-# ecxept for the following changes:
-#  * "Default case" has been added to the 0.1.2 bytecode, as this was a vuln. fix in 0.2.0
+# except for the following changes:
+#  * "Default case" has been added to the 0.1.2 bytecode, as this was a vulnerability fix in 0.2.0
 #    but we are only interested in the optimisation equivalence, so we simulate this fix for 0.1.2
 #  * Final OP_1/0 has been changed to OP_TRUE/FALSE to play nice with CashProof type checking
 #  * Raw data has been prepended with 0x or changed to integer representation

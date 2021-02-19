@@ -11,6 +11,7 @@ import { CashScriptParser } from './grammar/CashScriptParser';
 import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
+import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal';
 import VerifyCovenantTraversal from './semantic/VerifyCovenantTraversal';
 
 export const CashCompiler = {
@@ -21,6 +22,7 @@ export const CashCompiler = {
     // Semantic analysis
     ast = ast.accept(new SymbolTableTraversal()) as Ast;
     ast = ast.accept(new TypeCheckTraversal()) as Ast;
+    ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
     ast = ast.accept(new VerifyCovenantTraversal()) as Ast;
 
     // Code generation

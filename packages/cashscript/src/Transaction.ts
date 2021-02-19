@@ -225,7 +225,7 @@ export class Transaction {
     const tx = await this.build();
     try {
       const txid = await this.provider.sendRawTransaction(tx);
-      return raw ? this.getTxDetails(txid, raw) : this.getTxDetails(txid);
+      return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e) {
       const reason = e.error ?? e.message;
       throw buildError(reason, meep(tx, this.inputs, this.redeemScript));

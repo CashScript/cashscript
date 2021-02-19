@@ -51,6 +51,7 @@ describe.skip('P2Palindrome', () => {
 
       // when
       const tx = await p2palindrome.functions
+        // cspell:disable-next-line
         .spend('amanaplanacanalpanama')
         .withOpReturn(opReturn)
         .send();

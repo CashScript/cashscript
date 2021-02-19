@@ -6,22 +6,23 @@
     "examples"
   ],
   "devDependencies": {
-    "@types/jest": "^24.0.25",
-    "@types/node": "^12.7.8",
-    "@typescript-eslint/eslint-plugin": "^2.20.0",
-    "@typescript-eslint/parser": "^2.20.0",
-    "antlr4ts-cli": "^0.5.0-alpha.3",
+    "@jest/reporters": "^26.6.2",
+    "@types/node": "^14.14.28",
+    "@typescript-eslint/eslint-plugin": "^4.15.1",
+    "@typescript-eslint/parser": "^4.15.1",
+    "antlr4ts-cli": "^0.5.0-alpha.4",
     "cashproof": "https://github.com/eyeofpython/cashproof",
-    "chalk": "^3.0.0",
-    "codecov": "^3.6.1",
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-typescript": "^7.0.0",
-    "eslint-plugin-import": "^2.20.0",
-    "jest": "^24.9.0",
-    "lerna": "^3.16.0",
-    "ts-jest": "^24.3.0",
-    "ts-node": "^8.4.1",
-    "typescript": "3.7.5"
+    "chalk": "^4.1.0",
+    "codecov": "^3.8.1",
+    "cspell": "^5.2.4",
+    "eslint": "^7.20.0",
+    "eslint-config-airbnb-typescript": "^12.3.1",
+    "eslint-plugin-import": "^2.22.1",
+    "jest": "^26.6.3",
+    "lerna": "^3.22.1",
+    "ts-jest": "^26.5.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.5"
   },
   "scripts": {
     "test": "jest",
@@ -34,6 +35,7 @@
     "cashproof": "python3 node_modules/cashproof/run.py",
     "examples": "ts-node examples/p2pkh.ts && ts-node examples/transfer_with_timeout.ts && ts-node examples/hodl_vault.ts",
     "coverage": "codecov",
-    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-example"
+    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-example",
+    "spellcheck": "cspell lint '**' --no-progress --must-find-files"
   }
 }

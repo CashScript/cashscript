@@ -1,5 +1,6 @@
 contract Test(int x) {
     function hello() {
+        // cspell:disable-next-line
         require(withn(1, 0, 2));
     }
 

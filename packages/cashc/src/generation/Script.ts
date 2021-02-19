@@ -9,7 +9,7 @@ export type Op = number;
 export type OpOrData = Op | Uint8Array;
 export type Script = OpOrData[];
 
-export class toOps {
+export class ToOps {
   static fromTimeOp(op: TimeOp): Script {
     const mapping = {
       [TimeOp.CHECK_LOCKTIME]: [Op.OP_CHECKLOCKTIMEVERIFY, Op.OP_DROP],

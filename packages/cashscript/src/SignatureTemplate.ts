@@ -34,7 +34,7 @@ export default class SignatureTemplate {
   }
 }
 
-// Works for both BITBOX/bitcoincashjs ECPair and bitcore-lib-cash PrivateKey
+// Works for both BITBOX/bitcoincash.js ECPair and bitcore-lib-cash PrivateKey
 interface Keypair {
   toWIF(): string;
 }

@@ -61,6 +61,6 @@ export default abstract class AstVisitor<T> {
   }
 
   visitOptionalList(nodes?: Node[]): T[] | undefined {
-    return nodes && nodes.map((n) => this.visit(n));
+    return nodes && this.visitList(nodes);
   }
 }

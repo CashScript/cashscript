@@ -1,4 +1,4 @@
-// Generated from src/grammar/CashScript.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from src/grammar/CashScript.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
 import { ATN } from "antlr4ts/atn/ATN";
@@ -155,6 +155,10 @@ export class CashScriptParser extends Parser {
 
 	// @Override
 	public get serializedATN(): string { return CashScriptParser._serializedATN; }
+
+	protected createFailedPredicateException(predicate?: string, message?: string): FailedPredicateException {
+		return new FailedPredicateException(this, predicate, message);
+	}
 
 	constructor(input: TokenStream) {
 		super(input);
@@ -1183,7 +1187,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 230;
 						if (!(this.precpred(this._ctx, 13))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 13)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 13)");
 						}
 						this.state = 231;
 						(_localctx as BinaryOpContext)._op = this._input.LT(1);
@@ -1210,7 +1214,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 233;
 						if (!(this.precpred(this._ctx, 12))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 12)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 12)");
 						}
 						this.state = 234;
 						(_localctx as BinaryOpContext)._op = this._input.LT(1);
@@ -1237,7 +1241,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 236;
 						if (!(this.precpred(this._ctx, 11))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 11)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 11)");
 						}
 						this.state = 237;
 						(_localctx as BinaryOpContext)._op = this._input.LT(1);
@@ -1264,7 +1268,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 239;
 						if (!(this.precpred(this._ctx, 10))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 10)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 10)");
 						}
 						this.state = 240;
 						(_localctx as BinaryOpContext)._op = this._input.LT(1);
@@ -1291,7 +1295,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 242;
 						if (!(this.precpred(this._ctx, 9))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 9)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 9)");
 						}
 						this.state = 243;
 						(_localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__33);
@@ -1307,7 +1311,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 245;
 						if (!(this.precpred(this._ctx, 8))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 8)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 8)");
 						}
 						this.state = 246;
 						(_localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__3);
@@ -1323,7 +1327,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 248;
 						if (!(this.precpred(this._ctx, 7))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 7)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 7)");
 						}
 						this.state = 249;
 						(_localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__34);
@@ -1339,7 +1343,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 251;
 						if (!(this.precpred(this._ctx, 6))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 6)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
 						}
 						this.state = 252;
 						(_localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__35);
@@ -1355,7 +1359,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 254;
 						if (!(this.precpred(this._ctx, 5))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 5)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 5)");
 						}
 						this.state = 255;
 						(_localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__36);
@@ -1370,7 +1374,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 257;
 						if (!(this.precpred(this._ctx, 17))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 17)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 17)");
 						}
 						this.state = 258;
 						this.match(CashScriptParser.T__21);
@@ -1387,7 +1391,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 261;
 						if (!(this.precpred(this._ctx, 16))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 16)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 16)");
 						}
 						this.state = 262;
 						(_localctx as UnaryOpContext)._op = this._input.LT(1);
@@ -1412,7 +1416,7 @@ export class CashScriptParser extends Parser {
 						this.pushNewRecursionContext(_localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 263;
 						if (!(this.precpred(this._ctx, 14))) {
-							throw new FailedPredicateException(this, "this.precpred(this._ctx, 14)");
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 14)");
 						}
 						this.state = 264;
 						(_localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__27);
@@ -2351,8 +2355,8 @@ export class RequireStatementContext extends ParserRuleContext {
 
 
 export class IfStatementContext extends ParserRuleContext {
-	public _ifBlock: BlockContext;
-	public _elseBlock: BlockContext;
+	public _ifBlock!: BlockContext;
+	public _elseBlock!: BlockContext;
 	public expression(): ExpressionContext {
 		return this.getRuleContext(0, ExpressionContext);
 	}
@@ -2504,8 +2508,8 @@ export class ParenthesisedContext extends ExpressionContext {
 	}
 }
 export class CastContext extends ExpressionContext {
-	public _castable: ExpressionContext;
-	public _size: ExpressionContext;
+	public _castable!: ExpressionContext;
+	public _size!: ExpressionContext;
 	public typeName(): TypeNameContext {
 		return this.getRuleContext(0, TypeNameContext);
 	}
@@ -2603,7 +2607,7 @@ export class InstantiationContext extends ExpressionContext {
 	}
 }
 export class TupleIndexOpContext extends ExpressionContext {
-	public _index: Token;
+	public _index!: Token;
 	public expression(): ExpressionContext {
 		return this.getRuleContext(0, ExpressionContext);
 	}
@@ -2634,7 +2638,7 @@ export class TupleIndexOpContext extends ExpressionContext {
 	}
 }
 export class UnaryOpContext extends ExpressionContext {
-	public _op: Token;
+	public _op!: Token;
 	public expression(): ExpressionContext {
 		return this.getRuleContext(0, ExpressionContext);
 	}
@@ -2664,9 +2668,9 @@ export class UnaryOpContext extends ExpressionContext {
 	}
 }
 export class BinaryOpContext extends ExpressionContext {
-	public _left: ExpressionContext;
-	public _op: Token;
-	public _right: ExpressionContext;
+	public _left!: ExpressionContext;
+	public _op!: Token;
+	public _right!: ExpressionContext;
 	public expression(): ExpressionContext[];
 	public expression(i: number): ExpressionContext;
 	public expression(i?: number): ExpressionContext | ExpressionContext[] {

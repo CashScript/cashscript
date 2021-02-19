@@ -2,7 +2,7 @@ export enum UnaryOperator {
   NOT = '!',
   NEGATE = '-',
   SIZE = '.length',
-  REVERSE = '.reverse()'
+  REVERSE = '.reverse()',
 }
 
 export enum BinaryOperator {
@@ -21,5 +21,5 @@ export enum BinaryOperator {
   BIT_OR = '|',
   AND = '&&',
   OR = '||',
-  SPLIT = '.split'
+  SPLIT = '.split',
 }
