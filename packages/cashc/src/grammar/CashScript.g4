@@ -121,7 +121,7 @@ numberLiteral
     ;
 
 typeName
-    : 'int' | 'bool' | 'string' | 'date' | 'pubkey' | 'sig' | 'datasig' | Bytes
+    : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | 'datasig' | Bytes
     ;
 
 VersionLiteral
