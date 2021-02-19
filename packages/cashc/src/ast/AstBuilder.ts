@@ -298,7 +298,7 @@ export default class AstBuilder
       return this.createStringLiteral(ctx);
     }
 
-    if(ctx.DateLiteral()){
+    if (ctx.DateLiteral()) {
       return this.createDateLiteral(ctx);
     }
 
@@ -337,11 +337,11 @@ export default class AstBuilder
     return stringLiteral;
   }
 
-  createDateLiteral(ctx: LiteralContext): IntLiteralNode{
+  createDateLiteral(ctx: LiteralContext): IntLiteralNode {
     const rawString = (ctx.DateLiteral() as TerminalNode).text;
     const stringValue = rawString.substring(6, rawString.length - 2);
-    const timestamp = (Date.parse(stringValue)/1000);
-    if(isNaN(timestamp)) throw new ParseError();
+    const timestamp = (Date.parse(stringValue) / 1000);
+    if (Number.isNaN(timestamp)) throw new ParseError();
     const intLiteral = new IntLiteralNode(timestamp);
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
