@@ -339,11 +339,10 @@ export default class AstBuilder
 
   createDateLiteral(ctx: LiteralContext): IntLiteralNode {
     const rawString = (ctx.DateLiteral() as TerminalNode).text;
-    const stringValue = rawString.substring(6, rawString.length - 2);
+    const stringValue = rawString.substring(6, rawString.length - 2).trim();
+    if (!/^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/.test(stringValue)) throw new ParseError('Date should be in format `YYYY-MM-DDTHH:MM:SS`', Location.fromCtx(ctx)); // Force standard format
     const timestamp = Math.round(Date.parse(stringValue) / 1000);
     if (Number.isNaN(timestamp)) throw new ParseError(`Incorrectly formatted date "${stringValue}"`, Location.fromCtx(ctx)); // Date validation
-    const date = new Date(stringValue);
-    if (date.toISOString() !== stringValue) throw new ParseError(`Date should be in format "${date.toISOString()}"`, Location.fromCtx(ctx)); // Force IS0-8061 for consistency
     const intLiteral = new IntLiteralNode(timestamp);
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
