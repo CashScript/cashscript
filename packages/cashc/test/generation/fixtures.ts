@@ -358,8 +358,8 @@ export const fixtures: Fixture[] = [
       ],
       abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
-        // preimage parsing
-        'OP_OVER OP_4 OP_SPLIT 65 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
+      // Preimage deserialisation (with OP_NOP left in)
+        'OP_OVER OP_4 OP_SPLIT OP_NOP 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
         // require(tx.version == requiredVersion)
         + 'OP_SWAP OP_ROT OP_EQUALVERIFY '
         // require(tx.bytecode == 0x00)
@@ -387,8 +387,8 @@ export const fixtures: Fixture[] = [
       ],
       abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
-        // preimage parsing
-        'OP_OVER 24 OP_SPLIT OP_NIP 20 OP_SPLIT 25 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
+      // Preimage deserialisation (with OP_NOP left in)
+        'OP_OVER 24 OP_SPLIT OP_NIP 20 OP_SPLIT OP_NOP 24 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
         // require(!checkSig(s, pk))
         + 'OP_5 OP_PICK OP_5 OP_PICK OP_CHECKSIG OP_NOT OP_VERIFY '
         // require(tx.hashSequence == requiredHS)
@@ -495,7 +495,7 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
-        'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_1 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
+        'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_NOP OP_0 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT 20 OP_SPLIT OP_4 OP_SPLIT '
         + 'OP_9 OP_ROLL OP_1 OP_EQUALVERIFY OP_8 OP_ROLL OP_1 OP_EQUALVERIFY '
         + 'OP_7 OP_ROLL OP_1 OP_EQUALVERIFY OP_6 OP_ROLL OP_1 OP_EQUALVERIFY '
@@ -519,7 +519,7 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
-        'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_1 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
+        'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_NOP OP_0 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT 20 OP_SPLIT OP_4 OP_SPLIT '
         + 'OP_1 OP_EQUALVERIFY OP_4 OP_ROLL OP_1 OP_EQUALVERIFY '
         + 'OP_6 OP_ROLL OP_1 OP_EQUALVERIFY OP_6 OP_ROLL OP_1 OP_EQUALVERIFY '
@@ -553,8 +553,8 @@ export const fixtures: Fixture[] = [
       bytecode:
         // function receive
         'OP_4 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
-        // preimage parsing
-        + 'OP_5 OP_PICK 69 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
+        // Preimage deserialisation (with OP_NOP left in)
+        + 'OP_5 OP_PICK OP_NOP 68 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
         // require(checkSig(s, pk)) + preimage verification
         + 'OP_10 OP_ROLL OP_10 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
@@ -609,8 +609,8 @@ export const fixtures: Fixture[] = [
         { name: 'announce', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
       ],
       bytecode:
-        // Preimage deserialisation
-        'OP_DUP 69 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
+        // Preimage deserialisation (with OP_NOP left in)
+        'OP_DUP OP_NOP 68 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
         + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
         // require(checkSig(s, pk)) + covenant verification
         + 'OP_2ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '

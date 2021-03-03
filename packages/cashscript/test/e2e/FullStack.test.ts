@@ -16,7 +16,7 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
   beforeAll(() => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/p2pkh.json');
-    const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://free-main.fullstack.cash/v3/' }));
+    const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://free-main.fullstack.cash/v4/' }));
     p2pkhInstance = new Contract(artifact, [bobPkh], provider);
     console.log(p2pkhInstance.address);
   });
