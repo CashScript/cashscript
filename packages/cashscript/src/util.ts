@@ -268,4 +268,49 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
   throw Error('Pushdata too large');
 }
-// ////////////////////////////////////////////////////////////////////////////
+
+// ////////// COMPILER /////////////////////////////////////////////////////////
+/**
+ * When cutting out the tx.bytecode preimage variable, the compiler does not know
+ * the size of the final redeem scrip yet, because the constructor parameters still
+ * need to get added. Because of this it does not know whether the VarInt is 1 or 3
+ * bytes. During compilation, an OP_NOP is added at the spot where the bytecode is
+ * cut out. This function replaces that OP_NOP and adds either 1 or 3 to the cut to
+ * additionally cut off the VarInt.
+ *
+ * @param script incomplete redeem script
+ * @returns completed redeem script
+ */
+export function replaceBytecodeNop(script: Script): Script {
+  const index = script.findIndex((op) => op === Op.OP_NOP);
+  if (index < 0) return script;
+
+  // Remove the OP_NOP
+  script.splice(index, 1);
+
+  // Retrieve size of current OP_SPLIT
+  let oldCut = script[index];
+  if (oldCut instanceof Uint8Array) {
+    oldCut = Data.decodeInt(oldCut);
+  } else if (oldCut === Op.OP_0) {
+    oldCut = 0;
+  } else if (oldCut >= Op.OP_1 && oldCut <= Op.OP_16) {
+    oldCut -= 80;
+  } else {
+    return script;
+  }
+
+  // Update the old OP_SPLIT by adding either 1 or 3 to it
+  script[index] = Data.encodeInt(oldCut + 1);
+  const bytecodeSize = calculateBytesize(script);
+  if (bytecodeSize > 252) {
+    script[index] = Data.encodeInt(oldCut + 3);
+  }
+
+  // Minimally encode
+  return Data.asmToScript(Data.scriptToAsm(script));
+}
+
+export function generateRedeemScript(baseScript: Script, encodedArgs: Script): Script {
+  return replaceBytecodeNop([...encodedArgs, ...baseScript]);
+}

@@ -1,5 +1,11 @@
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
-import { alicePk, alice } from '../fixture/vars';
+import {
+  alicePk,
+  alice,
+  alicePkh,
+  bobPkh,
+  aliceAddress,
+} from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { createOpReturnOutput } from '../../src/util';
 
@@ -30,6 +36,36 @@ describe('Simple Covenant', () => {
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
+  });
+});
+
+describe('Bytecode VarInt Border Mecenas', () => {
+  let mecenas: Contract;
+  const pledge = 10000;
+
+  beforeAll(() => {
+    // eslint-disable-next-line global-require
+    const artifact = require('../fixture/mecenas_border.json');
+    const provider = new ElectrumNetworkProvider();
+    mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
+    console.log(mecenas.address);
+  });
+
+  it('should succeed when sending pledge to receiver', async () => {
+    // given
+    const to = aliceAddress;
+    const amount = pledge;
+
+    // when
+    const tx = await mecenas.functions
+      .receive(alicePk, new SignatureTemplate(alice))
+      .to(to, amount)
+      .withHardcodedFee(1000)
+      .send();
+
+    // then
+    const txOutputs = getTxOutputs(tx);
+    expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
   });
 });
 

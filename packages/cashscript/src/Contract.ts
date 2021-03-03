@@ -9,7 +9,12 @@ import { Transaction } from './Transaction';
 import { Argument, encodeArgument } from './Argument';
 import { Utxo } from './interfaces';
 import NetworkProvider from './network/NetworkProvider';
-import { scriptToAddress, calculateBytesize, countOpcodes } from './util';
+import {
+  scriptToAddress,
+  calculateBytesize,
+  countOpcodes,
+  generateRedeemScript,
+} from './util';
 import SignatureTemplate from './SignatureTemplate';
 import { ElectrumNetworkProvider } from './network';
 
@@ -49,10 +54,10 @@ export class Contract {
       throw new Error('Cannot use signatures in constructor');
     }
 
-    this.redeemScript = [
-      ...encodedArgs as Uint8Array[],
-      ...Data.asmToScript(this.artifact.bytecode),
-    ];
+    this.redeemScript = generateRedeemScript(
+      Data.asmToScript(this.artifact.bytecode),
+      encodedArgs as Uint8Array[],
+    );
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")

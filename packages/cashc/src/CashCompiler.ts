@@ -5,7 +5,6 @@ import { Ast } from './ast/AST';
 import AstBuilder from './ast/AstBuilder';
 import ThrowingErrorListener from './ast/ThrowingErrorListener';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
-import ReplaceBytecodeNop from './generation/ReplaceBytecodeNop';
 import { CashScriptLexer } from './grammar/CashScriptLexer';
 import { CashScriptParser } from './grammar/CashScriptParser';
 import TargetCodeOptimisation from './optimisations/TargetCodeOptimisation';
@@ -32,7 +31,6 @@ export const CashCompiler = {
 
     // Bytecode optimisation
     bytecode = TargetCodeOptimisation.optimise(bytecode);
-    bytecode = ReplaceBytecodeNop.replace(bytecode);
 
     return generateArtifact(ast, bytecode, code);
   },
