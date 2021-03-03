@@ -68,7 +68,7 @@ import {
 } from './Globals';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
-import { VersionError } from '../Errors';
+import { ParseError, VersionError } from '../Errors';
 import { parseType } from './Type';
 
 export default class AstBuilder
@@ -298,6 +298,10 @@ export default class AstBuilder
       return this.createStringLiteral(ctx);
     }
 
+    if (ctx.DateLiteral()) {
+      return this.createDateLiteral(ctx);
+    }
+
     if (ctx.HexLiteral()) {
       return this.createHexLiteral(ctx);
     }
@@ -331,6 +335,25 @@ export default class AstBuilder
     const stringLiteral = new StringLiteralNode(stringValue, quote);
     stringLiteral.location = Location.fromCtx(ctx);
     return stringLiteral;
+  }
+
+  createDateLiteral(ctx: LiteralContext): IntLiteralNode {
+    const rawString = (ctx.DateLiteral() as TerminalNode).text;
+    const stringValue = rawString.substring(6, rawString.length - 2).trim();
+
+    if (!/^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/.test(stringValue)) {
+      throw new ParseError('Date should be in format `YYYY-MM-DDThh:mm:ss`', Location.fromCtx(ctx));
+    }
+
+    const timestamp = Math.round(Date.parse(stringValue) / 1000);
+
+    if (Number.isNaN(timestamp)) {
+      throw new ParseError(`Incorrectly formatted date "${stringValue}"`, Location.fromCtx(ctx));
+    }
+
+    const intLiteral = new IntLiteralNode(timestamp);
+    intLiteral.location = Location.fromCtx(ctx);
+    return intLiteral;
   }
 
   createHexLiteral(ctx: LiteralContext): HexLiteralNode {

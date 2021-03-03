@@ -1,0 +1,7 @@
+pragma cashscript ^0.5.0;
+
+contract Test() {
+    function test() {
+        require(tx.time >= date("2021-03-03T05:30:00.000Z"));
+    }
+}

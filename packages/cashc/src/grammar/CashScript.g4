@@ -112,6 +112,7 @@ literal
     : BooleanLiteral
     | numberLiteral
     | StringLiteral
+    | DateLiteral
     | HexLiteral
     ;
 
@@ -151,6 +152,10 @@ Bound
 StringLiteral
     : '"' ('\\"' | ~["\r\n])*? '"'
     | '\'' ('\\\'' | ~['\r\n])*? '\''
+    ;
+
+DateLiteral
+    : 'date(' StringLiteral ')'
     ;
 
 HexLiteral
