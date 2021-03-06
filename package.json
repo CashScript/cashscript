@@ -30,7 +30,7 @@
     "preproof:opt": "cp packages/cashc/src/optimisations/Optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv",
     "proof:opt": "yarn cashproof opt.equiv",
     "postproof:opt": "rm opt.equiv",
-    "proof:0.2.0": "yarn cashproof packages/cashc/test/cashproof/0.1.2\\<=\\>0.2.0.equiv",
+    "proof:0.2.0": "yarn cashproof packages/cashc/test/cashproof/0.1.2=0.2.0.equiv",
     "proof": "yarn proof:opt && yarn proof:0.2.0",
     "cashproof": "python3 node_modules/cashproof/run.py",
     "examples": "ts-node examples/p2pkh.ts && ts-node examples/transfer_with_timeout.ts && ts-node examples/hodl_vault.ts",
