@@ -1,10 +1,20 @@
 #! /usr/bin/env node
 import { binToHex, hexToBin } from '@bitauth/libauth';
+import {
+  asmToScript,
+  calculateBytesize,
+  countOpcodes,
+  encodeBool,
+  encodeInt,
+  encodeString,
+  exportArtifact,
+  scriptToAsm,
+  scriptToBytecode,
+} from '@cashscript/utils';
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { CashCompiler, Artifacts, version } from '.';
-import { countOpcodes, Data, calculateBytesize } from './util';
+import { compileFile, version } from '.';
 
 program
   .storeOptionsAsProperties(false)
@@ -38,22 +48,22 @@ function run(): void {
   const outputFile = opts.output && opts.output !== '-' && path.resolve(opts.output);
 
   try {
-    const artifact = CashCompiler.compileFile(sourceFile);
-    const script = Data.asmToScript(artifact.bytecode);
+    const artifact = compileFile(sourceFile);
+    const script = asmToScript(artifact.bytecode);
 
     // Parse any provided args and add these to the front of the script
     if (opts.args) {
       opts.args.forEach((arg: string) => {
         if (arg === 'true') {
-          script.unshift(Data.encodeBool(true));
+          script.unshift(encodeBool(true));
         } else if (arg === 'false') {
-          script.unshift(Data.encodeBool(false));
+          script.unshift(encodeBool(false));
         } else if (arg.startsWith('0x')) {
           script.unshift(hexToBin(arg.substring(2)));
         } else if (!Number.isNaN(Number(arg))) {
-          script.unshift(Data.encodeInt(Number(arg)));
+          script.unshift(encodeInt(Number(arg)));
         } else {
-          script.unshift(Data.encodeString(arg));
+          script.unshift(encodeString(arg));
         }
       });
     }
@@ -69,12 +79,12 @@ function run(): void {
     }
 
     if (opts.asm) {
-      console.log(Data.scriptToAsm(script));
+      console.log(scriptToAsm(script));
       return;
     }
 
     if (opts.hex) {
-      console.log(binToHex(Data.scriptToBytecode(script)));
+      console.log(binToHex(scriptToBytecode(script)));
       return;
     }
 
@@ -95,7 +105,7 @@ function run(): void {
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
-      Artifacts.export(artifact, outputFile);
+      exportArtifact(artifact, outputFile);
     } else {
       // Output artifact to STDOUT
       console.log(JSON.stringify(artifact, null, 2));

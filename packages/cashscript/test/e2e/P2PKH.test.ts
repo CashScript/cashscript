@@ -9,7 +9,7 @@ import {
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
 import { Utxo } from '../../src/interfaces';
-import { createOpReturnOutput } from '../../src/util';
+import { createOpReturnOutput } from '../../src/utils';
 import { FailedSigCheckError, Reason } from '../../src/Errors';
 
 describe('P2PKH', () => {

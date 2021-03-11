@@ -1,4 +1,4 @@
-import { Type } from 'cashc';
+import { Type } from '@cashscript/utils';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {

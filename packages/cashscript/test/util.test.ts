@@ -1,16 +1,20 @@
 import { binToHex } from '@bitauth/libauth';
-import { Data } from 'cashc';
+import {
+  asmToBytecode,
+  asmToScript,
+  bytecodeToAsm,
+  placeholder,
+} from '@cashscript/utils';
 import {
   scriptToAddress,
   createInputScript,
   getInputSize,
   getPreimageSize,
-  placeholder,
-} from '../src/util';
+} from '../src/utils';
 import { Network } from '../src/interfaces';
 import { alicePk, alicePkh } from './fixture/vars';
 
-describe('util', () => {
+describe('utils', () => {
   describe('getInputSize', () => {
     it('should calculate input size for small script', () => {
       const inputScript = new Uint8Array(100).fill(0);
@@ -54,33 +58,33 @@ describe('util', () => {
   describe('createInputScript', () => {
     it('should create an input script without selector or preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
-      const redeemScript = Data.asmToScript(asm);
+      const redeemScript = asmToScript(asm);
       const args = [alicePk, placeholder(1)];
 
       const inputScript = createInputScript(redeemScript, args);
 
-      const expectedInputScriptAsm = `00 ${binToHex(alicePk)} ${binToHex(Data.asmToBytecode(asm))}`;
-      expect(Data.bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
+      const expectedInputScriptAsm = `00 ${binToHex(alicePk)} ${binToHex(asmToBytecode(asm))}`;
+      expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
     });
 
     it('should create an input script with selector and preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
-      const redeemScript = Data.asmToScript(asm);
+      const redeemScript = asmToScript(asm);
       const args = [alicePk, placeholder(1)];
       const selector = 1;
       const preimage = placeholder(1);
 
       const inputScript = createInputScript(redeemScript, args, selector, preimage);
 
-      const expectedInputScriptAsm = `00 ${binToHex(alicePk)} 00 OP_1 ${binToHex(Data.asmToBytecode(asm))}`;
-      expect(Data.bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
+      const expectedInputScriptAsm = `00 ${binToHex(alicePk)} 00 OP_1 ${binToHex(asmToBytecode(asm))}`;
+      expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
     });
   });
 
   describe('scriptToAddress', () => {
     it('should convert a redeem script to a cashaddress', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
-      const redeemScript = Data.asmToScript(asm);
+      const redeemScript = asmToScript(asm);
 
       const mainnetAddress = scriptToAddress(redeemScript, Network.MAINNET);
       const testnetAddress = scriptToAddress(redeemScript, Network.TESTNET);

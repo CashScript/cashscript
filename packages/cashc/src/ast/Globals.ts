@@ -1,5 +1,5 @@
+import { PrimitiveType, ArrayType, BytesType } from '@cashscript/utils';
 import { SymbolTable, Symbol } from './SymbolTable';
-import { PrimitiveType, ArrayType, BytesType } from './Type';
 
 export const NumberUnit: { [index:string] : number } = {
   SATOSHIS: 1,

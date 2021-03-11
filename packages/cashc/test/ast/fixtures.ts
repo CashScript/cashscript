@@ -1,5 +1,5 @@
 import { hexToBin } from '@bitauth/libauth';
-import { BytesType, PrimitiveType } from '../../src';
+import { BytesType, PrimitiveType } from '@cashscript/utils';
 import {
   SourceFileNode,
   ContractNode,

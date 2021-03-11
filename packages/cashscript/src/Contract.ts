@@ -1,20 +1,21 @@
 import { binToHex } from '@bitauth/libauth';
 import {
-  Artifact,
-  Data,
-  Script,
   AbiFunction,
-} from 'cashc';
+  Artifact,
+  asmToScript,
+  calculateBytesize,
+  countOpcodes,
+  generateRedeemScript,
+  Script,
+  scriptToBytecode,
+} from '@cashscript/utils';
 import { Transaction } from './Transaction';
 import { Argument, encodeArgument } from './Argument';
 import { Utxo } from './interfaces';
 import NetworkProvider from './network/NetworkProvider';
 import {
   scriptToAddress,
-  calculateBytesize,
-  countOpcodes,
-  generateRedeemScript,
-} from './util';
+} from './utils';
 import SignatureTemplate from './SignatureTemplate';
 import { ElectrumNetworkProvider } from './network';
 
@@ -55,7 +56,7 @@ export class Contract {
     }
 
     this.redeemScript = generateRedeemScript(
-      Data.asmToScript(this.artifact.bytecode),
+      asmToScript(this.artifact.bytecode),
       encodedArgs as Uint8Array[],
     );
 
@@ -87,7 +88,7 @@ export class Contract {
   }
 
   getRedeemScriptHex(): string {
-    return binToHex(Data.scriptToBytecode(this.redeemScript));
+    return binToHex(scriptToBytecode(this.redeemScript));
   }
 
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {

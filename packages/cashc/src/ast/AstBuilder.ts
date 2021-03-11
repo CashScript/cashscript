@@ -1,4 +1,5 @@
 import { hexToBin } from '@bitauth/libauth';
+import { parseType } from '@cashscript/utils';
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
 import { ParseTree } from 'antlr4ts/tree/ParseTree';
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
@@ -69,7 +70,6 @@ import {
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
 import { ParseError, VersionError } from '../Errors';
-import { parseType } from './Type';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>

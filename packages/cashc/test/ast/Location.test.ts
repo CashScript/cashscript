@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { parseCode } from '../../src/CashCompiler';
+import { parseCode } from '../../src/compiler';
 import { Location } from '../../src/ast/Location';
 
 describe('Location', () => {

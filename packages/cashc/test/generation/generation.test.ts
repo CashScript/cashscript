@@ -4,13 +4,13 @@
  */
 
 import path from 'path';
-import { CashCompiler } from '../../src/CashCompiler';
+import { compileFile } from '../../src';
 import { fixtures } from './fixtures';
 
 describe('Code generation & target code optimisation', () => {
   fixtures.forEach((fixture) => {
     it(`should compile ${fixture.fn} to correct Script and artifact`, () => {
-      const artifact = CashCompiler.compileFile(path.join(__dirname, '..', 'valid-contract-files', fixture.fn));
+      const artifact = compileFile(path.join(__dirname, '..', 'valid-contract-files', fixture.fn));
       expect(artifact).toEqual({ ...fixture.artifact, updatedAt: expect.any(String) });
     });
   });

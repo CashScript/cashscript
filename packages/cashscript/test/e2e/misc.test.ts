@@ -7,7 +7,7 @@ import {
   aliceAddress,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { createOpReturnOutput } from '../../src/util';
+import { createOpReturnOutput } from '../../src/utils';
 
 describe('Simple Covenant', () => {
   let covenant: Contract;

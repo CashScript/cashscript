@@ -1,10 +1,10 @@
+import { Type } from '@cashscript/utils';
 import {
   VariableDefinitionNode,
   ParameterNode,
   IdentifierNode,
   Node,
 } from './AST';
-import { Type } from './Type';
 
 export class Symbol {
   references: IdentifierNode[] = [];

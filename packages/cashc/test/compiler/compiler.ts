@@ -8,13 +8,13 @@
 import path from 'path';
 import { getSubdirectories, readCashFiles } from '../test-util';
 import * as Errors from '../../src/Errors';
-import { CashCompiler } from '../../src/CashCompiler';
+import { compileString } from '../../src';
 
 describe('CashCompiler', () => {
   describe('Successful compilation', () => {
     readCashFiles(path.join(__dirname, '..', 'valid-contract-files')).forEach((file) => {
       it(`${file.fn} should succeed`, () => {
-        expect(() => CashCompiler.compileString(file.contents)).not.toThrow();
+        expect(() => compileString(file.contents)).not.toThrow();
       });
     });
   });
@@ -29,7 +29,7 @@ describe('CashCompiler', () => {
             // Retrieve the correct Error constructor from the Errors.ts file
             const expectedError = Errors[errorType as keyof typeof Errors];
 
-            expect(() => CashCompiler.compileString(file.contents)).toThrow(expectedError);
+            expect(() => compileString(file.contents)).toThrow(expectedError);
           });
         });
       });

@@ -7,7 +7,7 @@ import {
 } from '@bitauth/libauth';
 import { Output } from '../src/interfaces';
 import { network } from './fixture/vars';
-import { getNetworkPrefix } from '../src/util';
+import { getNetworkPrefix } from '../src/utils';
 
 export function getTxOutputs(tx: Transaction): Output[] {
   return tx.outputs.map((o) => {

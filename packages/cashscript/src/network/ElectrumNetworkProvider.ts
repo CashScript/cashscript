@@ -1,4 +1,5 @@
 import { binToHex } from '@bitauth/libauth';
+import { sha256 } from '@cashscript/utils';
 import {
   ElectrumCluster,
   ElectrumTransport,
@@ -7,7 +8,7 @@ import {
 } from 'electrum-cash';
 import { Utxo, Network } from '../interfaces';
 import NetworkProvider from './NetworkProvider';
-import { addressToLockScript, sha256 } from '../util';
+import { addressToLockScript } from '../utils';
 
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumCluster;

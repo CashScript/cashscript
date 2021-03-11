@@ -1,10 +1,12 @@
 import { hexToBin } from '@bitauth/libauth';
 import {
-  PrimitiveType,
-  Data,
   BytesType,
+  encodeBool,
+  encodeInt,
+  encodeString,
   parseType,
-} from 'cashc';
+  PrimitiveType,
+} from '@cashscript/utils';
 import { TypeError } from './Errors';
 import SignatureTemplate from './SignatureTemplate';
 
@@ -20,21 +22,21 @@ export function encodeArgument(
     if (typeof argument !== 'boolean') {
       throw new TypeError(typeof argument, type);
     }
-    return Data.encodeBool(argument);
+    return encodeBool(argument);
   }
 
   if (type === PrimitiveType.INT) {
     if (typeof argument !== 'number') {
       throw new TypeError(typeof argument, type);
     }
-    return Data.encodeInt(argument);
+    return encodeInt(argument);
   }
 
   if (type === PrimitiveType.STRING) {
     if (typeof argument !== 'string') {
       throw new TypeError(typeof argument, type);
     }
-    return Data.encodeString(argument);
+    return encodeString(argument);
   }
 
   if (type === PrimitiveType.SIG && argument instanceof SignatureTemplate) return argument;

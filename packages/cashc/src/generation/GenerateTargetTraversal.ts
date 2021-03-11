@@ -1,5 +1,17 @@
 import { hexToBin } from '@bitauth/libauth';
 import {
+  asmToScript,
+  encodeBool,
+  encodeInt,
+  encodeString,
+  Op,
+  OpOrData,
+  PrimitiveType,
+  resultingType,
+  Script,
+  scriptToAsm,
+} from '@cashscript/utils';
+import {
   ContractNode,
   ParameterNode,
   VariableDefinitionNode,
@@ -26,16 +38,15 @@ import {
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { GlobalFunction, PreimageField, Class } from '../ast/Globals';
-import { resultingType, PrimitiveType } from '../ast/Type';
-import {
-  Op,
-  OpOrData,
-  Script,
-  ToOps,
-} from './Script';
-import { Data } from '../util';
 import { PreimageParts } from './preimage';
 import { BinaryOperator } from '../ast/Operator';
+import {
+  compileBinaryOp,
+  compileCast,
+  compileGlobalFunction,
+  compileTimeOp,
+  compileUnaryOp,
+} from './utils';
 
 export default class GenerateTargetTraversal extends AstTraversal {
   output: Script = [];
@@ -86,7 +97,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.contract = this.visit(node.contract) as ContractNode;
 
     // Minimally encode output by going Script -> ASM -> Script
-    this.output = Data.asmToScript(Data.scriptToAsm(this.output));
+    this.output = asmToScript(scriptToAsm(this.output));
 
     return node;
   }
@@ -100,7 +111,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       node.functions = node.functions.map((f, i) => {
         const stackCopy = [...this.stack];
         const selectorIndex = this.getStackIndex('$$');
-        this.emit(Data.encodeInt(selectorIndex));
+        this.emit(encodeInt(selectorIndex));
         if (i === node.functions.length - 1) {
           this.emit(Op.OP_ROLL);
           this.removeFromStack(selectorIndex);
@@ -110,7 +121,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
         // All functions are if-else statements, except the final one which is
         // enforced with NUMEQUALVERIFY
-        this.emit(Data.encodeInt(i));
+        this.emit(encodeInt(i));
         this.emit(Op.OP_NUMEQUAL);
         if (i < node.functions.length - 1) {
           this.emit(Op.OP_IF);
@@ -155,7 +166,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   decodePreimage(fields: PreimageField[]): void {
     // Preimage is first arg after selector
     this.pushToStack('$preimage', true);
-    this.emit(Data.encodeInt(this.getStackIndex('$preimage')));
+    this.emit(encodeInt(this.getStackIndex('$preimage')));
     this.emit(Op.OP_PICK);
 
     const cuts = {
@@ -173,12 +184,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
       const part = PreimageParts[field];
       const start = part.fromStart - cuts.fromStart;
       if (start !== 0) {
-        this.emit(Data.encodeInt(start));
+        this.emit(encodeInt(start));
         this.emit(Op.OP_SPLIT);
         this.emit(Op.OP_NIP);
       }
 
-      this.emit(Data.encodeInt(part.size));
+      this.emit(encodeInt(part.size));
       this.emit(Op.OP_SPLIT);
 
       this.pushToStack(field);
@@ -193,12 +204,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
       // Always add this split, since the VarInt needs to be cut off any way
       // See ReplaceBytecodeNop.ts
       this.emit(Op.OP_NOP);
-      this.emit(Data.encodeInt(start));
+      this.emit(encodeInt(start));
       this.emit(Op.OP_SPLIT);
       this.emit(Op.OP_NIP);
 
       this.emit(Op.OP_SIZE);
-      this.emit(Data.encodeInt(part.size));
+      this.emit(encodeInt(part.size));
       this.emit(Op.OP_SUB);
       this.emit(Op.OP_SPLIT);
 
@@ -221,12 +232,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
       if (end > 0) {
         this.emit(Op.OP_SIZE);
-        this.emit(Data.encodeInt(end));
+        this.emit(encodeInt(end));
         this.emit(Op.OP_SUB);
         this.emit(Op.OP_SPLIT);
         this.emit(Op.OP_NIP);
       } else if (start !== 0) {
-        this.emit(Data.encodeInt(start));
+        this.emit(encodeInt(start));
         this.emit(Op.OP_SPLIT);
         this.emit(Op.OP_NIP);
       }
@@ -234,7 +245,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.pushToStack(field);
       if (field === PreimageField.HASHTYPE) return;
 
-      this.emit(Data.encodeInt(part.size));
+      this.emit(encodeInt(part.size));
       this.emit(Op.OP_SPLIT);
 
       cuts.fromStart = part.fromStart + part.size;
@@ -308,7 +319,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   // This algorithm can be optimised for hardcoded depths
   // See thesis for explanation
   emitReplace(index: number): void {
-    this.emit(Data.encodeInt(index));
+    this.emit(encodeInt(index));
     this.emit(Op.OP_ROLL);
     this.emit(Op.OP_DROP);
     for (let i = 0; i < index - 1; i += 1) {
@@ -324,7 +335,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(ToOps.fromTimeOp(node.timeOp));
+    this.emit(compileTimeOp(node.timeOp));
     this.popFromStack();
     return node;
   }
@@ -387,7 +398,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.popFromStack();
     }
 
-    this.emit(ToOps.fromCast(node.expression.type as PrimitiveType, node.type));
+    this.emit(compileCast(node.expression.type as PrimitiveType, node.type));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -402,7 +413,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     if (this.needsToVerifyCovenant(node)) this.verifyCovenant();
 
-    this.emit(ToOps.fromFunction(node.identifier.name as GlobalFunction));
+    this.emit(compileGlobalFunction(node.identifier.name as GlobalFunction));
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
 
@@ -410,7 +421,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitMultiSig(node: FunctionCallNode): Node {
-    this.emit(Data.encodeBool(false));
+    this.emit(encodeBool(false));
     node.parameters = this.visitList(node.parameters);
     this.emit(Op.OP_CHECKMULTISIG);
     const sigs = node.parameters[0] as ArrayNode;
@@ -441,7 +452,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // Retrieve preimage from stack and hash it
     const preimageIndex = this.getStackIndex('$preimage');
     this.removeFromStack(preimageIndex);
-    this.emit(Data.encodeInt(preimageIndex));
+    this.emit(encodeInt(preimageIndex));
     this.emit(Op.OP_ROLL);
     this.emit(Op.OP_SHA256);
     this.pushToStack('(value)');
@@ -505,7 +516,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
         } else {
           // If the argument is not a literal, the script needs to check size
           this.emit(Op.OP_DUP);
-          this.emit(Data.encodeInt(75));
+          this.emit(encodeInt(75));
           this.emit(Op.OP_GREATERTHAN);
           this.emit(Op.OP_IF);
           this.emit(hexToBin('4c'));
@@ -550,10 +561,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    this.emit(ToOps.fromBinaryOp(
-      node.operator,
-      resultingType(node.left.type, node.right.type) === PrimitiveType.INT,
-    ));
+    const isNumeric = resultingType(node.left.type, node.right.type) === PrimitiveType.INT;
+    this.emit(compileBinaryOp(node.operator, isNumeric));
     this.popFromStack(2);
     this.pushToStack('(value)');
     if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value');
@@ -562,7 +571,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(ToOps.fromUnaryOp(node.operator));
+    this.emit(compileUnaryOp(node.operator));
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -570,14 +579,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitArray(node: ArrayNode): Node {
     node.elements = this.visitList(node.elements);
-    this.emit(Data.encodeInt(node.elements.length));
+    this.emit(encodeInt(node.elements.length));
     this.pushToStack('(value)');
     return node;
   }
 
   visitIdentifier(node: IdentifierNode): Node {
     const stackIndex = this.getStackIndex(node.name);
-    this.emit(Data.encodeInt(stackIndex));
+    this.emit(encodeInt(stackIndex));
 
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
@@ -597,19 +606,19 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitBoolLiteral(node: BoolLiteralNode): Node {
-    this.emit(Data.encodeBool(node.value));
+    this.emit(encodeBool(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
   visitIntLiteral(node: IntLiteralNode): Node {
-    this.emit(Data.encodeInt(node.value));
+    this.emit(encodeInt(node.value));
     this.pushToStack('(value)');
     return node;
   }
 
   visitStringLiteral(node: StringLiteralNode): Node {
-    this.emit(Data.encodeString(node.value));
+    this.emit(encodeString(node.value));
     this.pushToStack('(value)');
     return node;
   }

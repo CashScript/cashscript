@@ -1,4 +1,16 @@
 import {
+  PrimitiveType,
+  explicitlyCastable,
+  implicitlyCastable,
+  implicitlyCastableSignature,
+  resultingType,
+  arrayType,
+  ArrayType,
+  TupleType,
+  BytesType,
+  Type,
+} from '@cashscript/utils';
+import {
   AssignNode,
   BranchNode,
   CastNode,
@@ -26,18 +38,6 @@ import {
   IndexOutOfBoundsError,
   CastSizeError,
 } from '../Errors';
-import {
-  PrimitiveType,
-  explicitlyCastable,
-  implicitlyCastable,
-  implicitlyCastableSignature,
-  resultingType,
-  arrayType,
-  ArrayType,
-  TupleType,
-  BytesType,
-  Type,
-} from '../ast/Type';
 import { BinaryOperator, UnaryOperator } from '../ast/Operator';
 import { GlobalFunction } from '../ast/Globals';
 

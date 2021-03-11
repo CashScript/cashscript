@@ -1,8 +1,8 @@
+import { Type, PrimitiveType, BytesType } from '@cashscript/utils';
 import { TimeOp, PreimageField } from './Globals';
 import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
-import { Type, PrimitiveType, BytesType } from './Type';
 import { SymbolTable, Symbol } from './SymbolTable';
 
 export type Ast = SourceFileNode;

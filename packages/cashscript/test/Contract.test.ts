@@ -1,4 +1,5 @@
 import { hexToBin } from '@bitauth/libauth';
+import { placeholder } from '@cashscript/utils';
 import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../src';
 import {
   alicePkh,
@@ -6,7 +7,6 @@ import {
   alice,
   bob,
 } from './fixture/vars';
-import { placeholder } from '../src/util';
 
 describe('Contract', () => {
   describe('new', () => {

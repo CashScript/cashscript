@@ -27,7 +27,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint . --ext .ts",
-    "preproof:opt": "cp packages/cashc/src/optimisations/Optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv",
+    "preproof:opt": "cp packages/utils/src/cashproof-optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv",
     "proof:opt": "yarn cashproof opt.equiv",
     "postproof:opt": "rm opt.equiv",
     "proof:0.2.0": "yarn cashproof packages/cashc/test/cashproof/0.1.2=0.2.0.equiv",

@@ -1,7 +1,7 @@
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
-import { createOpReturnOutput } from '../../src/util';
+import { createOpReturnOutput } from '../../src/utils';
 import { alicePk, alice } from '../fixture/vars';
 
 describe('Announcement', () => {

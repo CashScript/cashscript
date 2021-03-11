@@ -1,6 +1,6 @@
 import { decodePrivateKeyWif, Secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
+import { sha256 } from '@cashscript/utils';
 import { HashType } from './interfaces';
-import { sha256 } from './util';
 
 export default class SignatureTemplate {
   private privateKey: Uint8Array;
@@ -44,7 +44,7 @@ function isKeypair(obj: any): obj is Keypair {
 }
 
 function decodeWif(wif: string): Uint8Array {
-  const result = decodePrivateKeyWif({ hash: (input) => sha256(input) }, wif);
+  const result = decodePrivateKeyWif({ hash: sha256 }, wif);
 
   if (typeof result === 'string') {
     throw new Error(result);

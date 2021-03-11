@@ -1,4 +1,3 @@
-import { Script, Data, Op } from 'cashc';
 import {
   cashAddressToLockingBytecode,
   AddressType,
@@ -13,7 +12,14 @@ import {
   hexToBin,
   flattenBinArray,
 } from '@bitauth/libauth';
-import hash from 'hash.js';
+import {
+  encodeInt,
+  hash160,
+  Op,
+  Script,
+  scriptToBytecode,
+  sha256,
+} from '@cashscript/utils';
 import { Utxo, Output, Network } from './interfaces';
 import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {
@@ -63,24 +69,9 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
     return acc + output.to.byteLength + 8 + 2;
   }, 0);
   // Add tx-out count (accounting for a potential change output)
-  size += Data.encodeInt(outputs.length + 1).byteLength;
+  size += encodeInt(outputs.length + 1).byteLength;
 
   return size;
-}
-
-export function placeholder(size: number): Uint8Array {
-  return new Uint8Array(size).fill(0);
-}
-
-export function countOpcodes(script: Script): number {
-  return script
-    .filter((opOrData) => typeof opOrData === 'number')
-    .filter((op) => op > Op.OP_16)
-    .length;
-}
-
-export function calculateBytesize(script: Script): number {
-  return Data.scriptToBytecode(script).byteLength;
 }
 
 // ////////// BUILD OBJECTS ///////////////////////////////////////////////////
@@ -93,11 +84,11 @@ export function createInputScript(
   // Create unlock script / redeemScriptSig (add potential preimage and selector)
   const unlockScript = encodedArgs.reverse();
   if (preimage !== undefined) unlockScript.push(preimage);
-  if (selector !== undefined) unlockScript.push(Data.encodeInt(selector));
+  if (selector !== undefined) unlockScript.push(encodeInt(selector));
 
   // Create input script and compile it to bytecode
-  const inputScript = [...unlockScript, Data.scriptToBytecode(redeemScript)];
-  return Data.scriptToBytecode(inputScript);
+  const inputScript = [...unlockScript, scriptToBytecode(redeemScript)];
+  return scriptToBytecode(inputScript);
 }
 
 export function createOpReturnOutput(
@@ -180,23 +171,6 @@ function toRegExp(reasons: string[]): RegExp {
   return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
 }
 
-// ////////// HASH FUNCTIONS //////////////////////////////////////////////////
-export function sha512(payload: Uint8Array): Uint8Array {
-  return Uint8Array.from(hash.sha512().update(payload).digest());
-}
-
-export function sha256(payload: Uint8Array): Uint8Array {
-  return Uint8Array.from(hash.sha256().update(payload).digest());
-}
-
-export function ripemd160(payload: Uint8Array): Uint8Array {
-  return Uint8Array.from(hash.ripemd160().update(payload).digest());
-}
-
-export function hash160(payload: Uint8Array): Uint8Array {
-  return ripemd160(sha256(payload));
-}
-
 // ////////// MISC ////////////////////////////////////////////////////////////
 export function meep(tx: any, utxos: Utxo[], script: Script): string {
   const scriptPubkey = binToHex(scriptToLockingBytecode(script));
@@ -211,7 +185,7 @@ export function scriptToAddress(script: Script, network: string): string {
 }
 
 export function scriptToLockingBytecode(script: Script): Uint8Array {
-  const scriptHash = hash160(Data.scriptToBytecode(script));
+  const scriptHash = hash160(scriptToBytecode(script));
   const addressContents = { payload: scriptHash, type: AddressType.p2sh };
   const lockingBytecode = addressContentsToLockingBytecode(addressContents);
   return lockingBytecode;
@@ -267,50 +241,4 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   if (byteLength < 76) return Uint8Array.from([byteLength]);
   if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
   throw Error('Pushdata too large');
-}
-
-// ////////// COMPILER /////////////////////////////////////////////////////////
-/**
- * When cutting out the tx.bytecode preimage variable, the compiler does not know
- * the size of the final redeem scrip yet, because the constructor parameters still
- * need to get added. Because of this it does not know whether the VarInt is 1 or 3
- * bytes. During compilation, an OP_NOP is added at the spot where the bytecode is
- * cut out. This function replaces that OP_NOP and adds either 1 or 3 to the cut to
- * additionally cut off the VarInt.
- *
- * @param script incomplete redeem script
- * @returns completed redeem script
- */
-export function replaceBytecodeNop(script: Script): Script {
-  const index = script.findIndex((op) => op === Op.OP_NOP);
-  if (index < 0) return script;
-
-  // Remove the OP_NOP
-  script.splice(index, 1);
-
-  // Retrieve size of current OP_SPLIT
-  let oldCut = script[index];
-  if (oldCut instanceof Uint8Array) {
-    oldCut = Data.decodeInt(oldCut);
-  } else if (oldCut === Op.OP_0) {
-    oldCut = 0;
-  } else if (oldCut >= Op.OP_1 && oldCut <= Op.OP_16) {
-    oldCut -= 80;
-  } else {
-    return script;
-  }
-
-  // Update the old OP_SPLIT by adding either 1 or 3 to it
-  script[index] = Data.encodeInt(oldCut + 1);
-  const bytecodeSize = calculateBytesize(script);
-  if (bytecodeSize > 252) {
-    script[index] = Data.encodeInt(oldCut + 3);
-  }
-
-  // Minimally encode
-  return Data.asmToScript(Data.scriptToAsm(script));
-}
-
-export function generateRedeemScript(baseScript: Script, encodedArgs: Script): Script {
-  return replaceBytecodeNop([...encodedArgs, ...baseScript]);
 }

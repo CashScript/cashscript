@@ -10,7 +10,14 @@ import {
   instantiateSecp256k1,
 } from '@bitauth/libauth';
 import delay from 'delay';
-import { Script, AbiFunction, Data } from 'cashc';
+import {
+  AbiFunction,
+  hash160,
+  hash256,
+  placeholder,
+  Script,
+  scriptToBytecode,
+} from '@cashscript/utils';
 import {
   Utxo,
   Output,
@@ -26,12 +33,9 @@ import {
   getTxSizeWithoutInputs,
   getPreimageSize,
   buildError,
-  hash160,
-  sha256,
   addressToLockScript,
   createSighashPreimage,
-  placeholder,
-} from './util';
+} from './utils';
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
 import NetworkProvider from './network/NetworkProvider';
 import SignatureTemplate from './SignatureTemplate';
@@ -138,7 +142,7 @@ export class Transaction {
     await this.setInputsAndOutputs();
 
     const secp256k1 = await instantiateSecp256k1();
-    const bytecode = Data.scriptToBytecode(this.redeemScript);
+    const bytecode = scriptToBytecode(this.redeemScript);
 
     const inputs = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
@@ -177,11 +181,11 @@ export class Transaction {
 
         const hashtype = utxo.template.getHashType();
         const preimage = createSighashPreimage(transaction, utxo, i, prevOutScript, hashtype);
-        const sighash = sha256(sha256(preimage));
+        const sighash = hash256(preimage);
 
         const signature = utxo.template.generateSignature(sighash, secp256k1);
 
-        const inputScript = Data.scriptToBytecode([signature, pubkey]);
+        const inputScript = scriptToBytecode([signature, pubkey]);
         inputScripts.push(inputScript);
 
         return;
@@ -195,7 +199,7 @@ export class Transaction {
         if (covenantHashType < 0) covenantHashType = arg.getHashType();
 
         const preimage = createSighashPreimage(transaction, utxo, i, bytecode, arg.getHashType());
-        const sighash = sha256(sha256(preimage));
+        const sighash = hash256(preimage);
 
         return arg.generateSignature(sighash, secp256k1);
       });
@@ -271,7 +275,7 @@ export class Transaction {
 
     // Create a placeholder preimage of the correct size
     const placeholderPreimage = this.abiFunction.covenant
-      ? placeholder(getPreimageSize(Data.scriptToBytecode(this.redeemScript)))
+      ? placeholder(getPreimageSize(scriptToBytecode(this.redeemScript)))
       : undefined;
 
     // Create a placeholder input script for size calculation using the placeholder

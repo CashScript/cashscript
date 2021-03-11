@@ -1,3 +1,4 @@
+import { Type, PrimitiveType } from '@cashscript/utils';
 import {
   IdentifierNode,
   FunctionDefinitionNode,
@@ -18,7 +19,6 @@ import {
   StatementNode,
   ContractNode,
 } from './ast/AST';
-import { Type, PrimitiveType } from './ast/Type';
 import { Symbol, SymbolType } from './ast/SymbolTable';
 import { Location, Point } from './ast/Location';
 
