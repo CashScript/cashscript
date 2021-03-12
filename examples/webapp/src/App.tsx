@@ -5,7 +5,8 @@ import React from 'react'
 import { Container, Row, Col, Form, Button } from 'react-bootstrap'
 import { BITBOX } from 'bitbox-sdk'
 import { ECPair } from 'bitcoincashjs-lib'
-import { CashCompiler, ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript'
+import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript'
+import { compileString } from 'cashc'
 
 interface AppState {
   contract?: Contract
@@ -45,7 +46,7 @@ class App extends React.Component<{}, AppState> {
     const alicePkh = bitbox.Crypto.hash160(alicePk)
 
     // Compile the P2PKH contract to an artifact object
-    const artifact = CashCompiler.compileString(source)
+    const artifact = compileString(source)
 
     // Initialise a network provider for network operations on TESTNET
     const provider = new ElectrumNetworkProvider('testnet')

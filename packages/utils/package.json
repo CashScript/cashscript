@@ -1,6 +1,6 @@
 {
   "name": "@cashscript/utils",
-  "version": "0.5.7",
+  "version": "0.6.0",
   "description": "CashScript utilities and types",
   "keywords": [
     "bitcoin cash",
@@ -38,7 +38,7 @@
     "test": "jest --config=../../jest.config.js packages/utils"
   },
   "dependencies": {
-    "@bitauth/libauth": "^1.18.0",
+    "@bitauth/libauth": "^1.18.1",
     "hash.js": "^1.1.7"
   },
   "devDependencies": {

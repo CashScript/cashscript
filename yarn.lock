@@ -287,10 +287,10 @@
   resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.17.1.tgz#bc5731ce787fbcdebcade8ab6aa3a0bd8cba19e9"
   integrity sha512-9jwzk1Zr/WWzbDC74rWLaEmtkTIx0B7HbGplCuOENTkfeWzM1j+ifAMkFcbATi9IwBpgB4P0s5eN1Z5uG/5wbg==
 
-"@bitauth/libauth@^1.18.0":
-  version "1.18.0"
-  resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.18.0.tgz#e1ada70befd9a2aaada27da4cf16413ae33829d4"
-  integrity sha512-xi5Ejji7Q+SFaPkWz8GPMi5mZLLhFdHkEn10M23vXlRoh2dC/aLEfNsdiDpS4vPWJjWbSg3fzzBb9SGlExnEeg==
+"@bitauth/libauth@^1.18.1":
+  version "1.18.1"
+  resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-1.18.1.tgz#b1c632ed85f73c16a0ff89d81e8a92809fa15108"
+  integrity sha512-s7evdGbdGAnGkv7xt6mCbcWTTNvburc1Z9EX/8JKwcRLqofjDs7VAEz+RP3a8OGEo4MWFV6Ydqu/BeJjIA7Kdg==
 
 "@bitcoin-dot-com/bitcoincashjs2-lib@^4.1.0":
   version "4.1.0"
