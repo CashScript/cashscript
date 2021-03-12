@@ -13,7 +13,7 @@ import path from 'path';
 import fs from 'fs';
 import { fixtures } from './fixtures';
 import { parseCode } from '../../src/compiler';
-import { readCashFiles } from '../test-util';
+import { readCashFiles } from '../test-utils';
 import { Ast } from '../../src/ast/AST';
 import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal';
 

@@ -6,7 +6,7 @@
  */
 
 import path from 'path';
-import { getSubdirectories, readCashFiles } from '../test-util';
+import { getSubdirectories, readCashFiles } from '../test-utils';
 import * as Errors from '../../src/Errors';
 import { compileString } from '../../src';
 
