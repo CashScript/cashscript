@@ -1,12 +1,9 @@
 #! /usr/bin/env node
-import { binToHex, hexToBin } from '@bitauth/libauth';
+import { binToHex } from '@bitauth/libauth';
 import {
   asmToScript,
   calculateBytesize,
   countOpcodes,
-  encodeBool,
-  encodeInt,
-  encodeString,
   exportArtifact,
   scriptToAsm,
   scriptToBytecode,
@@ -26,10 +23,6 @@ program
   .option('-A, --asm', 'Compile the contract to ASM format rather than a full artifact.')
   .option('-c, --opcount', 'Display the number of opcodes in the compiled bytecode.')
   .option('-s, --size', 'Display the size in bytes of the compiled bytecode.')
-  .option('-a, --args <args...>', 'List of constructor arguments to pass into the contract. '
-  + 'Can only be used in combination with either the --hex or --asm flags. '
-  + 'When compiling to a JSON artifact, contract instantiation should be done through the CashScript SDK. '
-  + 'Note that NO type checking is performed by the cashc CLI, so it is safer to use the CashScript SDK.')
   .parse();
 
 const opts = program.opts();
@@ -50,23 +43,6 @@ function run(): void {
   try {
     const artifact = compileFile(sourceFile);
     const script = asmToScript(artifact.bytecode);
-
-    // Parse any provided args and add these to the front of the script
-    if (opts.args) {
-      opts.args.forEach((arg: string) => {
-        if (arg === 'true') {
-          script.unshift(encodeBool(true));
-        } else if (arg === 'false') {
-          script.unshift(encodeBool(false));
-        } else if (arg.startsWith('0x')) {
-          script.unshift(hexToBin(arg.substring(2)));
-        } else if (!Number.isNaN(Number(arg))) {
-          script.unshift(encodeInt(Number(arg)));
-        } else {
-          script.unshift(encodeString(arg));
-        }
-      });
-    }
 
     const opcount = countOpcodes(script);
     const bytesize = calculateBytesize(script);
