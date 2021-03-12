@@ -1,11 +1,7 @@
 import { stringify } from '@bitauth/libauth';
 import { BITBOX } from 'bitbox-sdk';
-import {
-  Contract,
-  SignatureTemplate,
-  CashCompiler,
-  ElectrumNetworkProvider,
-} from 'cashscript';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { compileFile } from 'cashc';
 import path from 'path';
 
 run();
@@ -26,7 +22,7 @@ async function run(): Promise<void> {
   const bobPk = bitbox.ECPair.toPublicKey(bob);
 
   // Compile the TransferWithTimeout contract
-  const artifact = CashCompiler.compileFile(path.join(__dirname, 'transfer_with_timeout.cash'));
+  const artifact = compileFile(path.join(__dirname, 'transfer_with_timeout.cash'));
 
   // Initialise a network provider for network operations on TESTNET
   const provider = new ElectrumNetworkProvider('testnet');
