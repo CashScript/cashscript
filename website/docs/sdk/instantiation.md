@@ -12,30 +12,26 @@ The `Contract` class is used to represent a CashScript contract in a JavaScript 
 new Contract(
   artifact: Artifact,
   constructorArgs: Argument[],
-  provider?: NetworkProvider
+  provider?: NetworkProvider,
 )
 ```
 
 A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally a `NetworkProvider`.
 
-An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the CashScript SDK (see [`CashCompiler`](#cashcompiler)), or using the standalone [`cashc` CLI](/docs/basics/cli).
+An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/basics/cli) or programmatically with the `cashc` NPM package (see [CashScript Compiler](#cashscript-compiler)).
 
-:::note
-When using the command line compiler, the Artifact object still needs to be imported.
-```js
-require('./path-to-artifact.json')
-```
-:::
-
-A `NetworkProvider` is used to manage network operations for the CashScript contract. By default, a MAINNET `ElectrumNetworkProvider` is used, but alternative network providers can be used. See the section on [NetworkProvider](#networkprovider) below.
+A `NetworkProvider` is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but alternative network providers can be used. See the section on [NetworkProvider](#networkprovider) below.
 
 #### Example
 ```ts
-// Compile a contract file
-const P2PKH = CashCompiler.compileFile(path.join(__dirname, 'p2pkh.cash'));
+const { Contract, ElectrumNetworkProvider } = require('cashscript');
+const { compileFile } = require('cashc');
 
-// Or import an artifact JSON file that was compiled earlier
+// Import an artifact JSON file that was compiled earlier
 const P2PKH = require('./p2pkh.json');
+
+// Or compile a contract file
+const P2PKH = compileFile(path.join(__dirname, 'p2pkh.cash'));
 
 const provider = new ElectrumNetworkProvider('testnet');
 const contract = new Contract(P2PKH, [alicePkh], provider);
@@ -145,7 +141,6 @@ You may notice the `SignatureTemplate` object in the example above. When a contr
 
 So in the place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BITBOX/BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
 
-
 :::caution
 When calling a covenant function, the first `SignatureTemplate` parameter is used to generate the required sighash preimage. This is generally fine, but you should take extra care when using non-default hashtypes.
 :::
@@ -154,36 +149,6 @@ When calling a covenant function, the first `SignatureTemplate` parameter is use
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL);
-```
-
-## CashCompiler
-Generally CashScript contracts are compiled to an Artifact JSON file using the CLI compiler. As an alternative to this, CashScript contracts can be compiled from within JavaScript apps using the `CashCompiler` class.
-
-### CashCompiler.compileFile()
-```ts
-CashCompiler.compileFile(sourceFile: string): Artifact
-```
-
-Compiles a CashScript contract from a source file. This is the recommended compile method if you're using Node.js and you have a source file available.
-
-#### Example
-```ts
-const P2PKH = CashCompiler.compileFile(path.join(__dirname, 'p2pkh.cash'));
-```
-
-### CashCompiler.compileString()
-```ts
-CashCompiler.compileString(sourceCode: string): Artifact
-```
-
-Compiles a CashScript contract from a source code string. This is the recommended compile method if you're building a webapp, because `compileFile()` only works from a Node.js context. This is also the recommended method if no source file is locally available (e.g. the source code is retrieved with a REST API).
-
-```ts
-const baseUrl = 'https://raw.githubusercontent.com/Bitcoin-com/cashscript'
-const result = await fetch(`${baseUrl}/master/examples/p2pkh.cash`);
-const source = await result.text();
-
-const P2PKH = CashCompiler.compileString(source);
 ```
 
 ## NetworkProvider
@@ -234,6 +199,18 @@ const bitbox = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
 const provider = new FullStackNetworkProvider('mainnet', bitbox);
 ```
 
+### BitcoinRpcNetworkProvider
+```ts
+new BitcoinRpcNetworkProvider(network: Network, url: string, options?: any)
+```
+
+The BitcoinRpcNetworkProvider uses a direct connection to a BCH node. Note that a regular node does not have indexing, so any address of interest (e.g. the contract address) need to be registered by the node *before* sending any funds to those addresses. Because of this it is recommended to use a different network provider unless you have a specific reason to use the RPC provider.
+
+#### Example
+```js
+const provider = new BitcoinRpcNetworkProvider('mainnet', 'http://localhost:8332');
+```
+
 ### Custom NetworkProviders
 A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if new BCH libraries are created in the future, it is simple to use them with CashScript. This also potentially enables the CashScript SDK to be used with other (partially) compatible networks, such as BTC or BSV.
 
@@ -281,6 +258,40 @@ interface Utxo {
   vout: number;
   satoshis: number;
 }
+```
+
+## CashScript Compiler
+Generally CashScript contracts are compiled to an Artifact JSON file using the CLI compiler. As an alternative to this, CashScript contracts can be compiled from within JavaScript apps using the `cashc` package. This package needs to be installed separately and exports two compilation functions.
+
+```bash
+npm install cashc
+```
+
+### compileFile()
+```ts
+compileFile(sourceFile: string): Artifact
+```
+
+Compiles a CashScript contract from a source file. This is the recommended compile method if you're using Node.js and you have a source file available.
+
+#### Example
+```ts
+const P2PKH = compileFile(path.join(__dirname, 'p2pkh.cash'));
+```
+
+### compileString()
+```ts
+compileString(sourceCode: string): Artifact
+```
+
+Compiles a CashScript contract from a source code string. This is the recommended compile method if you're building a webapp, because `compileFile()` only works from a Node.js context. This is also the recommended method if no source file is locally available (e.g. the source code is retrieved with a REST API).
+
+```ts
+const baseUrl = 'https://raw.githubusercontent.com/Bitcoin-com/cashscript'
+const result = await fetch(`${baseUrl}/master/examples/p2pkh.cash`);
+const source = await result.text();
+
+const P2PKH = compileString(source);
 ```
 
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API

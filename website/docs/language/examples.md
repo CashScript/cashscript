@@ -10,7 +10,7 @@ One interesting use case of Bitcoin Cash is using it for *paper tips*. With pape
 As an alternative, a smart contract can be used for these kinds of gifts. This smart contract allows the recipient to claim their gift at any time, but if they don't claim it in time, the sender can reclaim it.
 
 ```solidity
-pragma cashscript ^0.4.0;
+pragma cashscript ^0.6.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     // Require recipient's signature to match
@@ -29,12 +29,12 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 ## HodlVault
 For better or worse, HODLing and waiting for price increases is one of the main things people want to do with their cryptocurrency. But it can be difficult to hold on to your cryptocurrency when the price is going down. So to prevent weak hands from getting the best of you, it's better to store your stash in a smart contract that enforces HODLing for you.
 
-This smart contract works by connecting with a price oracle. This price oracle is a trusted entity that publishes the BCH/USD price every block. This price is passed into the contract, and only if the price is higher than your target price can you spend the coins.
+This smart contract works by connecting with a price oracle. This price oracle is a trusted entity that publishes the BCH/USD price every block. This price is passed into the contract, and only if the price is higher than your target price you can spend the coins.
 
 This involves some degree of trust in the price oracle, but since the oracle produces price data for everyone to use, their incentive to attack *your* smart contract is minimised. To improve this situation, you can also choose to connect with multiple oracle providers so you do not have to trust a single party.
 
 ```solidity
-pragma cashscript ^0.4.0;
+pragma cashscript ^0.6.0;
 
 // A minimum block is provided to ensure that oracle price entries from before
 // this block are disregarded. i.e. when the BCH price was $1000 in the past,
@@ -70,7 +70,7 @@ The contract works by checking that a UTXO is at least 30 days old, after which 
 Due to the nature of covenants we have to be very specific about the outputs (amounts and destinations) of the transaction. This also means that we have to account for the special case where the remaining contract balance is lower than the `pledge` amount, meaning no remainder should be sent back. Finally we have to account for a small fee that has to be taken from the contract's balance to pay the miners.
 
 ```solidity
-pragma cashscript ^0.4.0;
+pragma cashscript ^0.6.0;
 
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
     // Allow the receiver to claim their monthly pledge amount

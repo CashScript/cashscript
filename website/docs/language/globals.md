@@ -45,7 +45,7 @@ Because of the way time locks work, **a corresponding time lock needs to be adde
 :::
 
 ### tx.age
-`tx.age is used to create *relative* time locks. The value of `tx.age` can either represent a number of blocks, or a number of *chunks*, which are 512 seconds. The corresponding *transaction level* time lock determines which of the two options is used.
+`tx.age` is used to create *relative* time locks. The value of `tx.age` can either represent a number of blocks, or a number of *chunks*, which are 512 seconds. The corresponding *transaction level* time lock determines which of the two options is used.
 
 Due to limitations in the underlying Bitcoin Script, `tx.age` can only be used in the following way:
 

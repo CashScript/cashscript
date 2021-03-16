@@ -38,13 +38,13 @@ The script will fail when the right hand side of Division and modulo operations 
 :::
 
 ### Date Parsing
-Dates and times are always represented as integers. To get the UTC timestamp of a date use the built-in parser to avoid any potential errors. This will take a date in the format `date("YYYY-MM-DDTHH:MM:SS")` and convert it to an integer timestamp.
+Dates and times are always represented as integers. To get the UTC timestamp of a date use the built-in parser to avoid any potential errors. This will take a date in the format `date("YYYY-MM-DDThh:mm:ss")` and convert it to an integer timestamp.
 
 #### Example
 
 ```solidity
-int ts = date("2021-02-17T01:30:00");
-require(ts == 1613554200) // true
+int timestamp = date("2021-02-17T01:30:00");
+require(timestamp == 1613554200);
 ```
 
 

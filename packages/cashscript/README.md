@@ -14,7 +14,7 @@ See the [GitHub repository](https://github.com/Bitcoin-com/cashscript) and the [
 CashScript is a high-level language that allows you to write Bitcoin Cash smart contracts in a straightforward and familiar way. Its syntax is inspired by Ethereum's Solidity language, but its functionality is different since the underlying systems have very different fundamentals. See the [language documentation](https://cashscript.org/docs/language/) for a full reference of the language.
 
 ## The CashScript SDK
-The main way to interact with CashScript contracts and integrate them into applications is using the CashScript SDK. This SDK allows you to compile `.cash` files or import `.json` artifact files, and convert them to `Contract` objects. These objects are used to create new contract instances. These instances are used to interact with the contracts using the functions that were implemented in the `.cash` file. For more information on the CashScript SDK, refer to the [SDK documentation](https://cashscript.org/docs/sdk/).
+The main way to interact with CashScript contracts and integrate them into applications is using the CashScript SDK. This SDK allows you to import `.json` artifact files that were compiled using the `cashc` compiler and convert them to `Contract` objects. These objects are used to create new contract instances. These instances are used to interact with the contracts using the functions that were implemented in the `.cash` file. For more information on the CashScript SDK, refer to the [SDK documentation](https://cashscript.org/docs/sdk/).
 
 ### Installation
 ```bash
@@ -23,19 +23,19 @@ npm install cashscript
 
 ### Usage
 ```ts
-import { Contract, CashCompiler, ... } from 'cashscript';
+import { Contract, ... } from 'cashscript';
 ```
 
 ```js
-const { Contract, CashCompiler, ... } = require('cashscript');
+const { Contract, ... } = require('cashscript');
 ```
 
-Using the CashScript SDK, you can import / compile existing contract files, create new instances of these contracts, and interact with these instances:
+Using the CashScript SDK, you can import contract artifact files, create new instances of these contracts, and interact with these instances:
 
 ```ts
 ...
-  // Compile the P2PKH contract
-  const P2PKH = CashCompiler.compileFile('./p2pkh.cash');
+  // Import the P2PKH artifact
+  const P2PKH = require('./p2pkh-artifact.json');
 
   // Instantiate a network provider for CashScript's network operations
   const provider = new ElectrumNetworkProvider('mainnet');

@@ -57,8 +57,6 @@ Besides sending money to `P2PKH` addresses, it is also possible to send money to
 This is especially effective when used together with time constraints. An example is the *Licho's Last Will* contract. This contract puts a dead man's switch on the contract's holdings, and requires the owner to send a heartbeat to the contract every six months. If the contract hasn't received this heartbeat, an inheritor can claim the funds instead.
 
 ```solidity
-pragma cashscript ^0.3.0;
-
 contract LastWill(bytes20 inheritor, bytes20 cold, bytes20 hot) {
     function inherit(pubkey pk, sig s) {
         require(tx.age >= 180 days);

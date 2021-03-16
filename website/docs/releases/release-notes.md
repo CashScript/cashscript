@@ -2,6 +2,21 @@
 title: Release Notes
 ---
 
+## v0.6.0
+#### cashc compiler
+* :sparkles: Add date literal (gets converted to int timestamp)
+* :hammer_and_wrench: Update ParseError messages
+* :bug: The final statement in a contract now MUST be a require statement (in all branches)
+* :bug: Empty contracts and functions are now considered invalid
+* :bug: Fix bug where certain covenants could become unspendable due to incorrect bytesize calculation
+  * :boom: **BREAKING**: Covenants using `tx.bytecode` now include a placeholder `OP_NOP` that gets replaced when constructor arguments are provided in the CashScript SDK. If you're not using the CashScript SDK, refer to the [`replaceBytecodeNop()` function](https://github.com/Bitcoin-com/cashscript/blob/master/packages/utils/src/script.ts#L130) to see the steps required to do so manually.
+* :boom: **BREAKING**: Remove `--args` parameter from the CLI, since this is too error prone with the recent changes in mind
+* :boom: **BREAKING**: Restructure exports
+
+#### CashScript SDK
+* :sparkles: Add BitcoinRpcNetworkProvider that connects to a BCH node RPC
+* :boom: **BREAKING**: Remove dependency on `cashc` and remove `CashCompiler` export
+
 ## v0.5.7
 #### cashc compiler
 - :bug: Better error reporting for parsing/lexing errors
@@ -54,7 +69,7 @@ CashScript used to be very tightly coupled with BITBOX. This proved to be proble
 - :hammer_and_wrench: Removed BITBOX as a dependency in favour of libauth for utility functions.
 
 ---
-https://twitter.com/RoscoKalis/status/1298645719272824833
+https://twitter.com/RoscoKalis/status/1298645699559596033
 
 ## v0.4.4
 #### cashc compiler

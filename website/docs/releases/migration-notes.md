@@ -2,6 +2,47 @@
 title: Migration Notes
 ---
 
+## v0.5 to v0.6
+#### cashc compiler
+The exports for library usage of `cashc` have been updated. All utility-type exports have been moved to the `@cashscript/utils` package, but they are still accessible from the `utils` export from `cashc`. Note that the recommended use of `cashc` is still the CLI, not the NPM package.
+
+In v0.5 you could encode a string like this:
+```js
+const { Data } = require('cashc');
+
+const encodedString = Data.encodeString('Hello World');
+```
+
+While for v0.6 you'd need to use the `utils` export or `@cashscript/utils`:
+```js
+const { utils } = require('cashc');
+const { encodeString } = require('@cashscript/utils');
+
+const encodedString = utils.encodeString('Hello World');
+const encodedString = encodeString('Hello World);
+```
+
+---
+
+Compilation functions used to be exported as part of the `CashCompiler` object, but are now exported as standalone functions.
+
+In v0.5 compilation looked like this:
+```js
+const { CashCompiler } = require('cashc');
+
+const Mecenas = CashCompiler.compileFile(path.join(__dirname, 'mecenas.cash'));
+```
+
+In v0.6, this needs to be changed to this:
+```js
+const { compileFile } = require('cashc');
+
+const Mecenas = compileFile(path.join(__dirname, 'mecenas.cash'));
+```
+
+#### CashScript SDK
+The CashScript SDK no longer depends on `cashc` and no longer exports the `CashCompiler` object. This reflects the recommended usage where the CLI is used for compilation and the artifact JSON is saved. Then this artifact JSON can be imported into the CashScript SDK. If you prefer to compile your contracts from code, you need to add `cashc` as a dependency and use its compilation functionality.
+
 ## v0.4 to v0.5
 #### CashScript SDK
 The contract instantiation flow has been refactored to enable compatibility with more BCH libraries and simplify the different classes involved.

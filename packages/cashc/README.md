@@ -14,7 +14,7 @@ See the [GitHub repository](https://github.com/Bitcoin-com/cashscript) and the [
 CashScript is a high-level language that allows you to write Bitcoin Cash smart contracts in a straightforward and familiar way. Its syntax is inspired by Ethereum's Solidity language, but its functionality is different since the underlying systems have very different fundamentals. See the [language documentation](https://cashscript.org/docs/language/) for a full reference of the language.
 
 ## The CashScript Compiler
-CashScript features a compiler as a standalone command line tool, called `cashc`. It can be installed through npm and used to compile `.cash` files into `.json` artifact files. These artifact files can be imported into the CashScript JavaScript SDK (or other SDKs in the future). Note that the CashScript SDK also has a function to import and compile `.cash` files directly, so it is not required to use the `cashc` command line tool.
+CashScript features a compiler as a standalone command line tool, called `cashc`. It can be installed through npm and used to compile `.cash` files into `.json` artifact files. These artifact files can be imported into the CashScript JavaScript SDK (or other SDKs in the future). The `cashc` NPM package can also be imported inside JavaScript files to compile `.cash` files without using the command line tool.
 
 ### Installation
 ```bash
@@ -33,12 +33,6 @@ Options:
                                                                        [boolean]
   --opcount, -c  Display the number of opcodes in the compiled bytecode[boolean]
   --size, -s     Display the size in bytes of the compiled bytecode    [boolean]
-  --args, -a     List of constructor arguments to pass into the contract. Can
-                 only be used in combination with either the --hex or --asm
-                 flags. When compiling to a JSON artifact, contract
-                 instantiation should be done through the CashScript SDK. Note
-                 that NO type checking is performed by the cashc CLI, so it is
-                 safer to use the CashScript SDK.                        [array]
   --help         Show help                                             [boolean]
   --version      Show version number                                   [boolean]
 ```

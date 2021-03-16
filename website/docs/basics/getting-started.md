@@ -47,18 +47,19 @@ Read more about the CashScript language syntax in the [Language Description](/do
 ## Integrating into JavaScript
 While more detailed examples are available on GitHub, we show an integration of the `TransferWithTimeout` contract in a JavaScript project.
 
+After compiling the contract file to an artifact JSON with cashc, it can be imported into the CashScript SDK.
+
+```bash
+cashc ./transfer_with_timeout.cash --output ./transfer_with_timeout.json
+```
+
 ```javascript
-const {
-  CashCompiler,
-  ElectrumNetworkProvider,
-  Contract,
-  SignatureTemplate,
-} = require('cashscript');
+const { ElectrumNetworkProvider, Contract, SignatureTemplate } = require('cashscript');
 const { alice, bob, alicePk, bobPk } = require('./keys');
 
 async function run() {
-  // Compile the TransferWithTimeout contract
-  const artifact = CashCompiler.compileFile('./transfer_with_timeout.cash');
+  // Import the TransferWithTimeout JSON artifact
+  const artifact = require('./transfer_with_timeout.json');
 
   // Initialise a network provider for network operations
   const provider = new ElectrumNetworkProvider('mainnet');

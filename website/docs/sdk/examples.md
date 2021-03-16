@@ -24,15 +24,14 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 Now to put this smart contract in use in a JavaScript application we have to use the CashScript SDK in combination with a BCH library such as [BCHJS][bchjs], [bitcore-lib-cash][bitcore] or [Libauth][libauth]. These libraries are used to generate public/private keys for the contract participants. Then these keys can be used in the CashScript SDK. The key generation code is left out of this example, since this works differently for every library.
 
 ```ts title="TransferWithTimeout.js"
-import { CashCompiler, Contract, SignatureTemplate } from 'cashscript';
+import { Contract, SignatureTemplate } from 'cashscript';
 import { alicePriv, alicePub, bobPriv, bobPub } from './somewhere';
 
 async function run() {
-  // Compile the TransferWithTimeout contract
-  const artifact = CashCompiler.compileFile('./transfer_with_timeout.cash'));
+  // Import the compiled TransferWithTimeout JSON artifact
+  const artifact = require('./transfer_with_timeout.json');
 
-  // Instantiate a new contract using the compiled artifact
-  // and constructor arguments:
+  // Instantiate a new contract using the artifact and constructor arguments:
   // { sender: alicePub, recipient: bobPub, timeout: 1000000 }
   // No network provider is provided, so the default ElectrumNetworkProvider is used
   const contract = new Contract(artifact, [alicePub, bobPub, 1000000]);
@@ -69,8 +68,6 @@ This contract expects a hardcoded transaction fee of 1000 satoshis. This is nece
 To ensure that this leftover money does not get lost in the contract, the contract performs an extra check, and adds the remainder to the transaction fee if it's too low.
 
 ```solidity title="Announcement.cash"
-pragma cashscript ^0.4.0;
-
 // This contract enforces making an announcement on Memo.cash and sending the
 // remaining balance back to the contract.
 contract Announcement() {
@@ -108,24 +105,19 @@ contract Announcement() {
 The CashScript code above ensures that the smart contract **can only** be used in the way specified in the code. But the transaction needs to be created by the SDK, and to ensure that it complies with the rules of the smart contract, we need to use some of the more advanced options of the SDK.
 
 ```ts title="Announcement.js"
-import {
-  CashCompiler,
-  ElectrumNetworkProvider,
-  Contract,
-  SignatureTemplate,
-} from 'cashscript';
+import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
 import { alicePriv, alicePub } from './somewhere';
 
 export async function run(){
-    // Compile the Announcement contract to an artifact object
-    const artifact = CashCompiler.compileFile('./announcement.cash');
+  // Import the compiled announcement JSON artifact
+  const artifact = require('./announcement.json');
 
-    // Initialise a network provider for network operations on MAINNET
-    const provider = new ElectrumNetworkProvider('mainnet');
+  // Initialise a network provider for network operations on MAINNET
+  const provider = new ElectrumNetworkProvider('mainnet');
 
-    // Instantiate a new contract using the compiled artifact and network provider
-    // AND providing the constructor parameters (none)
-    const contract = new Contract(artifact, [], provider);
+  // Instantiate a new contract using the compiled artifact and network provider
+  // AND providing the constructor parameters (none)
+  const contract = new Contract(artifact, [], provider);
 
   // Display contract address, balance, opcount, and bytesize
   console.log('contract address:', contract.address);

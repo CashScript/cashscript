@@ -1,4 +1,4 @@
-/*   CashCompiler.test.ts
+/*   Compiler.test.ts
  *
  * - This file is used to test the overall functioning of the compiler.
  * - It tests successful compilation using fixture .cash files in ../valid-contract-files.
@@ -10,7 +10,7 @@ import { getSubdirectories, readCashFiles } from '../test-utils';
 import * as Errors from '../../src/Errors';
 import { compileString } from '../../src';
 
-describe('CashCompiler', () => {
+describe('Compiler', () => {
   describe('Successful compilation', () => {
     readCashFiles(path.join(__dirname, '..', 'valid-contract-files')).forEach((file) => {
       it(`${file.fn} should succeed`, () => {

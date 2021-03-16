@@ -25,12 +25,6 @@ Options:
                                                                        [boolean]
   --opcount, -c  Display the number of opcodes in the compiled bytecode[boolean]
   --size, -s     Display the size in bytes of the compiled bytecode    [boolean]
-  --args, -a     List of constructor arguments to pass into the contract. Can
-                 only be used in combination with either the --hex or --asm
-                 flags. When compiling to a JSON artifact, contract
-                 instantiation should be done through the CashScript SDK. Note
-                 that NO type checking is performed by the cashc CLI, so it is
-                 safer to use the CashScript SDK.                        [array]
   --help         Show help                                             [boolean]
   --version      Show version number                                   [boolean]
 ```
