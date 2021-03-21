@@ -76,7 +76,7 @@ contract LastWill(bytes20 inheritor, bytes20 cold, bytes20 hot) {
         // Create and enforce outputs
         int minerFee = 1000; // hardcoded fee
         bytes8 amount = bytes8(int(bytes(tx.value)) - minerFee);
-        bytes32 output = new OutputP2SH(amount, hash160(tx.bytecode)
+        bytes32 output = new OutputP2SH(amount, hash160(tx.bytecode)°.
         require(tx.hashOutputs == hash256(output));
     }
 }
