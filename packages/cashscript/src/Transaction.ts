@@ -294,14 +294,14 @@ export class Transaction {
     const amount = this.outputs.reduce((acc, output) => acc + output.amount, 0);
     let fee = this.hardcodedFee
       ? this.hardcodedFee
-      : Math.ceil(getTxSizeWithoutInputs(this.outputs) * this.feePerByte);
+      : getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
 
     // Select and gather UTXOs and calculate fees and available funds
     let satsAvailable = 0;
     if (this.inputs.length > 0) {
       // If inputs are already defined, the user provided the UTXOs
       // and we perform no further UTXO selection
-      if (!this.hardcodedFee) fee += this.inputs.length * inputSize;
+      if (!this.hardcodedFee) fee += this.inputs.length * inputSize * this.feePerByte;
       satsAvailable = this.inputs.reduce((acc, input) => acc + input.satoshis, 0);
     } else {
       // If inputs are not defined yet, we retrieve the contract's UTXOs and perform selection
@@ -314,10 +314,13 @@ export class Transaction {
       for (const utxo of utxos) {
         this.inputs.push(utxo);
         satsAvailable += utxo.satoshis;
-        if (!this.hardcodedFee) fee += inputSize;
+        if (!this.hardcodedFee) fee += inputSize * this.feePerByte;
         if (satsAvailable > amount + fee) break;
       }
     }
+
+    // Fee per byte can be a decimal number, but we need the total fee to be an integer
+    fee = Math.ceil(fee);
 
     // Calculate change and check available funds
     let change = satsAvailable - amount - fee;
