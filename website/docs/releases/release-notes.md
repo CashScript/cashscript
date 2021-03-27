@@ -2,6 +2,10 @@
 title: Release Notes
 ---
 
+## v0.6.1
+#### CashScript SDK
+* :bug: Fix bug with incorrect fee calculation when providing custom fee per byte
+
 ## v0.6.0
 #### cashc compiler
 * :sparkles: Add date literal (gets converted to int timestamp)
@@ -16,6 +20,9 @@ title: Release Notes
 #### CashScript SDK
 * :sparkles: Add BitcoinRpcNetworkProvider that connects to a BCH node RPC
 * :boom: **BREAKING**: Remove dependency on `cashc` and remove `CashCompiler` export
+
+---
+twitter.com/RoscoKalis/status/1371896417443282956
 
 ## v0.5.7
 #### cashc compiler
