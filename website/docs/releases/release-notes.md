@@ -22,7 +22,7 @@ title: Release Notes
 * :boom: **BREAKING**: Remove dependency on `cashc` and remove `CashCompiler` export
 
 ---
-twitter.com/RoscoKalis/status/1371896417443282956
+https://twitter.com/RoscoKalis/status/1371896417443282956
 
 ## v0.5.7
 #### cashc compiler
