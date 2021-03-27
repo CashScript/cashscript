@@ -10,7 +10,7 @@ import { FailedSigCheckError, Reason } from '../../src/Errors';
 
 const BCHJS = require('@psf/bch-js');
 
-describe('P2PKH (using FullStackNetworkProvider)', () => {
+describe.skip('P2PKH (using FullStackNetworkProvider)', () => {
   let p2pkhInstance: Contract;
 
   beforeAll(() => {
