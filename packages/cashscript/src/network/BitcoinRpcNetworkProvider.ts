@@ -60,22 +60,22 @@ interface ListUnspentItem {
 interface RpcClientRetry {
   constructor(url: string, opts?: object): void;
   listUnspent(
-    minconf?: number,
-    maxconf?: number,
+    minConf?: number,
+    maxConf?: number,
     addresses?: string[],
-    include_unsafe?: boolean,
-    query_options?: object,
+    includeUnsafe?: boolean,
+    queryOptions?: object,
   ): Promise<ListUnspentItem[]>;
   getBlockCount(): Promise<number>;
-  getRawTransaction(txid: string, verbose?: boolean, blockhash?: string): Promise<string>;
-  sendRawTransaction(hexstring: string, allowhighfees?: boolean): Promise<string>;
+  getRawTransaction(txid: string, verbose?: boolean, blockHash?: string): Promise<string>;
+  sendRawTransaction(hexString: string, allowHighFees?: boolean): Promise<string>;
 
   // below are not required for NetworkProvider interface, but very useful
-  generate(nblocks: number, maxtries?: number): Promise<string[]>;
-  generateToAddress(nblocks: number, address: string, maxtries?: number): Promise<string[]>;
+  generate(nBlocks: number, maxTries?: number): Promise<string[]>;
+  generateToAddress(nBlocks: number, address: string, maxTries?: number): Promise<string[]>;
   getNewAddress(label?: string): Promise<string>;
   dumpPrivKey(address: string): Promise<string>;
-  getBalance(dummy?: string, minconf?: number, include_watchonly?: boolean): Promise<number>;
-  getBlock(blockhash: string, verbosity?: number): Promise<string>;
+  getBalance(dummy?: string, minConf?: number, includeWatchOnly?: boolean): Promise<number>;
+  getBlock(blockHash: string, verbosity?: number): Promise<string>;
   importAddress(address: string, label?: string, rescan?: boolean, p2sh?: boolean): Promise<void>;
 }
