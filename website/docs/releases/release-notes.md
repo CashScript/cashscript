@@ -2,6 +2,10 @@
 title: Release Notes
 ---
 
+## v0.6.2
+#### CashScript SDK
+* :bug: Fix typing issue with BitcoinRpcNetworkProvider
+
 ## v0.6.1
 #### CashScript SDK
 * :bug: Fix bug with incorrect fee calculation when providing custom fee per byte
