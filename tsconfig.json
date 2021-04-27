@@ -5,7 +5,8 @@
     "baseUrl": "./packages",
     "paths": {
       "cashc": ["cashc/src"],
-      "cashscript": ["cashscript/src"]
-    }
-  }
+      "cashscript": ["cashscript/src"],
+      "utils": ["utils/src"],
+    },
+  },
 }

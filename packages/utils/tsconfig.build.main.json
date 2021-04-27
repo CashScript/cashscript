@@ -3,10 +3,10 @@
 
   "compilerOptions": {
     "outDir": "./dist/main",
-    "module": "commonjs"
+    "module": "commonjs",
   },
 
   "include": [
-    "src/**/*"
-  ]
+    "src/**/*",
+  ],
 }

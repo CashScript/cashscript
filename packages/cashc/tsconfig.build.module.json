@@ -3,10 +3,10 @@
 
   "compilerOptions": {
     "outDir": "./dist/module",
-    "module": "esnext",
+    "module": "es2015",
   },
 
   "include": [
-    "src/**/*"
-  ]
+    "src/**/*",
+  ],
 }
