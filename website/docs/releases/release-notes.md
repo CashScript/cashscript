@@ -2,6 +2,9 @@
 title: Release Notes
 ---
 
+## v0.6.3
+* :hammer_and_wrench: Use ES2015 for the "module" output for better compatibility
+
 ## v0.6.2
 #### CashScript SDK
 * :bug: Fix typing issue with BitcoinRpcNetworkProvider
