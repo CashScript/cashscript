@@ -17,7 +17,7 @@ export class BytesType {
   ) {}
 
   static fromString(str: string): BytesType {
-    const bound = Number.parseInt(str.substring(5), 10) || undefined;
+    const bound = str === 'byte' ? 1 : Number.parseInt(str.substring(5), 10) || undefined;
     return new BytesType(bound);
   }
 
@@ -180,7 +180,7 @@ export function implicitlyCastableSignature(
 }
 
 export function parseType(str: string): Type {
-  if (str.startsWith('bytes')) return BytesType.fromString(str);
+  if (str.startsWith('byte')) return BytesType.fromString(str);
   return PrimitiveType[str.toUpperCase() as keyof typeof PrimitiveType];
 }
 

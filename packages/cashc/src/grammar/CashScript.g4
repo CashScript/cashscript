@@ -142,7 +142,7 @@ NumberLiteral
     ;
 
 Bytes
-    : 'bytes' Bound?
+    : 'bytes' Bound? | 'byte'
     ;
 
 Bound
