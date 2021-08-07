@@ -1,7 +1,7 @@
 contract Test() {
     function hello() {
         // Have to know what you're doing to force cast
-        bytes3 byte = bytes3(bytes(0x1234));
-        require(byte.length == 1);
+        bytes3 byte_ = bytes3(bytes(0x1234));
+        require(byte_.length == 1);
     }
 }

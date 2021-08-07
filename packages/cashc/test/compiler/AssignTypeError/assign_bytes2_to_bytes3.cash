@@ -1,6 +1,6 @@
 contract Test() {
     function hello() {
-        bytes3 byte = 0x1234;
-        require(byte.length == 3);
+        bytes3 byte_ = 0x1234;
+        require(byte_.length == 3);
     }
 }
