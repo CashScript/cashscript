@@ -68,7 +68,7 @@ The script will fail if `split()` is called with an index that is out of bounds.
 :::
 
 ## Bytes
-`bytes`: Byte sequence. Can optionally be bound to a byte length by specifying e.g. `bytes4`, `bytes32`, `bytes64`, etc.
+`bytes`: Byte sequence. Can optionally be bound to a byte length by specifying e.g. `bytes4`, `bytes32`, `bytes64`. It is also possible to use `byte` as an alias for `bytes1`.
 
 Operators:
 
