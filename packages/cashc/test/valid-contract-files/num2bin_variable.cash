@@ -1,6 +1,6 @@
 contract Num2Bin() {
     function spend(int size) {
-        bytes byte = bytes(10, size);
-        require(int(byte) == 10);
+        bytes byte_ = bytes(10, size);
+        require(int(byte_) == 10);
     }
 }

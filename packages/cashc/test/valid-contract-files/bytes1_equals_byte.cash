@@ -1,0 +1,6 @@
+contract Bytes1EqualsByte() {
+    function hello(int a, byte b) {
+        bytes1 c = byte(a);
+        require(b == c);
+    }
+}

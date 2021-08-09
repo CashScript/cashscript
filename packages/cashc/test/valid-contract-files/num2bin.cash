@@ -1,6 +1,6 @@
 contract Test() {
     function hello() {
-        bytes2 byte = bytes2(10);
-        require(int(byte) == 10);
+        bytes2 byte_ = bytes2(10);
+        require(int(byte_) == 10);
     }
 }
