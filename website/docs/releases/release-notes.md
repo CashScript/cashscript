@@ -2,6 +2,10 @@
 title: Release Notes
 ---
 
+## v0.6.4
+#### cashc compiler
+* :sparkles: Add `byte` type alias for `bytes1`
+
 ## v0.6.3
 * :hammer_and_wrench: Use ES2015 for the "module" output for better compatibility
 
