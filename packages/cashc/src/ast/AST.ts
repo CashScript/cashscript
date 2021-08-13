@@ -4,6 +4,7 @@ import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
 import { SymbolTable, Symbol } from './SymbolTable';
+import { versions } from 'node:process';
 
 export type Ast = SourceFileNode;
 
@@ -92,6 +93,19 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitVariableDefinition(this);
+  }
+}
+
+export class UnpackedVariableNode extends StatementNode {
+  constructor(
+    public var1: VariableDefinitionNode,
+    public var2: VariableDefinitionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitUnpackedVariable(this);
   }
 }
 

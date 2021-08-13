@@ -47,10 +47,15 @@ block
 
 statement
     : variableDefinition
+    | unpackedVariable
     | assignStatement
     | timeOpStatement
     | requireStatement
     | ifStatement
+    ;
+
+unpackedVariable
+    : typeName Identifier ',' Identifier '=' expression ';'
     ;
 
 variableDefinition

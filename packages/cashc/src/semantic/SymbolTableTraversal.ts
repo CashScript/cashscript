@@ -10,6 +10,7 @@ import {
   Node,
   FunctionCallNode,
   InstantiationNode,
+  UnpackedVariableNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable';
@@ -103,6 +104,21 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
+  visitUnpackedVariable(node: UnpackedVariableNode): Node {
+    const variableDefinitions = [node.var1, node.var2];
+    const [var1, var2] = variableDefinitions.map((v) => {
+      if (this.symbolTables[0].get(v.name)) {
+        throw new VariableRedefinitionError(v);
+      }
+      v.expression = this.visit(v.expression);
+      this.symbolTables[0].set(Symbol.variable(v));
+      return v;
+    });
+    node.var1 = var1;
+    node.var2 = var2;
+    return node;
+  }
+
   visitFunctionCall(node: FunctionCallNode): Node {
     this.expectedSymbolType = SymbolType.FUNCTION;
     node.identifier = this.visit(node.identifier) as IdentifierNode;
@@ -121,7 +137,6 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitIdentifier(node: IdentifierNode): Node {
     const definition = this.symbolTables[0].get(node.name);
-
     if (!definition) {
       throw new UndefinedReferenceError(node);
     }

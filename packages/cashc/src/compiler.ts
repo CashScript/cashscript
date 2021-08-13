@@ -19,6 +19,7 @@ export function compileString(code: string): Artifact {
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
+  console.log("POST symbol table: ", ast);
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
   ast = ast.accept(new VerifyCovenantTraversal()) as Ast;

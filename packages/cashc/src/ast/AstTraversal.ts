@@ -23,6 +23,7 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
+  UnpackedVariableNode,
 } from './AST';
 import AstVisitor from './AstVisitor';
 
@@ -50,6 +51,12 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
+    return node;
+  }
+
+  visitUnpackedVariable(node: UnpackedVariableNode): Node {
+    node.var1.expression = this.visit(node.var1.expression);
+    node.var2.expression = this.visit(node.var2.expression);
     return node;
   }
 

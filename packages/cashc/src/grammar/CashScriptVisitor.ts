@@ -26,6 +26,7 @@ import { ParameterListContext } from "./CashScriptParser";
 import { ParameterContext } from "./CashScriptParser";
 import { BlockContext } from "./CashScriptParser";
 import { StatementContext } from "./CashScriptParser";
+import { UnpackedVariableContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
 import { AssignStatementContext } from "./CashScriptParser";
 import { TimeOpStatementContext } from "./CashScriptParser";
@@ -218,6 +219,13 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.unpackedVariable`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnpackedVariable?: (ctx: UnpackedVariableContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.variableDefinition`.

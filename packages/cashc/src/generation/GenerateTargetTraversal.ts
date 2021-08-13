@@ -35,6 +35,7 @@ import {
   SourceFileNode,
   Node,
   InstantiationNode,
+  UnpackedVariableNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { GlobalFunction, PreimageField, Class } from '../ast/Globals';
@@ -301,6 +302,19 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.popFromStack();
     this.pushToStack(node.name);
+    return node;
+  }
+
+  visitUnpackedVariable(node: UnpackedVariableNode): Node {
+    this.visitVariableDefinition(node.var1);
+    this.visitVariableDefinition(node.var2);
+    // node.var1.expression = this.visit(node.var1.expression);
+    // node.var2.expression = this.visit(node.var2.expression);
+    // console.log(node);
+    // this.popFromStack();
+    // this.pushToStack(node.var1.name);
+    // this.popFromStack();
+    // this.pushToStack(node.var2.name);
     return node;
   }
 
