@@ -2,6 +2,10 @@
 title: Release Notes
 ---
 
+## v0.6.5
+#### cashc compiler
+* :bug: Fix `cashc` version
+
 ## v0.6.4
 #### cashc compiler
 * :sparkles: Add `byte` type alias for `bytes1`
