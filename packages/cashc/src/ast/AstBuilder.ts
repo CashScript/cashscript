@@ -152,7 +152,6 @@ export default class AstBuilder
   }
 
   visitVariableDefinition(ctx: VariableDefinitionContext): VariableDefinitionNode {
-    //console.log(ctx)
     const type = parseType(ctx.typeName().text);
     const name = ctx.Identifier().text;
     const expression = this.visit(ctx.expression());
@@ -163,14 +162,11 @@ export default class AstBuilder
 
   visitUnpackedVariable(ctx: UnpackedVariableContext): UnpackedVariableNode {
     const expression = this.visit(ctx.expression());
-    if (!(expression instanceof BinaryOpNode)) {
+    if (!(expression instanceof BinaryOpNode) || expression.operator !== BinaryOperator.SPLIT) {
       throw new Error('Must return tuple to use unpack syntax');
     }
     const type = ctx.typeName().text;
     const [name1, name2] = ctx.Identifier().map((i) => i.text);
-    // const var1 = new VariableDefinitionNode(type, name1, new TupleIndexOpNode(expression, 0));
-    // const var2 = new VariableDefinitionNode(type, name2, new TupleIndexOpNode(expression, 1));
-    //console.log({var1, var2})
     const unpackedVariable = new UnpackedVariableNode(type, name1, name2, expression);
     unpackedVariable.location = Location.fromCtx(ctx);
     return unpackedVariable;

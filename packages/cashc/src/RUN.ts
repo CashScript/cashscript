@@ -4,7 +4,7 @@ const code = `
 contract N(string s) {
     function test(/*string s*/){
         // int z = 5;
-        string x, y = (s+"iii").split(1);
+        int x, y = (s+s).split(s.length);
         // string x = (s+"iii").split(1)[0];
         // string y = (s+"iii").split(1)[1];
         // x = x + y;
