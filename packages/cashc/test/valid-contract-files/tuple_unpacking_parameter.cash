@@ -1,0 +1,6 @@
+contract Test(string s1) {
+    function split(string s2) {
+        string x, y = (s1+s2).split(1);
+        require(x == y);
+    }
+}

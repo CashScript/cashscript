@@ -67,23 +67,17 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   private pushToStack(value: string, pushToBottom?: boolean): void {
-    var s = `PUSHing ${value}: ` + this.stack;
     if (pushToBottom) {
       this.stack.push(value);
     } else {
       this.stack.unshift(value);
     }
-    s += " -> " + this.stack;
-    // console.log(s);
   }
 
   private popFromStack(count: number = 1): void {
-    var s = `POPing ${count}: ` + this.stack;
     for (let i = 0; i < count; i += 1) {
       this.stack.shift();
     }
-    s += " -> " + this.stack;
-    // // console.log(s);
   }
 
   private removeFromStack(i: number): void {
@@ -319,23 +313,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitUnpackedVariable(node: UnpackedVariableNode): Node {
     node.tuple = this.visit(node.tuple);
-    // console.log("add unpacked..");
     this.popFromStack();
     this.popFromStack();
     this.pushToStack(node.name1);
     this.pushToStack(node.name2);
-
-
-
-    // this.visitVariableDefinition(node.var1);
-    // this.visitVariableDefinition(node.var2);
-    // node.var1.expression = this.visit(node.var1.expression);
-    // node.var2.expression = this.visit(node.var2.expression);
-    // // console.log(node);
-    // this.popFromStack();
-    // this.pushToStack(node.var1.name);
-    // this.popFromStack();
-    // this.pushToStack(node.var2.name);
     return node;
   }
 

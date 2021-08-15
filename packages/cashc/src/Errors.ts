@@ -18,6 +18,7 @@ import {
   InstantiationNode,
   StatementNode,
   ContractNode,
+  ExpressionNode,
 } from './ast/AST';
 import { Symbol, SymbolType } from './ast/SymbolTable';
 import { Location, Point } from './ast/Location';
@@ -207,6 +208,14 @@ export class AssignTypeError extends TypeError {
   ) {
     const expected = node instanceof AssignNode ? node.identifier.type : node.type;
     super(node, node.expression.type, expected, `Type '${node.expression.type}' can not be assigned to variable of type '${expected}'`);
+  }
+}
+
+export class VariableDestructuringError extends CashScriptError {
+  constructor(
+    node: ExpressionNode,
+  ) {
+    super(node, 'Expression must return a tuple to use destructuring')
   }
 }
 
