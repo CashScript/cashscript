@@ -211,7 +211,7 @@ export class AssignTypeError extends TypeError {
   }
 }
 
-export class VariableDestructuringError extends CashScriptError {
+export class TupleAssignmentError extends CashScriptError {
   constructor(
     node: ExpressionNode,
   ) {

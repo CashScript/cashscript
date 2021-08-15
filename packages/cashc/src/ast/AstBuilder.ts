@@ -71,7 +71,7 @@ import {
 } from './Globals';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
-import { ParseError, VariableDestructuringError, VersionError } from '../Errors';
+import { ParseError, TupleAssignmentError, VersionError } from '../Errors';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>
@@ -162,7 +162,7 @@ export default class AstBuilder
   visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
     if (!(expression instanceof BinaryOpNode) || expression.operator !== BinaryOperator.SPLIT) {
-      throw new VariableDestructuringError(expression);
+      throw new TupleAssignmentError(expression);
     }
     const type = ctx.typeName().text;
     const [name1, name2] = ctx.Identifier().map((i) => i.text);
