@@ -31,13 +31,14 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
-  UnpackedVariableNode,
+  TupleAssignmentNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import {
   ContractDefinitionContext,
   FunctionDefinitionContext,
   VariableDefinitionContext,
+  TupleAssignmentContext,
   ParameterContext,
   AssignStatementContext,
   IfStatementContext,
@@ -60,7 +61,6 @@ import {
   PragmaDirectiveContext,
   PreimageFieldContext,
   InstantiationContext,
-  UnpackedVariableContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -159,16 +159,16 @@ export default class AstBuilder
     return variableDefinition;
   }
 
-  visitUnpackedVariable(ctx: UnpackedVariableContext): UnpackedVariableNode {
+  visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
     if (!(expression instanceof BinaryOpNode) || expression.operator !== BinaryOperator.SPLIT) {
       throw new VariableDestructuringError(expression);
     }
     const type = ctx.typeName().text;
     const [name1, name2] = ctx.Identifier().map((i) => i.text);
-    const unpackedVariable = new UnpackedVariableNode(type, name1, name2, expression);
-    unpackedVariable.location = Location.fromCtx(ctx);
-    return unpackedVariable;
+    const tupleAssignment = new TupleAssignmentNode(type, name1, name2, expression);
+    tupleAssignment.location = Location.fromCtx(ctx);
+    return tupleAssignment;
   }
 
   visitAssignStatement(ctx: AssignStatementContext): AssignNode {

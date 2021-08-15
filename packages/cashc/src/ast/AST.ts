@@ -95,7 +95,7 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
   }
 }
 
-export class UnpackedVariableNode extends StatementNode implements Typed {
+export class TupleAssignmentNode extends StatementNode implements Typed {
   constructor(
     public type: Type,
     public name1: string,
@@ -106,7 +106,7 @@ export class UnpackedVariableNode extends StatementNode implements Typed {
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitUnpackedVariable(this);
+    return visitor.visitTupleAssignment(this);
   }
 
   createVariableDefNode(name: string): VariableDefinitionNode {

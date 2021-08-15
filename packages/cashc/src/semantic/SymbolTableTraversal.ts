@@ -10,7 +10,7 @@ import {
   Node,
   FunctionCallNode,
   InstantiationNode,
-  UnpackedVariableNode,
+  TupleAssignmentNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable';
@@ -105,7 +105,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
-  visitUnpackedVariable(node: UnpackedVariableNode): Node {
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
     [node.name1, node.name2].forEach((name) => {
       if (this.symbolTables[0].get(name)) {
         throw new VariableRedefinitionError(node.createVariableDefNode(name));

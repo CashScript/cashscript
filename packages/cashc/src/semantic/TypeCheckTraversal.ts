@@ -25,7 +25,7 @@ import {
   RequireNode,
   Node,
   InstantiationNode,
-  UnpackedVariableNode,
+  TupleAssignmentNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -49,7 +49,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
-  visitUnpackedVariable(node: UnpackedVariableNode): Node {
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
     expectAssignable(node.createVariableDefNode('name'), (node.tuple.type as TupleType).elementType, node.type);
     return node;

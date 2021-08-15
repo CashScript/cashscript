@@ -47,19 +47,19 @@ block
 
 statement
     : variableDefinition
-    | unpackedVariable
+    | tupleAssignment
     | assignStatement
     | timeOpStatement
     | requireStatement
     | ifStatement
     ;
 
-unpackedVariable
-    : typeName Identifier ',' Identifier '=' expression ';'
-    ;
-
 variableDefinition
     : typeName Identifier '=' expression ';'
+    ;
+
+tupleAssignment
+    : typeName Identifier ',' Identifier '=' expression ';'
     ;
 
 assignStatement

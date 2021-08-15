@@ -22,7 +22,7 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
-  UnpackedVariableNode,
+  TupleAssignmentNode,
 } from './AST';
 
 export default abstract class AstVisitor<T> {
@@ -31,7 +31,7 @@ export default abstract class AstVisitor<T> {
   abstract visitFunctionDefinition(node: FunctionDefinitionNode): T;
   abstract visitParameter(node: ParameterNode): T;
   abstract visitVariableDefinition(node: VariableDefinitionNode): T;
-  abstract visitUnpackedVariable(node: UnpackedVariableNode): T;
+  abstract visitTupleAssignment(node: TupleAssignmentNode): T;
   abstract visitAssign(node: AssignNode): T;
   abstract visitTimeOp(node: TimeOpNode): T;
   abstract visitRequire(node: RequireNode): T;

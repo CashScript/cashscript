@@ -24,7 +24,7 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
-  UnpackedVariableNode,
+  TupleAssignmentNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -105,7 +105,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitUnpackedVariable(node: UnpackedVariableNode): Node {
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
     this.addOutput(`${node.type} ${node.name1}, ${node.name2} = `, true);
     this.visit(node.tuple);
     this.addOutput(';\n');

@@ -35,7 +35,7 @@ import {
   SourceFileNode,
   Node,
   InstantiationNode,
-  UnpackedVariableNode,
+  TupleAssignmentNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { GlobalFunction, PreimageField, Class } from '../ast/Globals';
@@ -305,7 +305,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  visitUnpackedVariable(node: UnpackedVariableNode): Node {
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
     this.popFromStack();
     this.popFromStack();
