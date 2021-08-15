@@ -164,7 +164,7 @@ export default class AstBuilder
     if (!(expression instanceof BinaryOpNode) || expression.operator !== BinaryOperator.SPLIT) {
       throw new TupleAssignmentError(expression);
     }
-    const type = ctx.typeName().text;
+    const type = parseType(ctx.typeName().text);
     const [name1, name2] = ctx.Identifier().map((i) => i.text);
     const tupleAssignment = new TupleAssignmentNode(type, name1, name2, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
