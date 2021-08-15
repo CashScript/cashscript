@@ -115,17 +115,6 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     node.tuple = this.visit(node.tuple);
 
-    // const variableDefinitions = [node.var1, node.var2];
-    // const [var1, var2] = variableDefinitions.map((v) => {
-    //   if (this.symbolTables[0].get(v.name)) {
-    //     throw new VariableRedefinitionError(v);
-    //   }
-    //   v.expression = this.visit(v.expression);
-    //   this.symbolTables[0].set(Symbol.variable(v));
-    //   return v;
-    // });
-    // node.var1 = var1;
-    // node.var2 = var2;
     return node;
   }
 
