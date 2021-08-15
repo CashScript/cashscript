@@ -109,7 +109,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(`${node.type} ${node.name1}, ${node.name2} = `, true);
     this.visit(node.tuple);
     this.addOutput(';\n');
-    
+
     return node;
   }
 

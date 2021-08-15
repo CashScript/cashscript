@@ -215,7 +215,7 @@ export class VariableDestructuringError extends CashScriptError {
   constructor(
     node: ExpressionNode,
   ) {
-    super(node, 'Expression must return a tuple to use destructuring')
+    super(node, 'Expression must return a tuple to use destructuring');
   }
 }
 

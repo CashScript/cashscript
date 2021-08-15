@@ -129,7 +129,6 @@ export default class AstBuilder
   visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
     this.preimageFields = [];
 
-    // console.log(ctx.statement());
     const name = ctx.Identifier().text;
     const parameters = ctx.parameterList().parameter().map((p) => this.visit(p) as ParameterNode);
     const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);

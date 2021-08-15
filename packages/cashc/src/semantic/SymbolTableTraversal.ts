@@ -106,7 +106,6 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitUnpackedVariable(node: UnpackedVariableNode): Node {
-
     [node.name1, node.name2].forEach((name) => {
       if (this.symbolTables[0].get(name)) {
         throw new VariableRedefinitionError(node.createVariableDefNode(name));

@@ -4,7 +4,6 @@ import AstVisitor from './AstVisitor';
 import { BinaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
 import { SymbolTable, Symbol } from './SymbolTable';
-import { versions } from 'node:process';
 
 export type Ast = SourceFileNode;
 
