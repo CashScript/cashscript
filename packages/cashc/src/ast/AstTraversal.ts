@@ -55,8 +55,7 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitUnpackedVariable(node: UnpackedVariableNode): Node {
-    node.var1.expression = this.visit(node.var1.expression);
-    node.var2.expression = this.visit(node.var2.expression);
+    node.tuple = this.visit(node.tuple);
     return node;
   }
 

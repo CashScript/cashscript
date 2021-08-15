@@ -135,7 +135,6 @@ export default class AstBuilder
     const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
-    console.log("function statements: ", statements);
     // Filter duplicate preimage fields
     const preimageFields = [...this.preimageFields].filter((v, i, a) => a.indexOf(v) === i);
 
@@ -169,10 +168,10 @@ export default class AstBuilder
     }
     const type = ctx.typeName().text;
     const [name1, name2] = ctx.Identifier().map((i) => i.text);
-    const var1 = new VariableDefinitionNode(type, name1, new TupleIndexOpNode(expression, 0));
-    const var2 = new VariableDefinitionNode(type, name2, new TupleIndexOpNode(expression, 1));
+    // const var1 = new VariableDefinitionNode(type, name1, new TupleIndexOpNode(expression, 0));
+    // const var2 = new VariableDefinitionNode(type, name2, new TupleIndexOpNode(expression, 1));
     //console.log({var1, var2})
-    const unpackedVariable = new UnpackedVariableNode(var1, var2);
+    const unpackedVariable = new UnpackedVariableNode(type, name1, name2, expression);
     unpackedVariable.location = Location.fromCtx(ctx);
     return unpackedVariable;
   }

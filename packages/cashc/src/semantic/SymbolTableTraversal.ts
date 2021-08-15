@@ -99,23 +99,37 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     node.expression = this.visit(node.expression);
+
     this.symbolTables[0].set(Symbol.variable(node));
 
     return node;
   }
 
   visitUnpackedVariable(node: UnpackedVariableNode): Node {
-    const variableDefinitions = [node.var1, node.var2];
-    const [var1, var2] = variableDefinitions.map((v) => {
-      if (this.symbolTables[0].get(v.name)) {
-        throw new VariableRedefinitionError(v);
-      }
-      v.expression = this.visit(v.expression);
-      this.symbolTables[0].set(Symbol.variable(v));
-      return v;
-    });
-    node.var1 = var1;
-    node.var2 = var2;
+
+    if (this.symbolTables[0].get(node.name1)) {
+      throw new VariableRedefinitionError(node.createVariableDefNode(node.name1));
+    }
+
+    if (this.symbolTables[0].get(node.name2)) {
+      throw new VariableRedefinitionError(node.createVariableDefNode(node.name2));
+    }
+
+    node.tuple = this.visit(node.tuple);
+    this.symbolTables[0].set(Symbol.variable(node.createVariableDefNode(node.name1)));
+    this.symbolTables[0].set(Symbol.variable(node.createVariableDefNode(node.name2)));
+
+    // const variableDefinitions = [node.var1, node.var2];
+    // const [var1, var2] = variableDefinitions.map((v) => {
+    //   if (this.symbolTables[0].get(v.name)) {
+    //     throw new VariableRedefinitionError(v);
+    //   }
+    //   v.expression = this.visit(v.expression);
+    //   this.symbolTables[0].set(Symbol.variable(v));
+    //   return v;
+    // });
+    // node.var1 = var1;
+    // node.var2 = var2;
     return node;
   }
 

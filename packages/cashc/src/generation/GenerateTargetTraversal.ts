@@ -67,24 +67,32 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   private pushToStack(value: string, pushToBottom?: boolean): void {
+    var s = `PUSHing ${value}: ` + this.stack;
     if (pushToBottom) {
       this.stack.push(value);
     } else {
       this.stack.unshift(value);
     }
+    s += " -> " + this.stack;
+    console.log(s);
   }
 
   private popFromStack(count: number = 1): void {
+    var s = `POPing ${count}: ` + this.stack;
     for (let i = 0; i < count; i += 1) {
       this.stack.shift();
     }
+    s += " -> " + this.stack;
+    console.log(s);
   }
 
   private removeFromStack(i: number): void {
+    console.log("REMOVED ", i)
     this.stack.splice(i, 1);
   }
 
   private nipFromStack(): void {
+    console.log("NIPPED")
     this.stack.splice(1, 1);
   }
 
@@ -285,9 +293,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   cleanStack(): void {
+    console.log("CLEARNING stack: ", this.stack);
     // Keep final verification value, OP_NIP the other stack values
     const stackSize = this.stack.length;
     for (let i = 0; i < stackSize - 1; i += 1) {
+      console.log("nipped")
       this.emit(Op.OP_NIP);
       this.nipFromStack();
     }
@@ -299,15 +309,26 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
+    console.log('starting expressino visit')
     node.expression = this.visit(node.expression);
+    console.log("adding variable");
     this.popFromStack();
     this.pushToStack(node.name);
     return node;
   }
 
   visitUnpackedVariable(node: UnpackedVariableNode): Node {
-    this.visitVariableDefinition(node.var1);
-    this.visitVariableDefinition(node.var2);
+    node.tuple = this.visit(node.tuple);
+    console.log("add unpacked..");
+    this.popFromStack();
+    this.popFromStack();
+    this.pushToStack(node.name1);
+    this.pushToStack(node.name2);
+
+
+
+    // this.visitVariableDefinition(node.var1);
+    // this.visitVariableDefinition(node.var2);
     // node.var1.expression = this.visit(node.var1.expression);
     // node.var2.expression = this.visit(node.var2.expression);
     // console.log(node);
@@ -605,6 +626,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
     if (this.isOpRoll(node)) {
+      console.log('removes')
       this.emit(Op.OP_ROLL);
       this.removeFromStack(stackIndex);
     } else {

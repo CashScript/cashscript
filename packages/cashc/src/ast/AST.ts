@@ -96,16 +96,22 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
   }
 }
 
-export class UnpackedVariableNode extends StatementNode {
+export class UnpackedVariableNode extends StatementNode implements Typed {
   constructor(
-    public var1: VariableDefinitionNode,
-    public var2: VariableDefinitionNode,
+    public type: Type,
+    public name1: string,
+    public name2: string,
+    public tuple: ExpressionNode,
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitUnpackedVariable(this);
+  }
+
+  createVariableDefNode(name: string): VariableDefinitionNode {
+    return new VariableDefinitionNode(this.type, name, this.tuple);
   }
 }
 
