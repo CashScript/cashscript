@@ -10,6 +10,7 @@ import {
   Node,
   FunctionCallNode,
   InstantiationNode,
+  AssignNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable';
@@ -19,6 +20,7 @@ import {
   UndefinedReferenceError,
   UnusedVariableError,
   InvalidSymbolTypeError,
+  ConstantModificationError,
 } from '../Errors';
 
 export default class SymbolTableTraversal extends AstTraversal {
@@ -100,6 +102,15 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.symbolTables[0].set(Symbol.variable(node));
 
+    return node;
+  }
+
+  visitAssign(node: AssignNode): Node {
+    const v = this.symbolTables[0].get(node.identifier.name)?.definition as VariableDefinitionNode;
+    if(v.modifier === 'constant') {
+      throw new ConstantModificationError(v);
+    }
+    super.visitAssign(node);
     return node;
   }
 

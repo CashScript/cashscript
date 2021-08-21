@@ -54,7 +54,7 @@ statement
     ;
 
 variableDefinition
-    : typeName Identifier '=' expression ';'
+    : typeName modifier? Identifier '=' expression ';'
     ;
 
 assignStatement
@@ -106,6 +106,10 @@ expression
     | PreimageField # PreimageField
     | Identifier # Identifier
     | literal # LiteralExpression
+    ;
+
+modifier
+    : 'constant'
     ;
 
 literal

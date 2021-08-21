@@ -151,9 +151,10 @@ export default class AstBuilder
 
   visitVariableDefinition(ctx: VariableDefinitionContext): VariableDefinitionNode {
     const type = parseType(ctx.typeName().text);
+    const modifier = ctx.modifier()?.text ?? '';
     const name = ctx.Identifier().text;
     const expression = this.visit(ctx.expression());
-    const variableDefinition = new VariableDefinitionNode(type, name, expression);
+    const variableDefinition = new VariableDefinitionNode(type, modifier, name, expression);
     variableDefinition.location = Location.fromCtx(ctx);
     return variableDefinition;
   }
