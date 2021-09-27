@@ -161,12 +161,12 @@ export default class AstBuilder
 
   visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
-    if (!(expression instanceof BinaryOpNode) || expression.operator !== BinaryOperator.SPLIT) {
-      throw new TupleAssignmentError(expression);
-    }
-    const type = parseType(ctx.typeName().text);
-    const [name1, name2] = ctx.Identifier().map((i) => i.text);
-    const tupleAssignment = new TupleAssignmentNode(type, name1, name2, expression);
+    const names = ctx.Identifier();
+    const types = ctx.typeName();
+    const [var1, var2] = names.map((name, i) => (
+      { name: name.text, type: parseType(types[i].text) }
+    ));
+    const tupleAssignment = new TupleAssignmentNode(var1, var2, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
     return tupleAssignment;
   }

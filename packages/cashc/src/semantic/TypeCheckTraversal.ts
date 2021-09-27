@@ -38,6 +38,7 @@ import {
   ArrayElementError,
   IndexOutOfBoundsError,
   CastSizeError,
+  TupleAssignmentError,
 } from '../Errors';
 import { BinaryOperator, UnaryOperator } from '../ast/Operator';
 import { GlobalFunction } from '../ast/Globals';
@@ -51,7 +52,21 @@ export default class TypeCheckTraversal extends AstTraversal {
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
-    expectAssignable(node.createVariableDefNode('name'), (node.tuple.type as TupleType).elementType, node.type);
+    if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
+      throw new TupleAssignmentError(node.tuple);
+    }
+    const tupleType = node.tuple.left.type;
+    for (const variable of [node.var1, node.var2]) {
+      if (!implicitlyCastable(tupleType, variable.type)) {
+        // Ignore if both are of type byte. problem: bytes16 can be typed to bytes32
+        if (tupleType instanceof BytesType && variable.type instanceof BytesType) {
+          return node;
+        }
+        throw new AssignTypeError(
+          new VariableDefinitionNode(variable.type, variable.name, node.tuple),
+        );
+      }
+    }
     return node;
   }
 

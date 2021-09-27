@@ -106,7 +106,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    this.addOutput(`${node.type} ${node.name1}, ${node.name2} = `, true);
+    this.addOutput(`${node.var1.type} ${node.var1.name}, ${node.var2.type} ${node.var2.name} = `, true);
     this.visit(node.tuple);
     this.addOutput(';\n');
 

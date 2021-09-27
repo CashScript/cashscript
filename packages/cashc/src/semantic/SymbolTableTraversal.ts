@@ -106,11 +106,11 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    [node.name1, node.name2].forEach((name) => {
+    [node.var1, node.var2].forEach(({ name, type }) => {
       if (this.symbolTables[0].get(name)) {
-        throw new VariableRedefinitionError(node.createVariableDefNode(name));
+        throw new VariableRedefinitionError(new VariableDefinitionNode(type, name, node.tuple));
       }
-      this.symbolTables[0].set(Symbol.variable(node.createVariableDefNode(name)));
+      this.symbolTables[0].set(Symbol.variable(new VariableDefinitionNode(type, name, node.tuple)));
     });
 
     node.tuple = this.visit(node.tuple);

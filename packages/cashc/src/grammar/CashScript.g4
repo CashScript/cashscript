@@ -59,7 +59,7 @@ variableDefinition
     ;
 
 tupleAssignment
-    : typeName Identifier ',' Identifier '=' expression ';'
+    : typeName Identifier ',' typeName Identifier '=' expression ';'
     ;
 
 assignStatement

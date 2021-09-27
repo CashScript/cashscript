@@ -308,8 +308,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
     this.popFromStack(2);
-    this.pushToStack(node.name1);
-    this.pushToStack(node.name2);
+    this.pushToStack(node.var1.name);
+    this.pushToStack(node.var2.name);
     return node;
   }
 

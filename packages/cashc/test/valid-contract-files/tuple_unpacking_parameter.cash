@@ -1,6 +1,6 @@
-contract Test(string s1) {
-    function split(string s2) {
-        string x, y = (s1+s2).split(1);
+contract Test() {
+    function split(bytes32 b) {
+        bytes16 x, bytes16 y =  b.split(16);
         require(x == y);
     }
 }
