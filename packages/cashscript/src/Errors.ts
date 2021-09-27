@@ -23,7 +23,7 @@ export enum Reason {
   EQUALVERIFY = 'Script failed an OP_EQUALVERIFY operation',
   CHECKMULTISIGVERIFY = 'Script failed an OP_CHECKMULTISIGVERIFY operation',
   CHECKSIGVERIFY = 'Script failed an OP_CHECKSIGVERIFY operation',
-  CHECKDATASIGVERIFY = 'Script failed an OP_CHECKDATASIGVERIFY operation',
+  CHECKSIGFROMSTACKVERIFY = 'Script failed an OP_CHECKSIGFROMSTACKVERIFY operation',
   NUMEQUALVERIFY = 'Script failed an OP_NUMEQUALVERIFY operation',
   SCRIPT_SIZE = 'Script is too big',
   PUSH_SIZE = 'Push value size limit exceeded',

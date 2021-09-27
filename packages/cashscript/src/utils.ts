@@ -144,7 +144,7 @@ export function createSighashPreimage(
 export function buildError(reason: string, meepStr: string): FailedTransactionError {
   const require = [
     Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
-    Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
+    Reason.CHECKSIGVERIFY, Reason.CHECKSIGFROMSTACKVERIFY, Reason.NUMEQUALVERIFY,
   ];
   const timeCheck = [Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME];
   const sigCheck = [

@@ -26,7 +26,7 @@ export enum GlobalFunction {
   HASH256 = 'hash256',
   CHECKSIG = 'checkSig',
   CHECKMULTISIG = 'checkMultiSig',
-  CHECKDATASIG = 'checkDataSig',
+  CHECKSIGFROMSTACK = 'checkSigFromStack',
 }
 
 export enum TimeOp {
@@ -37,6 +37,8 @@ export enum TimeOp {
 export enum Class {
   OUTPUT_P2SH = 'OutputP2SH',
   OUTPUT_P2PKH = 'OutputP2PKH',
+  OUTPUT_P2WPKH = 'OutputP2WPKH',
+  OUTPUT_P2WSH = 'OutputP2WSH',
   OUTPUT_NULLDATA = 'OutputNullData',
 }
 
@@ -77,6 +79,14 @@ GLOBAL_SYMBOL_TABLE.set(
 GLOBAL_SYMBOL_TABLE.set(
   Symbol.class(Class.OUTPUT_NULLDATA, new BytesType(), [new ArrayType(new BytesType())]),
 );
+// Elements types
+// TODO checks if this lenght are correct
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.class(Class.OUTPUT_P2WPKH, new BytesType(34), [new BytesType(8), new BytesType(20)]),
+);
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.class(Class.OUTPUT_P2WSH, new BytesType(32), [new BytesType(8), new BytesType(20)]),
+);
 
 // Global functions
 GLOBAL_SYMBOL_TABLE.set(
@@ -116,6 +126,6 @@ GLOBAL_SYMBOL_TABLE.set(Symbol.function(
   [new ArrayType(PrimitiveType.SIG), new ArrayType(PrimitiveType.PUBKEY)],
 ));
 GLOBAL_SYMBOL_TABLE.set(Symbol.function(
-  GlobalFunction.CHECKDATASIG, PrimitiveType.BOOL,
+  GlobalFunction.CHECKSIGFROMSTACK, PrimitiveType.BOOL,
   [PrimitiveType.DATASIG, new BytesType(), PrimitiveType.PUBKEY],
 ));

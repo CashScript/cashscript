@@ -457,9 +457,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.emit(Op.OP_SHA256);
     this.pushToStack('(value)');
 
-    // Order arguments and perform OP_CHECKDATASIGVERIFY
+    // Order arguments and perform CHECKSIGFROMSTACKVERIFY
     this.emit(Op.OP_ROT);
-    this.emit(Op.OP_CHECKDATASIGVERIFY);
+    this.emit(Op.OP_CHECKSIGFROMSTACKVERIFY);
     this.popFromStack(3);
 
     this.covenantNeedsToBeVerified = false;

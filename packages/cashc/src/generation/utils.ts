@@ -37,7 +37,7 @@ export function compileCast(from: Type, to: Type): Script {
 export function compileGlobalFunction(fn: GlobalFunction): Script {
   const mapping = {
     [GlobalFunction.ABS]: [Op.OP_ABS],
-    [GlobalFunction.CHECKDATASIG]: [Op.OP_CHECKDATASIG],
+    [GlobalFunction.CHECKSIGFROMSTACK]: [Op.OP_CHECKSIGFROMSTACK],
     [GlobalFunction.CHECKMULTISIG]: [Op.OP_CHECKMULTISIG],
     [GlobalFunction.CHECKSIG]: [Op.OP_CHECKSIG],
     [GlobalFunction.MAX]: [Op.OP_MAX],
