@@ -401,7 +401,7 @@ export const fixtures: Fixture[] = [
             ),
             new RequireNode(
               new FunctionCallNode(
-                new IdentifierNode('checkDataSig'),
+                new IdentifierNode('checkSigFromStack'),
                 [
                   new IdentifierNode('oracleSig'),
                   new IdentifierNode('oracleMessage'),
