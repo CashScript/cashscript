@@ -1,7 +1,7 @@
 # Ionio
 
 
-Ionio is a high-level programming language for smart contracts on Elements. It offers a strong abstraction layer over Elements' native virtual machine, Bitcoin Script. Its syntax is based on Ethereum's smart contract language Solidity, but its functionality is very different since smart contracts on Elements differ greatly from smart contracts on Ethereum. It's a fork of [Ionio](https://github.com/Bitcoin-com/cashscript)
+Ionio is a high-level programming language for smart contracts on Elements. It offers a strong abstraction layer over Elements' native virtual machine, Bitcoin Script. Its syntax is based on Ethereum's smart contract language Solidity, but its functionality is very different since smart contracts on Elements differ greatly from smart contracts on Ethereum. It's a fork of [CashScript](https://github.com/Bitcoin-com/cashscript)
 
 ## The Ionio Language
 Ionio is a high-level language that allows you to write Elements smart contracts in a straightforward and familiar way. Its syntax is inspired by Ethereum's Solidity language, but its functionality is different since the underlying systems have very different fundamentals. See the [language documentation](https://docs.vulpem.com/ionio/language/) for a full reference of the language.
