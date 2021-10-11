@@ -40,7 +40,7 @@
   "source": "contract TransferWithTimeout(\n    pubkey sender,\n    pubkey recipient,\n    int timeout\n) {\n    // Require recipient's signature to match\n    function transfer(sig recipientSig) {\n        require(checkSig(recipientSig, recipient));\n    }\n\n    // Require timeout time to be reached and sender's signature to match\n    function timeout(sig senderSig) {\n        require(checkSig(senderSig, sender));\n        require(tx.time >= timeout);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.4.3"
+    "version": "0.6.5"
   },
-  "updatedAt": "2020-08-07T09:57:03.985Z"
+  "updatedAt": "2021-10-11T09:22:05.990Z"
 }

@@ -21,7 +21,7 @@
   "source": "contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == bytes4(i));\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.4.3"
+    "version": "0.6.5"
   },
-  "updatedAt": "2020-08-07T09:57:03.099Z"
+  "updatedAt": "2021-10-11T09:22:05.434Z"
 }

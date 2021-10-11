@@ -31,12 +31,14 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
+  TupleAssignmentNode,
 } from './AST';
 import { UnaryOperator, BinaryOperator } from './Operator';
 import {
   ContractDefinitionContext,
   FunctionDefinitionContext,
   VariableDefinitionContext,
+  TupleAssignmentContext,
   ParameterContext,
   AssignStatementContext,
   IfStatementContext,
@@ -132,7 +134,6 @@ export default class AstBuilder
     const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
-
     // Filter duplicate preimage fields
     const preimageFields = [...this.preimageFields].filter((v, i, a) => a.indexOf(v) === i);
 
@@ -156,6 +157,18 @@ export default class AstBuilder
     const variableDefinition = new VariableDefinitionNode(type, name, expression);
     variableDefinition.location = Location.fromCtx(ctx);
     return variableDefinition;
+  }
+
+  visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
+    const expression = this.visit(ctx.expression());
+    const names = ctx.Identifier();
+    const types = ctx.typeName();
+    const [var1, var2] = names.map((name, i) => (
+      { name: name.text, type: parseType(types[i].text) }
+    ));
+    const tupleAssignment = new TupleAssignmentNode(var1, var2, expression);
+    tupleAssignment.location = Location.fromCtx(ctx);
+    return tupleAssignment;
   }
 
   visitAssignStatement(ctx: AssignStatementContext): AssignNode {

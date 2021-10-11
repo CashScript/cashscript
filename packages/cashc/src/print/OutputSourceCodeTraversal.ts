@@ -24,6 +24,7 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
+  TupleAssignmentNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -99,6 +100,14 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     this.addOutput(`${node.type} ${node.name} = `, true);
     this.visit(node.expression);
+    this.addOutput(';\n');
+
+    return node;
+  }
+
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
+    this.addOutput(`${node.var1.type} ${node.var1.name}, ${node.var2.type} ${node.var2.name} = `, true);
+    this.visit(node.tuple);
     this.addOutput(';\n');
 
     return node;

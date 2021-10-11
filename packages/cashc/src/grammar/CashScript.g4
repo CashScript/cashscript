@@ -47,6 +47,7 @@ block
 
 statement
     : variableDefinition
+    | tupleAssignment
     | assignStatement
     | timeOpStatement
     | requireStatement
@@ -55,6 +56,10 @@ statement
 
 variableDefinition
     : typeName Identifier '=' expression ';'
+    ;
+
+tupleAssignment
+    : typeName Identifier ',' typeName Identifier '=' expression ';'
     ;
 
 assignStatement

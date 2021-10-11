@@ -27,6 +27,7 @@ import { ParameterContext } from "./CashScriptParser";
 import { BlockContext } from "./CashScriptParser";
 import { StatementContext } from "./CashScriptParser";
 import { VariableDefinitionContext } from "./CashScriptParser";
+import { TupleAssignmentContext } from "./CashScriptParser";
 import { AssignStatementContext } from "./CashScriptParser";
 import { TimeOpStatementContext } from "./CashScriptParser";
 import { RequireStatementContext } from "./CashScriptParser";
@@ -225,6 +226,13 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitVariableDefinition?: (ctx: VariableDefinitionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.tupleAssignment`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTupleAssignment?: (ctx: TupleAssignmentContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.assignStatement`.

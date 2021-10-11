@@ -29,6 +29,8 @@ describe('Compiler', () => {
             // Retrieve the correct Error constructor from the Errors.ts file
             const expectedError = Errors[errorType as keyof typeof Errors];
 
+            if (!expectedError) throw new Error(`Invalid test configuration: error ${errorType} does not exist`);
+
             expect(() => compileString(file.contents)).toThrow(expectedError);
           });
         });

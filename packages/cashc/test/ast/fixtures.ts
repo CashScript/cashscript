@@ -18,10 +18,10 @@ import {
   BranchNode,
   ArrayNode,
   CastNode,
-  TupleIndexOpNode,
   TimeOpNode,
   HexLiteralNode,
   InstantiationNode,
+  TupleAssignmentNode,
 } from '../../src/ast/AST';
 import { BinaryOperator } from '../../src/ast/Operator';
 import {
@@ -351,19 +351,21 @@ export const fixtures: Fixture[] = [
             new ParameterNode(new BytesType(8), 'oracleMessage'),
           ],
           new BlockNode([
+            new TupleAssignmentNode(
+              { name: 'blockHeightBin', type: new BytesType(4) },
+              { name: 'priceBin', type: new BytesType(4) },
+              new BinaryOpNode(
+                new IdentifierNode('oracleMessage'),
+                BinaryOperator.SPLIT,
+                new IntLiteralNode(4),
+              ),
+            ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
               'blockHeight',
               new CastNode(
                 PrimitiveType.INT,
-                new TupleIndexOpNode(
-                  new BinaryOpNode(
-                    new IdentifierNode('oracleMessage'),
-                    BinaryOperator.SPLIT,
-                    new IntLiteralNode(4),
-                  ),
-                  0,
-                ),
+                new IdentifierNode('blockHeightBin'),
               ),
             ),
             new VariableDefinitionNode(
@@ -371,14 +373,7 @@ export const fixtures: Fixture[] = [
               'price',
               new CastNode(
                 PrimitiveType.INT,
-                new TupleIndexOpNode(
-                  new BinaryOpNode(
-                    new IdentifierNode('oracleMessage'),
-                    BinaryOperator.SPLIT,
-                    new IntLiteralNode(4),
-                  ),
-                  1,
-                ),
+                new IdentifierNode('priceBin'),
               ),
             ),
             new RequireNode(
