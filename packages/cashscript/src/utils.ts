@@ -20,15 +20,33 @@ import {
   scriptToBytecode,
   sha256,
 } from '@cashscript/utils';
-import { Utxo, Output, Network } from './interfaces';
-import { P2PKH_OUTPUT_SIZE, VERSION_SIZE, LOCKTIME_SIZE } from './constants';
 import {
+  Utxo,
+  Output,
+  Network,
+  Recipient,
+} from './interfaces';
+import {
+  P2PKH_OUTPUT_SIZE,
+  VERSION_SIZE,
+  LOCKTIME_SIZE,
+  DUST_LIMIT,
+} from './constants';
+import {
+  OutputSatoshisTooSmallError,
   Reason,
   FailedTransactionError,
   FailedRequireError,
   FailedTimeCheckError,
   FailedSigCheckError,
 } from './Errors';
+
+// ////////// PARAMETER VALIDATION ////////////////////////////////////////////
+export function validateRecipient(recipient: Recipient): void {
+  if (recipient.amount < DUST_LIMIT) {
+    throw new OutputSatoshisTooSmallError(recipient.amount);
+  }
+}
 
 // ////////// SIZE CALCULATIONS ///////////////////////////////////////////////
 export function getInputSize(inputScript: Uint8Array): number {
