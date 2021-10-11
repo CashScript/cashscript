@@ -71,7 +71,7 @@ import {
 } from './Globals';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
-import { ParseError, TupleAssignmentError, VersionError } from '../Errors';
+import { ParseError, VersionError } from '../Errors';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>

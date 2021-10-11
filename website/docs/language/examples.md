@@ -42,8 +42,10 @@ pragma cashscript ^0.6.0;
 contract HodlVault(pubkey ownerPk, pubkey oraclePk, int minBlock, int priceTarget) {
     function spend(sig ownerSig, datasig oracleSig, bytes oracleMessage) {
         // Decode the message { blockHeight, price }
-        int blockHeight = int(oracleMessage.split(4)[0]);
-        int price = int(oracleMessage.split(4)[1]);
+        bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);
+        int blockHeight = int(blockHeightBin);
+        int price = int(priceBin);
+
 
         // Check that blockHeight is after minBlock
         require(blockHeight >= minBlock);
