@@ -1,5 +1,3 @@
-pragma cashscript ^0.6.0;
-
 /* This is an unofficial CashScript port of Licho's Mecenas contract. It is
  * not compatible with Licho's EC plugin, but rather meant as a demonstration
  * of covenants in CashScript.
