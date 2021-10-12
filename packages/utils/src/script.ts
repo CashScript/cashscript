@@ -94,7 +94,7 @@ export function calculateBytesize(script: Script): number {
 }
 
 // For encoding OP_RETURN data (doesn't require BIP62.3 / MINIMALDATA)
-export function encodeNullDataScript(chunks: (number | Uint8Array)[]): Uint8Array {
+export function encodeNullDataScript(chunks: OpOrData[]): Uint8Array {
   return flattenBinArray(
     chunks.map((chunk) => {
       if (typeof chunk === 'number') {

@@ -10,7 +10,7 @@ import {
 import { TypeError } from './Errors';
 import SignatureTemplate from './SignatureTemplate';
 
-export type Argument = number | boolean | string | Uint8Array | SignatureTemplate;
+export type Argument = number | bigint | boolean | string | Uint8Array | SignatureTemplate;
 
 export function encodeArgument(
   argument: Argument,
@@ -26,7 +26,7 @@ export function encodeArgument(
   }
 
   if (type === PrimitiveType.INT) {
-    if (typeof argument !== 'number') {
+    if (typeof argument !== 'number' && typeof argument !== 'bigint') {
       throw new TypeError(typeof argument, type);
     }
     return encodeInt(argument);
