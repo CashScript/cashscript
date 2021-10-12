@@ -190,6 +190,7 @@ export default class TypeCheckTraversal extends AstTraversal {
           }
         }
         return node;
+      case BinaryOperator.MUL:
       case BinaryOperator.DIV:
       case BinaryOperator.MOD:
       case BinaryOperator.MINUS:

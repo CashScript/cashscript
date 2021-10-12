@@ -95,9 +95,8 @@ expression
     | expression op=('.reverse()' | '.length') # UnaryOp
     | op=('!' | '-') expression # UnaryOp
     // | expression '**' expression --- OP_POW does not exist in BCH Script
-    // | expression ('*' | '/' | '%') expression --- OP_MUL is disabled in BCH Script
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
-    | left=expression op=('/' | '%') right=expression # BinaryOp
+    | left=expression op=('*' | '/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
     // | expression ('>>' | '<<') expression --- OP_LSHIFT & RSHIFT are disabled in BCH Script
     | left=expression op=('<' | '<=' | '>' | '>=') right=expression # BinaryOp

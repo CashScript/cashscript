@@ -6,6 +6,7 @@ export enum UnaryOperator {
 }
 
 export enum BinaryOperator {
+  MUL = '*',
   DIV = '/',
   MOD = '%',
   PLUS = '+',
