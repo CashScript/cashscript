@@ -70,4 +70,5 @@ export enum Reason {
   NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
   ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
   MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
+  UNKNOWN = 'unknown error',
 }

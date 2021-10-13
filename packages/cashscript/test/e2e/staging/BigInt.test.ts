@@ -66,12 +66,7 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedTransactionError);
-
-      // TODO: This call currently returns this error:
-      // "mandatory-script-verify-flag-failed (unknown error) (code 16)"
-      // I'm assuming it will start returning a different error in the future at which point
-      // we'll need to update this test
-      // await expect(txPromise).rejects.toThrow(Reason.INVALID_NUMBER_RANGE);
+      await expect(txPromise).rejects.toThrow(Reason.UNKNOWN);
     });
 
     it('should succeed when providing a number within 32b < x < 64b', async () => {
