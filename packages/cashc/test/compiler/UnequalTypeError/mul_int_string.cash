@@ -1,0 +1,5 @@
+contract Test(int x, int y) {
+    function hello() {
+        require((x * "50") == y);
+    }
+}

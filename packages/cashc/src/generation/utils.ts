@@ -55,6 +55,7 @@ export function compileGlobalFunction(fn: GlobalFunction): Script {
 
 export function compileBinaryOp(op: BinaryOperator, numeric: boolean = false): Script {
   const mapping: { [key in BinaryOperator]: Script } = {
+    [BinaryOperator.MUL]: [Op.OP_MUL],
     [BinaryOperator.DIV]: [Op.OP_DIV],
     [BinaryOperator.MOD]: [Op.OP_MOD],
     [BinaryOperator.PLUS]: [Op.OP_CAT],
