@@ -11,7 +11,6 @@ import { TupleIndexOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
 import { ArrayContext } from "./CashScriptParser";
-import { PreimageFieldContext } from "./CashScriptParser";
 import { IdentifierContext } from "./CashScriptParser";
 import { LiteralExpressionContext } from "./CashScriptParser";
 import { SourceFileContext } from "./CashScriptParser";
@@ -111,14 +110,6 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitArray?: (ctx: ArrayContext) => Result;
-
-	/**
-	 * Visit a parse tree produced by the `PreimageField`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitPreimageField?: (ctx: PreimageFieldContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by the `Identifier`

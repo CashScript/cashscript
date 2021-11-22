@@ -3,6 +3,8 @@ title: Writing Covenants
 sidebar_label: Covenants
 ---
 
+**NOTE: As of CashScript 0.7, this guide is outdated and needs to be updated for Native Introspection**
+
 Covenants are all the rage in Bitcoin Cash smart contracts. But what are they, and how do you use them? In one sentence: **a covenant is a constraint on how money can be spent**. A simple example is creating a smart contract that may **only** send money to one specific address and nowhere else. The term *Covenant* originates in property law, where it is used to constrain the use of any object - or in the case of BCH, the use of money.
 
 Bitcoin covenants were first proposed in a paper titled [Bitcoin Covenants][bitcoin-covenants], but several other proposals have been created over the years. Bitcoin Cash covenants use an opcode called `OP_CHECKDATASIG`, which allows you to verify a digital signature over any message.

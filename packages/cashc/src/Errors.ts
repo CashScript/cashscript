@@ -255,11 +255,3 @@ export class VersionError extends Error {
     this.name = this.constructor.name;
   }
 }
-
-export class UnverifiedCovenantError extends CashScriptError {
-  constructor(
-    node: IdentifierNode,
-  ) {
-    super(node, `Covenant variable ${node.name} was used without un-nested signature check`);
-  }
-}
