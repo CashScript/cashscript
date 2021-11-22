@@ -11,7 +11,6 @@ import { TupleIndexOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
 import { ArrayContext } from "./CashScriptParser";
-import { PreimageFieldContext } from "./CashScriptParser";
 import { IdentifierContext } from "./CashScriptParser";
 import { LiteralExpressionContext } from "./CashScriptParser";
 import { SourceFileContext } from "./CashScriptParser";
@@ -148,19 +147,6 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitArray?: (ctx: ArrayContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `PreimageField`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	enterPreimageField?: (ctx: PreimageFieldContext) => void;
-	/**
-	 * Exit a parse tree produced by the `PreimageField`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	exitPreimageField?: (ctx: PreimageFieldContext) => void;
 
 	/**
 	 * Enter a parse tree produced by the `Identifier`
