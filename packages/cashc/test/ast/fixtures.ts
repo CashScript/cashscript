@@ -1,3 +1,4 @@
+import { hexToBin } from '@bitauth/libauth';
 import { BytesType, PrimitiveType } from '@cashscript/utils';
 import {
   SourceFileNode,
@@ -19,8 +20,10 @@ import {
   CastNode,
   TimeOpNode,
   TupleAssignmentNode,
+  NullaryOpNode,
+  HexLiteralNode,
 } from '../../src/ast/AST';
-import { BinaryOperator } from '../../src/ast/Operator';
+import { BinaryOperator, NullaryOperator } from '../../src/ast/Operator';
 import { TimeOp } from '../../src/ast/Globals';
 
 interface Fixture {
@@ -405,48 +408,35 @@ export const fixtures: Fixture[] = [
       ),
     ),
   },
-  // {
-  //   fn: 'covenant.cash',
-  //   ast: new SourceFileNode(
-  //     new ContractNode(
-  //       'Covenant',
-  //       [new ParameterNode(new BytesType(4), 'requiredVersion')],
-  //       [new FunctionDefinitionNode(
-  //         'spend',
-  //         [
-  //           new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
-  //           new ParameterNode(PrimitiveType.SIG, 's'),
-  //         ],
-  //         new BlockNode([
-  //           new RequireNode(
-  //             new BinaryOpNode(
-  //               new IdentifierNode(PreimageField.VERSION),
-  //               BinaryOperator.EQ,
-  //               new IdentifierNode('requiredVersion'),
-  //             ),
-  //           ),
-  //           new RequireNode(
-  //             new BinaryOpNode(
-  //               new IdentifierNode(PreimageField.BYTECODE),
-  //               BinaryOperator.EQ,
-  //               new HexLiteralNode(hexToBin('00')),
-  //             ),
-  //           ),
-  //           new RequireNode(
-  //             new FunctionCallNode(
-  //               new IdentifierNode('checkSig'),
-  //               [
-  //                 new IdentifierNode('s'),
-  //                 new IdentifierNode('pk'),
-  //               ],
-  //             ),
-  //           ),
-  //         ]),
-  //         [PreimageField.VERSION, PreimageField.BYTECODE],
-  //       )],
-  //     ),
-  //   ),
-  // },
+  {
+    fn: 'covenant.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'Covenant',
+        [new ParameterNode(PrimitiveType.INT, 'requiredVersion')],
+        [new FunctionDefinitionNode(
+          'spend',
+          [],
+          new BlockNode([
+            new RequireNode(
+              new BinaryOpNode(
+                new NullaryOpNode(NullaryOperator.VERSION),
+                BinaryOperator.EQ,
+                new IdentifierNode('requiredVersion'),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new NullaryOpNode(NullaryOperator.BYTECODE),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('00')),
+              ),
+            ),
+          ]),
+        )],
+      ),
+    ),
+  },
   // {
   //   fn: 'mecenas.cash',
   //   ast: new SourceFileNode(

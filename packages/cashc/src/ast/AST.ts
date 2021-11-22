@@ -1,7 +1,7 @@
 import { Type, PrimitiveType, BytesType } from '@cashscript/utils';
 import { TimeOp } from './Globals';
 import AstVisitor from './AstVisitor';
-import { BinaryOperator, UnaryOperator } from './Operator';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator';
 import { Location } from './Location';
 import { SymbolTable, Symbol } from './SymbolTable';
 
@@ -255,6 +255,18 @@ export class UnaryOpNode extends ExpressionNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitUnaryOp(this);
+  }
+}
+
+export class NullaryOpNode extends ExpressionNode {
+  constructor(
+    public operator: NullaryOperator,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitNullaryOp(this);
   }
 }
 

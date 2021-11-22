@@ -11,6 +11,7 @@ import { TupleIndexOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
 import { ArrayContext } from "./CashScriptParser";
+import { NullaryOpContext } from "./CashScriptParser";
 import { IdentifierContext } from "./CashScriptParser";
 import { LiteralExpressionContext } from "./CashScriptParser";
 import { SourceFileContext } from "./CashScriptParser";
@@ -147,6 +148,19 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitArray?: (ctx: ArrayContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `NullaryOp`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 */
+	enterNullaryOp?: (ctx: NullaryOpContext) => void;
+	/**
+	 * Exit a parse tree produced by the `NullaryOp`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 */
+	exitNullaryOp?: (ctx: NullaryOpContext) => void;
 
 	/**
 	 * Enter a parse tree produced by the `Identifier`

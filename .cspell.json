@@ -97,6 +97,7 @@
         "nonschnorr",
         "nops",
         "notif",
+        "nullary",
         "nulldata",
         "nullfail",
         "numequal",

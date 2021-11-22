@@ -1,0 +1,10 @@
+contract Covenant() {
+    function spend() {
+        require(tx.version == 2);
+        require(tx.locktime == 0);
+        require(tx.inputs.length == 1);
+        require(tx.outputs.length == 1);
+        require(this.inputIndex == 0);
+        require(this.bytecode.length == 300);
+    }
+}

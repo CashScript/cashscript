@@ -11,6 +11,16 @@ import {
 import { decodeInt, encodeInt } from './data';
 import OptimisationsEquivFile from './cashproof-optimisations';
 
+// TODO: Replace this when these opcodes are in Libauth
+export enum IntrospectionOp {
+  OP_INPUTINDEX = 192,
+  OP_ACTIVEBYTECODE = 193,
+  OP_TXVERSION = 194,
+  OP_TXINPUTCOUNT = 195,
+  OP_TXOUTPUTCOUNT = 196,
+  OP_TXLOCKTIME = 197,
+}
+
 export const Op = OpcodesBCH;
 export type Op = number;
 export type OpOrData = Op | Uint8Array;

@@ -347,196 +347,59 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
-  // {
-  //   fn: 'covenant.cash',
-  //   artifact: {
-  //     contractName: 'Covenant',
-  //     constructorInputs: [
-  //       {
-  //         name: 'requiredVersion',
-  //         type: 'bytes4',
-  //       },
-  //     ],
-  //     abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-  //     bytecode:
-  //     // Preimage deserialisation (with OP_NOP left in)
-  //       'OP_OVER OP_4 OP_SPLIT OP_NOP 64 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
-  //       // require(tx.version == requiredVersion)
-  //       + 'OP_SWAP OP_ROT OP_EQUALVERIFY '
-  //       // require(tx.bytecode == 0x00)
-  //       + '00 OP_EQUALVERIFY '
-  //       // require(checkSig(s, pk)) + preimage verification
-  //       + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
-  // {
-  //   fn: 'covenant_multiple_checksig.cash',
-  //   artifact: {
-  //     contractName: 'Covenant',
-  //     constructorInputs: [
-  //       {
-  //         name: 'requiredHS',
-  //         type: 'bytes32',
-  //       },
-  //     ],
-  //     abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-  //     bytecode:
-  //     // Preimage deserialisation (with OP_NOP left in)
-  //       'OP_OVER 24 OP_SPLIT OP_NIP 20 OP_SPLIT OP_NOP 24 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT OP_DROP '
-  //       // require(!checkSig(s, pk))
-  //       + 'OP_5 OP_PICK OP_5 OP_PICK OP_CHECKSIG OP_NOT OP_VERIFY '
-  //       // require(tx.hashSequence == requiredHS)
-  //       + 'OP_SWAP OP_ROT OP_EQUALVERIFY '
-  //       // require(tx.bytecode == 0x00)
-  //       + '00 OP_EQUALVERIFY '
-  //       // require(checkSig(s, pk)) + preimage verification
-  //       + 'OP_2 OP_PICK OP_2 OP_PICK OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
-  //       // require(checkSig(s, pk))
-  //       + 'OP_CHECKSIG',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_multiple_checksig.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
-  // {
-  //   fn: 'covenant_only_hashtype.cash',
-  //   artifact: {
-  //     contractName: 'Covenant',
-  //     constructorInputs: [],
-  //     abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-  //     bytecode:
-  //       // preimage parsing
-  //       'OP_DUP OP_SIZE OP_4 OP_SUB OP_SPLIT OP_NIP '
-  //       // require(tx.hashtype == bytes(0x01))
-  //       + 'OP_1 OP_EQUALVERIFY '
-  //       // require(checkSig(s, pk)) + preimage verification
-  //       + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_only_hashtype.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
-  // {
-  //   fn: 'covenant_only_version.cash',
-  //   artifact: {
-  //     contractName: 'Covenant',
-  //     constructorInputs: [],
-  //     abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-  //     bytecode:
-  //       // preimage parsing
-  //       'OP_DUP OP_4 OP_SPLIT OP_DROP '
-  //       // require(tx.version == bytes(0x01))
-  //       + 'OP_1 OP_EQUALVERIFY '
-  //       // require(checkSig(s, pk)) + preimage verification
-  //       + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_only_version.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
-  // {
-  //   fn: 'covenant_nested_verify.cash',
-  //   artifact: {
-  //     contractName: 'Covenant',
-  //     constructorInputs: [
-  //       { name: 'requiredVersion', type: 'bytes4' },
-  //       { name: 'altPk', type: 'pubkey' },
-  //       { name: 'altPk2', type: 'pubkey' },
-  //     ],
-  //     abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-  //     bytecode:
-  //       // preimage parsing
-  //       'OP_3 OP_PICK OP_4 OP_SPLIT OP_DROP '
-  //       // if (pk.length > 0) {
-  //       + 'OP_5 OP_PICK OP_SIZE OP_NIP OP_0 OP_GREATERTHAN OP_IF '
-  //       // require(checkSig(s, pk));
-  //       + 'OP_6 OP_PICK OP_6 OP_PICK OP_CHECKSIGVERIFY '
-  //       // } else {
-  //       + 'OP_ELSE '
-  //       // require(checkSig(s, altPk));
-  //       + 'OP_6 OP_PICK OP_3 OP_PICK OP_CHECKSIGVERIFY '
-  //       // }
-  //       + 'OP_ENDIF '
-  //       // require(checkSig(s, altPk2)) + preimage verification
-  //       + 'OP_6 OP_ROLL OP_4 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_7 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
-  //       // require(tx.version == requiredVersion) + cleanup
-  //       + 'OP_EQUAL OP_NIP OP_NIP',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_nested_verify.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
-  // {
-  //   fn: 'covenant_all_fields.cash',
-  //   artifact: {
-  //     contractName: 'Covenant',
-  //     constructorInputs: [],
-  //     abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-  //     bytecode:
-  //       'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_NOP OP_0 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
-  //       + 'OP_8 OP_SPLIT OP_4 OP_SPLIT 20 OP_SPLIT OP_4 OP_SPLIT '
-  //       + 'OP_9 OP_ROLL OP_1 OP_EQUALVERIFY OP_8 OP_ROLL OP_1 OP_EQUALVERIFY '
-  //       + 'OP_7 OP_ROLL OP_1 OP_EQUALVERIFY OP_6 OP_ROLL OP_1 OP_EQUALVERIFY '
-  //       + 'OP_5 OP_ROLL OP_1 OP_EQUALVERIFY OP_4 OP_ROLL OP_1 OP_EQUALVERIFY '
-  //       + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_ROT OP_1 OP_EQUALVERIFY '
-  //       + 'OP_SWAP OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
-  //       + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
-  // {
-  //   fn: 'covenant_shuffled_fields.cash',
-  //   artifact: {
-  //     contractName: 'Covenant',
-  //     constructorInputs: [],
-  //     abi: [{ name: 'spend', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
-  //     bytecode:
-  //       'OP_DUP OP_4 OP_SPLIT 20 OP_SPLIT 20 OP_SPLIT 24 OP_SPLIT OP_NOP OP_0 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
-  //       + 'OP_8 OP_SPLIT OP_4 OP_SPLIT 20 OP_SPLIT OP_4 OP_SPLIT '
-  //       + 'OP_1 OP_EQUALVERIFY OP_4 OP_ROLL OP_1 OP_EQUALVERIFY '
-  //       + 'OP_6 OP_ROLL OP_1 OP_EQUALVERIFY OP_6 OP_ROLL OP_1 OP_EQUALVERIFY '
-  //       + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
-  //       + 'OP_3 OP_ROLL OP_1 OP_EQUALVERIFY OP_SWAP OP_1 OP_EQUALVERIFY '
-  //       + 'OP_SWAP OP_1 OP_EQUALVERIFY OP_1 OP_EQUALVERIFY '
-  //       + 'OP_ROT OP_ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_4 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIG',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_shuffled_fields.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
+  {
+    fn: 'covenant.cash',
+    artifact: {
+      contractName: 'Covenant',
+      constructorInputs: [
+        {
+          name: 'requiredVersion',
+          type: 'int',
+        },
+      ],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode:
+        // TODO: Update with actual OP names when they're in Libauth
+        // require(tx.version == requiredVersion)
+        'OP_UNKNOWN194 OP_NUMEQUALVERIFY '
+        // require(tx.bytecode == 0x00)
+        + 'OP_UNKNOWN193 00 OP_EQUAL',
+      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant.cash'), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'covenant_all_fields.cash',
+    artifact: {
+      contractName: 'Covenant',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode:
+        // TODO: Update with actual OP names when they're in Libauth
+        // require(tx.version == 2)
+        'OP_UNKNOWN194 OP_2 OP_NUMEQUALVERIFY '
+        // require(tx.locktime == 0)
+        + 'OP_UNKNOWN197 OP_0 OP_NUMEQUALVERIFY '
+        // require(tx.inputs.length == 1)
+        + 'OP_UNKNOWN195 OP_1 OP_NUMEQUALVERIFY '
+        // require(tx.outputs.length == 1)
+        + 'OP_UNKNOWN196 OP_1 OP_NUMEQUALVERIFY '
+        // require(this.inputIndex == 0)
+        + 'OP_UNKNOWN192 OP_0 OP_NUMEQUALVERIFY '
+        // require(this.bytecode.length == 300)
+        + 'OP_UNKNOWN193 OP_SIZE OP_NIP 2c01 OP_NUMEQUAL',
+      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
   // {
   //   fn: 'mecenas.cash',
   //   artifact: {

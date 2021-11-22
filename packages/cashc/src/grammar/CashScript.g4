@@ -107,6 +107,7 @@ expression
     | left=expression op='&&' right=expression # BinaryOp
     | left=expression op='||' right=expression # BinaryOp
     | '[' (expression (',' expression)* ','?)? ']' # Array
+    | NullaryOp # NullaryOp
     | Identifier # Identifier
     | literal # LiteralExpression
     ;
@@ -168,6 +169,15 @@ HexLiteral
 TxVar
     : 'tx.age'
     | 'tx.time'
+    ;
+
+NullaryOp
+    : 'this.inputIndex'
+    | 'this.bytecode'
+    | 'tx.inputs.length'
+    | 'tx.outputs.length'
+    | 'tx.version'
+    | 'tx.locktime'
     ;
 
 Identifier
