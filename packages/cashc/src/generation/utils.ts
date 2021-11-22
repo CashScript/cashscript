@@ -1,12 +1,13 @@
 import {
   BytesType,
   encodeInt,
+  IntrospectionOp,
   Op,
   PrimitiveType,
   Script,
   Type,
 } from '@cashscript/utils';
-import { UnaryOperator, BinaryOperator } from '../ast/Operator';
+import { UnaryOperator, BinaryOperator, NullaryOperator } from '../ast/Operator';
 import { GlobalFunction, TimeOp } from '../ast/Globals';
 
 export function compileTimeOp(op: TimeOp): Script {
@@ -89,6 +90,19 @@ export function compileUnaryOp(op: UnaryOperator): Op[] {
     [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
     [UnaryOperator.SIZE]: [Op.OP_SIZE, Op.OP_NIP],
     [UnaryOperator.REVERSE]: [Op.OP_REVERSEBYTES],
+  };
+
+  return mapping[op];
+}
+
+export function compileNullaryOp(op: NullaryOperator): Op[] {
+  const mapping = {
+    [NullaryOperator.INPUT_INDEX]: [IntrospectionOp.OP_INPUTINDEX],
+    [NullaryOperator.BYTECODE]: [IntrospectionOp.OP_ACTIVEBYTECODE],
+    [NullaryOperator.INPUT_COUNT]: [IntrospectionOp.OP_TXINPUTCOUNT],
+    [NullaryOperator.OUTPUT_COUNT]: [IntrospectionOp.OP_TXOUTPUTCOUNT],
+    [NullaryOperator.VERSION]: [IntrospectionOp.OP_TXVERSION],
+    [NullaryOperator.LOCKTIME]: [IntrospectionOp.OP_TXLOCKTIME],
   };
 
   return mapping[op];

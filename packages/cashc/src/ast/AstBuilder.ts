@@ -32,8 +32,9 @@ import {
   RequireNode,
   InstantiationNode,
   TupleAssignmentNode,
+  NullaryOpNode,
 } from './AST';
-import { UnaryOperator, BinaryOperator } from './Operator';
+import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator';
 import {
   ContractDefinitionContext,
   FunctionDefinitionContext,
@@ -60,6 +61,7 @@ import {
   RequireStatementContext,
   PragmaDirectiveContext,
   InstantiationContext,
+  NullaryOpContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -245,6 +247,13 @@ export default class AstBuilder
     const tupleIndexOp = new TupleIndexOpNode(tuple, index);
     tupleIndexOp.location = Location.fromCtx(ctx);
     return tupleIndexOp;
+  }
+
+  visitNullaryOp(ctx: NullaryOpContext): NullaryOpNode {
+    const operator = ctx.text as NullaryOperator;
+    const nullaryOp = new NullaryOpNode(operator);
+    nullaryOp.location = Location.fromCtx(ctx);
+    return nullaryOp;
   }
 
   visitUnaryOp(ctx: UnaryOpContext): UnaryOpNode {

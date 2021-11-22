@@ -36,6 +36,7 @@ import {
   Node,
   InstantiationNode,
   TupleAssignmentNode,
+  NullaryOpNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { GlobalFunction, Class } from '../ast/Globals';
@@ -44,6 +45,7 @@ import {
   compileBinaryOp,
   compileCast,
   compileGlobalFunction,
+  compileNullaryOp,
   compileTimeOp,
   compileUnaryOp,
 } from './utils';
@@ -445,6 +447,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.emit(compileUnaryOp(node.operator));
     this.popFromStack();
+    this.pushToStack('(value)');
+    return node;
+  }
+
+  visitNullaryOp(node: NullaryOpNode): Node {
+    this.emit(compileNullaryOp(node.operator));
     this.pushToStack('(value)');
     return node;
   }
