@@ -5,25 +5,24 @@ pragma cashscript ^0.6.0;
  * remainder of contract funds back to the contract.
  */
 contract Announcement() {
-    function announce(pubkey pk, sig s) {
-        require(checkSig(s, pk));
-
+    function announce() {
         // Create the memo.cash announcement output
-        bytes announcement = new OutputNullData([
+        bytes announcement = new LockingBytecodeNullData([
             0x6d02,
             bytes('A contract may not injure a human being or, through inaction, allow a human being to come to harm.')
         ]);
 
+        // Check that the first tx output matches the announcement
+        require(tx.outputs[0].value == 0);
+        require(tx.outputs[0].lockingBytecode == announcement);
+
         // Calculate leftover money after fee (1000 sats)
-        // Add change output if there's enough leftover for another announcement
-        // otherwise donate the remainder to the miner
+        // Check that the second tx output sends the change back if there's enough leftover for another announcement
         int minerFee = 1000;
-        int changeAmount = int(bytes(tx.value)) - minerFee;
+        int changeAmount = tx.inputs[this.inputIndex].value - minerFee;
         if (changeAmount >= minerFee) {
-            bytes32 change = new OutputP2SH(bytes8(changeAmount), hash160(tx.bytecode));
-            require(tx.hashOutputs == hash256(announcement + change));
-        } else {
-            require(tx.hashOutputs == hash256(announcement));
+            require(tx.outputs[1].lockingBytecode == tx.inputs[this.inputIndex].lockingBytecode);
+            require(tx.outputs[1].value == changeAmount);
         }
     }
 }

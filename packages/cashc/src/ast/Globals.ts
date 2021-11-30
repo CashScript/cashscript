@@ -35,22 +35,22 @@ export enum TimeOp {
 }
 
 export enum Class {
-  OUTPUT_P2SH = 'OutputP2SH',
-  OUTPUT_P2PKH = 'OutputP2PKH',
-  OUTPUT_NULLDATA = 'OutputNullData',
+  LOCKING_BYTECODE_P2SH = 'LockingBytecodeP2SH',
+  LOCKING_BYTECODE_P2PKH = 'LockingBytecodeP2PKH',
+  LOCKING_BYTECODE_NULLDATA = 'LockingBytecodeNullData',
 }
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 
 // Classes
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.OUTPUT_P2SH, new BytesType(32), [new BytesType(8), new BytesType(20)]),
+  Symbol.class(Class.LOCKING_BYTECODE_P2SH, new BytesType(32), [new BytesType(20)]),
 );
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.OUTPUT_P2PKH, new BytesType(34), [new BytesType(8), new BytesType(20)]),
+  Symbol.class(Class.LOCKING_BYTECODE_P2PKH, new BytesType(34), [new BytesType(20)]),
 );
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.OUTPUT_NULLDATA, new BytesType(), [new ArrayType(new BytesType())]),
+  Symbol.class(Class.LOCKING_BYTECODE_NULLDATA, new BytesType(), [new ArrayType(new BytesType())]),
 );
 
 // Global functions

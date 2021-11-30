@@ -391,7 +391,23 @@ export const fixtures: Fixture[] = [
         // require(this.inputIndex == 0)
         + 'OP_UNKNOWN192 OP_0 OP_NUMEQUALVERIFY '
         // require(this.bytecode.length == 300)
-        + 'OP_UNKNOWN193 OP_SIZE OP_NIP 2c01 OP_NUMEQUAL',
+        + 'OP_UNKNOWN193 OP_SIZE OP_NIP 2c01 OP_NUMEQUALVERIFY '
+        // require(tx.inputs[0].value == 10000)
+        + 'OP_0 OP_UNKNOWN198 1027 OP_NUMEQUALVERIFY '
+        // require(tx.inputs[0].lockingBytecode.length == 10000)
+        + 'OP_0 OP_UNKNOWN199 OP_SIZE OP_NIP 1027 OP_NUMEQUALVERIFY '
+        // require(tx.inputs[0].outpointTransactionHash == 0x00...00)
+        + 'OP_0 OP_UNKNOWN200 0000000000000000000000000000000000000000000000000000000000000000 OP_EQUALVERIFY '
+        // require(tx.inputs[0].outpointIndex == 0)
+        + 'OP_0 OP_UNKNOWN201 OP_0 OP_NUMEQUALVERIFY '
+        // require(tx.inputs[0].unlockingBytecode.length == 100)
+        + 'OP_0 OP_UNKNOWN202 OP_SIZE OP_NIP 64 OP_NUMEQUALVERIFY '
+        // require(tx.inputs[0].sequenceNumber == 0)
+        + 'OP_0 OP_UNKNOWN203 OP_0 OP_NUMEQUALVERIFY '
+        // require(tx.outputs[0].value == 10000)
+        + 'OP_0 OP_UNKNOWN204 1027 OP_NUMEQUALVERIFY '
+        // require(tx.outputs[0].lockingBytecode.length == 100)
+        + 'OP_0 OP_UNKNOWN205 OP_SIZE OP_NIP 64 OP_NUMEQUAL',
       source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
@@ -400,115 +416,100 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
-  // {
-  //   fn: 'mecenas.cash',
-  //   artifact: {
-  //     contractName: 'Mecenas',
-  //     constructorInputs: [
-  //       { name: 'recipient', type: 'bytes20' },
-  //       { name: 'funder', type: 'bytes20' },
-  //       { name: 'pledge', type: 'int' },
-  //       { name: 'period', type: 'int' },
-  //     ],
-  //     abi: [
-  //       { name: 'receive', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
-  //       { name: 'reclaim', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
-  //     ],
-  //     bytecode:
-  //       // function receive
-  //       'OP_4 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
-  //       // Preimage deserialisation (with OP_NOP left in)
-  //       + 'OP_5 OP_PICK OP_NOP 68 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
-  //       + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
-  //       // require(checkSig(s, pk)) + preimage verification
-  //       + 'OP_10 OP_ROLL OP_10 OP_ROLL OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_12 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
-  //       // require(tx.age >= period)
-  //       + 'OP_6 OP_ROLL OP_CHECKSEQUENCEVERIFY OP_DROP '
-  //       // int minerFee = 1000
-  //       + 'e803 '
-  //       // int intValue = int(bytes(tx.value))
-  //       + 'OP_ROT OP_BIN2NUM '
-  //       // if (intValue <= pledge + minerFee) {
-  //       + 'OP_DUP OP_7 OP_PICK OP_3 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF '
-  //       // bytes8 amount1 = bytes8(intValue - minerFee)
-  //       + 'OP_2DUP OP_SWAP OP_SUB OP_8 OP_NUM2BIN '
-  //       // bytes34 out1 = new OutputP2PKH(amount1, recipient)
-  //       + 'OP_DUP 1976a914 OP_CAT OP_6 OP_PICK OP_CAT 88ac OP_CAT '
-  //       // require(hash256(out1) == tx.hashOutputs)
-  //       + 'OP_DUP OP_HASH256 OP_5 OP_PICK OP_EQUALVERIFY OP_2DROP '
-  //       // } else {
-  //       + 'OP_ELSE '
-  //       // bytes8 amount1 = bytes8(pledge)
-  //       + 'OP_6 OP_PICK OP_8 OP_NUM2BIN '
-  //       // bytes8 amount2 = bytes8(intValue - pledge - minerFee)
-  //       + 'OP_OVER OP_8 OP_PICK OP_SUB OP_3 OP_PICK OP_SUB OP_8 OP_NUM2BIN '
-  //       // bytes34 out1 = new OutputP2PKH(amount1, recipient)
-  //       + 'OP_OVER 1976a914 OP_CAT OP_7 OP_PICK OP_CAT 88ac OP_CAT '
-  //       // bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode))
-  //       + 'OP_OVER 17a914 OP_CAT OP_7 OP_PICK OP_HASH160 OP_CAT 87 OP_CAT '
-  //       // require(hash256(out1 + out2) == tx.hashOutputs) }
-  //       + 'OP_2DUP OP_CAT OP_HASH256 OP_7 OP_PICK OP_EQUALVERIFY OP_2DROP OP_2DROP OP_ENDIF '
-  //       + 'OP_2DROP OP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE '
-  //       // function reclaim
-  //       + 'OP_4 OP_ROLL OP_1 OP_NUMEQUALVERIFY '
-  //       // require(hash160(pk) == funder)
-  //       + 'OP_4 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY '
-  //       // require(checkSig(s, pk))
-  //       + 'OP_4 OP_ROLL OP_4 OP_ROLL OP_CHECKSIG OP_NIP OP_NIP OP_NIP OP_ENDIF',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'mecenas.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
-  // {
-  //   fn: 'announcement.cash',
-  //   artifact: {
-  //     contractName: 'Announcement',
-  //     constructorInputs: [],
-  //     abi: [
-  //       { name: 'announce', covenant: true, inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
-  //     ],
-  //     bytecode:
-  //       // Preimage deserialisation (with OP_NOP left in)
-  //       'OP_DUP OP_NOP 68 OP_SPLIT OP_NIP OP_SIZE 34 OP_SUB OP_SPLIT '
-  //       + 'OP_8 OP_SPLIT OP_4 OP_SPLIT OP_NIP 20 OP_SPLIT OP_DROP '
-  //       // require(checkSig(s, pk)) + covenant verification
-  //       + 'OP_2ROT OP_2DUP OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP '
-  //       + 'OP_7 OP_ROLL OP_SHA256 OP_ROT OP_CHECKDATASIGVERIFY OP_CHECKSIGVERIFY '
-  //       // bytes announcement = new OutputNullData(...)
-  //       + '0000000000000000 6a 6d02 OP_SIZE OP_SWAP OP_CAT OP_CAT '
-  //       + '4120636f6e7472616374206d6179206e6f7420696e6a75726520612068756d616e20626'
-  //       + '5696e67206f722c207468726f75676820696e616374696f6e2c20616c6c6f77206120687'
-  //       + '56d616e206265696e6720746f20636f6d6520746f206861726d2e '
-  //       + 'OP_SIZE OP_DUP 4b OP_GREATERTHAN OP_IF 4c OP_SWAP OP_CAT OP_ENDIF OP_SWAP OP_CAT OP_CAT '
-  //       + 'OP_SIZE OP_SWAP OP_CAT OP_CAT '
-  //       // int minerFee = 1000
-  //       + 'e803 '
-  //       // int changeAmount = int(tx.value) - minerFee
-  //       + 'OP_3 OP_ROLL OP_BIN2NUM OP_OVER OP_SUB '
-  //       // if (changeAmount >= minerFee)
-  //       + 'OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_IF '
-  //       // bytes32 change = new OutputP2SH(...)
-  //       + 'OP_DUP OP_8 OP_NUM2BIN 17a914 OP_CAT OP_4 OP_PICK OP_HASH160 OP_CAT 87 OP_CAT '
-  //       // require(tx.hashOutputs == hash256(announcement + change))
-  //       + 'OP_2OVER OP_2 OP_PICK OP_CAT OP_HASH256 OP_EQUALVERIFY OP_DROP '
-  //       + 'OP_ELSE '
-  //       // require(tx.hashOutputs == hash256(announcement))
-  //       + 'OP_2 OP_PICK OP_2 OP_PICK OP_HASH256 OP_EQUALVERIFY '
-  //       // Stack clean-up
-  //       + 'OP_ENDIF OP_2DROP OP_2DROP OP_1',
-  //     source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'announcement.cash'), { encoding: 'utf-8' }),
-  //     compiler: {
-  //       name: 'cashc',
-  //       version,
-  //     },
-  //     updatedAt: '',
-  //   },
-  // },
+  {
+    fn: 'mecenas.cash',
+    artifact: {
+      contractName: 'Mecenas',
+      constructorInputs: [
+        { name: 'recipient', type: 'bytes20' },
+        { name: 'funder', type: 'bytes20' },
+        { name: 'pledge', type: 'int' },
+        { name: 'period', type: 'int' },
+      ],
+      abi: [
+        { name: 'receive', inputs: [] },
+        { name: 'reclaim', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] },
+      ],
+      bytecode:
+        // function receive
+        'OP_4 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
+        // require(tx.age >= period)
+        + 'OP_3 OP_ROLL OP_CHECKSEQUENCEVERIFY OP_DROP '
+        // require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient))
+        + 'OP_0 OP_UNKNOWN205 76a914 OP_ROT OP_CAT 88ac OP_CAT OP_EQUALVERIFY '
+        // int minerFee = 1000
+        + 'e803 '
+        // int currentValue = tx.inputs[this.inputIndex].value
+        + 'OP_UNKNOWN192 OP_UNKNOWN198 '
+        // int changeValue = currentValue - pledge - minerFee
+        + 'OP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB '
+        // if (changeValue <= minerFee * 2) {
+        + 'OP_DUP OP_3 OP_PICK OP_2 OP_MUL OP_LESSTHANOREQUAL OP_IF '
+        // require(tx.outputs[0].value == currentValue - minerFee)
+        + 'OP_0 OP_UNKNOWN204 OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY '
+        // } else {
+        + 'OP_ELSE '
+        // require(tx.outputs[0].value == pledge)
+        + 'OP_0 OP_UNKNOWN204 OP_5 OP_PICK OP_NUMEQUALVERIFY '
+        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.inputIndex].lockingBytecode)
+        + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
+        // require(tx.outputs[1].value == changeValue) }
+        + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY '
+        // Cleanup
+        + 'OP_ENDIF OP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE '
+        // function reclaim
+        + 'OP_4 OP_ROLL OP_1 OP_NUMEQUALVERIFY '
+        // require(hash160(pk) == funder)
+        + 'OP_4 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY '
+        // require(checkSig(s, pk))
+        + 'OP_4 OP_ROLL OP_4 OP_ROLL OP_CHECKSIG '
+        // Cleanup
+        + 'OP_NIP OP_NIP OP_NIP OP_ENDIF',
+      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'mecenas.cash'), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'announcement.cash',
+    artifact: {
+      contractName: 'Announcement',
+      constructorInputs: [],
+      abi: [{ name: 'announce', inputs: [] }],
+      bytecode:
+        // bytes announcement = new LockingBytecodeNullData(...)
+        '6a 6d02 OP_SIZE OP_SWAP OP_CAT OP_CAT '
+        + '4120636f6e7472616374206d6179206e6f7420696e6a75726520612068756d616e20626'
+        + '5696e67206f722c207468726f75676820696e616374696f6e2c20616c6c6f77206120687'
+        + '56d616e206265696e6720746f20636f6d6520746f206861726d2e '
+        + 'OP_SIZE OP_DUP 4b OP_GREATERTHAN OP_IF 4c OP_SWAP OP_CAT OP_ENDIF OP_SWAP OP_CAT OP_CAT '
+        // require(tx.outputs[0].value == 0)
+        + 'OP_0 OP_UNKNOWN204 OP_0 OP_NUMEQUALVERIFY '
+        // require(tx.outputs[0].lockingBytecode == announcement)
+        + 'OP_0 OP_UNKNOWN205 OP_EQUALVERIFY '
+        // int minerFee = 1000
+        + 'e803 '
+        // int changeAmount = tx.inputs[this.inputIndex].value - minerFee
+        + 'OP_UNKNOWN192 OP_UNKNOWN198 OP_OVER OP_SUB '
+        // if (changeAmount >= minerFee)
+        + 'OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_IF '
+        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.inputIndex].lockingBytecode)
+        + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
+        // require(tx.outputs[1].value == changeAmount) }
+        + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY OP_ENDIF '
+        // Stack clean-up
+        + 'OP_DROP OP_1',
+      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'announcement.cash'), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
   {
     fn: 'p2palindrome.cash',
     artifact: {

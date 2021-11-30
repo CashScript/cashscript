@@ -62,6 +62,7 @@ import {
   PragmaDirectiveContext,
   InstantiationContext,
   NullaryOpContext,
+  UnaryIntrospectionOpContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
@@ -254,6 +255,14 @@ export default class AstBuilder
     const nullaryOp = new NullaryOpNode(operator);
     nullaryOp.location = Location.fromCtx(ctx);
     return nullaryOp;
+  }
+
+  visitUnaryIntrospectionOp(ctx: UnaryIntrospectionOpContext): UnaryOpNode {
+    const operator = `${ctx._scope.text}[i]${ctx._op.text}` as UnaryOperator;
+    const expression = this.visit(ctx.expression());
+    const unaryOp = new UnaryOpNode(operator, expression);
+    unaryOp.location = Location.fromCtx(ctx);
+    return unaryOp;
   }
 
   visitUnaryOp(ctx: UnaryOpContext): UnaryOpNode {

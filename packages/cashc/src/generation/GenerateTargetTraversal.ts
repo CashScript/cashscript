@@ -340,37 +340,30 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitInstantiation(node: InstantiationNode): Node {
-    if (node.identifier.name === Class.OUTPUT_P2PKH) {
-      // <output amount>
-      this.visit(node.parameters[0]);
-      // <VarInt 25 bytes> OP_DUP OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('1976a914'));
-      this.emit(Op.OP_CAT);
+    if (node.identifier.name === Class.LOCKING_BYTECODE_P2PKH) {
+      // OP_DUP OP_HASH160 OP_PUSH<20>
+      this.emit(hexToBin('76a914'));
+      this.pushToStack('(value)');
       // <pkh>
-      this.visit(node.parameters[1]);
+      this.visit(node.parameters[0]);
       this.emit(Op.OP_CAT);
       // OP_EQUAL OP_CHECKSIG
       this.emit(hexToBin('88ac'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
-    } else if (node.identifier.name === Class.OUTPUT_P2SH) {
-      // <output amount>
-      this.visit(node.parameters[0]);
-      // <VarInt 23 bytes> OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('17a914'));
-      this.emit(Op.OP_CAT);
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH) {
+      // OP_HASH160 OP_PUSH<20>
+      this.emit(hexToBin('a914'));
+      this.pushToStack('(value)');
       // <script hash>
-      this.visit(node.parameters[1]);
+      this.visit(node.parameters[0]);
       this.emit(Op.OP_CAT);
       // OP_EQUAL
       this.emit(hexToBin('87'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
-    } else if (node.identifier.name === Class.OUTPUT_NULLDATA) {
-      // Total script = bytes8(0) <VarInt> OP_RETURN (<VarInt> <chunk>)+
-      // <output amount (0)>
-      this.emit(hexToBin('0000000000000000'));
-      this.pushToStack('(value)');
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
+      // Total script = OP_RETURN (<VarInt> <chunk>)+
       // OP_RETURN
       this.emit(hexToBin('6a'));
       this.pushToStack('(value)');
@@ -404,15 +397,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
         this.emit(Op.OP_CAT);
         this.popFromStack();
       });
-      // <VarInt total script size>
-      this.emit(Op.OP_SIZE);
-      this.emit(Op.OP_SWAP);
-      this.emit(Op.OP_CAT);
-      this.emit(Op.OP_CAT);
-      this.popFromStack(2);
+      this.popFromStack();
     } else {
       throw new Error(); // Should not happen
     }
+
     this.pushToStack('(value)');
 
     return node;

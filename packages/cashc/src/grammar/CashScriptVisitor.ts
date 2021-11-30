@@ -7,6 +7,7 @@ import { ParenthesisedContext } from "./CashScriptParser";
 import { CastContext } from "./CashScriptParser";
 import { FunctionCallExpressionContext } from "./CashScriptParser";
 import { InstantiationContext } from "./CashScriptParser";
+import { UnaryIntrospectionOpContext } from "./CashScriptParser";
 import { TupleIndexOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
@@ -79,6 +80,14 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitInstantiation?: (ctx: InstantiationContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `UnaryIntrospectionOp`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by the `TupleIndexOp`
