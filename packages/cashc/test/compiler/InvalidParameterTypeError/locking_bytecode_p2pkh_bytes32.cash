@@ -3,7 +3,6 @@ pragma cashscript ^0.6.0;
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
         require(checkSig(s, pk));
-
-        require(tx.hashOutputs == sha256(new OutputP2PKH(1000000, pkh)));
+        require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(sha256(pkh)));
     }
 }

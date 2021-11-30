@@ -90,6 +90,14 @@ export function compileUnaryOp(op: UnaryOperator): Op[] {
     [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
     [UnaryOperator.SIZE]: [Op.OP_SIZE, Op.OP_NIP],
     [UnaryOperator.REVERSE]: [Op.OP_REVERSEBYTES],
+    [UnaryOperator.INPUT_VALUE]: [IntrospectionOp.OP_UTXOVALUE],
+    [UnaryOperator.INPUT_LOCKING_BYTECODE]: [IntrospectionOp.OP_UTXOBYTECODE],
+    [UnaryOperator.INPUT_OUTPOINT_HASH]: [IntrospectionOp.OP_OUTPOINTTXHASH],
+    [UnaryOperator.INPUT_OUTPOINT_INDEX]: [IntrospectionOp.OP_OUTPOINTINDEX],
+    [UnaryOperator.INPUT_UNLOCKING_BYTECODE]: [IntrospectionOp.OP_INPUTBYTECODE],
+    [UnaryOperator.INPUT_SEQUENCE_NUMBER]: [IntrospectionOp.OP_INPUTSEQUENCENUMBER],
+    [UnaryOperator.OUTPUT_VALUE]: [IntrospectionOp.OP_OUTPUTVALUE],
+    [UnaryOperator.OUTPUT_LOCKING_BYTECODE]: [IntrospectionOp.OP_OUTPUTBYTECODE],
   };
 
   return mapping[op];

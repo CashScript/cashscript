@@ -91,6 +91,8 @@ expression
     | typeName '(' castable=expression (',' size=expression)? ','? ')' # Cast
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantiation
+    | scope='tx.outputs' '[' expression ']' op=('.value' | '.lockingBytecode') # UnaryIntrospectionOp
+    | scope='tx.inputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.outpointTransactionHash' | '.outpointIndex' | '.unlockingBytecode' | '.sequenceNumber') # UnaryIntrospectionOp
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
     | expression op=('.reverse()' | '.length') # UnaryOp
     | op=('!' | '-') expression # UnaryOp

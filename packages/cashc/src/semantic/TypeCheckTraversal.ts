@@ -255,6 +255,23 @@ export default class TypeCheckTraversal extends AstTraversal {
         // Type is preserved
         node.type = node.expression.type;
         return node;
+      case UnaryOperator.INPUT_VALUE:
+      case UnaryOperator.INPUT_OUTPOINT_INDEX:
+      case UnaryOperator.INPUT_SEQUENCE_NUMBER:
+      case UnaryOperator.OUTPUT_VALUE:
+        expectInt(node, node.expression.type);
+        node.type = PrimitiveType.INT;
+        return node;
+      case UnaryOperator.INPUT_LOCKING_BYTECODE:
+      case UnaryOperator.INPUT_UNLOCKING_BYTECODE:
+      case UnaryOperator.OUTPUT_LOCKING_BYTECODE:
+        expectInt(node, node.expression.type);
+        node.type = new BytesType();
+        return node;
+      case UnaryOperator.INPUT_OUTPOINT_HASH:
+        expectInt(node, node.expression.type);
+        node.type = new BytesType(32);
+        return node;
       default:
         return node;
     }
