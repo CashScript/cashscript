@@ -56,7 +56,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
-  private isCheckSigVerify = false;
 
   private emit(op: OpOrData | OpOrData[]): void {
     if (Array.isArray(op)) {
@@ -250,19 +249,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitRequire(node: RequireNode): Node {
-    if (this.containsCheckSig(node)) this.isCheckSigVerify = true;
     node.expression = this.visit(node.expression);
-    this.isCheckSigVerify = false;
 
     this.emit(Op.OP_VERIFY);
     this.popFromStack();
     return node;
-  }
-
-  containsCheckSig(node: RequireNode): boolean {
-    if (!(node.expression instanceof FunctionCallNode)) return false;
-    if (node.expression.identifier.name !== GlobalFunction.CHECKSIG) return false;
-    return true;
   }
 
   visitBranch(node: BranchNode): Node {

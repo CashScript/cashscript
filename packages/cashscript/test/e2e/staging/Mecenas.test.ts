@@ -74,7 +74,6 @@ describe('Mecenas', () => {
       await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
     });
 
-
     it('should fail when sending incorrect amount of change', async () => {
       // given
       const to = aliceAddress;
