@@ -1,20 +1,19 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src';
 import {
   alicePk,
   alice,
   alicePkh,
   bobPkh,
   aliceAddress,
-} from '../fixture/vars';
-import { getTxOutputs } from '../test-util';
-import { createOpReturnOutput } from '../../src/utils';
+} from '../../fixture/vars';
+import { getTxOutputs } from '../../test-util';
 
-describe('Simple Covenant', () => {
+describe('v0.6.0 - Simple Covenant', () => {
   let covenant: Contract;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
-    const artifact = require('../fixture/simple_covenant.json');
+    const artifact = require('../../fixture/old/simple_covenant.json');
     const provider = new ElectrumNetworkProvider();
     covenant = new Contract(artifact, [], provider);
     console.log(covenant.address);
@@ -39,13 +38,13 @@ describe('Simple Covenant', () => {
   });
 });
 
-describe('Bytecode VarInt Border Mecenas', () => {
+describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
   let mecenas: Contract;
   const pledge = 10000;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
-    const artifact = require('../fixture/mecenas_border.json');
+    const artifact = require('../../fixture/old/mecenas_border.json');
     const provider = new ElectrumNetworkProvider();
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
@@ -66,35 +65,5 @@ describe('Bytecode VarInt Border Mecenas', () => {
     // then
     const txOutputs = getTxOutputs(tx);
     expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
-  });
-});
-
-describe.skip('P2Palindrome', () => {
-  let p2palindrome: Contract;
-
-  beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/p2palindrome.json');
-    const provider = new ElectrumNetworkProvider();
-    p2palindrome = new Contract(artifact, [], provider);
-    console.log(p2palindrome.address);
-  });
-
-  describe('send', () => {
-    it('should succeed', async () => {
-      // given
-      const opReturn = ['0x6d02', 'A man, a plan, a canal, Panama!'];
-
-      // when
-      const tx = await p2palindrome.functions
-        // cspell:disable-next-line
-        .spend('amanaplanacanalpanama')
-        .withOpReturn(opReturn)
-        .send();
-
-      // then
-      const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toContainEqual(createOpReturnOutput(opReturn));
-    });
   });
 });

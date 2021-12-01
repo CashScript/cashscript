@@ -4,7 +4,6 @@
   "abi": [
     {
       "name": "spend",
-      "covenant": false,
       "inputs": [
         {
           "name": "b",
@@ -21,7 +20,7 @@
   "source": "contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == bytes4(i));\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.6.5"
+    "version": "0.7.0"
   },
-  "updatedAt": "2021-10-12T16:23:15.739Z"
+  "updatedAt": "2021-11-30T13:26:07.791Z"
 }

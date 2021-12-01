@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src';
 import {
   alicePk,
   alice,
@@ -6,18 +6,18 @@ import {
   bobPkh,
   aliceAddress,
   bobAddress,
-} from '../fixture/vars';
-import { getTxOutputs } from '../test-util';
-import { FailedRequireError, Reason } from '../../src/Errors';
+} from '../../fixture/vars';
+import { getTxOutputs } from '../../test-util';
+import { FailedRequireError, Reason } from '../../../src/Errors';
 
 // Mecenas has tx.age check omitted for testing
-describe('Mecenas', () => {
+describe('v0.6.0 - Mecenas', () => {
   let mecenas: Contract;
   const pledge = 10000;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
-    const artifact = require('../fixture/mecenas.json');
+    const artifact = require('../../fixture/old/mecenas.json');
     const provider = new ElectrumNetworkProvider();
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
