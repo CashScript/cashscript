@@ -4,7 +4,6 @@
   "abi": [
     {
       "name": "proofOfBigInt",
-      "covenant": false,
       "inputs": [
         {
           "name": "x",
@@ -21,7 +20,7 @@
   "source": "contract BigInt() {\n    function proofOfBigInt(int x, int y) {\n        int maxInt32PlusOne = 2147483648;\n        require(x >= maxInt32PlusOne);\n        require(x * y >= maxInt32PlusOne);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.6.5"
+    "version": "0.7.0"
   },
-  "updatedAt": "2021-10-12T16:23:14.172Z"
+  "updatedAt": "2021-11-30T13:26:06.585Z"
 }

@@ -1,0 +1,34 @@
+pragma cashscript ^0.6.0;
+
+/* This is an unofficial CashScript port of Licho's Mecenas contract. It is
+ * not compatible with Licho's EC plugin, but rather meant as a demonstration
+ * of covenants in CashScript.
+ * The time checking has been removed so it can be tested without time requirements.
+ */
+contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period*/) {
+    function receive(pubkey pk, sig s) {
+        require(checkSig(s, pk));
+
+        // require(tx.age >= period);
+
+        int minerFee = 1000;
+        int intValue = int(bytes(tx.value));
+
+        if (intValue <= pledge + minerFee) {
+            bytes8 amount1 = bytes8(intValue - minerFee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            require(hash256(out1) == tx.hashOutputs);
+        } else {
+            bytes8 amount1 = bytes8(pledge);
+            bytes8 amount2 = bytes8(intValue - pledge - minerFee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode));
+            require(hash256(out1 + out2) == tx.hashOutputs);
+        }
+    }
+
+    function reclaim(pubkey pk, sig s) {
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
+    }
+}
