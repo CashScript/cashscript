@@ -193,7 +193,6 @@
         "txbytecode",
         "txhashoutputs",
         "txtime",
-        "verson",
         "withage",
         "withfeeperbyte",
         "withhardcodedfee",
