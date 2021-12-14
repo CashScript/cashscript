@@ -12,6 +12,7 @@ import { FailedRequireError, Reason } from '../../../src/Errors';
 describe('Mecenas', () => {
   let mecenas: Contract;
   const pledge = 10000;
+  const minerFee = 1000;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -31,7 +32,7 @@ describe('Mecenas', () => {
       const txPromise = mecenas.functions
         .receive()
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
@@ -48,7 +49,7 @@ describe('Mecenas', () => {
       const txPromise = mecenas.functions
         .receive()
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
@@ -66,7 +67,7 @@ describe('Mecenas', () => {
         .receive()
         .to(to, amount)
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
@@ -83,7 +84,7 @@ describe('Mecenas', () => {
       const txPromise = mecenas.functions
         .receive()
         .to(to, amount)
-        .withHardcodedFee(2000)
+        .withHardcodedFee(minerFee * 2)
         .send();
 
       // then
@@ -100,7 +101,7 @@ describe('Mecenas', () => {
       const tx = await mecenas.functions
         .receive()
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then

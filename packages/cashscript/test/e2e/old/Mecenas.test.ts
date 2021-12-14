@@ -14,6 +14,7 @@ import { FailedRequireError, Reason } from '../../../src/Errors';
 describe('v0.6.0 - Mecenas', () => {
   let mecenas: Contract;
   const pledge = 10000;
+  const minerFee = 1000;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -33,7 +34,7 @@ describe('v0.6.0 - Mecenas', () => {
       const txPromise = mecenas.functions
         .receive(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
@@ -50,7 +51,7 @@ describe('v0.6.0 - Mecenas', () => {
       const txPromise = mecenas.functions
         .receive(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
@@ -68,7 +69,7 @@ describe('v0.6.0 - Mecenas', () => {
         .receive(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
@@ -85,7 +86,7 @@ describe('v0.6.0 - Mecenas', () => {
       const tx = await mecenas.functions
         .receive(alicePk, new SignatureTemplate(alice))
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then

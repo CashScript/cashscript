@@ -6,6 +6,7 @@ import { aliceAddress } from '../../fixture/vars';
 
 describe('Announcement', () => {
   let announcement: Contract;
+  const minerFee = 1000;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -30,8 +31,8 @@ describe('Announcement', () => {
         .announce()
         .from(largestUtxo)
         .to(to, amount)
-        .withHardcodedFee(1000)
-        .withMinChange(1000)
+        .withHardcodedFee(minerFee)
+        .withMinChange(minerFee)
         .send();
 
       // then
@@ -51,8 +52,8 @@ describe('Announcement', () => {
         .announce()
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(1000)
-        .withMinChange(1000)
+        .withHardcodedFee(minerFee)
+        .withMinChange(minerFee)
         .send();
 
       // then
@@ -72,8 +73,8 @@ describe('Announcement', () => {
         .announce()
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(2000)
-        .withMinChange(1000)
+        .withHardcodedFee(minerFee * 2)
+        .withMinChange(minerFee)
         .send();
 
       // then
@@ -87,7 +88,7 @@ describe('Announcement', () => {
       const largestUtxo = (await announcement.getUtxos())
         .sort((a, b) => b.satoshis - a.satoshis)
         .slice(0, 1);
-      const changeAmount = (await announcement.getBalance()) - 1000;
+      const changeAmount = (await announcement.getBalance()) - minerFee;
 
       // when
       const txPromise = announcement.functions
@@ -95,7 +96,7 @@ describe('Announcement', () => {
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
         .to(aliceAddress, changeAmount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .withoutChange()
         .send();
 
@@ -116,8 +117,8 @@ describe('Announcement', () => {
         .announce()
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(1000)
-        .withMinChange(1000)
+        .withHardcodedFee(minerFee)
+        .withMinChange(minerFee)
         .send();
 
       // then
