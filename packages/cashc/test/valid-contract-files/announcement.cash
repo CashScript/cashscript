@@ -19,9 +19,9 @@ contract Announcement() {
         // Calculate leftover money after fee (1000 sats)
         // Check that the second tx output sends the change back if there's enough leftover for another announcement
         int minerFee = 1000;
-        int changeAmount = tx.inputs[this.inputIndex].value - minerFee;
+        int changeAmount = tx.inputs[this.activeInputIndex].value - minerFee;
         if (changeAmount >= minerFee) {
-            require(tx.outputs[1].lockingBytecode == tx.inputs[this.inputIndex].lockingBytecode);
+            require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);
             require(tx.outputs[1].value == changeAmount);
         }
     }

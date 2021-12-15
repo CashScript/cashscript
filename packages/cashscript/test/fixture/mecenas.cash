@@ -13,7 +13,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */)
         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));
 
         int minerFee = 1000;
-        int currentValue = tx.inputs[this.inputIndex].value;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
         int changeValue = currentValue - pledge - minerFee;
 
         // If there is not enough left for *another* pledge after this one, we send the remainder to the recipient
@@ -22,7 +22,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */)
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             require(tx.outputs[0].value == pledge);
-            require(tx.outputs[1].lockingBytecode == tx.inputs[this.inputIndex].lockingBytecode);
+            require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);
             require(tx.outputs[1].value == changeValue);
         }
     }

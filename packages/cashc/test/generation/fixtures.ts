@@ -388,9 +388,9 @@ export const fixtures: Fixture[] = [
         + 'OP_UNKNOWN195 OP_1 OP_NUMEQUALVERIFY '
         // require(tx.outputs.length == 1)
         + 'OP_UNKNOWN196 OP_1 OP_NUMEQUALVERIFY '
-        // require(this.inputIndex == 0)
+        // require(this.activeInputIndex == 0)
         + 'OP_UNKNOWN192 OP_0 OP_NUMEQUALVERIFY '
-        // require(this.bytecode.length == 300)
+        // require(this.activeBytecode.length == 300)
         + 'OP_UNKNOWN193 OP_SIZE OP_NIP 2c01 OP_NUMEQUALVERIFY '
         // require(tx.inputs[0].value == 10000)
         + 'OP_0 OP_UNKNOWN198 1027 OP_NUMEQUALVERIFY '
@@ -439,7 +439,7 @@ export const fixtures: Fixture[] = [
         + 'OP_0 OP_UNKNOWN205 76a914 OP_ROT OP_CAT 88ac OP_CAT OP_EQUALVERIFY '
         // int minerFee = 1000
         + 'e803 '
-        // int currentValue = tx.inputs[this.inputIndex].value
+        // int currentValue = tx.inputs[this.activeInputIndex].value
         + 'OP_UNKNOWN192 OP_UNKNOWN198 '
         // int changeValue = currentValue - pledge - minerFee
         + 'OP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB '
@@ -451,7 +451,7 @@ export const fixtures: Fixture[] = [
         + 'OP_ELSE '
         // require(tx.outputs[0].value == pledge)
         + 'OP_0 OP_UNKNOWN204 OP_5 OP_PICK OP_NUMEQUALVERIFY '
-        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.inputIndex].lockingBytecode)
+        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode)
         + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
         // require(tx.outputs[1].value == changeValue) }
         + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY '
@@ -492,11 +492,11 @@ export const fixtures: Fixture[] = [
         + 'OP_0 OP_UNKNOWN205 OP_EQUALVERIFY '
         // int minerFee = 1000
         + 'e803 '
-        // int changeAmount = tx.inputs[this.inputIndex].value - minerFee
+        // int changeAmount = tx.inputs[this.activeInputIndex].value - minerFee
         + 'OP_UNKNOWN192 OP_UNKNOWN198 OP_OVER OP_SUB '
         // if (changeAmount >= minerFee)
         + 'OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_IF '
-        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.inputIndex].lockingBytecode)
+        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode)
         + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
         // require(tx.outputs[1].value == changeAmount) }
         + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY OP_ENDIF '

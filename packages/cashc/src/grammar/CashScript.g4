@@ -174,8 +174,8 @@ TxVar
     ;
 
 NullaryOp
-    : 'this.inputIndex'
-    | 'this.bytecode'
+    : 'this.activeInputIndex'
+    | 'this.activeBytecode'
     | 'tx.inputs.length'
     | 'tx.outputs.length'
     | 'tx.version'
