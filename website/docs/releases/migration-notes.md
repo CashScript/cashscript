@@ -2,6 +2,101 @@
 title: Migration Notes
 ---
 
+## v0.6 to v0.7
+#### cashc compiler
+The older *preimage-based* introspection/covenants have been replaced with the newly supported *native* introspection/covenants. This has significant consequences for any existing covenant contracts, but in general this native introspection makes covenants more accessible, flexible and efficient. See below for a list of changes. In some cases there is no one to one mapping between the old introspection and the new introspection methods, so the logic of the smart contracts will need to be refactored as well.
+
+Most importantly, it is now possible to access specific data for all individual inputs and outputs, rather than e.g. working with hashes of the outputs (`tx.hashOutputs`). This offers more flexibility around the data you want to enforce. For more information about this new *native* introspection functionality, refer to the [Global covenant variables](TODO) section of the documentation, the [Covenants guide](TODO) and the [Native Introspection CHIP](https://gitlab.com/GeneralProtocols/research/chips/-/blob/master/CHIP-2021-02-Add-Native-Introspection-Opcodes.md).
+
+##### Covenant variables
+- `tx.version` and `tx.locktime` used to be `bytes4`, but are now `int`.
+- `tx.hashtype` has been removed and can no longer be accessed.
+- `tx.hashPrevouts` and `tx.outpoint` have been removed. Instead, the outpoints of individual inputs can be accessed with `tx.inputs[i].outpointTransactionHash` and `tx.inputs[i].outpointIndex`. The index of the *active* input can be accessed with `this.activeInputIndex`.
+- `tx.hashSequence` and `tx.sequence` have been removed. Instead, the sequence numbers of individual inputs can be accessed with `tx.inputs[i].sequenceNumber`. The index of the *active* input can be accessed with `this.activeInputIndex`.
+- `tx.bytecode` has been renamed to `this.activeBytecode`
+- `tx.value` has been removed. Instead, the value of individual inputs can be accessed with `tx.inputs[i].value`. The index of the *active* input can be accessed with `this.activeInputIndex`.
+- `tx.hashOutputs` has been removed. Instead, the value and locking bytecode of individual outputs can be accessed separately with `tx.outputs[i].value` and `tx.outputs[i].lockingBytecode`.
+
+Additionally, it is now possible to access the *number* of inputs and outputs with `tx.inputs.length` and `tx.outputs.length`. It is also possible to access individual inputs' locking bytecode and unlocking bytecode with `tx.inputs[i].lockingBytecode` and `tx.inputs[i].unlockingBytecode`. It is also no longer a requirement to have a signature check somewhere in the contract in order to use this introspection/covenant functionality.
+
+##### Utility classes
+`OutputP2PKH`, `OutputP2SH` and `OutputNullData` have been replaced by `LockingBytecodeP2PKH`, `LockingBytecodeP2SH` and `LockingBytecodeNullData` respectively. These new classes *only* produce the locking bytecode, rather than the full output (including value). This means that the locking bytecode and value of outputs need to be checked separately.
+
+##### Examples
+Since the new covenant functionality is very different from the existing, it may be useful to see a complex covenant contract refactored from the old way to the new way.
+
+```solidity title="Mecenas.cash v0.6.0"
+pragma cashscript ^0.6.0;
+
+contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
+    function receive(pubkey pk, sig s) {
+        require(checkSig(s, pk));
+        require(tx.age >= period);
+
+        int minerFee = 1000;
+        int intValue = int(bytes(tx.value));
+
+        if (intValue <= pledge + minerFee) {
+            // The contract has less value than the pledge, or equal.
+            // The recipient must claim all of of it.
+
+            bytes8 amount1 = bytes8(intValue - minerFee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            require(hash256(out1) == tx.hashOutputs);
+        } else {
+            // The contract has more value than the pledge. The recipient must
+            // also add one change output sending the remaining coins back
+            // to the contract.
+
+            bytes8 amount1 = bytes8(pledge);
+            bytes8 amount2 = bytes8(intValue - pledge - minerFee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode));
+            require(hash256(out1 + out2) == tx.hashOutputs);
+        }
+    }
+
+    function reclaim(pubkey pk, sig s) {
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
+    }
+}
+```
+
+```solidity title="Mecenas.cash 0.7.0"
+contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
+    function receive() {
+        require(tx.age >= period);
+
+        // Check that the first output sends to the recipient
+        bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
+        require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
+
+        // Calculate the value that's left
+        int minerFee = 1000;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int changeValue = currentValue - pledge - minerFee;
+
+        // If there is not enough left for *another* pledge after this one,
+        // we send the remainder to the recipient. Otherwise we send the
+        // remainder to the recipient and the change back to the contract
+        if (changeValue <= minerFee * 2) {
+            require(tx.outputs[0].value == currentValue - minerFee);
+        } else {
+            require(tx.outputs[0].value == pledge);
+            bytes changeBytecode = tx.inputs[this.activeInputIndex].lockingBytecode;
+            require(tx.outputs[1].lockingBytecode == changeBytecode);
+            require(tx.outputs[1].value == changeValue);
+        }
+    }
+
+    function reclaim(pubkey pk, sig s) {
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
+    }
+}
+```
+
 ## v0.5 to v0.6
 #### cashc compiler
 The exports for library usage of `cashc` have been updated. All utility-type exports have been moved to the `@cashscript/utils` package, but they are still accessible from the `utils` export from `cashc`. Note that the recommended use of `cashc` is still the CLI, not the NPM package.
