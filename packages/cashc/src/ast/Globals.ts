@@ -44,10 +44,10 @@ export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 
 // Classes
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.LOCKING_BYTECODE_P2SH, new BytesType(32), [new BytesType(20)]),
+  Symbol.class(Class.LOCKING_BYTECODE_P2SH, new BytesType(23), [new BytesType(20)]),
 );
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.LOCKING_BYTECODE_P2PKH, new BytesType(34), [new BytesType(20)]),
+  Symbol.class(Class.LOCKING_BYTECODE_P2PKH, new BytesType(25), [new BytesType(20)]),
 );
 GLOBAL_SYMBOL_TABLE.set(
   Symbol.class(Class.LOCKING_BYTECODE_NULLDATA, new BytesType(), [new ArrayType(new BytesType())]),
