@@ -7,8 +7,8 @@ import { ParenthesisedContext } from "./CashScriptParser";
 import { CastContext } from "./CashScriptParser";
 import { FunctionCallExpressionContext } from "./CashScriptParser";
 import { InstantiationContext } from "./CashScriptParser";
-import { UnaryIntrospectionOpContext } from "./CashScriptParser";
 import { TupleIndexOpContext } from "./CashScriptParser";
+import { UnaryIntrospectionOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
 import { ArrayContext } from "./CashScriptParser";
@@ -99,19 +99,6 @@ export interface CashScriptListener extends ParseTreeListener {
 	exitInstantiation?: (ctx: InstantiationContext) => void;
 
 	/**
-	 * Enter a parse tree produced by the `UnaryIntrospectionOp`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	enterUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => void;
-	/**
-	 * Exit a parse tree produced by the `UnaryIntrospectionOp`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	exitUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => void;
-
-	/**
 	 * Enter a parse tree produced by the `TupleIndexOp`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
@@ -123,6 +110,19 @@ export interface CashScriptListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitTupleIndexOp?: (ctx: TupleIndexOpContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `UnaryIntrospectionOp`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 */
+	enterUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => void;
+	/**
+	 * Exit a parse tree produced by the `UnaryIntrospectionOp`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 */
+	exitUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => void;
 
 	/**
 	 * Enter a parse tree produced by the `UnaryOp`

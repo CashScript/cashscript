@@ -91,13 +91,12 @@ expression
     | typeName '(' castable=expression (',' size=expression)? ','? ')' # Cast
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantiation
+    | expression '[' index=NumberLiteral ']' # TupleIndexOp
     | scope='tx.outputs' '[' expression ']' op=('.value' | '.lockingBytecode') # UnaryIntrospectionOp
     | scope='tx.inputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.outpointTransactionHash' | '.outpointIndex' | '.unlockingBytecode' | '.sequenceNumber') # UnaryIntrospectionOp
-    | expression '[' index=NumberLiteral ']' # TupleIndexOp
     | expression op=('.reverse()' | '.length') # UnaryOp
-    | op=('!' | '-') expression # UnaryOp
-    // | expression '**' expression --- OP_POW does not exist in BCH Script
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
+    | op=('!' | '-') expression # UnaryOp
     | left=expression op=('*' | '/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
     // | expression ('>>' | '<<') expression --- OP_LSHIFT & RSHIFT are disabled in BCH Script
