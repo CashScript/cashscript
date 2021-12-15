@@ -243,25 +243,6 @@ export const fixtures: Fixture[] = [
     },
   },
   {
-    fn: 'checkdatasig.cash',
-    artifact: {
-      contractName: 'CheckDataSig',
-      constructorInputs: [],
-      abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }, { name: 'data', type: 'bytes' }] }],
-      bytecode:
-        // require(checkSig(s, pk))
-        'OP_2DUP OP_CHECKSIGVERIFY '
-        // require(checkDataSig(datasig(s), data, pk))
-        + 'OP_SWAP OP_SIZE OP_1SUB OP_SPLIT OP_DROP OP_ROT OP_ROT OP_CHECKDATASIG',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'checkdatasig.cash'), { encoding: 'utf-8' }),
-      compiler: {
-        name: 'cashc',
-        version,
-      },
-      updatedAt: '',
-    },
-  },
-  {
     fn: 'hodl_vault.cash',
     artifact: {
       contractName: 'HodlVault',
@@ -451,7 +432,9 @@ export const fixtures: Fixture[] = [
         + 'OP_ELSE '
         // require(tx.outputs[0].value == pledge)
         + 'OP_0 OP_UNKNOWN204 OP_5 OP_PICK OP_NUMEQUALVERIFY '
-        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode)
+        // require(
+        //   tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode
+        // )
         + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
         // require(tx.outputs[1].value == changeValue) }
         + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY '
@@ -496,7 +479,9 @@ export const fixtures: Fixture[] = [
         + 'OP_UNKNOWN192 OP_UNKNOWN198 OP_OVER OP_SUB '
         // if (changeAmount >= minerFee)
         + 'OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_IF '
-        // require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode)
+        // require(
+        //  tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode
+        // )
         + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
         // require(tx.outputs[1].value == changeAmount) }
         + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY OP_ENDIF '

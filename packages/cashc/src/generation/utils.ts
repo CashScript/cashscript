@@ -28,10 +28,6 @@ export function compileCast(from: Type, to: Type): Script {
     return [Op.OP_BIN2NUM];
   }
 
-  if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
-    return [Op.OP_SIZE, encodeInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP];
-  }
-
   return [];
 }
 

@@ -60,11 +60,11 @@ export function encodeArgument(
     type = new BytesType(65);
   }
 
-  // TODO: Set DATASIG to 64 bytes (enforcing Schnorr) in a new MINOR version upgrade
-  // (backwards incompatible)
-  // if (type === PrimitiveType.DATASIG) {
-  //   type = new BytesType(64);
-  // }
+  // Redefine SIG as a bytes64 so it is included in the size checks below
+  // Note that ONLY Schnorr signatures are accepted
+  if (type === PrimitiveType.DATASIG) {
+    type = new BytesType(64);
+  }
 
   // Bounded bytes types require a correctly sized argument
   if (type instanceof BytesType && type.bound && argument.byteLength !== type.bound) {
