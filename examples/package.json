@@ -10,8 +10,8 @@
     "@types/node": "^12.7.8",
     "bitbox-sdk": "^8.11.1",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
-    "cashc": "^0.7.0",
-    "cashscript": "^0.7.0",
+    "cashc": "^0.7.0-next.0",
+    "cashscript": "^0.7.0-next.0",
     "typescript": "^3.6.4"
   }
 }
