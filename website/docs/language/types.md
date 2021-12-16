@@ -20,18 +20,14 @@ The operators `||` and `&&` don't apply common short-circuiting rules. This mean
 :::
 
 ## Integer
-`int`: Signed integer of 32 bit size.
+`int`: Signed integer of 64 bit size.
 
 Operators:
 
 - Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (all evaluate to `bool`)
-- Arithmetic operators: `+`, `-`, unary `-`, `/`, `%` (modulo).
+- Arithmetic operators: `+`, `-`, unary `-`, `*`, `/`, `%` (modulo).
 
-Note the clear lack of the `*` and `**` (exponentiation) operators as well as any bitwise operators.
-
-:::caution
-While integer sizes are limited to 32 bits, the output of arithmetic operations can exceed this size. This will not result in an overflow, but instead the script will fail when using this value in another integer operation.
-:::
+Note the clear lack of the `**` (exponentiation) operator as well as any bitwise operators.
 
 :::caution
 The script will fail when the right hand side of Division and modulo operations is zero.
@@ -143,7 +139,7 @@ When casting integer types to bytes of a certain size, the integer value is padd
 :::
 
 :::caution
-When casting bytes types to integer, you should be sure that the bytes value fits inside a 32-byte signed integer, or the script will fail.
+When casting bytes types to integer, you should be sure that the bytes value fits inside a 64-bit signed integer, or the script will fail.
 :::
 
 See the following table for information on which types can be cast to other which other types.
@@ -155,7 +151,7 @@ See the following table for information on which types can be cast to other whic
 | string  |                        | bytes                              |
 | bytes   |                        | sig, pubkey, int                   |
 | pubkey  | bytes                  | bytes                              |
-| sig     | bytes                  | bytes, datasig                     |
+| sig     | bytes                  | bytes                              |
 | datasig | bytes                  | bytes                              |
 
 #### Example

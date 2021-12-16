@@ -5,7 +5,7 @@ title: Syntax Highlighting
 When developing smart contracts for CashScript it is useful to have the proper syntax highlighting in your code editor / IDE. If you use Visual Studio Code, there is a dedicated CashScript extension. For other editors it is recommended to install a Solidity highlighting plugin and associate it with `.cash` files in your editor, since the syntaxes of the two languages are very similar.
 
 ## Visual Studio Code (Recommended)
-For Visual Studio Code a dedicated [CashScript extension](https://marketplace.visualstudio.com/items?itemName=nathanielcherian.cashscript) was developed by community member [Nathaniel Cherian](https://twitter.com/nathanielCheria). This plugin works with `.cash` files and supports syntax highlighting, autocompletion, snippets, linting and even integrated compilation.
+For Visual Studio Code a dedicated [CashScript extension](https://marketplace.visualstudio.com/items?itemName=nathanielcherian.cashscript) was developed by community contributor [Nathaniel Cherian](https://twitter.com/nathanielCheria). This plugin works with `.cash` files and supports syntax highlighting, autocompletion, snippets, linting and even integrated compilation.
 
 Because of the first-class CashScript support, Visual Studio Code together with this CashScript extension is the recommended way to develop CashScript contracts.
 

@@ -13,7 +13,7 @@ The pragma directive follows regular [semantic versioning rules](https://semver.
 
 #### Example
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 pragma cashscript >= 0.4.0 < 0.5.4;
 ```
 
@@ -22,7 +22,7 @@ A CashScript constructor works slightly differently than what you might be used 
 
 #### Example
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 
 contract HTLC(pubkey sender, pubkey recipient, int expiration, bytes32 hash) {
     ...
@@ -34,7 +34,7 @@ The main construct in a CashScript contract is the function. A contract can cont
 
 #### Example
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     function transfer(sig recipientSig) {
@@ -55,7 +55,7 @@ The most important statement of CashScript contracts is the `require` statement.
 
 #### Example
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
@@ -97,7 +97,7 @@ There is no implicit type conversion from non-boolean to boolean types. So `if (
 
 #### Example
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^7.0;
 
 contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
     function spend(pubkey pk, sig s, bytes message) {

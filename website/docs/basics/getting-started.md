@@ -24,7 +24,7 @@ CashScript only offers a JavaScript SDK, but CashScript contracts can be integra
 There are some examples available on the [Examples page](/docs/language/examples), that can be used to take inspiration from. Further examples of the JavaScript integration can be found on [GitHub](https://github.com/Bitcoin-com/cashscript/tree/master/examples). A simple example is included below.
 
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     // Allow the recipient to claim their received money
