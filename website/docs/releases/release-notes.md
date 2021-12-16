@@ -9,7 +9,7 @@ title: Release Notes
 - :sparkles: Add *native* introspection/covenants
 - :boom: **BREAKING**: Remove all old introspection/covenant functionality (`tx.version`, `tx.hashPrevouts`, `tx.hashSequence`, `tx.outpoint`, `tx.bytecode`, `tx.value`, `tx.sequence`, `tx.hashOutputs`, `tx.locktime`, `tx.hashtype`, `OutputP2PKH`, `OutputP2SH`, `OutputNullData`)
   - See the [migration notes](/docs/releases/migration-notes#v06-to-v07) for details on migrating from the old introspection to the new *native* inntrospection methods.
-- :boom: **BREAKING**: Remove `sig` to `datasig` casting
+- :boom: **BREAKING**: Remove `sig` to `datasig` casting since this was only useful for *old* covenants
 
 #### CashScript SDK
 - :sparkles: Add `"staging"` network option to ElectrumNetworkProvider, used to connect to the May 2022 testnet

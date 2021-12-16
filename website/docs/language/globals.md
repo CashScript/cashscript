@@ -206,4 +206,4 @@ Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [withAge()]: /docs/sdk/transactions#withage
 [withTime()]: /docs/sdk/transactions#withtime
-[covenants-guid]: /docs/guides/covenants
+[covenants-guide]: /docs/guides/covenants

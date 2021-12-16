@@ -232,7 +232,7 @@ contract Announcement() {
 }
 ```
 
-In this contract we construct an "announcement" `OP_RETURN` output, we reserve a part of value for the miner fee, and finally we send the remainder  back to the contract.
+In this contract we construct an "announcement" `OP_RETURN` output, we reserve a part of value for the miner fee, and finally we send the remainder back to the contract.
 
 ## Conclusion
 We have discussed the main uses for covenants as they exist on Bitcoin Cash today. We've seen how we can achieve different use case by combining transaction output restrictions to `P2SH` and `P2PKH` outputs. We also touched on more advanced subjects such as simulated state and `OP_RETURN` outputs. Covenants are the **main differentiating factor** for BCH smart contracts when compared to BTC, while keeping the same **efficient stateless verification**. If you're interested in learning more about the differences in smart contracts among BCH, BTC and ETH, read the article [*Smart contracts on Ethereum, Bitcoin and Bitcoin Cash*](https://kalis.me/smart-contracts-eth-btc-bch/).

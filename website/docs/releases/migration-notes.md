@@ -6,7 +6,7 @@ title: Migration Notes
 #### cashc compiler
 The older *preimage-based* introspection/covenants have been replaced with the newly supported *native* introspection/covenants. This has significant consequences for any existing covenant contracts, but in general this native introspection makes covenants more accessible, flexible and efficient. See below for a list of changes. In some cases there is no one to one mapping between the old introspection and the new introspection methods, so the logic of the smart contracts will need to be refactored as well.
 
-Most importantly, it is now possible to access specific data for all individual inputs and outputs, rather than e.g. working with hashes of the outputs (`tx.hashOutputs`). This offers more flexibility around the data you want to enforce. For more information about this new *native* introspection functionality, refer to the [Global covenant variables](TODO) section of the documentation, the [Covenants guide](TODO) and the [Native Introspection CHIP](https://gitlab.com/GeneralProtocols/research/chips/-/blob/master/CHIP-2021-02-Add-Native-Introspection-Opcodes.md).
+Most importantly, it is now possible to access specific data for all individual inputs and outputs, rather than e.g. working with hashes of the outputs (`tx.hashOutputs`). This offers more flexibility around the data you want to enforce. For more information about this new *native* introspection functionality, refer to the [Global covenant variables](/docs/language/globals#introspection-variables) section of the documentation, the [Covenants guide](/docs/guides/covenants/) and the [Native Introspection CHIP](https://gitlab.com/GeneralProtocols/research/chips/-/blob/master/CHIP-2021-02-Add-Native-Introspection-Opcodes.md).
 
 ##### Covenant variables
 - `tx.version` and `tx.locktime` used to be `bytes4`, but are now `int`.
@@ -21,6 +21,9 @@ Additionally, it is now possible to access the *number* of inputs and outputs wi
 
 ##### Utility classes
 `OutputP2PKH`, `OutputP2SH` and `OutputNullData` have been replaced by `LockingBytecodeP2PKH`, `LockingBytecodeP2SH` and `LockingBytecodeNullData` respectively. These new classes *only* produce the locking bytecode, rather than the full output (including value). This means that the locking bytecode and value of outputs need to be checked separately.
+
+##### Other changes
+Casting from `sig` to `datasig` has been removed since that was only useful for old-style covenants. If, for any reason, you do want to cast a sig to a datasig you will need to manually cut the `hashtype` off the end and update `datasig(s)` to `s.split(s.length - 1)[0]`.
 
 ##### Examples
 Since the new covenant functionality is very different from the existing, it may be useful to see a complex covenant contract refactored from the old way to the new way.
