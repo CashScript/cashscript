@@ -1,38 +1,51 @@
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 
 // This is an experimental contract for a more "streaming" Mecenas experience
 // Completely untested, just a concept
-contract Mecenas(bytes4 initialBlock, int pledgePerBlock, bytes20 recipient, bytes20 funder) {
-    function receive(pubkey pk, sig s, int pledge) {
-        require(checkSig(s, pk));
+contract Mecenas(
+    bytes20 recipient,
+    bytes20 funder,
+    int pledgePerBlock,
+    bytes4 initialBlock,
+) {
+    function receive() {
+        // Check that the first output sends to the recipient
+        bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
+        require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
 
+        // Check that time has passed and that time locks are enabled
         int initial = int(initialBlock);
         require(tx.time >= initial);
 
-        // Pledge amount calculation is done in client, verified in contract
-        // When OP_MUL is enabled this can be done in contract
-        // Double require to account for integer division
+        // Calculate the amount that has accrued since last claim
         int passedBlocks = int(tx.locktime) - initial;
-        require(pledge / passedBlocks == pledgePerBlock);
-        require((pledge - 1) / passedBlocks != pledgePerBlock);
+        int pledge = passedBlocks * pledgePerBlock;
 
-        // Cut out old initialBlock (PUSH1 0x04 <inheritor>)
-        // Insert new initialBlock (PUSH1 0x04 <newInheritor>)
-        bytes newContract = 0x4c04 + tx.locktime + tx.bytecode.split(6)[1];
+        // Calculate the leftover amount
+        int minerFee = 1000;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int changeValue = currentValue - pledge - minerFee;
 
-        int minerFee = 1000; // hardcoded fee
-        int intValue = int(bytes(tx.value));
-
-        if (intValue <= pledge + minerFee) {
-            bytes8 amount1 = bytes8(intValue - minerFee);
-            bytes34 out1 = new OutputP2PKH(amount1, recipient);
-            require(hash256(out1) == tx.hashOutputs);
+        // If there is not enough left for *another* pledge after this one,
+        // we send the remainder to the recipient. Otherwise we send the
+        // remainder to the recipient and the change back to the contract
+        if (changeValue <= minerFee * 2) {
+            require(tx.outputs[0].value == currentValue - minerFee);
         } else {
-            bytes8 amount1 = bytes8(pledge);
-            bytes8 amount2 = bytes8(intValue - pledge - minerFee);
-            bytes34 out1 = new OutputP2PKH(amount1, recipient);
-            bytes32 out2 = new OutputP2SH(amount2, hash160(newContract));
-            require(hash256(out1 + out2) == tx.hashOutputs);
+            // Check that the outputs send the correct amounts
+            require(tx.outputs[0].value == pledge);
+            require(tx.outputs[1].value == changeValue);
+
+            // Cut out old initialBlock (OP_PUSHBYTES_4 <initialBlock>)
+            // Insert new initialBlock (OP_PUSHBYTES_4 <tx.locktime>)
+            // Note that constructor parameters are added in reverse order,
+            // so initialBlock is the first statement in the contract bytecode.
+            bytes newContract = 0x04 + tx.locktime + this.activeBytecode.split(5)[1];
+
+            // Create the locking bytecode for the new contract and check that
+            // the change output sends to that contract
+            bytes23 newContractLock = new LockingBytecodeP2SH(hash160(newContract));
+            require(tx.outputs[1].lockingBytecode == newContractLock);
         }
     }
 
