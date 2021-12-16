@@ -13,9 +13,9 @@ title: Release Notes
 
 #### CashScript SDK
 - :sparkles: Add `"staging"` network option to ElectrumNetworkProvider, used to connect to the May 2022 testnet
-- :bug: Small fixes
 - :hammer_and_wrench: Deprecate old introspection/covenant functionality. You can still use pre-0.7 contracts with the new SDK, but this support will be removed in a future release.
 - :boom: **BREAKING**: arguments of type `datasig` must be 64 bytes in length, effectively enforcing Schnorr
+- :bug: Small fixes
 
 ## v0.6.5
 #### cashc compiler
