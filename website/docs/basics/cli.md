@@ -14,7 +14,7 @@ npm install -g cashc
 ## Usage
 The `cashc` CLI tool can be used to compile `.cash` files to JSON artifact files.
 
-```
+```bash
 Usage: cashc [options] [source_file]
 
 Options:
@@ -24,5 +24,5 @@ Options:
   -A, --asm            Compile the contract to ASM format rather than a full artifact.
   -c, --opcount        Display the number of opcodes in the compiled bytecode.
   -s, --size           Display the size in bytes of the compiled bytecode.
-  --help               display help for command
+  -?, --help           Display help
 ```

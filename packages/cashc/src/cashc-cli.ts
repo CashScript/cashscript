@@ -23,6 +23,7 @@ program
   .option('-A, --asm', 'Compile the contract to ASM format rather than a full artifact.')
   .option('-c, --opcount', 'Display the number of opcodes in the compiled bytecode.')
   .option('-s, --size', 'Display the size in bytes of the compiled bytecode.')
+  .helpOption('-?, --help', 'Display help')
   .parse();
 
 const opts = program.opts();

@@ -32,5 +32,5 @@ Options:
   -A, --asm            Compile the contract to ASM format rather than a full artifact.
   -c, --opcount        Display the number of opcodes in the compiled bytecode.
   -s, --size           Display the size in bytes of the compiled bytecode.
-  --help               display help for command
+  -?, --help           Display help
 ```
