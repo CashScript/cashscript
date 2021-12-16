@@ -88,7 +88,7 @@ contract LastWill(bytes20 inheritor, bytes20 cold, bytes20 hot) {
 }
 ```
 
-This contract has three functions, but only the `refresh()` function uses a covenant. Again it performs necessary checks to verify that the transaction is signed by the owner, after which it checks that the entire contract balance is sent. It then uses `tx.inputs[this.activeInputIndex].lockingBytecode` to access its own locking bytecode, which can be used as the locking bytecode of this transaction. Sending the full value back to the same contract effectively resets the `tx.age` counter, so the owner of the contract needs to do this every 180 days.
+This contract has three functions, but only the `refresh()` function uses a covenant. Again it performs necessary checks to verify that the transaction is signed by the owner, after which it checks that the entire contract balance is sent. It then uses `tx.inputs[this.activeInputIndex].lockingBytecode` to access its own locking bytecode, which can be used as the locking bytecode of this output. Sending the full value back to the same contract effectively resets the `tx.age` counter, so the owner of the contract needs to do this every 180 days.
 
 ### Restricting P2PKH and P2SH
 The earlier examples showed sending money to only a single output of either `P2PKH` or `P2SH`. But there nothing preventing us from writing a contract that can send to multiple outputs, including a combination of `P2PKH` and `P2SH` outputs. A good example is the *Licho's Mecenas* contract that allows you to set up recurring payments where the recipient is able to claim the same amount every month, while the remainder has to be sent back to the contract.
