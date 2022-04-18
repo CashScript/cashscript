@@ -165,7 +165,7 @@ bytes4 tx.locktime
 Represents the `nLocktime` field of the current input.
 
 :::note
-`tx.locktime` is similar to the [`tx.time`][tx.time] global variable. But for safety it is recommended to use [`tx.time`][tx.time] over `tx.locktime` in *almost* all cases.
+`tx.locktime` is similar to the [`tx.time`][tx.time] global variable. It is recommended to only use `tx.locktime` for adding the `nLocktime` to the simulated state and [`tx.time`][tx.time] in all other cases.
 :::
 
 ### tx.hashtype
