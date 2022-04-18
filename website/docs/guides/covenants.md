@@ -141,7 +141,7 @@ contract Mecenas(
     bytes20 recipient,
     bytes20 funder,
     int pledgePerBlock,
-    bytes4 initialBlock,
+    bytes8 initialBlock,
 ) {
     function receive() {
         // Check that the first output sends to the recipient
@@ -153,7 +153,7 @@ contract Mecenas(
         require(tx.time >= initial);
 
         // Calculate the amount that has accrued since last claim
-        int passedBlocks = int(tx.locktime) - initial;
+        int passedBlocks = tx.locktime - initial;
         int pledge = passedBlocks * pledgePerBlock;
 
         // Calculate the leftover amount
@@ -171,11 +171,11 @@ contract Mecenas(
             require(tx.outputs[0].value == pledge);
             require(tx.outputs[1].value == changeValue);
 
-            // Cut out old initialBlock (OP_PUSHBYTES_4 <initialBlock>)
-            // Insert new initialBlock (OP_PUSHBYTES_4 <tx.locktime>)
+            // Cut out old initialBlock (OP_PUSHBYTES_8 <initialBlock>)
+            // Insert new initialBlock (OP_PUSHBYTES_8 <tx.locktime>)
             // Note that constructor parameters are added in reverse order,
             // so initialBlock is the first statement in the contract bytecode.
-            bytes newContract = 0x04 + tx.locktime + this.activeBytecode.split(5)[1];
+            bytes newContract = 0x08 + bytes8(tx.locktime) + this.activeBytecode.split(9)[1];
 
             // Create the locking bytecode for the new contract and check that
             // the change output sends to that contract
