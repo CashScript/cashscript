@@ -107,7 +107,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitAssign(node: AssignNode): Node {
     const v = this.symbolTables[0].get(node.identifier.name)?.definition as VariableDefinitionNode;
-    if(v.modifier === 'constant') {
+    if (v?.modifier === 'constant') {
       throw new ConstantModificationError(v);
     }
     super.visitAssign(node);

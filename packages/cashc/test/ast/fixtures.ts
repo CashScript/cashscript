@@ -81,6 +81,7 @@ export const fixtures: Fixture[] = [
           new BlockNode([
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'myVariable',
               new BinaryOpNode(
                 new IntLiteralNode(10),
@@ -90,6 +91,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'myOtherVariable',
               new BinaryOpNode(
                 new IntLiteralNode(20),
@@ -110,6 +112,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.STRING,
+              '',
               'hw',
               new StringLiteralNode('Hello World', '"'),
             ),
@@ -153,6 +156,7 @@ export const fixtures: Fixture[] = [
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                '',
                 'd',
                 new BinaryOpNode(
                   new IdentifierNode('a'),
@@ -177,6 +181,7 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     PrimitiveType.INT,
+                    '',
                     'c',
                     new BinaryOpNode(
                       new IdentifierNode('d'),
@@ -231,6 +236,7 @@ export const fixtures: Fixture[] = [
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                '',
                 'd',
                 new IdentifierNode('b'),
               ),
@@ -251,6 +257,7 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     PrimitiveType.INT,
+                    '',
                     'c',
                     new BinaryOpNode(
                       new IdentifierNode('d'),
@@ -353,6 +360,7 @@ export const fixtures: Fixture[] = [
           new BlockNode([
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'blockHeight',
               new CastNode(
                 PrimitiveType.INT,
@@ -368,6 +376,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'price',
               new CastNode(
                 PrimitiveType.INT,
@@ -500,11 +509,13 @@ export const fixtures: Fixture[] = [
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                '',
                 'minerFee',
                 new IntLiteralNode(1000),
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                '',
                 'intValue',
                 new CastNode(
                   PrimitiveType.INT,
@@ -525,6 +536,7 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     new BytesType(8),
+                    '',
                     'amount1',
                     new CastNode(
                       new BytesType(8),
@@ -537,6 +549,7 @@ export const fixtures: Fixture[] = [
                   ),
                   new VariableDefinitionNode(
                     new BytesType(34),
+                    '',
                     'out1',
                     new InstantiationNode(
                       new IdentifierNode(Class.OUTPUT_P2PKH),
@@ -557,11 +570,13 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     new BytesType(8),
+                    '',
                     'amount1',
                     new CastNode(new BytesType(8), new IdentifierNode('pledge')),
                   ),
                   new VariableDefinitionNode(
                     new BytesType(8),
+                    '',
                     'amount2',
                     new CastNode(
                       new BytesType(8),
@@ -578,6 +593,7 @@ export const fixtures: Fixture[] = [
                   ),
                   new VariableDefinitionNode(
                     new BytesType(34),
+                    '',
                     'out1',
                     new InstantiationNode(
                       new IdentifierNode(Class.OUTPUT_P2PKH),
@@ -586,6 +602,7 @@ export const fixtures: Fixture[] = [
                   ),
                   new VariableDefinitionNode(
                     new BytesType(32),
+                    '',
                     'out2',
                     new InstantiationNode(
                       new IdentifierNode(Class.OUTPUT_P2SH),
@@ -672,6 +689,7 @@ export const fixtures: Fixture[] = [
             )),
             new VariableDefinitionNode(
               new BytesType(),
+              '',
               'announcement',
               new InstantiationNode(
                 new IdentifierNode(Class.OUTPUT_NULLDATA),
@@ -686,11 +704,13 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'minerFee',
               new IntLiteralNode(1000),
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'changeAmount',
               new BinaryOpNode(
                 new CastNode(
@@ -710,6 +730,7 @@ export const fixtures: Fixture[] = [
               new BlockNode([
                 new VariableDefinitionNode(
                   new BytesType(32),
+                  '',
                   'change',
                   new InstantiationNode(
                     new IdentifierNode(Class.OUTPUT_P2SH),
