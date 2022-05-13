@@ -11,6 +11,7 @@ import {
   FunctionCallNode,
   InstantiationNode,
   AssignNode,
+  TupleAssignmentNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable';
@@ -100,6 +101,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     node.expression = this.visit(node.expression);
+
     this.symbolTables[0].set(Symbol.variable(node));
 
     return node;
@@ -111,6 +113,18 @@ export default class SymbolTableTraversal extends AstTraversal {
       throw new ConstantModificationError(v);
     }
     super.visitAssign(node);
+    return node;
+  }
+
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
+    [node.var1, node.var2].forEach(({ name, type }) => {
+      if (this.symbolTables[0].get(name)) {
+        throw new VariableRedefinitionError(new VariableDefinitionNode(type, '', name, node.tuple));
+      }
+      this.symbolTables[0].set(Symbol.variable(new VariableDefinitionNode(type, '', name, node.tuple)));
+    });
+
+    node.tuple = this.visit(node.tuple);
     return node;
   }
 
@@ -132,7 +146,6 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitIdentifier(node: IdentifierNode): Node {
     const definition = this.symbolTables[0].get(node.name);
-
     if (!definition) {
       throw new UndefinedReferenceError(node);
     }

@@ -35,6 +35,7 @@ import {
   SourceFileNode,
   Node,
   InstantiationNode,
+  TupleAssignmentNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import { GlobalFunction, PreimageField, Class } from '../ast/Globals';
@@ -301,6 +302,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.popFromStack();
     this.pushToStack(node.name);
+    return node;
+  }
+
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
+    node.tuple = this.visit(node.tuple);
+    this.popFromStack(2);
+    this.pushToStack(node.var1.name);
+    this.pushToStack(node.var2.name);
     return node;
   }
 

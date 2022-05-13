@@ -23,6 +23,7 @@ import {
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
+  TupleAssignmentNode,
 } from './AST';
 import AstVisitor from './AstVisitor';
 
@@ -50,6 +51,11 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
+    return node;
+  }
+
+  visitTupleAssignment(node: TupleAssignmentNode): Node {
+    node.tuple = this.visit(node.tuple);
     return node;
   }
 

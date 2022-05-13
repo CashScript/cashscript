@@ -96,6 +96,20 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
   }
 }
 
+export class TupleAssignmentNode extends StatementNode {
+  constructor(
+    public var1: { name:string, type:Type },
+    public var2: { name:string, type:Type },
+    public tuple: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitTupleAssignment(this);
+  }
+}
+
 export class AssignNode extends StatementNode {
   constructor(
     public identifier: IdentifierNode,

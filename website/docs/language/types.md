@@ -113,20 +113,26 @@ Operators:
 - `==` (equality)
 - `!=` (inequality)
 
-## Array & Tuple
-These types are not assignable, and only have very specific uses within CashScript.
-
-Arrays are only able to be passed into `checkMultisig` functions using the following syntax:
+## Array
+Arrays are not assignable and can only be used with the `checkMultisig` function using the following syntax:
 
 ```solidity
 checkMultisig([sig1, sig2], [pk1, pk2, pk3]);
 ```
 
+## Tuple
 Tuples are the type that is returned when calling the `split` member function on a `string` or `bytes` type. Their first or second element can be accessed through an indexing syntax similar to other languages:
 
 ```solidity
 string question = "What is Bitcoin Cash?";
 string answer = question.split(15)[0].split(8)[1];
+```
+
+It is also possible to assign both sides of the tuple at once with a destructuring syntax:
+
+```solidity
+string bitcoin, string cash = "BitcoinCash".split(7);
+require(bitcoin == cash);
 ```
 
 ## Type Casting

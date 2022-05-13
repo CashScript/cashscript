@@ -1,8 +1,15 @@
 import { Type } from '@cashscript/utils';
+import { DUST_LIMIT } from './constants';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
     super(`Found type '${actual}' where type '${expected.toString()}' was expected`);
+  }
+}
+
+export class OutputSatoshisTooSmallError extends Error {
+  constructor(satoshis: number) {
+    super(`Tried to add an output with ${satoshis} satoshis, which is less than the DUST limit (${DUST_LIMIT})`);
   }
 }
 

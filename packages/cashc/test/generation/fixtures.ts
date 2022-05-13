@@ -283,10 +283,12 @@ export const fixtures: Fixture[] = [
         },
       ],
       bytecode:
-        // int blockHeight = int(oracleMessage.split(4)[0])
-        'OP_6 OP_PICK OP_4 OP_SPLIT OP_DROP OP_BIN2NUM '
-        // int price = int(oracleMessage.split(4)[1])
-        + 'OP_7 OP_PICK OP_4 OP_SPLIT OP_NIP OP_BIN2NUM '
+        // bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);
+        'OP_6 OP_PICK OP_4 OP_SPLIT '
+        // int blockHeight = int(blockHeightBin);
+        + 'OP_SWAP OP_BIN2NUM '
+        // int price = int(priceBin);
+        + 'OP_SWAP OP_BIN2NUM '
         // require(blockHeight >= minBlock);
         + 'OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY '
         // require(tx.time >= blockHeight);

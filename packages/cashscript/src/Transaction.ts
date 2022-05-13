@@ -35,6 +35,7 @@ import {
   buildError,
   addressToLockScript,
   createSighashPreimage,
+  validateRecipient,
 } from './utils';
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
 import NetworkProvider from './network/NetworkProvider';
@@ -94,13 +95,16 @@ export class Transaction {
 
   to(toOrOutputs: string | Recipient[], amount?: number): this {
     if (typeof toOrOutputs === 'string' && typeof amount === 'number') {
-      this.outputs.push({ to: toOrOutputs, amount });
-    } else if (Array.isArray(toOrOutputs) && amount === undefined) {
-      this.outputs = this.outputs.concat(toOrOutputs);
-    } else {
-      throw new Error('Incorrect arguments passed to function \'to\'');
+      return this.to([{ to: toOrOutputs, amount }]);
     }
-    return this;
+
+    if (Array.isArray(toOrOutputs) && amount === undefined) {
+      toOrOutputs.forEach(validateRecipient);
+      this.outputs = this.outputs.concat(toOrOutputs);
+      return this;
+    }
+
+    throw new Error('Incorrect arguments passed to function \'to\'');
   }
 
   withOpReturn(chunks: string[]): this {
