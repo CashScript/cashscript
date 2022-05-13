@@ -36,6 +36,7 @@
     "examples": "ts-node examples/p2pkh.ts && ts-node examples/transfer_with_timeout.ts && ts-node examples/hodl_vault.ts",
     "coverage": "codecov",
     "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-example",
-    "spellcheck": "cspell lint '**' --no-progress --must-find-files"
+    "spellcheck": "cspell lint '**' --no-progress --must-find-files",
+    "update-version":"ts-node update-version.ts "
   }
 }
