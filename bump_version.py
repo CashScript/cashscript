@@ -1,4 +1,4 @@
-import json, sys, os
+import json, sys
 
 package_files = [
     'packages/cashc/package.json',
@@ -27,4 +27,4 @@ if __name__ == "__main__":
         f.seek(0)
         f.write(''.join(data))
         editing(index_file)
-    print("Changed version to '%s'." % version)
+    print("Changed package version to '%s'." % version)
