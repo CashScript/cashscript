@@ -1,4 +1,4 @@
-import { GLOBAL_SYMBOL_TABLE } from '../ast/Globals';
+import { GLOBAL_SYMBOL_TABLE, Modifier } from '../ast/Globals';
 import {
   ContractNode,
   ParameterNode,
@@ -109,7 +109,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitAssign(node: AssignNode): Node {
     const v = this.symbolTables[0].get(node.identifier.name)?.definition as VariableDefinitionNode;
-    if (v?.modifier === 'constant') {
+    if (v?.modifier === Modifier.CONSTANT) {
       throw new ConstantModificationError(v);
     }
     super.visitAssign(node);

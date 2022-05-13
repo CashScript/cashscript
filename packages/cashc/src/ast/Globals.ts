@@ -53,6 +53,10 @@ export enum PreimageField {
   HASHTYPE = 'tx.hashtype', // bytes4
 }
 
+export enum Modifier {
+  CONSTANT = 'constant',
+}
+
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 
 // Preimage fields
