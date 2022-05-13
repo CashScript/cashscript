@@ -1,5 +1,9 @@
 import json, sys
 
+# USAGE
+# python3 bump_version.py 'X.X.X'
+
+
 package_files = [
     'packages/cashc/package.json',
     'packages/utils/package.json',
