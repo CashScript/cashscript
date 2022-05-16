@@ -4,8 +4,8 @@ import {
   FailedRequireError,
   FailedTransactionError,
   Reason,
-} from '../../../src';
-import { getTxOutputs } from '../../test-util';
+} from '../../src';
+import { getTxOutputs } from '../test-util';
 
 describe('BigInt', () => {
   let bigintContract: Contract;
@@ -14,8 +14,8 @@ describe('BigInt', () => {
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
-    const artifact = require('../../fixture/bigint.json');
-    const provider = new ElectrumNetworkProvider('staging');
+    const artifact = require('../fixture/bigint.json');
+    const provider = new ElectrumNetworkProvider();
     bigintContract = new Contract(artifact, [], provider);
     console.log(bigintContract.address);
   });
@@ -81,7 +81,7 @@ describe('BigInt', () => {
         .send();
 
       // then
-      const txOutputs = getTxOutputs(tx, 'staging');
+      const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
   });

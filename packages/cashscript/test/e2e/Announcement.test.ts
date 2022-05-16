@@ -1,8 +1,8 @@
-import { Contract, ElectrumNetworkProvider } from '../../../src';
-import { getTxOutputs } from '../../test-util';
-import { FailedRequireError, Reason } from '../../../src/Errors';
-import { createOpReturnOutput } from '../../../src/utils';
-import { aliceAddress } from '../../fixture/vars';
+import { Contract, ElectrumNetworkProvider } from '../../src';
+import { getTxOutputs } from '../test-util';
+import { FailedRequireError, Reason } from '../../src/Errors';
+import { createOpReturnOutput } from '../../src/utils';
+import { aliceAddress } from '../fixture/vars';
 
 describe('Announcement', () => {
   let announcement: Contract;
@@ -10,8 +10,8 @@ describe('Announcement', () => {
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
-    const artifact = require('../../fixture/announcement.json');
-    const provider = new ElectrumNetworkProvider('staging');
+    const artifact = require('../fixture/announcement.json');
+    const provider = new ElectrumNetworkProvider();
     announcement = new Contract(artifact, [], provider);
     console.log(announcement.address);
   });

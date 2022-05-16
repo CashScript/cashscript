@@ -29,8 +29,8 @@ export async function run(): Promise<void> {
   // Compile the Mecenas contract to an artifact object
   const artifact = compileFile(path.join(__dirname, 'mecenas.cash'));
 
-  // Initialise a network provider for network operations on STAGING
-  const provider = new ElectrumNetworkProvider('staging');
+  // Initialise a network provider for network operations on MAINNET
+  const provider = new ElectrumNetworkProvider();
 
   // Instantiate a new contract using the compiled artifact and network provider
   // AND providing the constructor parameters:

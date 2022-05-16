@@ -7,7 +7,7 @@
       "inputs": []
     }
   ],
-  "bytecode": "OP_UNKNOWN194 OP_2 OP_GREATERTHANOREQUAL",
+  "bytecode": "OP_TXVERSION OP_2 OP_GREATERTHANOREQUAL",
   "source": "contract Covenant() {\n    function spend() {\n        require(tx.version >= 2);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
