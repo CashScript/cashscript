@@ -5,7 +5,7 @@ import {
   ripemd160,
   sha256,
   sha512,
-} from '../src';
+} from '../dist/main/index.js';
 
 describe('hashing functions', () => {
   describe('sha512()', () => {

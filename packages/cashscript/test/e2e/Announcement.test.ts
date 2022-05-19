@@ -1,7 +1,7 @@
-import { Contract, ElectrumNetworkProvider } from '../../src';
+import { Contract, ElectrumNetworkProvider } from '../../dist/main/index.js';
 import { getTxOutputs } from '../test-util';
-import { FailedRequireError, Reason } from '../../src/Errors';
-import { createOpReturnOutput } from '../../src/utils';
+import { FailedRequireError, Reason } from '../../dist/main/Errors.js';
+import { createOpReturnOutput } from '../../dist/main/utils.js';
 import { aliceAddress } from '../fixture/vars';
 
 describe('Announcement', () => {

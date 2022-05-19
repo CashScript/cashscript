@@ -4,7 +4,7 @@ import {
   FailedRequireError,
   FailedTransactionError,
   Reason,
-} from '../../src';
+} from '../../dist/main/index.js';
 import { getTxOutputs } from '../test-util';
 
 describe('BigInt', () => {

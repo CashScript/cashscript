@@ -1,8 +1,8 @@
 import { hexToBin } from '@bitauth/libauth';
 import { parseType } from '@cashscript/utils';
-import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
-import { ParseTree } from 'antlr4ts/tree/ParseTree';
-import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor.js';
+import { ParseTree } from 'antlr4ts/tree/ParseTree.js';
+import { TerminalNode } from 'antlr4ts/tree/TerminalNode.js';
 import semver from 'semver';
 import {
   Node,

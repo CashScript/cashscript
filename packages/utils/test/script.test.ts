@@ -9,7 +9,7 @@ import {
   encodeNullDataScript,
   scriptToAsm,
   scriptToBytecode,
-} from '../src';
+} from '../dist/main/index.js';
 import { fixtures } from './script.fixture';
 
 describe('script utils', () => {

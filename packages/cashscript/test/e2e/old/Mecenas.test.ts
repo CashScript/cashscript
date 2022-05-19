@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../dist/main/index.js';
 import {
   alicePk,
   alice,
@@ -8,7 +8,7 @@ import {
   bobAddress,
 } from '../../fixture/vars';
 import { getTxOutputs } from '../../test-util';
-import { FailedRequireError, Reason } from '../../../src/Errors';
+import { FailedRequireError, Reason } from '../../../dist/main/Errors.js';
 
 // Mecenas has tx.age check omitted for testing
 describe('v0.6.0 - Mecenas', () => {

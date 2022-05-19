@@ -1,4 +1,4 @@
-import { Contract, ElectrumNetworkProvider } from '../../src';
+import { Contract, ElectrumNetworkProvider } from '../../dist/main/index.js';
 import {
   alicePkh,
   bobPkh,
@@ -6,7 +6,7 @@ import {
   bobAddress,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { FailedRequireError, Reason } from '../../src/Errors';
+import { FailedRequireError, Reason } from '../../dist/main/Errors.js';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {

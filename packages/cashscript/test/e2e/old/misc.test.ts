@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../dist/main/index.js';
 import {
   alicePk,
   alice,

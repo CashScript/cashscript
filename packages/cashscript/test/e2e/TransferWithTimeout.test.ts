@@ -1,4 +1,4 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../dist/main/index.js';
 import {
   alicePk,
   alice,
@@ -6,7 +6,7 @@ import {
   bobPk,
 } from '../fixture/vars';
 import { getTxOutputs } from '../test-util';
-import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors';
+import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../dist/main/Errors.js';
 
 describe('TransferWithTimeout', () => {
   let twtInstancePast: Contract;

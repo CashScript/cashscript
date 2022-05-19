@@ -1,6 +1,6 @@
 import { hexToBin } from '@bitauth/libauth';
 import { placeholder } from '@cashscript/utils';
-import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../src';
+import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../dist/main/index.js';
 import {
   alicePkh,
   alicePk,

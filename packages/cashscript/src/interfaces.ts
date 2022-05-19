@@ -1,5 +1,5 @@
 import { Transaction } from '@bitauth/libauth';
-import SignatureTemplate from './SignatureTemplate';
+import type SignatureTemplate from './SignatureTemplate';
 
 export interface Utxo {
   txid: string;

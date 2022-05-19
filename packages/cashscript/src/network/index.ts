@@ -1,5 +1,5 @@
-export { default as NetworkProvider } from './NetworkProvider';
-export { default as BitboxNetworkProvider } from './BitboxNetworkProvider';
-export { default as BitcoinRpcNetworkProvider } from './BitcoinRpcNetworkProvider';
-export { default as ElectrumNetworkProvider } from './ElectrumNetworkProvider';
-export { default as FullStackNetworkProvider } from './FullStackNetworkProvider';
+export { default as NetworkProvider } from './NetworkProvider.js';
+export { default as BitboxNetworkProvider } from './BitboxNetworkProvider.js';
+export { default as BitcoinRpcNetworkProvider } from './BitcoinRpcNetworkProvider.js';
+export { default as ElectrumNetworkProvider } from './ElectrumNetworkProvider.js';
+export { default as FullStackNetworkProvider } from './FullStackNetworkProvider.js';
