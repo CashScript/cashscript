@@ -36,15 +36,16 @@ import {
   Node,
   InstantiationNode,
   TupleAssignmentNode,
+  NullaryOpNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
-import { GlobalFunction, PreimageField, Class } from '../ast/Globals';
-import { PreimageParts } from './preimage';
+import { GlobalFunction, Class } from '../ast/Globals';
 import { BinaryOperator } from '../ast/Operator';
 import {
   compileBinaryOp,
   compileCast,
   compileGlobalFunction,
+  compileNullaryOp,
   compileTimeOp,
   compileUnaryOp,
 } from './utils';
@@ -55,8 +56,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
-  private isCheckSigVerify = false;
-  private covenantNeedsToBeVerified = false;
 
   private emit(op: OpOrData | OpOrData[]): void {
     if (Array.isArray(op)) {
@@ -150,11 +149,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.currentFunction = node;
 
-    if (node.preimageFields.length > 0) {
-      this.covenantNeedsToBeVerified = true;
-      this.decodePreimage(node.preimageFields);
-    }
-
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
 
@@ -162,101 +156,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.cleanStack();
 
     return node;
-  }
-
-  decodePreimage(fields: PreimageField[]): void {
-    // Preimage is first arg after selector
-    this.pushToStack('$preimage', true);
-    this.emit(encodeInt(this.getStackIndex('$preimage')));
-    this.emit(Op.OP_PICK);
-
-    const cuts = {
-      fromStart: 0,
-      fromEnd: 0,
-    };
-
-    // Fields before bytecode needs to be cut from the front
-    const beforeBytecode = [
-      PreimageField.VERSION, PreimageField.HASHPREVOUTS,
-      PreimageField.HASHSEQUENCE, PreimageField.OUTPOINT,
-    ].filter((field) => fields.includes(field));
-
-    beforeBytecode.forEach((field) => {
-      const part = PreimageParts[field];
-      const start = part.fromStart - cuts.fromStart;
-      if (start !== 0) {
-        this.emit(encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.emit(encodeInt(part.size));
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(field);
-      cuts.fromStart = part.fromStart + part.size;
-    });
-
-    // Bytecode potentially needs a cut from the front and from the back
-    if (fields.includes(PreimageField.BYTECODE)) {
-      const part = PreimageParts[PreimageField.BYTECODE];
-      const start = part.fromStart - cuts.fromStart;
-
-      // Always add this split, since the VarInt needs to be cut off any way
-      // See ReplaceBytecodeNop.ts
-      this.emit(Op.OP_NOP);
-      this.emit(encodeInt(start));
-      this.emit(Op.OP_SPLIT);
-      this.emit(Op.OP_NIP);
-
-      this.emit(Op.OP_SIZE);
-      this.emit(encodeInt(part.size));
-      this.emit(Op.OP_SUB);
-      this.emit(Op.OP_SPLIT);
-
-      this.pushToStack(PreimageField.BYTECODE);
-      cuts.fromStart = 0;
-      cuts.fromEnd = part.size;
-    }
-
-    // Fields after bytecode potentially need a cut from the back,
-    // after which they go back to cutting from the front
-    const afterBytecode = [
-      PreimageField.VALUE, PreimageField.SEQUENCE, PreimageField.HASHOUTPUTS,
-      PreimageField.LOCKTIME, PreimageField.HASHTYPE,
-    ].filter((field) => fields.includes(field));
-
-    afterBytecode.forEach((field) => {
-      const part = PreimageParts[field];
-      const start = part.fromStart - cuts.fromStart;
-      const end = part.fromEnd - cuts.fromEnd;
-
-      if (end > 0) {
-        this.emit(Op.OP_SIZE);
-        this.emit(encodeInt(end));
-        this.emit(Op.OP_SUB);
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      } else if (start !== 0) {
-        this.emit(encodeInt(start));
-        this.emit(Op.OP_SPLIT);
-        this.emit(Op.OP_NIP);
-      }
-
-      this.pushToStack(field);
-      if (field === PreimageField.HASHTYPE) return;
-
-      this.emit(encodeInt(part.size));
-      this.emit(Op.OP_SPLIT);
-
-      cuts.fromStart = part.fromStart + part.size;
-      cuts.fromEnd = part.fromEnd - part.size;
-    });
-
-    // Drop remainder
-    if (!fields.includes(PreimageField.HASHTYPE)) {
-      this.emit(Op.OP_DROP);
-    }
   }
 
   removeFinalVerify(): void {
@@ -350,19 +249,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitRequire(node: RequireNode): Node {
-    if (this.containsCheckSig(node)) this.isCheckSigVerify = true;
     node.expression = this.visit(node.expression);
-    this.isCheckSigVerify = false;
 
     this.emit(Op.OP_VERIFY);
     this.popFromStack();
     return node;
-  }
-
-  containsCheckSig(node: RequireNode): boolean {
-    if (!(node.expression instanceof FunctionCallNode)) return false;
-    if (node.expression.identifier.name !== GlobalFunction.CHECKSIG) return false;
-    return true;
   }
 
   visitBranch(node: BranchNode): Node {
@@ -420,8 +311,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     node.parameters = this.visitList(node.parameters);
 
-    if (this.needsToVerifyCovenant(node)) this.verifyCovenant();
-
     this.emit(compileGlobalFunction(node.identifier.name as GlobalFunction));
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
@@ -441,71 +330,31 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  needsToVerifyCovenant(node: FunctionCallNode): boolean {
-    if (node.identifier.name !== GlobalFunction.CHECKSIG) return false;
-    if (!this.isCheckSigVerify) return false;
-    if (!this.covenantNeedsToBeVerified) return false;
-    if (this.scopeDepth > 0) return false;
-    return true;
-  }
-
-  verifyCovenant(): void {
-    // Duplicate [s, pk] that are on stack
-    this.emit(Op.OP_2DUP);
-    this.pushToStack('(value)');
-    this.pushToStack('(value)');
-
-    // Turn sig into datasig
-    this.emit([Op.OP_SWAP, Op.OP_SIZE, Op.OP_1SUB, Op.OP_SPLIT, Op.OP_DROP]);
-
-    // Retrieve preimage from stack and hash it
-    const preimageIndex = this.getStackIndex('$preimage');
-    this.removeFromStack(preimageIndex);
-    this.emit(encodeInt(preimageIndex));
-    this.emit(Op.OP_ROLL);
-    this.emit(Op.OP_SHA256);
-    this.pushToStack('(value)');
-
-    // Order arguments and perform OP_CHECKDATASIGVERIFY
-    this.emit(Op.OP_ROT);
-    this.emit(Op.OP_CHECKDATASIGVERIFY);
-    this.popFromStack(3);
-
-    this.covenantNeedsToBeVerified = false;
-  }
-
   visitInstantiation(node: InstantiationNode): Node {
-    if (node.identifier.name === Class.OUTPUT_P2PKH) {
-      // <output amount>
-      this.visit(node.parameters[0]);
-      // <VarInt 25 bytes> OP_DUP OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('1976a914'));
-      this.emit(Op.OP_CAT);
+    if (node.identifier.name === Class.LOCKING_BYTECODE_P2PKH) {
+      // OP_DUP OP_HASH160 OP_PUSH<20>
+      this.emit(hexToBin('76a914'));
+      this.pushToStack('(value)');
       // <pkh>
-      this.visit(node.parameters[1]);
+      this.visit(node.parameters[0]);
       this.emit(Op.OP_CAT);
       // OP_EQUAL OP_CHECKSIG
       this.emit(hexToBin('88ac'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
-    } else if (node.identifier.name === Class.OUTPUT_P2SH) {
-      // <output amount>
-      this.visit(node.parameters[0]);
-      // <VarInt 23 bytes> OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('17a914'));
-      this.emit(Op.OP_CAT);
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH) {
+      // OP_HASH160 OP_PUSH<20>
+      this.emit(hexToBin('a914'));
+      this.pushToStack('(value)');
       // <script hash>
-      this.visit(node.parameters[1]);
+      this.visit(node.parameters[0]);
       this.emit(Op.OP_CAT);
       // OP_EQUAL
       this.emit(hexToBin('87'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
-    } else if (node.identifier.name === Class.OUTPUT_NULLDATA) {
-      // Total script = bytes8(0) <VarInt> OP_RETURN (<VarInt> <chunk>)+
-      // <output amount (0)>
-      this.emit(hexToBin('0000000000000000'));
-      this.pushToStack('(value)');
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
+      // Total script = OP_RETURN (<VarInt> <chunk>)+
       // OP_RETURN
       this.emit(hexToBin('6a'));
       this.pushToStack('(value)');
@@ -539,15 +388,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
         this.emit(Op.OP_CAT);
         this.popFromStack();
       });
-      // <VarInt total script size>
-      this.emit(Op.OP_SIZE);
-      this.emit(Op.OP_SWAP);
-      this.emit(Op.OP_CAT);
-      this.emit(Op.OP_CAT);
-      this.popFromStack(2);
+      this.popFromStack();
     } else {
       throw new Error(); // Should not happen
     }
+
     this.pushToStack('(value)');
 
     return node;
@@ -582,6 +427,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.emit(compileUnaryOp(node.operator));
     this.popFromStack();
+    this.pushToStack('(value)');
+    return node;
+  }
+
+  visitNullaryOp(node: NullaryOpNode): Node {
+    this.emit(compileNullaryOp(node.operator));
     this.pushToStack('(value)');
     return node;
   }

@@ -1,7 +1,5 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
+import { Contract, ElectrumNetworkProvider } from '../../src';
 import {
-  alicePk,
-  alice,
   alicePkh,
   bobPkh,
   aliceAddress,
@@ -14,6 +12,7 @@ import { FailedRequireError, Reason } from '../../src/Errors';
 describe('Mecenas', () => {
   let mecenas: Contract;
   const pledge = 10000;
+  const minerFee = 1000;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -31,14 +30,14 @@ describe('Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive()
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
     });
 
     it('should fail when trying to send to wrong person', async () => {
@@ -48,9 +47,9 @@ describe('Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive()
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
@@ -65,15 +64,32 @@ describe('Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive()
         .to(to, amount)
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
       await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+    });
+
+    it('should fail when sending incorrect amount of change', async () => {
+      // given
+      const to = aliceAddress;
+      const amount = pledge;
+
+      // when
+      const txPromise = mecenas.functions
+        .receive()
+        .to(to, amount)
+        .withHardcodedFee(minerFee * 2)
+        .send();
+
+      // then
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
     });
 
     it('should succeed when sending pledge to receiver', async () => {
@@ -83,9 +99,9 @@ describe('Mecenas', () => {
 
       // when
       const tx = await mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive()
         .to(to, amount)
-        .withHardcodedFee(1000)
+        .withHardcodedFee(minerFee)
         .send();
 
       // then

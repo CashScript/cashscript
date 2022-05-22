@@ -10,7 +10,6 @@ export function generateArtifact(ast: Ast, script: Script, source: string): Arti
 
   const abi = contract.functions.map((func) => ({
     name: func.name,
-    covenant: func.preimageFields.length > 0,
     inputs: func.parameters.map((parameter) => ({
       name: parameter.name,
       type: parameter.type.toString(),

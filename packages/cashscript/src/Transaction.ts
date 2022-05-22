@@ -234,7 +234,7 @@ export class Transaction {
     try {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
-    } catch (e) {
+    } catch (e: any) {
       const reason = e.error ?? e.message;
       throw buildError(reason, meep(tx, this.inputs, this.redeemScript));
     }
@@ -296,9 +296,7 @@ export class Transaction {
 
     // Calculate amount to send and base fee (excluding additional fees per UTXO)
     const amount = this.outputs.reduce((acc, output) => acc + output.amount, 0);
-    let fee = this.hardcodedFee
-      ? this.hardcodedFee
-      : getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
+    let fee = this.hardcodedFee ?? getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
 
     // Select and gather UTXOs and calculate fees and available funds
     let satsAvailable = 0;

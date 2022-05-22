@@ -25,6 +25,7 @@ import {
   RequireNode,
   InstantiationNode,
   TupleAssignmentNode,
+  NullaryOpNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 
@@ -224,10 +225,25 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
       return node;
     }
 
+    if (node.operator.includes('[i]')) {
+      const [scope, op] = node.operator.split('[i]');
+      this.addOutput(scope);
+      this.addOutput('[');
+      this.visit(node.expression);
+      this.addOutput(']');
+      this.addOutput(op);
+      return node;
+    }
+
     this.addOutput('(');
     this.addOutput(node.operator);
     node.expression = this.visit(node.expression);
     this.addOutput(')');
+    return node;
+  }
+
+  visitNullaryOp(node: NullaryOpNode): Node {
+    this.addOutput(node.operator);
     return node;
   }
 

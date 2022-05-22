@@ -1,5 +1,5 @@
 import { hexToBin } from '@bitauth/libauth';
-import { Op, Script } from '../src';
+import { IntrospectionOp, Op, Script } from '../src';
 
 export interface Fixture {
   name: string;
@@ -25,6 +25,14 @@ export const fixtures: Fixture[] = [
     asm: 'OP_DUP OP_HASH160 d627b2c3ede2aa85ca5869328873be1d8400bbcb OP_EQUALVERIFY OP_CHECKSIG',
     bytecode: hexToBin('76a914d627b2c3ede2aa85ca5869328873be1d8400bbcb88ac'),
     bytesize: 25,
+    opcount: 4,
+  },
+  {
+    name: 'simple covenant',
+    script: [IntrospectionOp.OP_TXVERSION, Op.OP_NUMEQUALVERIFY, IntrospectionOp.OP_ACTIVEBYTECODE, hexToBin('00'), Op.OP_EQUAL],
+    asm: 'OP_TXVERSION OP_NUMEQUALVERIFY OP_ACTIVEBYTECODE 00 OP_EQUAL',
+    bytecode: hexToBin('c29dc1010087'),
+    bytesize: 6,
     opcount: 4,
   },
   {

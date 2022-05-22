@@ -1,9 +1,0 @@
-contract Covenant(bytes32 requiredHS) {
-    function spend(pubkey pk, sig s) {
-        require(!checkSig(s, pk));
-        require(tx.hashSequence == requiredHS);
-        require(tx.bytecode == 0x00);
-        require(checkSig(s, pk));
-        require(checkSig(s, pk));
-    }
-}

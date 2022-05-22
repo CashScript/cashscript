@@ -4,7 +4,6 @@
   "abi": [
     {
       "name": "spend",
-      "covenant": false,
       "inputs": [
         {
           "name": "palindrome",
@@ -14,10 +13,10 @@
     }
   ],
   "bytecode": "OP_DUP OP_REVERSEBYTES OP_EQUAL",
-  "source": "pragma cashscript ^0.4.0;\n\ncontract P2Palindrome() {\n    function spend(string palindrome) {\n        require(palindrome.reverse() == palindrome);\n    }\n}\n",
+  "source": "contract P2Palindrome() {\n    function spend(string palindrome) {\n        require(palindrome.reverse() == palindrome);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.4.3"
+    "version": "0.7.0"
   },
-  "updatedAt": "2020-08-07T09:57:02.698Z"
+  "updatedAt": "2021-11-30T13:26:07.514Z"
 }

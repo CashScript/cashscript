@@ -10,7 +10,7 @@ import {
 import { TypeError } from './Errors';
 import SignatureTemplate from './SignatureTemplate';
 
-export type Argument = number | boolean | string | Uint8Array | SignatureTemplate;
+export type Argument = number | bigint | boolean | string | Uint8Array | SignatureTemplate;
 
 export function encodeArgument(
   argument: Argument,
@@ -26,7 +26,7 @@ export function encodeArgument(
   }
 
   if (type === PrimitiveType.INT) {
-    if (typeof argument !== 'number') {
+    if (typeof argument !== 'number' && typeof argument !== 'bigint') {
       throw new TypeError(typeof argument, type);
     }
     return encodeInt(argument);
@@ -56,15 +56,15 @@ export function encodeArgument(
 
   // Redefine SIG as a bytes65 so it is included in the size checks below
   // Note that ONLY Schnorr signatures are accepted
-  if (type === PrimitiveType.SIG) {
+  if (type === PrimitiveType.SIG && argument.byteLength !== 0) {
     type = new BytesType(65);
   }
 
-  // TODO: Set DATASIG to 64 bytes (enforcing Schnorr) in a new MINOR version upgrade
-  // (backwards incompatible)
-  // if (type === PrimitiveType.DATASIG) {
-  //   type = new BytesType(64);
-  // }
+  // Redefine SIG as a bytes64 so it is included in the size checks below
+  // Note that ONLY Schnorr signatures are accepted
+  if (type === PrimitiveType.DATASIG && argument.byteLength !== 0) {
+    type = new BytesType(64);
+  }
 
   // Bounded bytes types require a correctly sized argument
   if (type instanceof BytesType && type.bound && argument.byteLength !== type.bound) {

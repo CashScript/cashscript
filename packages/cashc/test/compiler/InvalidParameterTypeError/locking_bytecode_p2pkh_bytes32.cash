@@ -1,0 +1,8 @@
+pragma cashscript ^0.7.0;
+
+contract P2PKH(bytes20 pkh) {
+    function spend(pubkey pk, sig s) {
+        require(checkSig(s, pk));
+        require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(sha256(pkh)));
+    }
+}

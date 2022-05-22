@@ -1,29 +1,29 @@
-pragma cashscript ^0.4.0;
+pragma cashscript ^0.7.0;
 
 /* This is an unofficial CashScript port of Licho's Mecenas contract. It is
  * not compatible with Licho's EC plugin, but rather meant as a demonstration
  * of covenants in CashScript.
  * The time checking has been removed so it can be tested without time requirements.
  */
-contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period*/) {
-    function receive(pubkey pk, sig s) {
-        require(checkSig(s, pk));
-
+contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */) {
+    function receive() {
         // require(tx.age >= period);
 
-        int minerFee = 1000;
-        int intValue = int(bytes(tx.value));
+        // Check that the first output sends to the recipient
+        require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));
 
-        if (intValue <= pledge + minerFee) {
-            bytes8 amount1 = bytes8(intValue - minerFee);
-            bytes34 out1 = new OutputP2PKH(amount1, recipient);
-            require(hash256(out1) == tx.hashOutputs);
+        int minerFee = 1000;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int changeValue = currentValue - pledge - minerFee;
+
+        // If there is not enough left for *another* pledge after this one, we send the remainder to the recipient
+        // Otherwise we send the remainder to the recipient and the change back to the contract
+        if (changeValue <= pledge + minerFee) {
+            require(tx.outputs[0].value == currentValue - minerFee);
         } else {
-            bytes8 amount1 = bytes8(pledge);
-            bytes8 amount2 = bytes8(intValue - pledge - minerFee);
-            bytes34 out1 = new OutputP2PKH(amount1, recipient);
-            bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode));
-            require(hash256(out1 + out2) == tx.hashOutputs);
+            require(tx.outputs[0].value == pledge);
+            require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);
+            require(tx.outputs[1].value == changeValue);
         }
     }
 
