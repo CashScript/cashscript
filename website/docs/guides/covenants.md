@@ -110,7 +110,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
         // If there is not enough left for *another* pledge after this one,
         // we send the remainder to the recipient. Otherwise we send the
         // pledge to the recipient and the change back to the contract
-        if (changeValue <= minerFee * 2) {
+        if (changeValue <= pledge + minerFees) {
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             require(tx.outputs[0].value == pledge);
@@ -164,7 +164,7 @@ contract Mecenas(
         // If there is not enough left for *another* pledge after this one,
         // we send the remainder to the recipient. Otherwise we send the
         // remainder to the recipient and the change back to the contract
-        if (changeValue <= minerFee * 2) {
+        if (changeValue <= pledge + minerFee) {
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             // Check that the outputs send the correct amounts

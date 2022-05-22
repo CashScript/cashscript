@@ -422,8 +422,8 @@ export const fixtures: Fixture[] = [
         + 'OP_INPUTINDEX OP_UTXOVALUE '
         // int changeValue = currentValue - pledge - minerFee
         + 'OP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB '
-        // if (changeValue <= minerFee * 2) {
-        + 'OP_DUP OP_3 OP_PICK OP_2 OP_MUL OP_LESSTHANOREQUAL OP_IF '
+        // if (changeValue <= pledge + minerFee) {
+        + 'OP_DUP OP_5 OP_PICK OP_4 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF '
         // require(tx.outputs[0].value == currentValue - minerFee)
         + 'OP_0 OP_OUTPUTVALUE OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY '
         // } else {

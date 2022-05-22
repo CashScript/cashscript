@@ -26,10 +26,10 @@ contract Mecenas(
         int currentValue = tx.inputs[this.activeInputIndex].value;
         int changeValue = currentValue - pledge - minerFee;
 
-        // If there is not enough left for *another* pledge after this one,
+        // If there is not enough left for *another* block after this one,
         // we send the remainder to the recipient. Otherwise we send the
         // remainder to the recipient and the change back to the contract
-        if (changeValue <= minerFee * 2) {
+        if (changeValue <= pledgePerBlock + minerFee) {
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             // Check that the outputs send the correct amounts

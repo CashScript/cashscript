@@ -296,9 +296,7 @@ export class Transaction {
 
     // Calculate amount to send and base fee (excluding additional fees per UTXO)
     const amount = this.outputs.reduce((acc, output) => acc + output.amount, 0);
-    let fee = this.hardcodedFee
-      ? this.hardcodedFee
-      : getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
+    let fee = this.hardcodedFee ?? getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
 
     // Select and gather UTXOs and calculate fees and available funds
     let satsAvailable = 0;

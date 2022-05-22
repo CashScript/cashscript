@@ -623,9 +623,9 @@ export const fixtures: Fixture[] = [
                   new IdentifierNode('changeValue'),
                   BinaryOperator.LE,
                   new BinaryOpNode(
+                    new IdentifierNode('pledge'),
+                    BinaryOperator.PLUS,
                     new IdentifierNode('minerFee'),
-                    BinaryOperator.MUL,
-                    new IntLiteralNode(2),
                   ),
                 ),
                 new BlockNode([
