@@ -1,0 +1,6 @@
+contract Test() {
+    function covenant() {
+        // cspell:disable-next-line
+        require(tx.verson == 2);
+    }
+}

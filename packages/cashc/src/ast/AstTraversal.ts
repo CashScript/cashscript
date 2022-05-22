@@ -24,6 +24,7 @@ import {
   RequireNode,
   InstantiationNode,
   TupleAssignmentNode,
+  NullaryOpNode,
 } from './AST';
 import AstVisitor from './AstVisitor';
 
@@ -118,6 +119,10 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
+    return node;
+  }
+
+  visitNullaryOp(node: NullaryOpNode): Node {
     return node;
   }
 

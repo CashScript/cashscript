@@ -35,47 +35,22 @@ export enum TimeOp {
 }
 
 export enum Class {
-  OUTPUT_P2SH = 'OutputP2SH',
-  OUTPUT_P2PKH = 'OutputP2PKH',
-  OUTPUT_NULLDATA = 'OutputNullData',
-}
-
-export enum PreimageField {
-  VERSION = 'tx.version', // bytes4
-  HASHPREVOUTS = 'tx.hashPrevouts', // bytes32
-  HASHSEQUENCE = 'tx.hashSequence', // bytes32
-  OUTPOINT = 'tx.outpoint', // bytes36
-  BYTECODE = 'tx.bytecode', // bytes
-  VALUE = 'tx.value', // bytes8
-  SEQUENCE = 'tx.sequence', // bytes4
-  HASHOUTPUTS = 'tx.hashOutputs', // bytes32
-  LOCKTIME = 'tx.locktime', // bytes4
-  HASHTYPE = 'tx.hashtype', // bytes4
+  LOCKING_BYTECODE_P2SH = 'LockingBytecodeP2SH',
+  LOCKING_BYTECODE_P2PKH = 'LockingBytecodeP2PKH',
+  LOCKING_BYTECODE_NULLDATA = 'LockingBytecodeNullData',
 }
 
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 
-// Preimage fields
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.VERSION, new BytesType(4)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.HASHPREVOUTS, new BytesType(32)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.HASHSEQUENCE, new BytesType(32)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.OUTPOINT, new BytesType(36)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.BYTECODE, new BytesType()));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.VALUE, new BytesType(8)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.SEQUENCE, new BytesType(4)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.HASHOUTPUTS, new BytesType(32)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.LOCKTIME, new BytesType(4)));
-GLOBAL_SYMBOL_TABLE.set(Symbol.global(PreimageField.HASHTYPE, new BytesType(4)));
-
 // Classes
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.OUTPUT_P2SH, new BytesType(32), [new BytesType(8), new BytesType(20)]),
+  Symbol.class(Class.LOCKING_BYTECODE_P2SH, new BytesType(23), [new BytesType(20)]),
 );
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.OUTPUT_P2PKH, new BytesType(34), [new BytesType(8), new BytesType(20)]),
+  Symbol.class(Class.LOCKING_BYTECODE_P2PKH, new BytesType(25), [new BytesType(20)]),
 );
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.class(Class.OUTPUT_NULLDATA, new BytesType(), [new ArrayType(new BytesType())]),
+  Symbol.class(Class.LOCKING_BYTECODE_NULLDATA, new BytesType(), [new ArrayType(new BytesType())]),
 );
 
 // Global functions

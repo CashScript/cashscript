@@ -16,6 +16,45 @@ export type Op = number;
 export type OpOrData = Op | Uint8Array;
 export type Script = OpOrData[];
 
+// TODO: Replace this when these opcodes are in Libauth
+export enum IntrospectionOp {
+  OP_INPUTINDEX = 192,
+  OP_ACTIVEBYTECODE = 193,
+  OP_TXVERSION = 194,
+  OP_TXINPUTCOUNT = 195,
+  OP_TXOUTPUTCOUNT = 196,
+  OP_TXLOCKTIME = 197,
+  OP_UTXOVALUE = 198,
+  OP_UTXOBYTECODE = 199,
+  OP_OUTPOINTTXHASH = 200,
+  OP_OUTPOINTINDEX = 201,
+  OP_INPUTBYTECODE = 202,
+  OP_INPUTSEQUENCENUMBER = 203,
+  OP_OUTPUTVALUE = 204,
+  OP_OUTPUTBYTECODE = 205,
+}
+
+export const introspectionOpMapping: any = {
+  OP_INPUTINDEX: 'OP_UNKNOWN192',
+  OP_ACTIVEBYTECODE: 'OP_UNKNOWN193',
+  OP_TXVERSION: 'OP_UNKNOWN194',
+  OP_TXINPUTCOUNT: 'OP_UNKNOWN195',
+  OP_TXOUTPUTCOUNT: 'OP_UNKNOWN196',
+  OP_TXLOCKTIME: 'OP_UNKNOWN197',
+  OP_UTXOVALUE: 'OP_UNKNOWN198',
+  OP_UTXOBYTECODE: 'OP_UNKNOWN199',
+  OP_OUTPOINTTXHASH: 'OP_UNKNOWN200',
+  OP_OUTPOINTINDEX: 'OP_UNKNOWN201',
+  OP_INPUTBYTECODE: 'OP_UNKNOWN202',
+  OP_INPUTSEQUENCENUMBER: 'OP_UNKNOWN203',
+  OP_OUTPUTVALUE: 'OP_UNKNOWN204',
+  OP_OUTPUTBYTECODE: 'OP_UNKNOWN205',
+};
+
+export const reverseIntrospectionOpMapping = Object.fromEntries(
+  Object.entries(introspectionOpMapping).map(([k, v]) => ([v, k])),
+);
+
 export function scriptToAsm(script: Script): string {
   return bytecodeToAsm(scriptToBytecode(script));
 }
@@ -54,6 +93,9 @@ export function asmToBytecode(asm: string): Uint8Array {
   // Remove any duplicate whitespace
   asm = asm.replace(/\s+/g, ' ').trim();
 
+  // Replace introspection ops with OP_UNKNOWN... so Libauth gets it
+  asm = asm.split(' ').map((token) => introspectionOpMapping[token] ?? token).join(' ');
+
   // Convert the ASM tokens to AuthenticationInstructions
   const instructions = asm.split(' ').map((token) => {
     if (token.startsWith('OP_')) {
@@ -76,6 +118,9 @@ export function bytecodeToAsm(bytecode: Uint8Array): string {
   asm = asm.replace(/OP_PUSHDATA[^\s]+ [^\s]+/g, '');
   asm = asm.replace(/(^|\s)0x/g, ' ');
 
+  // Replace OP_UNKNOWN... with the correct ops
+  asm = asm.split(' ').map((token) => reverseIntrospectionOpMapping[token] ?? token).join(' ');
+
   // Remove any duplicate whitespace
   asm = asm.replace(/\s+/g, ' ').trim();
 
@@ -94,7 +139,7 @@ export function calculateBytesize(script: Script): number {
 }
 
 // For encoding OP_RETURN data (doesn't require BIP62.3 / MINIMALDATA)
-export function encodeNullDataScript(chunks: (number | Uint8Array)[]): Uint8Array {
+export function encodeNullDataScript(chunks: OpOrData[]): Uint8Array {
   return flattenBinArray(
     chunks.map((chunk) => {
       if (typeof chunk === 'number') {

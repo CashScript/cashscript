@@ -174,6 +174,9 @@ export class UnsupportedTypeError extends TypeError {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode && node.operator.startsWith('.')) {
       super(node, actual, expected, `Tried to access member '${node.operator}' on unsupported type '${actual}'`);
+    } else if (node instanceof UnaryOpNode && node.operator.includes('[i]')) {
+      const [scope] = node.operator.split('[i]');
+      super(node, actual, expected, `Tried to index '${scope}''with unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode) {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof TimeOpNode) {
@@ -253,13 +256,5 @@ export class VersionError extends Error {
     super(message);
 
     this.name = this.constructor.name;
-  }
-}
-
-export class UnverifiedCovenantError extends CashScriptError {
-  constructor(
-    node: IdentifierNode,
-  ) {
-    super(node, `Covenant variable ${node.name} was used without un-nested signature check`);
   }
 }

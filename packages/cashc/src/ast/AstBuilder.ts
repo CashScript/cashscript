@@ -32,8 +32,9 @@ import {
   RequireNode,
   InstantiationNode,
   TupleAssignmentNode,
+  NullaryOpNode,
 } from './AST';
-import { UnaryOperator, BinaryOperator } from './Operator';
+import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator';
 import {
   ContractDefinitionContext,
   FunctionDefinitionContext,
@@ -59,15 +60,15 @@ import {
   TupleIndexOpContext,
   RequireStatementContext,
   PragmaDirectiveContext,
-  PreimageFieldContext,
   InstantiationContext,
+  NullaryOpContext,
+  UnaryIntrospectionOpContext,
 } from '../grammar/CashScriptParser';
 import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
 import { Location } from './Location';
 import {
   NumberUnit,
   TimeOp,
-  PreimageField,
 } from './Globals';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
 import { version } from '..';
@@ -79,8 +80,6 @@ export default class AstBuilder
   constructor(private tree: ParseTree) {
     super();
   }
-
-  private preimageFields: PreimageField[];
 
   defaultResult(): Node {
     return new BoolLiteralNode(false);
@@ -127,17 +126,13 @@ export default class AstBuilder
   }
 
   visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
-    this.preimageFields = [];
-
     const name = ctx.Identifier().text;
     const parameters = ctx.parameterList().parameter().map((p) => this.visit(p) as ParameterNode);
     const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
-    // Filter duplicate preimage fields
-    const preimageFields = [...this.preimageFields].filter((v, i, a) => a.indexOf(v) === i);
 
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, block, preimageFields);
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, block);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -255,6 +250,21 @@ export default class AstBuilder
     return tupleIndexOp;
   }
 
+  visitNullaryOp(ctx: NullaryOpContext): NullaryOpNode {
+    const operator = ctx.text as NullaryOperator;
+    const nullaryOp = new NullaryOpNode(operator);
+    nullaryOp.location = Location.fromCtx(ctx);
+    return nullaryOp;
+  }
+
+  visitUnaryIntrospectionOp(ctx: UnaryIntrospectionOpContext): UnaryOpNode {
+    const operator = `${ctx._scope.text}[i]${ctx._op.text}` as UnaryOperator;
+    const expression = this.visit(ctx.expression());
+    const unaryOp = new UnaryOpNode(operator, expression);
+    unaryOp.location = Location.fromCtx(ctx);
+    return unaryOp;
+  }
+
   visitUnaryOp(ctx: UnaryOpContext): UnaryOpNode {
     const operator = ctx._op.text as UnaryOperator;
     const expression = this.visit(ctx.expression());
@@ -277,15 +287,6 @@ export default class AstBuilder
     const array = new ArrayNode(elements);
     array.location = Location.fromCtx(ctx);
     return array;
-  }
-
-  visitPreimageField(ctx: PreimageFieldContext): IdentifierNode {
-    const field = (ctx.PreimageField() as TerminalNode).text;
-    this.preimageFields.push(field as PreimageField);
-    const identifier = new IdentifierNode(field);
-    identifier.location = Location.fromCtx(ctx);
-
-    return identifier;
   }
 
   visitIdentifier(ctx: IdentifierContext): IdentifierNode {

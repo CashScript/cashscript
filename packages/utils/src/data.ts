@@ -22,7 +22,7 @@ export function decodeBool(encodedBool: Uint8Array): boolean {
   return false;
 }
 
-export function encodeInt(int: number): Uint8Array {
+export function encodeInt(int: number | bigint): Uint8Array {
   return bigIntToScriptNumber(BigInt(int));
 }
 

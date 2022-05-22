@@ -1,12 +1,13 @@
 import {
   BytesType,
   encodeInt,
+  IntrospectionOp,
   Op,
   PrimitiveType,
   Script,
   Type,
 } from '@cashscript/utils';
-import { UnaryOperator, BinaryOperator } from '../ast/Operator';
+import { UnaryOperator, BinaryOperator, NullaryOperator } from '../ast/Operator';
 import { GlobalFunction, TimeOp } from '../ast/Globals';
 
 export function compileTimeOp(op: TimeOp): Script {
@@ -25,10 +26,6 @@ export function compileCast(from: Type, to: Type): Script {
 
   if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
     return [Op.OP_BIN2NUM];
-  }
-
-  if (from === PrimitiveType.SIG && to === PrimitiveType.DATASIG) {
-    return [Op.OP_SIZE, encodeInt(1), Op.OP_SUB, Op.OP_SPLIT, Op.OP_DROP];
   }
 
   return [];
@@ -55,6 +52,7 @@ export function compileGlobalFunction(fn: GlobalFunction): Script {
 
 export function compileBinaryOp(op: BinaryOperator, numeric: boolean = false): Script {
   const mapping: { [key in BinaryOperator]: Script } = {
+    [BinaryOperator.MUL]: [Op.OP_MUL],
     [BinaryOperator.DIV]: [Op.OP_DIV],
     [BinaryOperator.MOD]: [Op.OP_MOD],
     [BinaryOperator.PLUS]: [Op.OP_CAT],
@@ -88,6 +86,27 @@ export function compileUnaryOp(op: UnaryOperator): Op[] {
     [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
     [UnaryOperator.SIZE]: [Op.OP_SIZE, Op.OP_NIP],
     [UnaryOperator.REVERSE]: [Op.OP_REVERSEBYTES],
+    [UnaryOperator.INPUT_VALUE]: [IntrospectionOp.OP_UTXOVALUE],
+    [UnaryOperator.INPUT_LOCKING_BYTECODE]: [IntrospectionOp.OP_UTXOBYTECODE],
+    [UnaryOperator.INPUT_OUTPOINT_HASH]: [IntrospectionOp.OP_OUTPOINTTXHASH],
+    [UnaryOperator.INPUT_OUTPOINT_INDEX]: [IntrospectionOp.OP_OUTPOINTINDEX],
+    [UnaryOperator.INPUT_UNLOCKING_BYTECODE]: [IntrospectionOp.OP_INPUTBYTECODE],
+    [UnaryOperator.INPUT_SEQUENCE_NUMBER]: [IntrospectionOp.OP_INPUTSEQUENCENUMBER],
+    [UnaryOperator.OUTPUT_VALUE]: [IntrospectionOp.OP_OUTPUTVALUE],
+    [UnaryOperator.OUTPUT_LOCKING_BYTECODE]: [IntrospectionOp.OP_OUTPUTBYTECODE],
+  };
+
+  return mapping[op];
+}
+
+export function compileNullaryOp(op: NullaryOperator): Op[] {
+  const mapping = {
+    [NullaryOperator.INPUT_INDEX]: [IntrospectionOp.OP_INPUTINDEX],
+    [NullaryOperator.BYTECODE]: [IntrospectionOp.OP_ACTIVEBYTECODE],
+    [NullaryOperator.INPUT_COUNT]: [IntrospectionOp.OP_TXINPUTCOUNT],
+    [NullaryOperator.OUTPUT_COUNT]: [IntrospectionOp.OP_TXOUTPUTCOUNT],
+    [NullaryOperator.VERSION]: [IntrospectionOp.OP_TXVERSION],
+    [NullaryOperator.LOCKTIME]: [IntrospectionOp.OP_TXLOCKTIME],
   };
 
   return mapping[op];

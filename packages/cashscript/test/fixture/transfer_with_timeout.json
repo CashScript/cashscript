@@ -17,7 +17,6 @@
   "abi": [
     {
       "name": "transfer",
-      "covenant": false,
       "inputs": [
         {
           "name": "recipientSig",
@@ -27,7 +26,6 @@
     },
     {
       "name": "timeout",
-      "covenant": false,
       "inputs": [
         {
           "name": "senderSig",
@@ -40,7 +38,7 @@
   "source": "contract TransferWithTimeout(\n    pubkey sender,\n    pubkey recipient,\n    int timeout\n) {\n    // Require recipient's signature to match\n    function transfer(sig recipientSig) {\n        require(checkSig(recipientSig, recipient));\n    }\n\n    // Require timeout time to be reached and sender's signature to match\n    function timeout(sig senderSig) {\n        require(checkSig(senderSig, sender));\n        require(tx.time >= timeout);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.6.5"
+    "version": "0.7.0"
   },
-  "updatedAt": "2021-10-11T09:22:05.990Z"
+  "updatedAt": "2021-11-30T13:26:08.445Z"
 }

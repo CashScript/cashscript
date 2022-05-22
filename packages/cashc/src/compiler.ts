@@ -11,7 +11,6 @@ import { CashScriptParser } from './grammar/CashScriptParser';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal';
-import VerifyCovenantTraversal from './semantic/VerifyCovenantTraversal';
 
 export function compileString(code: string): Artifact {
   // Lexing + parsing
@@ -21,7 +20,6 @@ export function compileString(code: string): Artifact {
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
-  ast = ast.accept(new VerifyCovenantTraversal()) as Ast;
 
   // Code generation
   const traversal = new GenerateTargetTraversal();

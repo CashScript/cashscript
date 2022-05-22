@@ -10,7 +10,7 @@ One interesting use case of Bitcoin Cash is using it for *paper tips*. With pape
 As an alternative, a smart contract can be used for these kinds of gifts. This smart contract allows the recipient to claim their gift at any time, but if they don't claim it in time, the sender can reclaim it.
 
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     // Require recipient's signature to match
@@ -34,7 +34,7 @@ This smart contract works by connecting with a price oracle. This price oracle i
 This involves some degree of trust in the price oracle, but since the oracle produces price data for everyone to use, their incentive to attack *your* smart contract is minimised. To improve this situation, you can also choose to connect with multiple oracle providers so you do not have to trust a single party.
 
 ```solidity
-pragma cashscript ^0.6.0;
+pragma cashscript ^0.7.0;
 
 // A minimum block is provided to ensure that oracle price entries from before
 // this block are disregarded. i.e. when the BCH price was $1000 in the past,
@@ -67,55 +67,40 @@ contract HodlVault(pubkey ownerPk, pubkey oraclePk, int minBlock, int priceTarge
 ## Licho's Mecenas
 Donations are a great way to support the projects you love and periodic donations can incentivise continuous improvement to the product. But platforms like Patreon generally take fees of 10%+ and don't accept cryptocurrencies. Instead you can create a peer-to-peer smart contract that allows a recipient to withdraw a specific amount every month.
 
-The contract works by checking that a UTXO is at least 30 days old, after which it uses a covenant to enforce that the `pledge` amount is sent to the recipient, while the remainder is sent back to the contract itself. By sending it back the [`tx.age`][tx.age] counter is effectively reset, meaning this process can only be repeated when another 30 days have past.
+The contract works by checking that a UTXO is at least 30 days old, after which it uses a covenant to enforce that the `pledge` amount is sent to the recipient, while the remainder is sent back to the contract itself. By sending it back the `tx.age` counter is effectively reset, meaning this process can only be repeated when another 30 days have past.
 
 Due to the nature of covenants we have to be very specific about the outputs (amounts and destinations) of the transaction. This also means that we have to account for the special case where the remaining contract balance is lower than the `pledge` amount, meaning no remainder should be sent back. Finally we have to account for a small fee that has to be taken from the contract's balance to pay the miners.
 
 ```solidity
-pragma cashscript ^0.6.0;
+contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
+    function receive() {
+        require(tx.age >= period);
 
-contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
-    // Allow the receiver to claim their monthly pledge amount
-    function receive(pubkey pk, sig s) {
-        // The transaction can be signed by anyone, because the money can only
-        // be sent to the correct address
-        require(checkSig(s, pk));
+        // Check that the first output sends to the recipient
+        bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
+        require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
 
-        // Check that the UTXO is at least 30 days old
-        require(tx.age >= 30 days);
-
-        // Use a hardcoded miner fee
+        // Calculate the value that's left
         int minerFee = 1000;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int changeValue = currentValue - pledge - minerFee;
 
-        // Retrieve the UTXO's value and cast it to an integer
-        int intValue = int(bytes(tx.value));
-
-        // Check if the UTXO's value is higher than the pledge amount + fee
-        if (intValue <= pledge + minerFee) {
-            // Create an Output that sends the remaining balance to the recipient
-            bytes34 out1 = new OutputP2PKH(bytes8(intValue - minerFee), recipient);
-
-            // Enforce that this is the only output for the current transaction
-            require(hash256(out1) == tx.hashOutputs);
+        // If there is not enough left for *another* pledge after this one,
+        // we send the remainder to the recipient. Otherwise we send the
+        // remainder to the recipient and the change back to the contract
+        if (changeValue <= minerFee * 2) {
+            require(tx.outputs[0].value == currentValue - minerFee);
         } else {
-            // Create an Output that sends the pledge amount to the recipient
-            bytes34 out1 = new OutputP2PKH(bytes8(pledge), recipient);
-
-            // Create an Output that sends the remainder back to the contract
-            bytes8 remainder = bytes8(intValue - pledge - minerFee);
-            bytes32 out2 = new OutputP2SH(remainder, hash160(tx.bytecode));
-
-            // Enforce that these are the only outputs for the current transaction
-            require(hash256(out1 + out2) == tx.hashOutputs);
+            require(tx.outputs[0].value == pledge);
+            bytes changeBytecode = tx.inputs[this.activeInputIndex].lockingBytecode;
+            require(tx.outputs[1].lockingBytecode == changeBytecode);
+            require(tx.outputs[1].value == changeValue);
         }
     }
 
-    // Allow the funder to reclaim their remaining pledges
     function reclaim(pubkey pk, sig s) {
         require(hash160(pk) == funder);
         require(checkSig(s, pk));
     }
 }
 ```
-
-[tx.age]: /docs/language/globals#txage

@@ -1,11 +1,12 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
+import { Contract, ElectrumNetworkProvider } from '../../src';
 import { getTxOutputs } from '../test-util';
 import { FailedRequireError, Reason } from '../../src/Errors';
 import { createOpReturnOutput } from '../../src/utils';
-import { alicePk, alice } from '../fixture/vars';
+import { aliceAddress } from '../fixture/vars';
 
 describe('Announcement', () => {
   let announcement: Contract;
+  const minerFee = 1000;
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -27,15 +28,16 @@ describe('Announcement', () => {
 
       // when
       const txPromise = announcement.functions
-        .announce(alicePk, new SignatureTemplate(alice))
+        .announce()
         .from(largestUtxo)
         .to(to, amount)
-        .withHardcodedFee(2000)
+        .withHardcodedFee(minerFee)
+        .withMinChange(minerFee)
         .send();
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
     });
 
     it('should fail when trying to announce incorrect announcement', async () => {
@@ -47,11 +49,55 @@ describe('Announcement', () => {
 
       // when
       const txPromise = announcement.functions
-        .announce(alicePk, new SignatureTemplate(alice))
+        .announce()
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(2000)
-        .withMinChange(1000)
+        .withHardcodedFee(minerFee)
+        .withMinChange(minerFee)
+        .send();
+
+      // then
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+    });
+
+    it('should fail when sending incorrect amount of change', async () => {
+      // given
+      const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
+      const largestUtxo = (await announcement.getUtxos())
+        .sort((a, b) => b.satoshis - a.satoshis)
+        .slice(0, 1);
+
+      // when
+      const txPromise = announcement.functions
+        .announce()
+        .from(largestUtxo)
+        .withOpReturn(['0x6d02', str])
+        .withHardcodedFee(minerFee * 2)
+        .withMinChange(minerFee)
+        .send();
+
+      // then
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
+    });
+
+    it('should fail when sending the correct change amount to an incorrect address', async () => {
+      // given
+      const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
+      const largestUtxo = (await announcement.getUtxos())
+        .sort((a, b) => b.satoshis - a.satoshis)
+        .slice(0, 1);
+      const changeAmount = (await announcement.getBalance()) - minerFee;
+
+      // when
+      const txPromise = announcement.functions
+        .announce()
+        .from(largestUtxo)
+        .withOpReturn(['0x6d02', str])
+        .to(aliceAddress, changeAmount)
+        .withHardcodedFee(minerFee)
+        .withoutChange()
         .send();
 
       // then
@@ -68,11 +114,11 @@ describe('Announcement', () => {
 
       // when
       const tx = await announcement.functions
-        .announce(alicePk, new SignatureTemplate(alice))
+        .announce()
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(2000)
-        .withMinChange(1000)
+        .withHardcodedFee(minerFee)
+        .withMinChange(minerFee)
         .send();
 
       // then

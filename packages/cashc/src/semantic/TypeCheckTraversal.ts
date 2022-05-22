@@ -26,6 +26,7 @@ import {
   Node,
   InstantiationNode,
   TupleAssignmentNode,
+  NullaryOpNode,
 } from '../ast/AST';
 import AstTraversal from '../ast/AstTraversal';
 import {
@@ -40,7 +41,7 @@ import {
   CastSizeError,
   TupleAssignmentError,
 } from '../Errors';
-import { BinaryOperator, UnaryOperator } from '../ast/Operator';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator';
 import { GlobalFunction } from '../ast/Globals';
 
 export default class TypeCheckTraversal extends AstTraversal {
@@ -190,6 +191,7 @@ export default class TypeCheckTraversal extends AstTraversal {
           }
         }
         return node;
+      case BinaryOperator.MUL:
       case BinaryOperator.DIV:
       case BinaryOperator.MOD:
       case BinaryOperator.MINUS:
@@ -252,6 +254,40 @@ export default class TypeCheckTraversal extends AstTraversal {
         expectAnyOfTypes(node, node.expression.type, [new BytesType(), PrimitiveType.STRING]);
         // Type is preserved
         node.type = node.expression.type;
+        return node;
+      case UnaryOperator.INPUT_VALUE:
+      case UnaryOperator.INPUT_OUTPOINT_INDEX:
+      case UnaryOperator.INPUT_SEQUENCE_NUMBER:
+      case UnaryOperator.OUTPUT_VALUE:
+        expectInt(node, node.expression.type);
+        node.type = PrimitiveType.INT;
+        return node;
+      case UnaryOperator.INPUT_LOCKING_BYTECODE:
+      case UnaryOperator.INPUT_UNLOCKING_BYTECODE:
+      case UnaryOperator.OUTPUT_LOCKING_BYTECODE:
+        expectInt(node, node.expression.type);
+        node.type = new BytesType();
+        return node;
+      case UnaryOperator.INPUT_OUTPOINT_HASH:
+        expectInt(node, node.expression.type);
+        node.type = new BytesType(32);
+        return node;
+      default:
+        return node;
+    }
+  }
+
+  visitNullaryOp(node: NullaryOpNode): Node {
+    switch (node.operator) {
+      case NullaryOperator.INPUT_INDEX:
+      case NullaryOperator.INPUT_COUNT:
+      case NullaryOperator.OUTPUT_COUNT:
+      case NullaryOperator.VERSION:
+      case NullaryOperator.LOCKTIME:
+        node.type = PrimitiveType.INT;
+        return node;
+      case NullaryOperator.BYTECODE:
+        node.type = new BytesType();
         return node;
       default:
         return node;
