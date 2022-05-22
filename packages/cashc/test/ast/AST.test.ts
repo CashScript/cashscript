@@ -11,11 +11,11 @@
 
 import path from 'path';
 import fs from 'fs';
-import { fixtures } from './fixtures';
-import { parseCode } from '../../src/compiler';
-import { readCashFiles } from '../test-utils';
-import { Ast } from '../../src/ast/AST';
-import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal';
+import { fixtures } from './fixtures.js';
+import { parseCode } from '../../src/compiler.js';
+import { readCashFiles } from '../test-utils.js';
+import { Ast } from '../../src/ast/AST.js';
+import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal.js';
 
 describe('AST Builder', () => {
   describe('AST correctness', () => {

@@ -5,9 +5,9 @@ import {
   binToHex,
   binToBigIntUint64LE,
 } from '@bitauth/libauth';
-import { Output, Network } from '../dist/main/interfaces.js';
-import { network as defaultNetwork } from './fixture/vars';
-import { getNetworkPrefix } from '../dist/main/utils.js';
+import { Output, Network } from '../src/interfaces.js';
+import { network as defaultNetwork } from './fixture/vars.js';
+import { getNetworkPrefix } from '../src/utils.js';
 
 export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork): Output[] {
   return tx.outputs.map((o) => {

@@ -1,5 +1,5 @@
-import { Contract, ElectrumNetworkProvider } from '../../dist/main/index.js';
-import { getTxOutputs } from '../test-util';
+import { Contract, ElectrumNetworkProvider } from '../../src/index.js';
+import { getTxOutputs } from '../test-util.js';
 
 describe('Simple Covenant', () => {
   let covenant: Contract;

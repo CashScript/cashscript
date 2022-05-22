@@ -4,7 +4,7 @@ import {
   ParameterNode,
   IdentifierNode,
   Node,
-} from './AST';
+} from './AST.js';
 
 export class Symbol {
   references: IdentifierNode[] = [];

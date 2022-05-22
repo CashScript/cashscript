@@ -1,6 +1,6 @@
 import { BITBOX } from 'bitbox-sdk';
-import { PriceOracle } from '../../../../examples/PriceOracle';
-import { Network } from '../../dist/main/interfaces.js';
+import { PriceOracle } from '../../../../examples/PriceOracle.js';
+import { Network } from '../../src/interfaces.js';
 
 export const network = Network.MAINNET;
 export const bitbox = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });

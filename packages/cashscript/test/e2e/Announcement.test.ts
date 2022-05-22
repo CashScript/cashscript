@@ -1,8 +1,8 @@
-import { Contract, ElectrumNetworkProvider } from '../../dist/main/index.js';
-import { getTxOutputs } from '../test-util';
-import { FailedRequireError, Reason } from '../../dist/main/Errors.js';
-import { createOpReturnOutput } from '../../dist/main/utils.js';
-import { aliceAddress } from '../fixture/vars';
+import { Contract, ElectrumNetworkProvider } from '../../src/index.js';
+import { getTxOutputs } from '../test-util.js';
+import { FailedRequireError, Reason } from '../../src/Errors.js';
+import { createOpReturnOutput } from '../../src/utils.js';
+import { aliceAddress } from '../fixture/vars.js';
 
 describe('Announcement', () => {
   let announcement: Contract;
@@ -88,7 +88,7 @@ describe('Announcement', () => {
       const largestUtxo = (await announcement.getUtxos())
         .sort((a, b) => b.satoshis - a.satoshis)
         .slice(0, 1);
-      const changeAmount = (await announcement.getBalance()) - minerFee;
+      const changeAmount = largestUtxo[0]?.satoshis - minerFee;
 
       // when
       const txPromise = announcement.functions

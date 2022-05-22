@@ -25,8 +25,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from './AST';
-import AstVisitor from './AstVisitor';
+} from './AST.js';
+import AstVisitor from './AstVisitor.js';
 
 export default class AstTraversal extends AstVisitor<Node> {
   visitSourceFile(node: SourceFileNode): Node {

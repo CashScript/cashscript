@@ -33,8 +33,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from './AST';
-import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator';
+} from './AST.js';
+import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import {
   ContractDefinitionContext,
   FunctionDefinitionContext,
@@ -63,16 +63,16 @@ import {
   InstantiationContext,
   NullaryOpContext,
   UnaryIntrospectionOpContext,
-} from '../grammar/CashScriptParser';
-import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
-import { Location } from './Location';
+} from '../grammar/CashScriptParser.js';
+import { CashScriptVisitor } from '../grammar/CashScriptVisitor.js';
+import { Location } from './Location.js';
 import {
   NumberUnit,
   TimeOp,
-} from './Globals';
-import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
-import { version } from '..';
-import { ParseError, VersionError } from '../Errors';
+} from './Globals.js';
+import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma.js';
+import { version } from '../index.js';
+import { ParseError, VersionError } from '../Errors.js';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>

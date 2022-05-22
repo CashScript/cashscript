@@ -11,7 +11,7 @@ import {
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { compileFile, version } from '.';
+import { compileFile, version } from './index.js';
 
 program
   .storeOptionsAsProperties(false)
@@ -87,7 +87,7 @@ function run(): void {
       // Output artifact to STDOUT
       console.log(JSON.stringify(artifact, null, 2));
     }
-  } catch (e) {
+  } catch (e: any) {
     abort(e.message);
   }
 }

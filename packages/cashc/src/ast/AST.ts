@@ -1,9 +1,9 @@
 import { Type, PrimitiveType, BytesType } from '@cashscript/utils';
-import { TimeOp } from './Globals';
-import AstVisitor from './AstVisitor';
-import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator';
-import { Location } from './Location';
-import { SymbolTable, Symbol } from './SymbolTable';
+import { TimeOp } from './Globals.js';
+import AstVisitor from './AstVisitor.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator.js';
+import { Location } from './Location.js';
+import { SymbolTable, Symbol } from './SymbolTable.js';
 
 export type Ast = SourceFileNode;
 

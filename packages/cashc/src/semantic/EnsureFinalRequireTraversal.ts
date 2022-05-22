@@ -6,9 +6,9 @@ import {
   StatementNode,
   TimeOpNode,
   BranchNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
-import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } from '../Errors';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
+import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } from '../Errors.js';
 
 export default class EnsureFinalRequireTraversal extends AstTraversal {
   visitContract(node: ContractNode): ContractNode {
