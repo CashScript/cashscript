@@ -10,9 +10,9 @@ import {
   createInputScript,
   getInputSize,
   getPreimageSize,
-} from '../src/utils';
-import { Network } from '../src/interfaces';
-import { alicePk, alicePkh } from './fixture/vars';
+} from '../src/utils.js';
+import { Network } from '../src/interfaces.js';
+import { alicePk, alicePkh } from './fixture/vars.js';
 
 describe('utils', () => {
   describe('getInputSize', () => {

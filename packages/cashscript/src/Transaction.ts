@@ -24,7 +24,7 @@ import {
   Recipient,
   isSignableUtxo,
   TransactionDetails,
-} from './interfaces';
+} from './interfaces.js';
 import {
   meep,
   createInputScript,
@@ -36,10 +36,10 @@ import {
   addressToLockScript,
   createSighashPreimage,
   validateRecipient,
-} from './utils';
-import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
-import NetworkProvider from './network/NetworkProvider';
-import SignatureTemplate from './SignatureTemplate';
+} from './utils.js';
+import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants.js';
+import NetworkProvider from './network/NetworkProvider.js';
+import SignatureTemplate from './SignatureTemplate.js';
 
 const bip68 = require('bip68');
 

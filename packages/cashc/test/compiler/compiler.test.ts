@@ -6,9 +6,9 @@
  */
 
 import path from 'path';
-import { getSubdirectories, readCashFiles } from '../test-utils';
-import * as Errors from '../../src/Errors';
-import { compileString } from '../../src';
+import { getSubdirectories, readCashFiles } from '../test-utils.js';
+import * as Errors from '../../src/Errors.js';
+import { compileString } from '../../src/index.js';
 
 describe('Compiler', () => {
   describe('Successful compilation', () => {

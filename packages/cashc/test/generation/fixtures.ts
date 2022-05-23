@@ -1,7 +1,7 @@
 import { Artifact } from '@cashscript/utils';
 import fs from 'fs';
 import path from 'path';
-import { version } from '../../src';
+import { version } from '../../src/index.js';
 
 interface Fixture {
   fn: string,

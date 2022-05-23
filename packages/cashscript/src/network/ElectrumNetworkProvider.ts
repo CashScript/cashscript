@@ -6,9 +6,9 @@ import {
   ClusterOrder,
   RequestResponse,
 } from 'electrum-cash';
-import { Utxo, Network } from '../interfaces';
-import NetworkProvider from './NetworkProvider';
-import { addressToLockScript } from '../utils';
+import { Utxo, Network } from '../interfaces.js';
+import NetworkProvider from './NetworkProvider.js';
+import { addressToLockScript } from '../utils.js';
 
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumCluster;

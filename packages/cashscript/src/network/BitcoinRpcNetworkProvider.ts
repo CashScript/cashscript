@@ -1,5 +1,5 @@
-import { Utxo, Network } from '../interfaces';
-import NetworkProvider from './NetworkProvider';
+import { Utxo, Network } from '../interfaces.js';
+import NetworkProvider from './NetworkProvider.js';
 
 const RpcClientRetry = require('bitcoin-rpc-promise-retry');
 
