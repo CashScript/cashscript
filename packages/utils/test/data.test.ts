@@ -7,7 +7,7 @@ import {
   encodeInt,
   encodeString,
   placeholder,
-} from '../src';
+} from '../src/index.js';
 
 describe('data utils', () => {
   describe('encodeBool()', () => {

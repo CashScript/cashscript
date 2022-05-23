@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "es2015",
     "declaration": true,
-    "lib": ["es2017", "dom"],
+    "lib": ["es2020", "dom"],
+    "types": ["node", "jest"],
     "sourceMap": true,
     "strict": true,
     "strictPropertyInitialization": false,

@@ -54,7 +54,7 @@ const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
   [PrimitiveType.BOOL]: [PrimitiveType.BOOL, PrimitiveType.INT],
   [PrimitiveType.STRING]: [PrimitiveType.STRING],
   [PrimitiveType.PUBKEY]: [PrimitiveType.PUBKEY],
-  [PrimitiveType.SIG]: [PrimitiveType.SIG, PrimitiveType.DATASIG],
+  [PrimitiveType.SIG]: [PrimitiveType.SIG],
   [PrimitiveType.DATASIG]: [PrimitiveType.DATASIG],
   [PrimitiveType.ANY]: [],
 };
@@ -95,7 +95,7 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
 
   if (from instanceof BytesType) {
     // Can cast unbounded bytes or <=4 bytes to int
-    if (to === PrimitiveType.INT) return !from.bound || from.bound <= 4;
+    if (to === PrimitiveType.INT) return !from.bound || from.bound <= 8;
     // Can't cast bytes to bool or string
     if (to === PrimitiveType.BOOL) return false;
     if (to === PrimitiveType.STRING) return false;

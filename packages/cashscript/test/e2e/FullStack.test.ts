@@ -1,12 +1,12 @@
-import { Contract, SignatureTemplate, FullStackNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, FullStackNetworkProvider } from '../../src/index.js';
 import {
   alice,
   bob,
   bobPkh,
   bobPk,
-} from '../fixture/vars';
-import { getTxOutputs } from '../test-util';
-import { FailedSigCheckError, Reason } from '../../src/Errors';
+} from '../fixture/vars.js';
+import { getTxOutputs } from '../test-util.js';
+import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 
 const BCHJS = require('@psf/bch-js');
 

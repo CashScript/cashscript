@@ -30,7 +30,6 @@ interface AbiInput {
 
 interface AbiFunction {
   name: string // Function name
-  covenant: boolean // Does this function use covenant variables
   inputs: AbiInput[] // Function inputs / parameters
 }
 ```

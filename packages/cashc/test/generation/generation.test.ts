@@ -4,8 +4,8 @@
  */
 
 import path from 'path';
-import { compileFile } from '../../src';
-import { fixtures } from './fixtures';
+import { compileFile } from '../../src/index.js';
+import { fixtures } from './fixtures.js';
 
 describe('Code generation & target code optimisation', () => {
   fixtures.forEach((fixture) => {

@@ -9,8 +9,8 @@ import {
   encodeNullDataScript,
   scriptToAsm,
   scriptToBytecode,
-} from '../src';
-import { fixtures } from './script.fixture';
+} from '../src/index.js';
+import { fixtures } from './script.fixture.js';
 
 describe('script utils', () => {
   describe('scriptToAsm()', () => {

@@ -1,0 +1,5 @@
+contract Test() {
+    function spend() {
+        require(tx.inputs[0].value != 0x01);
+    }
+}

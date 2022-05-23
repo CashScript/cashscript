@@ -1,4 +1,4 @@
-import { GLOBAL_SYMBOL_TABLE, Modifier } from '../ast/Globals';
+import { GLOBAL_SYMBOL_TABLE, Modifier } from '../ast/Globals.js';
 import {
   ContractNode,
   ParameterNode,
@@ -12,9 +12,9 @@ import {
   InstantiationNode,
   AssignNode,
   TupleAssignmentNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
-import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
+import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable.js';
 import {
   FunctionRedefinitionError,
   VariableRedefinitionError,
@@ -22,7 +22,7 @@ import {
   UnusedVariableError,
   InvalidSymbolTypeError,
   ConstantModificationError,
-} from '../Errors';
+} from '../Errors.js';
 
 export default class SymbolTableTraversal extends AstTraversal {
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];

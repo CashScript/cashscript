@@ -1,0 +1,26 @@
+{
+  "contractName": "BigInt",
+  "constructorInputs": [],
+  "abi": [
+    {
+      "name": "proofOfBigInt",
+      "inputs": [
+        {
+          "name": "x",
+          "type": "int"
+        },
+        {
+          "name": "y",
+          "type": "int"
+        }
+      ]
+    }
+  ],
+  "bytecode": "0000008000 OP_2DUP OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_ROT OP_MUL OP_LESSTHANOREQUAL",
+  "source": "contract BigInt() {\n    function proofOfBigInt(int x, int y) {\n        int maxInt32PlusOne = 2147483648;\n        require(x >= maxInt32PlusOne);\n        require(x * y >= maxInt32PlusOne);\n    }\n}\n",
+  "compiler": {
+    "name": "cashc",
+    "version": "0.7.0"
+  },
+  "updatedAt": "2021-11-30T13:26:06.585Z"
+}

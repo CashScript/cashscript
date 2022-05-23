@@ -3,7 +3,7 @@ import { BITBOX } from 'bitbox-sdk';
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
 import path from 'path';
-import { PriceOracle } from './PriceOracle';
+import { PriceOracle } from './PriceOracle.js';
 
 run();
 async function run(): Promise<void> {

@@ -8,10 +8,11 @@ import { CastContext } from "./CashScriptParser";
 import { FunctionCallExpressionContext } from "./CashScriptParser";
 import { InstantiationContext } from "./CashScriptParser";
 import { TupleIndexOpContext } from "./CashScriptParser";
+import { UnaryIntrospectionOpContext } from "./CashScriptParser";
 import { UnaryOpContext } from "./CashScriptParser";
 import { BinaryOpContext } from "./CashScriptParser";
 import { ArrayContext } from "./CashScriptParser";
-import { PreimageFieldContext } from "./CashScriptParser";
+import { NullaryOpContext } from "./CashScriptParser";
 import { IdentifierContext } from "./CashScriptParser";
 import { LiteralExpressionContext } from "./CashScriptParser";
 import { SourceFileContext } from "./CashScriptParser";
@@ -112,6 +113,19 @@ export interface CashScriptListener extends ParseTreeListener {
 	exitTupleIndexOp?: (ctx: TupleIndexOpContext) => void;
 
 	/**
+	 * Enter a parse tree produced by the `UnaryIntrospectionOp`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 */
+	enterUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => void;
+	/**
+	 * Exit a parse tree produced by the `UnaryIntrospectionOp`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 */
+	exitUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => void;
+
+	/**
 	 * Enter a parse tree produced by the `UnaryOp`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
@@ -151,17 +165,17 @@ export interface CashScriptListener extends ParseTreeListener {
 	exitArray?: (ctx: ArrayContext) => void;
 
 	/**
-	 * Enter a parse tree produced by the `PreimageField`
+	 * Enter a parse tree produced by the `NullaryOp`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
 	 */
-	enterPreimageField?: (ctx: PreimageFieldContext) => void;
+	enterNullaryOp?: (ctx: NullaryOpContext) => void;
 	/**
-	 * Exit a parse tree produced by the `PreimageField`
+	 * Exit a parse tree produced by the `NullaryOp`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
 	 */
-	exitPreimageField?: (ctx: PreimageFieldContext) => void;
+	exitNullaryOp?: (ctx: NullaryOpContext) => void;
 
 	/**
 	 * Enter a parse tree produced by the `Identifier`

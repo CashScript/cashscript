@@ -1,8 +1,8 @@
 import { hexToBin } from '@bitauth/libauth';
 import { parseType } from '@cashscript/utils';
-import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor';
-import { ParseTree } from 'antlr4ts/tree/ParseTree';
-import { TerminalNode } from 'antlr4ts/tree/TerminalNode';
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor.js';
+import { ParseTree } from 'antlr4ts/tree/ParseTree.js';
+import { TerminalNode } from 'antlr4ts/tree/TerminalNode.js';
 import semver from 'semver';
 import {
   Node,
@@ -32,8 +32,9 @@ import {
   RequireNode,
   InstantiationNode,
   TupleAssignmentNode,
-} from './AST';
-import { UnaryOperator, BinaryOperator } from './Operator';
+  NullaryOpNode,
+} from './AST.js';
+import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import {
   ContractDefinitionContext,
   FunctionDefinitionContext,
@@ -59,19 +60,19 @@ import {
   TupleIndexOpContext,
   RequireStatementContext,
   PragmaDirectiveContext,
-  PreimageFieldContext,
   InstantiationContext,
-} from '../grammar/CashScriptParser';
-import { CashScriptVisitor } from '../grammar/CashScriptVisitor';
-import { Location } from './Location';
+  NullaryOpContext,
+  UnaryIntrospectionOpContext,
+} from '../grammar/CashScriptParser.js';
+import { CashScriptVisitor } from '../grammar/CashScriptVisitor.js';
+import { Location } from './Location.js';
 import {
   NumberUnit,
   TimeOp,
-  PreimageField,
-} from './Globals';
-import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma';
-import { version } from '..';
-import { ParseError, VersionError } from '../Errors';
+} from './Globals.js';
+import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma.js';
+import { version } from '../index.js';
+import { ParseError, VersionError } from '../Errors.js';
 
 export default class AstBuilder
   extends AbstractParseTreeVisitor<Node>
@@ -79,8 +80,6 @@ export default class AstBuilder
   constructor(private tree: ParseTree) {
     super();
   }
-
-  private preimageFields: PreimageField[];
 
   defaultResult(): Node {
     return new BoolLiteralNode(false);
@@ -127,17 +126,13 @@ export default class AstBuilder
   }
 
   visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
-    this.preimageFields = [];
-
     const name = ctx.Identifier().text;
     const parameters = ctx.parameterList().parameter().map((p) => this.visit(p) as ParameterNode);
     const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
-    // Filter duplicate preimage fields
-    const preimageFields = [...this.preimageFields].filter((v, i, a) => a.indexOf(v) === i);
 
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, block, preimageFields);
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, block);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -256,6 +251,21 @@ export default class AstBuilder
     return tupleIndexOp;
   }
 
+  visitNullaryOp(ctx: NullaryOpContext): NullaryOpNode {
+    const operator = ctx.text as NullaryOperator;
+    const nullaryOp = new NullaryOpNode(operator);
+    nullaryOp.location = Location.fromCtx(ctx);
+    return nullaryOp;
+  }
+
+  visitUnaryIntrospectionOp(ctx: UnaryIntrospectionOpContext): UnaryOpNode {
+    const operator = `${ctx._scope.text}[i]${ctx._op.text}` as UnaryOperator;
+    const expression = this.visit(ctx.expression());
+    const unaryOp = new UnaryOpNode(operator, expression);
+    unaryOp.location = Location.fromCtx(ctx);
+    return unaryOp;
+  }
+
   visitUnaryOp(ctx: UnaryOpContext): UnaryOpNode {
     const operator = ctx._op.text as UnaryOperator;
     const expression = this.visit(ctx.expression());
@@ -278,15 +288,6 @@ export default class AstBuilder
     const array = new ArrayNode(elements);
     array.location = Location.fromCtx(ctx);
     return array;
-  }
-
-  visitPreimageField(ctx: PreimageFieldContext): IdentifierNode {
-    const field = (ctx.PreimageField() as TerminalNode).text;
-    this.preimageFields.push(field as PreimageField);
-    const identifier = new IdentifierNode(field);
-    identifier.location = Location.fromCtx(ctx);
-
-    return identifier;
   }
 
   visitIdentifier(ctx: IdentifierContext): IdentifierNode {

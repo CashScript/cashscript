@@ -1,15 +1,18 @@
 contract Covenant() {
-    function spend(pubkey pk, sig s) {
-        require(tx.version == bytes(0x01));
-        require(tx.hashPrevouts == bytes(0x01));
-        require(tx.hashSequence == bytes(0x01));
-        require(tx.outpoint == bytes(0x01));
-        require(tx.bytecode == bytes(0x01));
-        require(tx.value == bytes(0x01));
-        require(tx.sequence == bytes(0x01));
-        require(tx.hashOutputs == bytes(0x01));
-        require(tx.locktime == bytes(0x01));
-        require(tx.hashtype == bytes(0x01));
-        require(checkSig(s, pk));
+    function spend() {
+        require(tx.version == 2);
+        require(tx.locktime == 0);
+        require(tx.inputs.length == 1);
+        require(tx.outputs.length == 1);
+        require(this.activeInputIndex == 0);
+        require(this.activeBytecode.length == 300);
+        require(tx.inputs[0].value == 10000);
+        require(tx.inputs[0].lockingBytecode.length == 10000);
+        require(tx.inputs[0].outpointTransactionHash == 0x000000000000000000000000000000000000000000000000000000000000000);
+        require(tx.inputs[0].outpointIndex == 0);
+        require(tx.inputs[0].unlockingBytecode.length == 100);
+        require(tx.inputs[0].sequenceNumber == 0);
+        require(tx.outputs[0].value == 10000);
+        require(tx.outputs[0].lockingBytecode.length == 100);
     }
 }

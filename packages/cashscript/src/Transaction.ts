@@ -24,7 +24,7 @@ import {
   Recipient,
   isSignableUtxo,
   TransactionDetails,
-} from './interfaces';
+} from './interfaces.js';
 import {
   meep,
   createInputScript,
@@ -36,10 +36,10 @@ import {
   addressToLockScript,
   createSighashPreimage,
   validateRecipient,
-} from './utils';
-import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants';
-import NetworkProvider from './network/NetworkProvider';
-import SignatureTemplate from './SignatureTemplate';
+} from './utils.js';
+import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants.js';
+import NetworkProvider from './network/NetworkProvider.js';
+import SignatureTemplate from './SignatureTemplate.js';
 
 const bip68 = require('bip68');
 
@@ -234,7 +234,7 @@ export class Transaction {
     try {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
-    } catch (e) {
+    } catch (e: any) {
       const reason = e.error ?? e.message;
       throw buildError(reason, meep(tx, this.inputs, this.redeemScript));
     }
@@ -296,9 +296,7 @@ export class Transaction {
 
     // Calculate amount to send and base fee (excluding additional fees per UTXO)
     const amount = this.outputs.reduce((acc, output) => acc + output.amount, 0);
-    let fee = this.hardcodedFee
-      ? this.hardcodedFee
-      : getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
+    let fee = this.hardcodedFee ?? getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
 
     // Select and gather UTXOs and calculate fees and available funds
     let satsAvailable = 0;

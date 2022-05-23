@@ -25,13 +25,13 @@ import {
   Output,
   Network,
   Recipient,
-} from './interfaces';
+} from './interfaces.js';
 import {
   P2PKH_OUTPUT_SIZE,
   VERSION_SIZE,
   LOCKTIME_SIZE,
   DUST_LIMIT,
-} from './constants';
+} from './constants.js';
 import {
   OutputSatoshisTooSmallError,
   Reason,
@@ -39,7 +39,7 @@ import {
   FailedRequireError,
   FailedTimeCheckError,
   FailedSigCheckError,
-} from './Errors';
+} from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
 export function validateRecipient(recipient: Recipient): void {
@@ -228,6 +228,8 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
   switch (network) {
     case Network.MAINNET:
       return 'bitcoincash';
+    case Network.STAGING:
+      return 'bchtest';
     case Network.TESTNET:
       return 'bchtest';
     case Network.REGTEST:

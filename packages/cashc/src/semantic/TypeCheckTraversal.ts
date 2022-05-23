@@ -26,8 +26,9 @@ import {
   Node,
   InstantiationNode,
   TupleAssignmentNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
+  NullaryOpNode,
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
 import {
   InvalidParameterTypeError,
   UnequalTypeError,
@@ -39,9 +40,9 @@ import {
   IndexOutOfBoundsError,
   CastSizeError,
   TupleAssignmentError,
-} from '../Errors';
-import { BinaryOperator, UnaryOperator } from '../ast/Operator';
-import { GlobalFunction } from '../ast/Globals';
+} from '../Errors.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
+import { GlobalFunction } from '../ast/Globals.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
@@ -63,7 +64,7 @@ export default class TypeCheckTraversal extends AstTraversal {
           return node;
         }
         throw new AssignTypeError(
-          new VariableDefinitionNode(variable.type, variable.name, node.tuple),
+          new VariableDefinitionNode(variable.type, '', variable.name, node.tuple),
         );
       }
     }
@@ -190,6 +191,7 @@ export default class TypeCheckTraversal extends AstTraversal {
           }
         }
         return node;
+      case BinaryOperator.MUL:
       case BinaryOperator.DIV:
       case BinaryOperator.MOD:
       case BinaryOperator.MINUS:
@@ -252,6 +254,40 @@ export default class TypeCheckTraversal extends AstTraversal {
         expectAnyOfTypes(node, node.expression.type, [new BytesType(), PrimitiveType.STRING]);
         // Type is preserved
         node.type = node.expression.type;
+        return node;
+      case UnaryOperator.INPUT_VALUE:
+      case UnaryOperator.INPUT_OUTPOINT_INDEX:
+      case UnaryOperator.INPUT_SEQUENCE_NUMBER:
+      case UnaryOperator.OUTPUT_VALUE:
+        expectInt(node, node.expression.type);
+        node.type = PrimitiveType.INT;
+        return node;
+      case UnaryOperator.INPUT_LOCKING_BYTECODE:
+      case UnaryOperator.INPUT_UNLOCKING_BYTECODE:
+      case UnaryOperator.OUTPUT_LOCKING_BYTECODE:
+        expectInt(node, node.expression.type);
+        node.type = new BytesType();
+        return node;
+      case UnaryOperator.INPUT_OUTPOINT_HASH:
+        expectInt(node, node.expression.type);
+        node.type = new BytesType(32);
+        return node;
+      default:
+        return node;
+    }
+  }
+
+  visitNullaryOp(node: NullaryOpNode): Node {
+    switch (node.operator) {
+      case NullaryOperator.INPUT_INDEX:
+      case NullaryOperator.INPUT_COUNT:
+      case NullaryOperator.OUTPUT_COUNT:
+      case NullaryOperator.VERSION:
+      case NullaryOperator.LOCKTIME:
+        node.type = PrimitiveType.INT;
+        return node;
+      case NullaryOperator.BYTECODE:
+        node.type = new BytesType();
         return node;
       default:
         return node;

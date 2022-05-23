@@ -68,35 +68,32 @@ This contract expects a hardcoded transaction fee of 1000 satoshis. This is nece
 To ensure that this leftover money does not get lost in the contract, the contract performs an extra check, and adds the remainder to the transaction fee if it's too low.
 
 ```solidity title="Announcement.cash"
+pragma cashscript ^0.7.0;
+
 // This contract enforces making an announcement on Memo.cash and sending the
 // remaining balance back to the contract.
 contract Announcement() {
-    function announce(pubkey pk, sig s) {
-        // The transaction can be signed by anyone, because the contract can only
-        // make an announcement
-        require(checkSig(s, pk));
-
+    function announce() {
         // Create the memo.cash announcement output
-        bytes announcement = new OutputNullData([
+        bytes announcement = new LockingBytecodeNullData([
             0x6d02,
             bytes('A contract may not injure a human being or, '
-                + 'through inaction, allow a human being to come to harm.')
+             + 'through inaction, allow a human being to come to harm.')
         ]);
 
-        // Use a hardcoded miner fee
-        int minerFee = 1000;
+        // Check that the first tx output matches the announcement
+        require(tx.outputs[0].value == 0);
+        require(tx.outputs[0].lockingBytecode == announcement);
 
         // Calculate leftover money after fee (1000 sats)
-        int remainder = int(bytes(tx.value)) - minerFee;
-        if (remainder >= minerFee) {
-            // Send remainder back to the contract if there's enough
-            // left for another announcement
-            bytes32 change = new OutputP2SH(bytes8(remainder), hash160(tx.bytecode));
-            require(tx.hashOutputs == hash256(announcement + change));
-        } else {
-            // Don't send the remainder back if there's not enough left
-            // (i.e. add the remainder to the miner fee)
-            require(tx.hashOutputs == hash256(announcement));
+        // Check that the second tx output sends the change back if there's
+        // enough leftover for another announcement
+        int minerFee = 1000;
+        int changeAmount = tx.inputs[this.activeInputIndex].value - minerFee;
+        if (changeAmount >= minerFee) {
+            bytes changeLock = tx.inputs[this.activeInputIndex].lockingBytecode;
+            require(tx.outputs[1].lockingBytecode == changeLock);
+            require(tx.outputs[1].value == changeAmount);
         }
     }
 }

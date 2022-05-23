@@ -1,5 +1,4 @@
-import { BITBOX } from 'bitbox-sdk';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { Contract, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
 import path from 'path';
 import { stringify } from '@bitauth/libauth';
@@ -7,22 +6,11 @@ import { stringify } from '@bitauth/libauth';
 run();
 export async function run(): Promise<void> {
   try {
-    // Initialise BITBOX ---- ATTENTION: Set to mainnet
-    const bitbox = new BITBOX();
-
-    // Initialise HD node and alice's keypair
-    const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
-    const hdNode = bitbox.HDNode.fromSeed(rootSeed);
-    const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
-
-    // Derive alice's public key
-    const alicePk = bitbox.ECPair.toPublicKey(alice);
-
     // Compile the Announcement contract to an artifact object
     const artifact = compileFile(path.join(__dirname, 'announcement.cash'));
 
     // Initialise a network provider for network operations on MAINNET
-    const provider = new ElectrumNetworkProvider('mainnet');
+    const provider = new ElectrumNetworkProvider();
 
     // Instantiate a new contract using the compiled artifact and network provider
     // AND providing the constructor parameters (none)
@@ -40,9 +28,9 @@ export async function run(): Promise<void> {
     // for another announcement.
     const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
     const tx = await contract.functions
-      .announce(alicePk, new SignatureTemplate(alice))
+      .announce()
       .withOpReturn(['0x6d02', str])
-      .withHardcodedFee(2000)
+      .withHardcodedFee(1000)
       .withMinChange(1000)
       .send();
 
