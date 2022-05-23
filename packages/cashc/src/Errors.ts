@@ -231,6 +231,14 @@ export class ConstantConditionError extends CashScriptError {
   }
 }
 
+export class ConstantModificationError extends CashScriptError {
+  constructor(
+    node: VariableDefinitionNode,
+  ) {
+    super(node, `Tried to modify immutable variable '${node.name}'`);
+  }
+}
+
 export class ArrayElementError extends CashScriptError {
   constructor(
     node: ArrayNode,

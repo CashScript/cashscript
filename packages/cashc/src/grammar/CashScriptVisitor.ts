@@ -36,6 +36,7 @@ import { IfStatementContext } from "./CashScriptParser";
 import { FunctionCallContext } from "./CashScriptParser";
 import { ExpressionListContext } from "./CashScriptParser";
 import { ExpressionContext } from "./CashScriptParser";
+import { ModifierContext } from "./CashScriptParser";
 import { LiteralContext } from "./CashScriptParser";
 import { NumberLiteralContext } from "./CashScriptParser";
 import { TypeNameContext } from "./CashScriptParser";
@@ -291,6 +292,13 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitExpression?: (ctx: ExpressionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.modifier`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitModifier?: (ctx: ModifierContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.literal`.

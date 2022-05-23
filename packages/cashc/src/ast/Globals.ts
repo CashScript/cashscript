@@ -40,6 +40,10 @@ export enum Class {
   LOCKING_BYTECODE_NULLDATA = 'LockingBytecodeNullData',
 }
 
+export enum Modifier {
+  CONSTANT = 'constant',
+}
+
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 
 // Classes

@@ -64,7 +64,7 @@ export default class TypeCheckTraversal extends AstTraversal {
           return node;
         }
         throw new AssignTypeError(
-          new VariableDefinitionNode(variable.type, variable.name, node.tuple),
+          new VariableDefinitionNode(variable.type, '', variable.name, node.tuple),
         );
       }
     }
