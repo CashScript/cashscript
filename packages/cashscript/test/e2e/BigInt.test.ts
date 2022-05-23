@@ -4,8 +4,8 @@ import {
   FailedRequireError,
   FailedTransactionError,
   Reason,
-} from '../../src';
-import { getTxOutputs } from '../test-util';
+} from '../../src/index.js';
+import { getTxOutputs } from '../test-util.js';
 
 describe('BigInt', () => {
   let bigintContract: Contract;

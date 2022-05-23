@@ -24,9 +24,9 @@ import {
   HexLiteralNode,
   UnaryOpNode,
   InstantiationNode,
-} from '../../src/ast/AST';
-import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator';
-import { Class, TimeOp } from '../../src/ast/Globals';
+} from '../../src/ast/AST.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator.js';
+import { Class, TimeOp } from '../../src/ast/Globals.js';
 
 interface Fixture {
   fn: string,

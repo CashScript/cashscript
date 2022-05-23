@@ -1,6 +1,6 @@
 import { decodePrivateKeyWif, Secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
-import { HashType } from './interfaces';
+import { HashType } from './interfaces.js';
 
 export default class SignatureTemplate {
   private privateKey: Uint8Array;

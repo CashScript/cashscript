@@ -1,5 +1,5 @@
 import { hexToBin } from '@bitauth/libauth';
-import { IntrospectionOp, Op, Script } from '../src';
+import { IntrospectionOp, Op, Script } from '../src/index.js';
 
 export interface Fixture {
   name: string;

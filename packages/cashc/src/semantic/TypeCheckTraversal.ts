@@ -27,8 +27,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
 import {
   InvalidParameterTypeError,
   UnequalTypeError,
@@ -40,9 +40,9 @@ import {
   IndexOutOfBoundsError,
   CastSizeError,
   TupleAssignmentError,
-} from '../Errors';
-import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator';
-import { GlobalFunction } from '../ast/Globals';
+} from '../Errors.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
+import { GlobalFunction } from '../ast/Globals.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {

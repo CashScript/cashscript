@@ -24,7 +24,7 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from './AST';
+} from './AST.js';
 
 export default abstract class AstVisitor<T> {
   abstract visitSourceFile(node: SourceFileNode): T;

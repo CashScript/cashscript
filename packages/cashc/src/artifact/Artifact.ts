@@ -1,6 +1,6 @@
 import { Artifact, Script, scriptToAsm } from '@cashscript/utils';
-import { version } from '..';
-import { Ast } from '../ast/AST';
+import { version } from '../index.js';
+import { Ast } from '../ast/AST.js';
 
 export function generateArtifact(ast: Ast, script: Script, source: string): Artifact {
   const { contract } = ast;

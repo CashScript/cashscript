@@ -8,8 +8,8 @@ import {
   disassembleBytecodeBCH,
   flattenBinArray,
 } from '@bitauth/libauth';
-import { decodeInt, encodeInt } from './data';
-import OptimisationsEquivFile from './cashproof-optimisations';
+import { decodeInt, encodeInt } from './data.js';
+import OptimisationsEquivFile from './cashproof-optimisations.js';
 
 export const Op = OpcodesBCH;
 export type Op = number;

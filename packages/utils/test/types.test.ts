@@ -5,7 +5,7 @@ import {
   parseType,
   PrimitiveType,
   TupleType,
-} from '../src';
+} from '../src/index.js';
 
 describe('type utilities', () => {
   describe('explicitlyCastable()', () => {

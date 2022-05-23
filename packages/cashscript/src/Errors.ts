@@ -1,5 +1,5 @@
 import { Type } from '@cashscript/utils';
-import { DUST_LIMIT } from './constants';
+import { DUST_LIMIT } from './constants.js';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {

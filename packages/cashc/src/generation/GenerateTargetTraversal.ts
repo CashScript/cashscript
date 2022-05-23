@@ -37,10 +37,10 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
-import { GlobalFunction, Class } from '../ast/Globals';
-import { BinaryOperator } from '../ast/Operator';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
+import { GlobalFunction, Class } from '../ast/Globals.js';
+import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
   compileCast,
@@ -48,7 +48,7 @@ import {
   compileNullaryOp,
   compileTimeOp,
   compileUnaryOp,
-} from './utils';
+} from './utils.js';
 
 export default class GenerateTargetTraversal extends AstTraversal {
   output: Script = [];

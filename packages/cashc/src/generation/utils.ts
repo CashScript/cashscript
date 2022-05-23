@@ -7,8 +7,8 @@ import {
   Script,
   Type,
 } from '@cashscript/utils';
-import { UnaryOperator, BinaryOperator, NullaryOperator } from '../ast/Operator';
-import { GlobalFunction, TimeOp } from '../ast/Globals';
+import { UnaryOperator, BinaryOperator, NullaryOperator } from '../ast/Operator.js';
+import { GlobalFunction, TimeOp } from '../ast/Globals.js';
 
 export function compileTimeOp(op: TimeOp): Script {
   const mapping = {
