@@ -207,3 +207,4 @@ Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
 [withAge()]: /docs/sdk/transactions#withage
 [withTime()]: /docs/sdk/transactions#withtime
 [covenants-guide]: /docs/guides/covenants
+[tx.time]: #txtime

@@ -2,19 +2,22 @@
 title: Release Notes
 ---
 
-## v0.7.0-next.0
+## v0.7.0
 #### cashc compiler
 - :sparkles: Add destructuring assignments, e.g. `bytes2 left, bytes1 right = 0x123456.split(2)`
+- :sparkles: Add constant keyword, e.g. `int constant x = 10;`
 - :sparkles: Add multiplication, e.g. `int x = 5 * 5`
 - :sparkles: Add *native* introspection/covenants
 - :boom: **BREAKING**: Remove all old introspection/covenant functionality (`tx.version`, `tx.hashPrevouts`, `tx.hashSequence`, `tx.outpoint`, `tx.bytecode`, `tx.value`, `tx.sequence`, `tx.hashOutputs`, `tx.locktime`, `tx.hashtype`, `OutputP2PKH`, `OutputP2SH`, `OutputNullData`)
   - See the [migration notes](/docs/releases/migration-notes#v06-to-v07) for details on migrating from the old introspection to the new *native* introspection methods.
 - :boom: **BREAKING**: Remove `sig` to `datasig` casting since this was only useful for *old* covenants
+- :bug: Fix ESM build
 
 #### CashScript SDK
 - :sparkles: Add `"staging"` network option to ElectrumNetworkProvider, used to connect to the May 2022 testnet
 - :hammer_and_wrench: Deprecate old introspection/covenant functionality. You can still use pre-0.7 contracts with the new SDK, but this support will be removed in a future release.
 - :boom: **BREAKING**: arguments of type `datasig` must be 64 bytes in length, effectively enforcing Schnorr
+- :bug: Fix ESM build
 - :bug: Small fixes
 
 ## v0.6.5

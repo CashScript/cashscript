@@ -97,7 +97,7 @@ There is no implicit type conversion from non-boolean to boolean types. So `if (
 
 #### Example
 ```solidity
-pragma cashscript ^7.0;
+pragma cashscript ^0.7.0;
 
 contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
     function spend(pubkey pk, sig s, bytes message) {
