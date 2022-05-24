@@ -66,7 +66,7 @@ contract P2PKH(bytes20 pkh) {
 ```
 
 ### Variable declaration
-Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
+Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on - unless specifying the `constant` keyword. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
 
 :::caution
 CashScript disallows variable shadowing and unused variables.
@@ -75,7 +75,7 @@ CashScript disallows variable shadowing and unused variables.
 #### Example
 ```solidity
 int myNumber = 3000;
-string myString = 'Bitcoin Cash';
+string constant myString = 'Bitcoin Cash';
 ```
 
 ### Variable assignment
