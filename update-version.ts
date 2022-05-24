@@ -1,17 +1,14 @@
-const { exec } = require('child_process');
-const fs = require('fs');
+import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 // USAGE:
 // $ yarn run update-version 'X.X.X'
 
 const version = process.argv[2];
+execSync(`yarn lerna version --no-push --no-git-tag-version --force-publish --yes ${version}`);
 
-[
-  'packages/cashc',
-  'packages/cashscript',
-  'packages/utils',
-].forEach((path) => exec(`npm --prefix ${path} version ${version}`));
-
-const data = fs.readFileSync('packages/cashc/src/index.ts', 'utf8').split('\n');
-data[0] = `export const version = '${version}'; // keep this on line 1`;
-fs.writeFileSync('packages/cashc/src/index.ts', data.join('\n'));
+const indexFilePath = path.join(__dirname, 'packages', 'cashc', 'src', 'index.ts');
+const data = fs.readFileSync(indexFilePath, 'utf8');
+const updatedData = data.replace(/export const version = .*\n/, `export const version = '${version}';\n`);
+fs.writeFileSync(indexFilePath, updatedData);
