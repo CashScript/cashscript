@@ -23,7 +23,8 @@ import {
   RequireNode,
   InstantiationNode,
   TupleAssignmentNode,
-} from './AST';
+  NullaryOpNode,
+} from './AST.js';
 
 export default abstract class AstVisitor<T> {
   abstract visitSourceFile(node: SourceFileNode): T;
@@ -43,6 +44,7 @@ export default abstract class AstVisitor<T> {
   abstract visitTupleIndexOp(node: TupleIndexOpNode): T;
   abstract visitBinaryOp(node: BinaryOpNode): T;
   abstract visitUnaryOp(node: UnaryOpNode): T;
+  abstract visitNullaryOp(node: NullaryOpNode): T;
   abstract visitArray(node: ArrayNode): T;
   abstract visitIdentifier(node: IdentifierNode): T;
   abstract visitBoolLiteral(node: BoolLiteralNode): T;

@@ -1,4 +1,4 @@
-import { VersionOperatorContext } from '../grammar/CashScriptParser';
+import { VersionOperatorContext } from '../grammar/CashScriptParser.js';
 
 export enum PragmaName {
   CASHSCRIPT = 'cashscript',

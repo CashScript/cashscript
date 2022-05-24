@@ -5,11 +5,11 @@ import {
   binToHex,
   binToBigIntUint64LE,
 } from '@bitauth/libauth';
-import { Output } from '../src/interfaces';
-import { network } from './fixture/vars';
-import { getNetworkPrefix } from '../src/utils';
+import { Output, Network } from '../src/interfaces.js';
+import { network as defaultNetwork } from './fixture/vars.js';
+import { getNetworkPrefix } from '../src/utils.js';
 
-export function getTxOutputs(tx: Transaction): Output[] {
+export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork): Output[] {
   return tx.outputs.map((o) => {
     const OP_RETURN = '6a';
     const scriptHex = binToHex(o.lockingBytecode);

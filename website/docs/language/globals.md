@@ -59,159 +59,152 @@ Because of the way time locks work, **a corresponding time lock needs to be adde
 `tx.age` corresponds to the `nSequence` field of the current *UTXO* and the `OP_CHECKSEQUENCEVERIFY` opcode.
 :::
 
-## Global covenant variables
-Covenants are a technique used to put constraints on spending the money inside a smart contract. The main use case of this is limiting the addresses where money can be sent and the amount sent. This technique works by passing the so-called *sighash preimage* into the smart contract and extracting its individual fields. Using the JavaScript SDK this preimage is passed in automatically by the SDK, but when constructing transactions manually, be sure to include the preimage when working with covenants.
+## Introspection variables
+Introspection functionality is used to create *covenant* contracts. Covenants are a technique used to put constraints on spending the money inside a smart contract. The main use case of this is limiting the addresses where money can be sent and the amount sent. To explore the possible uses of covenants inside smart contracts, read the [CashScript Covenants Guide][covenants-guide].
 
-To explore the possible uses of covenants inside smart contracts, read the [CashScript Covenants Guide](/docs/guides/covenants).
-
-:::note
-Because of the way covenants work in the underlying Bitcoin Script, the sighash preimage needs to be verified by the contract. This is done automatically by including a signature check statement anywhere in the code outside of if-statements. This statement is then used by the compiler to verify the preimage.
-
+### this.activeInputIndex
 ```solidity
-require(checkSig(sig, pubkey));
+int this.activeInputIndex
 ```
-:::
 
-:::note
-The explanations below use the default `SIGHASH_ALL` *hashtype*. Other hashtypes could assign slightly different meaning to these variables. For more specific information on the sighash preimage, refer to [BIP143][bip143] and the [sighash docs][sighash-docs].
-:::
+During the validation of a BCH transaction, every transaction input is evaluated in order, and the contract's code is evaluated in the context of the different inputs. `this.activeInputIndex` represents the index of the input that is currently being evaluated. This can be used in conjunction with the properties under `tx.inputs`.
+
+### this.activeBytecode
+```solidity
+bytes this.activeBytecode
+```
+
+During the validation of a BCH transaction, every transaction input is evaluated in order, and the contract's code is evaluated in the context of the different inputs. `this.activeBytecode` represents the contract bytecode of the input that is currently being evaluated.
+
 
 ### tx.version
 ```solidity
-bytes4 tx.version
+int tx.version
 ```
 
 Represents the version of the current transaction. Different transaction versions can have differences in functionality. Currently only version 1 and 2 exist, where only version 2 has support for [BIP68][bip68].
 
-:::note
-`tx.version` is of type `bytes4` so to use it as an integer it needs to be cast to `int` first.
-:::
-
-### tx.hashPrevouts
-```solidity
-bytes32 tx.hashPrevouts
-```
-
-Represents the double sha256 of the serialisation of all input outpoints.
-
-### tx.hashSequence
-```solidity
-bytes32 tx.hashSequence
-```
-
-Represents the double sha256 of the serialisation of the `nSequence` field of all inputs.
-
-### tx.outpoint
-```solidity
-bytes36 tx.outpoint
-```
-
-Represents the outpoint of the current input (`bytes32 txid` concatenated with `bytes4 vout`).
-
-### tx.bytecode
-```solidity
-bytes tx.bytecode
-```
-
-Represents the Bitcoin Script bytecode of the current contract. This can be used to enforce sending money back to the contract in combination with `tx.hashOutputs`.
-
-#### Example
-```solidity
-bytes32 output = new OutputP2SH(bytes8(10000), hash160(tx.bytecode));
-require(hash256(output) == tx.hashOutputs);
-```
-
-### tx.value
-```solidity
-bytes8 value
-```
-
-Represents the value of current UTXO being spent. This can be used to enforce the full balance or a specific part of the contract's balance to be spent.
-
-:::caution
-`tx.value` is of type `bytes8` so its value could be too large to fit in an `int` (max ~21 BCH). So you should make sure that the value is small enough before casting it to an integer. For safety, casting `bytes8` to `int` is disabled and you need to *force cast* it by casting to `bytes` first.
-
-```solidity
-int intValue = int(bytes(tx.value))
-```
-:::
-
-### tx.sequence
-```solidity
-bytes4 tx.sequence
-```
-
-Represents the `nSequence` field of the current input.
-
-### tx.hashOutputs
-```solidity
-bytes32 tx.hashOutputs
-```
-
-Represents the double SHA-256 hash of the serialisation of all outputs (`bytes8` amount + `bytes` locking script). Can be used to enforce sending specific amounts to specific addresses.
-
-#### Example
-```solidity
-bytes34 out1 = new OutputP2PKH(bytes8(10000), pkh);
-bytes32 out2 = new OutputP2SH(bytes8(10000), hash160(tx.bytecode));
-require(hash256(out1 + out2) == tx.hashOutputs);
-```
-
 ### tx.locktime
 ```solidity
-bytes4 tx.locktime
+int tx.locktime
 ```
 
-Represents the `nLocktime` field of the current input.
+Represents the `nLocktime` field of the transaction.
 
 :::note
-`tx.locktime` is similar to the [`tx.time`][tx.time] global variable. But for safety it is recommended to use [`tx.time`][tx.time] over `tx.locktime` in *almost* all cases.
+`tx.locktime` is similar to the [`tx.time`][tx.time] global variable. It is recommended to only use `tx.locktime` for adding `nLocktime` to simulated state and [`tx.time`][tx.time] in all other cases.
 :::
 
-### tx.hashtype
+### tx.inputs
+Represents the list of inputs of the evaluated transaction. This is an array, and cannot be used on itself. You need to access an input with a specific index and specify the properties you want to access.
+
+#### tx.inputs.length
 ```solidity
-bytes4 tx.hashtype
+int tx.inputs.length
 ```
 
-Represents the hashtype used for the generation of the sighash and transaction signature. Can be used to enforce that the spender uses a specific hashtype. See the [sighash docs][sighash-docs] for the implications of different hashtypes.
+Represents the number of inputs in the transaction.
 
-## Output instantiation
-One of the main use cases of covenants is enforcing transaction outputs (where money is sent and how much). To assist with enforcing these outputs, there is a number of `Output` objects that can be instantiated. These objects are then used in combination with `tx.hashOutputs` as shown in the [`tx.hashOutputs` section][tx.hashOutputs].
+#### tx.inputs[i].value
+```solidity
+int tx.inputs[i].value
+```
+
+Represents the value of a specific input (in satoshis).
+
+#### tx.inputs[i].lockingBytecode
+```solidity
+bytes tx.inputs[i].lockingBytecode
+```
+
+Represents the locking bytecode (`scriptPubKey`) of a specific input.
+
+#### tx.inputs[i].unlockingBytecode
+```solidity
+bytes tx.inputs[i].unlockingBytecode
+```
+
+Represents the unlocking bytecode (`scriptSig`) of a specific input.
+
+#### tx.inputs[i].outpointTransactionHash
+```solidity
+bytes32 tx.inputs[i].outpointTransactionHash
+```
+
+Represents the outpoint transaction hash where a specific input was initially locked.
+
+#### tx.inputs[i].outpointIndex
+```solidity
+int tx.inputs[i].outpointIndex
+```
+
+Represents the outpoint index where a specific input was initially locked.
+
+#### tx.inputs[i].sequenceNumber
+```solidity
+int tx.inputs[i].sequenceNumber
+```
+
+Represents the `nSequence` number of a specific input.
+
+### tx.outputs
+Represents the list of outputs of the evaluated transaction. This is an array, and cannot be used on itself. You need to access an output with a specific index and specify the properties you want to access.
+
+#### tx.outputs.length
+```solidity
+int tx.outputs.length
+```
+
+Represents the number of outputs in the transaction.
+
+#### tx.outputs[i].value
+```solidity
+int tx.outputs[i].value
+```
+
+Represents the value of a specific output (in satoshis).
+
+#### tx.outputs[i].lockingBytecode
+```solidity
+bytes tx.outputs[i].lockingBytecode
+```
+
+Represents the locking bytecode (`scriptPubKey`) of a specific output.
+
+## Constructing locking bytecode
+One of the main use cases of covenants is enforcing transaction outputs (where money is sent). To assist with enforcing these outputs, there is a number of `LockingBytecode` objects that can be instantiated. These locking bytecodes can then be compared to the locking bytecodes of transaction outputs.
 
 #### Example
 ```solidity
-bytes34 out1 = new OutputP2PKH(bytes8(10000), pkh);
-bytes32 out2 = new OutputP2SH(bytes8(10000), hash160(tx.bytecode));
-require(hash256(out1 + out2) == tx.hashOutputs);
+bytes25 lockingBytecode = new LockingBytecodeP2PKH(pkh);
+int value = 10000;
+require(tx.outputs[0].lockingBytecode == lockingBytecode);
+require(tx.outputs[0].value == value);
 ```
 
-### OutputP2PKH
+### LockingBytecodeP2PKH
 ```solidity
-new OutputP2PKH(bytes8 amount, bytes20 pkh): bytes34
+new LockingBytecodeP2PKH(bytes20 pkh): bytes25
 ```
 
-Creates new P2PKH output serialisation for an output sending `amount` to `pkh`.
+Creates new P2PKH locking bytecode for the public key hash `pkh`.
 
-### OutputP2SH
+### LockingBytecodeP2SH
 ```solidity
-new OutputP2SH(bytes8 amount, bytes20 scriptHash): bytes32
+new LockingBytecodeP2SH(bytes20 scriptHash): bytes23
 ```
 
-Creates new P2SH output serialisation for an output sending `amount` to `scriptHash`.
+Creates new P2SH locking bytecode for the script hash `scriptHash`.
 
-### OutputNullData
+### LockingBytecodeNullData
 ```solidity
-new OutputNullData(bytes[] chunks): bytes
+new LockingBytecodeNullData(bytes[] chunks): bytes
 ```
 
-Creates new OP_RETURN output serialisation for an output containing an OP_RETURN script with `chunks` as its data.
+Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
 
-[bip143]: https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
-[sighash-docs]: https://github.com/bitcoincashorg/bitcoincash.org/blob/master/spec/replay-protected-sighash.md#digest-algorithm
-
-[tx.time]: /docs/language/globals#txtime
-[tx.hashOutputs]: /docs/language/globals#txhashoutputs
-
 [withAge()]: /docs/sdk/transactions#withage
 [withTime()]: /docs/sdk/transactions#withtime
+[covenants-guide]: /docs/guides/covenants
+[tx.time]: #txtime

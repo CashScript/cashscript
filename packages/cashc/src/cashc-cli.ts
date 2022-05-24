@@ -11,7 +11,7 @@ import {
 import { program } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { compileFile, version } from '.';
+import { compileFile, version } from './index.js';
 
 program
   .storeOptionsAsProperties(false)
@@ -23,6 +23,7 @@ program
   .option('-A, --asm', 'Compile the contract to ASM format rather than a full artifact.')
   .option('-c, --opcount', 'Display the number of opcodes in the compiled bytecode.')
   .option('-s, --size', 'Display the size in bytes of the compiled bytecode.')
+  .helpOption('-?, --help', 'Display help')
   .parse();
 
 const opts = program.opts();
@@ -86,7 +87,7 @@ function run(): void {
       // Output artifact to STDOUT
       console.log(JSON.stringify(artifact, null, 2));
     }
-  } catch (e) {
+  } catch (e: any) {
     abort(e.message);
   }
 }

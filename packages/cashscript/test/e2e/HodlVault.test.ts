@@ -1,12 +1,12 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
 import {
   alicePk,
   alice,
   oraclePk,
   oracle,
-} from '../fixture/vars';
-import { getTxOutputs } from '../test-util';
-import { FailedRequireError, Reason } from '../../src/Errors';
+} from '../fixture/vars.js';
+import { getTxOutputs } from '../test-util.js';
+import { FailedRequireError, Reason } from '../../src/Errors.js';
 
 describe('HodlVault', () => {
   let hodlVault: Contract;

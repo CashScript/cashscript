@@ -1,0 +1,57 @@
+/* This is an unofficial CashScript port of Licho's Mecenas contract. It is
+ * not compatible with Licho's EC plugin, but rather meant as a demonstration
+ * of covenants in CashScript.
+ * The time checking has been removed so it can be tested without time requirements.
+ */
+contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period*/) {
+    function receive(pubkey pk, sig s) {
+        require(checkSig(s, pk));
+
+        // require(tx.age >= period);
+
+        int minerFee = 1000;
+        int intValue = int(bytes(tx.value));
+
+        if (intValue <= pledge + minerFee) {
+            /* The contract has less value than the pledge, or equal.
+             * The recipient must claim all of of it. */
+
+            bytes8 amount1 = bytes8(intValue - minerFee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            require(hash256(out1) == tx.hashOutputs);
+        } else {
+            /* The contract has more value than the pledge. The recipient must
+             * also add one change output sending the remaining coins back
+             * to the contract.
+             */
+
+            bytes8 amount1 = bytes8(pledge);
+            bytes8 amount2 = bytes8(intValue - pledge - minerFee);
+            bytes34 out1 = new OutputP2PKH(amount1, recipient);
+            bytes32 out2 = new OutputP2SH(amount2, hash160(tx.bytecode));
+            require(hash256(out1 + out2) == tx.hashOutputs);
+        }
+    }
+
+    function reclaim(pubkey pk, sig s) {
+        // This is a bunch of useless statements to fill up space so that we can
+        // test the border between a 1byte and 3byte bytecode VarInt
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+        require(1 == 1);
+
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
+    }
+}

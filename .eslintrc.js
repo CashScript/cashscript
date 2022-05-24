@@ -42,5 +42,6 @@ module.exports = {
     'max-classes-per-file': 0, // Multiple classes in one file are allowed (e.g. Errors)
     '@typescript-eslint/no-redeclare': 0, // I sometimes name variables an types the same
     'linebreak-style': 0, // Ignore linebreak lints https://stackoverflow.com/a/43008668/1129108
+    'import/extensions': ['error', 'always'], // ESM requires file extensins
   },
 }

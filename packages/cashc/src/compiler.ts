@@ -1,17 +1,16 @@
 import { Artifact, optimiseBytecode } from '@cashscript/utils';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import fs from 'fs';
-import { generateArtifact } from './artifact/Artifact';
-import { Ast } from './ast/AST';
-import AstBuilder from './ast/AstBuilder';
-import ThrowingErrorListener from './ast/ThrowingErrorListener';
-import GenerateTargetTraversal from './generation/GenerateTargetTraversal';
-import { CashScriptLexer } from './grammar/CashScriptLexer';
-import { CashScriptParser } from './grammar/CashScriptParser';
-import SymbolTableTraversal from './semantic/SymbolTableTraversal';
-import TypeCheckTraversal from './semantic/TypeCheckTraversal';
-import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal';
-import VerifyCovenantTraversal from './semantic/VerifyCovenantTraversal';
+import { generateArtifact } from './artifact/Artifact.js';
+import { Ast } from './ast/AST.js';
+import AstBuilder from './ast/AstBuilder.js';
+import ThrowingErrorListener from './ast/ThrowingErrorListener.js';
+import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
+import { CashScriptLexer } from './grammar/CashScriptLexer.js';
+import { CashScriptParser } from './grammar/CashScriptParser.js';
+import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
+import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
+import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 
 export function compileString(code: string): Artifact {
   // Lexing + parsing
@@ -21,7 +20,6 @@ export function compileString(code: string): Artifact {
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
-  ast = ast.accept(new VerifyCovenantTraversal()) as Ast;
 
   // Code generation
   const traversal = new GenerateTargetTraversal();

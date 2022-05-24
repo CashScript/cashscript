@@ -26,13 +26,11 @@ npm install -g cashc
 Usage: cashc [options] [source_file]
 
 Options:
-  --output, -o   Specify a file to output the generated artifact.       [string]
-  --hex, -h      Compile the contract to hex format rather than a full artifact
-                                                                       [boolean]
-  --asm, -A      Compile the contract to ASM format rather than a full artifact
-                                                                       [boolean]
-  --opcount, -c  Display the number of opcodes in the compiled bytecode[boolean]
-  --size, -s     Display the size in bytes of the compiled bytecode    [boolean]
-  --help         Show help                                             [boolean]
-  --version      Show version number                                   [boolean]
+  -V, --version        Output the version number.
+  -o, --output <path>  Specify a file to output the generated artifact.
+  -h, --hex            Compile the contract to hex format rather than a full artifact.
+  -A, --asm            Compile the contract to ASM format rather than a full artifact.
+  -c, --opcount        Display the number of opcodes in the compiled bytecode.
+  -s, --size           Display the size in bytes of the compiled bytecode.
+  -?, --help           Display help
 ```

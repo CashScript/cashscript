@@ -1,4 +1,4 @@
-import { GLOBAL_SYMBOL_TABLE } from '../ast/Globals';
+import { GLOBAL_SYMBOL_TABLE, Modifier } from '../ast/Globals.js';
 import {
   ContractNode,
   ParameterNode,
@@ -10,17 +10,19 @@ import {
   Node,
   FunctionCallNode,
   InstantiationNode,
+  AssignNode,
   TupleAssignmentNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
-import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
+import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable.js';
 import {
   FunctionRedefinitionError,
   VariableRedefinitionError,
   UndefinedReferenceError,
   UnusedVariableError,
   InvalidSymbolTypeError,
-} from '../Errors';
+  ConstantModificationError,
+} from '../Errors.js';
 
 export default class SymbolTableTraversal extends AstTraversal {
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];
@@ -105,16 +107,24 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
+  visitAssign(node: AssignNode): Node {
+    const v = this.symbolTables[0].get(node.identifier.name)?.definition as VariableDefinitionNode;
+    if (v?.modifier === Modifier.CONSTANT) {
+      throw new ConstantModificationError(v);
+    }
+    super.visitAssign(node);
+    return node;
+  }
+
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     [node.var1, node.var2].forEach(({ name, type }) => {
       if (this.symbolTables[0].get(name)) {
-        throw new VariableRedefinitionError(new VariableDefinitionNode(type, name, node.tuple));
+        throw new VariableRedefinitionError(new VariableDefinitionNode(type, '', name, node.tuple));
       }
-      this.symbolTables[0].set(Symbol.variable(new VariableDefinitionNode(type, name, node.tuple)));
+      this.symbolTables[0].set(Symbol.variable(new VariableDefinitionNode(type, '', name, node.tuple)));
     });
 
     node.tuple = this.visit(node.tuple);
-
     return node;
   }
 

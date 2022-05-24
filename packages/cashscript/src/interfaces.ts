@@ -1,5 +1,5 @@
 import { Transaction } from '@bitauth/libauth';
-import SignatureTemplate from './SignatureTemplate';
+import type SignatureTemplate from './SignatureTemplate.js';
 
 export interface Utxo {
   txid: string;
@@ -43,6 +43,7 @@ const literal = <L extends string>(l: L): L => l;
 export const Network = {
   MAINNET: literal('mainnet'),
   TESTNET: literal('testnet'),
+  STAGING: literal('staging'),
   REGTEST: literal('regtest'),
 };
 

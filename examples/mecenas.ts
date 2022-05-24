@@ -1,6 +1,6 @@
 import { stringify } from '@bitauth/libauth';
 import { BITBOX } from 'bitbox-sdk';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { Contract, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
 import path from 'path';
 
@@ -29,8 +29,8 @@ export async function run(): Promise<void> {
   // Compile the Mecenas contract to an artifact object
   const artifact = compileFile(path.join(__dirname, 'mecenas.cash'));
 
-  // Initialise a network provider for network operations on TESTNET
-  const provider = new ElectrumNetworkProvider('testnet');
+  // Initialise a network provider for network operations on MAINNET
+  const provider = new ElectrumNetworkProvider();
 
   // Instantiate a new contract using the compiled artifact and network provider
   // AND providing the constructor parameters:
@@ -47,7 +47,7 @@ export async function run(): Promise<void> {
   // Will send one pledge amount to alice, and send change back to the contract
   // Manually set fee to 1000 because this is hardcoded in the contract
   const tx = await contract.functions
-    .receive(alicePk, new SignatureTemplate(alice))
+    .receive()
     .to(aliceAddress, 10000)
     .withHardcodedFee(1000)
     .send();

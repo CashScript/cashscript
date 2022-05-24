@@ -1,4 +1,4 @@
-import { ParserRuleContext } from 'antlr4ts/ParserRuleContext';
+import { ParserRuleContext } from 'antlr4ts/ParserRuleContext.js';
 import { Token } from 'antlr4ts';
 
 export class Location {

@@ -1,0 +1,5 @@
+contract Test() {
+    function covenant() {
+        require(tx.version == 0x02);
+    }
+}

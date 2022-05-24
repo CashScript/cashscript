@@ -55,7 +55,7 @@ statement
     ;
 
 variableDefinition
-    : typeName Identifier '=' expression ';'
+    : typeName modifier? Identifier '=' expression ';'
     ;
 
 tupleAssignment
@@ -92,12 +92,12 @@ expression
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantiation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
+    | scope='tx.outputs' '[' expression ']' op=('.value' | '.lockingBytecode') # UnaryIntrospectionOp
+    | scope='tx.inputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.outpointTransactionHash' | '.outpointIndex' | '.unlockingBytecode' | '.sequenceNumber') # UnaryIntrospectionOp
     | expression op=('.reverse()' | '.length') # UnaryOp
-    | op=('!' | '-') expression # UnaryOp
-    // | expression '**' expression --- OP_POW does not exist in BCH Script
-    // | expression ('*' | '/' | '%') expression --- OP_MUL is disabled in BCH Script
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
-    | left=expression op=('/' | '%') right=expression # BinaryOp
+    | op=('!' | '-') expression # UnaryOp
+    | left=expression op=('*' | '/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
     // | expression ('>>' | '<<') expression --- OP_LSHIFT & RSHIFT are disabled in BCH Script
     | left=expression op=('<' | '<=' | '>' | '>=') right=expression # BinaryOp
@@ -108,9 +108,13 @@ expression
     | left=expression op='&&' right=expression # BinaryOp
     | left=expression op='||' right=expression # BinaryOp
     | '[' (expression (',' expression)* ','?)? ']' # Array
-    | PreimageField # PreimageField
+    | NullaryOp # NullaryOp
     | Identifier # Identifier
     | literal # LiteralExpression
+    ;
+
+modifier
+    : 'constant'
     ;
 
 literal
@@ -172,18 +176,13 @@ TxVar
     | 'tx.time'
     ;
 
-PreimageField
-    : 'tx.version'
-    | 'tx.hashPrevouts'
-    | 'tx.hashSequence'
-    | 'tx.outpoint'
-    | 'tx.bytecode'
-    | 'tx.value'
-    | 'tx.sequence'
-    | 'tx.hashOutputs'
+NullaryOp
+    : 'this.activeInputIndex'
+    | 'this.activeBytecode'
+    | 'tx.inputs.length'
+    | 'tx.outputs.length'
+    | 'tx.version'
     | 'tx.locktime'
-    | 'tx.hashtype'
-    | 'tx.preimage'
     ;
 
 Identifier

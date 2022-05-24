@@ -1,5 +1,5 @@
 import { Type } from '@cashscript/utils';
-import { DUST_LIMIT } from './constants';
+import { DUST_LIMIT } from './constants.js';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -39,7 +39,7 @@ export enum Reason {
   SIG_COUNT = 'Signature count negative or greater than pubkey count',
   PUBKEY_COUNT = 'Pubkey count negative or limit exceeded',
   INVALID_OPERAND_SIZE = 'Invalid operand size',
-  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range [-2^31...2^31]',
+  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range',
   IMPOSSIBLE_ENCODING = 'The requested encoding is impossible to satisfy',
   INVALID_SPLIT_RANGE = 'Invalid OP_SPLIT range',
   INVALID_BIT_COUNT = 'Invalid number of bit set in OP_CHECKMULTISIG',
@@ -70,4 +70,5 @@ export enum Reason {
   NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
   ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
   MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
+  UNKNOWN = 'unknown error',
 }

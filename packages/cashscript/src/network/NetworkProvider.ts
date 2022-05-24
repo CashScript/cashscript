@@ -1,4 +1,4 @@
-import { Utxo, Network } from '../interfaces';
+import { Utxo, Network } from '../interfaces.js';
 
 export default interface NetworkProvider {
   /**

@@ -114,7 +114,7 @@ Be sure to check that the remaining amount (sum of inputs - sum of outputs) is n
 transaction.withAge(age: number): this
 ```
 
-The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to to use the [`tx.age`][tx.age] CashScript functionality, and the `age` parameter passed into this function will be the value of [`tx.age`][tx.age] inside the smart contract. For more information, refer to [BIP68][bip68].
+The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to to use the `tx.age` CashScript functionality, and the `age` parameter passed into this function will be the value of `tx.age` inside the smart contract. For more information, refer to [BIP68][bip68].
 
 #### Example
 ```ts
@@ -126,7 +126,7 @@ The `withAge()` function allows you to specify the minimum age of the transactio
 transaction.withTime(time: number): this
 ```
 
-The `withTime()` function allows you to specify the minimum block number that the transaction can be included in. The `time` parameter will be the value of [`tx.time`][tx.time] inside the smart contract.
+The `withTime()` function allows you to specify the minimum block number that the transaction can be included in. The `time` parameter will be the value of `tx.time` inside the smart contract.
 
 :::tip
 By default, the transaction's `time` variable is set to the most recent block number, which is the most common use case. So you should only override this in specific use cases.
@@ -143,7 +143,7 @@ By default, the transaction's `time` variable is set to the most recent block nu
 async transaction.send(): Promise<TransactionDetails>
 ```
 
-After completing a transaction, the `send()` function can be used to send the transaction to the BCH network. An uncompleted transaction cannot be sent.
+After completing a transaction, the `send()` function can be used to send the transaction to the BCH network. An incomplete transaction cannot be sent.
 
 ```ts
 interface TransactionDetails {
@@ -248,7 +248,7 @@ enum Reason {
   SIG_COUNT = 'Signature count negative or greater than pubkey count',
   PUBKEY_COUNT = 'Pubkey count negative or limit exceeded',
   INVALID_OPERAND_SIZE = 'Invalid operand size',
-  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range [-2^31...2^31]',
+  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range',
   IMPOSSIBLE_ENCODING = 'The requested encoding is impossible to satisfy',
   INVALID_SPLIT_RANGE = 'Invalid OP_SPLIT range',
   INVALID_BIT_COUNT = 'Invalid number of bit set in OP_CHECKMULTISIG',
@@ -261,7 +261,7 @@ enum Reason {
   DIV_BY_ZERO = 'Division by zero error',
   MOD_BY_ZERO = 'Modulo by zero error',
   INVALID_BITFIELD_SIZE = 'Bitfield of unexpected size error',
-  INVALID_BIT_RANGE = "Bitfield\'s bit out of the expected range",
+  INVALID_BIT_RANGE = 'Bitfield\'s bit out of the expected range',
   NEGATIVE_LOCKTIME = 'Negative locktime',
   UNSATISFIED_LOCKTIME = 'Locktime requirement not satisfied',
   SIG_HASHTYPE = 'Signature hash type missing or not understood',
@@ -279,15 +279,13 @@ enum Reason {
   NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
   ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
   MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
+  UNKNOWN = 'unknown error',
 }
 ```
 
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [meep]: https://github.com/gcash/meep
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
-
-[tx.age]: /docs/language/globals#txage
-[tx.time]: /docs/language/globals#txtime
 
 [to()]: /docs/sdk/transactions#to
 [withOpReturn()]: /docs/sdk/transactions#withopreturn

@@ -1,9 +1,9 @@
 import { Type, PrimitiveType, BytesType } from '@cashscript/utils';
-import { TimeOp, PreimageField } from './Globals';
-import AstVisitor from './AstVisitor';
-import { BinaryOperator, UnaryOperator } from './Operator';
-import { Location } from './Location';
-import { SymbolTable, Symbol } from './SymbolTable';
+import { TimeOp } from './Globals.js';
+import AstVisitor from './AstVisitor.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator.js';
+import { Location } from './Location.js';
+import { SymbolTable, Symbol } from './SymbolTable.js';
 
 export type Ast = SourceFileNode;
 
@@ -56,7 +56,6 @@ export class FunctionDefinitionNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
-    public preimageFields: PreimageField[],
   ) {
     super();
   }
@@ -84,6 +83,7 @@ export abstract class StatementNode extends Node {}
 export class VariableDefinitionNode extends StatementNode implements Named, Typed {
   constructor(
     public type: Type,
+    public modifier: string,
     public name: string,
     public expression: ExpressionNode,
   ) {
@@ -256,6 +256,18 @@ export class UnaryOpNode extends ExpressionNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitUnaryOp(this);
+  }
+}
+
+export class NullaryOpNode extends ExpressionNode {
+  constructor(
+    public operator: NullaryOperator,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitNullaryOp(this);
   }
 }
 

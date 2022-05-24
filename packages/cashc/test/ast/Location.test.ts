@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { parseCode } from '../../src/compiler';
-import { Location } from '../../src/ast/Location';
+import { parseCode } from '../../src/compiler.js';
 
 describe('Location', () => {
   it('should retrieve correct text from location', () => {
@@ -11,6 +10,6 @@ describe('Location', () => {
     const f = ast.contract.functions[0];
 
     expect(f.location).toBeDefined();
-    expect((f.location as Location).text(code)).toEqual('function hello(sig s, pubkey pk) {\n        require(checkSig(s, pk));\n    }');
+    expect((f.location!).text(code)).toEqual('function hello(sig s, pubkey pk) {\n        require(checkSig(s, pk));\n    }');
   });
 });

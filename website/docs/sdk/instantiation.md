@@ -68,10 +68,6 @@ contract.bytesize: number
 
 The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 520 bytes at most.
 
-:::note
-When writing covenant contracts, the de facto limit is actually closer to 360 bytes due to technical factors.
-:::
-
 #### Example
 ```ts
 console.log(contract.bytesize)
@@ -140,10 +136,6 @@ new SignatureTemplate(signer: Keypair | Uint8Array | string, hashtype?: HashType
 You may notice the `SignatureTemplate` object in the example above. When a contract function has a `sig` parameter, it requires a cryptographic signature over the spending transaction. But to generate this signature, the transaction needs to be built first, which is not yet the case when a contract function is first called.
 
 So in the place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BITBOX/BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
-
-:::caution
-When calling a covenant function, the first `SignatureTemplate` parameter is used to generate the required sighash preimage. This is generally fine, but you should take extra care when using non-default hashtypes.
-:::
 
 #### Example
 ```ts
@@ -251,7 +243,7 @@ interface NetworkProvider {
   sendRawTransaction(txHex: string): Promise<string>;
 }
 
-type Network = 'mainnet' | 'testnet' | 'regtest';
+type Network = 'mainnet' | 'testnet' | 'staging' | 'regtest';
 
 interface Utxo {
   txid: string;

@@ -19,17 +19,14 @@ import {
   ArrayNode,
   CastNode,
   TimeOpNode,
-  HexLiteralNode,
-  InstantiationNode,
   TupleAssignmentNode,
-} from '../../src/ast/AST';
-import { BinaryOperator } from '../../src/ast/Operator';
-import {
-  TimeOp,
-  PreimageField,
-  Class,
-  GlobalFunction,
-} from '../../src/ast/Globals';
+  NullaryOpNode,
+  HexLiteralNode,
+  UnaryOpNode,
+  InstantiationNode,
+} from '../../src/ast/AST.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator.js';
+import { Class, TimeOp } from '../../src/ast/Globals.js';
 
 interface Fixture {
   fn: string,
@@ -64,7 +61,6 @@ export const fixtures: Fixture[] = [
               ),
             ),
           ]),
-          [],
         )],
       ),
     ),
@@ -81,6 +77,7 @@ export const fixtures: Fixture[] = [
           new BlockNode([
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'myVariable',
               new BinaryOpNode(
                 new IntLiteralNode(10),
@@ -90,6 +87,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'myOtherVariable',
               new BinaryOpNode(
                 new IntLiteralNode(20),
@@ -110,6 +108,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.STRING,
+              '',
               'hw',
               new StringLiteralNode('Hello World', '"'),
             ),
@@ -135,7 +134,6 @@ export const fixtures: Fixture[] = [
               ),
             ),
           ]),
-          [],
         )],
       ),
     ),
@@ -153,6 +151,7 @@ export const fixtures: Fixture[] = [
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                '',
                 'd',
                 new BinaryOpNode(
                   new IdentifierNode('a'),
@@ -177,6 +176,7 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     PrimitiveType.INT,
+                    '',
                     'c',
                     new BinaryOpNode(
                       new IdentifierNode('d'),
@@ -223,7 +223,6 @@ export const fixtures: Fixture[] = [
                 ),
               ),
             ]),
-            [],
           ),
           new FunctionDefinitionNode(
             'timeout',
@@ -231,6 +230,7 @@ export const fixtures: Fixture[] = [
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                '',
                 'd',
                 new IdentifierNode('b'),
               ),
@@ -251,6 +251,7 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     PrimitiveType.INT,
+                    '',
                     'c',
                     new BinaryOpNode(
                       new IdentifierNode('d'),
@@ -287,7 +288,6 @@ export const fixtures: Fixture[] = [
                 ),
               ),
             ]),
-            [],
           ),
         ],
       ),
@@ -327,7 +327,6 @@ export const fixtures: Fixture[] = [
               ),
             ),
           ]),
-          [],
         )],
       ),
     ),
@@ -362,6 +361,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'blockHeight',
               new CastNode(
                 PrimitiveType.INT,
@@ -370,6 +370,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'price',
               new CastNode(
                 PrimitiveType.INT,
@@ -414,49 +415,155 @@ export const fixtures: Fixture[] = [
               ),
             ),
           ]),
-          [],
         )],
       ),
     ),
   },
   {
-    fn: 'covenant.cash',
+    fn: 'covenant_all_fields.cash',
     ast: new SourceFileNode(
       new ContractNode(
         'Covenant',
-        [new ParameterNode(new BytesType(4), 'requiredVersion')],
+        [],
         [new FunctionDefinitionNode(
           'spend',
-          [
-            new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
-            new ParameterNode(PrimitiveType.SIG, 's'),
-          ],
+          [],
           new BlockNode([
             new RequireNode(
               new BinaryOpNode(
-                new IdentifierNode(PreimageField.VERSION),
+                new NullaryOpNode(NullaryOperator.VERSION),
                 BinaryOperator.EQ,
-                new IdentifierNode('requiredVersion'),
+                new IntLiteralNode(2),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
-                new IdentifierNode(PreimageField.BYTECODE),
+                new NullaryOpNode(NullaryOperator.LOCKTIME),
                 BinaryOperator.EQ,
-                new HexLiteralNode(hexToBin('00')),
+                new IntLiteralNode(0),
               ),
             ),
             new RequireNode(
-              new FunctionCallNode(
-                new IdentifierNode('checkSig'),
-                [
-                  new IdentifierNode('s'),
-                  new IdentifierNode('pk'),
-                ],
+              new BinaryOpNode(
+                new NullaryOpNode(NullaryOperator.INPUT_COUNT),
+                BinaryOperator.EQ,
+                new IntLiteralNode(1),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new NullaryOpNode(NullaryOperator.OUTPUT_COUNT),
+                BinaryOperator.EQ,
+                new IntLiteralNode(1),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new NullaryOpNode(NullaryOperator.INPUT_INDEX),
+                BinaryOperator.EQ,
+                new IntLiteralNode(0),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.SIZE,
+                  new NullaryOpNode(NullaryOperator.BYTECODE),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(300),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_VALUE,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(10000),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.SIZE,
+                  new UnaryOpNode(
+                    UnaryOperator.INPUT_LOCKING_BYTECODE,
+                    new IntLiteralNode(0),
+                  ),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(10000),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_OUTPOINT_HASH,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_OUTPOINT_INDEX,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(0),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.SIZE,
+                  new UnaryOpNode(
+                    UnaryOperator.INPUT_UNLOCKING_BYTECODE,
+                    new IntLiteralNode(0),
+                  ),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(100),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_SEQUENCE_NUMBER,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(0),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_VALUE,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(10000),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.SIZE,
+                  new UnaryOpNode(
+                    UnaryOperator.OUTPUT_LOCKING_BYTECODE,
+                    new IntLiteralNode(0),
+                  ),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(100),
               ),
             ),
           ]),
-          [PreimageField.VERSION, PreimageField.BYTECODE],
         )],
       ),
     ),
@@ -475,40 +582,57 @@ export const fixtures: Fixture[] = [
         [
           new FunctionDefinitionNode(
             'receive',
-            [
-              new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
-              new ParameterNode(PrimitiveType.SIG, 's'),
-            ],
+            [],
             new BlockNode([
-              new RequireNode(
-                new FunctionCallNode(
-                  new IdentifierNode('checkSig'),
-                  [
-                    new IdentifierNode('s'),
-                    new IdentifierNode('pk'),
-                  ],
-                ),
-              ),
               new TimeOpNode(
                 TimeOp.CHECK_SEQUENCE,
                 new IdentifierNode('period'),
               ),
+              new RequireNode(
+                new BinaryOpNode(
+                  new UnaryOpNode(
+                    UnaryOperator.OUTPUT_LOCKING_BYTECODE,
+                    new IntLiteralNode(0),
+                  ),
+                  BinaryOperator.EQ,
+                  new InstantiationNode(
+                    new IdentifierNode(Class.LOCKING_BYTECODE_P2PKH),
+                    [new IdentifierNode('recipient')],
+                  ),
+                ),
+              ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                '',
                 'minerFee',
                 new IntLiteralNode(1000),
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
-                'intValue',
-                new CastNode(
-                  PrimitiveType.INT,
-                  new CastNode(new BytesType(), new IdentifierNode(PreimageField.VALUE)),
+                '',
+                'currentValue',
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_VALUE,
+                  new NullaryOpNode(NullaryOperator.INPUT_INDEX),
+                ),
+              ),
+              new VariableDefinitionNode(
+                PrimitiveType.INT,
+                '',
+                'changeValue',
+                new BinaryOpNode(
+                  new BinaryOpNode(
+                    new IdentifierNode('currentValue'),
+                    BinaryOperator.MINUS,
+                    new IdentifierNode('pledge'),
+                  ),
+                  BinaryOperator.MINUS,
+                  new IdentifierNode('minerFee'),
                 ),
               ),
               new BranchNode(
                 new BinaryOpNode(
-                  new IdentifierNode('intValue'),
+                  new IdentifierNode('changeValue'),
                   BinaryOperator.LE,
                   new BinaryOpNode(
                     new IdentifierNode('pledge'),
@@ -516,104 +640,59 @@ export const fixtures: Fixture[] = [
                     new IdentifierNode('minerFee'),
                   ),
                 ),
-                // bytes8(int(bytes(tx.value)) - minerFee);
                 new BlockNode([
-                  new VariableDefinitionNode(
-                    new BytesType(8),
-                    'amount1',
-                    new CastNode(
-                      new BytesType(8),
+                  new RequireNode(
+                    new BinaryOpNode(
+                      new UnaryOpNode(
+                        UnaryOperator.OUTPUT_VALUE,
+                        new IntLiteralNode(0),
+                      ),
+                      BinaryOperator.EQ,
                       new BinaryOpNode(
-                        new IdentifierNode('intValue'),
+                        new IdentifierNode('currentValue'),
                         BinaryOperator.MINUS,
                         new IdentifierNode('minerFee'),
                       ),
-                    ),
-                  ),
-                  new VariableDefinitionNode(
-                    new BytesType(34),
-                    'out1',
-                    new InstantiationNode(
-                      new IdentifierNode(Class.OUTPUT_P2PKH),
-                      [new IdentifierNode('amount1'), new IdentifierNode('recipient')],
-                    ),
-                  ),
-                  new RequireNode(
-                    new BinaryOpNode(
-                      new FunctionCallNode(
-                        new IdentifierNode('hash256'),
-                        [new IdentifierNode('out1')],
-                      ),
-                      BinaryOperator.EQ,
-                      new IdentifierNode(PreimageField.HASHOUTPUTS),
                     ),
                   ),
                 ]),
                 new BlockNode([
-                  new VariableDefinitionNode(
-                    new BytesType(8),
-                    'amount1',
-                    new CastNode(new BytesType(8), new IdentifierNode('pledge')),
-                  ),
-                  new VariableDefinitionNode(
-                    new BytesType(8),
-                    'amount2',
-                    new CastNode(
-                      new BytesType(8),
-                      new BinaryOpNode(
-                        new BinaryOpNode(
-                          new IdentifierNode('intValue'),
-                          BinaryOperator.MINUS,
-                          new IdentifierNode('pledge'),
-                        ),
-                        BinaryOperator.MINUS,
-                        new IdentifierNode('minerFee'),
+                  new RequireNode(
+                    new BinaryOpNode(
+                      new UnaryOpNode(
+                        UnaryOperator.OUTPUT_VALUE,
+                        new IntLiteralNode(0),
                       ),
-                    ),
-                  ),
-                  new VariableDefinitionNode(
-                    new BytesType(34),
-                    'out1',
-                    new InstantiationNode(
-                      new IdentifierNode(Class.OUTPUT_P2PKH),
-                      [new IdentifierNode('amount1'), new IdentifierNode('recipient')],
-                    ),
-                  ),
-                  new VariableDefinitionNode(
-                    new BytesType(32),
-                    'out2',
-                    new InstantiationNode(
-                      new IdentifierNode(Class.OUTPUT_P2SH),
-                      [
-                        new IdentifierNode('amount2'), new FunctionCallNode(
-                          new IdentifierNode('hash160'),
-                          [new IdentifierNode(PreimageField.BYTECODE)],
-                        ),
-                      ],
+                      BinaryOperator.EQ,
+                      new IdentifierNode('pledge'),
                     ),
                   ),
                   new RequireNode(
                     new BinaryOpNode(
-                      new FunctionCallNode(
-                        new IdentifierNode('hash256'),
-                        [new BinaryOpNode(
-                          new IdentifierNode('out1'),
-                          BinaryOperator.PLUS,
-                          new IdentifierNode('out2'),
-                        )],
+                      new UnaryOpNode(
+                        UnaryOperator.OUTPUT_LOCKING_BYTECODE,
+                        new IntLiteralNode(1),
                       ),
                       BinaryOperator.EQ,
-                      new IdentifierNode(PreimageField.HASHOUTPUTS),
+                      new UnaryOpNode(
+                        UnaryOperator.INPUT_LOCKING_BYTECODE,
+                        new NullaryOpNode(NullaryOperator.INPUT_INDEX),
+                      ),
+                    ),
+                  ),
+                  new RequireNode(
+                    new BinaryOpNode(
+                      new UnaryOpNode(
+                        UnaryOperator.OUTPUT_VALUE,
+                        new IntLiteralNode(1),
+                      ),
+                      BinaryOperator.EQ,
+                      new IdentifierNode('changeValue'),
                     ),
                   ),
                 ]),
               ),
             ]),
-            [
-              PreimageField.VALUE,
-              PreimageField.HASHOUTPUTS,
-              PreimageField.BYTECODE,
-            ],
           ),
           new FunctionDefinitionNode(
             'reclaim',
@@ -642,7 +721,6 @@ export const fixtures: Fixture[] = [
                 ),
               ),
             ]),
-            [],
           ),
         ],
       ),
@@ -656,20 +734,14 @@ export const fixtures: Fixture[] = [
         [],
         [new FunctionDefinitionNode(
           'announce',
-          [
-            new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
-            new ParameterNode(PrimitiveType.SIG, 's'),
-          ],
+          [],
           new BlockNode([
-            new RequireNode(new FunctionCallNode(
-              new IdentifierNode(GlobalFunction.CHECKSIG),
-              [new IdentifierNode('s'), new IdentifierNode('pk')],
-            )),
             new VariableDefinitionNode(
               new BytesType(),
+              '',
               'announcement',
               new InstantiationNode(
-                new IdentifierNode(Class.OUTPUT_NULLDATA),
+                new IdentifierNode(Class.LOCKING_BYTECODE_NULLDATA),
                 [new ArrayNode([
                   new HexLiteralNode(hexToBin('6d02')),
                   new CastNode(
@@ -679,18 +751,40 @@ export const fixtures: Fixture[] = [
                 ])],
               ),
             ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_VALUE,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(0),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_LOCKING_BYTECODE,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IdentifierNode('announcement'),
+              ),
+            ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'minerFee',
               new IntLiteralNode(1000),
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              '',
               'changeAmount',
               new BinaryOpNode(
-                new CastNode(
-                  PrimitiveType.INT,
-                  new CastNode(new BytesType(), new IdentifierNode(PreimageField.VALUE)),
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_VALUE,
+                  new NullaryOpNode(NullaryOperator.INPUT_INDEX),
                 ),
                 BinaryOperator.MINUS,
                 new IdentifierNode('minerFee'),
@@ -703,57 +797,32 @@ export const fixtures: Fixture[] = [
                 new IdentifierNode('minerFee'),
               ),
               new BlockNode([
-                new VariableDefinitionNode(
-                  new BytesType(32),
-                  'change',
-                  new InstantiationNode(
-                    new IdentifierNode(Class.OUTPUT_P2SH),
-                    [
-                      new CastNode(
-                        new BytesType(8),
-                        new IdentifierNode('changeAmount'),
-                      ),
-                      new FunctionCallNode(
-                        new IdentifierNode(GlobalFunction.HASH160),
-                        [new IdentifierNode(PreimageField.BYTECODE)],
-                      ),
-                    ],
+                new RequireNode(
+                  new BinaryOpNode(
+                    new UnaryOpNode(
+                      UnaryOperator.OUTPUT_LOCKING_BYTECODE,
+                      new IntLiteralNode(1),
+                    ),
+                    BinaryOperator.EQ,
+                    new UnaryOpNode(
+                      UnaryOperator.INPUT_LOCKING_BYTECODE,
+                      new NullaryOpNode(NullaryOperator.INPUT_INDEX),
+                    ),
                   ),
                 ),
                 new RequireNode(
                   new BinaryOpNode(
-                    new IdentifierNode(PreimageField.HASHOUTPUTS),
-                    BinaryOperator.EQ,
-                    new FunctionCallNode(
-                      new IdentifierNode(GlobalFunction.HASH256),
-                      [new BinaryOpNode(
-                        new IdentifierNode('announcement'),
-                        BinaryOperator.PLUS,
-                        new IdentifierNode('change'),
-                      )],
+                    new UnaryOpNode(
+                      UnaryOperator.OUTPUT_VALUE,
+                      new IntLiteralNode(1),
                     ),
-                  ),
-                ),
-              ]),
-              new BlockNode([
-                new RequireNode(
-                  new BinaryOpNode(
-                    new IdentifierNode(PreimageField.HASHOUTPUTS),
                     BinaryOperator.EQ,
-                    new FunctionCallNode(
-                      new IdentifierNode(GlobalFunction.HASH256),
-                      [new IdentifierNode('announcement')],
-                    ),
+                    new IdentifierNode('changeAmount'),
                   ),
                 ),
               ]),
             ),
           ]),
-          [
-            PreimageField.VALUE,
-            PreimageField.BYTECODE,
-            PreimageField.HASHOUTPUTS,
-          ],
         )],
       ),
     ),

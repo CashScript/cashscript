@@ -19,9 +19,9 @@ import {
   StatementNode,
   ContractNode,
   ExpressionNode,
-} from './ast/AST';
-import { Symbol, SymbolType } from './ast/SymbolTable';
-import { Location, Point } from './ast/Location';
+} from './ast/AST.js';
+import { Symbol, SymbolType } from './ast/SymbolTable.js';
+import { Location, Point } from './ast/Location.js';
 
 export class CashScriptError extends Error {
   node: Node;
@@ -174,6 +174,9 @@ export class UnsupportedTypeError extends TypeError {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode && node.operator.startsWith('.')) {
       super(node, actual, expected, `Tried to access member '${node.operator}' on unsupported type '${actual}'`);
+    } else if (node instanceof UnaryOpNode && node.operator.includes('[i]')) {
+      const [scope] = node.operator.split('[i]');
+      super(node, actual, expected, `Tried to index '${scope}''with unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode) {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof TimeOpNode) {
@@ -228,6 +231,14 @@ export class ConstantConditionError extends CashScriptError {
   }
 }
 
+export class ConstantModificationError extends CashScriptError {
+  constructor(
+    node: VariableDefinitionNode,
+  ) {
+    super(node, `Tried to modify immutable variable '${node.name}'`);
+  }
+}
+
 export class ArrayElementError extends CashScriptError {
   constructor(
     node: ArrayNode,
@@ -253,13 +264,5 @@ export class VersionError extends Error {
     super(message);
 
     this.name = this.constructor.name;
-  }
-}
-
-export class UnverifiedCovenantError extends CashScriptError {
-  constructor(
-    node: IdentifierNode,
-  ) {
-    super(node, `Covenant variable ${node.name} was used without un-nested signature check`);
   }
 }
