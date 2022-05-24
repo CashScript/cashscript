@@ -20,6 +20,9 @@ title: Release Notes
 - :bug: Fix ESM build
 - :bug: Small fixes
 
+---
+https://twitter.com/RoscoKalis/status/1529072055756414976
+
 ## v0.6.5
 #### cashc compiler
 * :bug: Fix `cashc` version
