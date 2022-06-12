@@ -2,6 +2,10 @@
 title: Release Notes
 ---
 
+## v0.7.1
+#### @cashscript/utils
+* :bug: Fix bug where 64bit integers could not be decoded.
+
 ## v0.7.0
 #### cashc compiler
 - :sparkles: Add destructuring assignments, e.g. `bytes2 left, bytes1 right = 0x123456.split(2)`

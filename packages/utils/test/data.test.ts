@@ -59,6 +59,7 @@ describe('data utils', () => {
       expect(decodeInt(hexToBin('81'))).toEqual(-1);
       expect(decodeInt(hexToBin('e803'))).toEqual(1000);
       expect(decodeInt(hexToBin('e883'))).toEqual(-1000);
+      expect(decodeInt(hexToBin('00407a10f35a'))).toEqual(100000000000000);
     });
 
     it('should throw if the integer is not minimally encoded', () => {
@@ -70,7 +71,7 @@ describe('data utils', () => {
 
     it('should throw if the integer is too large', () => {
       const expectedError = ScriptNumberError.outOfRange;
-      expect(() => decodeInt(hexToBin('0000000001'))).toThrow(expectedError);
+      expect(() => decodeInt(hexToBin('00000000000000000001'))).toThrow(expectedError);
       expect(() => decodeInt(hexToBin('000001'), 2)).toThrow(expectedError);
     });
   });
