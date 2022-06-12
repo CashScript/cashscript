@@ -36,8 +36,9 @@
     "cashproof": "python3 node_modules/cashproof/run.py",
     "examples": "ts-node examples/p2pkh.ts && ts-node examples/transfer_with_timeout.ts && ts-node examples/hodl_vault.ts",
     "coverage": "codecov",
-    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-example",
+    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
-    "update-version":"ts-node update-version.ts"
+    "update-version": "ts-node update-version.ts",
+    "publish-all": "lerna publish from-package"
   }
 }
