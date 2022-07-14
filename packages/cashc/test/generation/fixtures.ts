@@ -193,7 +193,7 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', inputs: [{ name: 's1', type: 'sig' }, { name: 's2', type: 'sig' }] }],
       bytecode:
         // require(checkMultiSig([s1, s2], [pk1, pk2, pk3]))
-        'OP_0 OP_3 OP_ROLL OP_4 OP_ROLL OP_2 OP_3 OP_ROLL OP_2ROT OP_SWAP OP_3 OP_CHECKMULTISIG',
+        'OP_0 OP_2ROT OP_SWAP OP_2 OP_2ROT OP_SWAP OP_6 OP_ROLL OP_3 OP_CHECKMULTISIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
