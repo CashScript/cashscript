@@ -2,6 +2,13 @@
 title: Release Notes
 ---
 
+## v0.7.2
+#### cashc compiler
+* :bug: Fix bug where contracts using `checkMultiSig()` were unspendable.
+
+#### CashScript SDK
+* :sparkles: Add `signatureAlgorithm` parameter to `SignatureTemplate` to allow ECDSA signatures.
+
 ## v0.7.1
 #### @cashscript/utils
 * :bug: Fix bug where 64bit integers could not be decoded.

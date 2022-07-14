@@ -320,11 +320,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitMultiSig(node: FunctionCallNode): Node {
     this.emit(encodeBool(false));
+    this.pushToStack('(value)');
     node.parameters = this.visitList(node.parameters);
     this.emit(Op.OP_CHECKMULTISIG);
     const sigs = node.parameters[0] as ArrayNode;
     const pks = node.parameters[1] as ArrayNode;
-    this.popFromStack(sigs.elements.length + pks.elements.length + 2);
+    this.popFromStack(sigs.elements.length + pks.elements.length + 3);
     this.pushToStack('(value)');
 
     return node;
