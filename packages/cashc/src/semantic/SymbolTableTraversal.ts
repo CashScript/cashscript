@@ -114,7 +114,7 @@ export default class SymbolTableTraversal extends AstTraversal {
       if (modifier === Modifier.CONSTANT) {
         throw new ConstantModificationError(v);
       }
-    })
+    });
 
     super.visitAssign(node);
     return node;
@@ -125,7 +125,9 @@ export default class SymbolTableTraversal extends AstTraversal {
       if (this.symbolTables[0].get(name)) {
         throw new VariableRedefinitionError(new VariableDefinitionNode(type, [], name, node.tuple));
       }
-      this.symbolTables[0].set(Symbol.variable(new VariableDefinitionNode(type, [], name, node.tuple)));
+      this.symbolTables[0].set(
+        Symbol.variable(new VariableDefinitionNode(type, [], name, node.tuple)),
+      );
     });
 
     node.tuple = this.visit(node.tuple);

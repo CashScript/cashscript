@@ -147,7 +147,7 @@ export default class AstBuilder
 
   visitVariableDefinition(ctx: VariableDefinitionContext): VariableDefinitionNode {
     const type = parseType(ctx.typeName().text);
-    const modifiers = ctx.modifier().map((modifier) => modifier.text)
+    const modifiers = ctx.modifier().map((modifier) => modifier.text);
     const name = ctx.Identifier().text;
     const expression = this.visit(ctx.expression());
     const variableDefinition = new VariableDefinitionNode(type, modifiers, name, expression);
