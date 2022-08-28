@@ -24,6 +24,7 @@ import {
   Recipient,
   isSignableUtxo,
   TransactionDetails,
+  ProvidedUtxo,
 } from './interfaces.js';
 import {
   meep,
@@ -62,45 +63,60 @@ export class Transaction {
     private selector?: number,
   ) {}
 
-  from(input: Utxo): this;
-  from(inputs: Utxo[]): this;
+  from(input: ProvidedUtxo): this;
+  from(inputs: ProvidedUtxo[]): this;
 
-  from(inputOrInputs: Utxo | Utxo[]): this {
+  from(inputOrInputs: ProvidedUtxo | ProvidedUtxo[]): this {
     if (!Array.isArray(inputOrInputs)) {
       inputOrInputs = [inputOrInputs];
     }
 
-    this.inputs = this.inputs.concat(inputOrInputs);
+    const normalisedUtxos = inputOrInputs.map(
+      (utxo) => ({ ...utxo, satoshis: Number(utxo.satoshis) }),
+    );
+
+    this.inputs = this.inputs.concat(normalisedUtxos);
 
     return this;
   }
 
-  experimentalFromP2PKH(input: Utxo, template: SignatureTemplate): this;
-  experimentalFromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
+  experimentalFromP2PKH(input: ProvidedUtxo, template: SignatureTemplate): this;
+  experimentalFromP2PKH(inputs: ProvidedUtxo[], template: SignatureTemplate): this;
 
-  experimentalFromP2PKH(inputOrInputs: Utxo | Utxo[], template: SignatureTemplate): this {
+  experimentalFromP2PKH(
+    inputOrInputs: ProvidedUtxo | ProvidedUtxo[],
+    template: SignatureTemplate,
+  ): this {
     if (!Array.isArray(inputOrInputs)) {
       inputOrInputs = [inputOrInputs];
     }
 
-    inputOrInputs = inputOrInputs.map((input) => ({ ...input, template }));
+    const normalisedUtxos = inputOrInputs.map(
+      (utxo) => ({ ...utxo, satoshis: Number(utxo.satoshis), template }),
+    );
 
-    this.inputs = this.inputs.concat(inputOrInputs);
+    this.inputs = this.inputs.concat(normalisedUtxos);
 
     return this;
   }
 
-  to(to: string, amount: number): this;
+  to(to: string, amount: number | bigint): this;
   to(outputs: Recipient[]): this;
 
-  to(toOrOutputs: string | Recipient[], amount?: number): this {
-    if (typeof toOrOutputs === 'string' && typeof amount === 'number') {
-      return this.to([{ to: toOrOutputs, amount }]);
+  to(toOrOutputs: string | Recipient[], amount?: number | bigint): this {
+    if (typeof toOrOutputs === 'string' && (typeof amount === 'number' || typeof amount === 'bigint')) {
+      return this.to([{ to: toOrOutputs, amount: Number(amount) }]);
     }
 
     if (Array.isArray(toOrOutputs) && amount === undefined) {
       toOrOutputs.forEach(validateRecipient);
-      this.outputs = this.outputs.concat(toOrOutputs);
+
+      const normalisedOutputs = toOrOutputs.map(
+        (output) => ({ ...output, amount: Number(output.amount) }),
+      );
+
+      this.outputs = this.outputs.concat(normalisedOutputs);
+
       return this;
     }
 

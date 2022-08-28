@@ -7,6 +7,12 @@ export interface Utxo {
   satoshis: number;
 }
 
+export interface ProvidedUtxo {
+  txid: string;
+  vout: number;
+  satoshis: number | bigint;
+}
+
 export interface SignableUtxo extends Utxo {
   template: SignatureTemplate;
 }
@@ -17,7 +23,7 @@ export function isSignableUtxo(utxo: Utxo): utxo is SignableUtxo {
 
 export interface Recipient {
   to: string;
-  amount: number;
+  amount: number | bigint;
 }
 
 export interface Output {

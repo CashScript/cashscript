@@ -44,7 +44,7 @@ import {
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
 export function validateRecipient(recipient: Recipient): void {
   if (recipient.amount < DUST_LIMIT) {
-    throw new OutputSatoshisTooSmallError(recipient.amount);
+    throw new OutputSatoshisTooSmallError(Number(recipient.amount));
   }
 }
 
