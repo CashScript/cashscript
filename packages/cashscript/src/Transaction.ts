@@ -7,7 +7,7 @@ import {
   AddressType,
   decodeTransaction,
   Transaction as LibauthTransaction,
-  instantiateSecp256k1,
+  secp256k1,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -145,7 +145,6 @@ export class Transaction {
     this.locktime = this.locktime ?? await this.provider.getBlockHeight();
     await this.setInputsAndOutputs();
 
-    const secp256k1 = await instantiateSecp256k1();
     const bytecode = scriptToBytecode(this.redeemScript);
 
     const inputs = this.inputs.map((utxo) => ({
