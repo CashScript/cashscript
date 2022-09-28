@@ -23,6 +23,11 @@ module.exports = {
       links: [
         {to: '/docs/basics/about', label: 'Docs', position: 'right'},
         {
+          href: 'https://playground.cashscript.org',
+          label: 'Playground',
+          position: 'right',
+        },
+        {
           href: 'https://github.com/Bitcoin-com/cashscript',
           label: 'GitHub',
           position: 'right',
