@@ -21,8 +21,8 @@ async function run() {
   // Compile the P2PKH contract to an artifact object
   const artifact = compileFile(path.join(__dirname, 'p2pkh.cash'));
 
-  // Initialise a network provider for network operations on TESTNET
-  const provider = new ElectrumNetworkProvider('testnet');
+  // Initialise a network provider for network operations on TESTNET3
+  const provider = new ElectrumNetworkProvider('testnet3');
 
   // Instantiate a new contract using the compiled artifact and network provider
   // AND providing the constructor parameters (pkh: alicePkh)
