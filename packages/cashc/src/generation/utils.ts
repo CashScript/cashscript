@@ -94,6 +94,12 @@ export function compileUnaryOp(op: UnaryOperator): Op[] {
     [UnaryOperator.INPUT_SEQUENCE_NUMBER]: [IntrospectionOp.OP_INPUTSEQUENCENUMBER],
     [UnaryOperator.OUTPUT_VALUE]: [IntrospectionOp.OP_OUTPUTVALUE],
     [UnaryOperator.OUTPUT_LOCKING_BYTECODE]: [IntrospectionOp.OP_OUTPUTBYTECODE],
+    [UnaryOperator.INPUT_TOKEN_CATEGORY]: [IntrospectionOp.OP_UTXOTOKENCATEGORY],
+    [UnaryOperator.INPUT_NFT_COMMITMENT]: [IntrospectionOp.OP_UTXOTOKENCOMMITMENT],
+    [UnaryOperator.INPUT_TOKEN_AMOUNT]: [IntrospectionOp.OP_UTXOTOKENAMOUNT],
+    [UnaryOperator.OUTPUT_TOKEN_CATEGORY]: [IntrospectionOp.OP_OUTPUTTOKENCATEGORY],
+    [UnaryOperator.OUTPUT_NFT_COMMITMENT]: [IntrospectionOp.OP_OUTPUTTOKENCOMMITMENT],
+    [UnaryOperator.OUTPUT_TOKEN_AMOUNT]: [IntrospectionOp.OP_OUTPUTTOKENAMOUNT],
   };
 
   return mapping[op];

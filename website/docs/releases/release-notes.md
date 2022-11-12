@@ -2,6 +2,13 @@
 title: Release Notes
 ---
 
+## v0.8.0
+#### cashc compiler
+- :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`,`nftCommitment`and `tokenAmount`for both in- and outputs).
+
+#### CashScript SDK
+- :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.
+
 ## v0.7.3
 #### CashScript SDK
 - :sparkles: Add `"chipnet"` network option to ElectrumNetworkProvider, used to connect to the May 2023 testnet.

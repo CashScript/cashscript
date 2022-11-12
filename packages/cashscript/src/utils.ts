@@ -228,9 +228,7 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
   switch (network) {
     case Network.MAINNET:
       return 'bitcoincash';
-    case Network.STAGING:
     case Network.TESTNET4:
-    case Network.TESTNET:
     case Network.TESTNET3:
     case Network.CHIPNET:
       return 'bchtest';

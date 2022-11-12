@@ -20,6 +20,12 @@ export enum UnaryOperator {
   INPUT_SEQUENCE_NUMBER = 'tx.inputs[i].sequenceNumber',
   OUTPUT_VALUE = 'tx.outputs[i].value',
   OUTPUT_LOCKING_BYTECODE = 'tx.outputs[i].lockingBytecode',
+  INPUT_TOKEN_CATEGORY = 'tx.inputs[i].tokenCategory',
+  INPUT_NFT_COMMITMENT = 'tx.inputs[i].nftCommitment',
+  INPUT_TOKEN_AMOUNT = 'tx.inputs[i].tokenAmount',
+  OUTPUT_TOKEN_CATEGORY = 'tx.outputs[i].tokenCategory',
+  OUTPUT_NFT_COMMITMENT = 'tx.outputs[i].nftCommitment',
+  OUTPUT_TOKEN_AMOUNT = 'tx.outputs[i].tokenAmount',
 }
 
 export enum BinaryOperator {

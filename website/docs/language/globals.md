@@ -147,6 +147,27 @@ int tx.inputs[i].sequenceNumber
 
 Represents the `nSequence` number of a specific input.
 
+#### tx.inputs[i].tokenCategory
+```solidity
+bytes tx.inputs[i].tokenCategory
+```
+
+Represents the `tokenCategory` of a specific input.
+
+#### tx.inputs[i].nftCommitment
+```solidity
+bytes tx.inputs[i].nftCommitment
+```
+
+Represents the NFT commitment data of a specific input.
+
+#### tx.inputs[i].tokenAmount
+```solidity
+int tx.inputs[i].tokenAmount
+```
+
+Represents the amount of fungible tokens of a specific input.
+
 ### tx.outputs
 Represents the list of outputs of the evaluated transaction. This is an array, and cannot be used on itself. You need to access an output with a specific index and specify the properties you want to access.
 
@@ -170,6 +191,27 @@ bytes tx.outputs[i].lockingBytecode
 ```
 
 Represents the locking bytecode (`scriptPubKey`) of a specific output.
+
+#### tx.output[i].tokenCategory
+```solidity
+bytes tx.output[i].tokenCategory
+```
+
+Represents the `tokenCategory` of a specific output.
+
+#### tx.output[i].nftCommitment
+```solidity
+bytes tx.output[i].nftCommitment
+```
+
+Represents the NFT commitment data of a specific output.
+
+#### tx.output[i].tokenAmount
+```solidity
+int tx.output[i].tokenAmount
+```
+
+Represents the amount of fungible tokens of a specific output.
 
 ## Constructing locking bytecode
 One of the main use cases of covenants is enforcing transaction outputs (where money is sent). To assist with enforcing these outputs, there is a number of `LockingBytecode` objects that can be instantiated. These locking bytecodes can then be compared to the locking bytecodes of transaction outputs.
