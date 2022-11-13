@@ -104,3 +104,5 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
     }
 }
 ```
+
+More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/guides/covenants). 

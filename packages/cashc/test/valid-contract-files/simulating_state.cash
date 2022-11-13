@@ -1,0 +1,52 @@
+contract SimulatingState(
+    bytes20 recipient,
+    bytes20 funder,
+    int pledgePerBlock,
+    bytes8 initialBlock,
+) {
+    function receive() {
+        // Check that the first output sends to the recipient
+        bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
+        require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
+
+        // Check that time has passed and that time locks are enabled
+        int initial = int(initialBlock);
+        require(tx.time >= initial);
+
+        // Calculate the amount that has accrued since last claim
+        int passedBlocks = tx.locktime - initial;
+        int pledge = passedBlocks * pledgePerBlock;
+
+        // Calculate the leftover amount
+        int minerFee = 1000;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int changeValue = currentValue - pledge - minerFee;
+
+        // If there is not enough left for *another* pledge after this one,
+        // we send the remainder to the recipient. Otherwise we send the
+        // remainder to the recipient and the change back to the contract
+        if (changeValue <= pledge + minerFee) {
+            require(tx.outputs[0].value == currentValue - minerFee);
+        } else {
+            // Check that the outputs send the correct amounts
+            require(tx.outputs[0].value == pledge);
+            require(tx.outputs[1].value == changeValue);
+
+            // Cut out old initialBlock (OP_PUSHBYTES_8 <initialBlock>)
+            // Insert new initialBlock (OP_PUSHBYTES_8 <tx.locktime>)
+            // Note that constructor parameters are added in reverse order,
+            // so initialBlock is the first statement in the contract bytecode.
+            bytes newContract = 0x08 + bytes8(tx.locktime) + this.activeBytecode.split(9)[1];
+
+            // Create the locking bytecode for the new contract and check that
+            // the change output sends to that contract
+            bytes23 newContractLock = new LockingBytecodeP2SH(hash160(newContract));
+            require(tx.outputs[1].lockingBytecode == newContractLock);
+        }
+    }
+
+    function reclaim(pubkey pk, sig s) {
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
+    }
+}

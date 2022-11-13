@@ -149,7 +149,7 @@ Represents the `nSequence` number of a specific input.
 
 #### tx.inputs[i].tokenCategory
 ```solidity
-bytes tx.inputs[i].tokenCategory
+bytes32 tx.inputs[i].tokenCategory
 ```
 
 Represents the `tokenCategory` of a specific input.
@@ -194,7 +194,7 @@ Represents the locking bytecode (`scriptPubKey`) of a specific output.
 
 #### tx.output[i].tokenCategory
 ```solidity
-bytes tx.output[i].tokenCategory
+bytes32 tx.output[i].tokenCategory
 ```
 
 Represents the `tokenCategory` of a specific output.

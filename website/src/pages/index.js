@@ -53,8 +53,8 @@ const features = [
         <p>
           Most DeFi applications are currently running on top of Ethereum. Bitcoin
           Cash contracts use a different and functionally more limited paradigm.
-          But with techniques such as covenants, state simulation and trust-minimised
-          price oracles, DeFi is very much possible on Bitcoin Cash.
+          But with techniques such as covenants, keeping local state in NFTs and 
+          trust-minimised price oracles, DeFi is very much possible on Bitcoin Cash.
         </p>
       </>
     ),
