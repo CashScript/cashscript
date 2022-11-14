@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.7.3
+#### CashScript SDK
+- :sparkles: Add `"chipnet"` network option to ElectrumNetworkProvider, used to connect to the May 2023 testnet.
+* :hammer_and_wrench: Renamed network options `"testnet"` & `"staging"` to `"testnet3"` and `"testnet4"` respectively. Old options will be removed in a future release.
+
 ## v0.7.2
 #### cashc compiler
 * :bug: Fix bug where contracts using `checkMultiSig()` were unspendable.

@@ -87,7 +87,7 @@ describe('utils', () => {
       const redeemScript = asmToScript(asm);
 
       const mainnetAddress = scriptToAddress(redeemScript, Network.MAINNET);
-      const testnetAddress = scriptToAddress(redeemScript, Network.TESTNET);
+      const testnetAddress = scriptToAddress(redeemScript, Network.TESTNET3);
       const regtestAddress = scriptToAddress(redeemScript, Network.REGTEST);
 
       const expectedMainnetAddress = 'bitcoincash:pz0z7u9p96h2p6hfychxdrmwgdlzpk5luc5yks2wxq';
