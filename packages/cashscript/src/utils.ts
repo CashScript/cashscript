@@ -233,7 +233,7 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
     case Network.TESTNET:
     case Network.TESTNET3:
     case Network.CHIPNET:
-        return 'bchtest';
+      return 'bchtest';
     case Network.REGTEST:
       return 'bchreg';
     default:
