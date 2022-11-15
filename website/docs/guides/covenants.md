@@ -137,7 +137,7 @@ This contract applies similar techniques as the previous two examples to verify 
 
 ### Keeping local State in NFTs
 
-Smart contracts which persist for mutiple transactions might want to keep data for later use, this is called local state. With the CashTokens upgrade local state can be kept in the commitment field of the NFT of the smart contract UTXO. Because the state is not kept in the script of the smart contract itself, the address can remain the same unlike with the "simulated state" strategy where the P2SH locking bytecode of the new iteration of the contract was restricted to contain the updated state, which caused the address to change each time. 
+Smart contracts which persist for multiple transactions might want to keep data for later use, this is called local state. With the CashTokens upgrade local state can be kept in the commitment field of the NFT of the smart contract UTXO. Because the state is not kept in the script of the smart contract itself, the address can remain the same unlike with the "simulated state" strategy where the P2SH locking bytecode of the new iteration of the contract was restricted to contain the updated state, which caused the address to change each time.
 
 To demonstrate this we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `tx.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
 
@@ -154,16 +154,16 @@ contract StreamingMecenas(
         bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
         require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
 
-        // Read the blockheight of the previous pledge, kept in the NFT commitment
+        // Read the block height of the previous pledge, kept in the NFT commitment
         require(tx.inputs.length == 1);
         bytes localState = tx.inputs[0].nftCommitment;
-        int blockheightPreviousPledge = int(localState);
+        int blockHeightPreviousPledge = int(localState);
 
         // Check that time has passed and that time locks are enabled
-        require(tx.time >= blockheightPreviousPledge);
+        require(tx.time >= blockHeightPreviousPledge);
 
         // Calculate the amount that has accrued since last claim
-        int passedBlocks = tx.locktime - blockheightPreviousPledge;
+        int passedBlocks = tx.locktime - blockHeightPreviousPledge;
         int pledge = passedBlocks * pledgePerBlock;
 
         // Calculate the leftover amount
@@ -184,9 +184,9 @@ contract StreamingMecenas(
             // Send the change value back to the same smart contract locking bytecode
             require(tx.outputs[1].lockingBytecode == tx.inputs[0].lockingBytecode);
 
-            // Update the blockheight of the previous pledge, kept in the NFT commitment
-            bytes blockheightNewPledge = bytes8(tx.locktime);
-            require(tx.outputs[1].nftCommitment == blockheightNewPledge);
+            // Update the block height of the previous pledge, kept in the NFT commitment
+            bytes blockHeightNewPledge = bytes8(tx.locktime);
+            require(tx.outputs[1].nftCommitment == blockHeightNewPledge);
         }
     }
 
@@ -201,7 +201,7 @@ Instead of having a pledge per 30 day period, we define a pledge per block. At a
 
 ### Issuing NFTs as receipts
 
-A covenants that manages funds which are pooled together from different people often wants to enable its particpants to also exit the covenants with their funds. Instead of keeping track of which address contributed how much in the local state, a better strategy is to issue a receipt for each time funds are added to the pool. Technically this happens by minting a new NFT with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool and sending this to the address of the contributor. All outputs need to be carefully controlled in the covenant contract code so no additional NFTs can be minted in other ouputs. The minted NFTs only differ from the covenant's minting NFT in that there is no minting capability added to the token's categoryID when calling `.tokenCategory`. At withdrawal this NFT commitment data needs to be read and the receipt NFT needs to be burned.
+A covenants that manages funds which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. Instead of keeping track of which address contributed how much in the local state, a better strategy is to issue a receipt for each time funds are added to the pool. Technically this happens by minting a new NFT with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool and sending this to the address of the contributor. All outputs need to be carefully controlled in the covenant contract code so no additional NFTs can be minted in other outputs. The minted NFTs only differ from the covenant's minting NFT in that there is no minting capability added to the token's categoryID when calling `.tokenCategory`. At withdrawal this NFT commitment data needs to be read and the receipt NFT needs to be burned.
 
 ```solidity
 contract PooledFunds(
@@ -213,16 +213,16 @@ contract PooledFunds(
         require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
         require(tx.outputs[0].tokenCategory == tx.inputs[0].tokenCategory);
 
-        // Now it is conventient to calculate the amount added to the pool of funds
+        // Now it is convenient to calculate the amount added to the pool of funds
         int amountAdded = tx.outputs[0].value - tx.inputs[0].value;
-        
+
         // Place a minimum on the amount of funds that can be added
-        // Implicity requires tx.outputs[0].value > tx.inputs[0].value
+        // Implicitly requires tx.outputs[0].value > tx.inputs[0].value
         require(amountAdded > 10000);
-        
+
         // Require there to be at most three outputs so no additional NFTs can be minted
         require(tx.outputs.length <= 3);
-        
+
         // 2nd output contains NFT receipt for the funds added to the pool
         // Get the tokenCategory of the minting NFT without the minting capability added
         bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(64)[0];
@@ -232,7 +232,7 @@ contract PooledFunds(
         // The NFT commitment of the receipt contains the amount that was added to the pool
         require(tx.outputs[1].lockingBytecode == tx.inputs[1].lockingBytecode);
         require(tx.outputs[1].tokenCommitment == bytes8(amountAdded));
-        
+
         // A 3rd output for change is allowed
         if (tx.outputs.length == 3) {
             // Require that the change output does not mint any NFTs
@@ -245,7 +245,7 @@ contract PooledFunds(
         require(this.activeInputIndex == 0);
         require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
         require(tx.outputs[0].tokenCategory == tx.inputs[0].tokenCategory);
-        
+
         // Accept NFT of the correct category as input index1
         // Validate by checking the tokenCategory without capability
     	bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(64)[0];
@@ -257,7 +257,7 @@ contract PooledFunds(
 
         // Require the pool's balance to decrease with the amount initially contributed
         require(tx.outputs[0].value == tx.inputs[0].value - amountToWithdraw);
-        
+
         // Require there are exactly two outputs so no additional NFTs can be minted
         require(tx.outputs.length == 2);
 

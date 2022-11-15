@@ -12,6 +12,7 @@ module.exports = {
     'jest': true,
   },
   rules: {
+    'max-len': ['error', { code: 120, ignoreStrings: true, ignoreTemplateLiterals: true }],
     'import/no-cycle': 0, // Needed for AST -> AstVisitor -> AST
     'class-methods-use-this': 0, // I don't like this rule
     'no-underscore-dangle': 0, // antlr4ts automatically uses this
