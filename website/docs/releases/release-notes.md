@@ -5,6 +5,7 @@ title: Release Notes
 ## v0.8.0
 #### cashc compiler
 - :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`,`nftCommitment`and `tokenAmount`for both in- and outputs).
+- :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script, which is now the instead of regular `LockingBytecodeP2SH`  because of its improved security.
 
 #### CashScript SDK
 - :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.

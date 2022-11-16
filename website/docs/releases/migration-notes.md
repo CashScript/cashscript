@@ -2,6 +2,10 @@
 title: Migration Notes
 ---
 
+## v0.7 to v0.8
+### CashScript SDK
+Network options `"testnet"` & `"staging"` have been renamed to `"testnet3"` and `"testnet4"` respectively in version 0.7.3. The old option names are removed with this major release.
+
 ## v0.6 to v0.7
 ### cashc compiler
 The older *preimage-based* introspection/covenants have been replaced with the newly supported *native* introspection/covenants. This has significant consequences for any existing covenant contracts, but in general this native introspection makes covenants more accessible, flexible and efficient. See below for a list of changes. In some cases there is no one to one mapping between the old introspection and the new introspection methods, so the logic of the smart contracts will need to be refactored as well.
