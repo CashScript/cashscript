@@ -201,7 +201,7 @@ Instead of having a pledge per 30 day period, we define a pledge per block. At a
 
 ### Issuing NFTs as receipts
 
-A covenants that manages funds which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. Instead of keeping track of which address contributed how much in the local state, a better strategy is to issue a receipt for each time funds are added to the pool. Technically this happens by minting a new NFT with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool and sending this to the address of the contributor. All outputs need to be carefully controlled in the covenant contract code so no additional NFTs can be minted in other outputs. The minted NFTs only differ from the covenant's minting NFT in that there is no minting capability added to the token's categoryID when calling `.tokenCategory`. At withdrawal this NFT commitment data needs to be read and the receipt NFT needs to be burned.
+A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. Instead of keeping track of which address contributed how much in the local state, a better strategy is to issue a receipt for each time funds are added to the pool. Technically this happens by minting a new NFT with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool and sending this to the address of the contributor. All outputs need to be carefully controlled in the covenant contract code so no additional NFTs can be minted in other outputs. The minted NFTs only differ from the covenant's minting NFT in that there is no minting capability added to the token's categoryID when calling `.tokenCategory`. At withdrawal this NFT commitment data needs to be read and the receipt NFT needs to be burned.
 
 ```solidity
 contract PooledFunds(
@@ -214,11 +214,22 @@ contract PooledFunds(
         require(tx.outputs[0].tokenCategory == tx.inputs[0].tokenCategory);
 
         // Now it is convenient to calculate the amount added to the pool of funds
-        int amountAdded = tx.outputs[0].value - tx.inputs[0].value;
+        int amountSatsAdded = tx.outputs[0].value - tx.inputs[0].value;
+        int amountTokensAdded = tx.outputs[0].tokenAmount - tx.inputs[0].tokenAmount;
 
-        // Place a minimum on the amount of funds that can be added
-        // Implicitly requires tx.outputs[0].value > tx.inputs[0].value
-        require(amountAdded > 10000);
+        // Determine whether BCH or fungible tokens were contributed to the pool
+        bytes actionIdentifier = 0x00;
+        if (amountTokensAdded > 0) {
+            // Require 1000 sats to pay for future withdrawal fee
+            require(amountSatsAdded == 1000);
+            actionIdentifier = 0x01;
+            actionIdentifier = actionIdentifier + bytes8(amountTokensAdded);
+        } else {
+            // Place a minimum on the amount of funds that can be added
+            // Implicitly requires tx.outputs[0].value > tx.inputs[0].value
+            require(amountSatsAdded > 10000);
+            actionIdentifier = actionIdentifier + bytes8(amountSatsAdded);
+        }
 
         // Require there to be at most three outputs so no additional NFTs can be minted
         require(tx.outputs.length <= 3);
@@ -229,9 +240,9 @@ contract PooledFunds(
         require(tx.outputs[1].tokenCategory == tokenCategoryReceipt);
 
         // The receipt NFT is sent back to the same address of the first user's input
-        // The NFT commitment of the receipt contains the amount that was added to the pool
+        // The NFT commitment of the receipt contains what was added to the pool
         require(tx.outputs[1].lockingBytecode == tx.inputs[1].lockingBytecode);
-        require(tx.outputs[1].tokenCommitment == bytes8(amountAdded));
+        require(tx.outputs[1].tokenCommitment == actionIdentifier);
 
         // A 3rd output for change is allowed
         if (tx.outputs.length == 3) {
@@ -253,10 +264,16 @@ contract PooledFunds(
 
         // Read the amount that was contributed to the pool from the NFT commitment
         bytes ntfCommitmentData = tx.inputs[1].tokenCommitment;
-        int amountToWithdraw = int(ntfCommitmentData);
+        bytes actionIdentifier, bytes amountToWithdrawBytes = ntfCommitmentData.split(2);
+        int amountToWithdraw = int(amountToWithdrawBytes);
 
-        // Require the pool's balance to decrease with the amount initially contributed
-        require(tx.outputs[0].value == tx.inputs[0].value - amountToWithdraw);
+        if (actionIdentifier == 0x01) {
+            // Require the pool's token balance to decrease with the amount initially contributed
+            require(tx.outputs[0].tokenAmount == tx.inputs[0].tokenAmount - amountToWithdraw);
+        } else {
+            // Require the pool's BCH balance to decrease with the amount initially contributed
+            require(tx.outputs[0].value == tx.inputs[0].value - amountToWithdraw);
+        }
 
         // Require there are exactly two outputs so no additional NFTs can be minted
         require(tx.outputs.length == 2);

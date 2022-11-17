@@ -149,10 +149,10 @@ Represents the `nSequence` number of a specific input.
 
 #### tx.inputs[i].tokenCategory
 ```solidity
-bytes32 tx.inputs[i].tokenCategory
+bytes tx.inputs[i].tokenCategory
 ```
 
-Represents the `tokenCategory` of a specific input.
+Represents the `tokenCategory` of a specific input. Returns 0 when that specific input contains no tokens. When the input contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
 #### tx.inputs[i].nftCommitment
 ```solidity
@@ -194,10 +194,10 @@ Represents the locking bytecode (`scriptPubKey`) of a specific output.
 
 #### tx.output[i].tokenCategory
 ```solidity
-bytes32 tx.output[i].tokenCategory
+bytes tx.output[i].tokenCategory
 ```
 
-Represents the `tokenCategory` of a specific output.
+Represents the `tokenCategory` of a specific output. Returns 0 when that specific output contains no tokens. When the output contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
 #### tx.output[i].nftCommitment
 ```solidity

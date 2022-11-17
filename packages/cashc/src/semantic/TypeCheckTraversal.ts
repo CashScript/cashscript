@@ -269,12 +269,12 @@ export default class TypeCheckTraversal extends AstTraversal {
       case UnaryOperator.OUTPUT_LOCKING_BYTECODE:
       case UnaryOperator.INPUT_NFT_COMMITMENT:
       case UnaryOperator.OUTPUT_NFT_COMMITMENT:
+      case UnaryOperator.INPUT_TOKEN_CATEGORY:
+      case UnaryOperator.OUTPUT_TOKEN_CATEGORY:
         expectInt(node, node.expression.type);
         node.type = new BytesType();
         return node;
       case UnaryOperator.INPUT_OUTPOINT_HASH:
-      case UnaryOperator.INPUT_TOKEN_CATEGORY:
-      case UnaryOperator.OUTPUT_TOKEN_CATEGORY:
         expectInt(node, node.expression.type);
         node.type = new BytesType(32);
         return node;
