@@ -563,6 +563,66 @@ export const fixtures: Fixture[] = [
                 new IntLiteralNode(100),
               ),
             ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_TOKEN_CATEGORY,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_NFT_COMMITMENT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('00')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_TOKEN_AMOUNT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(100),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_TOKEN_CATEGORY,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_NFT_COMMITMENT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('00')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_TOKEN_AMOUNT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(100),
+              ),
+            ),
           ]),
         )],
       ),
