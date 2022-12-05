@@ -10,7 +10,7 @@ One interesting use case of Bitcoin Cash is using it for *paper tips*. With pape
 As an alternative, a smart contract can be used for these kinds of gifts. This smart contract allows the recipient to claim their gift at any time, but if they don't claim it in time, the sender can reclaim it.
 
 ```solidity
-pragma cashscript ^0.7.0;
+pragma cashscript ^0.8.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     // Require recipient's signature to match
@@ -34,7 +34,7 @@ This smart contract works by connecting with a price oracle. This price oracle i
 This involves some degree of trust in the price oracle, but since the oracle produces price data for everyone to use, their incentive to attack *your* smart contract is minimised. To improve this situation, you can also choose to connect with multiple oracle providers so you do not have to trust a single party.
 
 ```solidity
-pragma cashscript ^0.7.0;
+pragma cashscript ^0.8.0;
 
 // A minimum block is provided to ensure that oracle price entries from before
 // this block are disregarded. i.e. when the BCH price was $1000 in the past,
@@ -105,4 +105,4 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
 }
 ```
 
-More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/guides/covenants). 
+More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/guides/covenants).
