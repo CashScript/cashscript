@@ -1,7 +1,7 @@
 {
   "name": "cashscript-examples",
   "private": true,
-  "version": "0.7.4",
+  "version": "0.8.0-next.0",
   "description": "Usage examples of the CashScript SDK",
   "main": "p2pkh.js",
   "author": "Rosco Kalis <rosco@bitcoin.com>",
@@ -11,8 +11,8 @@
     "@types/node": "^12.7.8",
     "bitbox-sdk": "^8.11.1",
     "bitcoincashjs-lib": "Bitcoin-com/bitcoincashjs-lib#v4.0.1",
-    "cashc": "^0.7.4",
-    "cashscript": "^0.7.4",
+    "cashc": "^0.8.0-next.0",
+    "cashscript": "^0.8.0-next.0",
     "typescript": "^3.6.4"
   }
 }
