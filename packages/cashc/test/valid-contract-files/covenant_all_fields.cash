@@ -14,5 +14,11 @@ contract Covenant() {
         require(tx.inputs[0].sequenceNumber == 0);
         require(tx.outputs[0].value == 10000);
         require(tx.outputs[0].lockingBytecode.length == 100);
+        require(tx.inputs[0].tokenCategory == 0x000000000000000000000000000000000000000000000000000000000000000);
+        require(tx.inputs[0].nftCommitment == 0x00);
+        require(tx.inputs[0].tokenAmount == 100);
+        require(tx.outputs[0].tokenCategory == 0x000000000000000000000000000000000000000000000000000000000000000);
+        require(tx.outputs[0].nftCommitment == 0x00);
+        require(tx.outputs[0].tokenAmount == 100);
     }
 }
