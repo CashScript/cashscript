@@ -45,8 +45,6 @@ export const Network = {
   TESTNET3: literal('testnet3'),
   TESTNET4: literal('testnet4'),
   CHIPNET: literal('chipnet'),
-  TESTNET: literal('testnet'),
-  STAGING: literal('staging'),
   REGTEST: literal('regtest'),
 };
 

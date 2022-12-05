@@ -386,7 +386,19 @@ export const fixtures: Fixture[] = [
         // require(tx.outputs[0].value == 10000)
         + 'OP_0 OP_OUTPUTVALUE 1027 OP_NUMEQUALVERIFY '
         // require(tx.outputs[0].lockingBytecode.length == 100)
-        + 'OP_0 OP_OUTPUTBYTECODE OP_SIZE OP_NIP 64 OP_NUMEQUAL',
+        + 'OP_0 OP_OUTPUTBYTECODE OP_SIZE OP_NIP 64 OP_NUMEQUALVERIFY '
+        // require(tx.inputs[0].tokenCategory == 0x000000000000000000000000000000000000000000000000000000000000000)
+        + 'OP_0 OP_UTXOTOKENCATEGORY 0000000000000000000000000000000000000000000000000000000000000000 OP_EQUALVERIFY '
+        // require(tx.inputs[0].nftCommitment == 0x00);
+        + 'OP_0 OP_UTXOTOKENCOMMITMENT 00 OP_EQUALVERIFY '
+        // require(tx.inputs[0].tokenAmount == 100);
+        + 'OP_0 OP_UTXOTOKENAMOUNT 64 OP_NUMEQUALVERIFY '
+        // require(tx.outputs[0].tokenCategory == 0x000000000000000000000000000000000000000000000000000000000000000)
+        + 'OP_0 OP_OUTPUTTOKENCATEGORY 0000000000000000000000000000000000000000000000000000000000000000 OP_EQUALVERIFY '
+        // require(tx.outputs[0].nftCommitment == 0x00);
+        + 'OP_0 OP_OUTPUTTOKENCOMMITMENT 00 OP_EQUALVERIFY '
+        // require(tx.outputs[0].tokenAmount == 100);
+        + 'OP_0 OP_OUTPUTTOKENAMOUNT 64 OP_NUMEQUAL',
       source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
