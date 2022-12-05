@@ -354,7 +354,18 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.emit(hexToBin('87'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
-    } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH32) {
+      // OP_HASH256 OP_PUSH<32>
+      this.emit(hexToBin('aa20'));
+      this.pushToStack('(value)');
+      // <script hash>
+      this.visit(node.parameters[0]);
+      this.emit(Op.OP_CAT);
+      // OP_EQUAL
+      this.emit(hexToBin('87'));
+      this.emit(Op.OP_CAT);
+      this.popFromStack(2);
+    }else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
       // Total script = OP_RETURN (<VarInt> <chunk>)+
       // OP_RETURN
       this.emit(hexToBin('6a'));

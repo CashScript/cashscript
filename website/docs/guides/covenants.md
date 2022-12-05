@@ -5,7 +5,7 @@ sidebar_label: Covenants & Introspection
 
 Covenants are all the rage in Bitcoin Cash smart contracts. But what are they, and how do you use them? In one sentence: **a covenant is a constraint on how money can be spent**. A simple example is creating a smart contract that may **only** send money to one specific address and nowhere else. The term *Covenant* originates in property law, where it is used to constrain the use of any object - or in the case of BCH, the use of money.
 
-Bitcoin covenants were first proposed in a paper titled [Bitcoin Covenants][bitcoin-covenants], but several other proposals have been created over the years. In May of 2022 Bitcoin Cash implemented so-called *Native Introspection* which enables efficient and accessible covenants.
+Bitcoin covenants were first proposed in a paper titled [Bitcoin Covenants][bitcoin-covenants], but several other proposals have been created over the years. In May of 2022 Bitcoin Cash implemented so-called *Native Introspection* which enables efficient and accessible covenants. This was extended with token introspection opcodes with the *CashTokens* upgrade in May of 2023.
 
 ## Accessible introspection data
 When using CashScript, you can access a lot of *introspection data* that can be used to inspect and constrain transaction details, such as inputs and outputs.
@@ -21,9 +21,15 @@ When using CashScript, you can access a lot of *introspection data* that can be 
 - **`bytes32 tx.inputs[i].outpointTransactionHash`** - Outpoint transaction hash of a specific input.
 - **`int tx.inputs[i].outpointIndex`** - Outpoint index of a specific input.
 - **`int tx.inputs[i].sequenceNumber`** - `nSequence` number of a specific input.
+- **`bytes32 tx.inputs[i].tokenCategory`** - `tokenCategory` of a specific input.
+- **`bytes tx.inputs[i].nftCommitment`** - NFT commitment data of a specific input.
+- **`int tx.inputs[i].tokenAmount`** - Amount of fungible tokens of a specific input.
 - **`int tx.outputs.length`** - Number of outputs in the transaction.
 - **`int tx.outputs[i].value`** - Value of a specific output (in satoshis).
 - **`bytes tx.outputs[i].lockingBytecode`** - Locking bytecode (`scriptPubKey`) of a specific output.
+- **`bytes32 tx.outputs[i].tokenCategory`** - `tokenCategory` of a specific output.
+- **`bytes tx.outputs[i].nftCommitment`** - NFT commitment data of a specific output
+- **`int tx.outputs[i].tokenAmount`** - Amount of fungible tokens of a specific output.
 
 ## Using introspection data
 While we know the individual data fields, it's not immediately clear how this can be used to create useful smart contracts on Bitcoin Cash. But there are several constraints that can be created using these fields, most important of which are constraints on the recipients of funds, so that is what we discuss.
@@ -129,36 +135,40 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
 
 This contract applies similar techniques as the previous two examples to verify the signature, although in this case it does not matter who the *signer* of the transaction is. Since the outputs are restricted with covenants, there is **no way** someone could call this function to send money **anywhere but to the correct outputs**.
 
-### Simulating state
-A more advanced use case of restricting recipients is so-called simulated state. This works by restricting the recipient to a **slightly amended version of the current contract**. This can be done when the changes to the contract are only to its constructor parameters and when these parameters are of a known size (like `bytes20` or `bytes4`).
+### Keeping local State in NFTs
+
+Smart contracts which persist for multiple transactions might want to keep data for later use, this is called local state. With the CashTokens upgrade local state can be kept in the commitment field of the NFT of the smart contract UTXO. Because the state is not kept in the script of the smart contract itself, the address can remain the same unlike with the "simulated state" strategy where the P2SH locking bytecode of the new iteration of the contract was restricted to contain the updated state, which caused the address to change each time.
 
 To demonstrate this we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `tx.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
 
-Besides these wasted days it can also be inconvenient to claim at set intervals, rather than the "streaming" model that the Ethereum project [Sablier](https://www.sablier.finance/) employs. Instead of set intervals, you should be able to claim funds at any time during the "money stream". Using simulated state, we can approach a similar system with BCH.
+Besides these wasted days it can also be inconvenient to claim at set intervals, rather than the "streaming" model that the Ethereum project [Sablier](https://www.sablier.finance/) employs. Instead of set intervals, you should be able to claim funds at any time during the "money stream". Using local state, we can approach a similar system with BCH.
 
 ```solidity
-contract Mecenas(
+contract StreamingMecenas(
     bytes20 recipient,
     bytes20 funder,
     int pledgePerBlock,
-    bytes8 initialBlock,
 ) {
     function receive() {
         // Check that the first output sends to the recipient
         bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
         require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
 
+        // Read the block height of the previous pledge, kept in the NFT commitment
+        require(tx.inputs.length == 1);
+        bytes localState = tx.inputs[0].nftCommitment;
+        int blockHeightPreviousPledge = int(localState);
+
         // Check that time has passed and that time locks are enabled
-        int initial = int(initialBlock);
-        require(tx.time >= initial);
+        require(tx.time >= blockHeightPreviousPledge);
 
         // Calculate the amount that has accrued since last claim
-        int passedBlocks = tx.locktime - initial;
+        int passedBlocks = tx.locktime - blockHeightPreviousPledge;
         int pledge = passedBlocks * pledgePerBlock;
 
         // Calculate the leftover amount
         int minerFee = 1000;
-        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int currentValue = tx.inputs[0].value;
         int changeValue = currentValue - pledge - minerFee;
 
         // If there is not enough left for *another* pledge after this one,
@@ -171,16 +181,12 @@ contract Mecenas(
             require(tx.outputs[0].value == pledge);
             require(tx.outputs[1].value == changeValue);
 
-            // Cut out old initialBlock (OP_PUSHBYTES_8 <initialBlock>)
-            // Insert new initialBlock (OP_PUSHBYTES_8 <tx.locktime>)
-            // Note that constructor parameters are added in reverse order,
-            // so initialBlock is the first statement in the contract bytecode.
-            bytes newContract = 0x08 + bytes8(tx.locktime) + this.activeBytecode.split(9)[1];
+            // Send the change value back to the same smart contract locking bytecode
+            require(tx.outputs[1].lockingBytecode == tx.inputs[0].lockingBytecode);
 
-            // Create the locking bytecode for the new contract and check that
-            // the change output sends to that contract
-            bytes23 newContractLock = new LockingBytecodeP2SH(hash160(newContract));
-            require(tx.outputs[1].lockingBytecode == newContractLock);
+            // Update the block height of the previous pledge, kept in the NFT commitment
+            bytes blockHeightNewPledge = bytes8(tx.locktime);
+            require(tx.outputs[1].nftCommitment == blockHeightNewPledge);
         }
     }
 
@@ -191,51 +197,101 @@ contract Mecenas(
 }
 ```
 
-Instead of having a pledge per 30 day period, we define a pledge per block. At any point in time we can calculate how much money the recipient has earned. Then the covenant **enforces that this amount is withdrawn from the contract**. The remainder is sent to a new stream that **starts at the end of of the previous one**. The bytecode of this new stream is computed by "cutting out" some of the existing constructor parameters in the `this.activeBytecode` field and replacing them with new values. This process can be applied to the new stream until the money in the stream runs out.
+Instead of having a pledge per 30 day period, we define a pledge per block. At any point in time we can calculate how much money the recipient has earned. Then the covenant **enforces that this amount is withdrawn from the contract**. The remainder is sent to a new stream that **starts at the end of of the previous one**. The locktime used for the last withdrawal from the covenant is kept in the local state to calculate the amount of money the recipient has earned over the passed time. This process of changing the local state in the NFT associated with the smart contractUTXO can be applied to the new stream until the money in the stream runs out.
 
-A drawback of using this "simulated state" method is that every new stream is a new contract with its own address. So additional abstractions are needed to provide a clear frontend layer for a system like this. Simulated state can be used to create much more sophisticated systems and is the main idea that powers complex solutions such as the offline payments card [Be.cash](https://be.cash), and the Proof-of-Work SLP token [MistCoin](https://mistcoin.org).
+### Issuing NFTs as receipts
 
-### Restricting OP_RETURN outputs
-A final way to restrict outputs is adding `OP_RETURN` outputs to the mix. This is necessary when you want to make any SLP-based covenants, such as [MistCoin](https://mistcoin.org) or the [SLP Mint Contracts](https://github.com/simpleledgerinc/slp-mint-contracts). The integration of SLP and CashScript is still in its early stages though, so that is a topic for a more advanced guide.
-
-Right now we'll use a simpler (but also less useful) example, where we restrict a smart contract to only being able to post on the on-chain social media platform [Memo.cash](https://memo.cash). For this we use `LockingBytecodeNullData`, which works slightly different than the other `LockingBytecode` objects. While regular outputs have a locking script, `OP_RETURN` outputs can include different chunks of data. This is why `LockingBytecode` instead takes a list of `bytes` chunks.
+A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. Instead of keeping track of which address contributed how much in the local state, a better strategy is to issue a receipt for each time funds are added to the pool. Technically this happens by minting a new NFT with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool and sending this to the address of the contributor. All outputs need to be carefully controlled in the covenant contract code so no additional NFTs can be minted in other outputs. The minted NFTs only differ from the covenant's minting NFT in that there is no minting capability added to the token's categoryID when calling `.tokenCategory`. At withdrawal this NFT commitment data needs to be read and the receipt NFT needs to be burned.
 
 ```solidity
-pragma cashscript ^0.7.0;
+contract PooledFunds(
+) {
+    function addFunds(
+    ) {
+        // Require the covenant contract always lives at index zero with a minting NFT
+        require(this.activeInputIndex == 0);
+        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
+        require(tx.outputs[0].tokenCategory == tx.inputs[0].tokenCategory);
 
-// This contract enforces making an announcement on Memo.cash and sending the
-// remaining balance back to the contract.
-contract Announcement() {
-    function announce() {
-        // Create the memo.cash announcement output
-        bytes announcement = new LockingBytecodeNullData([
-            0x6d02,
-            bytes('A contract may not injure a human being or, '
-             + 'through inaction, allow a human being to come to harm.')
-        ]);
+        // Now it is convenient to calculate the amount added to the pool of funds
+        int amountSatsAdded = tx.outputs[0].value - tx.inputs[0].value;
+        int amountTokensAdded = tx.outputs[0].tokenAmount - tx.inputs[0].tokenAmount;
 
-        // Check that the first tx output matches the announcement
-        require(tx.outputs[0].value == 0);
-        require(tx.outputs[0].lockingBytecode == announcement);
-
-        // Calculate leftover money after fee (1000 sats)
-        // Check that the second tx output sends the change back if there's
-        // enough leftover for another announcement
-        int minerFee = 1000;
-        int changeAmount = tx.inputs[this.activeInputIndex].value - minerFee;
-        if (changeAmount >= minerFee) {
-            bytes changeLock = tx.inputs[this.activeInputIndex].lockingBytecode;
-            require(tx.outputs[1].lockingBytecode == changeLock);
-            require(tx.outputs[1].value == changeAmount);
+        // Determine whether BCH or fungible tokens were contributed to the pool
+        bytes actionIdentifier = 0x00;
+        if (amountTokensAdded > 0) {
+            // Require 1000 sats to pay for future withdrawal fee
+            require(amountSatsAdded == 1000);
+            actionIdentifier = 0x01;
+            actionIdentifier = actionIdentifier + bytes8(amountTokensAdded);
+        } else {
+            // Place a minimum on the amount of funds that can be added
+            // Implicitly requires tx.outputs[0].value > tx.inputs[0].value
+            require(amountSatsAdded > 10000);
+            actionIdentifier = actionIdentifier + bytes8(amountSatsAdded);
         }
+
+        // Require there to be at most three outputs so no additional NFTs can be minted
+        require(tx.outputs.length <= 3);
+
+        // 2nd output contains NFT receipt for the funds added to the pool
+        // Get the tokenCategory of the minting NFT without the minting capability added
+        bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(64)[0];
+        require(tx.outputs[1].tokenCategory == tokenCategoryReceipt);
+
+        // The receipt NFT is sent back to the same address of the first user's input
+        // The NFT commitment of the receipt contains what was added to the pool
+        require(tx.outputs[1].lockingBytecode == tx.inputs[1].lockingBytecode);
+        require(tx.outputs[1].tokenCommitment == actionIdentifier);
+
+        // A 3rd output for change is allowed
+        if (tx.outputs.length == 3) {
+            // Require that the change output does not mint any NFTs
+            require(tx.outputs[2].TokenCategory == 0);
+        }
+    }
+    function withdraw(
+    ) {
+        // Require the covenant contract always lives at index zero with a minting NFT
+        require(this.activeInputIndex == 0);
+        require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
+        require(tx.outputs[0].tokenCategory == tx.inputs[0].tokenCategory);
+
+        // Accept NFT of the correct category as input index1
+        // Validate by checking the tokenCategory without capability
+    	bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(64)[0];
+        require(tx.inputs[1].tokenCategory == tokenCategoryReceipt);
+
+        // Read the amount that was contributed to the pool from the NFT commitment
+        bytes ntfCommitmentData = tx.inputs[1].tokenCommitment;
+        bytes actionIdentifier, bytes amountToWithdrawBytes = ntfCommitmentData.split(2);
+        int amountToWithdraw = int(amountToWithdrawBytes);
+
+        if (actionIdentifier == 0x01) {
+            // Require the pool's token balance to decrease with the amount initially contributed
+            require(tx.outputs[0].tokenAmount == tx.inputs[0].tokenAmount - amountToWithdraw);
+        } else {
+            // Require the pool's BCH balance to decrease with the amount initially contributed
+            require(tx.outputs[0].value == tx.inputs[0].value - amountToWithdraw);
+        }
+
+        // Require there are exactly two outputs so no additional NFTs can be minted
+        require(tx.outputs.length == 2);
+
+        // Require the amount to withdraw minus fee is sent to the same address of the first user's input
+        require(tx.outputs[1].lockingBytecode == tx.inputs[1].lockingBytecode);
+        require(tx.outputs[1].value == amountToWithdraw - 1000);
+
+        // require that the receipt NFT is burned
+        require(tx.outputs[1].tokenCategory == 0);
     }
 }
 ```
 
-In this contract we construct an "announcement" `OP_RETURN` output, we reserve a part of value for the miner fee, and finally we send the remainder back to the contract.
+Keeping local state in NFTs and issuing NFTs as receipts are two strategies which can be used to create much more sophisticated decentralized applications such as the AMM-style DEX named [Jedex](https://blog.bitjson.com/jedex-decentralized-exchanges-on-bitcoin-cash/).
 
 ## Conclusion
-We have discussed the main uses for covenants as they exist on Bitcoin Cash today. We've seen how we can achieve different use case by combining transaction output restrictions to `P2SH` and `P2PKH` outputs. We also touched on more advanced subjects such as simulated state and `OP_RETURN` outputs. Covenants are the **main differentiating factor** for BCH smart contracts when compared to BTC, while keeping the same **efficient stateless verification**. If you're interested in learning more about the differences in smart contracts among BCH, BTC and ETH, read the article [*Smart contracts on Ethereum, Bitcoin and Bitcoin Cash*](https://kalis.me/smart-contracts-eth-btc-bch/).
+We have discussed the main uses for covenants as they exist on Bitcoin Cash today. We've seen how we can achieve different use case by combining transaction output restrictions to `P2SH` and `P2PKH` outputs. We also touched on more advanced subjects such as keeping local state in NFTs. Covenants and CashTokens are the **main differentiating factor** for BCH smart contracts when compared to BTC, while keeping the same **efficient stateless verification**. If you're interested in learning more about the differences in smart contracts among BCH, BTC and ETH, read the article [*Smart contracts on Ethereum, Bitcoin and Bitcoin Cash*](https://kalis.me/smart-contracts-eth-btc-bch/).
 
 [bitcoin-covenants]: https://fc16.ifca.ai/bitcoin/papers/MES16.pdf
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
