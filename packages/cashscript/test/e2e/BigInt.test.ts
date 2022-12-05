@@ -66,7 +66,7 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedTransactionError);
-      await expect(txPromise).rejects.toThrow(Reason.UNKNOWN);
+      await expect(txPromise).rejects.toThrow(Reason.INVALID_NUMBER_RANGE);
     });
 
     it('should succeed when providing a number within 32b < x < 64b', async () => {
