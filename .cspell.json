@@ -41,6 +41,7 @@
         "checksequenceverify",
         "checksig",
         "checksigverify",
+        "chipnet",
         "cleanstack",
         "cryptocurrency",
         "datasig",

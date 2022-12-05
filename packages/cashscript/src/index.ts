@@ -1,8 +1,9 @@
+import SignatureTemplate from './SignatureTemplate.js';
+
+export { SignatureTemplate };
 export { Contract, ContractFunction } from './Contract.js';
 export { Transaction } from './Transaction.js';
 export { Argument } from './Argument.js';
-import { default as SignatureTemplate } from './SignatureTemplate.js';
-export { SignatureTemplate };
 export { Artifact, AbiFunction, AbiInput } from '@cashscript/utils';
 export * as utils from '@cashscript/utils';
 export {
