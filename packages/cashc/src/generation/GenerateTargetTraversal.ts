@@ -365,7 +365,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.emit(hexToBin('87'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
-    }else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
       // Total script = OP_RETURN (<VarInt> <chunk>)+
       // OP_RETURN
       this.emit(hexToBin('6a'));
