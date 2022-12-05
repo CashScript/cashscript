@@ -83,7 +83,7 @@ export abstract class StatementNode extends Node {}
 export class VariableDefinitionNode extends StatementNode implements Named, Typed {
   constructor(
     public type: Type,
-    public modifier: string,
+    public modifier: string[],
     public name: string,
     public expression: ExpressionNode,
   ) {

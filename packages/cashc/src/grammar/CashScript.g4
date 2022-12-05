@@ -55,7 +55,7 @@ statement
     ;
 
 variableDefinition
-    : typeName modifier? Identifier '=' expression ';'
+    : typeName modifier* Identifier '=' expression ';'
     ;
 
 tupleAssignment

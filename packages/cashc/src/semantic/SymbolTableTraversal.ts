@@ -109,9 +109,13 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitAssign(node: AssignNode): Node {
     const v = this.symbolTables[0].get(node.identifier.name)?.definition as VariableDefinitionNode;
-    if (v?.modifier === Modifier.CONSTANT) {
-      throw new ConstantModificationError(v);
-    }
+    // const used_modifiers = [] # PREVENT USER FROM USING SAME MODIFIER AGAIN
+    v?.modifier?.forEach((modifier) => {
+      if (modifier === Modifier.CONSTANT) {
+        throw new ConstantModificationError(v);
+      }
+    });
+
     super.visitAssign(node);
     return node;
   }
@@ -119,9 +123,11 @@ export default class SymbolTableTraversal extends AstTraversal {
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     [node.var1, node.var2].forEach(({ name, type }) => {
       if (this.symbolTables[0].get(name)) {
-        throw new VariableRedefinitionError(new VariableDefinitionNode(type, '', name, node.tuple));
+        throw new VariableRedefinitionError(new VariableDefinitionNode(type, [], name, node.tuple));
       }
-      this.symbolTables[0].set(Symbol.variable(new VariableDefinitionNode(type, '', name, node.tuple)));
+      this.symbolTables[0].set(
+        Symbol.variable(new VariableDefinitionNode(type, [], name, node.tuple)),
+      );
     });
 
     node.tuple = this.visit(node.tuple);
