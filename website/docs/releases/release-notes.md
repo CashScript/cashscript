@@ -2,6 +2,14 @@
 title: Release Notes
 ---
 
+## v0.7.4
+
+#### cashc compiler
+- :hammer_and_wrench: Internal refactoring
+
+#### CashScript SDK
+- :bug: Fix a bug with ESM exports
+
 ## v0.7.3
 #### CashScript SDK
 - :sparkles: Add `"chipnet"` network option to ElectrumNetworkProvider, used to connect to the May 2023 testnet.

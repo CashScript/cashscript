@@ -72,7 +72,7 @@ module.exports = {
             },
             {
               label: 'Twitter',
-              href: 'https://twitter.com/RoscoKalis',
+              href: 'https://twitter.com/CashScriptBCH',
             },
           ],
         },
