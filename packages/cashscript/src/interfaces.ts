@@ -1,5 +1,5 @@
 import { Transaction } from '@bitauth/libauth';
-import SignatureTemplate from './SignatureTemplate';
+import type SignatureTemplate from './SignatureTemplate.js';
 
 export interface Utxo {
   txid: string;
@@ -42,8 +42,9 @@ export enum HashType {
 const literal = <L extends string>(l: L): L => l;
 export const Network = {
   MAINNET: literal('mainnet'),
-  TESTNET: literal('testnet'),
-  STAGING: literal('staging'),
+  TESTNET3: literal('testnet3'),
+  TESTNET4: literal('testnet4'),
+  CHIPNET: literal('chipnet'),
   REGTEST: literal('regtest'),
 };
 

@@ -19,9 +19,9 @@ import {
   StatementNode,
   ContractNode,
   ExpressionNode,
-} from './ast/AST';
-import { Symbol, SymbolType } from './ast/SymbolTable';
-import { Location, Point } from './ast/Location';
+} from './ast/AST.js';
+import { Symbol, SymbolType } from './ast/SymbolTable.js';
+import { Location, Point } from './ast/Location.js';
 
 export class CashScriptError extends Error {
   node: Node;
@@ -228,6 +228,14 @@ export class ConstantConditionError extends CashScriptError {
     res: boolean,
   ) {
     super(node, `Condition always evaluates to ${res}`);
+  }
+}
+
+export class ConstantModificationError extends CashScriptError {
+  constructor(
+    node: VariableDefinitionNode,
+  ) {
+    super(node, `Tried to modify immutable variable '${node.name}'`);
   }
 }
 

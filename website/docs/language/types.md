@@ -45,7 +45,7 @@ require(timestamp == 1613554200);
 
 
 ## String
-`string`: ASCII-encoded byte sequence.
+`string`: UTF8-encoded byte sequence.
 
 Operators:
 

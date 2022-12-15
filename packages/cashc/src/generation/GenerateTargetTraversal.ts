@@ -37,10 +37,10 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
-import { GlobalFunction, Class } from '../ast/Globals';
-import { BinaryOperator } from '../ast/Operator';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
+import { GlobalFunction, Class } from '../ast/Globals.js';
+import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
   compileCast,
@@ -48,7 +48,7 @@ import {
   compileNullaryOp,
   compileTimeOp,
   compileUnaryOp,
-} from './utils';
+} from './utils.js';
 
 export default class GenerateTargetTraversal extends AstTraversal {
   output: Script = [];
@@ -320,11 +320,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitMultiSig(node: FunctionCallNode): Node {
     this.emit(encodeBool(false));
+    this.pushToStack('(value)');
     node.parameters = this.visitList(node.parameters);
     this.emit(Op.OP_CHECKMULTISIG);
     const sigs = node.parameters[0] as ArrayNode;
     const pks = node.parameters[1] as ArrayNode;
-    this.popFromStack(sigs.elements.length + pks.elements.length + 2);
+    this.popFromStack(sigs.elements.length + pks.elements.length + 3);
     this.pushToStack('(value)');
 
     return node;
@@ -345,6 +346,17 @@ export default class GenerateTargetTraversal extends AstTraversal {
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH) {
       // OP_HASH160 OP_PUSH<20>
       this.emit(hexToBin('a914'));
+      this.pushToStack('(value)');
+      // <script hash>
+      this.visit(node.parameters[0]);
+      this.emit(Op.OP_CAT);
+      // OP_EQUAL
+      this.emit(hexToBin('87'));
+      this.emit(Op.OP_CAT);
+      this.popFromStack(2);
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH32) {
+      // OP_HASH256 OP_PUSH<32>
+      this.emit(hexToBin('aa20'));
       this.pushToStack('(value)');
       // <script hash>
       this.visit(node.parameters[0]);

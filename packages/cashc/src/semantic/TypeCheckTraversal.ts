@@ -27,8 +27,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
 import {
   InvalidParameterTypeError,
   UnequalTypeError,
@@ -40,9 +40,9 @@ import {
   IndexOutOfBoundsError,
   CastSizeError,
   TupleAssignmentError,
-} from '../Errors';
-import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator';
-import { GlobalFunction } from '../ast/Globals';
+} from '../Errors.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
+import { GlobalFunction } from '../ast/Globals.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
@@ -64,7 +64,7 @@ export default class TypeCheckTraversal extends AstTraversal {
           return node;
         }
         throw new AssignTypeError(
-          new VariableDefinitionNode(variable.type, variable.name, node.tuple),
+          new VariableDefinitionNode(variable.type, [], variable.name, node.tuple),
         );
       }
     }
@@ -259,12 +259,18 @@ export default class TypeCheckTraversal extends AstTraversal {
       case UnaryOperator.INPUT_OUTPOINT_INDEX:
       case UnaryOperator.INPUT_SEQUENCE_NUMBER:
       case UnaryOperator.OUTPUT_VALUE:
+      case UnaryOperator.INPUT_TOKEN_AMOUNT:
+      case UnaryOperator.OUTPUT_TOKEN_AMOUNT:
         expectInt(node, node.expression.type);
         node.type = PrimitiveType.INT;
         return node;
       case UnaryOperator.INPUT_LOCKING_BYTECODE:
       case UnaryOperator.INPUT_UNLOCKING_BYTECODE:
       case UnaryOperator.OUTPUT_LOCKING_BYTECODE:
+      case UnaryOperator.INPUT_NFT_COMMITMENT:
+      case UnaryOperator.OUTPUT_NFT_COMMITMENT:
+      case UnaryOperator.INPUT_TOKEN_CATEGORY:
+      case UnaryOperator.OUTPUT_TOKEN_CATEGORY:
         expectInt(node, node.expression.type);
         node.type = new BytesType();
         return node;

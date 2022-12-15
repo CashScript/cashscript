@@ -1,12 +1,12 @@
-import { Contract, ElectrumNetworkProvider } from '../../../src';
+import { Contract, ElectrumNetworkProvider } from '../../src/index.js';
 import {
   alicePkh,
   bobPkh,
   aliceAddress,
   bobAddress,
-} from '../../fixture/vars';
-import { getTxOutputs } from '../../test-util';
-import { FailedRequireError, Reason } from '../../../src/Errors';
+} from '../fixture/vars.js';
+import { getTxOutputs } from '../test-util.js';
+import { FailedRequireError, Reason } from '../../src/Errors.js';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {
@@ -16,8 +16,8 @@ describe('Mecenas', () => {
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
-    const artifact = require('../../fixture/mecenas.json');
-    const provider = new ElectrumNetworkProvider('staging');
+    const artifact = require('../fixture/mecenas.json');
+    const provider = new ElectrumNetworkProvider();
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
   });

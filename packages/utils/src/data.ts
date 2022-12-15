@@ -26,7 +26,7 @@ export function encodeInt(int: number | bigint): Uint8Array {
   return bigIntToScriptNumber(BigInt(int));
 }
 
-export function decodeInt(encodedInt: Uint8Array, maxLength?: number): number {
+export function decodeInt(encodedInt: Uint8Array, maxLength: number = 8): number {
   const options = { maximumScriptNumberByteLength: maxLength };
   const result = parseBytesAsScriptNumber(encodedInt, options);
 

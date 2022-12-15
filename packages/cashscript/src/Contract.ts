@@ -9,15 +9,15 @@ import {
   Script,
   scriptToBytecode,
 } from '@cashscript/utils';
-import { Transaction } from './Transaction';
-import { Argument, encodeArgument } from './Argument';
-import { Utxo } from './interfaces';
-import NetworkProvider from './network/NetworkProvider';
+import { Transaction } from './Transaction.js';
+import { Argument, encodeArgument } from './Argument.js';
+import { Utxo } from './interfaces.js';
+import NetworkProvider from './network/NetworkProvider.js';
 import {
   scriptToAddress,
-} from './utils';
-import SignatureTemplate from './SignatureTemplate';
-import { ElectrumNetworkProvider } from './network';
+} from './utils.js';
+import SignatureTemplate from './SignatureTemplate.js';
+import { ElectrumNetworkProvider } from './network/index.js';
 
 export class Contract {
   name: string;

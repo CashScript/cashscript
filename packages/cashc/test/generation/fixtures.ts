@@ -1,7 +1,7 @@
 import { Artifact } from '@cashscript/utils';
 import fs from 'fs';
 import path from 'path';
-import { version } from '../../src';
+import { version } from '../../src/index.js';
 
 interface Fixture {
   fn: string,
@@ -193,7 +193,7 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'spend', inputs: [{ name: 's1', type: 'sig' }, { name: 's2', type: 'sig' }] }],
       bytecode:
         // require(checkMultiSig([s1, s2], [pk1, pk2, pk3]))
-        'OP_0 OP_3 OP_ROLL OP_4 OP_ROLL OP_2 OP_3 OP_ROLL OP_2ROT OP_SWAP OP_3 OP_CHECKMULTISIG',
+        'OP_0 OP_2ROT OP_SWAP OP_2 OP_2ROT OP_SWAP OP_6 OP_ROLL OP_3 OP_CHECKMULTISIG',
       source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
@@ -340,11 +340,10 @@ export const fixtures: Fixture[] = [
       ],
       abi: [{ name: 'spend', inputs: [] }],
       bytecode:
-        // TODO: Update with actual OP names when they're in Libauth
         // require(tx.version == requiredVersion)
-        'OP_UNKNOWN194 OP_NUMEQUALVERIFY '
+        'OP_TXVERSION OP_NUMEQUALVERIFY '
         // require(tx.bytecode == 0x00)
-        + 'OP_UNKNOWN193 00 OP_EQUAL',
+        + 'OP_ACTIVEBYTECODE 00 OP_EQUAL',
       source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant.cash'), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
@@ -360,35 +359,46 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [] }],
       bytecode:
-        // TODO: Update with actual OP names when they're in Libauth
         // require(tx.version == 2)
-        'OP_UNKNOWN194 OP_2 OP_NUMEQUALVERIFY '
+        'OP_TXVERSION OP_2 OP_NUMEQUALVERIFY '
         // require(tx.locktime == 0)
-        + 'OP_UNKNOWN197 OP_0 OP_NUMEQUALVERIFY '
+        + 'OP_TXLOCKTIME OP_0 OP_NUMEQUALVERIFY '
         // require(tx.inputs.length == 1)
-        + 'OP_UNKNOWN195 OP_1 OP_NUMEQUALVERIFY '
+        + 'OP_TXINPUTCOUNT OP_1 OP_NUMEQUALVERIFY '
         // require(tx.outputs.length == 1)
-        + 'OP_UNKNOWN196 OP_1 OP_NUMEQUALVERIFY '
+        + 'OP_TXOUTPUTCOUNT OP_1 OP_NUMEQUALVERIFY '
         // require(this.activeInputIndex == 0)
-        + 'OP_UNKNOWN192 OP_0 OP_NUMEQUALVERIFY '
+        + 'OP_INPUTINDEX OP_0 OP_NUMEQUALVERIFY '
         // require(this.activeBytecode.length == 300)
-        + 'OP_UNKNOWN193 OP_SIZE OP_NIP 2c01 OP_NUMEQUALVERIFY '
+        + 'OP_ACTIVEBYTECODE OP_SIZE OP_NIP 2c01 OP_NUMEQUALVERIFY '
         // require(tx.inputs[0].value == 10000)
-        + 'OP_0 OP_UNKNOWN198 1027 OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_UTXOVALUE 1027 OP_NUMEQUALVERIFY '
         // require(tx.inputs[0].lockingBytecode.length == 10000)
-        + 'OP_0 OP_UNKNOWN199 OP_SIZE OP_NIP 1027 OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_UTXOBYTECODE OP_SIZE OP_NIP 1027 OP_NUMEQUALVERIFY '
         // require(tx.inputs[0].outpointTransactionHash == 0x00...00)
-        + 'OP_0 OP_UNKNOWN200 0000000000000000000000000000000000000000000000000000000000000000 OP_EQUALVERIFY '
+        + 'OP_0 OP_OUTPOINTTXHASH 0000000000000000000000000000000000000000000000000000000000000000 OP_EQUALVERIFY '
         // require(tx.inputs[0].outpointIndex == 0)
-        + 'OP_0 OP_UNKNOWN201 OP_0 OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_OUTPOINTINDEX OP_0 OP_NUMEQUALVERIFY '
         // require(tx.inputs[0].unlockingBytecode.length == 100)
-        + 'OP_0 OP_UNKNOWN202 OP_SIZE OP_NIP 64 OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_INPUTBYTECODE OP_SIZE OP_NIP 64 OP_NUMEQUALVERIFY '
         // require(tx.inputs[0].sequenceNumber == 0)
-        + 'OP_0 OP_UNKNOWN203 OP_0 OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_INPUTSEQUENCENUMBER OP_0 OP_NUMEQUALVERIFY '
         // require(tx.outputs[0].value == 10000)
-        + 'OP_0 OP_UNKNOWN204 1027 OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_OUTPUTVALUE 1027 OP_NUMEQUALVERIFY '
         // require(tx.outputs[0].lockingBytecode.length == 100)
-        + 'OP_0 OP_UNKNOWN205 OP_SIZE OP_NIP 64 OP_NUMEQUAL',
+        + 'OP_0 OP_OUTPUTBYTECODE OP_SIZE OP_NIP 64 OP_NUMEQUALVERIFY '
+        // require(tx.inputs[0].tokenCategory == 0x000000000000000000000000000000000000000000000000000000000000000)
+        + 'OP_0 OP_UTXOTOKENCATEGORY 0000000000000000000000000000000000000000000000000000000000000000 OP_EQUALVERIFY '
+        // require(tx.inputs[0].nftCommitment == 0x00);
+        + 'OP_0 OP_UTXOTOKENCOMMITMENT 00 OP_EQUALVERIFY '
+        // require(tx.inputs[0].tokenAmount == 100);
+        + 'OP_0 OP_UTXOTOKENAMOUNT 64 OP_NUMEQUALVERIFY '
+        // require(tx.outputs[0].tokenCategory == 0x000000000000000000000000000000000000000000000000000000000000000)
+        + 'OP_0 OP_OUTPUTTOKENCATEGORY 0000000000000000000000000000000000000000000000000000000000000000 OP_EQUALVERIFY '
+        // require(tx.outputs[0].nftCommitment == 0x00);
+        + 'OP_0 OP_OUTPUTTOKENCOMMITMENT 00 OP_EQUALVERIFY '
+        // require(tx.outputs[0].tokenAmount == 100);
+        + 'OP_0 OP_OUTPUTTOKENAMOUNT 64 OP_NUMEQUAL',
       source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
@@ -417,27 +427,27 @@ export const fixtures: Fixture[] = [
         // require(tx.age >= period)
         + 'OP_3 OP_ROLL OP_CHECKSEQUENCEVERIFY OP_DROP '
         // require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient))
-        + 'OP_0 OP_UNKNOWN205 76a914 OP_ROT OP_CAT 88ac OP_CAT OP_EQUALVERIFY '
+        + 'OP_0 OP_OUTPUTBYTECODE 76a914 OP_ROT OP_CAT 88ac OP_CAT OP_EQUALVERIFY '
         // int minerFee = 1000
         + 'e803 '
         // int currentValue = tx.inputs[this.activeInputIndex].value
-        + 'OP_UNKNOWN192 OP_UNKNOWN198 '
+        + 'OP_INPUTINDEX OP_UTXOVALUE '
         // int changeValue = currentValue - pledge - minerFee
         + 'OP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB '
-        // if (changeValue <= minerFee * 2) {
-        + 'OP_DUP OP_3 OP_PICK OP_2 OP_MUL OP_LESSTHANOREQUAL OP_IF '
+        // if (changeValue <= pledge + minerFee) {
+        + 'OP_DUP OP_5 OP_PICK OP_4 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF '
         // require(tx.outputs[0].value == currentValue - minerFee)
-        + 'OP_0 OP_UNKNOWN204 OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_OUTPUTVALUE OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY '
         // } else {
         + 'OP_ELSE '
         // require(tx.outputs[0].value == pledge)
-        + 'OP_0 OP_UNKNOWN204 OP_5 OP_PICK OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_OUTPUTVALUE OP_5 OP_PICK OP_NUMEQUALVERIFY '
         // require(
         //   tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode
         // )
-        + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
+        + 'OP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUALVERIFY '
         // require(tx.outputs[1].value == changeValue) }
-        + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY '
+        + 'OP_1 OP_OUTPUTVALUE OP_OVER OP_NUMEQUALVERIFY '
         // Cleanup
         + 'OP_ENDIF OP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE '
         // function reclaim
@@ -470,21 +480,21 @@ export const fixtures: Fixture[] = [
         + '56d616e206265696e6720746f20636f6d6520746f206861726d2e '
         + 'OP_SIZE OP_DUP 4b OP_GREATERTHAN OP_IF 4c OP_SWAP OP_CAT OP_ENDIF OP_SWAP OP_CAT OP_CAT '
         // require(tx.outputs[0].value == 0)
-        + 'OP_0 OP_UNKNOWN204 OP_0 OP_NUMEQUALVERIFY '
+        + 'OP_0 OP_OUTPUTVALUE OP_0 OP_NUMEQUALVERIFY '
         // require(tx.outputs[0].lockingBytecode == announcement)
-        + 'OP_0 OP_UNKNOWN205 OP_EQUALVERIFY '
+        + 'OP_0 OP_OUTPUTBYTECODE OP_EQUALVERIFY '
         // int minerFee = 1000
         + 'e803 '
         // int changeAmount = tx.inputs[this.activeInputIndex].value - minerFee
-        + 'OP_UNKNOWN192 OP_UNKNOWN198 OP_OVER OP_SUB '
+        + 'OP_INPUTINDEX OP_UTXOVALUE OP_OVER OP_SUB '
         // if (changeAmount >= minerFee)
         + 'OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_IF '
         // require(
         //  tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode
         // )
-        + 'OP_1 OP_UNKNOWN205 OP_UNKNOWN192 OP_UNKNOWN199 OP_EQUALVERIFY '
+        + 'OP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUALVERIFY '
         // require(tx.outputs[1].value == changeAmount) }
-        + 'OP_1 OP_UNKNOWN204 OP_OVER OP_NUMEQUALVERIFY OP_ENDIF '
+        + 'OP_1 OP_OUTPUTVALUE OP_OVER OP_NUMEQUALVERIFY OP_ENDIF '
         // Stack clean-up
         + 'OP_DROP OP_1',
       source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'announcement.cash'), { encoding: 'utf-8' }),

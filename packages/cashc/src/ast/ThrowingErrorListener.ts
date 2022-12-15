@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ANTLRErrorListener, RecognitionException, Recognizer } from 'antlr4ts';
-import { ParseError } from '../Errors';
-import { Point } from './Location';
+import { ParseError } from '../Errors.js';
+import { Point } from './Location.js';
 
 /**
  * ANTLR Error Listener that immediately throws on error. This is used so that

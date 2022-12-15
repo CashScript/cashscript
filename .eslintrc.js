@@ -12,6 +12,7 @@ module.exports = {
     'jest': true,
   },
   rules: {
+    'max-len': ['error', { code: 120, ignoreStrings: true, ignoreTemplateLiterals: true }],
     'import/no-cycle': 0, // Needed for AST -> AstVisitor -> AST
     'class-methods-use-this': 0, // I don't like this rule
     'no-underscore-dangle': 0, // antlr4ts automatically uses this
@@ -42,5 +43,6 @@ module.exports = {
     'max-classes-per-file': 0, // Multiple classes in one file are allowed (e.g. Errors)
     '@typescript-eslint/no-redeclare': 0, // I sometimes name variables an types the same
     'linebreak-style': 0, // Ignore linebreak lints https://stackoverflow.com/a/43008668/1129108
+    'import/extensions': ['error', 'always'], // ESM requires file extensins
   },
 }

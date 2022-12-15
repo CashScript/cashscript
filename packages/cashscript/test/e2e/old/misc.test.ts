@@ -1,12 +1,12 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src/index.js';
 import {
   alicePk,
   alice,
   alicePkh,
   bobPkh,
   aliceAddress,
-} from '../../fixture/vars';
-import { getTxOutputs } from '../../test-util';
+} from '../../fixture/vars.js';
+import { getTxOutputs } from '../../test-util.js';
 
 describe('v0.6.0 - Simple Covenant', () => {
   let covenant: Contract;

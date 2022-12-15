@@ -7,6 +7,7 @@
   ],
   "devDependencies": {
     "@jest/reporters": "^26.6.2",
+    "@types/jest": "^26.0.0",
     "@types/node": "^14.14.28",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
@@ -35,7 +36,9 @@
     "cashproof": "python3 node_modules/cashproof/run.py",
     "examples": "ts-node examples/p2pkh.ts && ts-node examples/transfer_with_timeout.ts && ts-node examples/hodl_vault.ts",
     "coverage": "codecov",
-    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-example",
-    "spellcheck": "cspell lint '**' --no-progress --must-find-files"
+    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
+    "spellcheck": "cspell lint '**' --no-progress --must-find-files",
+    "update-version": "ts-node update-version.ts",
+    "publish-all": "lerna publish from-package"
   }
 }

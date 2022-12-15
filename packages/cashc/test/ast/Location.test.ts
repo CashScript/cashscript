@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { parseCode } from '../../src/compiler';
+import { parseCode } from '../../src/compiler.js';
 
 describe('Location', () => {
   it('should retrieve correct text from location', () => {

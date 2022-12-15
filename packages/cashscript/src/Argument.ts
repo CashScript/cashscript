@@ -7,8 +7,8 @@ import {
   parseType,
   PrimitiveType,
 } from '@cashscript/utils';
-import { TypeError } from './Errors';
-import SignatureTemplate from './SignatureTemplate';
+import { TypeError } from './Errors.js';
+import SignatureTemplate from './SignatureTemplate.js';
 
 export type Argument = number | bigint | boolean | string | Uint8Array | SignatureTemplate;
 

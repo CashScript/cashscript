@@ -1,12 +1,12 @@
 import { hexToBin } from '@bitauth/libauth';
 import { placeholder } from '@cashscript/utils';
-import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../src';
+import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../src/index.js';
 import {
   alicePkh,
   alicePk,
   alice,
   bob,
-} from './fixture/vars';
+} from './fixture/vars.js';
 
 describe('Contract', () => {
   describe('new', () => {

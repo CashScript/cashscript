@@ -248,7 +248,7 @@ enum Reason {
   SIG_COUNT = 'Signature count negative or greater than pubkey count',
   PUBKEY_COUNT = 'Pubkey count negative or limit exceeded',
   INVALID_OPERAND_SIZE = 'Invalid operand size',
-  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range [-2^31...2^31]',
+  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range',
   IMPOSSIBLE_ENCODING = 'The requested encoding is impossible to satisfy',
   INVALID_SPLIT_RANGE = 'Invalid OP_SPLIT range',
   INVALID_BIT_COUNT = 'Invalid number of bit set in OP_CHECKMULTISIG',
@@ -261,7 +261,7 @@ enum Reason {
   DIV_BY_ZERO = 'Division by zero error',
   MOD_BY_ZERO = 'Modulo by zero error',
   INVALID_BITFIELD_SIZE = 'Bitfield of unexpected size error',
-  INVALID_BIT_RANGE = "Bitfield\'s bit out of the expected range",
+  INVALID_BIT_RANGE = 'Bitfield\'s bit out of the expected range',
   NEGATIVE_LOCKTIME = 'Negative locktime',
   UNSATISFIED_LOCKTIME = 'Locktime requirement not satisfied',
   SIG_HASHTYPE = 'Signature hash type missing or not understood',
@@ -279,6 +279,7 @@ enum Reason {
   NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
   ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
   MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
+  UNKNOWN = 'unknown error',
 }
 ```
 

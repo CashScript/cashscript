@@ -6,9 +6,9 @@ import {
   ClusterOrder,
   RequestResponse,
 } from 'electrum-cash';
-import { Utxo, Network } from '../interfaces';
-import NetworkProvider from './NetworkProvider';
-import { addressToLockScript } from '../utils';
+import { Utxo, Network } from '../interfaces.js';
+import NetworkProvider from './NetworkProvider.js';
+import { addressToLockScript } from '../utils.js';
 
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumCluster;
@@ -35,16 +35,19 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       this.electrum.addServer('electroncash.dk', 50004, ElectrumTransport.WSS.Scheme, false);
       this.electrum.addServer('bch.loping.net', 50004, ElectrumTransport.WSS.Scheme, false);
       this.electrum.addServer('electrum.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
-    } else if (network === Network.TESTNET) {
+    } else if (network === Network.TESTNET3) {
       // Initialise a 1-of-2 Electrum Cluster with 2 hardcoded servers
       this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 2, ClusterOrder.PRIORITY);
       this.electrum.addServer('blackie.c3-soft.com', 60004, ElectrumTransport.WSS.Scheme, false);
       this.electrum.addServer('electroncash.de', 60004, ElectrumTransport.WSS.Scheme, false);
       // this.electrum.addServer('bch.loping.net', 60004, ElectrumTransport.WSS.Scheme, false);
       // this.electrum.addServer('testnet.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme);
-    } else if (network === Network.STAGING) {
+    } else if (network === Network.TESTNET4) {
       this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 1, ClusterOrder.PRIORITY);
       this.electrum.addServer('testnet4.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
+    } else if (network === Network.CHIPNET) {
+      this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 1, ClusterOrder.PRIORITY);
+      this.electrum.addServer('chipnet.imaginary.cash/', 50004, ElectrumTransport.WSS.Scheme, false);
     } else {
       throw new Error(`Tried to instantiate an ElectrumNetworkProvider for unsupported network ${network}`);
     }

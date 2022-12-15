@@ -92,7 +92,7 @@ int tx.locktime
 Represents the `nLocktime` field of the transaction.
 
 :::note
-`tx.locktime` is similar to the `tx.time` global variable. But for safety it is recommended to use `tx.time` over `tx.locktime` in *almost* all cases.
+`tx.locktime` is similar to the [`tx.time`][tx.time] global variable. It is recommended to only use `tx.locktime` for adding `nLocktime` to simulated state and [`tx.time`][tx.time] in all other cases.
 :::
 
 ### tx.inputs
@@ -147,6 +147,27 @@ int tx.inputs[i].sequenceNumber
 
 Represents the `nSequence` number of a specific input.
 
+#### tx.inputs[i].tokenCategory
+```solidity
+bytes tx.inputs[i].tokenCategory
+```
+
+Represents the `tokenCategory` of a specific input. Returns 0 when that specific input contains no tokens. When the input contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
+
+#### tx.inputs[i].nftCommitment
+```solidity
+bytes tx.inputs[i].nftCommitment
+```
+
+Represents the NFT commitment data of a specific input.
+
+#### tx.inputs[i].tokenAmount
+```solidity
+int tx.inputs[i].tokenAmount
+```
+
+Represents the amount of fungible tokens of a specific input.
+
 ### tx.outputs
 Represents the list of outputs of the evaluated transaction. This is an array, and cannot be used on itself. You need to access an output with a specific index and specify the properties you want to access.
 
@@ -171,6 +192,27 @@ bytes tx.outputs[i].lockingBytecode
 
 Represents the locking bytecode (`scriptPubKey`) of a specific output.
 
+#### tx.output[i].tokenCategory
+```solidity
+bytes tx.output[i].tokenCategory
+```
+
+Represents the `tokenCategory` of a specific output. Returns 0 when that specific output contains no tokens. When the output contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
+
+#### tx.output[i].nftCommitment
+```solidity
+bytes tx.output[i].nftCommitment
+```
+
+Represents the NFT commitment data of a specific output.
+
+#### tx.output[i].tokenAmount
+```solidity
+int tx.output[i].tokenAmount
+```
+
+Represents the amount of fungible tokens of a specific output.
+
 ## Constructing locking bytecode
 One of the main use cases of covenants is enforcing transaction outputs (where money is sent). To assist with enforcing these outputs, there is a number of `LockingBytecode` objects that can be instantiated. These locking bytecodes can then be compared to the locking bytecodes of transaction outputs.
 
@@ -194,7 +236,18 @@ Creates new P2PKH locking bytecode for the public key hash `pkh`.
 new LockingBytecodeP2SH(bytes20 scriptHash): bytes23
 ```
 
-Creates new P2SH locking bytecode for the script hash `scriptHash`.
+Creates new P2SH locking bytecode for the script hash, where `scriptHash` is the hash160() of your script.
+
+:::caution
+Because regular P2SH addresses uses hashes which are only 20-bytes in length, it is vulnerable to hash collision in situations where an attacker can introduce arbitrary data to a contract. To solve these security issues P2SH32 has been introduced. It is recommended to always use `LockingBytecodeP2SH32` from now on.
+:::
+
+### LockingBytecodeP2SH32
+```solidity
+new LockingBytecodeP2SH32(bytes32 scriptHash): bytes35
+```
+
+Creates new P2SH32 locking bytecode for the script hash, where `scriptHash` is the hash256() of your script.
 
 ### LockingBytecodeNullData
 ```solidity
@@ -207,3 +260,4 @@ Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
 [withAge()]: /docs/sdk/transactions#withage
 [withTime()]: /docs/sdk/transactions#withtime
 [covenants-guide]: /docs/guides/covenants
+[tx.time]: #txtime

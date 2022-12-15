@@ -1,5 +1,5 @@
 import { binToHex } from '@bitauth/libauth';
-import { SymbolTable } from '../ast/SymbolTable';
+import { SymbolTable } from '../ast/SymbolTable.js';
 import {
   Node,
   ContractNode,
@@ -26,8 +26,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-} from '../ast/AST';
-import AstTraversal from '../ast/AstTraversal';
+} from '../ast/AST.js';
+import AstTraversal from '../ast/AstTraversal.js';
 
 export default class OutputSourceCodeTraversal extends AstTraversal {
   private indentationLevel: number = 0;

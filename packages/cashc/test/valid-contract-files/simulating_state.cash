@@ -1,8 +1,4 @@
-pragma cashscript ^0.8.0;
-
-// This is an experimental contract for a more "streaming" Mecenas experience
-// Completely untested, just a concept
-contract Mecenas(
+contract SimulatingState(
     bytes20 recipient,
     bytes20 funder,
     int pledgePerBlock,
@@ -26,10 +22,10 @@ contract Mecenas(
         int currentValue = tx.inputs[this.activeInputIndex].value;
         int changeValue = currentValue - pledge - minerFee;
 
-        // If there is not enough left for *another* block after this one,
+        // If there is not enough left for *another* pledge after this one,
         // we send the remainder to the recipient. Otherwise we send the
         // remainder to the recipient and the change back to the contract
-        if (changeValue <= pledgePerBlock + minerFee) {
+        if (changeValue <= pledge + minerFee) {
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             // Check that the outputs send the correct amounts

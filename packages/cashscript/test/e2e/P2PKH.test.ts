@@ -1,16 +1,16 @@
 import { binToHex } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
 import {
   alicePkh,
   alicePk,
   alice,
   bob,
   aliceAddress,
-} from '../fixture/vars';
-import { getTxOutputs } from '../test-util';
-import { Utxo } from '../../src/interfaces';
-import { createOpReturnOutput } from '../../src/utils';
-import { FailedSigCheckError, Reason } from '../../src/Errors';
+} from '../fixture/vars.js';
+import { getTxOutputs } from '../test-util.js';
+import { Utxo } from '../../src/interfaces.js';
+import { createOpReturnOutput } from '../../src/utils.js';
+import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 
 describe('P2PKH', () => {
   let p2pkhInstance: Contract;

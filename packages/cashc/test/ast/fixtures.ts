@@ -24,9 +24,9 @@ import {
   HexLiteralNode,
   UnaryOpNode,
   InstantiationNode,
-} from '../../src/ast/AST';
-import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator';
-import { Class, TimeOp } from '../../src/ast/Globals';
+} from '../../src/ast/AST.js';
+import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator.js';
+import { Class, TimeOp } from '../../src/ast/Globals.js';
 
 interface Fixture {
   fn: string,
@@ -77,6 +77,7 @@ export const fixtures: Fixture[] = [
           new BlockNode([
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              [],
               'myVariable',
               new BinaryOpNode(
                 new IntLiteralNode(10),
@@ -86,6 +87,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              [],
               'myOtherVariable',
               new BinaryOpNode(
                 new IntLiteralNode(20),
@@ -106,6 +108,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.STRING,
+              [],
               'hw',
               new StringLiteralNode('Hello World', '"'),
             ),
@@ -148,6 +151,7 @@ export const fixtures: Fixture[] = [
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                [],
                 'd',
                 new BinaryOpNode(
                   new IdentifierNode('a'),
@@ -172,6 +176,7 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     PrimitiveType.INT,
+                    [],
                     'c',
                     new BinaryOpNode(
                       new IdentifierNode('d'),
@@ -225,6 +230,7 @@ export const fixtures: Fixture[] = [
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                [],
                 'd',
                 new IdentifierNode('b'),
               ),
@@ -245,6 +251,7 @@ export const fixtures: Fixture[] = [
                 new BlockNode([
                   new VariableDefinitionNode(
                     PrimitiveType.INT,
+                    [],
                     'c',
                     new BinaryOpNode(
                       new IdentifierNode('d'),
@@ -354,6 +361,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              [],
               'blockHeight',
               new CastNode(
                 PrimitiveType.INT,
@@ -362,6 +370,7 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              [],
               'price',
               new CastNode(
                 PrimitiveType.INT,
@@ -554,6 +563,66 @@ export const fixtures: Fixture[] = [
                 new IntLiteralNode(100),
               ),
             ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_TOKEN_CATEGORY,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_NFT_COMMITMENT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('00')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.INPUT_TOKEN_AMOUNT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(100),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_TOKEN_CATEGORY,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_NFT_COMMITMENT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new HexLiteralNode(hexToBin('00')),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new UnaryOpNode(
+                  UnaryOperator.OUTPUT_TOKEN_AMOUNT,
+                  new IntLiteralNode(0),
+                ),
+                BinaryOperator.EQ,
+                new IntLiteralNode(100),
+              ),
+            ),
           ]),
         )],
       ),
@@ -594,11 +663,13 @@ export const fixtures: Fixture[] = [
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                [],
                 'minerFee',
                 new IntLiteralNode(1000),
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                [],
                 'currentValue',
                 new UnaryOpNode(
                   UnaryOperator.INPUT_VALUE,
@@ -607,6 +678,7 @@ export const fixtures: Fixture[] = [
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
+                [],
                 'changeValue',
                 new BinaryOpNode(
                   new BinaryOpNode(
@@ -623,9 +695,9 @@ export const fixtures: Fixture[] = [
                   new IdentifierNode('changeValue'),
                   BinaryOperator.LE,
                   new BinaryOpNode(
+                    new IdentifierNode('pledge'),
+                    BinaryOperator.PLUS,
                     new IdentifierNode('minerFee'),
-                    BinaryOperator.MUL,
-                    new IntLiteralNode(2),
                   ),
                 ),
                 new BlockNode([
@@ -726,6 +798,7 @@ export const fixtures: Fixture[] = [
           new BlockNode([
             new VariableDefinitionNode(
               new BytesType(),
+              [],
               'announcement',
               new InstantiationNode(
                 new IdentifierNode(Class.LOCKING_BYTECODE_NULLDATA),
@@ -760,11 +833,13 @@ export const fixtures: Fixture[] = [
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              [],
               'minerFee',
               new IntLiteralNode(1000),
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
+              [],
               'changeAmount',
               new BinaryOpNode(
                 new UnaryOpNode(

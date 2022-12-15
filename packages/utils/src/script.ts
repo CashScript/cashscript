@@ -8,8 +8,13 @@ import {
   disassembleBytecodeBCH,
   flattenBinArray,
 } from '@bitauth/libauth';
-import { decodeInt, encodeInt } from './data';
-import OptimisationsEquivFile from './cashproof-optimisations';
+import { decodeInt, encodeInt } from './data.js';
+import OptimisationsEquivFile from './cashproof-optimisations.js';
+
+export const Op = OpcodesBCH;
+export type Op = number;
+export type OpOrData = Op | Uint8Array;
+export type Script = OpOrData[];
 
 // TODO: Replace this when these opcodes are in Libauth
 export enum IntrospectionOp {
@@ -27,12 +32,40 @@ export enum IntrospectionOp {
   OP_INPUTSEQUENCENUMBER = 203,
   OP_OUTPUTVALUE = 204,
   OP_OUTPUTBYTECODE = 205,
+  OP_UTXOTOKENCATEGORY = 206,
+  OP_UTXOTOKENCOMMITMENT = 207,
+  OP_UTXOTOKENAMOUNT = 208,
+  OP_OUTPUTTOKENCATEGORY = 209,
+  OP_OUTPUTTOKENCOMMITMENT = 210,
+  OP_OUTPUTTOKENAMOUNT = 211,
 }
 
-export const Op = OpcodesBCH;
-export type Op = number;
-export type OpOrData = Op | Uint8Array;
-export type Script = OpOrData[];
+export const introspectionOpMapping: any = {
+  OP_INPUTINDEX: 'OP_UNKNOWN192',
+  OP_ACTIVEBYTECODE: 'OP_UNKNOWN193',
+  OP_TXVERSION: 'OP_UNKNOWN194',
+  OP_TXINPUTCOUNT: 'OP_UNKNOWN195',
+  OP_TXOUTPUTCOUNT: 'OP_UNKNOWN196',
+  OP_TXLOCKTIME: 'OP_UNKNOWN197',
+  OP_UTXOVALUE: 'OP_UNKNOWN198',
+  OP_UTXOBYTECODE: 'OP_UNKNOWN199',
+  OP_OUTPOINTTXHASH: 'OP_UNKNOWN200',
+  OP_OUTPOINTINDEX: 'OP_UNKNOWN201',
+  OP_INPUTBYTECODE: 'OP_UNKNOWN202',
+  OP_INPUTSEQUENCENUMBER: 'OP_UNKNOWN203',
+  OP_OUTPUTVALUE: 'OP_UNKNOWN204',
+  OP_OUTPUTBYTECODE: 'OP_UNKNOWN205',
+  OP_UTXOTOKENCATEGORY: 'OP_UNKNOWN206',
+  OP_UTXOTOKENCOMMITMENT: 'OP_UNKNOWN207',
+  OP_UTXOTOKENAMOUNT: 'OP_UNKNOWN208',
+  OP_OUTPUTTOKENCATEGORY: 'OP_UNKNOWN209',
+  OP_OUTPUTTOKENCOMMITMENT: 'OP_UNKNOWN210',
+  OP_OUTPUTTOKENAMOUNT: 'OP_UNKNOWN211',
+};
+
+export const reverseIntrospectionOpMapping = Object.fromEntries(
+  Object.entries(introspectionOpMapping).map(([k, v]) => ([v, k])),
+);
 
 export function scriptToAsm(script: Script): string {
   return bytecodeToAsm(scriptToBytecode(script));
@@ -72,6 +105,9 @@ export function asmToBytecode(asm: string): Uint8Array {
   // Remove any duplicate whitespace
   asm = asm.replace(/\s+/g, ' ').trim();
 
+  // Replace introspection ops with OP_UNKNOWN... so Libauth gets it
+  asm = asm.split(' ').map((token) => introspectionOpMapping[token] ?? token).join(' ');
+
   // Convert the ASM tokens to AuthenticationInstructions
   const instructions = asm.split(' ').map((token) => {
     if (token.startsWith('OP_')) {
@@ -93,6 +129,9 @@ export function bytecodeToAsm(bytecode: Uint8Array): string {
   asm = asm.replace(/OP_PUSHBYTES_[^\s]+/g, '');
   asm = asm.replace(/OP_PUSHDATA[^\s]+ [^\s]+/g, '');
   asm = asm.replace(/(^|\s)0x/g, ' ');
+
+  // Replace OP_UNKNOWN... with the correct ops
+  asm = asm.split(' ').map((token) => reverseIntrospectionOpMapping[token] ?? token).join(' ');
 
   // Remove any duplicate whitespace
   asm = asm.replace(/\s+/g, ' ').trim();
