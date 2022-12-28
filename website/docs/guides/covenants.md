@@ -21,13 +21,13 @@ When using CashScript, you can access a lot of *introspection data* that can be 
 - **`bytes32 tx.inputs[i].outpointTransactionHash`** - Outpoint transaction hash of a specific input.
 - **`int tx.inputs[i].outpointIndex`** - Outpoint index of a specific input.
 - **`int tx.inputs[i].sequenceNumber`** - `nSequence` number of a specific input.
-- **`bytes32 tx.inputs[i].tokenCategory`** - `tokenCategory` of a specific input.
+- **`bytes tx.inputs[i].tokenCategory`** - `tokenCategory` + `tokenCapability` of a specific input.
 - **`bytes tx.inputs[i].nftCommitment`** - NFT commitment data of a specific input.
 - **`int tx.inputs[i].tokenAmount`** - Amount of fungible tokens of a specific input.
 - **`int tx.outputs.length`** - Number of outputs in the transaction.
 - **`int tx.outputs[i].value`** - Value of a specific output (in satoshis).
 - **`bytes tx.outputs[i].lockingBytecode`** - Locking bytecode (`scriptPubKey`) of a specific output.
-- **`bytes32 tx.outputs[i].tokenCategory`** - `tokenCategory` of a specific output.
+- **`bytes tx.outputs[i].tokenCategory`** - `tokenCategory` + `tokenCapability` of a specific output.
 - **`bytes tx.outputs[i].nftCommitment`** - NFT commitment data of a specific output
 - **`int tx.outputs[i].tokenAmount`** - Amount of fungible tokens of a specific output.
 
@@ -242,12 +242,12 @@ contract PooledFunds(
         // The receipt NFT is sent back to the same address of the first user's input
         // The NFT commitment of the receipt contains what was added to the pool
         require(tx.outputs[1].lockingBytecode == tx.inputs[1].lockingBytecode);
-        require(tx.outputs[1].tokenCommitment == actionIdentifier);
+        require(tx.outputs[1].nftCommitment == actionIdentifier);
 
         // A 3rd output for change is allowed
         if (tx.outputs.length == 3) {
             // Require that the change output does not mint any NFTs
-            require(tx.outputs[2].TokenCategory == 0);
+            require(tx.outputs[2].tokenCategory == 0x00);
         }
     }
     function withdraw(
@@ -263,7 +263,7 @@ contract PooledFunds(
         require(tx.inputs[1].tokenCategory == tokenCategoryReceipt);
 
         // Read the amount that was contributed to the pool from the NFT commitment
-        bytes ntfCommitmentData = tx.inputs[1].tokenCommitment;
+        bytes ntfCommitmentData = tx.inputs[1].nftCommitment;
         bytes actionIdentifier, bytes amountToWithdrawBytes = ntfCommitmentData.split(2);
         int amountToWithdraw = int(amountToWithdrawBytes);
 
@@ -283,7 +283,7 @@ contract PooledFunds(
         require(tx.outputs[1].value == amountToWithdraw - 1000);
 
         // require that the receipt NFT is burned
-        require(tx.outputs[1].tokenCategory == 0);
+        require(tx.outputs[1].tokenCategory == 0x00);
     }
 }
 ```
