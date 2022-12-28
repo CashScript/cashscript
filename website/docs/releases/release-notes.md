@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.7.5
+
+#### CashScript SDK
+- :bug: Fix a bug with chipnet connection
+
 ## v0.7.4
 
 #### cashc compiler
