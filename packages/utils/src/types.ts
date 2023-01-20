@@ -48,9 +48,7 @@ export enum PrimitiveType {
 }
 
 const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
-  [PrimitiveType.INT]: [
-    PrimitiveType.INT, PrimitiveType.BOOL,
-  ],
+  [PrimitiveType.INT]: [PrimitiveType.INT, PrimitiveType.BOOL],
   [PrimitiveType.BOOL]: [PrimitiveType.BOOL, PrimitiveType.INT],
   [PrimitiveType.STRING]: [PrimitiveType.STRING],
   [PrimitiveType.PUBKEY]: [PrimitiveType.PUBKEY],
