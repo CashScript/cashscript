@@ -1,5 +1,5 @@
-import { ParserRuleContext } from 'antlr4ts/ParserRuleContext.js';
-import { Token } from 'antlr4ts';
+import type { ParserRuleContext } from 'antlr4ts/ParserRuleContext.js';
+import type { Token } from 'antlr4ts';
 
 export class Location {
   constructor(public start: Point, public end: Point) {}

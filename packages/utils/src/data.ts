@@ -7,7 +7,7 @@ import {
 } from '@bitauth/libauth';
 
 export function encodeBool(bool: boolean): Uint8Array {
-  return bool ? encodeInt(1) : encodeInt(0);
+  return bool ? encodeInt(BigInt(1)) : encodeInt(BigInt(0));
 }
 
 export function decodeBool(encodedBool: Uint8Array): boolean {
@@ -22,11 +22,11 @@ export function decodeBool(encodedBool: Uint8Array): boolean {
   return false;
 }
 
-export function encodeInt(int: number | bigint): Uint8Array {
-  return bigIntToScriptNumber(BigInt(int));
+export function encodeInt(int: bigint): Uint8Array {
+  return bigIntToScriptNumber(int);
 }
 
-export function decodeInt(encodedInt: Uint8Array, maxLength: number = 8): number {
+export function decodeInt(encodedInt: Uint8Array, maxLength: number = 8): bigint {
   const options = { maximumScriptNumberByteLength: maxLength };
   const result = parseBytesAsScriptNumber(encodedInt, options);
 
@@ -34,7 +34,7 @@ export function decodeInt(encodedInt: Uint8Array, maxLength: number = 8): number
     throw new Error(result);
   }
 
-  return Number(result);
+  return result;
 }
 
 export function encodeString(str: string): Uint8Array {

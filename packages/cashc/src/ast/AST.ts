@@ -314,7 +314,7 @@ export class BoolLiteralNode extends LiteralNode {
 
 export class IntLiteralNode extends LiteralNode {
   constructor(
-    public value: number,
+    public value: bigint,
   ) {
     super();
     this.type = PrimitiveType.INT;
