@@ -80,9 +80,9 @@ export const fixtures: Fixture[] = [
               [],
               'myVariable',
               new BinaryOpNode(
-                new IntLiteralNode(10),
+                new IntLiteralNode(BigInt(10)),
                 BinaryOperator.MINUS,
-                new IntLiteralNode(4),
+                new IntLiteralNode(BigInt(4)),
               ),
             ),
             new VariableDefinitionNode(
@@ -90,12 +90,12 @@ export const fixtures: Fixture[] = [
               [],
               'myOtherVariable',
               new BinaryOpNode(
-                new IntLiteralNode(20),
+                new IntLiteralNode(BigInt(20)),
                 BinaryOperator.PLUS,
                 new BinaryOpNode(
                   new IdentifierNode('myVariable'),
                   BinaryOperator.MOD,
-                  new IntLiteralNode(2),
+                  new IntLiteralNode(BigInt(2)),
                 ),
               ),
             ),
@@ -239,7 +239,7 @@ export const fixtures: Fixture[] = [
                 new BinaryOpNode(
                   new IdentifierNode('d'),
                   BinaryOperator.PLUS,
-                  new IntLiteralNode(2),
+                  new IntLiteralNode(BigInt(2)),
                 ),
               ),
               new BranchNode(
@@ -356,7 +356,7 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new IdentifierNode('oracleMessage'),
                 BinaryOperator.SPLIT,
-                new IntLiteralNode(4),
+                new IntLiteralNode(BigInt(4)),
               ),
             ),
             new VariableDefinitionNode(
@@ -433,35 +433,35 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new NullaryOpNode(NullaryOperator.VERSION),
                 BinaryOperator.EQ,
-                new IntLiteralNode(2),
+                new IntLiteralNode(BigInt(2)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new NullaryOpNode(NullaryOperator.LOCKTIME),
                 BinaryOperator.EQ,
-                new IntLiteralNode(0),
+                new IntLiteralNode(BigInt(0)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new NullaryOpNode(NullaryOperator.INPUT_COUNT),
                 BinaryOperator.EQ,
-                new IntLiteralNode(1),
+                new IntLiteralNode(BigInt(1)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new NullaryOpNode(NullaryOperator.OUTPUT_COUNT),
                 BinaryOperator.EQ,
-                new IntLiteralNode(1),
+                new IntLiteralNode(BigInt(1)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new NullaryOpNode(NullaryOperator.INPUT_INDEX),
                 BinaryOperator.EQ,
-                new IntLiteralNode(0),
+                new IntLiteralNode(BigInt(0)),
               ),
             ),
             new RequireNode(
@@ -471,17 +471,17 @@ export const fixtures: Fixture[] = [
                   new NullaryOpNode(NullaryOperator.BYTECODE),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(300),
+                new IntLiteralNode(BigInt(300)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.INPUT_VALUE,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(10000),
+                new IntLiteralNode(BigInt(10000)),
               ),
             ),
             new RequireNode(
@@ -490,18 +490,18 @@ export const fixtures: Fixture[] = [
                   UnaryOperator.SIZE,
                   new UnaryOpNode(
                     UnaryOperator.INPUT_LOCKING_BYTECODE,
-                    new IntLiteralNode(0),
+                    new IntLiteralNode(BigInt(0)),
                   ),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(10000),
+                new IntLiteralNode(BigInt(10000)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.INPUT_OUTPOINT_HASH,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
                 new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
@@ -511,10 +511,10 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.INPUT_OUTPOINT_INDEX,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(0),
+                new IntLiteralNode(BigInt(0)),
               ),
             ),
             new RequireNode(
@@ -523,31 +523,31 @@ export const fixtures: Fixture[] = [
                   UnaryOperator.SIZE,
                   new UnaryOpNode(
                     UnaryOperator.INPUT_UNLOCKING_BYTECODE,
-                    new IntLiteralNode(0),
+                    new IntLiteralNode(BigInt(0)),
                   ),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(100),
+                new IntLiteralNode(BigInt(100)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.INPUT_SEQUENCE_NUMBER,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(0),
+                new IntLiteralNode(BigInt(0)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.OUTPUT_VALUE,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(10000),
+                new IntLiteralNode(BigInt(10000)),
               ),
             ),
             new RequireNode(
@@ -556,18 +556,18 @@ export const fixtures: Fixture[] = [
                   UnaryOperator.SIZE,
                   new UnaryOpNode(
                     UnaryOperator.OUTPUT_LOCKING_BYTECODE,
-                    new IntLiteralNode(0),
+                    new IntLiteralNode(BigInt(0)),
                   ),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(100),
+                new IntLiteralNode(BigInt(100)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.INPUT_TOKEN_CATEGORY,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
                 new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
@@ -577,7 +577,7 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.INPUT_NFT_COMMITMENT,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
                 new HexLiteralNode(hexToBin('00')),
@@ -587,17 +587,17 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.INPUT_TOKEN_AMOUNT,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(100),
+                new IntLiteralNode(BigInt(100)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.OUTPUT_TOKEN_CATEGORY,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
                 new HexLiteralNode(hexToBin('000000000000000000000000000000000000000000000000000000000000000')),
@@ -607,7 +607,7 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.OUTPUT_NFT_COMMITMENT,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
                 new HexLiteralNode(hexToBin('00')),
@@ -617,10 +617,10 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.OUTPUT_TOKEN_AMOUNT,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(100),
+                new IntLiteralNode(BigInt(100)),
               ),
             ),
           ]),
@@ -652,7 +652,7 @@ export const fixtures: Fixture[] = [
                 new BinaryOpNode(
                   new UnaryOpNode(
                     UnaryOperator.OUTPUT_LOCKING_BYTECODE,
-                    new IntLiteralNode(0),
+                    new IntLiteralNode(BigInt(0)),
                   ),
                   BinaryOperator.EQ,
                   new InstantiationNode(
@@ -665,7 +665,7 @@ export const fixtures: Fixture[] = [
                 PrimitiveType.INT,
                 [],
                 'minerFee',
-                new IntLiteralNode(1000),
+                new IntLiteralNode(BigInt(1000)),
               ),
               new VariableDefinitionNode(
                 PrimitiveType.INT,
@@ -705,7 +705,7 @@ export const fixtures: Fixture[] = [
                     new BinaryOpNode(
                       new UnaryOpNode(
                         UnaryOperator.OUTPUT_VALUE,
-                        new IntLiteralNode(0),
+                        new IntLiteralNode(BigInt(0)),
                       ),
                       BinaryOperator.EQ,
                       new BinaryOpNode(
@@ -721,7 +721,7 @@ export const fixtures: Fixture[] = [
                     new BinaryOpNode(
                       new UnaryOpNode(
                         UnaryOperator.OUTPUT_VALUE,
-                        new IntLiteralNode(0),
+                        new IntLiteralNode(BigInt(0)),
                       ),
                       BinaryOperator.EQ,
                       new IdentifierNode('pledge'),
@@ -731,7 +731,7 @@ export const fixtures: Fixture[] = [
                     new BinaryOpNode(
                       new UnaryOpNode(
                         UnaryOperator.OUTPUT_LOCKING_BYTECODE,
-                        new IntLiteralNode(1),
+                        new IntLiteralNode(BigInt(1)),
                       ),
                       BinaryOperator.EQ,
                       new UnaryOpNode(
@@ -744,7 +744,7 @@ export const fixtures: Fixture[] = [
                     new BinaryOpNode(
                       new UnaryOpNode(
                         UnaryOperator.OUTPUT_VALUE,
-                        new IntLiteralNode(1),
+                        new IntLiteralNode(BigInt(1)),
                       ),
                       BinaryOperator.EQ,
                       new IdentifierNode('changeValue'),
@@ -815,17 +815,17 @@ export const fixtures: Fixture[] = [
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.OUTPUT_VALUE,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
-                new IntLiteralNode(0),
+                new IntLiteralNode(BigInt(0)),
               ),
             ),
             new RequireNode(
               new BinaryOpNode(
                 new UnaryOpNode(
                   UnaryOperator.OUTPUT_LOCKING_BYTECODE,
-                  new IntLiteralNode(0),
+                  new IntLiteralNode(BigInt(0)),
                 ),
                 BinaryOperator.EQ,
                 new IdentifierNode('announcement'),
@@ -835,7 +835,7 @@ export const fixtures: Fixture[] = [
               PrimitiveType.INT,
               [],
               'minerFee',
-              new IntLiteralNode(1000),
+              new IntLiteralNode(BigInt(1000)),
             ),
             new VariableDefinitionNode(
               PrimitiveType.INT,
@@ -861,7 +861,7 @@ export const fixtures: Fixture[] = [
                   new BinaryOpNode(
                     new UnaryOpNode(
                       UnaryOperator.OUTPUT_LOCKING_BYTECODE,
-                      new IntLiteralNode(1),
+                      new IntLiteralNode(BigInt(1)),
                     ),
                     BinaryOperator.EQ,
                     new UnaryOpNode(
@@ -874,7 +874,7 @@ export const fixtures: Fixture[] = [
                   new BinaryOpNode(
                     new UnaryOpNode(
                       UnaryOperator.OUTPUT_VALUE,
-                      new IntLiteralNode(1),
+                      new IntLiteralNode(BigInt(1)),
                     ),
                     BinaryOperator.EQ,
                     new IdentifierNode('changeAmount'),

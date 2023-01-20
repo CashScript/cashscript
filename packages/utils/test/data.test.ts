@@ -42,24 +42,24 @@ describe('data utils', () => {
 
   describe('encodeInt()', () => {
     it('should encode integers', () => {
-      expect(encodeInt(0)).toEqual(hexToBin(''));
-      expect(encodeInt(-0)).toEqual(hexToBin(''));
-      expect(encodeInt(1)).toEqual(hexToBin('01'));
-      expect(encodeInt(-1)).toEqual(hexToBin('81'));
-      expect(encodeInt(1000)).toEqual(hexToBin('e803'));
-      expect(encodeInt(-1000)).toEqual(hexToBin('e883'));
-      expect(encodeInt(100000000000000)).toEqual(hexToBin('00407a10f35a'));
+      expect(encodeInt(BigInt(0))).toEqual(hexToBin(''));
+      expect(encodeInt(BigInt(-0))).toEqual(hexToBin(''));
+      expect(encodeInt(BigInt(1))).toEqual(hexToBin('01'));
+      expect(encodeInt(BigInt(-1))).toEqual(hexToBin('81'));
+      expect(encodeInt(BigInt(1000))).toEqual(hexToBin('e803'));
+      expect(encodeInt(BigInt(-1000))).toEqual(hexToBin('e883'));
+      expect(encodeInt(BigInt(100000000000000))).toEqual(hexToBin('00407a10f35a'));
     });
   });
 
   describe('decodeInt()', () => {
     it('should decode integers', () => {
-      expect(decodeInt(hexToBin(''))).toEqual(0);
-      expect(decodeInt(hexToBin('01'))).toEqual(1);
-      expect(decodeInt(hexToBin('81'))).toEqual(-1);
-      expect(decodeInt(hexToBin('e803'))).toEqual(1000);
-      expect(decodeInt(hexToBin('e883'))).toEqual(-1000);
-      expect(decodeInt(hexToBin('00407a10f35a'))).toEqual(100000000000000);
+      expect(decodeInt(hexToBin(''))).toEqual(BigInt(0));
+      expect(decodeInt(hexToBin('01'))).toEqual(BigInt(1));
+      expect(decodeInt(hexToBin('81'))).toEqual(BigInt(-1));
+      expect(decodeInt(hexToBin('e803'))).toEqual(BigInt(1000));
+      expect(decodeInt(hexToBin('e883'))).toEqual(BigInt(-1000));
+      expect(decodeInt(hexToBin('00407a10f35a'))).toEqual(BigInt(100000000000000));
     });
 
     it('should throw if the integer is not minimally encoded', () => {

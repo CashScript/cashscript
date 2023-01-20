@@ -194,7 +194,7 @@ export function replaceBytecodeNop(script: Script): Script {
   // Retrieve size of current OP_SPLIT
   let oldCut = script[index];
   if (oldCut instanceof Uint8Array) {
-    oldCut = decodeInt(oldCut);
+    oldCut = Number(decodeInt(oldCut));
   } else if (oldCut === Op.OP_0) {
     oldCut = 0;
   } else if (oldCut >= Op.OP_1 && oldCut <= Op.OP_16) {
@@ -204,10 +204,10 @@ export function replaceBytecodeNop(script: Script): Script {
   }
 
   // Update the old OP_SPLIT by adding either 1 or 3 to it
-  script[index] = encodeInt(oldCut + 1);
+  script[index] = encodeInt(BigInt(oldCut + 1));
   const bytecodeSize = calculateBytesize(script);
   if (bytecodeSize > 252) {
-    script[index] = encodeInt(oldCut + 3);
+    script[index] = encodeInt(BigInt(oldCut + 3));
   }
 
   // Minimally encode

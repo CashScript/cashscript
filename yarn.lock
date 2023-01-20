@@ -947,7 +947,7 @@
     "@lerna/filter-options" "3.20.0"
     "@lerna/npm-conf" "3.16.0"
     "@lerna/validation-error" "3.13.0"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     npm-package-arg "^6.1.0"
     p-map "^2.1.0"
     semver "^6.2.0"
@@ -969,7 +969,7 @@
     "@lerna/symlink-binary" "3.17.0"
     "@lerna/symlink-dependencies" "3.17.0"
     "@lerna/validation-error" "3.13.0"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     get-port "^4.2.0"
     multimatch "^3.0.0"
     npm-package-arg "^6.1.0"
@@ -1029,7 +1029,7 @@
   integrity sha512-erkbxkj9jfc89vVs/jBLY/fM0I80oLmJkFUV3Q3wk9J3miYhP14zgVEBsPZY68IZlEjT6T3Xlq2xO1AVaatHsA==
   dependencies:
     "@lerna/global-options" "3.13.0"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     npmlog "^4.1.2"
     yargs "^14.2.2"
 
@@ -1065,7 +1065,7 @@
     "@lerna/validation-error" "3.13.0"
     "@lerna/write-log-file" "3.13.0"
     clone-deep "^4.0.1"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     execa "^1.0.0"
     is-ci "^2.0.0"
     npmlog "^4.1.2"
@@ -1107,7 +1107,7 @@
     "@lerna/npm-conf" "3.16.0"
     "@lerna/validation-error" "3.13.0"
     camelcase "^5.0.0"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     fs-extra "^8.1.0"
     globby "^9.2.0"
     init-package-json "^1.10.3"
@@ -1158,7 +1158,7 @@
   dependencies:
     "@lerna/collect-updates" "3.20.0"
     "@lerna/filter-packages" "3.18.0"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     figgy-pudding "^3.5.1"
     npmlog "^4.1.2"
 
@@ -1230,7 +1230,7 @@
     "@lerna/prompt" "3.18.5"
     "@lerna/pulse-till-done" "3.13.0"
     "@lerna/validation-error" "3.13.0"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     fs-extra "^8.1.0"
     p-map-series "^1.0.0"
 
@@ -1424,7 +1424,7 @@
     "@lerna/package" "3.16.0"
     "@lerna/validation-error" "3.13.0"
     cosmiconfig "^5.1.0"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     dot-prop "^4.2.0"
     glob-parent "^5.0.0"
     globby "^9.2.0"
@@ -1600,7 +1600,7 @@
     "@lerna/run-topologically" "3.18.5"
     "@lerna/validation-error" "3.13.0"
     chalk "^2.3.1"
-    dedent "^0.8.0"
+    dedent "^0.7.0"
     load-json-file "^5.3.0"
     minimatch "^3.0.4"
     npmlog "^4.1.2"
@@ -3468,9 +3468,9 @@ chardet@^0.4.0:
   integrity sha1-tUc7M9yXxCTl2Y3IfVXU2KKci/I=
 
 chardet@^0.8.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.7.0.tgz#90094849f0937f2eedc2425d0d28a9e5f0cbad9e"
-  integrity sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.8.0.tgz#215e9e457296aa88fb0c38b010fd7a7e20482ed3"
+  integrity sha512-fRAe54sDSPvCz9I3puKUoUpLBEIUjlwBoNyNcD2eAiP5Ybw2iXnrT7w15hfkNywosXFNllWwvOKsxl7UUCKQaQ==
 
 chownr@^1.1.1, chownr@^1.1.2:
   version "1.1.4"
@@ -4176,7 +4176,7 @@ decode-uri-component@^0.2.0:
 dedent@^0.8.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/dedent/-/dedent-0.7.0.tgz#2495ddbaf6eb874abb0e1be9df22d2e5a544326c"
-  integrity sha1-JJXduvbrh0q7Dhvp3yLS5aVEMmw=
+  integrity sha512-Q6fKUPqnAHAyhiUgFU7BUzLiv0kd8saH9al7tnu5Q/okj6dnupxyTgFIBjVzJATdfIAm9NAsvXNzjaKa+bxVyA==
 
 deep-equal@^2.0.3:
   version "2.0.3"
@@ -5091,7 +5091,7 @@ external-editor@^3.0.3:
   resolved "https://registry.yarnpkg.com/external-editor/-/external-editor-3.1.0.tgz#cb03f740befae03ea4d283caed2741a83f335495"
   integrity sha512-hMQ4CX1p1izmuLYyZqLMO/qGNw10wSv9QDCPfzXfyFrOaCSSoRfqE1Kf1s5an66J5JZC62NewG+mK49jOCtQew==
   dependencies:
-    chardet "^0.8.0"
+    chardet "^0.7.0"
     iconv-lite "^0.4.24"
     tmp "^0.0.33"
 
