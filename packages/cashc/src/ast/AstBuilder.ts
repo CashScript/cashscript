@@ -335,9 +335,8 @@ export default class AstBuilder
   createIntLiteral(ctx: LiteralContext): IntLiteralNode {
     const numberCtx = ctx.numberLiteral() as NumberLiteralContext;
     const numberString = numberCtx.NumberLiteral().text;
-    const numberUnit = numberCtx.NumberUnit();
-    let numberValue = parseInt(numberString, 10);
-    numberValue *= numberUnit ? NumberUnit[numberUnit.text.toUpperCase()] : 1;
+    const numberUnit = numberCtx.NumberUnit()?.text;
+    const numberValue = BigInt(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit.toUpperCase()] : 1);
     const intLiteral = new IntLiteralNode(numberValue);
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
@@ -366,7 +365,7 @@ export default class AstBuilder
       throw new ParseError(`Incorrectly formatted date "${stringValue}"`, Location.fromCtx(ctx));
     }
 
-    const intLiteral = new IntLiteralNode(timestamp);
+    const intLiteral = new IntLiteralNode(BigInt(timestamp));
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
   }

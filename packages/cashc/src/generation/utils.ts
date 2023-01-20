@@ -21,7 +21,7 @@ export function compileTimeOp(op: TimeOp): Script {
 
 export function compileCast(from: Type, to: Type): Script {
   if (from === PrimitiveType.INT && to instanceof BytesType && to.bound !== undefined) {
-    return [encodeInt(to.bound), Op.OP_NUM2BIN];
+    return [encodeInt(BigInt(to.bound)), Op.OP_NUM2BIN];
   }
 
   if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {

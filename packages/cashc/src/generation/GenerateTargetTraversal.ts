@@ -111,7 +111,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       node.functions = node.functions.map((f, i) => {
         const stackCopy = [...this.stack];
         const selectorIndex = this.getStackIndex('$$');
-        this.emit(encodeInt(selectorIndex));
+        this.emit(encodeInt(BigInt(selectorIndex)));
         if (i === node.functions.length - 1) {
           this.emit(Op.OP_ROLL);
           this.removeFromStack(selectorIndex);
@@ -121,7 +121,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
         // All functions are if-else statements, except the final one which is
         // enforced with NUMEQUALVERIFY
-        this.emit(encodeInt(i));
+        this.emit(encodeInt(BigInt(i)));
         this.emit(Op.OP_NUMEQUAL);
         if (i < node.functions.length - 1) {
           this.emit(Op.OP_IF);
@@ -227,7 +227,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   // This algorithm can be optimised for hardcoded depths
   // See thesis for explanation
   emitReplace(index: number): void {
-    this.emit(encodeInt(index));
+    this.emit(encodeInt(BigInt(index)));
     this.emit(Op.OP_ROLL);
     this.emit(Op.OP_DROP);
     for (let i = 0; i < index - 1; i += 1) {
@@ -386,7 +386,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
         } else {
           // If the argument is not a literal, the script needs to check size
           this.emit(Op.OP_DUP);
-          this.emit(encodeInt(75));
+          this.emit(encodeInt(BigInt(75)));
           this.emit(Op.OP_GREATERTHAN);
           this.emit(Op.OP_IF);
           this.emit(hexToBin('4c'));
@@ -451,14 +451,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitArray(node: ArrayNode): Node {
     node.elements = this.visitList(node.elements);
-    this.emit(encodeInt(node.elements.length));
+    this.emit(encodeInt(BigInt(node.elements.length)));
     this.pushToStack('(value)');
     return node;
   }
 
   visitIdentifier(node: IdentifierNode): Node {
     const stackIndex = this.getStackIndex(node.name);
-    this.emit(encodeInt(stackIndex));
+    this.emit(encodeInt(BigInt(stackIndex)));
 
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
