@@ -4,7 +4,7 @@ import type SignatureTemplate from './SignatureTemplate.js';
 export interface Utxo {
   txid: string;
   vout: number;
-  satoshis: number;
+  satoshis: bigint;
 }
 
 export interface SignableUtxo extends Utxo {
@@ -17,12 +17,12 @@ export function isSignableUtxo(utxo: Utxo): utxo is SignableUtxo {
 
 export interface Recipient {
   to: string;
-  amount: number;
+  amount: bigint;
 }
 
 export interface Output {
   to: string | Uint8Array;
-  amount: number;
+  amount: bigint;
 }
 
 export enum SignatureAlgorithm {

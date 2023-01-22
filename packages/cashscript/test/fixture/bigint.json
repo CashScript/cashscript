@@ -20,7 +20,7 @@
   "source": "contract BigInt() {\n    function proofOfBigInt(int x, int y) {\n        int maxInt32PlusOne = 2147483648;\n        require(x >= maxInt32PlusOne);\n        require(x * y >= maxInt32PlusOne);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.7.0"
+    "version": "0.8.0-next.0"
   },
-  "updatedAt": "2021-11-30T13:26:06.585Z"
+  "updatedAt": "2023-01-21T17:30:02.210Z"
 }

@@ -7,11 +7,11 @@
       "inputs": []
     }
   ],
-  "bytecode": "OP_TXVERSION OP_2 OP_GREATERTHANOREQUAL",
-  "source": "contract Covenant() {\n    function spend() {\n        require(tx.version >= 2);\n    }\n}\n",
+  "bytecode": "OP_TXVERSION OP_2 OP_GREATERTHANOREQUAL OP_VERIFY OP_TXINPUTCOUNT OP_1 OP_GREATERTHANOREQUAL OP_VERIFY OP_TXOUTPUTCOUNT OP_1 OP_GREATERTHANOREQUAL OP_VERIFY OP_ACTIVEBYTECODE OP_SIZE OP_NIP 0802 OP_LESSTHAN OP_VERIFY OP_0 OP_UTXOVALUE 2202 OP_GREATERTHANOREQUAL OP_VERIFY OP_0 OP_OUTPUTVALUE 2202 OP_GREATERTHANOREQUAL",
+  "source": "contract Covenant() {\n    function spend() {\n        require(tx.version >= 2);\n        require(tx.inputs.length >= 1);\n        require(tx.outputs.length >= 1);\n        require(this.activeBytecode.length < 520);\n        require(tx.inputs[0].value >= 546);\n        require(tx.outputs[0].value >= 546);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.7.0"
+    "version": "0.8.0-next.0"
   },
-  "updatedAt": "2021-11-30T13:26:08.090Z"
+  "updatedAt": "2023-01-21T17:30:03.108Z"
 }

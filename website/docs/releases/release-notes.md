@@ -9,6 +9,8 @@ title: Release Notes
 
 #### CashScript SDK
 - :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.
+- :boom: **BREAKING**: Use `bigint` rather than `number` for all instances of "script numbers" (e.g. function arguments) and satoshi amounts.
+- :boom: **BREAKING**: Replace `contract.getRedeemScriptHex()` with `contract.bytecode`.
 
 ## v0.7.5
 

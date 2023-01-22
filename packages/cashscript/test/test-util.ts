@@ -15,14 +15,14 @@ export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork)
     const scriptHex = binToHex(o.lockingBytecode);
 
     if (scriptHex.startsWith(OP_RETURN)) {
-      return { to: hexToBin(scriptHex), amount: 0 };
+      return { to: hexToBin(scriptHex), amount: BigInt(0) };
     }
 
     const prefix = getNetworkPrefix(network);
     const address = lockingBytecodeToCashAddress(hexToBin(scriptHex), prefix) as string;
     return {
       to: address,
-      amount: Number(binToBigIntUint64LE(o.satoshis)),
+      amount: binToBigIntUint64LE(o.satoshis),
     };
   });
 }

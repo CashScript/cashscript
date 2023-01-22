@@ -1,12 +1,12 @@
 import { Contract, ElectrumNetworkProvider } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import { createOpReturnOutput } from '../../src/utils.js';
+import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
 
 describe('Announcement', () => {
   let announcement: Contract;
-  const minerFee = 1000;
+  const minerFee = BigInt(1000);
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -20,10 +20,11 @@ describe('Announcement', () => {
     it('should fail when trying to send money', async () => {
       // given
       const to = announcement.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
 
       const largestUtxo = (await announcement.getUtxos())
-        .sort((a, b) => b.satoshis - a.satoshis)
+        .sort(utxoComparator)
+        .reverse()
         .slice(0, 1);
 
       // when
@@ -44,7 +45,8 @@ describe('Announcement', () => {
       // given
       const str = 'A contract may injure a human being and, through inaction, allow a human being to come to harm.';
       const largestUtxo = (await announcement.getUtxos())
-        .sort((a, b) => b.satoshis - a.satoshis)
+        .sort(utxoComparator)
+        .reverse()
         .slice(0, 1);
 
       // when
@@ -65,7 +67,8 @@ describe('Announcement', () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
       const largestUtxo = (await announcement.getUtxos())
-        .sort((a, b) => b.satoshis - a.satoshis)
+        .sort(utxoComparator)
+        .reverse()
         .slice(0, 1);
 
       // when
@@ -73,7 +76,7 @@ describe('Announcement', () => {
         .announce()
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(minerFee * 2)
+        .withHardcodedFee(minerFee * BigInt(2))
         .withMinChange(minerFee)
         .send();
 
@@ -86,7 +89,8 @@ describe('Announcement', () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
       const largestUtxo = (await announcement.getUtxos())
-        .sort((a, b) => b.satoshis - a.satoshis)
+        .sort(utxoComparator)
+        .reverse()
         .slice(0, 1);
       const changeAmount = largestUtxo[0]?.satoshis - minerFee;
 
@@ -109,7 +113,8 @@ describe('Announcement', () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
       const largestUtxo = (await announcement.getUtxos())
-        .sort((a, b) => b.satoshis - a.satoshis)
+        .sort(utxoComparator)
+        .reverse()
         .slice(0, 1);
 
       // when
