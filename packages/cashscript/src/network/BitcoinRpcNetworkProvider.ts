@@ -20,7 +20,7 @@ export default class BitcoinRpcNetworkProvider implements NetworkProvider {
     const utxos = result.map((utxo) => ({
       txid: utxo.txid,
       vout: utxo.vout,
-      satoshis: utxo.amount * 1e8,
+      satoshis: BigInt(utxo.amount * 1e8),
     }));
 
     return utxos;

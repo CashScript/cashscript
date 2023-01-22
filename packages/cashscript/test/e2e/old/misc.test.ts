@@ -23,7 +23,7 @@ describe('v0.6.0 - Simple Covenant', () => {
     it('should succeed', async () => {
       // given
       const to = covenant.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
 
       // when
       const tx = await covenant.functions
@@ -40,7 +40,7 @@ describe('v0.6.0 - Simple Covenant', () => {
 
 describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
   let mecenas: Contract;
-  const pledge = 10000;
+  const pledge = BigInt(10000);
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -59,7 +59,7 @@ describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
     const tx = await mecenas.functions
       .receive(alicePk, new SignatureTemplate(alice))
       .to(to, amount)
-      .withHardcodedFee(1000)
+      .withHardcodedFee(BigInt(1000))
       .send();
 
     // then

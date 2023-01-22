@@ -15,7 +15,7 @@ describe('HodlVault', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/hodl_vault.json');
     const provider = new ElectrumNetworkProvider();
-    hodlVault = new Contract(artifact, [alicePk, oraclePk, 597000, 30000], provider);
+    hodlVault = new Contract(artifact, [alicePk, oraclePk, BigInt(597000), BigInt(30000)], provider);
     console.log(hodlVault.address);
   });
 
@@ -26,7 +26,7 @@ describe('HodlVault', () => {
       const wrongMessage = oracle.createMessage(600000, 1001);
       const wrongSig = oracle.signMessage(wrongMessage);
       const to = hodlVault.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const txPromise = hodlVault.functions
@@ -44,7 +44,7 @@ describe('HodlVault', () => {
       const message = oracle.createMessage(600000, 29900);
       const oracleSig = oracle.signMessage(message);
       const to = hodlVault.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const txPromise = hodlVault.functions
@@ -62,7 +62,7 @@ describe('HodlVault', () => {
       const message = oracle.createMessage(600000, 30000);
       const oracleSig = oracle.signMessage(message);
       const to = hodlVault.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const tx = await hodlVault.functions

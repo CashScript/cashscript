@@ -8,7 +8,7 @@ export class TypeError extends Error {
 }
 
 export class OutputSatoshisTooSmallError extends Error {
-  constructor(satoshis: number) {
+  constructor(satoshis: bigint) {
     super(`Tried to add an output with ${satoshis} satoshis, which is less than the DUST limit (${DUST_LIMIT})`);
   }
 }

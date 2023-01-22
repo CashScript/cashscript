@@ -87,7 +87,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
     return acc + output.to.byteLength + 8 + 2;
   }, 0);
   // Add tx-out count (accounting for a potential change output)
-  size += encodeInt(outputs.length + 1).byteLength;
+  size += encodeInt(BigInt(outputs.length + 1)).byteLength;
 
   return size;
 }
@@ -102,7 +102,7 @@ export function createInputScript(
   // Create unlock script / redeemScriptSig (add potential preimage and selector)
   const unlockScript = encodedArgs.reverse();
   if (preimage !== undefined) unlockScript.push(preimage);
-  if (selector !== undefined) unlockScript.push(encodeInt(selector));
+  if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 
   // Create input script and compile it to bytecode
   const inputScript = [...unlockScript, scriptToBytecode(redeemScript)];
@@ -117,7 +117,7 @@ export function createOpReturnOutput(
     ...opReturnData.map((output: string) => toBin(output)),
   ];
 
-  return { to: encodeNullDataScript(script), amount: 0 };
+  return { to: encodeNullDataScript(script), amount: BigInt(0) };
 }
 
 function toBin(output: string): Uint8Array {
@@ -128,14 +128,14 @@ function toBin(output: string): Uint8Array {
 
 export function createSighashPreimage(
   transaction: Transaction,
-  input: { satoshis: number },
+  input: Utxo,
   inputIndex: number,
   coveredBytecode: Uint8Array,
   hashtype: number,
 ): Uint8Array {
   const state = createTransactionContextCommon({
     inputIndex,
-    sourceOutput: { satoshis: bigIntToBinUint64LE(BigInt(input.satoshis)) },
+    sourceOutput: { satoshis: bigIntToBinUint64LE(input.satoshis) },
     spendingTransaction: transaction,
   });
 
@@ -207,6 +207,12 @@ export function scriptToLockingBytecode(script: Script): Uint8Array {
   const addressContents = { payload: scriptHash, type: AddressType.p2sh };
   const lockingBytecode = addressContentsToLockingBytecode(addressContents);
   return lockingBytecode;
+}
+
+export function utxoComparator(a: Utxo, b: Utxo): number {
+  if (a.satoshis > b.satoshis) return 1;
+  if (a.satoshis < b.satoshis) return -1;
+  return 0;
 }
 
 /**
