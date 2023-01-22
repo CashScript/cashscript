@@ -4,7 +4,12 @@ title: Migration Notes
 
 ## v0.7 to v0.8
 ### CashScript SDK
-Network options `"testnet"` & `"staging"` have been renamed to `"testnet3"` and `"testnet4"` respectively in version 0.7.3. The old option names are removed with this major release.
+- Network options `"testnet"` & `"staging"` have been renamed to `"testnet3"` and `"testnet4"` respectively in version 0.7.3. The old option names are removed with this major release.
+- You can no longer use `number` inputs for constructor arguments, function arguments, or input/output amounts. Use `bigint` instead.
+- `contract.getBalance()` and `contract.getUtxos()` now return `bigint` for satoshi amounts instead of `number`.
+- `contract.getRedeemScriptHex()` has been replaced with `contract.bytecode`.
+- `BitboxNetworkProvider` has been removed since Bitbox is long deprecated. Switch to modern solutions like `ElectrumNetworkProvider` instead.
+
 
 ## v0.6 to v0.7
 ### cashc compiler

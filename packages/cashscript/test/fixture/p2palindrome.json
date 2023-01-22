@@ -16,7 +16,7 @@
   "source": "contract P2Palindrome() {\n    function spend(string palindrome) {\n        require(palindrome.reverse() == palindrome);\n    }\n}\n",
   "compiler": {
     "name": "cashc",
-    "version": "0.7.0"
+    "version": "0.8.0-next.0"
   },
-  "updatedAt": "2021-11-30T13:26:07.514Z"
+  "updatedAt": "2023-01-21T17:30:02.752Z"
 }

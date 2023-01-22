@@ -61,8 +61,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     const utxos = result.map((utxo) => ({
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
-      satoshis: utxo.value,
-      height: utxo.height,
+      satoshis: BigInt(utxo.value),
     }));
 
     return utxos;
@@ -70,7 +69,6 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
 
   async getBlockHeight(): Promise<number> {
     const { height } = await this.performRequest('blockchain.headers.subscribe') as BlockHeader;
-
     return height;
   }
 

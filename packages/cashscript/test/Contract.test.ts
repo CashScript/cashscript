@@ -8,6 +8,8 @@ import {
   bob,
 } from './fixture/vars.js';
 
+// This is failing due to limitations between Jest and bigint (https://github.com/facebook/jest/issues/11617)
+// TODO: Fix this somehow by changing the test, or move away from Jest
 describe('Contract', () => {
   describe('new', () => {
     it('should fail with incorrect constructor args', () => {
@@ -16,7 +18,7 @@ describe('Contract', () => {
       const provider = new ElectrumNetworkProvider();
 
       expect(() => new Contract(artifact, [], provider)).toThrow();
-      expect(() => new Contract(artifact, [20], provider)).toThrow();
+      expect(() => new Contract(artifact, [BigInt(20)], provider)).toThrow();
       expect(
         () => new Contract(artifact, [placeholder(20), placeholder(20)], provider),
       ).toThrow();
@@ -52,7 +54,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/transfer_with_timeout.json');
       const provider = new ElectrumNetworkProvider();
-      const constructorArgs = [placeholder(65), placeholder(65), 1000000];
+      const constructorArgs = [placeholder(65), placeholder(65), BigInt(1000000)];
       const instance = new Contract(artifact, constructorArgs, provider);
 
       expect(typeof instance.address).toBe('string');
@@ -65,7 +67,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/hodl_vault.json');
       const provider = new ElectrumNetworkProvider();
-      const constructorArgs = [placeholder(65), placeholder(65), 1000000, 10000];
+      const constructorArgs = [placeholder(65), placeholder(65), BigInt(1000000), BigInt(10000)];
       const instance = new Contract(artifact, constructorArgs, provider);
 
       expect(typeof instance.address).toBe('string');
@@ -77,7 +79,7 @@ describe('Contract', () => {
       // eslint-disable-next-line global-require
       const artifact = require('./fixture/mecenas.json');
       const provider = new ElectrumNetworkProvider();
-      const constructorArgs = [placeholder(20), placeholder(20), 1000000];
+      const constructorArgs = [placeholder(20), placeholder(20), BigInt(1000000)];
       const instance = new Contract(artifact, constructorArgs, provider);
 
       expect(typeof instance.address).toBe('string');
@@ -95,7 +97,7 @@ describe('Contract', () => {
       const provider = new ElectrumNetworkProvider();
       const instance = new Contract(artifact, [alicePkh], provider);
 
-      expect(await instance.getBalance()).toBeGreaterThan(0);
+      expect(await instance.getBalance()).toBeGreaterThan(BigInt(0));
     });
 
     it('should return zero balance for new contract', async () => {
@@ -104,7 +106,7 @@ describe('Contract', () => {
       const provider = new ElectrumNetworkProvider();
       const instance = new Contract(artifact, [placeholder(20)], provider);
 
-      expect(await instance.getBalance()).toBe(0);
+      expect(await instance.getBalance()).toBe(BigInt(0));
     });
   });
 
@@ -124,21 +126,21 @@ describe('Contract', () => {
 
     it('can\'t call spend with incorrect signature', () => {
       expect(() => instance.functions.spend()).toThrow();
-      expect(() => instance.functions.spend(0, 1)).toThrow();
-      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice), 0)).toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e803'), 1000)).toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e803000000'), 1000)).toThrow();
+      expect(() => instance.functions.spend(BigInt(0), BigInt(1))).toThrow();
+      expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice), BigInt(0))).toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e803'), BigInt(1000))).toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e803000000'), BigInt(1000))).toThrow();
     });
 
     it('can call spend with incorrect arguments', () => {
       expect(() => instance.functions.spend(alicePk, new SignatureTemplate(bob))).not.toThrow();
       expect(() => instance.functions.spend(alicePk, placeholder(65))).not.toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e8031234'), 1000)).not.toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e8031234'), BigInt(1000))).not.toThrow();
     });
 
     it('can call spend with correct arguments', () => {
       expect(() => instance.functions.spend(alicePk, new SignatureTemplate(alice))).not.toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e8030000'), 1000)).not.toThrow();
+      expect(() => bbInstance.functions.spend(hexToBin('e8030000'), BigInt(1000))).not.toThrow();
     });
   });
 });

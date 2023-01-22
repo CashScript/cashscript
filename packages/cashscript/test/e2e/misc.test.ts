@@ -16,7 +16,7 @@ describe('Simple Covenant', () => {
     it('should succeed', async () => {
       // given
       const to = covenant.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
 
       // when
       const tx = await covenant.functions.spend().to(to, amount).send();
