@@ -16,8 +16,8 @@ describe('TransferWithTimeout', () => {
     // eslint-disable-next-line global-require
     const artifact = require('../fixture/transfer_with_timeout.json');
     const provider = new ElectrumNetworkProvider();
-    twtInstancePast = new Contract(artifact, [alicePk, bobPk, 500000], provider);
-    twtInstanceFuture = new Contract(artifact, [alicePk, bobPk, 2000000], provider);
+    twtInstancePast = new Contract(artifact, [alicePk, bobPk, BigInt(500000)], provider);
+    twtInstanceFuture = new Contract(artifact, [alicePk, bobPk, BigInt(2000000)], provider);
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);
   });
@@ -26,7 +26,7 @@ describe('TransferWithTimeout', () => {
     it('should fail when using incorrect function arguments to transfer', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const txPromise = twtInstancePast.functions
@@ -42,7 +42,7 @@ describe('TransferWithTimeout', () => {
     it('should fail when using incorrect function arguments to timeout', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const txPromise = twtInstancePast.functions
@@ -58,7 +58,7 @@ describe('TransferWithTimeout', () => {
     it('should fail when timeout is called before timeout block', async () => {
       // given
       const to = twtInstanceFuture.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const txPromise = twtInstanceFuture.functions
@@ -74,7 +74,7 @@ describe('TransferWithTimeout', () => {
     it('should succeed when transfer is called after timeout block', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const tx = await twtInstancePast.functions
@@ -90,7 +90,7 @@ describe('TransferWithTimeout', () => {
     it('should succeed when transfer is called before timeout block', async () => {
       // given
       const to = twtInstanceFuture.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const tx = await twtInstanceFuture.functions
@@ -106,7 +106,7 @@ describe('TransferWithTimeout', () => {
     it('should succeed when timeout is called after timeout block', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const tx = await twtInstancePast.functions

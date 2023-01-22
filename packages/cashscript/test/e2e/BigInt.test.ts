@@ -24,11 +24,11 @@ describe('BigInt', () => {
     it('should fail when providing a number that fits within 32 bits', async () => {
       // given
       const to = bigintContract.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
 
       // when
       const txPromise = bigintContract.functions
-        .proofOfBigInt(MAX_INT32, 10)
+        .proofOfBigInt(MAX_INT32, BigInt(10))
         .to(to, amount)
         .send();
 
@@ -40,11 +40,11 @@ describe('BigInt', () => {
     it('should fail when providing numbers that overflow 64 bits when multiplied', async () => {
       // given
       const to = bigintContract.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
 
       // when
       const txPromise = bigintContract.functions
-        .proofOfBigInt(MAX_INT64 / BigInt(9), 10)
+        .proofOfBigInt(MAX_INT64 / BigInt(9), BigInt(10))
         .to(to, amount)
         .send();
 
@@ -56,11 +56,11 @@ describe('BigInt', () => {
     it('should fail when providing a number that does not fit within 64 bits', async () => {
       // given
       const to = bigintContract.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
 
       // when
       const txPromise = bigintContract.functions
-        .proofOfBigInt(MAX_INT64 + BigInt(1), 10)
+        .proofOfBigInt(MAX_INT64 + BigInt(1), BigInt(10))
         .to(to, amount)
         .send();
 
@@ -72,11 +72,11 @@ describe('BigInt', () => {
     it('should succeed when providing a number within 32b < x < 64b', async () => {
       // given
       const to = bigintContract.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
 
       // when
       const tx = await bigintContract.functions
-        .proofOfBigInt(MAX_INT32 + BigInt(1), 10)
+        .proofOfBigInt(MAX_INT32 + BigInt(1), BigInt(10))
         .to(to, amount)
         .send();
 

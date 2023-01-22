@@ -13,8 +13,8 @@ import { FailedRequireError, Reason } from '../../../src/Errors.js';
 // Mecenas has tx.age check omitted for testing
 describe('v0.6.0 - Mecenas', () => {
   let mecenas: Contract;
-  const pledge = 10000;
-  const minerFee = 1000;
+  const pledge = BigInt(10000);
+  const minerFee = BigInt(1000);
 
   beforeAll(() => {
     // eslint-disable-next-line global-require
@@ -28,7 +28,7 @@ describe('v0.6.0 - Mecenas', () => {
     it('should fail when trying to send more than pledge', async () => {
       // given
       const to = aliceAddress;
-      const amount = pledge + 10;
+      const amount = pledge + BigInt(10);
 
       // when
       const txPromise = mecenas.functions

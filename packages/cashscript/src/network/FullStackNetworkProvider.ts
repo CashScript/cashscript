@@ -21,8 +21,7 @@ export default class FullStackNetworkProvider implements NetworkProvider {
     const utxos = (result.utxos ?? []).map((utxo: ElectrumUtxo) => ({
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
-      satoshis: utxo.value,
-      height: utxo.height,
+      satoshis: BigInt(utxo.value),
     }));
 
     return utxos;
@@ -33,7 +32,7 @@ export default class FullStackNetworkProvider implements NetworkProvider {
   }
 
   async getRawTransaction(txid: string): Promise<string> {
-    return this.bchjs.RawTransactions.getRawTransaction(txid) as Promise<string>;
+    return this.bchjs.RawTransactions.getRawTransaction(txid);
   }
 
   async sendRawTransaction(txHex: string): Promise<string> {

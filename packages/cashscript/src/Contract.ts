@@ -22,6 +22,7 @@ import { ElectrumNetworkProvider } from './network/index.js';
 export class Contract {
   name: string;
   address: string;
+  bytecode: string;
   bytesize: number;
   opcount: number;
 
@@ -74,21 +75,18 @@ export class Contract {
 
     this.name = artifact.contractName;
     this.address = scriptToAddress(this.redeemScript, this.provider.network);
+    this.bytecode = binToHex(scriptToBytecode(this.redeemScript));
     this.bytesize = calculateBytesize(this.redeemScript);
     this.opcount = countOpcodes(this.redeemScript);
   }
 
-  async getBalance(): Promise<number> {
+  async getBalance(): Promise<bigint> {
     const utxos = await this.getUtxos();
-    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, 0);
+    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, BigInt(0));
   }
 
   async getUtxos(): Promise<Utxo[]> {
     return this.provider.getUtxos(this.address);
-  }
-
-  getRedeemScriptHex(): string {
-    return binToHex(scriptToBytecode(this.redeemScript));
   }
 
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {

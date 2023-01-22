@@ -36,6 +36,7 @@ import {
   addressToLockScript,
   createSighashPreimage,
   validateRecipient,
+  utxoComparator,
 } from './utils.js';
 import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants.js';
 import NetworkProvider from './network/NetworkProvider.js';
@@ -49,9 +50,9 @@ export class Transaction {
 
   private sequence = 0xfffffffe;
   private locktime: number;
-  private hardcodedFee: number;
-  private feePerByte = 1.0;
-  private minChange = DUST_LIMIT;
+  private feePerByte: number = 1.0;
+  private hardcodedFee: bigint;
+  private minChange: bigint = DUST_LIMIT;
 
   constructor(
     private address: string,
@@ -90,11 +91,11 @@ export class Transaction {
     return this;
   }
 
-  to(to: string, amount: number): this;
+  to(to: string, amount: bigint): this;
   to(outputs: Recipient[]): this;
 
-  to(toOrOutputs: string | Recipient[], amount?: number): this {
-    if (typeof toOrOutputs === 'string' && typeof amount === 'number') {
+  to(toOrOutputs: string | Recipient[], amount?: bigint): this {
+    if (typeof toOrOutputs === 'string' && typeof amount === 'bigint') {
       return this.to([{ to: toOrOutputs, amount }]);
     }
 
@@ -122,7 +123,7 @@ export class Transaction {
     return this;
   }
 
-  withHardcodedFee(hardcodedFee: number): this {
+  withHardcodedFee(hardcodedFee: bigint): this {
     this.hardcodedFee = hardcodedFee;
     return this;
   }
@@ -132,13 +133,13 @@ export class Transaction {
     return this;
   }
 
-  withMinChange(minChange: number): this {
+  withMinChange(minChange: bigint): this {
     this.minChange = minChange;
     return this;
   }
 
   withoutChange(): this {
-    return this.withMinChange(Number.MAX_VALUE);
+    return this.withMinChange(BigInt(Number.MAX_VALUE));
   }
 
   async build(): Promise<string> {
@@ -160,7 +161,7 @@ export class Transaction {
         ? addressToLockScript(output.to)
         : output.to;
 
-      const satoshis = bigIntToBinUint64LE(BigInt(output.amount));
+      const satoshis = bigIntToBinUint64LE(output.amount);
 
       return { lockingBytecode, satoshis };
     });
@@ -294,35 +295,38 @@ export class Transaction {
     // Add one extra byte per input to over-estimate tx-in count
     const inputSize = getInputSize(placeholderScript) + 1;
 
+    // Note that we use the addPrecision function to add "decimal points" to BigInt numbers
+
     // Calculate amount to send and base fee (excluding additional fees per UTXO)
-    const amount = this.outputs.reduce((acc, output) => acc + output.amount, 0);
-    let fee = this.hardcodedFee ?? getTxSizeWithoutInputs(this.outputs) * this.feePerByte;
+    let amount = addPrecision(this.outputs.reduce((acc, output) => acc + output.amount, BigInt(0)));
+    let fee = addPrecision(this.hardcodedFee ?? getTxSizeWithoutInputs(this.outputs) * this.feePerByte);
 
     // Select and gather UTXOs and calculate fees and available funds
-    let satsAvailable = 0;
+    let satsAvailable = BigInt(0);
     if (this.inputs.length > 0) {
-      // If inputs are already defined, the user provided the UTXOs
-      // and we perform no further UTXO selection
-      if (!this.hardcodedFee) fee += this.inputs.length * inputSize * this.feePerByte;
-      satsAvailable = this.inputs.reduce((acc, input) => acc + input.satoshis, 0);
+      // If inputs are already defined, the user provided the UTXOs and we perform no further UTXO selection
+      if (!this.hardcodedFee) fee += addPrecision(this.inputs.length * inputSize * this.feePerByte);
+      satsAvailable = addPrecision(this.inputs.reduce((acc, input) => acc + input.satoshis, BigInt(0)));
     } else {
       // If inputs are not defined yet, we retrieve the contract's UTXOs and perform selection
       const utxos = await this.provider.getUtxos(this.address);
 
       // We sort the UTXOs mainly so there is consistent behaviour between network providers
       // even if they report UTXOs in a different order
-      utxos.sort((a, b) => b.satoshis - a.satoshis);
+      utxos.sort(utxoComparator).reverse();
 
       for (const utxo of utxos) {
         this.inputs.push(utxo);
-        satsAvailable += utxo.satoshis;
-        if (!this.hardcodedFee) fee += inputSize * this.feePerByte;
+        satsAvailable += addPrecision(utxo.satoshis);
+        if (!this.hardcodedFee) fee += addPrecision(inputSize * this.feePerByte);
         if (satsAvailable > amount + fee) break;
       }
     }
 
-    // Fee per byte can be a decimal number, but we need the total fee to be an integer
-    fee = Math.ceil(fee);
+    // Remove "decimal points" from BigInt numbers (rounding up for fee, down for others)
+    satsAvailable = removePrecisionFloor(satsAvailable);
+    amount = removePrecisionFloor(amount);
+    fee = removePrecisionCeil(fee);
 
     // Calculate change and check available funds
     let change = satsAvailable - amount - fee;
@@ -331,9 +335,9 @@ export class Transaction {
       throw new Error(`Insufficient funds: available (${satsAvailable}) < needed (${amount + fee}).`);
     }
 
-    // Account for the fee of a change output
+    // Account for the fee of adding a change output
     if (!this.hardcodedFee) {
-      change -= P2SH_OUTPUT_SIZE;
+      change -= BigInt(P2SH_OUTPUT_SIZE * this.feePerByte);
     }
 
     // Add a change output if applicable
@@ -342,3 +346,25 @@ export class Transaction {
     }
   }
 }
+
+// Note: the below is a very simple implementation of a "decimal point" system for BigInt numbers
+// It is safe to use for UTXO fee calculations due to its low numbers, but should not be used for other purposes
+// Also note that multiplication and division between two "decimal" bigints is not supported
+
+// High precision may not work with some 'number' inputs, so we set the default to 6 "decimal places"
+const addPrecision = (amount: number | bigint, precision: number = 6): bigint => {
+  if (typeof amount === 'number') {
+    return BigInt(Math.ceil(amount * 10 ** precision));
+  }
+
+  return amount * BigInt(10 ** precision);
+};
+
+const removePrecisionFloor = (amount: bigint, precision: number = 6): bigint => (
+  amount / (BigInt(10) ** BigInt(precision))
+);
+
+const removePrecisionCeil = (amount: bigint, precision: number = 6): bigint => {
+  const multiplier = BigInt(10) ** BigInt(precision);
+  return (amount + multiplier - BigInt(1)) / multiplier;
+};

@@ -9,7 +9,7 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { Utxo } from '../../src/interfaces.js';
-import { createOpReturnOutput } from '../../src/utils.js';
+import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 
 describe('P2PKH', () => {
@@ -27,7 +27,7 @@ describe('P2PKH', () => {
     it('should fail when using incorrect function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const txPromise = p2pkhInstance.functions
@@ -43,7 +43,7 @@ describe('P2PKH', () => {
     it('should succeed when using correct function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const tx = await p2pkhInstance.functions
@@ -60,11 +60,11 @@ describe('P2PKH', () => {
     it('should fail when not enough satoshis are provided in utxos', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
       const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1));
+      utxos.sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
-      const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, 0) + 1;
+      const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, BigInt(0)) + BigInt(1);
 
       // when
       const txPromise = p2pkhInstance.functions
@@ -80,9 +80,9 @@ describe('P2PKH', () => {
     it('should succeed when providing UTXOs', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = 1000;
+      const amount = BigInt(1000);
       const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort((a, b) => (a.satoshis > b.satoshis ? 1 : -1));
+      utxos.sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
 
       // when
@@ -105,8 +105,8 @@ describe('P2PKH', () => {
     it('can call to() multiple times', async () => {
       // given
       const outputs = [
-        { to: p2pkhInstance.address, amount: 10000 },
-        { to: p2pkhInstance.address, amount: 20000 },
+        { to: p2pkhInstance.address, amount: BigInt(10000) },
+        { to: p2pkhInstance.address, amount: BigInt(20000) },
       ];
 
       // when
@@ -124,8 +124,8 @@ describe('P2PKH', () => {
     it('can send to list of recipients', async () => {
       // given
       const outputs = [
-        { to: p2pkhInstance.address, amount: 10000 },
-        { to: p2pkhInstance.address, amount: 20000 },
+        { to: p2pkhInstance.address, amount: BigInt(10000) },
+        { to: p2pkhInstance.address, amount: BigInt(20000) },
       ];
 
       // when
@@ -143,7 +143,7 @@ describe('P2PKH', () => {
       // given
       const opReturn = ['0x6d02', 'Hello, World!', '0x01'];
       const to = p2pkhInstance.address;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       // when
       const tx = await p2pkhInstance.functions
@@ -161,7 +161,7 @@ describe('P2PKH', () => {
     it('can include UTXOs from P2PKH addresses', async () => {
       // given
       const to = aliceAddress;
-      const amount = 10000;
+      const amount = BigInt(10000);
 
       const contractUtxos = await p2pkhInstance.getUtxos();
       const aliceUtxos = await getAddressUtxos(aliceAddress);
@@ -190,12 +190,12 @@ async function getAddressUtxos(address: string): Promise<Utxo[]> {
 
 function gatherUtxos(
   utxos: Utxo[],
-  options?: { amount?: number, fees?: number },
-): { utxos: Utxo[], total: number } {
+  options?: { amount?: bigint, fees?: bigint },
+): { utxos: Utxo[], total: bigint } {
   const targetUtxos: Utxo[] = [];
-  let total = 0;
+  let total = BigInt(0);
   // 1000 for fees
-  const { amount = 0, fees = 1000 } = options ?? {};
+  const { amount = BigInt(0), fees = BigInt(1000) } = options ?? {};
   for (const utxo of utxos) {
     if (total - fees > amount) break;
     total += utxo.satoshis;

@@ -16,7 +16,6 @@ export {
 export * from './Errors.js';
 export {
   NetworkProvider,
-  BitboxNetworkProvider,
   BitcoinRpcNetworkProvider,
   ElectrumNetworkProvider,
   FullStackNetworkProvider,
