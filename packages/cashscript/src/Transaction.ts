@@ -282,16 +282,23 @@ export class Transaction {
 
     // Construct object with total output of fungible tokens by tokenId
     const netBalanceTokens: any = {};
+    // Construct list with all nfts in inputs
+    const listNftsInputs = [];
     // If inputs are manually selected, add their tokens to balance
     for(const input of this.inputs){
       if(typeof input.token === "undefined") continue;
       const tokenCategory = input.token.category;
-      if(typeof netBalanceTokens[tokenCategory] === "undefined"){
+      if(typeof netBalanceTokens[tokenCategory] === "undefined"){ 
         netBalanceTokens[tokenCategory] = input.token.amount;
       } else {
         netBalanceTokens[tokenCategory] += input.token.amount;
       }
+      if(typeof input.token.nft !== "undefined"){
+        listNftsInputs.push({...input.token.nft, category: input.token.category});
+      }
     }
+    // Construct list with all nfts in outputs
+    let listNftsOutputs = [];
     // Substract all token outputs from the token balances
     for(const output of this.outputs){
       if(typeof output.token === "undefined") continue;
@@ -301,8 +308,11 @@ export class Transaction {
       } else {
         netBalanceTokens[tokenCategory] -= output.token.amount;
       }
+      if(typeof output.token.nft !== "undefined"){
+        listNftsOutputs.push({...output.token.nft, category: output.token.category});
+      }
     }
-    // If iputs are manually provided, check token balances
+    // If inputs are manually provided, check token balances
     if(this.inputs.length > 0){
       for(const tokenBalance of netBalanceTokens){
         // Add token change outputs if applicable
@@ -318,6 +328,62 @@ export class Transaction {
         if(tokenBalance.amount < 0){
           throw new Error(`Insufficient token balance.`);
         }
+      }
+      // Compare nfts in- and outputs, check if inputs have nfts corresponsing to outputs
+      // Keep list of nfts in inputs without matching output
+      // First check immutable nfts, then mutables & minting nfts together
+      // this is so the mutable nft in input does not get match to an output nft corresponding to an immutible nft in the inputs
+      let unusedNfts = listNftsInputs;
+      for(const nftInput of listNftsInputs){
+        if(nftInput.capability === "none"){
+          for (let i = 0; i < listNftsOutputs.length; i++) {
+            if (listNftsOutputs[i] === nftInput) {
+              listNftsOutputs.splice(i, 1);
+              unusedNfts = unusedNfts.filter(nft => nft !== nftInput);
+              break;
+            }
+          }
+        }
+      }
+      for(const nftInput of listNftsInputs){
+        if(nftInput.capability === "minting"){
+          const newListNftsOutputs: {
+            category: string;
+            capability: "none" | "mutable" | "minting";
+            commitment: string;
+        }[] = listNftsOutputs.filter(nftOutput => nftOutput.category !== nftInput.category);
+          if(newListNftsOutputs !== listNftsOutputs){
+            unusedNfts = unusedNfts.filter(nft => nft !== nftInput);
+            listNftsOutputs = newListNftsOutputs;
+          }
+        }
+        if(nftInput.capability === "mutable"){
+          for (let i = 0; i < listNftsOutputs.length; i++) {
+            if (listNftsOutputs[i].category === nftInput.category) {
+              listNftsOutputs.splice(i, 1);
+              unusedNfts = unusedNfts.filter(nft => nft !== nftInput);
+              break;
+            }
+          }
+        }
+      }
+      if(listNftsOutputs.length !== 0) {
+        throw new Error(`Nfts in outputs don't have corresponding nfts in inputs!`)
+      }
+      if(this.tokenChange){
+        for(const unusedNft of unusedNfts){
+          const tokenDetails: TokenDetails = {
+            category : unusedNft.category,
+            amount : BigInt(0),
+            nft: {
+              capability: unusedNft.capability,
+              commitment: unusedNft.commitment,
+            }
+          };
+          const nftChangeOutput = { to: this.address, amount: BigInt(1000), token: tokenDetails };
+          this.outputs.push(nftChangeOutput);
+        }
+      }
     }
 
     // Replace all SignatureTemplate with 65-length placeholder Uint8Arrays
