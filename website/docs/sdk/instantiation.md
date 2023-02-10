@@ -24,16 +24,16 @@ A `NetworkProvider` is used to manage network operations for the CashScript cont
 
 #### Example
 ```ts
-const { Contract, ElectrumNetworkProvider } = require('cashscript');
-const { compileFile } = require('cashc');
+import { Contract, ElectrumNetworkProvider } from 'cashscript';
+import { compileFile } from 'cashc';
 
-// Import an artifact JSON file that was compiled earlier
-const P2PKH = require('./p2pkh.json');
+// Import the artifact JSON
+import P2PKH from './p2pkh.json';
 
 // Or compile a contract file
-const P2PKH = compileFile(path.join(__dirname, 'p2pkh.cash'));
+const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 
-const provider = new ElectrumNetworkProvider('testnet');
+const provider = new ElectrumNetworkProvider('testnet4');
 const contract = new Contract(P2PKH, [alicePkh], provider);
 ```
 
@@ -73,21 +73,21 @@ The size of the contract's bytecode in bytes can be retrieved through the `bytes
 console.log(contract.bytesize)
 ```
 
-### getRedeemScriptHex()
+### bytecode
 ```ts
-contract.getRedeemScriptHex: string
+contract.bytecode: string
 ```
 
 Returns the contract's redeem script encoded as a hex string.
 
 #### Example
 ```ts
-console.log(contract.getRedeemScriptHex())
+console.log(contract.bytecode)
 ```
 
 ### getBalance()
 ```ts
-async contract.getBalance(): Promise<number>
+async contract.getBalance(): Promise<bigint>
 ```
 
 Returns the total balance of the contract in satoshis. Both confirmed and unconfirmed balance is included in this figure.
@@ -124,7 +124,7 @@ import { alice } from './somewhere';
 
 const tx = await contract.functions
   .transfer(new SignatureTemplate(alice))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000)
+  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
   .send()
 ```
 
@@ -167,28 +167,13 @@ The FullStackNetworkProvider uses [FullStack.cash][fullstack]' infrastructure to
 
 #### Example
 ```js
-const BCHJS = require('@psf/bch-js');
+const { default: BCHJS } = await import('@psf/bch-js');
 
 const restURL = 'https://api.fullstack.cash/v3/';
 const apiToken = 'eyJhbGciO...'; // Your JWT token here.
 const bchjs = new BCHJS({ restURL, apiToken });
 
 const provider = new FullStackNetworkProvider('mainnet', bchjs);
-```
-
-### BitboxNetworkProvider
-```ts
-new BitboxNetworkProvider(network: Network, bitbox: BITBOX)
-```
-
-The BitboxNetworkProvider uses Bitcoin.com's [BITBOX][bitbox] to connect to the BCH network. Because BITBOX is no longer officially maintained it is not recommended to use this network provider, and it is only available for compatibility with older projects. Both `network` and `bitbox` parameters are mandatory, where `bitbox` is a BITBOX instance.
-
-#### Example
-```js
-const BITBOX = require('bitbox-sdk');
-
-const bitbox = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
-const provider = new FullStackNetworkProvider('mainnet', bitbox);
 ```
 
 ### BitcoinRpcNetworkProvider
@@ -248,7 +233,7 @@ type Network = 'mainnet' | 'testnet3' | 'testnet4' | 'chipnet' | 'regtest';
 interface Utxo {
   txid: string;
   vout: number;
-  satoshis: number;
+  satoshis: bigint;
 }
 ```
 
@@ -261,14 +246,14 @@ npm install cashc
 
 ### compileFile()
 ```ts
-compileFile(sourceFile: string): Artifact
+compileFile(sourceFile: PathLike): Artifact
 ```
 
 Compiles a CashScript contract from a source file. This is the recommended compile method if you're using Node.js and you have a source file available.
 
 #### Example
 ```ts
-const P2PKH = compileFile(path.join(__dirname, 'p2pkh.cash'));
+const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 ```
 
 ### compileString()

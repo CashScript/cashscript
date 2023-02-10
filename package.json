@@ -1,6 +1,7 @@
 {
   "name": "root",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/*",
     "examples"
@@ -26,8 +27,8 @@
     "typescript": "^4.1.5"
   },
   "scripts": {
-    "test": "jest",
-    "lint": "eslint . --ext .ts",
+    "test": "lerna run test --ignore cashscript-examples",
+    "lint": "lerna run lint --ignore cashscript-examples",
     "preproof:opt": "cp packages/utils/src/cashproof-optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv",
     "proof:opt": "yarn cashproof opt.equiv",
     "postproof:opt": "rm opt.equiv",
@@ -38,7 +39,7 @@
     "coverage": "codecov",
     "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
-    "update-version": "ts-node update-version.ts",
+    "update-version": "ts-node-esm update-version.ts",
     "publish-all": "lerna publish from-package"
   }
 }

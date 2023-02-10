@@ -10,15 +10,15 @@ Most of the available transaction options are only useful in very specific use c
 
 ### to()
 ```ts
-transaction.to(to: string, amount: number): this
-transaction.to(outputs: { to: string, amount: number }[]): this
+transaction.to(to: string, amount: bigint): this
+transaction.to(outputs: Array<{ to: string, amount: bigint }>): this
 ```
 
 The `to()` function allows you to add outputs to the transaction. Either a single pair `to/amount` pair can be provided, or a list of them. This function can be called any number of times, and the provided outputs will be added to the list of earlier added outputs.
 
 #### Example
 ```ts
-.to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000)
+.to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
 ```
 
 ### withOpReturn()
@@ -63,7 +63,7 @@ The `withFeePerByte()` function allows you to specify the fee per per bytes for 
 
 ### withHardcodedFee()
 ```ts
-transaction.withHardcodedFee(hardcodedFee: number): this
+transaction.withHardcodedFee(hardcodedFee: bigint): this
 ```
 
 The `withHardcodedFee()` function allows you to specify a hardcoded fee to the transaction. By default the transaction fee is automatically calculated by the CashScript SDK, but there are certain use cases where the smart contract relies on a hardcoded fee.
@@ -74,12 +74,12 @@ If you're not building a covenant contract, you probably do not need a hardcoded
 
 #### Example
 ```ts
-.withHardcodedFee(1000)
+.withHardcodedFee(1000n)
 ```
 
 ### withMinChange()
 ```ts
-transaction.withMinChange(minChange: number): this
+transaction.withMinChange(minChange: bigint): this
 ```
 
 The `withMinChange()` function allows you to set a threshold for including a change output. Any remaining amount under this threshold will be added to the transaction fee instead.
@@ -90,7 +90,7 @@ This is generally only useful in specific covenant use cases.
 
 #### Example
 ```ts
-.withMinChange(1000)
+.withMinChange(1000n)
 ```
 
 ### withoutChange()
@@ -167,9 +167,9 @@ import { alice } from './somewhere';
 const txDetails = await instance.functions
   .transfer(new SignatureTemplate(alice))
   .withOpReturn(['0x6d02', 'Hello World!'])
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 200000)
-  .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 100000)
-  .withHardcodedFee(1000)
+  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 200000n)
+  .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 100000n)
+  .withHardcodedFee(1000n)
   .send()
 ```
 
@@ -184,8 +184,10 @@ After completing a transaction, the `build()` function can be used to build the 
 ```ts
 const txHex = await instance.functions
   .transfer(new SignatureTemplate(alice))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000)
-  .withAge(10).withFeePerByte(10).build()
+  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
+  .withAge(10)
+  .withFeePerByte(10)
+  .build()
 ```
 
 ### meep()
@@ -199,7 +201,7 @@ After completing a transaction, the `meep()` function can be used to return the 
 ```ts
 const meepStr = await instance.functions
   .transfer(new SignatureTemplate(alice))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000)
+  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
   .withTime(700000)
   .meep()
 ```

@@ -1,3 +1,4 @@
+// TODO: Replace with libauth
 import hash from 'hash.js';
 
 export function sha512(payload: Uint8Array): Uint8Array {

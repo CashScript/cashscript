@@ -1,13 +1,13 @@
 import {
-  bigIntToScriptNumber,
-  parseBytesAsScriptNumber,
-  isScriptNumberError,
+  bigIntToVmNumber,
   utf8ToBin,
   binToUtf8,
+  vmNumberToBigInt,
+  isVmNumberError,
 } from '@bitauth/libauth';
 
 export function encodeBool(bool: boolean): Uint8Array {
-  return bool ? encodeInt(BigInt(1)) : encodeInt(BigInt(0));
+  return bool ? encodeInt(1n) : encodeInt(0n);
 }
 
 export function decodeBool(encodedBool: Uint8Array): boolean {
@@ -23,14 +23,14 @@ export function decodeBool(encodedBool: Uint8Array): boolean {
 }
 
 export function encodeInt(int: bigint): Uint8Array {
-  return bigIntToScriptNumber(int);
+  return bigIntToVmNumber(int);
 }
 
 export function decodeInt(encodedInt: Uint8Array, maxLength: number = 8): bigint {
-  const options = { maximumScriptNumberByteLength: maxLength };
-  const result = parseBytesAsScriptNumber(encodedInt, options);
+  const options = { maximumVmNumberByteLength: maxLength };
+  const result = vmNumberToBigInt(encodedInt, options);
 
-  if (isScriptNumberError(result)) {
+  if (isVmNumberError(result)) {
     throw new Error(result);
   }
 

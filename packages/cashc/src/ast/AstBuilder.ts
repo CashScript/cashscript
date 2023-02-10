@@ -35,7 +35,7 @@ import {
   NullaryOpNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
-import {
+import type {
   ContractDefinitionContext,
   FunctionDefinitionContext,
   VariableDefinitionContext,
@@ -64,7 +64,7 @@ import {
   NullaryOpContext,
   UnaryIntrospectionOpContext,
 } from '../grammar/CashScriptParser.js';
-import { CashScriptVisitor } from '../grammar/CashScriptVisitor.js';
+import type { CashScriptVisitor } from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
 import {
   NumberUnit,

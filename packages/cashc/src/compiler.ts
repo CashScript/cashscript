@@ -1,6 +1,6 @@
 import { Artifact, optimiseBytecode } from '@cashscript/utils';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
-import fs from 'fs';
+import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
 import AstBuilder from './ast/AstBuilder.js';
@@ -32,7 +32,7 @@ export function compileString(code: string): Artifact {
   return generateArtifact(ast, optimisedBytecode, code);
 }
 
-export function compileFile(codeFile: string): Artifact {
+export function compileFile(codeFile: PathLike): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
   return compileString(code);
 }

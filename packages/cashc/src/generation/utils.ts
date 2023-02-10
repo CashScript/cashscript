@@ -1,7 +1,6 @@
 import {
   BytesType,
   encodeInt,
-  IntrospectionOp,
   Op,
   PrimitiveType,
   Script,
@@ -86,20 +85,20 @@ export function compileUnaryOp(op: UnaryOperator): Op[] {
     [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
     [UnaryOperator.SIZE]: [Op.OP_SIZE, Op.OP_NIP],
     [UnaryOperator.REVERSE]: [Op.OP_REVERSEBYTES],
-    [UnaryOperator.INPUT_VALUE]: [IntrospectionOp.OP_UTXOVALUE],
-    [UnaryOperator.INPUT_LOCKING_BYTECODE]: [IntrospectionOp.OP_UTXOBYTECODE],
-    [UnaryOperator.INPUT_OUTPOINT_HASH]: [IntrospectionOp.OP_OUTPOINTTXHASH],
-    [UnaryOperator.INPUT_OUTPOINT_INDEX]: [IntrospectionOp.OP_OUTPOINTINDEX],
-    [UnaryOperator.INPUT_UNLOCKING_BYTECODE]: [IntrospectionOp.OP_INPUTBYTECODE],
-    [UnaryOperator.INPUT_SEQUENCE_NUMBER]: [IntrospectionOp.OP_INPUTSEQUENCENUMBER],
-    [UnaryOperator.OUTPUT_VALUE]: [IntrospectionOp.OP_OUTPUTVALUE],
-    [UnaryOperator.OUTPUT_LOCKING_BYTECODE]: [IntrospectionOp.OP_OUTPUTBYTECODE],
-    [UnaryOperator.INPUT_TOKEN_CATEGORY]: [IntrospectionOp.OP_UTXOTOKENCATEGORY],
-    [UnaryOperator.INPUT_NFT_COMMITMENT]: [IntrospectionOp.OP_UTXOTOKENCOMMITMENT],
-    [UnaryOperator.INPUT_TOKEN_AMOUNT]: [IntrospectionOp.OP_UTXOTOKENAMOUNT],
-    [UnaryOperator.OUTPUT_TOKEN_CATEGORY]: [IntrospectionOp.OP_OUTPUTTOKENCATEGORY],
-    [UnaryOperator.OUTPUT_NFT_COMMITMENT]: [IntrospectionOp.OP_OUTPUTTOKENCOMMITMENT],
-    [UnaryOperator.OUTPUT_TOKEN_AMOUNT]: [IntrospectionOp.OP_OUTPUTTOKENAMOUNT],
+    [UnaryOperator.INPUT_VALUE]: [Op.OP_UTXOVALUE],
+    [UnaryOperator.INPUT_LOCKING_BYTECODE]: [Op.OP_UTXOBYTECODE],
+    [UnaryOperator.INPUT_OUTPOINT_HASH]: [Op.OP_OUTPOINTTXHASH],
+    [UnaryOperator.INPUT_OUTPOINT_INDEX]: [Op.OP_OUTPOINTINDEX],
+    [UnaryOperator.INPUT_UNLOCKING_BYTECODE]: [Op.OP_INPUTBYTECODE],
+    [UnaryOperator.INPUT_SEQUENCE_NUMBER]: [Op.OP_INPUTSEQUENCENUMBER],
+    [UnaryOperator.OUTPUT_VALUE]: [Op.OP_OUTPUTVALUE],
+    [UnaryOperator.OUTPUT_LOCKING_BYTECODE]: [Op.OP_OUTPUTBYTECODE],
+    [UnaryOperator.INPUT_TOKEN_CATEGORY]: [Op.OP_UTXOTOKENCATEGORY],
+    [UnaryOperator.INPUT_NFT_COMMITMENT]: [Op.OP_UTXOTOKENCOMMITMENT],
+    [UnaryOperator.INPUT_TOKEN_AMOUNT]: [Op.OP_UTXOTOKENAMOUNT],
+    [UnaryOperator.OUTPUT_TOKEN_CATEGORY]: [Op.OP_OUTPUTTOKENCATEGORY],
+    [UnaryOperator.OUTPUT_NFT_COMMITMENT]: [Op.OP_OUTPUTTOKENCOMMITMENT],
+    [UnaryOperator.OUTPUT_TOKEN_AMOUNT]: [Op.OP_OUTPUTTOKENAMOUNT],
   };
 
   return mapping[op];
@@ -107,12 +106,12 @@ export function compileUnaryOp(op: UnaryOperator): Op[] {
 
 export function compileNullaryOp(op: NullaryOperator): Op[] {
   const mapping = {
-    [NullaryOperator.INPUT_INDEX]: [IntrospectionOp.OP_INPUTINDEX],
-    [NullaryOperator.BYTECODE]: [IntrospectionOp.OP_ACTIVEBYTECODE],
-    [NullaryOperator.INPUT_COUNT]: [IntrospectionOp.OP_TXINPUTCOUNT],
-    [NullaryOperator.OUTPUT_COUNT]: [IntrospectionOp.OP_TXOUTPUTCOUNT],
-    [NullaryOperator.VERSION]: [IntrospectionOp.OP_TXVERSION],
-    [NullaryOperator.LOCKTIME]: [IntrospectionOp.OP_TXLOCKTIME],
+    [NullaryOperator.INPUT_INDEX]: [Op.OP_INPUTINDEX],
+    [NullaryOperator.BYTECODE]: [Op.OP_ACTIVEBYTECODE],
+    [NullaryOperator.INPUT_COUNT]: [Op.OP_TXINPUTCOUNT],
+    [NullaryOperator.OUTPUT_COUNT]: [Op.OP_TXOUTPUTCOUNT],
+    [NullaryOperator.VERSION]: [Op.OP_TXVERSION],
+    [NullaryOperator.LOCKTIME]: [Op.OP_TXLOCKTIME],
   };
 
   return mapping[op];

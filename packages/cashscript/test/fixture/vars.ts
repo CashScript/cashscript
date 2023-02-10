@@ -1,24 +1,37 @@
-import { BITBOX } from 'bitbox-sdk';
-import { PriceOracle } from '../../../../examples/PriceOracle.js';
+import {
+  deriveHdPath,
+  deriveHdPrivateNodeFromSeed,
+  encodeCashAddress,
+  secp256k1,
+} from '@bitauth/libauth';
+import { hash160 } from '@cashscript/utils';
+import bip39 from 'bip39';
+import { PriceOracle } from './PriceOracle.js';
 import { Network } from '../../src/interfaces.js';
 
 export const network = Network.MAINNET;
-export const bitbox = new BITBOX({ restURL: 'https://rest.bitcoin.com/v2/' });
 
-const rootSeed = bitbox.Mnemonic.toSeed('CashScript Tests');
-const hdNode = bitbox.HDNode.fromSeed(rootSeed, network);
+const seed = await bip39.mnemonicToSeed('CashScript Tests');
 
-export const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
-export const bob = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1));
+const rootNode = deriveHdPrivateNodeFromSeed(seed, true);
+const baseDerivationPath = "m/44'/145'/0'/0";
 
-export const oracle = new PriceOracle(bob);
+const aliceNode = deriveHdPath(rootNode, `${baseDerivationPath}/0`);
+const bobNode = deriveHdPath(rootNode, `${baseDerivationPath}/1`);
+if (typeof aliceNode === 'string') throw new Error();
+if (typeof bobNode === 'string') throw new Error();
 
-export const alicePk = bitbox.ECPair.toPublicKey(alice);
-export const bobPk = bitbox.ECPair.toPublicKey(bob);
-export const oraclePk = bitbox.ECPair.toPublicKey(oracle.keypair);
+export const alicePriv = aliceNode.privateKey;
+export const alicePub = secp256k1.derivePublicKeyCompressed(alicePriv) as Uint8Array;
+export const alicePkh = hash160(alicePub);
+export const aliceAddress = encodeCashAddress('bitcoincash', 'p2pkh', alicePkh);
 
-export const alicePkh = bitbox.Crypto.hash160(alicePk);
-export const bobPkh = bitbox.Crypto.hash160(bobPk);
+export const bobPriv = bobNode.privateKey;
+export const bobPub = secp256k1.derivePublicKeyCompressed(bobPriv) as Uint8Array;
+export const bobPkh = hash160(bobPub);
+export const bobAddress = encodeCashAddress('bitcoincash', 'p2pkh', bobPkh);
 
-export const aliceAddress = bitbox.ECPair.toCashAddress(alice);
-export const bobAddress = bitbox.ECPair.toCashAddress(bob);
+export const oracle = new PriceOracle(bobPriv);
+export const oraclePub = bobPub;
+
+console.log(aliceAddress, bobAddress);
