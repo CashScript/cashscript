@@ -9,6 +9,7 @@ module.exports = {
     project: path.join(__dirname, 'tsconfig.json'),
     ecmaVersion: 2018,  // Allows for the parsing of modern ECMAScript features
     sourceType: 'module',  // Allows for the use of imports
+    extraFileExtensions: ['.cjs'],
   },
   env: {
     'jest': true,
