@@ -14,6 +14,7 @@
         "bchjs",
         "bchreg",
         "bchtest",
+        "bigints",
         "bitauth",
         "bitbox",
         "bitbox's",
@@ -225,6 +226,7 @@
         "**.pdf",
         // Do not spellcheck generated code
         "**/dist/**",
+        "**/dist-test/**",
         "**/coverage/**",
         "**/build/**",
         "**/.docusaurus/**",

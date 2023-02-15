@@ -1,13 +1,11 @@
 import {
-  bigIntToBinUint64LE,
   hexToBin,
   binToHex,
   encodeTransaction,
   addressContentsToLockingBytecode,
-  AddressType,
   decodeTransaction,
   Transaction as LibauthTransaction,
-  instantiateSecp256k1,
+  LockingBytecodeType,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -42,7 +40,7 @@ import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
-const bip68 = require('bip68');
+const bip68 = await import('bip68');
 
 export class Transaction {
   private inputs: Utxo[] = [];
@@ -146,7 +144,6 @@ export class Transaction {
     this.locktime = this.locktime ?? await this.provider.getBlockHeight();
     await this.setInputsAndOutputs();
 
-    const secp256k1 = await instantiateSecp256k1();
     const bytecode = scriptToBytecode(this.redeemScript);
 
     const inputs = this.inputs.map((utxo) => ({
@@ -161,9 +158,9 @@ export class Transaction {
         ? addressToLockScript(output.to)
         : output.to;
 
-      const satoshis = bigIntToBinUint64LE(output.amount);
+      const valueSatoshis = output.amount;
 
-      return { lockingBytecode, satoshis };
+      return { lockingBytecode, valueSatoshis };
     });
 
     const transaction = {
@@ -178,17 +175,17 @@ export class Transaction {
     this.inputs.forEach((utxo, i) => {
       // UTXO's with signature templates are signed using P2PKH
       if (isSignableUtxo(utxo)) {
-        const pubkey = utxo.template.getPublicKey(secp256k1);
+        const pubkey = utxo.template.getPublicKey();
         const pubkeyHash = hash160(pubkey);
 
-        const addressContents = { payload: pubkeyHash, type: AddressType.p2pkh };
+        const addressContents = { payload: pubkeyHash, type: LockingBytecodeType.p2pkh };
         const prevOutScript = addressContentsToLockingBytecode(addressContents);
 
         const hashtype = utxo.template.getHashType();
         const preimage = createSighashPreimage(transaction, utxo, i, prevOutScript, hashtype);
         const sighash = hash256(preimage);
 
-        const signature = utxo.template.generateSignature(sighash, secp256k1);
+        const signature = utxo.template.generateSignature(sighash);
 
         const inputScript = scriptToBytecode([signature, pubkey]);
         inputScripts.push(inputScript);
@@ -206,7 +203,7 @@ export class Transaction {
         const preimage = createSighashPreimage(transaction, utxo, i, bytecode, arg.getHashType());
         const sighash = hash256(preimage);
 
-        return arg.generateSignature(sighash, secp256k1);
+        return arg.generateSignature(sighash);
       });
 
       const preimage = this.abiFunction.covenant
@@ -298,15 +295,15 @@ export class Transaction {
     // Note that we use the addPrecision function to add "decimal points" to BigInt numbers
 
     // Calculate amount to send and base fee (excluding additional fees per UTXO)
-    let amount = addPrecision(this.outputs.reduce((acc, output) => acc + output.amount, BigInt(0)));
+    let amount = addPrecision(this.outputs.reduce((acc, output) => acc + output.amount, 0n));
     let fee = addPrecision(this.hardcodedFee ?? getTxSizeWithoutInputs(this.outputs) * this.feePerByte);
 
     // Select and gather UTXOs and calculate fees and available funds
-    let satsAvailable = BigInt(0);
+    let satsAvailable = 0n;
     if (this.inputs.length > 0) {
       // If inputs are already defined, the user provided the UTXOs and we perform no further UTXO selection
       if (!this.hardcodedFee) fee += addPrecision(this.inputs.length * inputSize * this.feePerByte);
-      satsAvailable = addPrecision(this.inputs.reduce((acc, input) => acc + input.satoshis, BigInt(0)));
+      satsAvailable = addPrecision(this.inputs.reduce((acc, input) => acc + input.satoshis, 0n));
     } else {
       // If inputs are not defined yet, we retrieve the contract's UTXOs and perform selection
       const utxos = await this.provider.getUtxos(this.address);
@@ -361,10 +358,10 @@ const addPrecision = (amount: number | bigint, precision: number = 6): bigint =>
 };
 
 const removePrecisionFloor = (amount: bigint, precision: number = 6): bigint => (
-  amount / (BigInt(10) ** BigInt(precision))
+  amount / (10n ** BigInt(precision))
 );
 
 const removePrecisionCeil = (amount: bigint, precision: number = 6): bigint => {
-  const multiplier = BigInt(10) ** BigInt(precision);
-  return (amount + multiplier - BigInt(1)) / multiplier;
+  const multiplier = 10n ** BigInt(precision);
+  return (amount + multiplier - 1n) / multiplier;
 };

@@ -1,22 +1,22 @@
 import { Contract, SignatureTemplate, FullStackNetworkProvider } from '../../src/index.js';
 import {
-  alice,
-  bob,
+  alicePriv,
   bobPkh,
-  bobPk,
+  bobPriv,
+  bobPub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
+import artifact from '../fixture/p2pkh.json' assert { type: "json" };
 
-const BCHJS = require('@psf/bch-js');
+const { default: BCHJS } = await import('@psf/bch-js');
 
 describe('P2PKH (using FullStackNetworkProvider)', () => {
   let p2pkhInstance: Contract;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/p2pkh.json');
     const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://free-main.fullstack.cash/v5/' }));
+    // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
     p2pkhInstance = new Contract(artifact, [bobPkh], provider);
     console.log(p2pkhInstance.address);
   });
@@ -25,11 +25,11 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
     it('should fail when using incorrect function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const txPromise = p2pkhInstance.functions
-        .spend(bobPk, new SignatureTemplate(alice))
+        .spend(bobPub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .send();
 
@@ -41,11 +41,11 @@ describe('P2PKH (using FullStackNetworkProvider)', () => {
     it('should succeed when using correct function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(bobPk, new SignatureTemplate(bob))
+        .spend(bobPub, new SignatureTemplate(bobPriv))
         .to(to, amount)
         .send();
 

@@ -1,12 +1,11 @@
 import { Contract, ElectrumNetworkProvider } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
+import artifact from '../fixture/simple_covenant.json' assert { type: "json" };
 
 describe('Simple Covenant', () => {
   let covenant: Contract;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/simple_covenant.json');
     const provider = new ElectrumNetworkProvider();
     covenant = new Contract(artifact, [], provider);
     console.log(covenant.address);
@@ -16,7 +15,7 @@ describe('Simple Covenant', () => {
     it('should succeed', async () => {
       // given
       const to = covenant.address;
-      const amount = BigInt(1000);
+      const amount = 1000n;
 
       // when
       const tx = await covenant.functions.spend().to(to, amount).send();

@@ -82,7 +82,7 @@ export class Contract {
 
   async getBalance(): Promise<bigint> {
     const utxos = await this.getUtxos();
-    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, BigInt(0));
+    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, 0n);
   }
 
   async getUtxos(): Promise<Utxo[]> {

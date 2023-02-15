@@ -2,11 +2,11 @@
   "extends": "../../tsconfig.build.json",
 
   "compilerOptions": {
-    "outDir": "./dist/module",
-    "module": "es2015",
+    "outDir": "./dist-test",
   },
 
   "include": [
     "src/**/*",
+    "test/**/*",
   ],
 }

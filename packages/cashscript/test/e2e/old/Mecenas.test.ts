@@ -1,24 +1,23 @@
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src/index.js';
 import {
-  alicePk,
-  alice,
   alicePkh,
   bobPkh,
   aliceAddress,
   bobAddress,
+  alicePub,
+  alicePriv,
 } from '../../fixture/vars.js';
 import { getTxOutputs } from '../../test-util.js';
 import { FailedRequireError, Reason } from '../../../src/Errors.js';
+import artifact from '../../fixture/old/mecenas.json' assert { type: "json" };
 
 // Mecenas has tx.age check omitted for testing
 describe('v0.6.0 - Mecenas', () => {
   let mecenas: Contract;
-  const pledge = BigInt(10000);
-  const minerFee = BigInt(1000);
+  const pledge = 10000n;
+  const minerFee = 1000n;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../../fixture/old/mecenas.json');
     const provider = new ElectrumNetworkProvider();
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
@@ -28,11 +27,11 @@ describe('v0.6.0 - Mecenas', () => {
     it('should fail when trying to send more than pledge', async () => {
       // given
       const to = aliceAddress;
-      const amount = pledge + BigInt(10);
+      const amount = pledge + 10n;
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive(alicePub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .withHardcodedFee(minerFee)
         .send();
@@ -49,7 +48,7 @@ describe('v0.6.0 - Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive(alicePub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .withHardcodedFee(minerFee)
         .send();
@@ -66,7 +65,7 @@ describe('v0.6.0 - Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive(alicePub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .to(to, amount)
         .withHardcodedFee(minerFee)
@@ -84,7 +83,7 @@ describe('v0.6.0 - Mecenas', () => {
 
       // when
       const tx = await mecenas.functions
-        .receive(alicePk, new SignatureTemplate(alice))
+        .receive(alicePub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .withHardcodedFee(minerFee)
         .send();

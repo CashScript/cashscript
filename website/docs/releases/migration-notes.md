@@ -3,7 +3,12 @@ title: Migration Notes
 ---
 
 ## v0.7 to v0.8
+
+### cashc compiler
+- `cashc` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
+
 ### CashScript SDK
+- `cashscript` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
 - Network options `"testnet"` & `"staging"` have been renamed to `"testnet3"` and `"testnet4"` respectively in version 0.7.3. The old option names are removed with this major release.
 - You can no longer use `number` inputs for constructor arguments, function arguments, or input/output amounts. Use `bigint` instead.
 - `contract.getBalance()` and `contract.getUtxos()` now return `bigint` for satoshi amounts instead of `number`.

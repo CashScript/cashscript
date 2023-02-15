@@ -1,56 +1,45 @@
 import { stringify } from '@bitauth/libauth';
-import { BITBOX } from 'bitbox-sdk';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
-import path from 'path';
+import { Contract, ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
+import { URL } from 'url';
 
-run();
-async function run(): Promise<void> {
-  // Initialise BITBOX
-  const bitbox = new BITBOX();
+// Import Bob and Alice's keys from common.ts
+import {
+  alicePriv,
+  alicePub,
+  bobPriv,
+  bobPub,
+} from './common.js';
 
-  // Initialise HD node
-  const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
-  const hdNode = bitbox.HDNode.fromSeed(rootSeed);
+// Compile the TransferWithTimeout contract
+const artifact = compileFile(new URL('transfer_with_timeout.cash', import.meta.url));
 
-  // Create bob and alice's key pairs
-  const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
-  const bob = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1));
+// Initialise a network provider for network operations on TESTNET4
+const provider = new ElectrumNetworkProvider('testnet4');
 
-  // Derive their public keys
-  const alicePk = bitbox.ECPair.toPublicKey(alice);
-  const bobPk = bitbox.ECPair.toPublicKey(bob);
+// Instantiate a new contract using the compiled artifact and network provider
+// AND providing the constructor parameters:
+// { sender: alicePk, recipient: bobPk, timeout: 1000000 } - timeout is a past block
+const contract = new Contract(artifact, [alicePub, bobPub, 100000n], provider);
 
-  // Compile the TransferWithTimeout contract
-  const artifact = compileFile(path.join(__dirname, 'transfer_with_timeout.cash'));
+// Get contract balance & output address + balance
+console.log('contract address:', contract.address);
+console.log('contract balance:', await contract.getBalance());
 
-  // Initialise a network provider for network operations on TESTNET3
-  const provider = new ElectrumNetworkProvider('testnet3');
+// Call the transfer function with bob's signature
+// Allows bob to claim the money that alice sent him
+const transferTx = await contract.functions
+  .transfer(new SignatureTemplate(bobPriv))
+  .to(contract.address, 10000n)
+  .send();
 
-  // Instantiate a new contract using the compiled artifact and network provider
-  // AND providing the constructor parameters:
-  // { sender: alicePk, recipient: bobPk, timeout: 1000000 } - timeout is a past block
-  const contract = new Contract(artifact, [alicePk, bobPk, 1000000], provider);
+console.log('transfer transaction details:', stringify(transferTx));
 
-  // Get contract balance & output address + balance
-  console.log('contract address:', contract.address);
-  console.log('contract balance:', await contract.getBalance());
+// Call the timeout function with alice's signature
+// Allows alice to reclaim the money she sent as the timeout is in the past
+const timeoutTx = await contract.functions
+  .timeout(new SignatureTemplate(alicePriv))
+  .to(contract.address, 10000n)
+  .send();
 
-  // Call the transfer function with bob's signature
-  // Allows bob to claim the money that alice sent him
-  const transferTx = await contract.functions
-    .transfer(new SignatureTemplate(bob))
-    .to(contract.address, 10000)
-    .send();
-
-  console.log('transfer transaction details:', stringify(transferTx));
-
-  // Call the timeout function with alice's signature
-  // Allows alice to reclaim the money she sent as the timeout is in the past
-  const timeoutTx = await contract.functions
-    .timeout(new SignatureTemplate(alice))
-    .to(contract.address, 10000)
-    .send();
-
-  console.log('timeout transaction details:', stringify(timeoutTx));
-}
+console.log('timeout transaction details:', stringify(timeoutTx));

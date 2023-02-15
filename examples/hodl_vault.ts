@@ -1,51 +1,39 @@
 import { stringify } from '@bitauth/libauth';
-import { BITBOX } from 'bitbox-sdk';
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
-import path from 'path';
-import { PriceOracle } from './PriceOracle.js';
+import { URL } from 'url';
 
-run();
-async function run(): Promise<void> {
-  // Initialise BITBOX
-  const bitbox = new BITBOX();
+// Import keys and price oracle from common.ts
+import {
+  alicePriv,
+  alicePub,
+  oracle,
+  oraclePub,
+} from './common.js';
 
-  // Initialise HD node and owner's keypair
-  const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
-  const hdNode = bitbox.HDNode.fromSeed(rootSeed);
+// Compile the HodlVault contract to an artifact object
+const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
 
-  const owner = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
-  const ownerPk = bitbox.ECPair.toPublicKey(owner);
+// Initialise a network provider for network operations on TESTNET4
+const provider = new ElectrumNetworkProvider('testnet4');
 
-  // Initialise price oracle with a keypair
-  const oracleKeypair = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 1));
-  const oraclePk = bitbox.ECPair.toPublicKey(oracleKeypair);
-  const oracle = new PriceOracle(oracleKeypair);
+// Instantiate a new contract using the compiled artifact and network provider
+// AND providing the constructor parameters
+const parameters = [alicePub, oraclePub, 100000n, 30000n];
+const contract = new Contract(artifact, parameters, provider);
 
-  // Compile the HodlVault contract to an artifact object
-  const artifact = compileFile(path.join(__dirname, 'hodl_vault.cash'));
+// Get contract balance & output address + balance
+console.log('contract address:', contract.address);
+console.log('contract balance:', await contract.getBalance());
 
-  // Initialise a network provider for network operations on TESTNET3
-  const provider = new ElectrumNetworkProvider('testnet3');
+// Produce new oracle message and signature
+const oracleMessage = oracle.createMessage(100000n, 30000n);
+const oracleSignature = oracle.signMessage(oracleMessage);
 
-  // Instantiate a new contract using the compiled artifact and network provider
-  // AND providing the constructor parameters
-  const parameters = [ownerPk, oraclePk, 597000, 30000];
-  const contract = new Contract(artifact, parameters, provider);
+// Spend from the vault
+const tx = await contract.functions
+  .spend(new SignatureTemplate(alicePriv), oracleSignature, oracleMessage)
+  .to(contract.address, 1000n)
+  .send();
 
-  // Get contract balance & output address + balance
-  console.log('contract address:', contract.address);
-  console.log('contract balance:', await contract.getBalance());
-
-  // Produce new oracle message and signature
-  const oracleMessage = oracle.createMessage(597000, 30000);
-  const oracleSignature = oracle.signMessage(oracleMessage);
-
-  // Spend from the vault
-  const tx = await contract.functions
-    .spend(new SignatureTemplate(owner), oracleSignature, oracleMessage)
-    .to(contract.address, 1000)
-    .send();
-
-  console.log(stringify(tx));
-}
+console.log(stringify(tx));
