@@ -1,16 +1,14 @@
 import {
   cashAddressToLockingBytecode,
-  AddressType,
   addressContentsToLockingBytecode,
   lockingBytecodeToCashAddress,
   binToHex,
-  createTransactionContextCommon,
-  bigIntToBinUint64LE,
   Transaction,
   generateSigningSerializationBCH,
   utf8ToBin,
   hexToBin,
   flattenBinArray,
+  LockingBytecodeType,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -18,7 +16,6 @@ import {
   Op,
   Script,
   scriptToBytecode,
-  sha256,
 } from '@cashscript/utils';
 import {
   Utxo,
@@ -117,7 +114,7 @@ export function createOpReturnOutput(
     ...opReturnData.map((output: string) => toBin(output)),
   ];
 
-  return { to: encodeNullDataScript(script), amount: BigInt(0) };
+  return { to: encodeNullDataScript(script), amount: 0n };
 }
 
 function toBin(output: string): Uint8Array {
@@ -133,28 +130,12 @@ export function createSighashPreimage(
   coveredBytecode: Uint8Array,
   hashtype: number,
 ): Uint8Array {
-  const state = createTransactionContextCommon({
-    inputIndex,
-    sourceOutput: { satoshis: bigIntToBinUint64LE(input.satoshis) },
-    spendingTransaction: transaction,
-  });
+  const sourceOutputs = [];
+  sourceOutputs[inputIndex] = { valueSatoshis: input.satoshis, lockingBytecode: Uint8Array.of() };
+  const context = { inputIndex, sourceOutputs, transaction };
+  const signingSerializationType = new Uint8Array([hashtype]);
 
-  const sighashPreimage = generateSigningSerializationBCH({
-    correspondingOutput: state.correspondingOutput,
-    coveredBytecode,
-    forkId: new Uint8Array([0, 0, 0]),
-    locktime: state.locktime,
-    outpointIndex: state.outpointIndex,
-    outpointTransactionHash: state.outpointTransactionHash,
-    outputValue: state.outputValue,
-    sequenceNumber: state.sequenceNumber,
-    sha256: { hash: sha256 },
-    signingSerializationType: new Uint8Array([hashtype]),
-    transactionOutpoints: state.transactionOutpoints,
-    transactionOutputs: state.transactionOutputs,
-    transactionSequenceNumbers: state.transactionSequenceNumbers,
-    version: 2,
-  });
+  const sighashPreimage = generateSigningSerializationBCH(context, { coveredBytecode, signingSerializationType });
 
   return sighashPreimage;
 }
@@ -204,7 +185,7 @@ export function scriptToAddress(script: Script, network: string): string {
 
 export function scriptToLockingBytecode(script: Script): Uint8Array {
   const scriptHash = hash160(scriptToBytecode(script));
-  const addressContents = { payload: scriptHash, type: AddressType.p2sh };
+  const addressContents = { payload: scriptHash, type: LockingBytecodeType.p2sh20 };
   const lockingBytecode = addressContentsToLockingBytecode(addressContents);
   return lockingBytecode;
 }

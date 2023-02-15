@@ -1,23 +1,19 @@
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
 import {
-  alicePk,
-  alice,
-  bob,
-  bobPk,
+  alicePriv, alicePub, bobPriv, bobPub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors.js';
+import artifact from '../fixture/transfer_with_timeout.json' assert { type: "json" };
 
 describe('TransferWithTimeout', () => {
   let twtInstancePast: Contract;
   let twtInstanceFuture: Contract;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/transfer_with_timeout.json');
     const provider = new ElectrumNetworkProvider();
-    twtInstancePast = new Contract(artifact, [alicePk, bobPk, BigInt(500000)], provider);
-    twtInstanceFuture = new Contract(artifact, [alicePk, bobPk, BigInt(2000000)], provider);
+    twtInstancePast = new Contract(artifact, [alicePub, bobPub, 500000n], provider);
+    twtInstanceFuture = new Contract(artifact, [alicePub, bobPub, 2000000n], provider);
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);
   });
@@ -26,11 +22,11 @@ describe('TransferWithTimeout', () => {
     it('should fail when using incorrect function arguments to transfer', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const txPromise = twtInstancePast.functions
-        .transfer(new SignatureTemplate(alice))
+        .transfer(new SignatureTemplate(alicePriv))
         .to(to, amount)
         .send();
 
@@ -42,11 +38,11 @@ describe('TransferWithTimeout', () => {
     it('should fail when using incorrect function arguments to timeout', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const txPromise = twtInstancePast.functions
-        .timeout(new SignatureTemplate(bob))
+        .timeout(new SignatureTemplate(bobPriv))
         .to(to, amount)
         .send();
 
@@ -58,11 +54,11 @@ describe('TransferWithTimeout', () => {
     it('should fail when timeout is called before timeout block', async () => {
       // given
       const to = twtInstanceFuture.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const txPromise = twtInstanceFuture.functions
-        .timeout(new SignatureTemplate(alice))
+        .timeout(new SignatureTemplate(alicePriv))
         .to(to, amount)
         .send();
 
@@ -74,11 +70,11 @@ describe('TransferWithTimeout', () => {
     it('should succeed when transfer is called after timeout block', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const tx = await twtInstancePast.functions
-        .transfer(new SignatureTemplate(bob))
+        .transfer(new SignatureTemplate(bobPriv))
         .to(to, amount)
         .send();
 
@@ -90,11 +86,11 @@ describe('TransferWithTimeout', () => {
     it('should succeed when transfer is called before timeout block', async () => {
       // given
       const to = twtInstanceFuture.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const tx = await twtInstanceFuture.functions
-        .transfer(new SignatureTemplate(bob))
+        .transfer(new SignatureTemplate(bobPriv))
         .to(to, amount)
         .send();
 
@@ -106,11 +102,11 @@ describe('TransferWithTimeout', () => {
     it('should succeed when timeout is called after timeout block', async () => {
       // given
       const to = twtInstancePast.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const tx = await twtInstancePast.functions
-        .timeout(new SignatureTemplate(alice))
+        .timeout(new SignatureTemplate(alicePriv))
         .to(to, amount)
         .send();
 

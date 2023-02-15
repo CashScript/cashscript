@@ -1,10 +1,10 @@
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 
-const RpcClientRetry = require('bitcoin-rpc-promise-retry');
+const { default: RpcClientRetry } = await import('bitcoin-rpc-promise-retry');
 
 export default class BitcoinRpcNetworkProvider implements NetworkProvider {
-  private rpcClient: RpcClientRetry;
+  private rpcClient: IRpcClientRetry;
 
   constructor(
     public network: Network,
@@ -38,7 +38,7 @@ export default class BitcoinRpcNetworkProvider implements NetworkProvider {
     return this.rpcClient.sendRawTransaction(txHex);
   }
 
-  getClient(): RpcClientRetry {
+  getClient(): IRpcClientRetry {
     return this.rpcClient;
   }
 }
@@ -57,7 +57,7 @@ interface ListUnspentItem {
   safe: boolean;
 }
 
-interface RpcClientRetry {
+interface IRpcClientRetry {
   constructor(url: string, opts?: object): void;
   listUnspent(
     minConf?: number,

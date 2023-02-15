@@ -1,5 +1,4 @@
-import { decodePrivateKeyWif, Secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
-import { sha256 } from '@cashscript/utils';
+import { decodePrivateKeyWif, secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
 import { HashType, SignatureAlgorithm } from './interfaces.js';
 
 export default class SignatureTemplate {
@@ -20,10 +19,10 @@ export default class SignatureTemplate {
     }
   }
 
-  generateSignature(payload: Uint8Array, secp256k1: Secp256k1, bchForkId?: boolean): Uint8Array {
+  generateSignature(payload: Uint8Array, bchForkId?: boolean): Uint8Array {
     const signature = this.signatureAlgorithm === SignatureAlgorithm.SCHNORR
-      ? secp256k1.signMessageHashSchnorr(this.privateKey, payload)
-      : secp256k1.signMessageHashDER(this.privateKey, payload);
+      ? secp256k1.signMessageHashSchnorr(this.privateKey, payload) as Uint8Array
+      : secp256k1.signMessageHashDER(this.privateKey, payload) as Uint8Array;
 
     return Uint8Array.from([...signature, this.getHashType(bchForkId)]);
   }
@@ -32,8 +31,8 @@ export default class SignatureTemplate {
     return bchForkId ? (this.hashtype | SigningSerializationFlag.forkId) : this.hashtype;
   }
 
-  getPublicKey(secp256k1: Secp256k1): Uint8Array {
-    return secp256k1.derivePublicKeyCompressed(this.privateKey);
+  getPublicKey(): Uint8Array {
+    return secp256k1.derivePublicKeyCompressed(this.privateKey) as Uint8Array;
   }
 }
 
@@ -47,7 +46,7 @@ function isKeypair(obj: any): obj is Keypair {
 }
 
 function decodeWif(wif: string): Uint8Array {
-  const result = decodePrivateKeyWif({ hash: sha256 }, wif);
+  const result = decodePrivateKeyWif(wif);
 
   if (typeof result === 'string') {
     throw new Error(result);

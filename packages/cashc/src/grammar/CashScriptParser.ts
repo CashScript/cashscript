@@ -1,30 +1,29 @@
 // Generated from src/grammar/CashScript.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
-import { ATN } from "antlr4ts/atn/ATN";
-import { ATNDeserializer } from "antlr4ts/atn/ATNDeserializer";
-import { FailedPredicateException } from "antlr4ts/FailedPredicateException";
-import { NotNull } from "antlr4ts/Decorators";
-import { NoViableAltException } from "antlr4ts/NoViableAltException";
-import { Override } from "antlr4ts/Decorators";
-import { Parser } from "antlr4ts/Parser";
-import { ParserRuleContext } from "antlr4ts/ParserRuleContext";
-import { ParserATNSimulator } from "antlr4ts/atn/ParserATNSimulator";
-import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
-import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
-import { RecognitionException } from "antlr4ts/RecognitionException";
-import { RuleContext } from "antlr4ts/RuleContext";
-//import { RuleVersion } from "antlr4ts/RuleVersion";
-import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { Token } from "antlr4ts/Token";
-import { TokenStream } from "antlr4ts/TokenStream";
-import { Vocabulary } from "antlr4ts/Vocabulary";
-import { VocabularyImpl } from "antlr4ts/VocabularyImpl";
+import { ATN } from "antlr4ts/atn/ATN.js";
+import { ATNDeserializer } from "antlr4ts/atn/ATNDeserializer.js";
+import { FailedPredicateException } from "antlr4ts/FailedPredicateException.js";
+import { NotNull } from "antlr4ts/Decorators.js";
+import { NoViableAltException } from "antlr4ts/NoViableAltException.js";
+import { Override } from "antlr4ts/Decorators.js";
+import { Parser } from "antlr4ts/Parser.js";
+import { ParserRuleContext } from "antlr4ts/ParserRuleContext.js";
+import { ParserATNSimulator } from "antlr4ts/atn/ParserATNSimulator.js";
+import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener.js";
+import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor.js";
+import { RecognitionException } from "antlr4ts/RecognitionException.js";
+import { RuleContext } from "antlr4ts/RuleContext.js";
+//import { RuleVersion } from "antlr4ts/RuleVersion.js";
+import { TerminalNode } from "antlr4ts/tree/TerminalNode.js";
+import { Token } from "antlr4ts/Token.js";
+import { TokenStream } from "antlr4ts/TokenStream.js";
+import { Vocabulary } from "antlr4ts/Vocabulary.js";
+import { VocabularyImpl } from "antlr4ts/VocabularyImpl.js";
 
-import * as Utils from "antlr4ts/misc/Utils";
+import * as Utils from "antlr4ts/misc/Utils.js";
 
-import { CashScriptListener } from "./CashScriptListener";
-import { CashScriptVisitor } from "./CashScriptVisitor";
+import { CashScriptVisitor } from "./CashScriptVisitor.js";
 
 
 export class CashScriptParser extends Parser {
@@ -1980,18 +1979,6 @@ export class SourceFileContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_sourceFile; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterSourceFile) {
-			listener.enterSourceFile(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitSourceFile) {
-			listener.exitSourceFile(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitSourceFile) {
 			return visitor.visitSourceFile(this);
@@ -2015,18 +2002,6 @@ export class PragmaDirectiveContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_pragmaDirective; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterPragmaDirective) {
-			listener.enterPragmaDirective(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitPragmaDirective) {
-			listener.exitPragmaDirective(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitPragmaDirective) {
 			return visitor.visitPragmaDirective(this);
@@ -2043,18 +2018,6 @@ export class PragmaNameContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_pragmaName; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterPragmaName) {
-			listener.enterPragmaName(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitPragmaName) {
-			listener.exitPragmaName(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitPragmaName) {
@@ -2082,18 +2045,6 @@ export class PragmaValueContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_pragmaValue; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterPragmaValue) {
-			listener.enterPragmaValue(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitPragmaValue) {
-			listener.exitPragmaValue(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitPragmaValue) {
 			return visitor.visitPragmaValue(this);
@@ -2115,18 +2066,6 @@ export class VersionConstraintContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_versionConstraint; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterVersionConstraint) {
-			listener.enterVersionConstraint(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitVersionConstraint) {
-			listener.exitVersionConstraint(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitVersionConstraint) {
 			return visitor.visitVersionConstraint(this);
@@ -2143,18 +2082,6 @@ export class VersionOperatorContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_versionOperator; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterVersionOperator) {
-			listener.enterVersionOperator(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitVersionOperator) {
-			listener.exitVersionOperator(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitVersionOperator) {
@@ -2186,18 +2113,6 @@ export class ContractDefinitionContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_contractDefinition; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterContractDefinition) {
-			listener.enterContractDefinition(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitContractDefinition) {
-			listener.exitContractDefinition(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitContractDefinition) {
 			return visitor.visitContractDefinition(this);
@@ -2228,18 +2143,6 @@ export class FunctionDefinitionContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_functionDefinition; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterFunctionDefinition) {
-			listener.enterFunctionDefinition(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitFunctionDefinition) {
-			listener.exitFunctionDefinition(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitFunctionDefinition) {
 			return visitor.visitFunctionDefinition(this);
@@ -2266,18 +2169,6 @@ export class ParameterListContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_parameterList; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterParameterList) {
-			listener.enterParameterList(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitParameterList) {
-			listener.exitParameterList(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitParameterList) {
 			return visitor.visitParameterList(this);
@@ -2298,18 +2189,6 @@ export class ParameterContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_parameter; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterParameter) {
-			listener.enterParameter(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitParameter) {
-			listener.exitParameter(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitParameter) {
@@ -2336,18 +2215,6 @@ export class BlockContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_block; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterBlock) {
-			listener.enterBlock(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitBlock) {
-			listener.exitBlock(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitBlock) {
@@ -2384,18 +2251,6 @@ export class StatementContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_statement; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterStatement) {
-			listener.enterStatement(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitStatement) {
-			listener.exitStatement(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitStatement) {
 			return visitor.visitStatement(this);
@@ -2428,18 +2283,6 @@ export class VariableDefinitionContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_variableDefinition; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterVariableDefinition) {
-			listener.enterVariableDefinition(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitVariableDefinition) {
-			listener.exitVariableDefinition(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitVariableDefinition) {
@@ -2479,18 +2322,6 @@ export class TupleAssignmentContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_tupleAssignment; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterTupleAssignment) {
-			listener.enterTupleAssignment(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitTupleAssignment) {
-			listener.exitTupleAssignment(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitTupleAssignment) {
 			return visitor.visitTupleAssignment(this);
@@ -2511,18 +2342,6 @@ export class AssignStatementContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_assignStatement; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterAssignStatement) {
-			listener.enterAssignStatement(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitAssignStatement) {
-			listener.exitAssignStatement(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitAssignStatement) {
@@ -2545,18 +2364,6 @@ export class TimeOpStatementContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_timeOpStatement; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterTimeOpStatement) {
-			listener.enterTimeOpStatement(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitTimeOpStatement) {
-			listener.exitTimeOpStatement(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitTimeOpStatement) {
 			return visitor.visitTimeOpStatement(this);
@@ -2576,18 +2383,6 @@ export class RequireStatementContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_requireStatement; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterRequireStatement) {
-			listener.enterRequireStatement(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitRequireStatement) {
-			listener.exitRequireStatement(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitRequireStatement) {
@@ -2620,18 +2415,6 @@ export class IfStatementContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_ifStatement; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterIfStatement) {
-			listener.enterIfStatement(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitIfStatement) {
-			listener.exitIfStatement(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitIfStatement) {
 			return visitor.visitIfStatement(this);
@@ -2652,18 +2435,6 @@ export class FunctionCallContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_functionCall; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterFunctionCall) {
-			listener.enterFunctionCall(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitFunctionCall) {
-			listener.exitFunctionCall(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitFunctionCall) {
@@ -2690,18 +2461,6 @@ export class ExpressionListContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_expressionList; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterExpressionList) {
-			listener.enterExpressionList(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitExpressionList) {
-			listener.exitExpressionList(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitExpressionList) {
@@ -2732,18 +2491,6 @@ export class ParenthesisedContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterParenthesised) {
-			listener.enterParenthesised(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitParenthesised) {
-			listener.exitParenthesised(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitParenthesised) {
 			return visitor.visitParenthesised(this);
@@ -2772,18 +2519,6 @@ export class CastContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterCast) {
-			listener.enterCast(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitCast) {
-			listener.exitCast(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitCast) {
 			return visitor.visitCast(this);
@@ -2799,18 +2534,6 @@ export class FunctionCallExpressionContext extends ExpressionContext {
 	constructor(ctx: ExpressionContext) {
 		super(ctx.parent, ctx.invokingState);
 		this.copyFrom(ctx);
-	}
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterFunctionCallExpression) {
-			listener.enterFunctionCallExpression(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitFunctionCallExpression) {
-			listener.exitFunctionCallExpression(this);
-		}
 	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
@@ -2829,18 +2552,6 @@ export class InstantiationContext extends ExpressionContext {
 	constructor(ctx: ExpressionContext) {
 		super(ctx.parent, ctx.invokingState);
 		this.copyFrom(ctx);
-	}
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterInstantiation) {
-			listener.enterInstantiation(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitInstantiation) {
-			listener.exitInstantiation(this);
-		}
 	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
@@ -2862,18 +2573,6 @@ export class TupleIndexOpContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterTupleIndexOp) {
-			listener.enterTupleIndexOp(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitTupleIndexOp) {
-			listener.exitTupleIndexOp(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitTupleIndexOp) {
 			return visitor.visitTupleIndexOp(this);
@@ -2893,18 +2592,6 @@ export class UnaryIntrospectionOpContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterUnaryIntrospectionOp) {
-			listener.enterUnaryIntrospectionOp(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitUnaryIntrospectionOp) {
-			listener.exitUnaryIntrospectionOp(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitUnaryIntrospectionOp) {
 			return visitor.visitUnaryIntrospectionOp(this);
@@ -2921,18 +2608,6 @@ export class UnaryOpContext extends ExpressionContext {
 	constructor(ctx: ExpressionContext) {
 		super(ctx.parent, ctx.invokingState);
 		this.copyFrom(ctx);
-	}
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterUnaryOp) {
-			listener.enterUnaryOp(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitUnaryOp) {
-			listener.exitUnaryOp(this);
-		}
 	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
@@ -2961,18 +2636,6 @@ export class BinaryOpContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterBinaryOp) {
-			listener.enterBinaryOp(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitBinaryOp) {
-			listener.exitBinaryOp(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitBinaryOp) {
 			return visitor.visitBinaryOp(this);
@@ -2996,18 +2659,6 @@ export class ArrayContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterArray) {
-			listener.enterArray(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitArray) {
-			listener.exitArray(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitArray) {
 			return visitor.visitArray(this);
@@ -3023,18 +2674,6 @@ export class NullaryOpContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterNullaryOp) {
-			listener.enterNullaryOp(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitNullaryOp) {
-			listener.exitNullaryOp(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitNullaryOp) {
 			return visitor.visitNullaryOp(this);
@@ -3048,18 +2687,6 @@ export class IdentifierContext extends ExpressionContext {
 	constructor(ctx: ExpressionContext) {
 		super(ctx.parent, ctx.invokingState);
 		this.copyFrom(ctx);
-	}
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterIdentifier) {
-			listener.enterIdentifier(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitIdentifier) {
-			listener.exitIdentifier(this);
-		}
 	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
@@ -3079,18 +2706,6 @@ export class LiteralExpressionContext extends ExpressionContext {
 		this.copyFrom(ctx);
 	}
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterLiteralExpression) {
-			listener.enterLiteralExpression(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitLiteralExpression) {
-			listener.exitLiteralExpression(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitLiteralExpression) {
 			return visitor.visitLiteralExpression(this);
@@ -3107,18 +2722,6 @@ export class ModifierContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_modifier; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterModifier) {
-			listener.enterModifier(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitModifier) {
-			listener.exitModifier(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitModifier) {
@@ -3144,18 +2747,6 @@ export class LiteralContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_literal; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterLiteral) {
-			listener.enterLiteral(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitLiteral) {
-			listener.exitLiteral(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitLiteral) {
 			return visitor.visitLiteral(this);
@@ -3175,18 +2766,6 @@ export class NumberLiteralContext extends ParserRuleContext {
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_numberLiteral; }
 	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterNumberLiteral) {
-			listener.enterNumberLiteral(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitNumberLiteral) {
-			listener.exitNumberLiteral(this);
-		}
-	}
-	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitNumberLiteral) {
 			return visitor.visitNumberLiteral(this);
@@ -3204,18 +2783,6 @@ export class TypeNameContext extends ParserRuleContext {
 	}
 	// @Override
 	public get ruleIndex(): number { return CashScriptParser.RULE_typeName; }
-	// @Override
-	public enterRule(listener: CashScriptListener): void {
-		if (listener.enterTypeName) {
-			listener.enterTypeName(this);
-		}
-	}
-	// @Override
-	public exitRule(listener: CashScriptListener): void {
-		if (listener.exitTypeName) {
-			listener.exitTypeName(this);
-		}
-	}
 	// @Override
 	public accept<Result>(visitor: CashScriptVisitor<Result>): Result {
 		if (visitor.visitTypeName) {

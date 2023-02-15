@@ -26,16 +26,12 @@ npm install cashscript
 import { Contract, ... } from 'cashscript';
 ```
 
-```js
-const { Contract, ... } = require('cashscript');
-```
-
 Using the CashScript SDK, you can import contract artifact files, create new instances of these contracts, and interact with these instances:
 
 ```ts
 ...
   // Import the P2PKH artifact
-  const P2PKH = require('./p2pkh-artifact.json');
+  import P2PKH from './p2pkh-artifact.json' assert { type: 'json' };
 
   // Instantiate a network provider for CashScript's network operations
   const provider = new ElectrumNetworkProvider('mainnet');

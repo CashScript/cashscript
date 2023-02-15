@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs, { PathLike } from 'fs';
 
 export interface AbiInput {
   name: string;
@@ -24,7 +24,7 @@ export interface Artifact {
   updatedAt: string;
 }
 
-export function importArtifact(artifactFile: string): Artifact {
+export function importArtifact(artifactFile: PathLike): Artifact {
   return JSON.parse(fs.readFileSync(artifactFile, { encoding: 'utf-8' }));
 }
 

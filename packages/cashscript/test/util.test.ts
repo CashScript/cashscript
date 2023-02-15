@@ -12,7 +12,7 @@ import {
   getPreimageSize,
 } from '../src/utils.js';
 import { Network } from '../src/interfaces.js';
-import { alicePk, alicePkh } from './fixture/vars.js';
+import { alicePkh, alicePub } from './fixture/vars.js';
 
 describe('utils', () => {
   describe('getInputSize', () => {
@@ -59,24 +59,24 @@ describe('utils', () => {
     it('should create an input script without selector or preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = asmToScript(asm);
-      const args = [alicePk, placeholder(1)];
+      const args = [alicePub, placeholder(1)];
 
       const inputScript = createInputScript(redeemScript, args);
 
-      const expectedInputScriptAsm = `00 ${binToHex(alicePk)} ${binToHex(asmToBytecode(asm))}`;
+      const expectedInputScriptAsm = `00 ${binToHex(alicePub)} ${binToHex(asmToBytecode(asm))}`;
       expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
     });
 
     it('should create an input script with selector and preimage', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = asmToScript(asm);
-      const args = [alicePk, placeholder(1)];
+      const args = [alicePub, placeholder(1)];
       const selector = 1;
       const preimage = placeholder(1);
 
       const inputScript = createInputScript(redeemScript, args, selector, preimage);
 
-      const expectedInputScriptAsm = `00 ${binToHex(alicePk)} 00 OP_1 ${binToHex(asmToBytecode(asm))}`;
+      const expectedInputScriptAsm = `00 ${binToHex(alicePub)} 00 OP_1 ${binToHex(asmToBytecode(asm))}`;
       expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
     });
   });
@@ -90,9 +90,9 @@ describe('utils', () => {
       const testnetAddress = scriptToAddress(redeemScript, Network.TESTNET3);
       const regtestAddress = scriptToAddress(redeemScript, Network.REGTEST);
 
-      const expectedMainnetAddress = 'bitcoincash:pz0z7u9p96h2p6hfychxdrmwgdlzpk5luc5yks2wxq';
-      const expectedTestnetAddress = 'bchtest:pz0z7u9p96h2p6hfychxdrmwgdlzpk5lucskjhgepu';
-      const expectedRegtestAddress = 'bchreg:pz0z7u9p96h2p6hfychxdrmwgdlzpk5luc22ykt2z6';
+      const expectedMainnetAddress = 'bitcoincash:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyc27hzc7y';
+      const expectedTestnetAddress = 'bchtest:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyuc6sq0ec';
+      const expectedRegtestAddress = 'bchreg:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyxyv3ru67';
 
       expect(mainnetAddress).toEqual(expectedMainnetAddress);
       expect(testnetAddress).toEqual(expectedTestnetAddress);

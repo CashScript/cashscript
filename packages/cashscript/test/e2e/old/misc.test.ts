@@ -1,21 +1,21 @@
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src/index.js';
 import {
-  alicePk,
-  alice,
   alicePkh,
   bobPkh,
   aliceAddress,
+  alicePub,
+  alicePriv,
 } from '../../fixture/vars.js';
 import { getTxOutputs } from '../../test-util.js';
+import simpleCovenantArtifact from '../../fixture/old/simple_covenant.json' assert { type: "json" };
+import mecenasBorderArtifact from '../../fixture/old/mecenas_border.json' assert { type: "json" };
 
 describe('v0.6.0 - Simple Covenant', () => {
   let covenant: Contract;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../../fixture/old/simple_covenant.json');
     const provider = new ElectrumNetworkProvider();
-    covenant = new Contract(artifact, [], provider);
+    covenant = new Contract(simpleCovenantArtifact, [], provider);
     console.log(covenant.address);
   });
 
@@ -23,11 +23,11 @@ describe('v0.6.0 - Simple Covenant', () => {
     it('should succeed', async () => {
       // given
       const to = covenant.address;
-      const amount = BigInt(1000);
+      const amount = 1000n;
 
       // when
       const tx = await covenant.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .send();
 
@@ -40,13 +40,11 @@ describe('v0.6.0 - Simple Covenant', () => {
 
 describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
   let mecenas: Contract;
-  const pledge = BigInt(10000);
+  const pledge = 10000n;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../../fixture/old/mecenas_border.json');
     const provider = new ElectrumNetworkProvider();
-    mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
+    mecenas = new Contract(mecenasBorderArtifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
   });
 
@@ -57,9 +55,9 @@ describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
 
     // when
     const tx = await mecenas.functions
-      .receive(alicePk, new SignatureTemplate(alice))
+      .receive(alicePub, new SignatureTemplate(alicePriv))
       .to(to, amount)
-      .withHardcodedFee(BigInt(1000))
+      .withHardcodedFee(1000n)
       .send();
 
     // then
