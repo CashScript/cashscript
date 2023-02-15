@@ -3,14 +3,20 @@ title: Release Notes
 ---
 
 ## v0.8.0
+
+:warning: From v0.8.0 onwards, CashScript is a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require()` to import `cashscript` or `cashc`.
+
 #### cashc compiler
+- :boom: **BREAKING**: Move to Pure ESM.
 - :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`,`nftCommitment`and `tokenAmount`for both in- and outputs).
 - :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script, which is now the instead of regular `LockingBytecodeP2SH`  because of its improved security.
 
 #### CashScript SDK
+- :boom: **BREAKING**: Move to Pure ESM.
 - :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.
 - :boom: **BREAKING**: Use `bigint` rather than `number` for all instances of "script numbers" (e.g. function arguments) and satoshi amounts.
 - :boom: **BREAKING**: Replace `contract.getRedeemScriptHex()` with `contract.bytecode`.
+- :boom: **BREAKING**: Remove `BitboxNetworkProvider`.
 
 ## v0.7.5
 

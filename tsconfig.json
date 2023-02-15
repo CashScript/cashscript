@@ -6,7 +6,7 @@
     "paths": {
       "cashc": ["cashc/src"],
       "cashscript": ["cashscript/src"],
-      "utils": ["utils/src"],
+      "@cashscript/utils": ["utils/src"],
     },
   },
 }

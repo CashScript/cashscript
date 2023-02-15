@@ -386,7 +386,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
         } else {
           // If the argument is not a literal, the script needs to check size
           this.emit(Op.OP_DUP);
-          this.emit(encodeInt(BigInt(75)));
+          this.emit(encodeInt(75n));
           this.emit(Op.OP_GREATERTHAN);
           this.emit(Op.OP_IF);
           this.emit(hexToBin('4c'));

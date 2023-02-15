@@ -1,12 +1,10 @@
-const path = require('path');
-
 module.exports = {
   title: 'CashScript',
   tagline: 'Smart contracts for Bitcoin Cash',
   url: 'https://cashscript.org',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
-  organizationName: 'Bitcoin-com',
+  organizationName: 'CashScript',
   projectName: 'cashscript',
   themeConfig: {
     prism: {

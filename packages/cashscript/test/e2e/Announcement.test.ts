@@ -3,14 +3,13 @@ import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
 import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
+import artifact from '../fixture/announcement.json' assert { type: "json" };
 
 describe('Announcement', () => {
   let announcement: Contract;
-  const minerFee = BigInt(1000);
+  const minerFee = 1000n;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/announcement.json');
     const provider = new ElectrumNetworkProvider();
     announcement = new Contract(artifact, [], provider);
     console.log(announcement.address);
@@ -20,7 +19,7 @@ describe('Announcement', () => {
     it('should fail when trying to send money', async () => {
       // given
       const to = announcement.address;
-      const amount = BigInt(1000);
+      const amount = 1000n;
 
       const largestUtxo = (await announcement.getUtxos())
         .sort(utxoComparator)
@@ -76,7 +75,7 @@ describe('Announcement', () => {
         .announce()
         .from(largestUtxo)
         .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(minerFee * BigInt(2))
+        .withHardcodedFee(minerFee * 2n)
         .withMinChange(minerFee)
         .send();
 

@@ -5,14 +5,14 @@
  * - It tests compile errors using fixture .cash files in respective Error directories.
  */
 
-import path from 'path';
+import { URL } from 'url';
 import { getSubdirectories, readCashFiles } from '../test-utils.js';
 import * as Errors from '../../src/Errors.js';
 import { compileString } from '../../src/index.js';
 
 describe('Compiler', () => {
   describe('Successful compilation', () => {
-    readCashFiles(path.join(__dirname, '..', 'valid-contract-files')).forEach((file) => {
+    readCashFiles(new URL('../valid-contract-files', import.meta.url)).forEach((file) => {
       it(`${file.fn} should succeed`, () => {
         expect(() => compileString(file.contents)).not.toThrow();
       });
@@ -20,11 +20,11 @@ describe('Compiler', () => {
   });
 
   describe('Compilation errors', () => {
-    const errorTypes = getSubdirectories(__dirname);
+    const errorTypes = getSubdirectories(new URL('.', import.meta.url));
 
     errorTypes.forEach((errorType) => {
-      describe(errorType, () => {
-        readCashFiles(path.join(__dirname, errorType)).forEach((file) => {
+      describe(errorType.toString(), () => {
+        readCashFiles(new URL(errorType, import.meta.url)).forEach((file) => {
           it(`${file.fn} should throw ${errorType}`, () => {
             // Retrieve the correct Error constructor from the Errors.ts file
             const expectedError = Errors[errorType as keyof typeof Errors];

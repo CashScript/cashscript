@@ -1,17 +1,17 @@
 {
   "name": "root",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/*",
     "examples"
   ],
   "devDependencies": {
     "@jest/reporters": "^26.6.2",
-    "@types/jest": "^26.0.0",
+    "@types/jest": "^29.4.0",
     "@types/node": "^14.14.28",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
-    "antlr4ts-cli": "^0.5.0-alpha.4",
     "cashproof": "https://github.com/eyeofpython/cashproof",
     "chalk": "^4.1.0",
     "codecov": "^3.8.1",
@@ -19,15 +19,13 @@
     "eslint": "^7.20.0",
     "eslint-config-airbnb-typescript": "^12.3.1",
     "eslint-plugin-import": "^2.22.1",
-    "jest": "^26.6.3",
     "lerna": "^3.22.1",
-    "ts-jest": "^26.5.1",
     "ts-node": "^9.1.1",
-    "typescript": "^4.1.5"
+    "typescript": "^4.9.5"
   },
   "scripts": {
-    "test": "jest",
-    "lint": "eslint . --ext .ts",
+    "test": "lerna run test --ignore cashscript-examples",
+    "lint": "lerna run lint --ignore cashscript-examples",
     "preproof:opt": "cp packages/utils/src/cashproof-optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv",
     "proof:opt": "yarn cashproof opt.equiv",
     "postproof:opt": "rm opt.equiv",
@@ -38,7 +36,7 @@
     "coverage": "codecov",
     "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
-    "update-version": "ts-node update-version.ts",
+    "update-version": "ts-node-esm update-version.ts",
     "publish-all": "lerna publish from-package"
   }
 }

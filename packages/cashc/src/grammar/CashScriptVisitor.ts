@@ -1,45 +1,45 @@
 // Generated from src/grammar/CashScript.g4 by ANTLR 4.9.0-SNAPSHOT
 
 
-import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
+import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor.js";
 
-import { ParenthesisedContext } from "./CashScriptParser";
-import { CastContext } from "./CashScriptParser";
-import { FunctionCallExpressionContext } from "./CashScriptParser";
-import { InstantiationContext } from "./CashScriptParser";
-import { TupleIndexOpContext } from "./CashScriptParser";
-import { UnaryIntrospectionOpContext } from "./CashScriptParser";
-import { UnaryOpContext } from "./CashScriptParser";
-import { BinaryOpContext } from "./CashScriptParser";
-import { ArrayContext } from "./CashScriptParser";
-import { NullaryOpContext } from "./CashScriptParser";
-import { IdentifierContext } from "./CashScriptParser";
-import { LiteralExpressionContext } from "./CashScriptParser";
-import { SourceFileContext } from "./CashScriptParser";
-import { PragmaDirectiveContext } from "./CashScriptParser";
-import { PragmaNameContext } from "./CashScriptParser";
-import { PragmaValueContext } from "./CashScriptParser";
-import { VersionConstraintContext } from "./CashScriptParser";
-import { VersionOperatorContext } from "./CashScriptParser";
-import { ContractDefinitionContext } from "./CashScriptParser";
-import { FunctionDefinitionContext } from "./CashScriptParser";
-import { ParameterListContext } from "./CashScriptParser";
-import { ParameterContext } from "./CashScriptParser";
-import { BlockContext } from "./CashScriptParser";
-import { StatementContext } from "./CashScriptParser";
-import { VariableDefinitionContext } from "./CashScriptParser";
-import { TupleAssignmentContext } from "./CashScriptParser";
-import { AssignStatementContext } from "./CashScriptParser";
-import { TimeOpStatementContext } from "./CashScriptParser";
-import { RequireStatementContext } from "./CashScriptParser";
-import { IfStatementContext } from "./CashScriptParser";
-import { FunctionCallContext } from "./CashScriptParser";
-import { ExpressionListContext } from "./CashScriptParser";
-import { ExpressionContext } from "./CashScriptParser";
-import { ModifierContext } from "./CashScriptParser";
-import { LiteralContext } from "./CashScriptParser";
-import { NumberLiteralContext } from "./CashScriptParser";
-import { TypeNameContext } from "./CashScriptParser";
+import { ParenthesisedContext } from "./CashScriptParser.js";
+import { CastContext } from "./CashScriptParser.js";
+import { FunctionCallExpressionContext } from "./CashScriptParser.js";
+import { InstantiationContext } from "./CashScriptParser.js";
+import { TupleIndexOpContext } from "./CashScriptParser.js";
+import { UnaryIntrospectionOpContext } from "./CashScriptParser.js";
+import { UnaryOpContext } from "./CashScriptParser.js";
+import { BinaryOpContext } from "./CashScriptParser.js";
+import { ArrayContext } from "./CashScriptParser.js";
+import { NullaryOpContext } from "./CashScriptParser.js";
+import { IdentifierContext } from "./CashScriptParser.js";
+import { LiteralExpressionContext } from "./CashScriptParser.js";
+import { SourceFileContext } from "./CashScriptParser.js";
+import { PragmaDirectiveContext } from "./CashScriptParser.js";
+import { PragmaNameContext } from "./CashScriptParser.js";
+import { PragmaValueContext } from "./CashScriptParser.js";
+import { VersionConstraintContext } from "./CashScriptParser.js";
+import { VersionOperatorContext } from "./CashScriptParser.js";
+import { ContractDefinitionContext } from "./CashScriptParser.js";
+import { FunctionDefinitionContext } from "./CashScriptParser.js";
+import { ParameterListContext } from "./CashScriptParser.js";
+import { ParameterContext } from "./CashScriptParser.js";
+import { BlockContext } from "./CashScriptParser.js";
+import { StatementContext } from "./CashScriptParser.js";
+import { VariableDefinitionContext } from "./CashScriptParser.js";
+import { TupleAssignmentContext } from "./CashScriptParser.js";
+import { AssignStatementContext } from "./CashScriptParser.js";
+import { TimeOpStatementContext } from "./CashScriptParser.js";
+import { RequireStatementContext } from "./CashScriptParser.js";
+import { IfStatementContext } from "./CashScriptParser.js";
+import { FunctionCallContext } from "./CashScriptParser.js";
+import { ExpressionListContext } from "./CashScriptParser.js";
+import { ExpressionContext } from "./CashScriptParser.js";
+import { ModifierContext } from "./CashScriptParser.js";
+import { LiteralContext } from "./CashScriptParser.js";
+import { NumberLiteralContext } from "./CashScriptParser.js";
+import { TypeNameContext } from "./CashScriptParser.js";
 
 
 /**

@@ -25,39 +25,35 @@ Now to put this smart contract in use in a JavaScript application we have to use
 
 ```ts title="TransferWithTimeout.js"
 import { Contract, SignatureTemplate } from 'cashscript';
-import { alicePriv, alicePub, bobPriv, bobPub } from './somewhere';
+import { alicePriv, alicePub, bobPriv, bobPub } from './somewhere.js';
+import artifact from './transfer_with_timeout.json';
 
-async function run() {
-  // Import the compiled TransferWithTimeout JSON artifact
-  const artifact = require('./transfer_with_timeout.json');
+// Instantiate a new contract using the artifact and constructor arguments:
+// { sender: alicePub, recipient: bobPub, timeout: 1000000 }
+// No network provider is provided, so the default ElectrumNetworkProvider is used
+const contract = new Contract(artifact, [alicePub, bobPub, 1000000n]);
 
-  // Instantiate a new contract using the artifact and constructor arguments:
-  // { sender: alicePub, recipient: bobPub, timeout: 1000000 }
-  // No network provider is provided, so the default ElectrumNetworkProvider is used
-  const contract = new Contract(artifact, [alicePub, bobPub, 1000000]);
+// Display contract address and balance
+console.log('contract address:', contract.address);
+console.log('contract balance:', await contract.getBalance());
 
-  // Display contract address and balance
-  console.log('contract address:', contract.address);
-  console.log('contract balance:', await contract.getBalance());
+// Call the transfer function with Bob's signature
+// i.e. Bob claims the money that Alice has sent him
+const txDetails = await contract.functions
+  .transfer(new SignatureTemplate(bobPriv))
+  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
+  .send();
+console.log(txDetails);
 
-  // Call the transfer function with Bob's signature
-  // i.e. Bob claims the money that Alice has sent him
-  const txDetails = await contract.functions
-    .transfer(new SignatureTemplate(bobPriv))
-    .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000)
-    .send();
-  console.log(txDetails);
-
-  // Call the timeout function with Alice's signature
-  // i.e. Alice recovers the money that Bob has not claimed
-  // But because the timeout has not passed yet, the function fails and
-  // we call the meep function so the transaction can be debugged instead
-  const meepStr = await contract.functions
-    .timeout(new SignatureTemplate(alicePriv))
-    .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000)
-    .meep();
-  console.log(meepStr);
-}
+// Call the timeout function with Alice's signature
+// i.e. Alice recovers the money that Bob has not claimed
+// But because the timeout has not passed yet, the function fails and
+// we call the meep function so the transaction can be debugged instead
+const meepStr = await contract.functions
+  .timeout(new SignatureTemplate(alicePriv))
+  .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000n)
+  .meep();
+console.log(meepStr);
 ```
 
 ## Memo.cash Announcement
@@ -103,43 +99,39 @@ The CashScript code above ensures that the smart contract **can only** be used i
 
 ```ts title="Announcement.js"
 import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
-import { alicePriv, alicePub } from './somewhere';
+import { alicePriv, alicePub } from './somewhere.js';
+import artifact from './announcement.json';
 
-export async function run(){
-  // Import the compiled announcement JSON artifact
-  const artifact = require('./announcement.json');
+// Initialise a network provider for network operations on MAINNET
+const provider = new ElectrumNetworkProvider('mainnet');
 
-  // Initialise a network provider for network operations on MAINNET
-  const provider = new ElectrumNetworkProvider('mainnet');
+// Instantiate a new contract using the compiled artifact and network provider
+// AND providing the constructor parameters (none)
+const contract = new Contract(artifact, [], provider);
 
-  // Instantiate a new contract using the compiled artifact and network provider
-  // AND providing the constructor parameters (none)
-  const contract = new Contract(artifact, [], provider);
+// Display contract address, balance, opcount, and bytesize
+console.log('contract address:', contract.address);
+console.log('contract balance:', await contract.getBalance());
+console.log('contract opcount:', contract.opcount);
+console.log('contract bytesize:', contract.bytesize);
 
-  // Display contract address, balance, opcount, and bytesize
-  console.log('contract address:', contract.address);
-  console.log('contract balance:', await contract.getBalance());
-  console.log('contract opcount:', contract.opcount);
-  console.log('contract bytesize:', contract.bytesize);
+// Create the announcement string. Any other announcement will fail because
+// it does not comply with the smart contract.
+const str = 'A contract may not injure a human being or, '
+  + 'through inaction, allow a human being to come to harm.';
 
-  // Create the announcement string. Any other announcement will fail because
-  // it does not comply with the smart contract.
-  const str = 'A contract may not injure a human being or, '
-    + 'through inaction, allow a human being to come to harm.';
+// Send the announcement transaction
+const txDetails = await contract.functions
+  .announce(alicePub, new SignatureTemplate(alicePriv))
+  // Add the announcement string as an OP_RETURN output
+  .withOpReturn(['0x6d02', str])
+  // Hardcodes the transaction fee (like the contract expects)
+  .withHardcodedFee(1000n)
+  // Only add a "change" output if the remainder is higher than 1000
+  .withMinChange(1000n)
+  .send();
 
-  // Send the announcement transaction
-  const txDetails = await contract.functions
-    .announce(alicePub, new SignatureTemplate(alicePriv))
-    // Add the announcement string as an OP_RETURN output
-    .withOpReturn(['0x6d02', str])
-    // Hardcodes the transaction fee (like the contract expects)
-    .withHardcodedFee(1000)
-    // Only add a "change" output if the remainder is higher than 1000
-    .withMinChange(1000)
-    .send();
-
-  console.log(txDetails);
-}
+console.log(txDetails);
 ```
 
 [bitbox]: https://developer.bitcoin.com/bitbox/

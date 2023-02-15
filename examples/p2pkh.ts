@@ -1,53 +1,40 @@
-import { BITBOX } from 'bitbox-sdk';
 import { stringify } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
-import path from 'path';
+import { ElectrumNetworkProvider, SignatureTemplate, Contract } from 'cashscript';
+import { URL } from 'url';
 
-run();
-async function run(): Promise<void> {
-  // Initialise BITBOX
-  const bitbox = new BITBOX();
+// Import Alice's keys from common.ts
+import { alicePkh, alicePriv, alicePub } from './common.js';
 
-  // Initialise HD node and alice's keypair
-  const rootSeed = bitbox.Mnemonic.toSeed('CashScript');
-  const hdNode = bitbox.HDNode.fromSeed(rootSeed);
-  const alice = bitbox.HDNode.toKeyPair(bitbox.HDNode.derive(hdNode, 0));
+// Compile the P2PKH contract to an artifact object
+const artifact = compileFile(new URL('p2pkh.cash', import.meta.url));
 
-  // Derive alice's public key and public key hash
-  const alicePk = bitbox.ECPair.toPublicKey(alice);
-  const alicePkh = bitbox.Crypto.hash160(alicePk);
+// Initialise a network provider for network operations on TESTNET$
+const provider = new ElectrumNetworkProvider('testnet4');
 
-  // Compile the P2PKH contract to an artifact object
-  const artifact = compileFile(path.join(__dirname, 'p2pkh.cash'));
+// Instantiate a new contract using the compiled artifact and network provider
+// AND providing the constructor parameters (pkh: alicePkh)
+const contract = new Contract(artifact, [alicePkh], provider);
 
-  // Initialise a network provider for network operations on TESTNET3
-  const provider = new ElectrumNetworkProvider('testnet3');
+// Get contract balance & output address + balance
+console.log('contract address:', contract.address);
+console.log('contract balance:', await contract.getBalance());
 
-  // Instantiate a new contract using the compiled artifact and network provider
-  // AND providing the constructor parameters (pkh: alicePkh)
-  const contract = new Contract(artifact, [alicePkh], provider);
+// Call the spend() function with alice's signature + pk
+// And use it to send 0. 000 100 00 BCH back to the contract's address
+const tx = await contract.functions
+  .spend(alicePub, new SignatureTemplate(alicePriv))
+  .to(contract.address, 10000n)
+  .send();
 
-  // Get contract balance & output address + balance
-  console.log('contract address:', contract.address);
-  console.log('contract balance:', await contract.getBalance());
+console.log('transaction details:', stringify(tx));
 
-  // Call the spend() function with alice's signature + pk
-  // And use it to send 0. 000 100 00 BCH back to the contract's address
-  const tx = await contract.functions
-    .spend(alicePk, new SignatureTemplate(alice))
-    .to(contract.address, 10000)
-    .send();
+// Call the spend() function with alice's signature + pk
+// And use it to send two outputs of 0. 000 150 00 BCH back to the contract's address
+const tx2 = await contract.functions
+  .spend(alicePub, new SignatureTemplate(alicePriv))
+  .to(contract.address, 15000n)
+  .to(contract.address, 15000n)
+  .send();
 
-  console.log('transaction details:', stringify(tx));
-
-  // Call the spend() function with alice's signature + pk
-  // And use it to send two outputs of 0. 000 150 00 BCH back to the contract's address
-  const tx2 = await contract.functions
-    .spend(alicePk, new SignatureTemplate(alice))
-    .to(contract.address, 15000)
-    .to(contract.address, 15000)
-    .send();
-
-  console.log('transaction details:', stringify(tx2));
-}
+console.log('transaction details:', stringify(tx2));

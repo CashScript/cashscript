@@ -1,6 +1,6 @@
 import { Artifact } from '@cashscript/utils';
 import fs from 'fs';
-import path from 'path';
+import { URL } from 'url';
 import { version } from '../../src/index.js';
 
 interface Fixture {
@@ -20,7 +20,7 @@ export const fixtures: Fixture[] = [
         'OP_OVER OP_HASH160 OP_EQUALVERIFY '
         // require(checkSig(s, pk))
         + 'OP_CHECKSIG',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'p2pkh.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/p2pkh.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -50,7 +50,7 @@ export const fixtures: Fixture[] = [
         // require(checkSig(s, pk))
         + 'OP_ROT OP_ROT OP_CHECKSIG '
         + 'OP_NIP',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'reassignment.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/reassignment.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -86,7 +86,7 @@ export const fixtures: Fixture[] = [
         // require(d == y)
         + 'OP_3 OP_ROLL OP_NUMEQUAL '
         + 'OP_NIP OP_NIP OP_NIP',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'if_statement.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/if_statement.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -116,7 +116,7 @@ export const fixtures: Fixture[] = [
         // require(tx.time >= timeout)
         + 'OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 '
         + 'OP_ENDIF',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'multifunction.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/multifunction.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -177,7 +177,7 @@ export const fixtures: Fixture[] = [
         // require(d == y)
         + 'OP_2SWAP OP_NUMEQUAL '
         + 'OP_NIP OP_NIP OP_ENDIF',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'multifunction_if_statements.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/multifunction_if_statements.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -194,7 +194,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         // require(checkMultiSig([s1, s2], [pk1, pk2, pk3]))
         'OP_0 OP_2ROT OP_SWAP OP_2 OP_2ROT OP_SWAP OP_6 OP_ROLL OP_3 OP_CHECKMULTISIG',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', '2_of_3_multisig.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/2_of_3_multisig.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -215,7 +215,7 @@ export const fixtures: Fixture[] = [
         + 'OP_2DUP OP_EQUAL OP_NOT OP_VERIFY '
         // bytes x = b.split(b.length / 2)[1]
         + 'OP_SWAP OP_4 OP_SPLIT OP_DROP OP_EQUAL OP_NOT',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'split_size.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/split_size.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -234,7 +234,7 @@ export const fixtures: Fixture[] = [
         'OP_DUP OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_EQUALVERIFY '
         // require(checkSig(s, pk));
         + 'OP_CHECKSIG',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'cast_hash_checksig.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/cast_hash_checksig.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -279,7 +279,7 @@ export const fixtures: Fixture[] = [
         + 'OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY '
         // require(checkSig(ownerSig, ownerPk));
         + 'OP_CHECKSIG',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'hodl_vault.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/hodl_vault.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -305,7 +305,7 @@ export const fixtures: Fixture[] = [
         // require(a > b + c + d + e + f);
         + 'OP_2ROT OP_5 OP_ROLL OP_ADD OP_4 OP_ROLL OP_ADD '
         + 'OP_3 OP_ROLL OP_ADD OP_ROT OP_ADD OP_GREATERTHAN',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'deep_replace.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/deep_replace.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -320,7 +320,7 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [{ name: 'b', type: 'bytes4' }, { name: 'i', type: 'int' }] }],
       bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL', // require(b == bytes4(i))
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'bounded_bytes.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/bounded_bytes.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -344,7 +344,7 @@ export const fixtures: Fixture[] = [
         'OP_TXVERSION OP_NUMEQUALVERIFY '
         // require(tx.bytecode == 0x00)
         + 'OP_ACTIVEBYTECODE 00 OP_EQUAL',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/covenant.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -399,7 +399,7 @@ export const fixtures: Fixture[] = [
         + 'OP_0 OP_OUTPUTTOKENCOMMITMENT 00 OP_EQUALVERIFY '
         // require(tx.outputs[0].tokenAmount == 100);
         + 'OP_0 OP_OUTPUTTOKENAMOUNT 64 OP_NUMEQUAL',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'covenant_all_fields.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/covenant_all_fields.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -458,7 +458,7 @@ export const fixtures: Fixture[] = [
         + 'OP_4 OP_ROLL OP_4 OP_ROLL OP_CHECKSIG '
         // Cleanup
         + 'OP_NIP OP_NIP OP_NIP OP_ENDIF',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'mecenas.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/mecenas.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -497,7 +497,7 @@ export const fixtures: Fixture[] = [
         + 'OP_1 OP_OUTPUTVALUE OP_OVER OP_NUMEQUALVERIFY OP_ENDIF '
         // Stack clean-up
         + 'OP_DROP OP_1',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'announcement.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/announcement.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -514,7 +514,7 @@ export const fixtures: Fixture[] = [
         { name: 'spend', inputs: [{ name: 'palindrome', type: 'string' }] },
       ],
       bytecode: 'OP_DUP OP_REVERSEBYTES OP_EQUAL',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'p2palindrome.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/p2palindrome.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
@@ -531,7 +531,7 @@ export const fixtures: Fixture[] = [
         { name: 'spend', inputs: [{ name: 'size', type: 'int' }] },
       ],
       bytecode: 'OP_10 OP_SWAP OP_NUM2BIN OP_BIN2NUM OP_10 OP_NUMEQUAL',
-      source: fs.readFileSync(path.join(__dirname, '..', 'valid-contract-files', 'num2bin_variable.cash'), { encoding: 'utf-8' }),
+      source: fs.readFileSync(new URL('../valid-contract-files/num2bin_variable.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,

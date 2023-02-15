@@ -1,12 +1,15 @@
+const path = require('path');
+
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   extends: ['airbnb-typescript/base'],
   parserOptions: {
-    project: './tsconfig.json',
+    project: path.join(__dirname, 'tsconfig.json'),
     ecmaVersion: 2018,  // Allows for the parsing of modern ECMAScript features
     sourceType: 'module',  // Allows for the use of imports
+    extraFileExtensions: ['.cjs'],
   },
   env: {
     'jest': true,
@@ -43,6 +46,6 @@ module.exports = {
     'max-classes-per-file': 0, // Multiple classes in one file are allowed (e.g. Errors)
     '@typescript-eslint/no-redeclare': 0, // I sometimes name variables an types the same
     'linebreak-style': 0, // Ignore linebreak lints https://stackoverflow.com/a/43008668/1129108
-    'import/extensions': ['error', 'always'], // ESM requires file extensins
+    'import/extensions': ['error', 'always'], // ESM requires file extensions
   },
 }

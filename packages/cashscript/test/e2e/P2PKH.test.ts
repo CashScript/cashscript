@@ -2,22 +2,21 @@ import { binToHex } from '@bitauth/libauth';
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
 import {
   alicePkh,
-  alicePk,
-  alice,
-  bob,
   aliceAddress,
+  alicePub,
+  bobPriv,
+  alicePriv,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { Utxo } from '../../src/interfaces.js';
 import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
+import artifact from '../fixture/p2pkh.json' assert { type: "json" };
 
 describe('P2PKH', () => {
   let p2pkhInstance: Contract;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/p2pkh.json');
     const provider = new ElectrumNetworkProvider();
     p2pkhInstance = new Contract(artifact, [alicePkh], provider);
     console.log(p2pkhInstance.address);
@@ -27,11 +26,11 @@ describe('P2PKH', () => {
     it('should fail when using incorrect function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const txPromise = p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(bob))
+        .spend(alicePub, new SignatureTemplate(bobPriv))
         .to(to, amount)
         .send();
 
@@ -43,11 +42,11 @@ describe('P2PKH', () => {
     it('should succeed when using correct function arguments', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .send();
 
@@ -60,15 +59,15 @@ describe('P2PKH', () => {
     it('should fail when not enough satoshis are provided in utxos', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = BigInt(1000);
+      const amount = 1000n;
       const utxos = await p2pkhInstance.getUtxos();
       utxos.sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
-      const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, BigInt(0)) + BigInt(1);
+      const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, 0n) + 1n;
 
       // when
       const txPromise = p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
         .from(gathered)
         .to(to, failureAmount)
         .send();
@@ -80,14 +79,14 @@ describe('P2PKH', () => {
     it('should succeed when providing UTXOs', async () => {
       // given
       const to = p2pkhInstance.address;
-      const amount = BigInt(1000);
+      const amount = 1000n;
       const utxos = await p2pkhInstance.getUtxos();
       utxos.sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
 
       // when
       const receipt = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
         .from(gathered)
         .to(to, amount)
         .send();
@@ -105,13 +104,13 @@ describe('P2PKH', () => {
     it('can call to() multiple times', async () => {
       // given
       const outputs = [
-        { to: p2pkhInstance.address, amount: BigInt(10000) },
-        { to: p2pkhInstance.address, amount: BigInt(20000) },
+        { to: p2pkhInstance.address, amount: 10000n },
+        { to: p2pkhInstance.address, amount: 20000n },
       ];
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
         .to(outputs[0].to, outputs[0].amount)
         .to(outputs[1].to, outputs[1].amount)
         .send();
@@ -124,13 +123,13 @@ describe('P2PKH', () => {
     it('can send to list of recipients', async () => {
       // given
       const outputs = [
-        { to: p2pkhInstance.address, amount: BigInt(10000) },
-        { to: p2pkhInstance.address, amount: BigInt(20000) },
+        { to: p2pkhInstance.address, amount: 10000n },
+        { to: p2pkhInstance.address, amount: 20000n },
       ];
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
         .to(outputs)
         .send();
 
@@ -143,11 +142,11 @@ describe('P2PKH', () => {
       // given
       const opReturn = ['0x6d02', 'Hello, World!', '0x01'];
       const to = p2pkhInstance.address;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
         .to(to, amount)
         .withOpReturn(opReturn)
         .send();
@@ -161,17 +160,18 @@ describe('P2PKH', () => {
     it('can include UTXOs from P2PKH addresses', async () => {
       // given
       const to = aliceAddress;
-      const amount = BigInt(10000);
+      const amount = 10000n;
 
       const contractUtxos = await p2pkhInstance.getUtxos();
       const aliceUtxos = await getAddressUtxos(aliceAddress);
+      console.log(contractUtxos, aliceUtxos);
 
       // when
       const tx = await p2pkhInstance.functions
-        .spend(alicePk, new SignatureTemplate(alice))
-        .experimentalFromP2PKH(aliceUtxos[0], new SignatureTemplate(alice))
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .experimentalFromP2PKH(aliceUtxos[0], new SignatureTemplate(alicePriv))
         .from(contractUtxos[0])
-        .experimentalFromP2PKH(aliceUtxos[1], new SignatureTemplate(alice))
+        .experimentalFromP2PKH(aliceUtxos[1], new SignatureTemplate(alicePriv))
         .from(contractUtxos[1])
         .to(to, amount)
         .to(to, amount)
@@ -193,14 +193,17 @@ function gatherUtxos(
   options?: { amount?: bigint, fees?: bigint },
 ): { utxos: Utxo[], total: bigint } {
   const targetUtxos: Utxo[] = [];
-  let total = BigInt(0);
+  let total = 0n;
+
   // 1000 for fees
-  const { amount = BigInt(0), fees = BigInt(1000) } = options ?? {};
+  const { amount = 0n, fees = 1000n } = options ?? {};
+
   for (const utxo of utxos) {
     if (total - fees > amount) break;
     total += utxo.satoshis;
     targetUtxos.push(utxo);
   }
+
   return {
     utxos: targetUtxos,
     total,

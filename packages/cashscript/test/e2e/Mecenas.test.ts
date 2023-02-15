@@ -7,16 +7,15 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
+import artifact from '../fixture/mecenas.json' assert { type: "json" };
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {
   let mecenas: Contract;
-  const pledge = BigInt(10000);
-  const minerFee = BigInt(1000);
+  const pledge = 10000n;
+  const minerFee = 1000n;
 
   beforeAll(() => {
-    // eslint-disable-next-line global-require
-    const artifact = require('../fixture/mecenas.json');
     const provider = new ElectrumNetworkProvider();
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
@@ -26,7 +25,7 @@ describe('Mecenas', () => {
     it('should fail when trying to send more than pledge', async () => {
       // given
       const to = aliceAddress;
-      const amount = pledge + BigInt(10);
+      const amount = pledge + 10n;
 
       // when
       const txPromise = mecenas.functions
@@ -84,7 +83,7 @@ describe('Mecenas', () => {
       const txPromise = mecenas.functions
         .receive()
         .to(to, amount)
-        .withHardcodedFee(minerFee * BigInt(2))
+        .withHardcodedFee(minerFee * 2n)
         .send();
 
       // then
