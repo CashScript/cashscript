@@ -1,5 +1,4 @@
 import { Type } from '@cashscript/utils';
-import { DUST_LIMIT } from './constants.js';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -8,8 +7,8 @@ export class TypeError extends Error {
 }
 
 export class OutputSatoshisTooSmallError extends Error {
-  constructor(satoshis: bigint) {
-    super(`Tried to add an output with ${satoshis} satoshis, which is less than the DUST limit (${DUST_LIMIT})`);
+  constructor(satoshis: bigint, minimumAmount:bigint) {
+    super(`Tried to add an output with ${satoshis} satoshis, which is less than the required minimum for this output-type (${minimumAmount})`);
   }
 }
 

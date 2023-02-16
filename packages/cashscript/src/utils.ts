@@ -1,6 +1,8 @@
 import {
   cashAddressToLockingBytecode,
   decodeCashAddressFormat,
+  decodeCashAddress,
+  CashAddressType,
   addressContentsToLockingBytecode,
   lockingBytecodeToCashAddress,
   binToHex,
@@ -26,9 +28,9 @@ import {
 } from './interfaces.js';
 import {
   P2PKH_OUTPUT_SIZE,
+  P2SH20_OUTPUT_SIZE,
   VERSION_SIZE,
   LOCKTIME_SIZE,
-  DUST_LIMIT,
 } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
@@ -42,8 +44,9 @@ import {
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
 export function validateRecipient(recipient: Recipient): void {
-  if (recipient.amount < DUST_LIMIT) {
-    throw new OutputSatoshisTooSmallError(recipient.amount);
+  const minimumAmount = calculateDust(recipient);
+  if (recipient.amount < minimumAmount) {
+    throw new OutputSatoshisTooSmallError(recipient.amount, BigInt(minimumAmount));
   }
 
   if ('token' in recipient) {
@@ -51,6 +54,25 @@ export function validateRecipient(recipient: Recipient): void {
       throw new TokensToNonTokenAddress(recipient.to);
     }
   }
+}
+
+function calculateDust(recipient: Recipient): number {
+  const outputSize = getOutputSize(recipient);
+  // Formala used to calculate the minimum allowed output
+  const dustAmount = 444 + outputSize * 3;
+  return dustAmount
+}
+
+function getOutputSize(recipient: Recipient): number {
+  const result = decodeCashAddress(recipient.to);
+  if (typeof result === 'string') throw new Error(result);
+  const addressType: string = CashAddressType[result.type];
+  const outputSizes: any  = {
+    P2PKH : P2PKH_OUTPUT_SIZE,
+    P2SH : P2SH20_OUTPUT_SIZE
+  };
+  const outputSize = outputSizes[addressType];
+  return outputSize
 }
 
 function isTokenAddress(address: string): boolean {
@@ -92,7 +114,8 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   let size = VERSION_SIZE + LOCKTIME_SIZE;
   size += outputs.reduce((acc, output) => {
     if (typeof output.to === 'string') {
-      return acc + P2PKH_OUTPUT_SIZE;
+      const outputSize = getOutputSize(output as Recipient);
+      return acc + outputSize;
     }
 
     // Size of an OP_RETURN output = byteLength + 8 (amount) + 2 (scriptSize)
