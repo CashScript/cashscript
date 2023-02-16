@@ -231,15 +231,15 @@ new LockingBytecodeP2PKH(bytes20 pkh): bytes25
 
 Creates new P2PKH locking bytecode for the public key hash `pkh`.
 
-### LockingBytecodeP2SH
+### LockingBytecodeP2SH20
 ```solidity
-new LockingBytecodeP2SH(bytes20 scriptHash): bytes23
+new LockingBytecodeP2SH20(bytes20 scriptHash): bytes23
 ```
 
-Creates new P2SH locking bytecode for the script hash, where `scriptHash` is the hash160() of your script.
+Creates new P2SH20 locking bytecode for the script hash, where `scriptHash` is the hash160() of your script.
 
 :::caution
-Because regular P2SH addresses uses hashes which are only 20-bytes in length, it is vulnerable to hash collision in situations where an attacker can introduce arbitrary data to a contract. To solve these security issues P2SH32 has been introduced. It is recommended to always use `LockingBytecodeP2SH32` from now on.
+Because the old P2SH20 addresses use hashes which are only 20-bytes in length, they are vulnerable to hash collision in situations where an attacker can introduce arbitrary data to a contract. To solve these security issues P2SH32 has been introduced. It is recommended to always use `LockingBytecodeP2SH32` from now on.
 :::
 
 ### LockingBytecodeP2SH32

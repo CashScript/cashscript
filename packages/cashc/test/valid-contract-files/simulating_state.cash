@@ -40,7 +40,7 @@ contract SimulatingState(
 
             // Create the locking bytecode for the new contract and check that
             // the change output sends to that contract
-            bytes23 newContractLock = new LockingBytecodeP2SH(hash160(newContract));
+            bytes23 newContractLock = new LockingBytecodeP2SH20(hash160(newContract));
             require(tx.outputs[1].lockingBytecode == newContractLock);
         }
     }
