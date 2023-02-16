@@ -1,5 +1,6 @@
 import {
   cashAddressToLockingBytecode,
+  decodeCashAddressFormat,
   addressContentsToLockingBytecode,
   lockingBytecodeToCashAddress,
   binToHex,
@@ -31,6 +32,7 @@ import {
 } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
+  TokensToNonTokenAddress,
   Reason,
   FailedTransactionError,
   FailedRequireError,
@@ -43,6 +45,19 @@ export function validateRecipient(recipient: Recipient): void {
   if (recipient.amount < DUST_LIMIT) {
     throw new OutputSatoshisTooSmallError(recipient.amount);
   }
+
+  if ('token' in recipient) {
+    if(!isTokenAddress(recipient.to)){
+      throw new TokensToNonTokenAddress(recipient.to);
+    }
+  }
+}
+
+function isTokenAddress(address: string): boolean {
+  const result = decodeCashAddressFormat(address);
+  if (typeof result === 'string') throw new Error(result);
+  const supportsTokens = (result.version > 1);
+  return supportsTokens
 }
 
 // ////////// SIZE CALCULATIONS ///////////////////////////////////////////////
