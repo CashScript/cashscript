@@ -37,7 +37,7 @@ import {
   validateRecipient,
   utxoComparator,
 } from './utils.js';
-import { P2SH20_OUTPUT_SIZE, DUST_LIMIT } from './constants.js';
+import { P2SH20_OUTPUT_SIZE, MINIMUM_CHANGE_P2SH20 } from './constants.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
@@ -51,7 +51,7 @@ export class Transaction {
   private locktime: number;
   private feePerByte: number = 1.0;
   private hardcodedFee: bigint;
-  private minChange: bigint = DUST_LIMIT;
+  private minChange: bigint = MINIMUM_CHANGE_P2SH20;
 
   constructor(
     private address: string,
@@ -342,7 +342,7 @@ export class Transaction {
     }
 
     // Add a change output if applicable
-    if (change >= DUST_LIMIT && change >= this.minChange) {
+    if (change >= this.minChange) {
       this.outputs.push({ to: this.address, amount: change });
     }
   }
