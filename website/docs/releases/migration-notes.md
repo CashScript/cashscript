@@ -6,6 +6,7 @@ title: Migration Notes
 
 ### cashc compiler
 - `cashc` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
+- `LockingBytecodeP2SH` has been renamed to `LockingBytecodeP2SH20` but it is recommended to use the newly introduced `LockingBytecodeP2SH32` instead.
 
 ### CashScript SDK
 - `cashscript` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
