@@ -20,6 +20,7 @@ import {
   Utxo,
   Output,
   Recipient,
+  TokenDetails,
   isSignableUtxo,
   TransactionDetails,
 } from './interfaces.js';
@@ -89,12 +90,15 @@ export class Transaction {
     return this;
   }
 
-  to(to: string, amount: bigint): this;
+  to(to: string, amount: bigint, tokenDetails: TokenDetails): this;
   to(outputs: Recipient[]): this;
 
-  to(toOrOutputs: string | Recipient[], amount?: bigint): this {
+  to(toOrOutputs: string | Recipient[], amount?: bigint, tokenDetails?: TokenDetails): this {
     if (typeof toOrOutputs === 'string' && typeof amount === 'bigint') {
-      return this.to([{ to: toOrOutputs, amount }]);
+      const recipient = { to: toOrOutputs, amount, token: tokenDetails };
+      if(typeof tokenDetails != "undefined") recipient.token = tokenDetails;
+      validateRecipient(recipient);
+      return this.to([recipient]);
     }
 
     if (Array.isArray(toOrOutputs) && amount === undefined) {

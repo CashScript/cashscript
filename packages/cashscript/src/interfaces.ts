@@ -5,6 +5,7 @@ export interface Utxo {
   txid: string;
   vout: number;
   satoshis: bigint;
+  token?: TokenDetails;
 }
 
 export interface SignableUtxo extends Utxo {
@@ -18,11 +19,22 @@ export function isSignableUtxo(utxo: Utxo): utxo is SignableUtxo {
 export interface Recipient {
   to: string;
   amount: bigint;
+  token?: TokenDetails;
 }
 
 export interface Output {
   to: string | Uint8Array;
   amount: bigint;
+  token?: TokenDetails;
+}
+
+export interface TokenDetails {
+  amount: bigint; // the amount cannot be a JSON numeric and is instead written as a decimal string in the JSON output
+  category: string;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: string;
+  };
 }
 
 export enum SignatureAlgorithm {
