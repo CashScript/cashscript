@@ -13,6 +13,12 @@ export class OutputSatoshisTooSmallError extends Error {
   }
 }
 
+export class TokensToNonTokenAddress extends Error {
+  constructor(address: string) {
+    super(`Tried to send tokens to an adress without token support, ${address}.`);
+  }
+}
+
 export class FailedTransactionError extends Error {
   constructor(public reason: string, public meep: string) {
     super(`Transaction failed with reason: ${reason}\n${meep}`);

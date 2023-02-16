@@ -56,12 +56,14 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   async getUtxos(address: string): Promise<Utxo[]> {
     const scripthash = addressToElectrumScriptHash(address);
 
-    const result = await this.performRequest('blockchain.scripthash.listunspent', scripthash) as ElectrumUtxo[];
+    const filteringOption = "include_tokens";
+    const result = await this.performRequest('blockchain.scripthash.listunspent', scripthash, filteringOption) as ElectrumUtxo[];
 
     const utxos = result.map((utxo) => ({
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
       satoshis: BigInt(utxo.value),
+      token: utxo.token_data
     }));
 
     return utxos;
@@ -141,6 +143,14 @@ interface ElectrumUtxo {
   value: number;
   tx_hash: string;
   height: number;
+  token_data?: {
+    amount: bigint;
+    category: string;
+    nft?: {
+      capability: 'none' | 'mutable' | 'minting';
+      commitment: string;
+    };
+  };
 }
 
 interface BlockHeader {
