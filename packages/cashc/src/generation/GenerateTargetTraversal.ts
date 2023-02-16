@@ -343,7 +343,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.emit(hexToBin('88ac'));
       this.emit(Op.OP_CAT);
       this.popFromStack(2);
-    } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH) {
+    } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH20) {
       // OP_HASH160 OP_PUSH<20>
       this.emit(hexToBin('a914'));
       this.pushToStack('(value)');

@@ -9,7 +9,8 @@ title: Release Notes
 #### cashc compiler
 - :boom: **BREAKING**: Move to Pure ESM.
 - :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`,`nftCommitment`and `tokenAmount`for both in- and outputs).
-- :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script, which is now the instead of regular `LockingBytecodeP2SH`  because of its improved security.
+- :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script
+- :boom: **BREAKING**: renamed `LockingBytecodeP2SH` to `LockingBytecodeP2SH20` but it is recommended to change over to the new P2SH32 for security reasons.
 
 #### CashScript SDK
 - :boom: **BREAKING**: Move to Pure ESM.

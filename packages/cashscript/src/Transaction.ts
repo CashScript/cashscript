@@ -37,7 +37,7 @@ import {
   validateRecipient,
   utxoComparator,
 } from './utils.js';
-import { P2SH_OUTPUT_SIZE, DUST_LIMIT } from './constants.js';
+import { P2SH20_OUTPUT_SIZE, DUST_LIMIT } from './constants.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
@@ -338,7 +338,7 @@ export class Transaction {
 
     // Account for the fee of adding a change output
     if (!this.hardcodedFee) {
-      change -= BigInt(P2SH_OUTPUT_SIZE * this.feePerByte);
+      change -= BigInt(P2SH20_OUTPUT_SIZE * this.feePerByte);
     }
 
     // Add a change output if applicable
