@@ -97,8 +97,6 @@ export class Transaction {
   to(toOrOutputs: string | Recipient[], amount?: bigint, tokenDetails?: TokenDetails): this {
     if (typeof toOrOutputs === 'string' && typeof amount === 'bigint') {
       const recipient = { to: toOrOutputs, amount, token: tokenDetails };
-      if(typeof tokenDetails != "undefined") recipient.token = tokenDetails;
-      validateRecipient(recipient);
       return this.to([recipient]);
     }
 
@@ -281,19 +279,19 @@ export class Transaction {
     }
 
     // Construct object with total output of fungible tokens by tokenId
-    const netBalanceTokens: any = {};
+    const netBalanceTokens: Record<string, bigint> = {};
     // Construct list with all nfts in inputs
     const listNftsInputs = [];
     // If inputs are manually selected, add their tokens to balance
     for(const input of this.inputs){
-      if(typeof input.token === "undefined") continue;
+      if(!input.token) continue;
       const tokenCategory = input.token.category;
-      if(typeof netBalanceTokens[tokenCategory] === "undefined"){ 
+      if(!netBalanceTokens[tokenCategory]){ 
         netBalanceTokens[tokenCategory] = input.token.amount;
       } else {
         netBalanceTokens[tokenCategory] += input.token.amount;
       }
-      if(typeof input.token.nft !== "undefined"){
+      if(input.token.nft){
         listNftsInputs.push({...input.token.nft, category: input.token.category});
       }
     }
@@ -301,32 +299,32 @@ export class Transaction {
     let listNftsOutputs = [];
     // Substract all token outputs from the token balances
     for(const output of this.outputs){
-      if(typeof output.token === "undefined") continue;
+      if(!output.token) continue;
       const tokenCategory = output.token.category;
-      if(typeof netBalanceTokens[tokenCategory] === "undefined"){
+      if(netBalanceTokens[tokenCategory]){
         netBalanceTokens[tokenCategory] = -output.token.amount;
       } else {
         netBalanceTokens[tokenCategory] -= output.token.amount;
       }
-      if(typeof output.token.nft !== "undefined"){
+      if(output.token.nft){
         listNftsOutputs.push({...output.token.nft, category: output.token.category});
       }
     }
     // If inputs are manually provided, check token balances
     if(this.inputs.length > 0){
-      for(const tokenBalance of netBalanceTokens){
+      for (const [category, balance] of Object.entries(netBalanceTokens)) {
         // Add token change outputs if applicable
-        if(this.tokenChange && tokenBalance.amount > 0){
+        if(this.tokenChange && balance > 0){
           const tokenDetails: TokenDetails = {
-            category : tokenBalance.category,
-            amount : BigInt(-tokenBalance.amount)
+            category : category,
+            amount : balance
           };
           const tokenChangeOutput = { to: this.address, amount: BigInt(1000), token: tokenDetails };
           this.outputs.push(tokenChangeOutput);
         }
         // Throw error when token balance is insufficient
-        if(tokenBalance.amount < 0){
-          throw new Error(`Insufficient token balance.`);
+        if(balance < 0){
+          throw new Error(`Insufficient token balance for token with category ${category}.`);
         }
       }
       // Compare nfts in- and outputs, check if inputs have nfts corresponsing to outputs
