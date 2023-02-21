@@ -91,7 +91,7 @@ export class Transaction {
     return this;
   }
 
-  to(to: string, amount: bigint, tokenDetails: TokenDetails): this;
+  to(to: string, amount: bigint, tokenDetails?: TokenDetails): this;
   to(outputs: Recipient[]): this;
 
   to(toOrOutputs: string | Recipient[], amount?: bigint, tokenDetails?: TokenDetails): this {
@@ -286,7 +286,7 @@ export class Transaction {
     for(const input of this.inputs){
       if(!input.token) continue;
       const tokenCategory = input.token.category;
-      if(!netBalanceTokens[tokenCategory]){ 
+      if(!netBalanceTokens[tokenCategory]){
         netBalanceTokens[tokenCategory] = input.token.amount;
       } else {
         netBalanceTokens[tokenCategory] += input.token.amount;
