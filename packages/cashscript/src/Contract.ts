@@ -14,7 +14,7 @@ import { Argument, encodeArgument } from './Argument.js';
 import { Utxo } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
-  scriptToAddress,
+  scriptToP2sh32Address,
 } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
@@ -74,7 +74,7 @@ export class Contract {
     }
 
     this.name = artifact.contractName;
-    this.address = scriptToAddress(this.redeemScript, this.provider.network);
+    this.address = scriptToP2sh32Address(this.redeemScript, this.provider.network);
     this.bytecode = binToHex(scriptToBytecode(this.redeemScript));
     this.bytesize = calculateBytesize(this.redeemScript);
     this.opcount = countOpcodes(this.redeemScript);
