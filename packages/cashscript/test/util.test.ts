@@ -6,7 +6,7 @@ import {
   placeholder,
 } from '@cashscript/utils';
 import {
-  scriptToAddress,
+  scriptToP2sh32Address,
   createInputScript,
   getInputSize,
   getPreimageSize,
@@ -81,14 +81,14 @@ describe('utils', () => {
     });
   });
 
-  describe('scriptToAddress', () => {
+  describe('scriptToP2sh32Address', () => {
     it('should convert a redeem script to a cashaddress', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = asmToScript(asm);
 
-      const mainnetAddress = scriptToAddress(redeemScript, Network.MAINNET);
-      const testnetAddress = scriptToAddress(redeemScript, Network.TESTNET3);
-      const regtestAddress = scriptToAddress(redeemScript, Network.REGTEST);
+      const mainnetAddress = scriptToP2sh32Address(redeemScript, Network.MAINNET);
+      const testnetAddress = scriptToP2sh32Address(redeemScript, Network.TESTNET3);
+      const regtestAddress = scriptToP2sh32Address(redeemScript, Network.REGTEST);
 
       const expectedMainnetAddress = 'bitcoincash:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyc27hzc7y';
       const expectedTestnetAddress = 'bchtest:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyuc6sq0ec';
