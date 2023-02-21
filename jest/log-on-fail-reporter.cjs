@@ -1,29 +1,23 @@
-const chalk = require('chalk');
-const { getConsoleOutput } = require('@jest/console');
-const DefaultReporter = require('@jest/reporters/build/DefaultReporter').default;
-const getResultHeader = require('@jest/reporters/build/getResultHeader').default;
 
-const TITLE_BULLET = chalk.bold('\u25cf ');
+const { DefaultReporter } = require('@jest/reporters')
 
-// This Jest reporter does not output any console.log except when the tests are
-// failing, see: https://github.com/mozilla/addons-frontend/issues/2980.
+// Thanks to https://github.com/facebook/jest/issues/4156#issuecomment-757376195
 class LogOnFailReporter extends DefaultReporter {
-  printTestFileHeader(testPath, config, result) {
-    this.log(getResultHeader(result, this._globalConfig, config));
+	constructor() {
+		super(...arguments)
+	}
 
-    const consoleBuffer = result.console;
-    const testFailed = result.numFailingTests > 0;
+	printTestFileHeader(_testPath, config, result) {
+		const console = result.console
 
-    if (testFailed && consoleBuffer && consoleBuffer.length) {
-      this.log(
-        `  ${TITLE_BULLET}Console\n\n${getConsoleOutput(
-          config.cwd,
-          !!this._globalConfig.verbose,
-          consoleBuffer,
-        )}`,
-      );
-    }
-  }
+		if(result.numFailingTests === 0 && !result.testExecError) {
+			result.console = null
+		}
+
+		super.printTestFileHeader(...arguments)
+
+		result.console = console
+	}
 }
 
-module.exports = LogOnFailReporter;
+module.exports = LogOnFailReporter
