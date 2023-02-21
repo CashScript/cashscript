@@ -34,7 +34,7 @@ import {
 } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
-  TokensToNonTokenAddress,
+  TokensToNonTokenAddressError,
   Reason,
   FailedTransactionError,
   FailedRequireError,
@@ -49,9 +49,9 @@ export function validateRecipient(recipient: Recipient): void {
     throw new OutputSatoshisTooSmallError(recipient.amount, BigInt(minimumAmount));
   }
 
-  if ('token' in recipient) {
+  if (recipient.token) {
     if(!isTokenAddress(recipient.to)){
-      throw new TokensToNonTokenAddress(recipient.to);
+      throw new TokensToNonTokenAddressError(recipient.to);
     }
   }
 }
