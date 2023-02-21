@@ -2,7 +2,7 @@ import {
   cashAddressToLockingBytecode,
   decodeCashAddressFormat,
   decodeCashAddress,
-  CashAddressType,
+  CashAddressVersionByte,
   addressContentsToLockingBytecode,
   lockingBytecodeToCashAddress,
   binToHex,
@@ -15,7 +15,7 @@ import {
 } from '@bitauth/libauth';
 import {
   encodeInt,
-  hash160,
+  hash256,
   Op,
   Script,
   scriptToBytecode,
@@ -29,6 +29,7 @@ import {
 import {
   P2PKH_OUTPUT_SIZE,
   P2SH20_OUTPUT_SIZE,
+  P2SH32_OUTPUT_SIZE,
   VERSION_SIZE,
   LOCKTIME_SIZE,
 } from './constants.js';
@@ -64,21 +65,22 @@ function calculateDust(recipient: Recipient): number {
 }
 
 function getOutputSize(recipient: Recipient): number {
-  const result = decodeCashAddress(recipient.to);
+  const result = decodeCashAddressFormat(recipient.to);
   if (typeof result === 'string') throw new Error(result);
-  const addressType: string = CashAddressType[result.type];
+  const addressVersionByte: string = CashAddressVersionByte[result.version];
   const outputSizes: any  = {
-    P2PKH : P2PKH_OUTPUT_SIZE,
-    P2SH : P2SH20_OUTPUT_SIZE
+    p2pkh : P2PKH_OUTPUT_SIZE,
+    p2sh20 : P2SH20_OUTPUT_SIZE,
+    p2sh32 : P2SH32_OUTPUT_SIZE
   };
-  const outputSize = outputSizes[addressType];
+  const outputSize = outputSizes[addressVersionByte];
   return outputSize
 }
 
 function isTokenAddress(address: string): boolean {
-  const result = decodeCashAddressFormat(address);
+  const result = decodeCashAddress(address);
   if (typeof result === 'string') throw new Error(result);
-  const supportsTokens = (result.version > 1);
+  const supportsTokens = (result.type === "p2pkhWithTokens" || result.type === "p2shWithTokens" );
   return supportsTokens
 }
 
@@ -210,20 +212,20 @@ function toRegExp(reasons: string[]): RegExp {
 
 // ////////// MISC ////////////////////////////////////////////////////////////
 export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey = binToHex(scriptToLockingBytecode(script));
+  const scriptPubkey = binToHex(scriptToP2sh32LockingBytecode(script));
   return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
-export function scriptToAddress(script: Script, network: string): string {
-  const lockingBytecode = scriptToLockingBytecode(script);
+export function scriptToP2sh32Address(script: Script, network: string): string {
+  const lockingBytecode = scriptToP2sh32LockingBytecode(script);
   const prefix = getNetworkPrefix(network);
   const address = lockingBytecodeToCashAddress(lockingBytecode, prefix) as string;
   return address;
 }
 
-export function scriptToLockingBytecode(script: Script): Uint8Array {
-  const scriptHash = hash160(scriptToBytecode(script));
-  const addressContents = { payload: scriptHash, type: LockingBytecodeType.p2sh20 };
+export function scriptToP2sh32LockingBytecode(script: Script): Uint8Array {
+  const scriptHash = hash256(scriptToBytecode(script));
+  const addressContents = { payload: scriptHash, type: LockingBytecodeType.p2sh32 };
   const lockingBytecode = addressContentsToLockingBytecode(addressContents);
   return lockingBytecode;
 }
