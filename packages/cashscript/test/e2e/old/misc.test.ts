@@ -1,4 +1,9 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src/index.js';
+import {
+  Contract,
+  SignatureTemplate,
+  ElectrumNetworkProvider,
+  Network,
+} from '../../../src/index.js';
 import {
   alicePkh,
   bobPkh,
@@ -14,7 +19,7 @@ describe('v0.6.0 - Simple Covenant', () => {
   let covenant: Contract;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     covenant = new Contract(simpleCovenantArtifact, [], provider);
     console.log(covenant.address);
   });
@@ -43,7 +48,7 @@ describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
   const pledge = 10000n;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     mecenas = new Contract(mecenasBorderArtifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
   });

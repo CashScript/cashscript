@@ -3,6 +3,7 @@ import {
   ElectrumNetworkProvider,
   FailedRequireError,
   FailedTransactionError,
+  Network,
   Reason,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
@@ -14,7 +15,7 @@ describe('BigInt', () => {
   const MAX_INT64 = BigInt('9223372036854775807');
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     bigintContract = new Contract(artifact, [], provider);
     console.log(bigintContract.address);
   });

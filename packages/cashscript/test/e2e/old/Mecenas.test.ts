@@ -1,4 +1,9 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../../src/index.js';
+import {
+  Contract,
+  SignatureTemplate,
+  ElectrumNetworkProvider,
+  Network,
+} from '../../../src/index.js';
 import {
   alicePkh,
   bobPkh,
@@ -18,7 +23,7 @@ describe('v0.6.0 - Mecenas', () => {
   const minerFee = 1000n;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
     console.log(mecenas.address);
   });

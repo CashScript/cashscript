@@ -9,7 +9,7 @@ import bip39 from 'bip39';
 import { PriceOracle } from './PriceOracle.js';
 import { Network } from '../../src/interfaces.js';
 
-export const network = Network.MAINNET;
+export const network = Network.CHIPNET;
 
 const seed = await bip39.mnemonicToSeed('CashScript Tests');
 
@@ -24,12 +24,12 @@ if (typeof bobNode === 'string') throw new Error();
 export const alicePriv = aliceNode.privateKey;
 export const alicePub = secp256k1.derivePublicKeyCompressed(alicePriv) as Uint8Array;
 export const alicePkh = hash160(alicePub);
-export const aliceAddress = encodeCashAddress('bitcoincash', 'p2pkh', alicePkh);
+export const aliceAddress = encodeCashAddress('bchtest', 'p2pkh', alicePkh);
 
 export const bobPriv = bobNode.privateKey;
 export const bobPub = secp256k1.derivePublicKeyCompressed(bobPriv) as Uint8Array;
 export const bobPkh = hash160(bobPub);
-export const bobAddress = encodeCashAddress('bitcoincash', 'p2pkh', bobPkh);
+export const bobAddress = encodeCashAddress('bchtest', 'p2pkh', bobPkh);
 
 export const oracle = new PriceOracle(bobPriv);
 export const oraclePub = bobPub;

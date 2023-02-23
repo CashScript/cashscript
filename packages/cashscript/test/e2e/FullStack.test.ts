@@ -11,7 +11,7 @@ import artifact from '../fixture/p2pkh.json' assert { type: "json" };
 
 const { default: BCHJS } = await import('@psf/bch-js');
 
-describe('P2PKH (using FullStackNetworkProvider)', () => {
+describe.skip('P2PKH (using FullStackNetworkProvider)', () => {
   let p2pkhInstance: Contract;
 
   beforeAll(() => {

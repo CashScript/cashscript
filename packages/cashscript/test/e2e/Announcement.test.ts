@@ -1,4 +1,4 @@
-import { Contract, ElectrumNetworkProvider } from '../../src/index.js';
+import { Contract, ElectrumNetworkProvider, Network } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
 import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
@@ -10,7 +10,7 @@ describe('Announcement', () => {
   const minerFee = 1000n;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     announcement = new Contract(artifact, [], provider);
     console.log(announcement.address);
   });
