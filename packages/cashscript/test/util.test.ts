@@ -87,12 +87,12 @@ describe('utils', () => {
       const redeemScript = asmToScript(asm);
 
       const mainnetAddress = scriptToP2sh32Address(redeemScript, Network.MAINNET);
-      const testnetAddress = scriptToP2sh32Address(redeemScript, Network.TESTNET3);
+      const testnetAddress = scriptToP2sh32Address(redeemScript, Network.TESTNET4);
       const regtestAddress = scriptToP2sh32Address(redeemScript, Network.REGTEST);
 
-      const expectedMainnetAddress = 'bitcoincash:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyc27hzc7y';
-      const expectedTestnetAddress = 'bchtest:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyuc6sq0ec';
-      const expectedRegtestAddress = 'bchreg:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyxyv3ru67';
+      const expectedMainnetAddress = 'bitcoincash:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d23629h20jd0s';
+      const expectedTestnetAddress = 'bchtest:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d2362xsm3276z';
+      const expectedRegtestAddress = 'bchreg:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d2362n6fmdfd2';
 
       expect(mainnetAddress).toEqual(expectedMainnetAddress);
       expect(testnetAddress).toEqual(expectedTestnetAddress);

@@ -37,7 +37,7 @@ import {
   validateRecipient,
   utxoComparator,
 } from './utils.js';
-import { P2SH20_OUTPUT_SIZE, MINIMUM_CHANGE_P2SH20 } from './constants.js';
+import { MINIMUM_CHANGE_P2SH20, P2SH32_OUTPUT_SIZE } from './constants.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
@@ -448,7 +448,7 @@ export class Transaction {
 
     // Account for the fee of adding a change output
     if (!this.hardcodedFee) {
-      change -= BigInt(P2SH20_OUTPUT_SIZE * this.feePerByte);
+      change -= BigInt(P2SH32_OUTPUT_SIZE * this.feePerByte);
     }
 
     // Add a change output if applicable

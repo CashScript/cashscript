@@ -1,4 +1,9 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
+import {
+  Contract,
+  SignatureTemplate,
+  ElectrumNetworkProvider,
+  Network,
+} from '../../src/index.js';
 import {
   alicePriv, alicePub, bobPriv, bobPub,
 } from '../fixture/vars.js';
@@ -11,8 +16,8 @@ describe('TransferWithTimeout', () => {
   let twtInstanceFuture: Contract;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
-    twtInstancePast = new Contract(artifact, [alicePub, bobPub, 500000n], provider);
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    twtInstancePast = new Contract(artifact, [alicePub, bobPub, 100000n], provider);
     twtInstanceFuture = new Contract(artifact, [alicePub, bobPub, 2000000n], provider);
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);

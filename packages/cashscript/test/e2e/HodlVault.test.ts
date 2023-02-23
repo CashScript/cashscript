@@ -1,5 +1,9 @@
-import { binToHex } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
+import {
+  Contract,
+  SignatureTemplate,
+  ElectrumNetworkProvider,
+  Network,
+} from '../../src/index.js';
 import {
   alicePriv,
   alicePub,
@@ -14,16 +18,16 @@ describe('HodlVault', () => {
   let hodlVault: Contract;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
-    hodlVault = new Contract(artifact, [alicePub, oraclePub, 597000n, 30000n], provider);
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], provider);
     console.log(hodlVault.address);
   });
 
   describe('send', () => {
     it('should fail when oracle sig is incorrect', async () => {
       // given
-      const message = oracle.createMessage(600000n, 1000n);
-      const wrongMessage = oracle.createMessage(600000n, 1001n);
+      const message = oracle.createMessage(100000n, 1000n);
+      const wrongMessage = oracle.createMessage(100000n, 1001n);
       const wrongSig = oracle.signMessage(wrongMessage);
       const to = hodlVault.address;
       const amount = 10000n;
@@ -41,7 +45,7 @@ describe('HodlVault', () => {
 
     it('should fail when price is too low', async () => {
       // given
-      const message = oracle.createMessage(600000n, 29900n);
+      const message = oracle.createMessage(100000n, 29900n);
       const oracleSig = oracle.signMessage(message);
       const to = hodlVault.address;
       const amount = 10000n;
@@ -59,8 +63,7 @@ describe('HodlVault', () => {
 
     it('should succeed when price is high enough', async () => {
       // given
-      const message = oracle.createMessage(600000n, 30000n);
-      console.log(binToHex(message));
+      const message = oracle.createMessage(100000n, 30000n);
       const oracleSig = oracle.signMessage(message);
       const to = hodlVault.address;
       const amount = 10000n;

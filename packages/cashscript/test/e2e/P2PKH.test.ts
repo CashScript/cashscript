@@ -1,4 +1,4 @@
-import { binToHex } from '@bitauth/libauth';
+import { binToHex, stringify } from '@bitauth/libauth';
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
 import {
   alicePkh,
@@ -8,7 +8,7 @@ import {
   alicePriv,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { Utxo } from '../../src/interfaces.js';
+import { Network, Utxo } from '../../src/interfaces.js';
 import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/p2pkh.json' assert { type: "json" };
@@ -17,7 +17,7 @@ describe('P2PKH', () => {
   let p2pkhInstance: Contract;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     p2pkhInstance = new Contract(artifact, [alicePkh], provider);
     console.log(p2pkhInstance.address);
   });
@@ -164,7 +164,6 @@ describe('P2PKH', () => {
 
       const contractUtxos = await p2pkhInstance.getUtxos();
       const aliceUtxos = await getAddressUtxos(aliceAddress);
-      console.log(contractUtxos, aliceUtxos);
 
       // when
       const tx = await p2pkhInstance.functions
@@ -185,7 +184,7 @@ describe('P2PKH', () => {
 });
 
 async function getAddressUtxos(address: string): Promise<Utxo[]> {
-  return new ElectrumNetworkProvider().getUtxos(address);
+  return new ElectrumNetworkProvider(Network.CHIPNET).getUtxos(address);
 }
 
 function gatherUtxos(
