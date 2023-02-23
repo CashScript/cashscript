@@ -1,6 +1,11 @@
 import { hexToBin } from '@bitauth/libauth';
 import { placeholder } from '@cashscript/utils';
-import { Contract, ElectrumNetworkProvider, SignatureTemplate } from '../src/index.js';
+import {
+  Contract,
+  ElectrumNetworkProvider,
+  Network,
+  SignatureTemplate,
+} from '../src/index.js';
 import {
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
@@ -15,7 +20,7 @@ import boundedBytesArtifact from './fixture/bounded_bytes.json' assert { type: "
 describe('Contract', () => {
   describe('new', () => {
     it('should fail with incorrect constructor args', () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
 
       expect(() => new Contract(p2pkhArtifact, [], provider)).toThrow();
       expect(() => new Contract(p2pkhArtifact, [20n], provider)).toThrow();
@@ -27,7 +32,7 @@ describe('Contract', () => {
     });
 
     it('should fail with incomplete artifact', () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
 
       expect(() => new Contract({ ...p2pkhArtifact, abi: undefined } as any, [], provider)).toThrow();
       expect(() => new Contract({ ...p2pkhArtifact, bytecode: undefined } as any, [], provider)).toThrow();
@@ -38,7 +43,7 @@ describe('Contract', () => {
     });
 
     it('should create new P2PKH instance', () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const instance = new Contract(p2pkhArtifact, [placeholder(20)], provider);
 
       expect(typeof instance.address).toBe('string');
@@ -47,7 +52,7 @@ describe('Contract', () => {
     });
 
     it('should create new TransferWithTimeout instance', () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const constructorArgs = [placeholder(65), placeholder(65), 1000000n];
       const instance = new Contract(twtArtifact, constructorArgs, provider);
 
@@ -58,7 +63,7 @@ describe('Contract', () => {
     });
 
     it('should create new HodlVault instance', () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const constructorArgs = [placeholder(65), placeholder(65), 1000000n, 10000n];
       const instance = new Contract(hodlVaultArtifact, constructorArgs, provider);
 
@@ -68,7 +73,7 @@ describe('Contract', () => {
     });
 
     it('should create new Mecenas instance', () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const constructorArgs = [placeholder(20), placeholder(20), 1000000n];
       const instance = new Contract(mecenasArtifact, constructorArgs, provider);
 
@@ -82,14 +87,14 @@ describe('Contract', () => {
   describe('getBalance', () => {
     // Not very robust, as this depends on the example P2PKH contract having balance
     it('should return balance for existing contract', async () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const instance = new Contract(p2pkhArtifact, [alicePkh], provider);
 
       expect(await instance.getBalance()).toBeGreaterThan(0n);
     });
 
     it('should return zero balance for new contract', async () => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const instance = new Contract(p2pkhArtifact, [placeholder(20)], provider);
 
       expect(await instance.getBalance()).toBe(0n);
@@ -100,7 +105,7 @@ describe('Contract', () => {
     let instance: Contract;
     let bbInstance: Contract;
     beforeEach(() => {
-      const provider = new ElectrumNetworkProvider();
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       instance = new Contract(p2pkhArtifact, [alicePkh], provider);
       bbInstance = new Contract(boundedBytesArtifact, [], provider);
     });

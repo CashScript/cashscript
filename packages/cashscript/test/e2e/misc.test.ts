@@ -1,4 +1,4 @@
-import { Contract, ElectrumNetworkProvider } from '../../src/index.js';
+import { Contract, ElectrumNetworkProvider, Network } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import artifact from '../fixture/simple_covenant.json' assert { type: "json" };
 
@@ -6,7 +6,7 @@ describe('Simple Covenant', () => {
   let covenant: Contract;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider();
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     covenant = new Contract(artifact, [], provider);
     console.log(covenant.address);
   });

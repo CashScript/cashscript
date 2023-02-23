@@ -51,7 +51,7 @@ export function validateRecipient(recipient: Recipient): void {
   }
 
   if (recipient.token) {
-    if(!isTokenAddress(recipient.to)){
+    if (!isTokenAddress(recipient.to)) {
       throw new TokensToNonTokenAddressError(recipient.to);
     }
   }
@@ -61,27 +61,31 @@ function calculateDust(recipient: Recipient): number {
   const outputSize = getOutputSize(recipient);
   // Formala used to calculate the minimum allowed output
   const dustAmount = 444 + outputSize * 3;
-  return dustAmount
+  return dustAmount;
 }
 
+// TODO: Account for token data in output
 function getOutputSize(recipient: Recipient): number {
   const result = decodeCashAddressFormat(recipient.to);
   if (typeof result === 'string') throw new Error(result);
-  const addressVersionByte: string = CashAddressVersionByte[result.version];
-  const outputSizes: any  = {
-    p2pkh : P2PKH_OUTPUT_SIZE,
-    p2sh20 : P2SH20_OUTPUT_SIZE,
-    p2sh32 : P2SH32_OUTPUT_SIZE
+
+  const outputSizes: Record<number, number> = {
+    [CashAddressVersionByte.p2pkh]: P2PKH_OUTPUT_SIZE,
+    [CashAddressVersionByte.p2pkhWithTokens]: P2PKH_OUTPUT_SIZE,
+    [CashAddressVersionByte.p2sh20]: P2SH20_OUTPUT_SIZE,
+    [CashAddressVersionByte.p2sh20WithTokens]: P2SH20_OUTPUT_SIZE,
+    [CashAddressVersionByte.p2sh32]: P2SH32_OUTPUT_SIZE,
+    [CashAddressVersionByte.p2sh32WithTokens]: P2SH32_OUTPUT_SIZE,
   };
-  const outputSize = outputSizes[addressVersionByte];
-  return outputSize
+
+  return outputSizes[result.version];
 }
 
 function isTokenAddress(address: string): boolean {
   const result = decodeCashAddress(address);
   if (typeof result === 'string') throw new Error(result);
-  const supportsTokens = (result.type === "p2pkhWithTokens" || result.type === "p2shWithTokens" );
-  return supportsTokens
+  const supportsTokens = (result.type === 'p2pkhWithTokens' || result.type === 'p2shWithTokens');
+  return supportsTokens;
 }
 
 // ////////// SIZE CALCULATIONS ///////////////////////////////////////////////
