@@ -12,15 +12,20 @@ The `Contract` class is used to represent a CashScript contract in a JavaScript 
 new Contract(
   artifact: Artifact,
   constructorArgs: Argument[],
-  provider?: NetworkProvider,
+  options? : {
+    provider: NetworkProvider,
+    addressType: 'p2sh20' | 'p2sh32',
+  }
 )
 ```
 
-A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally a `NetworkProvider`.
+A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `addressType`.
 
 An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/basics/cli) or programmatically with the `cashc` NPM package (see [CashScript Compiler](#cashscript-compiler)).
 
 A `NetworkProvider` is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but alternative network providers can be used. See the section on [NetworkProvider](#networkprovider) below.
+
+The `addressType` is used to choose between the new p2sh32 which has increased cryptographic security and is the new default and p2sh20 the legacy address type which still has wider ecosystem support but can be insecure in some cases.
 
 #### Example
 ```ts
@@ -34,7 +39,8 @@ import P2PKH from './p2pkh.json';
 const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 
 const provider = new ElectrumNetworkProvider('testnet4');
-const contract = new Contract(P2PKH, [alicePkh], provider);
+const addressType = 'p2sh20';
+const contract = new Contract(P2PKH, [alicePkh], , options:{ provider, addressType});
 ```
 
 ### address
