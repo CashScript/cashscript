@@ -86,12 +86,12 @@ describe('utils', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = asmToScript(asm);
 
-      const mainnetAddressP2sh32 = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh32');
-      const testnetAddressP2sh32 = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh32');
-      const regtestAddressP2sh32 = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh32');
-      const mainnetAddressP2sh20 = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh20');
-      const testnetAddressP2sh20 = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh20');
-      const regtestAddressP2sh20 = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh20');
+      const mainnetAddressP2sh32 = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh32', false);
+      const testnetAddressP2sh32 = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh32', false);
+      const regtestAddressP2sh32 = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh32', false);
+      const mainnetAddressP2sh20 = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh20', false);
+      const testnetAddressP2sh20 = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh20', false);
+      const regtestAddressP2sh20 = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh20', false);
 
       const expectedMainnetAddressP2sh32 = 'bitcoincash:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d23629h20jd0s';
       const expectedTestnetAddressP2sh32 = 'bchtest:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d2362xsm3276z';
