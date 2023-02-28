@@ -15,6 +15,7 @@ import {
 } from '@bitauth/libauth';
 import {
   encodeInt,
+  hash160,
   hash256,
   Op,
   Script,
@@ -216,20 +217,21 @@ function toRegExp(reasons: string[]): RegExp {
 
 // ////////// MISC ////////////////////////////////////////////////////////////
 export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey = binToHex(scriptToP2sh32LockingBytecode(script));
+  const scriptPubkey = binToHex(scriptToLockingBytecode(script, 'p2sh20'));
   return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
-export function scriptToP2sh32Address(script: Script, network: string): string {
-  const lockingBytecode = scriptToP2sh32LockingBytecode(script);
+export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32'): string {
+  const lockingBytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
   const address = lockingBytecodeToCashAddress(lockingBytecode, prefix) as string;
   return address;
 }
 
-export function scriptToP2sh32LockingBytecode(script: Script): Uint8Array {
-  const scriptHash = hash256(scriptToBytecode(script));
-  const addressContents = { payload: scriptHash, type: LockingBytecodeType.p2sh32 };
+export function scriptToLockingBytecode(script: Script, addressType: 'p2sh20' | 'p2sh32'): Uint8Array {
+  const scriptBytecode = scriptToBytecode(script);
+  const scriptHash = (addressType === 'p2sh20')? hash160(scriptBytecode) : hash256(scriptBytecode);
+  const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };
   const lockingBytecode = addressContentsToLockingBytecode(addressContents);
   return lockingBytecode;
 }
