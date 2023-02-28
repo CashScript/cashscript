@@ -14,7 +14,7 @@ import { Argument, encodeArgument } from './Argument.js';
 import { Utxo } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
-  scriptToP2sh32Address,
+  scriptToAddress
 } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
@@ -31,12 +31,22 @@ export class Contract {
   };
 
   private redeemScript: Script;
+  private provider: NetworkProvider;
+  private addressType: 'p2sh20' | 'p2sh32';
 
   constructor(
     private artifact: Artifact,
     constructorArgs: Argument[],
-    private provider: NetworkProvider = new ElectrumNetworkProvider(),
+    private options? : {
+      provider: NetworkProvider,
+      addressType: 'p2sh20' | 'p2sh32',
+    }
   ) {
+    const defaultProvider = new ElectrumNetworkProvider();
+    const defaultAddressType = 'p2sh32';
+    this.provider = defaultProvider || this.options?.provider;
+    this.addressType = defaultAddressType || this.options?.addressType;
+
     const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName'];
     if (!expectedProperties.every((property) => property in artifact)) {
       throw new Error('Invalid or incomplete artifact provided');
@@ -74,7 +84,7 @@ export class Contract {
     }
 
     this.name = artifact.contractName;
-    this.address = scriptToP2sh32Address(this.redeemScript, this.provider.network);
+    this.address = scriptToAddress(this.redeemScript, this.provider.network, this.addressType);
     this.bytecode = binToHex(scriptToBytecode(this.redeemScript));
     this.bytesize = calculateBytesize(this.redeemScript);
     this.opcount = countOpcodes(this.redeemScript);

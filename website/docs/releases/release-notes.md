@@ -15,6 +15,8 @@ title: Release Notes
 #### CashScript SDK
 - :boom: **BREAKING**: Move to Pure ESM.
 - :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.
+- :boom: **BREAKING**: `.contract.address` returns `p2sh32` address by default.
+- :boom: **BREAKING**: Moved the configuration of the network provider to an options object on contract initialization.
 - :boom: **BREAKING**: Use `bigint` rather than `number` for all instances of "script numbers" (e.g. function arguments) and satoshi amounts.
 - :boom: **BREAKING**: Replace `contract.getRedeemScriptHex()` with `contract.bytecode`.
 - :boom: **BREAKING**: Remove `BitboxNetworkProvider`.

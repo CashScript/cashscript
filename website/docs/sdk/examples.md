@@ -31,7 +31,7 @@ import artifact from './transfer_with_timeout.json';
 // Instantiate a new contract using the artifact and constructor arguments:
 // { sender: alicePub, recipient: bobPub, timeout: 1000000 }
 // No network provider is provided, so the default ElectrumNetworkProvider is used
-const contract = new Contract(artifact, [alicePub, bobPub, 1000000n]);
+const contract = new Contract(artifact, [alicePub, bobPub, 1000000n], options:{addressType: 'p2sh20'});
 
 // Display contract address and balance
 console.log('contract address:', contract.address);
@@ -104,10 +104,11 @@ import artifact from './announcement.json';
 
 // Initialise a network provider for network operations on MAINNET
 const provider = new ElectrumNetworkProvider('mainnet');
+const addressType = 'p2sh20';
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters (none)
-const contract = new Contract(artifact, [], provider);
+const contract = new Contract(artifact, [], , options:{ provider, addressType});
 
 // Display contract address, balance, opcount, and bytesize
 console.log('contract address:', contract.address);

@@ -60,9 +60,10 @@ import artifact from './transfer_with_timeout.json';
 
 // Initialise a network provider for network operations
 const provider = new ElectrumNetworkProvider('mainnet');
+const addressType = 'p2sh20';
 
 // Instantiate a new TransferWithTimeout contract
-const contract = new Contract(artifact, [alicePub, bobPub, 100000n], provider);
+const contract = new Contract(artifact, [alicePub, bobPub, 100000n], options:{ provider, addressType});
 
 // Call the transfer function with Bob's signature
 // i.e. Bob claims the money that Alice has sent him
