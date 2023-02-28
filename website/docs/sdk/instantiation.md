@@ -23,9 +23,13 @@ A CashScript contract can be instantiated by providing an `Artifact` object, a l
 
 An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/basics/cli) or programmatically with the `cashc` NPM package (see [CashScript Compiler](#cashscript-compiler)).
 
-A `NetworkProvider` is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but alternative network providers can be used. See the section on [NetworkProvider](#networkprovider) below.
+The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but alternative network providers can be used. See the section on [NetworkProvider](#networkprovider) below.
 
-The `addressType` is used to choose between the new p2sh32 which has increased cryptographic security and is the new default and p2sh20 the legacy address type which still has wider ecosystem support but can be insecure in some cases.
+The `addressType` option is used to choose between a `p2sh32` and `p2sh20` address for the CashScript contract. By default `p2sh32` is used because it has increased cryptographic security but it is not yet supported by all wallets.
+
+:::caution
+P2sh32 was introduced because p2sh20 is cryptographically insecure for a large subset of smart contracts. For contracts holding large sums of BCH this provides an incentive to find a hash collision and hack the contract.
+:::
 
 #### Example
 ```ts
@@ -48,11 +52,27 @@ const contract = new Contract(P2PKH, [alicePkh], , options:{ provider, addressTy
 contract.address: string
 ```
 
-A contract's address can be retrieved through the `address` member field.
+A contract's regular address (without token-support) can be retrieved through the `address` member field.
+
+:::note
+Wallets will not allow you to send CashTokens to this address, for that you must use the tokenAddress below. Wallets which have not upgraded might not recognize this new address type.
+:::
 
 #### Example
 ```ts
 console.log(contract.address)
+```
+
+### tokenAddress
+```ts
+contract.tokenAddress: string
+```
+
+A contract's token-supporting address can be retrieved through the `tokenAddress` member field.
+
+#### Example
+```ts
+console.log(contract.tokenAddress)
 ```
 
 ### opcount

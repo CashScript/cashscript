@@ -22,6 +22,7 @@ import { ElectrumNetworkProvider } from './network/index.js';
 export class Contract {
   name: string;
   address: string;
+  tokenAddress: string;
   bytecode: string;
   bytesize: number;
   opcount: number;
@@ -84,7 +85,8 @@ export class Contract {
     }
 
     this.name = artifact.contractName;
-    this.address = scriptToAddress(this.redeemScript, this.provider.network, this.addressType);
+    this.address = scriptToAddress(this.redeemScript, this.provider.network, this.addressType, false);
+    this.tokenAddress = scriptToAddress(this.redeemScript, this.provider.network, this.addressType, true);
     this.bytecode = binToHex(scriptToBytecode(this.redeemScript));
     this.bytesize = calculateBytesize(this.redeemScript);
     this.opcount = countOpcodes(this.redeemScript);

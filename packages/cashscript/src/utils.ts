@@ -221,10 +221,10 @@ export function meep(tx: any, utxos: Utxo[], script: Script): string {
   return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
-export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32'): string {
+export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32', tokenSupport: boolean): string {
   const lockingBytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
-  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix) as string;
+  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix, {tokenSupport}) as string;
   return address;
 }
 
