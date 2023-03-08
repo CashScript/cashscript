@@ -1,0 +1,43 @@
+# Simple automation of tests on pushes to master branch
+name: tests
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["master"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # single job for testing, linting and spellcheck
+  testing:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 12
+
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install # will run `yarn install` command
+
+      - name: Run the tests
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: test --coverage # will run `yarn test --coverage` command
+      
+      - name: Run the linting check
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: lint # will run `yarn lint` command
+
+      - name: Test the spelling check
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: spellcheck # will run `yarn spellcheck` command
