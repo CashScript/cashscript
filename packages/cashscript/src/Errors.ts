@@ -14,7 +14,7 @@ export class OutputSatoshisTooSmallError extends Error {
 
 export class TokensToNonTokenAddressError extends Error {
   constructor(address: string) {
-    super(`Tried to send tokens to an adress without token support, ${address}.`);
+    super(`Tried to send tokens to an address without token support, ${address}.`);
   }
 }
 

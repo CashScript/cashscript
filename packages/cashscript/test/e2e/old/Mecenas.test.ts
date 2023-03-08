@@ -24,7 +24,8 @@ describe('v0.6.0 - Mecenas', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
+    const addressType = 'p2sh20';
+    mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider, addressType });
     console.log(mecenas.address);
   });
 

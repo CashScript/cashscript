@@ -11,11 +11,9 @@ import {
 } from '@cashscript/utils';
 import { Transaction } from './Transaction.js';
 import { Argument, encodeArgument } from './Argument.js';
-import { Utxo } from './interfaces.js';
+import { ContractOptions, Utxo } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
-import {
-  scriptToAddress
-} from './utils.js';
+import { scriptToAddress } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
 
@@ -38,15 +36,12 @@ export class Contract {
   constructor(
     private artifact: Artifact,
     constructorArgs: Argument[],
-    private options? : {
-      provider: NetworkProvider,
-      addressType: 'p2sh20' | 'p2sh32',
-    }
+    private options?: ContractOptions,
   ) {
     const defaultProvider = new ElectrumNetworkProvider();
     const defaultAddressType = 'p2sh32';
-    this.provider = defaultProvider || this.options?.provider;
-    this.addressType = defaultAddressType || this.options?.addressType;
+    this.provider = this.options?.provider ?? defaultProvider;
+    this.addressType = this.options?.addressType ?? defaultAddressType;
 
     const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName'];
     if (!expectedProperties.every((property) => property in artifact)) {

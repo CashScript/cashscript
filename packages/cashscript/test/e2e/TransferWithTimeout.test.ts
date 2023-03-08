@@ -17,8 +17,8 @@ describe('TransferWithTimeout', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    twtInstancePast = new Contract(artifact, [alicePub, bobPub, 100000n], provider);
-    twtInstanceFuture = new Contract(artifact, [alicePub, bobPub, 2000000n], provider);
+    twtInstancePast = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+    twtInstanceFuture = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);
   });
