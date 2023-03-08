@@ -11,7 +11,7 @@ describe('Announcement', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    announcement = new Contract(artifact, [], provider);
+    announcement = new Contract(artifact, [], { provider });
     console.log(announcement.address);
   });
 

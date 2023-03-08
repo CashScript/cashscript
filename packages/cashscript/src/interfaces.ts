@@ -1,4 +1,5 @@
-import { Transaction } from '@bitauth/libauth';
+import type { Transaction } from '@bitauth/libauth';
+import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
 
 export interface Utxo {
@@ -65,4 +66,9 @@ export type Network = (typeof Network)[keyof typeof Network];
 export interface TransactionDetails extends Transaction {
   txid: string;
   hex: string;
+}
+
+export interface ContractOptions {
+  provider?: NetworkProvider,
+  addressType?: 'p2sh20' | 'p2sh32',
 }

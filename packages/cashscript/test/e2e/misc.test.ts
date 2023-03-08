@@ -7,7 +7,7 @@ describe('Simple Covenant', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    covenant = new Contract(artifact, [], provider);
+    covenant = new Contract(artifact, [], { provider });
     console.log(covenant.address);
   });
 

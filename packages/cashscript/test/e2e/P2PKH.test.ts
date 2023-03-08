@@ -1,4 +1,4 @@
-import { binToHex, stringify } from '@bitauth/libauth';
+import { binToHex } from '@bitauth/libauth';
 import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
 import {
   alicePkh,
@@ -18,7 +18,7 @@ describe('P2PKH', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    p2pkhInstance = new Contract(artifact, [alicePkh], provider);
+    p2pkhInstance = new Contract(artifact, [alicePkh], { provider });
     console.log(p2pkhInstance.address);
   });
 

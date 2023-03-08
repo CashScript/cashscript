@@ -1,8 +1,6 @@
 import {
   cashAddressToLockingBytecode,
-  decodeCashAddressFormat,
   decodeCashAddress,
-  CashAddressVersionByte,
   addressContentsToLockingBytecode,
   lockingBytecodeToCashAddress,
   binToHex,
@@ -12,6 +10,7 @@ import {
   hexToBin,
   flattenBinArray,
   LockingBytecodeType,
+  encodeTransactionOutput,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -27,13 +26,7 @@ import {
   Network,
   Recipient,
 } from './interfaces.js';
-import {
-  P2PKH_OUTPUT_SIZE,
-  P2SH20_OUTPUT_SIZE,
-  P2SH32_OUTPUT_SIZE,
-  VERSION_SIZE,
-  LOCKTIME_SIZE,
-} from './constants.js';
+import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
   TokensToNonTokenAddressError,
@@ -60,26 +53,28 @@ export function validateRecipient(recipient: Recipient): void {
 
 function calculateDust(recipient: Recipient): number {
   const outputSize = getOutputSize(recipient);
-  // Formala used to calculate the minimum allowed output
+  // Formula used to calculate the minimum allowed output
   const dustAmount = 444 + outputSize * 3;
   return dustAmount;
 }
 
-// TODO: Account for token data in output
 function getOutputSize(recipient: Recipient): number {
-  const result = decodeCashAddressFormat(recipient.to);
-  if (typeof result === 'string') throw new Error(result);
+  const bytecodeResult = cashAddressToLockingBytecode(recipient.to);
+  if (typeof bytecodeResult === 'string') throw new Error(bytecodeResult);
 
-  const outputSizes: Record<number, number> = {
-    [CashAddressVersionByte.p2pkh]: P2PKH_OUTPUT_SIZE,
-    [CashAddressVersionByte.p2pkhWithTokens]: P2PKH_OUTPUT_SIZE,
-    [CashAddressVersionByte.p2sh20]: P2SH20_OUTPUT_SIZE,
-    [CashAddressVersionByte.p2sh20WithTokens]: P2SH20_OUTPUT_SIZE,
-    [CashAddressVersionByte.p2sh32]: P2SH32_OUTPUT_SIZE,
-    [CashAddressVersionByte.p2sh32WithTokens]: P2SH32_OUTPUT_SIZE,
+  const lockingBytecode = bytecodeResult.bytecode;
+  const valueSatoshis = recipient.amount;
+  const token = recipient.token && {
+    ...recipient.token,
+    category: hexToBin(recipient.token.category),
+    nft: recipient.token.nft && {
+      ...recipient.token.nft,
+      commitment: hexToBin(recipient.token.nft.commitment),
+    },
   };
 
-  return outputSizes[result.version];
+  const encodedOutput = encodeTransactionOutput({ lockingBytecode, valueSatoshis, token });
+  return encodedOutput.byteLength;
 }
 
 function isTokenAddress(address: string): boolean {
@@ -224,13 +219,13 @@ export function meep(tx: any, utxos: Utxo[], script: Script): string {
 export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32', tokenSupport: boolean): string {
   const lockingBytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
-  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix, {tokenSupport}) as string;
+  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix, { tokenSupport }) as string;
   return address;
 }
 
 export function scriptToLockingBytecode(script: Script, addressType: 'p2sh20' | 'p2sh32'): Uint8Array {
   const scriptBytecode = scriptToBytecode(script);
-  const scriptHash = (addressType === 'p2sh20')? hash160(scriptBytecode) : hash256(scriptBytecode);
+  const scriptHash = (addressType === 'p2sh20') ? hash160(scriptBytecode) : hash256(scriptBytecode);
   const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };
   const lockingBytecode = addressContentsToLockingBytecode(addressContents);
   return lockingBytecode;
