@@ -22,29 +22,29 @@ describe('Contract', () => {
     it('should fail with incorrect constructor args', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
 
-      expect(() => new Contract(p2pkhArtifact, [], provider)).toThrow();
-      expect(() => new Contract(p2pkhArtifact, [20n], provider)).toThrow();
+      expect(() => new Contract(p2pkhArtifact, [], { provider })).toThrow();
+      expect(() => new Contract(p2pkhArtifact, [20n], { provider })).toThrow();
       expect(
-        () => new Contract(p2pkhArtifact, [placeholder(20), placeholder(20)], provider),
+        () => new Contract(p2pkhArtifact, [placeholder(20), placeholder(20)], { provider }),
       ).toThrow();
-      expect(() => new Contract(p2pkhArtifact, [placeholder(19)], provider)).toThrow();
-      expect(() => new Contract(p2pkhArtifact, [placeholder(21)], provider)).toThrow();
+      expect(() => new Contract(p2pkhArtifact, [placeholder(19)], { provider })).toThrow();
+      expect(() => new Contract(p2pkhArtifact, [placeholder(21)], { provider })).toThrow();
     });
 
     it('should fail with incomplete artifact', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
 
-      expect(() => new Contract({ ...p2pkhArtifact, abi: undefined } as any, [], provider)).toThrow();
-      expect(() => new Contract({ ...p2pkhArtifact, bytecode: undefined } as any, [], provider)).toThrow();
+      expect(() => new Contract({ ...p2pkhArtifact, abi: undefined } as any, [], { provider })).toThrow();
+      expect(() => new Contract({ ...p2pkhArtifact, bytecode: undefined } as any, [], { provider })).toThrow();
       expect(
-        () => new Contract({ ...p2pkhArtifact, constructorInputs: undefined } as any, [], provider),
+        () => new Contract({ ...p2pkhArtifact, constructorInputs: undefined } as any, [], { provider }),
       ).toThrow();
-      expect(() => new Contract({ ...p2pkhArtifact, contractName: undefined } as any, [], provider)).toThrow();
+      expect(() => new Contract({ ...p2pkhArtifact, contractName: undefined } as any, [], { provider })).toThrow();
     });
 
     it('should create new P2PKH instance', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const instance = new Contract(p2pkhArtifact, [placeholder(20)], provider);
+      const instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider });
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.spend).toBe('function');
@@ -54,7 +54,7 @@ describe('Contract', () => {
     it('should create new TransferWithTimeout instance', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const constructorArgs = [placeholder(65), placeholder(65), 1000000n];
-      const instance = new Contract(twtArtifact, constructorArgs, provider);
+      const instance = new Contract(twtArtifact, constructorArgs, { provider });
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.transfer).toBe('function');
@@ -65,7 +65,7 @@ describe('Contract', () => {
     it('should create new HodlVault instance', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const constructorArgs = [placeholder(65), placeholder(65), 1000000n, 10000n];
-      const instance = new Contract(hodlVaultArtifact, constructorArgs, provider);
+      const instance = new Contract(hodlVaultArtifact, constructorArgs, { provider });
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.spend).toBe('function');
@@ -75,7 +75,7 @@ describe('Contract', () => {
     it('should create new Mecenas instance', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const constructorArgs = [placeholder(20), placeholder(20), 1000000n];
-      const instance = new Contract(mecenasArtifact, constructorArgs, provider);
+      const instance = new Contract(mecenasArtifact, constructorArgs, { provider });
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.receive).toBe('function');
@@ -88,14 +88,14 @@ describe('Contract', () => {
     // Not very robust, as this depends on the example P2PKH contract having balance
     it('should return balance for existing contract', async () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const instance = new Contract(p2pkhArtifact, [alicePkh], provider);
+      const instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
 
       expect(await instance.getBalance()).toBeGreaterThan(0n);
     });
 
     it('should return zero balance for new contract', async () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const instance = new Contract(p2pkhArtifact, [placeholder(20)], provider);
+      const instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider });
 
       expect(await instance.getBalance()).toBe(0n);
     });
@@ -106,8 +106,8 @@ describe('Contract', () => {
     let bbInstance: Contract;
     beforeEach(() => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      instance = new Contract(p2pkhArtifact, [alicePkh], provider);
-      bbInstance = new Contract(boundedBytesArtifact, [], provider);
+      instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
+      bbInstance = new Contract(boundedBytesArtifact, [], { provider });
     });
 
     it('can\'t call spend with incorrect signature', () => {

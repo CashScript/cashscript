@@ -17,7 +17,7 @@ describe('Mecenas', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], provider);
+    mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider });
     console.log(mecenas.address);
   });
 

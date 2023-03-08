@@ -283,100 +283,100 @@ export class Transaction {
     // Construct list with all nfts in inputs
     const listNftsInputs = [];
     // If inputs are manually selected, add their tokens to balance
-    for(const input of this.inputs){
-      if(!input.token) continue;
+    for (const input of this.inputs) {
+      if (!input.token) continue;
       const tokenCategory = input.token.category;
-      if(!netBalanceTokens[tokenCategory]){
+      if (!netBalanceTokens[tokenCategory]) {
         netBalanceTokens[tokenCategory] = input.token.amount;
       } else {
         netBalanceTokens[tokenCategory] += input.token.amount;
       }
-      if(input.token.nft){
-        listNftsInputs.push({...input.token.nft, category: input.token.category});
+      if (input.token.nft) {
+        listNftsInputs.push({ ...input.token.nft, category: input.token.category });
       }
     }
     // Construct list with all nfts in outputs
     let listNftsOutputs = [];
-    // Substract all token outputs from the token balances
-    for(const output of this.outputs){
-      if(!output.token) continue;
+    // Subtract all token outputs from the token balances
+    for (const output of this.outputs) {
+      if (!output.token) continue;
       const tokenCategory = output.token.category;
-      if(netBalanceTokens[tokenCategory]){
+      if (netBalanceTokens[tokenCategory]) {
         netBalanceTokens[tokenCategory] = -output.token.amount;
       } else {
         netBalanceTokens[tokenCategory] -= output.token.amount;
       }
-      if(output.token.nft){
-        listNftsOutputs.push({...output.token.nft, category: output.token.category});
+      if (output.token.nft) {
+        listNftsOutputs.push({ ...output.token.nft, category: output.token.category });
       }
     }
     // If inputs are manually provided, check token balances
-    if(this.inputs.length > 0){
+    if (this.inputs.length > 0) {
       for (const [category, balance] of Object.entries(netBalanceTokens)) {
         // Add token change outputs if applicable
-        if(this.tokenChange && balance > 0){
+        if (this.tokenChange && balance > 0) {
           const tokenDetails: TokenDetails = {
-            category : category,
-            amount : balance
+            category,
+            amount: balance,
           };
           const tokenChangeOutput = { to: this.address, amount: BigInt(1000), token: tokenDetails };
           this.outputs.push(tokenChangeOutput);
         }
         // Throw error when token balance is insufficient
-        if(balance < 0){
+        if (balance < 0) {
           throw new Error(`Insufficient token balance for token with category ${category}.`);
         }
       }
-      // Compare nfts in- and outputs, check if inputs have nfts corresponsing to outputs
+      // Compare nfts in- and outputs, check if inputs have nfts corresponding to outputs
       // Keep list of nfts in inputs without matching output
-      // First check immutable nfts, then mutables & minting nfts together
-      // this is so the mutable nft in input does not get match to an output nft corresponding to an immutible nft in the inputs
+      // First check immutable nfts, then mutable & minting nfts together
+      // this is so the mutable nft in input does not get match to an output nft corresponding to an immutable nft in the inputs
       let unusedNfts = listNftsInputs;
-      for(const nftInput of listNftsInputs){
-        if(nftInput.capability === "none"){
+      for (const nftInput of listNftsInputs) {
+        if (nftInput.capability === 'none') {
           for (let i = 0; i < listNftsOutputs.length; i++) {
             if (listNftsOutputs[i] === nftInput) {
               listNftsOutputs.splice(i, 1);
-              unusedNfts = unusedNfts.filter(nft => nft !== nftInput);
+              unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
               break;
             }
           }
         }
       }
-      for(const nftInput of listNftsInputs){
-        if(nftInput.capability === "minting"){
+      for (const nftInput of listNftsInputs) {
+        if (nftInput.capability === 'minting') {
           const newListNftsOutputs: {
             category: string;
-            capability: "none" | "mutable" | "minting";
+            capability: 'none' | 'mutable' | 'minting';
             commitment: string;
-        }[] = listNftsOutputs.filter(nftOutput => nftOutput.category !== nftInput.category);
-          if(newListNftsOutputs !== listNftsOutputs){
-            unusedNfts = unusedNfts.filter(nft => nft !== nftInput);
+          }[] = listNftsOutputs.filter((nftOutput) => nftOutput.category !== nftInput.category);
+          if (newListNftsOutputs !== listNftsOutputs) {
+            unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
             listNftsOutputs = newListNftsOutputs;
           }
         }
-        if(nftInput.capability === "mutable"){
+        if (nftInput.capability === 'mutable') {
           for (let i = 0; i < listNftsOutputs.length; i++) {
             if (listNftsOutputs[i].category === nftInput.category) {
               listNftsOutputs.splice(i, 1);
-              unusedNfts = unusedNfts.filter(nft => nft !== nftInput);
+              unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
               break;
             }
           }
         }
       }
-      if(listNftsOutputs.length !== 0) {
-        throw new Error(`Nfts in outputs don't have corresponding nfts in inputs!`)
+      if (listNftsOutputs.length !== 0) {
+        throw new Error('Nfts in outputs don\'t have corresponding nfts in inputs!');
       }
-      if(this.tokenChange){
-        for(const unusedNft of unusedNfts){
+      if (this.tokenChange) {
+        for (const unusedNft of unusedNfts) {
           const tokenDetails: TokenDetails = {
-            category : unusedNft.category,
-            amount : BigInt(0),
+            category: unusedNft.category,
+            amount: BigInt(0),
             nft: {
               capability: unusedNft.capability,
               commitment: unusedNft.commitment,
-            }
+            },
           };
           const nftChangeOutput = { to: this.address, amount: BigInt(1000), token: tokenDetails };
           this.outputs.push(nftChangeOutput);

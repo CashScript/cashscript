@@ -20,7 +20,8 @@ describe('v0.6.0 - Simple Covenant', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    covenant = new Contract(simpleCovenantArtifact, [], provider);
+    const addressType = 'p2sh20';
+    covenant = new Contract(simpleCovenantArtifact, [], { provider, addressType });
     console.log(covenant.address);
   });
 
@@ -49,7 +50,8 @@ describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    mecenas = new Contract(mecenasBorderArtifact, [alicePkh, bobPkh, pledge], provider);
+    const addressType = 'p2sh20';
+    mecenas = new Contract(mecenasBorderArtifact, [alicePkh, bobPkh, pledge], { provider, addressType });
     console.log(mecenas.address);
   });
 

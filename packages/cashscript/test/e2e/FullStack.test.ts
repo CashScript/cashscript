@@ -17,7 +17,7 @@ describe.skip('P2PKH (using FullStackNetworkProvider)', () => {
   beforeAll(() => {
     const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://free-main.fullstack.cash/v5/' }));
     // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
-    p2pkhInstance = new Contract(artifact, [bobPkh], provider);
+    p2pkhInstance = new Contract(artifact, [bobPkh], { provider });
     console.log(p2pkhInstance.address);
   });
 

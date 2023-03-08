@@ -19,7 +19,7 @@ describe('HodlVault', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], provider);
+    hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
     console.log(hodlVault.address);
   });
 

@@ -56,14 +56,14 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   async getUtxos(address: string): Promise<Utxo[]> {
     const scripthash = addressToElectrumScriptHash(address);
 
-    const filteringOption = "include_tokens";
+    const filteringOption = 'include_tokens';
     const result = await this.performRequest('blockchain.scripthash.listunspent', scripthash, filteringOption) as ElectrumUtxo[];
 
     const utxos = result.map((utxo) => ({
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
       satoshis: BigInt(utxo.value),
-      token: utxo.token_data
+      token: utxo.token_data,
     }));
 
     return utxos;

@@ -16,7 +16,7 @@ describe('BigInt', () => {
 
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    bigintContract = new Contract(artifact, [], provider);
+    bigintContract = new Contract(artifact, [], { provider });
     console.log(bigintContract.address);
   });
 
