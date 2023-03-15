@@ -83,6 +83,21 @@ export function cashScriptOutputToLibauthOutput(output: Output): LibauthOutput {
   };
 }
 
+export function libauthOutputToCashScriptOutput(output: LibauthOutput): Output {
+  return {
+    to: output.lockingBytecode,
+    amount: output.valueSatoshis,
+    token: output.token && {
+      ...output.token,
+      category: binToHex(output.token.category),
+      nft: output.token.nft && {
+        ...output.token.nft,
+        commitment: binToHex(output.token.nft.commitment),
+      },
+    },
+  };
+}
+
 function isTokenAddress(address: string): boolean {
   const result = decodeCashAddress(address);
   if (typeof result === 'string') throw new Error(result);
