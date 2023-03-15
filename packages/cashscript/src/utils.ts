@@ -25,6 +25,7 @@ import {
   Output,
   Network,
   Recipient,
+  LibauthOutput,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -58,23 +59,28 @@ function calculateDust(recipient: Recipient): number {
   return dustAmount;
 }
 
-function getOutputSize(recipient: Recipient): number {
-  const bytecodeResult = cashAddressToLockingBytecode(recipient.to);
-  if (typeof bytecodeResult === 'string') throw new Error(bytecodeResult);
+function getOutputSize(output: Output): number {
+  const encodedOutput = encodeOutput(output);
+  return encodedOutput.byteLength;
+}
 
-  const lockingBytecode = bytecodeResult.bytecode;
-  const valueSatoshis = recipient.amount;
-  const token = recipient.token && {
-    ...recipient.token,
-    category: hexToBin(recipient.token.category),
-    nft: recipient.token.nft && {
-      ...recipient.token.nft,
-      commitment: hexToBin(recipient.token.nft.commitment),
+function encodeOutput(output: Output): Uint8Array {
+  return encodeTransactionOutput(cashScriptOutputToLibauthOutput(output));
+}
+
+export function cashScriptOutputToLibauthOutput(output: Output): LibauthOutput {
+  return {
+    lockingBytecode: typeof output.to === 'string' ? addressToLockScript(output.to) : output.to,
+    valueSatoshis: output.amount,
+    token: output.token && {
+      ...output.token,
+      category: hexToBin(output.token.category),
+      nft: output.token.nft && {
+        ...output.token.nft,
+        commitment: hexToBin(output.token.nft.commitment),
+      },
     },
   };
-
-  const encodedOutput = encodeTransactionOutput({ lockingBytecode, valueSatoshis, token });
-  return encodedOutput.byteLength;
 }
 
 function isTokenAddress(address: string): boolean {
@@ -114,15 +120,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   // LockTime (4B)
 
   let size = VERSION_SIZE + LOCKTIME_SIZE;
-  size += outputs.reduce((acc, output) => {
-    if (typeof output.to === 'string') {
-      const outputSize = getOutputSize(output as Recipient);
-      return acc + outputSize;
-    }
-
-    // Size of an OP_RETURN output = byteLength + 8 (amount) + 2 (scriptSize)
-    return acc + output.to.byteLength + 8 + 2;
-  }, 0);
+  size += outputs.reduce((acc, output) => acc + getOutputSize(output), 0);
   // Add tx-out count (accounting for a potential change output)
   size += encodeInt(BigInt(outputs.length + 1)).byteLength;
 
@@ -165,13 +163,20 @@ function toBin(output: string): Uint8Array {
 
 export function createSighashPreimage(
   transaction: Transaction,
-  input: Utxo,
+  inputs: Utxo[],
   inputIndex: number,
   coveredBytecode: Uint8Array,
   hashtype: number,
 ): Uint8Array {
-  const sourceOutputs = [];
-  sourceOutputs[inputIndex] = { valueSatoshis: input.satoshis, lockingBytecode: Uint8Array.of() };
+  const sourceOutputs = inputs.map((input) => {
+    const sourceOutput = {
+      amount: input.satoshis,
+      to: Uint8Array.of(),
+      token: input.token,
+    };
+
+    return cashScriptOutputToLibauthOutput(sourceOutput);
+  });
   const context = { inputIndex, sourceOutputs, transaction };
   const signingSerializationType = new Uint8Array([hashtype]);
 
