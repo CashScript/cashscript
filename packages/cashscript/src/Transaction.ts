@@ -327,7 +327,8 @@ export class Transaction {
       for (const nftInput of listNftsInputs) {
         if (nftInput.capability === 'none') {
           for (let i = 0; i < listNftsOutputs.length; i++) {
-            if (listNftsOutputs[i] === nftInput) {
+            // Deep equality check token objects
+            if (JSON.stringify(listNftsOutputs[i]) === JSON.stringify(nftInput)) {
               listNftsOutputs.splice(i, 1);
               unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
               break;
