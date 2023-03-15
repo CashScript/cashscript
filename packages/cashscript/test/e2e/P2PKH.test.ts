@@ -181,13 +181,13 @@ describe('P2PKH', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
 
-    it.only('can send tokens', async () => {
+    it.only('can send fungible tokens', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
-      const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined);
+      const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
       const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
 
       if (!tokenUtxo) {
-        throw new Error('No token UTXO found');
+        throw new Error('No token UTXO found with fungible tokens');
       }
 
       const to = p2pkhInstance.tokenAddress;
@@ -198,6 +198,30 @@ describe('P2PKH', () => {
         .spend(alicePub, new SignatureTemplate(alicePriv))
         .from(nonTokenUtxos)
         .from(tokenUtxo)
+        .to(to, amount, token)
+        .send();
+
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
+    });
+
+    it.only('can send NFTs', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const nftUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.nft !== undefined);
+      const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
+
+      if (!nftUtxo) {
+        throw new Error('No token UTXO found with an NFT');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const { token } = nftUtxo;
+
+      const tx = await p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(nonTokenUtxos)
+        .from(nftUtxo)
         .to(to, amount, token)
         .send();
 
