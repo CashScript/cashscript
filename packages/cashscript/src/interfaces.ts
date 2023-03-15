@@ -38,6 +38,21 @@ export interface TokenDetails {
   };
 }
 
+export interface LibauthOutput {
+  lockingBytecode: Uint8Array;
+  valueSatoshis: bigint;
+  token?: LibauthTokenDetails;
+}
+
+export interface LibauthTokenDetails {
+  amount: bigint; // the amount cannot be a JSON numeric and is instead written as a decimal string in the JSON output
+  category: Uint8Array;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: Uint8Array;
+  };
+}
+
 export enum SignatureAlgorithm {
   ECDSA = 0x00,
   SCHNORR = 0x01,
