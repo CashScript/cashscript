@@ -92,6 +92,12 @@ describe('utils', () => {
       const mainnetAddressP2sh20 = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh20', false);
       const testnetAddressP2sh20 = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh20', false);
       const regtestAddressP2sh20 = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh20', false);
+      const mainnetAddressP2sh32Tokens = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh32', true);
+      const testnetAddressP2sh32Tokens = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh32', true);
+      const regtestAddressP2sh32Tokens = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh32', true);
+      const mainnetAddressP2sh20Tokens = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh20', true);
+      const testnetAddressP2sh20Tokens = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh20', true);
+      const regtestAddressP2sh20Tokens = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh20', true);
 
       const expectedMainnetAddressP2sh32 = 'bitcoincash:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d23629h20jd0s';
       const expectedTestnetAddressP2sh32 = 'bchtest:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d2362xsm3276z';
@@ -99,6 +105,12 @@ describe('utils', () => {
       const expectedMainnetAddressP2sh20 = 'bitcoincash:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyc27hzc7y';
       const expectedTestnetAddressP2sh20 = 'bchtest:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyuc6sq0ec';
       const expectedRegtestAddressP2sh20 = 'bchreg:pr4wzdh0h9d7fpu890lq8xz0c84cpv3nvyxyv3ru67';
+      const expectedMainnetAddressP2sh32Tokens = 'bitcoincash:rv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d2362hykwtvkm';
+      const expectedTestnetAddressP2sh32Tokens = 'bchtest:rv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d23625r8snlrf';
+      const expectedRegtestAddressP2sh32Tokens = 'bchreg:rv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d2362pf465g5p';
+      const expectedMainnetAddressP2sh20Tokens = 'bitcoincash:rr4wzdh0h9d7fpu890lq8xz0c84cpv3nvylqdfv7ph';
+      const expectedTestnetAddressP2sh20Tokens = 'bchtest:rr4wzdh0h9d7fpu890lq8xz0c84cpv3nvymjfwwfxt';
+      const expectedRegtestAddressP2sh20Tokens = 'bchreg:rr4wzdh0h9d7fpu890lq8xz0c84cpv3nvypwl0d69d';
 
       expect(mainnetAddressP2sh32).toEqual(expectedMainnetAddressP2sh32);
       expect(testnetAddressP2sh32).toEqual(expectedTestnetAddressP2sh32);
@@ -106,6 +118,12 @@ describe('utils', () => {
       expect(mainnetAddressP2sh20).toEqual(expectedMainnetAddressP2sh20);
       expect(testnetAddressP2sh20).toEqual(expectedTestnetAddressP2sh20);
       expect(regtestAddressP2sh20).toEqual(expectedRegtestAddressP2sh20);
+      expect(mainnetAddressP2sh32Tokens).toEqual(expectedMainnetAddressP2sh32Tokens);
+      expect(testnetAddressP2sh32Tokens).toEqual(expectedTestnetAddressP2sh32Tokens);
+      expect(regtestAddressP2sh32Tokens).toEqual(expectedRegtestAddressP2sh32Tokens);
+      expect(mainnetAddressP2sh20Tokens).toEqual(expectedMainnetAddressP2sh20Tokens);
+      expect(testnetAddressP2sh20Tokens).toEqual(expectedTestnetAddressP2sh20Tokens);
+      expect(regtestAddressP2sh20Tokens).toEqual(expectedRegtestAddressP2sh20Tokens);
     });
   });
 });
