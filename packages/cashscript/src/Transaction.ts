@@ -32,10 +32,10 @@ import {
   getTxSizeWithoutInputs,
   getPreimageSize,
   buildError,
-  addressToLockScript,
   createSighashPreimage,
   validateRecipient,
   utxoComparator,
+  cashScriptOutputToLibauthOutput,
 } from './utils.js';
 import { MINIMUM_CHANGE_P2SH20, P2SH32_OUTPUT_SIZE } from './constants.js';
 import NetworkProvider from './network/NetworkProvider.js';
@@ -161,15 +161,7 @@ export class Transaction {
       unlockingBytecode: new Uint8Array(),
     }));
 
-    const outputs = this.outputs.map((output) => {
-      const lockingBytecode = typeof output.to === 'string'
-        ? addressToLockScript(output.to)
-        : output.to;
-
-      const valueSatoshis = output.amount;
-
-      return { lockingBytecode, valueSatoshis };
-    });
+    const outputs = this.outputs.map(cashScriptOutputToLibauthOutput);
 
     const transaction = {
       inputs,
@@ -190,7 +182,7 @@ export class Transaction {
         const prevOutScript = addressContentsToLockingBytecode(addressContents);
 
         const hashtype = utxo.template.getHashType();
-        const preimage = createSighashPreimage(transaction, utxo, i, prevOutScript, hashtype);
+        const preimage = createSighashPreimage(transaction, this.inputs, i, prevOutScript, hashtype);
         const sighash = hash256(preimage);
 
         const signature = utxo.template.generateSignature(sighash);
@@ -208,14 +200,14 @@ export class Transaction {
         // First signature is used for sighash preimage (maybe not the best way)
         if (covenantHashType < 0) covenantHashType = arg.getHashType();
 
-        const preimage = createSighashPreimage(transaction, utxo, i, bytecode, arg.getHashType());
+        const preimage = createSighashPreimage(transaction, this.inputs, i, bytecode, arg.getHashType());
         const sighash = hash256(preimage);
 
         return arg.generateSignature(sighash);
       });
 
       const preimage = this.abiFunction.covenant
-        ? createSighashPreimage(transaction, utxo, i, bytecode, covenantHashType)
+        ? createSighashPreimage(transaction, this.inputs, i, bytecode, covenantHashType)
         : undefined;
 
       const inputScript = createInputScript(

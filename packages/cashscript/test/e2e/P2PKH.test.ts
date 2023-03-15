@@ -19,7 +19,7 @@ describe('P2PKH', () => {
   beforeAll(() => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     p2pkhInstance = new Contract(artifact, [alicePkh], { provider });
-    console.log(p2pkhInstance.address);
+    console.log(p2pkhInstance.tokenAddress);
   });
 
   describe('send', () => {
@@ -179,6 +179,30 @@ describe('P2PKH', () => {
       // then
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+    });
+
+    it.only('can send tokens', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined);
+      const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
+
+      if (!tokenUtxo) {
+        throw new Error('No token UTXO found');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const { token } = tokenUtxo;
+
+      const tx = await p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(nonTokenUtxos)
+        .from(tokenUtxo)
+        .to(to, amount, token)
+        .send();
+
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
   });
 });
