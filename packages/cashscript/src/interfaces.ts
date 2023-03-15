@@ -30,7 +30,7 @@ export interface Output {
 }
 
 export interface TokenDetails {
-  amount: bigint; // the amount cannot be a JSON numeric and is instead written as a decimal string in the JSON output
+  amount: bigint;
   category: string;
   nft?: {
     capability: 'none' | 'mutable' | 'minting';

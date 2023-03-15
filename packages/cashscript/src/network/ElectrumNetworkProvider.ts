@@ -63,7 +63,10 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
       satoshis: BigInt(utxo.value),
-      token: utxo.token_data,
+      token: utxo.token_data ? {
+        ...utxo.token_data,
+        amount: BigInt(utxo.token_data.amount),
+      } : undefined,
     }));
 
     return utxos;
@@ -144,7 +147,7 @@ interface ElectrumUtxo {
   tx_hash: string;
   height: number;
   token_data?: {
-    amount: bigint;
+    amount: string;
     category: string;
     nft?: {
       capability: 'none' | 'mutable' | 'minting';
