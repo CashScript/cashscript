@@ -293,7 +293,7 @@ export class Transaction {
     for (const output of this.outputs) {
       if (!output.token) continue;
       const tokenCategory = output.token.category;
-      if (netBalanceTokens[tokenCategory]) {
+      if (!netBalanceTokens[tokenCategory]) {
         netBalanceTokens[tokenCategory] = -output.token.amount;
       } else {
         netBalanceTokens[tokenCategory] -= output.token.amount;
