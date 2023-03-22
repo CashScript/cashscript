@@ -1,6 +1,6 @@
 {
   "name": "cashc",
-  "version": "0.8.0-next.1",
+  "version": "0.8.0-next.2",
   "description": "Compile Bitcoin Cash contracts to Bitcoin Cash Script or artifacts",
   "keywords": [
     "bitcoin",
@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@bitauth/libauth": "^2.0.0-alpha.8",
-    "@cashscript/utils": "^0.8.0-next.1",
+    "@cashscript/utils": "^0.8.0-next.2",
     "antlr4ts": "^0.5.0-alpha.4",
     "commander": "^7.1.0",
     "semver": "^7.3.4"
