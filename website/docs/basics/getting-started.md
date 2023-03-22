@@ -10,7 +10,7 @@ npm install -g cashc
 ```
 
 ## Installing the JavaScript SDK
-The JavaScript SDK can be installed into your project with NPM.
+The JavaScript SDK can be installed into your project with NPM. Note that CashScript is a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
 
 ```bash
 npm install cashscript

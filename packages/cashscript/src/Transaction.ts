@@ -36,8 +36,9 @@ import {
   validateRecipient,
   utxoComparator,
   cashScriptOutputToLibauthOutput,
+  calculateDust,
+  getOutputSize,
 } from './utils.js';
-import { MINIMUM_CHANGE_P2SH20, P2SH32_OUTPUT_SIZE } from './constants.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
@@ -51,7 +52,7 @@ export class Transaction {
   private locktime: number;
   private feePerByte: number = 1.0;
   private hardcodedFee: bigint;
-  private minChange: bigint = MINIMUM_CHANGE_P2SH20;
+  private minChange: bigint = 0n;
   private tokenChange: boolean = true;
 
   constructor(
@@ -91,12 +92,12 @@ export class Transaction {
     return this;
   }
 
-  to(to: string, amount: bigint, tokenDetails?: TokenDetails): this;
+  to(to: string, amount: bigint, token?: TokenDetails): this;
   to(outputs: Recipient[]): this;
 
-  to(toOrOutputs: string | Recipient[], amount?: bigint, tokenDetails?: TokenDetails): this {
+  to(toOrOutputs: string | Recipient[], amount?: bigint, token?: TokenDetails): this {
     if (typeof toOrOutputs === 'string' && typeof amount === 'bigint') {
-      const recipient = { to: toOrOutputs, amount, token: tokenDetails };
+      const recipient = { to: toOrOutputs, amount, token };
       return this.to([recipient]);
     }
 
@@ -441,12 +442,14 @@ export class Transaction {
 
     // Account for the fee of adding a change output
     if (!this.hardcodedFee) {
-      change -= BigInt(P2SH32_OUTPUT_SIZE * this.feePerByte);
+      const changeOutputSize = getOutputSize({ to: this.address, amount: 0n });
+      change -= BigInt(changeOutputSize * this.feePerByte);
     }
 
     // Add a change output if applicable
-    if (change >= this.minChange) {
-      this.outputs.push({ to: this.address, amount: change });
+    const changeOutput = { to: this.address, amount: change };
+    if (change >= this.minChange && change >= calculateDust(changeOutput)) {
+      this.outputs.push(changeOutput);
     }
   }
 }

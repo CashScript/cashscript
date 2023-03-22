@@ -10,7 +10,17 @@ title: Migration Notes
 
 ### CashScript SDK
 - `cashscript` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
-- The SDK now returns P2sh32 addresses by default. The address type can be changed to the old `p2sh20` in the options object when initializing a contract. The configuration of the network provider is placed under this options object too.
+- The SDK now returns `p2sh32` addresses by default. The address type can be changed to the old `p2sh20` in the options object when initializing a contract.
+- The configuration of the network provider is also part of this options object.
+  ```ts
+  // old
+  const contract = new Contract(artifact, constructorArgs, provider);
+
+  // new
+  const options = { provider, addressType: 'p2sh20' };
+  const contract = new Contract(artifact, constructorArgs, options);
+  ```
+
 - Network options `"testnet"` & `"staging"` have been renamed to `"testnet3"` and `"testnet4"` respectively in version 0.7.3. The old option names are removed with this major release.
 - You can no longer use `number` inputs for constructor arguments, function arguments, or input/output amounts. Use `bigint` instead.
 - `contract.getBalance()` and `contract.getUtxos()` now return `bigint` for satoshi amounts instead of `number`.
