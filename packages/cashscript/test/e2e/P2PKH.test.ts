@@ -180,8 +180,10 @@ describe('P2PKH', () => {
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
+  });
 
-    it.only('can send fungible tokens', async () => {
+  describe('send (tokens)', () => {
+    it('can send fungible tokens', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
       const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
       const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
@@ -205,7 +207,7 @@ describe('P2PKH', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
 
-    it.only('can send NFTs', async () => {
+    it('can send NFTs', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
       const nftUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.nft !== undefined);
       const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
@@ -229,7 +231,7 @@ describe('P2PKH', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
 
-    it.only('adds automatic change output for fungible tokens', async () => {
+    it('adds automatic change output for fungible tokens', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
       const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
       const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
@@ -253,7 +255,7 @@ describe('P2PKH', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
 
-    it.only('adds automatic change output for NFTs', async () => {
+    it('adds automatic change output for NFTs', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
       const nftUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.nft !== undefined);
       const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
@@ -276,6 +278,111 @@ describe('P2PKH', () => {
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
+
+    it('can disable automatic change output for fungible tokens', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
+      const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
+
+      if (!tokenUtxo) {
+        throw new Error('No token UTXO found with fungible tokens');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const token = { ...tokenUtxo.token!, amount: tokenUtxo.token!.amount - 1n };
+
+      const tx = await p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(nonTokenUtxos)
+        .from(tokenUtxo)
+        .to(to, amount, token)
+        .withoutTokenChange()
+        .send();
+
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
+
+      // Check that the change output is not present
+      txOutputs.forEach((output) => {
+        expect(output.token?.amount).not.toEqual(1n);
+      });
+    });
+
+    it.todo('can disable automatic change output for NFTs');
+
+    it('should throw an error when trying to send more tokens than the contract has', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
+      const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
+
+      if (!tokenUtxo) {
+        throw new Error('No token UTXO found with fungible tokens');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const token = { ...tokenUtxo.token!, amount: tokenUtxo.token!.amount + 1n };
+
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(nonTokenUtxos)
+        .from(tokenUtxo)
+        .to(to, amount, token)
+        .send();
+
+      await expect(txPromise).rejects.toThrow(/Insufficient token balance/);
+    });
+
+    it('should throw an error when trying to send a token the contract doesn\'t have', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
+      const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
+
+      if (!tokenUtxo) {
+        throw new Error('No token UTXO found with fungible tokens');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const token = { ...tokenUtxo.token!, category: '0x0000000000000000000000000000000000000000000000000000000000000000' };
+
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(nonTokenUtxos)
+        .from(tokenUtxo)
+        .to(to, amount, token)
+        .send();
+
+      await expect(txPromise).rejects.toThrow(/Insufficient token balance/);
+    });
+
+    it('should throw an error when trying to send an NFT the contract doesn\'t have', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const nftUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.nft !== undefined);
+      const nonTokenUtxos = contractUtxos.filter((utxo) => utxo.token === undefined);
+
+      if (!nftUtxo) {
+        throw new Error('No token UTXO found with an NFT');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const token = { ...nftUtxo.token!, category: '0x0000000000000000000000000000000000000000000000000000000000000000' };
+
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(nonTokenUtxos)
+        .from(nftUtxo)
+        .to(to, amount, token)
+        .send();
+
+      await expect(txPromise).rejects.toThrow(/Nfts in outputs don't have corresponding nfts in inputs/);
+    });
+
+    it.todo('can mint new NFTs if the NFT has minting capabilities');
+    it.todo('can change the NFT commitment if the NFT has mutable capabilities');
+    // TODO: Add more edge case tests for NFTs (minting, mutable, change outputs with multiple kinds of NFTs)
   });
 });
 

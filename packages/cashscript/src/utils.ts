@@ -52,19 +52,19 @@ export function validateRecipient(recipient: Recipient): void {
   }
 }
 
-function calculateDust(recipient: Recipient): number {
+export function calculateDust(recipient: Recipient): number {
   const outputSize = getOutputSize(recipient);
   // Formula used to calculate the minimum allowed output
   const dustAmount = 444 + outputSize * 3;
   return dustAmount;
 }
 
-function getOutputSize(output: Output): number {
+export function getOutputSize(output: Output): number {
   const encodedOutput = encodeOutput(output);
   return encodedOutput.byteLength;
 }
 
-function encodeOutput(output: Output): Uint8Array {
+export function encodeOutput(output: Output): Uint8Array {
   return encodeTransactionOutput(cashScriptOutputToLibauthOutput(output));
 }
 
