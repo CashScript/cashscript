@@ -6,16 +6,25 @@ title: Release Notes
 
 :warning: From v0.8.0 onwards, CashScript is a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require()` to import `cashscript` or `cashc`.
 
+This release also contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
+
 #### cashc compiler
-- :boom: **BREAKING**: Move to Pure ESM.
 - :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`,`nftCommitment`and `tokenAmount`for both in- and outputs).
 - :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script
+- :boom: **BREAKING**: Move to Pure ESM.
 - :boom: **BREAKING**: renamed `LockingBytecodeP2SH` to `LockingBytecodeP2SH20` but it is recommended to change over to the new P2SH32 for security reasons.
 
 #### CashScript SDK
+- :sparkles: Add support for CashTokens.
+  - `.to()` now takes a `token` parameter that can be used to send CashTokens.
+  - UTXOs that are retrieved with `contract.getUtxos()` include a `token` field if they are token UTXOs.
+  - UTXOs that are passed into `.from()` can also include this `token` field to send tokens.
+  - Add `.withoutTokenChange()` to disable automatic token change outputs.
+  - Note that only the `ElectrumNetworkProvider` supports CashTokens at this time.
+- :sparkles: Add `contract.tokenAddress` to get the token-enabled address of a contract.
 - :boom: **BREAKING**: Move to Pure ESM.
 - :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.
-- :boom: **BREAKING**: `.contract.address` returns `p2sh32` address by default.
+- :boom: **BREAKING**: `contract.address` returns `p2sh32` address by default, this can be configured to be `p2sh20` on contract initialization.
 - :boom: **BREAKING**: Moved the configuration of the network provider to an options object on contract initialization.
 - :boom: **BREAKING**: Use `bigint` rather than `number` for all instances of "script numbers" (e.g. function arguments) and satoshi amounts.
 - :boom: **BREAKING**: Replace `contract.getRedeemScriptHex()` with `contract.bytecode`.

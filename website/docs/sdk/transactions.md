@@ -10,11 +10,28 @@ Most of the available transaction options are only useful in very specific use c
 
 ### to()
 ```ts
-transaction.to(to: string, amount: bigint): this
-transaction.to(outputs: Array<{ to: string, amount: bigint }>): this
+transaction.to(to: string, amount: bigint, token: TokenDetails): this
+transaction.to(outputs: Array<Recipient>): this
 ```
 
-The `to()` function allows you to add outputs to the transaction. Either a single pair `to/amount` pair can be provided, or a list of them. This function can be called any number of times, and the provided outputs will be added to the list of earlier added outputs.
+The `to()` function allows you to add outputs to the transaction. Either a single pair `to/amount` pair can be provided, or a list of them. This function can be called any number of times, and the provided outputs will be added to the list of earlier added outputs. Tokens can be sent by providing a `TokenDetails` object as the third parameter, or including it in your array of outputs with the `.token` property.
+
+```ts
+interface Recipient {
+  to: string;
+  amount: bigint;
+  token?: TokenDetails;
+}
+
+interface TokenDetails {
+  amount: bigint;
+  category: string;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: string;
+  };
+}
+```
 
 #### Example
 ```ts
@@ -108,6 +125,17 @@ Be sure to check that the remaining amount (sum of inputs - sum of outputs) is n
 ```ts
 .withoutChange()
 ```
+
+### withoutTokenChange()
+```ts
+transaction.withoutTokenChange(): this
+```
+
+The `withoutTokenChange()` function allows you to disable the change output for tokens.
+
+:::caution
+Be sure to check that the remaining amount (sum of inputs - sum of outputs) is not too high. The difference will be burned and cannot be reclaimed.
+:::
 
 ### withAge()
 ```ts
