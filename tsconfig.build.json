@@ -3,7 +3,7 @@
     "target": "es2020",
     "module": "esnext",
     "declaration": true,
-    "lib": ["es2022", "dom"],
+    "lib": ["es2020", "dom"],
     "types": ["node", "jest"],
     "sourceMap": true,
     "strict": true,
