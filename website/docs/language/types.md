@@ -135,7 +135,7 @@ require(bitcoin == cash);
 Type casting can be done both explicitly and implicitly as illustrated below. `pubkey`, `sig` and `datasig` can be implicitly cast to `bytes`, meaning they can be used anywhere where you would normally use a `bytes` type. Explicit type casting can be done with a broader range of types, but is still limited. The syntax of this explicit type casting is illustrated below. Note that you can also cast to bounded `bytes` types.
 
 :::note
-When casting integer types to bytes of a certain size, the integer value is padded with zeros. e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros, by passing in a `size` parameter, which indicates the size of the output. e.g. `bytes(0, 4 - 2) == 0x0000`.
+When casting integer types to bytes of a certain size, the integer value is padded with zeros. e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros, by passing in a `size` parameter, which indicates the size of the output. e.g. `bytes(0, 4 - 2) == 0x0000`. Lastly, note that `bytes(0) == 0x`.
 :::
 
 :::caution

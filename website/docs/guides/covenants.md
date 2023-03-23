@@ -247,7 +247,7 @@ contract PooledFunds(
         // A 3rd output for change is allowed
         if (tx.outputs.length == 3) {
             // Require that the change output does not mint any NFTs
-            require(tx.outputs[2].tokenCategory == 0x00);
+            require(tx.outputs[2].tokenCategory == bytes(0));
         }
     }
     function withdraw(
@@ -283,7 +283,7 @@ contract PooledFunds(
         require(tx.outputs[1].value == amountToWithdraw - 1000);
 
         // require that the receipt NFT is burned
-        require(tx.outputs[1].tokenCategory == 0x00);
+        require(tx.outputs[1].tokenCategory == bytes(0));
     }
 }
 ```
