@@ -21,6 +21,7 @@ import {
   Output,
   Recipient,
   TokenDetails,
+  NftObject,
   isSignableUtxo,
   TransactionDetails,
 } from './interfaces.js';
@@ -274,10 +275,10 @@ export class Transaction {
     // Construct object with total output of fungible tokens by tokenId
     const netBalanceTokens: Record<string, bigint> = {};
     // Construct list with all nfts in inputs
-    const listNftsInputs = [];
+    const listNftsInputs: NftObject[] = [];
     // If inputs are manually selected, add their tokens to balance
-    for (const input of this.inputs) {
-      if (!input.token) continue;
+    this.inputs.forEach((input) => {
+      if (!input.token) return;
       const tokenCategory = input.token.category;
       if (!netBalanceTokens[tokenCategory]) {
         netBalanceTokens[tokenCategory] = input.token.amount;
@@ -287,12 +288,12 @@ export class Transaction {
       if (input.token.nft) {
         listNftsInputs.push({ ...input.token.nft, category: input.token.category });
       }
-    }
+    });
     // Construct list with all nfts in outputs
-    let listNftsOutputs = [];
+    let listNftsOutputs: NftObject[] = [];
     // Subtract all token outputs from the token balances
-    for (const output of this.outputs) {
-      if (!output.token) continue;
+    this.outputs.forEach((output) => {
+      if (!output.token) return;
       const tokenCategory = output.token.category;
       if (!netBalanceTokens[tokenCategory]) {
         netBalanceTokens[tokenCategory] = -output.token.amount;
@@ -302,7 +303,7 @@ export class Transaction {
       if (output.token.nft) {
         listNftsOutputs.push({ ...output.token.nft, category: output.token.category });
       }
-    }
+    });
     // If inputs are manually provided, check token balances
     if (this.inputs.length > 0) {
       for (const [category, balance] of Object.entries(netBalanceTokens)) {
@@ -323,11 +324,11 @@ export class Transaction {
       // Compare nfts in- and outputs, check if inputs have nfts corresponding to outputs
       // Keep list of nfts in inputs without matching output
       // First check immutable nfts, then mutable & minting nfts together
-      // this is so the mutable nft in input does not get match to an output nft corresponding to an immutable nft in the inputs
+      // This is so an immutible input gets matched first and is removed from the list of unused nfts
       let unusedNfts = listNftsInputs;
       for (const nftInput of listNftsInputs) {
         if (nftInput.capability === 'none') {
-          for (let i = 0; i < listNftsOutputs.length; i++) {
+          for (let i = 0; i < listNftsOutputs.length; i += 1) {
             // Deep equality check token objects
             if (JSON.stringify(listNftsOutputs[i]) === JSON.stringify(nftInput)) {
               listNftsOutputs.splice(i, 1);
@@ -339,18 +340,15 @@ export class Transaction {
       }
       for (const nftInput of listNftsInputs) {
         if (nftInput.capability === 'minting') {
-          const newListNftsOutputs: {
-            category: string;
-            capability: 'none' | 'mutable' | 'minting';
-            commitment: string;
-          }[] = listNftsOutputs.filter((nftOutput) => nftOutput.category !== nftInput.category);
+          // eslint-disable-next-line max-len
+          const newListNftsOutputs: NftObject[] = listNftsOutputs.filter((nftOutput) => nftOutput.category !== nftInput.category);
           if (newListNftsOutputs !== listNftsOutputs) {
             unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
             listNftsOutputs = newListNftsOutputs;
           }
         }
         if (nftInput.capability === 'mutable') {
-          for (let i = 0; i < listNftsOutputs.length; i++) {
+          for (let i = 0; i < listNftsOutputs.length; i += 1) {
             if (listNftsOutputs[i].category === nftInput.category) {
               listNftsOutputs.splice(i, 1);
               unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
