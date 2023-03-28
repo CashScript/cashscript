@@ -236,7 +236,7 @@ contract PooledFunds(
 
         // 2nd output contains NFT receipt for the funds added to the pool
         // Get the tokenCategory of the minting NFT without the minting capability added
-        bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(64)[0];
+        bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(32)[0];
         require(tx.outputs[1].tokenCategory == tokenCategoryReceipt);
 
         // The receipt NFT is sent back to the same address of the first user's input
@@ -259,7 +259,7 @@ contract PooledFunds(
 
         // Accept NFT of the correct category as input index1
         // Validate by checking the tokenCategory without capability
-    	bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(64)[0];
+    	bytes tokenCategoryReceipt = tx.inputs[0].tokenCategory.split(32)[0];
         require(tx.inputs[1].tokenCategory == tokenCategoryReceipt);
 
         // Read the amount that was contributed to the pool from the NFT commitment
