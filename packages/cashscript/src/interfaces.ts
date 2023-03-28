@@ -38,6 +38,12 @@ export interface TokenDetails {
   };
 }
 
+export interface NftObject {
+  category: string;
+  capability: 'none' | 'mutable' | 'minting';
+  commitment: string;
+}
+
 export interface LibauthOutput {
   lockingBytecode: Uint8Array;
   valueSatoshis: bigint;
