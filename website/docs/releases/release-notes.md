@@ -29,6 +29,7 @@ This release also contains several breaking changes, please refer to the [migrat
 - :boom: **BREAKING**: Use `bigint` rather than `number` for all instances of "script numbers" (e.g. function arguments) and satoshi amounts.
 - :boom: **BREAKING**: Replace `contract.getRedeemScriptHex()` with `contract.bytecode`.
 - :boom: **BREAKING**: Remove `BitboxNetworkProvider`.
+- :boom: **BREAKING**: All signature templates use  `SIGHASH_ALL | SIGHASH_UTXOS` now, this new default can be overwritten in the constructor of the `SignatureTemplate`.
 
 ## v0.7.5
 

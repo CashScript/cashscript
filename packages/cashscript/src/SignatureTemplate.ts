@@ -6,7 +6,7 @@ export default class SignatureTemplate {
 
   constructor(
     signer: Keypair | Uint8Array | string,
-    private hashtype: HashType = HashType.SIGHASH_ALL,
+    private hashtype: HashType = HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS,
     private signatureAlgorithm: SignatureAlgorithm = SignatureAlgorithm.SCHNORR,
   ) {
     if (isKeypair(signer)) {

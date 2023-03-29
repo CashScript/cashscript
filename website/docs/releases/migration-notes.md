@@ -26,7 +26,10 @@ title: Migration Notes
 - `contract.getBalance()` and `contract.getUtxos()` now return `bigint` for satoshi amounts instead of `number`.
 - `contract.getRedeemScriptHex()` has been replaced with `contract.bytecode`.
 - `BitboxNetworkProvider` has been removed since Bitbox is long deprecated. Switch to modern solutions like `ElectrumNetworkProvider` instead.
-
+- :boom: **BREAKING**: All signature templates use  `SIGHASH_ALL | SIGHASH_UTXOS` now, to keep using the only the previous `SIGHASH_ALL` overwrite it in the following way:
+ ```ts
+  const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL);
+  ```
 
 ## v0.6 to v0.7
 ### cashc compiler

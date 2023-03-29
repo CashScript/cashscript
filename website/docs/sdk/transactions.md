@@ -10,7 +10,7 @@ Most of the available transaction options are only useful in very specific use c
 
 ### to()
 ```ts
-transaction.to(to: string, amount: bigint, token: TokenDetails): this
+transaction.to(to: string, amount: bigint, token?: TokenDetails): this
 transaction.to(outputs: Array<Recipient>): this
 ```
 
