@@ -170,12 +170,22 @@ new SignatureTemplate(signer: Keypair | Uint8Array | string, hashtype?: HashType
 
 You may notice the `SignatureTemplate` object in the example above. When a contract function has a `sig` parameter, it requires a cryptographic signature over the spending transaction. But to generate this signature, the transaction needs to be built first, which is not yet the case when a contract function is first called.
 
-So in the place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BITBOX/BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
+So in the place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
+
+```ts
+export enum HashType {
+  SIGHASH_ALL = 0x01,
+  SIGHASH_NONE = 0x02,
+  SIGHASH_SINGLE = 0x03,
+  SIGHASH_UTXOS = 0x20,
+  SIGHASH_ANYONECANPAY = 0x80,
+}
+```
 
 #### Example
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
-const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL);
+const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS );
 ```
 
 ## NetworkProvider
