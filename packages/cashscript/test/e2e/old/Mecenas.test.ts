@@ -3,6 +3,7 @@ import {
   SignatureTemplate,
   ElectrumNetworkProvider,
   Network,
+  HashType,
 } from '../../../src/index.js';
 import {
   alicePkh,
@@ -37,7 +38,7 @@ describe('v0.6.0 - Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePub, new SignatureTemplate(alicePriv))
+        .receive(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
         .to(to, amount)
         .withHardcodedFee(minerFee)
         .send();
@@ -54,7 +55,7 @@ describe('v0.6.0 - Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePub, new SignatureTemplate(alicePriv))
+        .receive(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
         .to(to, amount)
         .withHardcodedFee(minerFee)
         .send();
@@ -71,7 +72,7 @@ describe('v0.6.0 - Mecenas', () => {
 
       // when
       const txPromise = mecenas.functions
-        .receive(alicePub, new SignatureTemplate(alicePriv))
+        .receive(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
         .to(to, amount)
         .to(to, amount)
         .withHardcodedFee(minerFee)
@@ -89,7 +90,7 @@ describe('v0.6.0 - Mecenas', () => {
 
       // when
       const tx = await mecenas.functions
-        .receive(alicePub, new SignatureTemplate(alicePriv))
+        .receive(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
         .to(to, amount)
         .withHardcodedFee(minerFee)
         .send();

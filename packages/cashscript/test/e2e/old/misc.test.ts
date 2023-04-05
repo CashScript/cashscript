@@ -3,6 +3,7 @@ import {
   SignatureTemplate,
   ElectrumNetworkProvider,
   Network,
+  HashType,
 } from '../../../src/index.js';
 import {
   alicePkh,
@@ -33,7 +34,7 @@ describe('v0.6.0 - Simple Covenant', () => {
 
       // when
       const tx = await covenant.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .spend(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
         .to(to, amount)
         .send();
 
@@ -62,7 +63,7 @@ describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
 
     // when
     const tx = await mecenas.functions
-      .receive(alicePub, new SignatureTemplate(alicePriv))
+      .receive(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
       .to(to, amount)
       .withHardcodedFee(1000n)
       .send();
