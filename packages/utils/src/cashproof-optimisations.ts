@@ -7,7 +7,7 @@ export default `
 OP_1 OP_ADD                            <=> OP_1ADD;
 OP_1 OP_SUB                            <=> OP_1SUB;
 OP_1 OP_NEGATE                         <=> OP_1NEGATE;
-OP_0 OP_EQUAL OP_NOT                   <=> OP_0NOTEQUAL;
+OP_0 OP_NUMEQUAL OP_NOT                <=> OP_0NOTEQUAL;
 OP_NUMEQUAL OP_NOT                     <=> OP_NUMNOTEQUAL;
 OP_SHA256 OP_SHA256                    <=> OP_HASH256;
 OP_SHA256 OP_RIPEMD160                 <=> OP_HASH160;

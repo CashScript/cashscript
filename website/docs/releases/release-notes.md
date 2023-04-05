@@ -10,7 +10,8 @@ This release also contains several breaking changes, please refer to the [migrat
 
 #### cashc compiler
 - :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`,`nftCommitment`and `tokenAmount`for both in- and outputs).
-- :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script
+- :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script.
+- :bug: Fix optimisation bug that caused `OP_0NOTEQUAL` to be applied to non-integer values.
 - :boom: **BREAKING**: Move to Pure ESM.
 - :boom: **BREAKING**: renamed `LockingBytecodeP2SH` to `LockingBytecodeP2SH20` but it is recommended to change over to the new P2SH32 for security reasons.
 
