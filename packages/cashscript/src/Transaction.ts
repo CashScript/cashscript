@@ -2,15 +2,12 @@ import {
   hexToBin,
   binToHex,
   encodeTransaction,
-  addressContentsToLockingBytecode,
   decodeTransaction,
   Transaction as LibauthTransaction,
-  LockingBytecodeType,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
   AbiFunction,
-  hash160,
   hash256,
   placeholder,
   Script,
@@ -39,6 +36,8 @@ import {
   cashScriptOutputToLibauthOutput,
   calculateDust,
   getOutputSize,
+  addressToLockScript,
+  publicKeyToP2PKHLockingBytecode,
 } from './utils.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
@@ -155,6 +154,7 @@ export class Transaction {
     await this.setInputsAndOutputs();
 
     const bytecode = scriptToBytecode(this.redeemScript);
+    const lockingBytecode = addressToLockScript(this.address);
 
     const inputs = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
@@ -162,6 +162,17 @@ export class Transaction {
       sequenceNumber: this.sequence,
       unlockingBytecode: new Uint8Array(),
     }));
+
+    // Generate source outputs from inputs (for signing with SIGHASH_UTXOS)
+    const sourceOutputs = this.inputs.map((input) => {
+      const sourceOutput = {
+        amount: input.satoshis,
+        to: isSignableUtxo(input) ? publicKeyToP2PKHLockingBytecode(input.template.getPublicKey()) : lockingBytecode,
+        token: input.token,
+      };
+
+      return cashScriptOutputToLibauthOutput(sourceOutput);
+    });
 
     const outputs = this.outputs.map(cashScriptOutputToLibauthOutput);
 
@@ -178,13 +189,10 @@ export class Transaction {
       // UTXO's with signature templates are signed using P2PKH
       if (isSignableUtxo(utxo)) {
         const pubkey = utxo.template.getPublicKey();
-        const pubkeyHash = hash160(pubkey);
-
-        const addressContents = { payload: pubkeyHash, type: LockingBytecodeType.p2pkh };
-        const prevOutScript = addressContentsToLockingBytecode(addressContents);
+        const prevOutScript = publicKeyToP2PKHLockingBytecode(pubkey);
 
         const hashtype = utxo.template.getHashType();
-        const preimage = createSighashPreimage(transaction, this.inputs, i, prevOutScript, hashtype);
+        const preimage = createSighashPreimage(transaction, sourceOutputs, i, prevOutScript, hashtype);
         const sighash = hash256(preimage);
 
         const signature = utxo.template.generateSignature(sighash);
@@ -202,14 +210,14 @@ export class Transaction {
         // First signature is used for sighash preimage (maybe not the best way)
         if (covenantHashType < 0) covenantHashType = arg.getHashType();
 
-        const preimage = createSighashPreimage(transaction, this.inputs, i, bytecode, arg.getHashType());
+        const preimage = createSighashPreimage(transaction, sourceOutputs, i, bytecode, arg.getHashType());
         const sighash = hash256(preimage);
 
         return arg.generateSignature(sighash);
       });
 
       const preimage = this.abiFunction.covenant
-        ? createSighashPreimage(transaction, this.inputs, i, bytecode, covenantHashType)
+        ? createSighashPreimage(transaction, sourceOutputs, i, bytecode, covenantHashType)
         : undefined;
 
       const inputScript = createInputScript(

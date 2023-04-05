@@ -182,6 +182,10 @@ export enum HashType {
 }
 ```
 
+:::note
+If you're using "old-style" covenants (using CashScript v0.6.0 or lower), you need to configure `HashType.SIGHASH_ALL` as the `hashtype` parameter for the SignatureTemplate.
+:::
+
 #### Example
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';

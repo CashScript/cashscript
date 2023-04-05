@@ -178,20 +178,11 @@ function toBin(output: string): Uint8Array {
 
 export function createSighashPreimage(
   transaction: Transaction,
-  inputs: Utxo[],
+  sourceOutputs: LibauthOutput[],
   inputIndex: number,
   coveredBytecode: Uint8Array,
   hashtype: number,
 ): Uint8Array {
-  const sourceOutputs = inputs.map((input) => {
-    const sourceOutput = {
-      amount: input.satoshis,
-      to: Uint8Array.of(),
-      token: input.token,
-    };
-
-    return cashScriptOutputToLibauthOutput(sourceOutput);
-  });
   const context = { inputIndex, sourceOutputs, transaction };
   const signingSerializationType = new Uint8Array([hashtype]);
 
@@ -247,6 +238,13 @@ export function scriptToLockingBytecode(script: Script, addressType: 'p2sh20' | 
   const scriptBytecode = scriptToBytecode(script);
   const scriptHash = (addressType === 'p2sh20') ? hash160(scriptBytecode) : hash256(scriptBytecode);
   const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };
+  const lockingBytecode = addressContentsToLockingBytecode(addressContents);
+  return lockingBytecode;
+}
+
+export function publicKeyToP2PKHLockingBytecode(publicKey: Uint8Array): Uint8Array {
+  const pubkeyHash = hash160(publicKey);
+  const addressContents = { payload: pubkeyHash, type: LockingBytecodeType.p2pkh };
   const lockingBytecode = addressContentsToLockingBytecode(addressContents);
   return lockingBytecode;
 }

@@ -30,6 +30,7 @@ title: Migration Notes
  ```ts
   const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL);
   ```
+  Note that you *need* to use only `SIGHASH_ALL` if you're still using "old-style" covenants (from CashScript v0.6.0 and lower). It is recommended to upgrade to the new "native" covenants (from CashScript v0.7.0 and higher) instead.
 
 ## v0.6 to v0.7
 ### cashc compiler
