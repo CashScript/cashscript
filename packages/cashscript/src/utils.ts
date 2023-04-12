@@ -255,6 +255,14 @@ export function utxoComparator(a: Utxo, b: Utxo): number {
   return 0;
 }
 
+export function utxoTokenComparator(a: Utxo, b: Utxo): number {
+  if (!a.token || !b.token) throw new Error('UTXO does not have token data');
+  if (!a.token.category !== !b.token.category) throw new Error('UTXO token categories do not match');
+  if (a.token.amount > b.token.amount) return 1;
+  if (a.token.amount < b.token.amount) return -1;
+  return 0;
+}
+
 /**
 * Helper function to convert an address to a locking script
 *
