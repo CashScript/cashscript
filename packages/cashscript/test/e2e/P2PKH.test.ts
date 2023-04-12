@@ -231,6 +231,27 @@ describe('P2PKH', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
 
+    it('can automatically select UTXOs for fungible tokens', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
+
+      if (!tokenUtxo) {
+        throw new Error('No token UTXO found with fungible tokens');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const { token } = tokenUtxo;
+
+      const tx = await p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .to(to, amount, token)
+        .send();
+
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
+    });
+
     it('adds automatic change output for fungible tokens', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
       const tokenUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.amount > 0);
@@ -331,7 +352,7 @@ describe('P2PKH', () => {
         .to(to, amount, token)
         .send();
 
-      await expect(txPromise).rejects.toThrow(/Insufficient token balance/);
+      await expect(txPromise).rejects.toThrow(/Insufficient funds for token/);
     });
 
     it('should throw an error when trying to send a token the contract doesn\'t have', async () => {
@@ -354,7 +375,7 @@ describe('P2PKH', () => {
         .to(to, amount, token)
         .send();
 
-      await expect(txPromise).rejects.toThrow(/Insufficient token balance/);
+      await expect(txPromise).rejects.toThrow(/Insufficient funds for token/);
     });
 
     it('should throw an error when trying to send an NFT the contract doesn\'t have', async () => {

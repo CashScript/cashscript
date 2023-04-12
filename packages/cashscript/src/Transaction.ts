@@ -38,6 +38,7 @@ import {
   getOutputSize,
   addressToLockScript,
   publicKeyToP2PKHLockingBytecode,
+  utxoTokenComparator,
 } from './utils.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
@@ -280,19 +281,29 @@ export class Transaction {
       throw Error('Attempted to build a transaction without outputs');
     }
 
-    // Construct object with total output of fungible tokens by tokenId
-    const netBalanceTokens: Record<string, bigint> = {};
+    const allUtxos = await this.provider.getUtxos(this.address);
+
+    const manualTokenInputs = this.inputs.filter((input) => input.token);
+    // This will throw if the amount is not enough
+    if (manualTokenInputs.length > 0) {
+      selectAllTokenUtxos(manualTokenInputs, this.outputs);
+    }
+
+    const automaticTokenInputs = selectAllTokenUtxos(allUtxos, this.outputs);
+    const tokenInputs = manualTokenInputs.length > 0 ? manualTokenInputs : automaticTokenInputs;
+
+    if (this.tokenChange) {
+      const tokenChangeOutputs = createTokenChangeOutputs(tokenInputs, this.outputs, this.address);
+      this.outputs.push(...tokenChangeOutputs);
+    }
+
+    // TODO: NFT automatic UTXO selection + refactor
+
     // Construct list with all nfts in inputs
     const listNftsInputs: NftObject[] = [];
     // If inputs are manually selected, add their tokens to balance
     this.inputs.forEach((input) => {
       if (!input.token) return;
-      const tokenCategory = input.token.category;
-      if (!netBalanceTokens[tokenCategory]) {
-        netBalanceTokens[tokenCategory] = input.token.amount;
-      } else {
-        netBalanceTokens[tokenCategory] += input.token.amount;
-      }
       if (input.token.nft) {
         listNftsInputs.push({ ...input.token.nft, category: input.token.category });
       }
@@ -302,33 +313,12 @@ export class Transaction {
     // Subtract all token outputs from the token balances
     this.outputs.forEach((output) => {
       if (!output.token) return;
-      const tokenCategory = output.token.category;
-      if (!netBalanceTokens[tokenCategory]) {
-        netBalanceTokens[tokenCategory] = -output.token.amount;
-      } else {
-        netBalanceTokens[tokenCategory] -= output.token.amount;
-      }
       if (output.token.nft) {
         listNftsOutputs.push({ ...output.token.nft, category: output.token.category });
       }
     });
     // If inputs are manually provided, check token balances
     if (this.inputs.length > 0) {
-      for (const [category, balance] of Object.entries(netBalanceTokens)) {
-        // Add token change outputs if applicable
-        if (this.tokenChange && balance > 0) {
-          const tokenDetails: TokenDetails = {
-            category,
-            amount: balance,
-          };
-          const tokenChangeOutput = { to: this.address, amount: BigInt(1000), token: tokenDetails };
-          this.outputs.push(tokenChangeOutput);
-        }
-        // Throw error when token balance is insufficient
-        if (balance < 0) {
-          throw new Error(`Insufficient token balance for token with category ${category}.`);
-        }
-      }
       // Compare nfts in- and outputs, check if inputs have nfts corresponding to outputs
       // Keep list of nfts in inputs without matching output
       // First check immutable nfts, then mutable & minting nfts together
@@ -420,17 +410,24 @@ export class Transaction {
       satsAvailable = addPrecision(this.inputs.reduce((acc, input) => acc + input.satoshis, 0n));
     } else {
       // If inputs are not defined yet, we retrieve the contract's UTXOs and perform selection
-      const utxos = await this.provider.getUtxos(this.address);
+      const bchUtxos = allUtxos.filter((utxo) => !utxo.token);
 
       // We sort the UTXOs mainly so there is consistent behaviour between network providers
       // even if they report UTXOs in a different order
-      utxos.sort(utxoComparator).reverse();
+      bchUtxos.sort(utxoComparator).reverse();
 
-      for (const utxo of utxos) {
+      // Add all automatically added token inputs to the transaction
+      for (const utxo of automaticTokenInputs) {
         this.inputs.push(utxo);
         satsAvailable += addPrecision(utxo.satoshis);
         if (!this.hardcodedFee) fee += addPrecision(inputSize * this.feePerByte);
+      }
+
+      for (const utxo of bchUtxos) {
         if (satsAvailable > amount + fee) break;
+        this.inputs.push(utxo);
+        satsAvailable += addPrecision(utxo.satoshis);
+        if (!this.hardcodedFee) fee += addPrecision(inputSize * this.feePerByte);
       }
     }
 
@@ -459,6 +456,60 @@ export class Transaction {
     }
   }
 }
+
+const getTokenCategories = (outputs: Array<Output | Utxo>): string[] => (
+  outputs
+    .filter((output) => output.token)
+    .map((output) => output.token!.category)
+);
+
+const calculateTotalTokenAmount = (outputs: Array<Output | Utxo>, tokenCategory: string): bigint => (
+  outputs
+    .filter((output) => output.token?.category === tokenCategory)
+    .reduce((acc, output) => acc + output.token!.amount, 0n)
+);
+
+const selectTokenUtxos = (utxos: Utxo[], amountNeeded: bigint, tokenCategory: string): Utxo[] => {
+  const tokenUtxos = utxos.filter((utxo) => utxo.token?.category === tokenCategory);
+
+  // We sort the UTXOs mainly so there is consistent behaviour between network providers
+  // even if they report UTXOs in a different order
+  tokenUtxos.sort(utxoTokenComparator).reverse();
+
+  let amountAvailable = 0n;
+  const selectedUtxos: Utxo[] = [];
+
+  // Add token UTXOs until we have enough to cover the amount needed (no fee calculation because it's a token)
+  for (const utxo of tokenUtxos) {
+    selectedUtxos.push(utxo);
+    amountAvailable += utxo.token!.amount;
+    if (amountAvailable >= amountNeeded) break;
+  }
+
+  if (amountAvailable < amountNeeded) {
+    throw new Error(`Insufficient funds for token ${tokenCategory}: available (${amountAvailable}) < needed (${amountNeeded}).`);
+  }
+
+  return selectedUtxos;
+};
+
+const selectAllTokenUtxos = (utxos: Utxo[], outputs: Output[]): Utxo[] => {
+  const tokenCategories = getTokenCategories(outputs);
+  return tokenCategories.flatMap(
+    (tokenCategory) => selectTokenUtxos(utxos, calculateTotalTokenAmount(outputs, tokenCategory), tokenCategory),
+  );
+};
+
+const createTokenChangeOutputs = (utxos: Utxo[], outputs: Output[], address: string): Output[] => {
+  const tokenCategories = getTokenCategories(utxos);
+
+  return tokenCategories.map((tokenCategory) => {
+    const required = calculateTotalTokenAmount(outputs, tokenCategory);
+    const available = calculateTotalTokenAmount(utxos, tokenCategory);
+    const change = available - required;
+    return { to: address, amount: BigInt(1000), token: { category: tokenCategory, amount: change } };
+  });
+};
 
 // Note: the below is a very simple implementation of a "decimal point" system for BigInt numbers
 // It is safe to use for UTXO fee calculations due to its low numbers, but should not be used for other purposes
