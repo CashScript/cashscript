@@ -154,6 +154,10 @@ bytes tx.inputs[i].tokenCategory
 
 Represents the `tokenCategory` of a specific input. Returns 0 when that specific input contains no tokens. When the input contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
+:::note
+The `tokenCategory` is returned in the original un-reversed order. Explorers and wallets change the byte order by default but for Cashscript you need to be careful to use the un-reversed order.
+:::
+
 #### tx.inputs[i].nftCommitment
 ```solidity
 bytes tx.inputs[i].nftCommitment
@@ -198,6 +202,10 @@ bytes tx.output[i].tokenCategory
 ```
 
 Represents the `tokenCategory` of a specific output. Returns 0 when that specific output contains no tokens. When the output contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
+
+:::note
+The `tokenCategory` is returned in the original un-reversed order. Explorers and wallets change the byte order by default but for Cashscript you need to be careful to use the un-reversed order.
+:::
 
 #### tx.output[i].nftCommitment
 ```solidity
