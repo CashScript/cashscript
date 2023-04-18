@@ -8,7 +8,7 @@ import {
   alicePriv,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { Network, Utxo } from '../../src/interfaces.js';
+import { Network, Utxo, TokenDetails } from '../../src/interfaces.js';
 import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/p2pkh.json' assert { type: "json" };
@@ -276,6 +276,43 @@ describe('P2PKH', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
 
+    it('can create new token categories', async () => {
+      const to = p2pkhInstance.tokenAddress;
+
+      // Send a transaction to be used as the genesis UTXO
+      await p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .to(to, 10_000n)
+        .send();
+
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      console.log(contractUtxos);
+      const [genesisUtxo] = contractUtxos.filter((utxo) => utxo.vout === 0 && utxo.satoshis > 2000);
+
+      if (!genesisUtxo) {
+        throw new Error('No possible genesis UTXO found');
+      }
+
+      const amount = 1000n;
+      const token: TokenDetails = {
+        amount: 1000n,
+        category: genesisUtxo.txid,
+        nft: {
+          capability: 'none',
+          commitment: '0000000000',
+        },
+      };
+
+      const tx = await p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(genesisUtxo)
+        .to(to, amount, token)
+        .send();
+
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
+    });
+
     it('adds automatic change output for NFTs', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
       const nftUtxo = contractUtxos.find((utxo) => utxo.token !== undefined && utxo.token.nft !== undefined);
@@ -398,7 +435,7 @@ describe('P2PKH', () => {
         .to(to, amount, token)
         .send();
 
-      await expect(txPromise).rejects.toThrow(/Nfts in outputs don't have corresponding nfts in inputs/);
+      await expect(txPromise).rejects.toThrow(/NFT output with token category .* does not have corresponding input/);
     });
 
     it.todo('can mint new NFTs if the NFT has minting capabilities');
