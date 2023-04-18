@@ -297,8 +297,6 @@ export class Transaction {
       this.outputs.push(...tokenChangeOutputs);
     }
 
-    // TODO: NFT automatic UTXO selection + refactor
-
     // Construct list with all nfts in inputs
     const listNftsInputs: NftObject[] = [];
     // If inputs are manually selected, add their tokens to balance
@@ -355,8 +353,14 @@ export class Transaction {
           }
         }
       }
+      for (const nftOutput of listNftsOutputs) {
+        const genesisUtxo = getTokenGenesisUtxo(this.inputs, nftOutput.category);
+        if (genesisUtxo) {
+          listNftsOutputs = listNftsOutputs.filter((nft) => nft !== nftOutput);
+        }
+      }
       if (listNftsOutputs.length !== 0) {
-        throw new Error('Nfts in outputs don\'t have corresponding nfts in inputs!');
+        throw new Error(`NFT output with token category ${listNftsOutputs[0].category} does not have corresponding input`);
       }
       if (this.tokenChange) {
         for (const unusedNft of unusedNfts) {
@@ -457,6 +461,11 @@ export class Transaction {
   }
 }
 
+const getTokenGenesisUtxo = (utxos: Utxo[], tokenCategory: string): Utxo | undefined => {
+  const creationUtxo = utxos.find((utxo) => utxo.vout === 0 && utxo.txid === tokenCategory);
+  return creationUtxo;
+};
+
 const getTokenCategories = (outputs: Array<Output | Utxo>): string[] => (
   outputs
     .filter((output) => output.token)
@@ -470,6 +479,12 @@ const calculateTotalTokenAmount = (outputs: Array<Output | Utxo>, tokenCategory:
 );
 
 const selectTokenUtxos = (utxos: Utxo[], amountNeeded: bigint, tokenCategory: string): Utxo[] => {
+  const genesisUtxo = getTokenGenesisUtxo(utxos, tokenCategory);
+
+  if (genesisUtxo) {
+    return [genesisUtxo];
+  }
+
   const tokenUtxos = utxos.filter((utxo) => utxo.token?.category === tokenCategory);
 
   // We sort the UTXOs mainly so there is consistent behaviour between network providers
