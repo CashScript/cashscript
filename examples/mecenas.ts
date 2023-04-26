@@ -9,13 +9,13 @@ import { aliceAddress, alicePkh, bobPkh } from './common.js';
 // Compile the Mecenas contract to an artifact object
 const artifact = compileFile(new URL('mecenas.cash', import.meta.url));
 
-// Initialise a network provider for network operations on TESTNET4
-const provider = new ElectrumNetworkProvider('testnet4');
+// Initialise a network provider for network operations on CHIPNET
+const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters:
 // (recipient: alicePkh, funder: bobPkh, pledge: 10000)
-const contract = new Contract(artifact, [alicePkh, bobPkh, 10000n], provider);
+const contract = new Contract(artifact, [alicePkh, bobPkh, 10000n], { provider });
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);

@@ -14,13 +14,13 @@ import {
 // Compile the HodlVault contract to an artifact object
 const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
 
-// Initialise a network provider for network operations on TESTNET4
-const provider = new ElectrumNetworkProvider('testnet4');
+// Initialise a network provider for network operations on CHIPNET
+const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters
 const parameters = [alicePub, oraclePub, 100000n, 30000n];
-const contract = new Contract(artifact, parameters, provider);
+const contract = new Contract(artifact, parameters, { provider });
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);

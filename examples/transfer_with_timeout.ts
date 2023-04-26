@@ -14,13 +14,13 @@ import {
 // Compile the TransferWithTimeout contract
 const artifact = compileFile(new URL('transfer_with_timeout.cash', import.meta.url));
 
-// Initialise a network provider for network operations on TESTNET4
-const provider = new ElectrumNetworkProvider('testnet4');
+// Initialise a network provider for network operations on CHIPNET
+const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters:
 // { sender: alicePk, recipient: bobPk, timeout: 1000000 } - timeout is a past block
-const contract = new Contract(artifact, [alicePub, bobPub, 100000n], provider);
+const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);

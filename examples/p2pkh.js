@@ -9,12 +9,12 @@ import { alicePkh, alicePriv, alicePub } from './common-js.js';
 // Compile the P2PKH contract to an artifact object
 const artifact = compileFile(new URL('p2pkh.cash', import.meta.url));
 
-// Initialise a network provider for network operations on TESTNET4
-const provider = new ElectrumNetworkProvider('testnet4');
+// Initialise a network provider for network operations on CHIPNET
+const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters (pkh: alicePkh)
-const contract = new Contract(artifact, [alicePkh], provider);
+const contract = new Contract(artifact, [alicePkh], { provider });
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
