@@ -7,11 +7,12 @@ import { URL } from 'url';
 const artifact = compileFile(new URL('announcement.cash', import.meta.url));
 
 // Initialise a network provider for network operations on MAINNET
+const addressType = 'p2sh20';
 const provider = new ElectrumNetworkProvider();
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters (none)
-const contract = new Contract(artifact, [], provider);
+const contract = new Contract(artifact, [], { provider, addressType });
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
