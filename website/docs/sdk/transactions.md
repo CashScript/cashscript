@@ -33,6 +33,10 @@ interface TokenDetails {
 }
 ```
 
+:::note
+The CashScript SDK supports automatic UTXO selection for BCH and fungible CashTokens. However, if you want to send Non-Fungible CashTokens, you will need to do manual UTXO selection using `from()`.
+:::
+
 #### Example
 ```ts
 .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
@@ -65,6 +69,30 @@ The built-in UTXO selection is generally sufficient. But there are specific use 
 ```ts
 .from(await instance.getUtxos())
 ```
+
+### fromP2PKH()
+```ts
+fromP2PKH(input: Utxo, template: SignatureTemplate): this;
+fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
+```
+
+The `fromP2PKH()` function allows you to provide a list of P2PKH UTXOs to be used in the transaction. The passed `SignatureTemplate` is used to sign these UTXOs. This function can be called any number of times, and the provided UTXOs will be added to the list of earlier added UTXOs.
+
+:::note
+If you are using meep to debug a `fromP2PKH()` transaction, meep will always use the first input for the debugging. So if you want to debug the smart contract bytecode, make sure that the first input is not a P2PKH input.
+:::
+
+#### Example
+```ts
+import { bobAddress, bobPrivateKey } from 'somewhere';
+import { ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
+
+const provider = new ElectrumNetworkProvider();
+const bobUtxos = await provider.getUtxos(bobAddress);
+
+.fromP2PKH(bobUtxos, new SignatureTemplate(bobPrivateKey))
+```
+
 
 ### withFeePerByte()
 ```ts
@@ -233,6 +261,10 @@ const meepStr = await instance.functions
   .withTime(700000)
   .meep()
 ```
+
+:::note
+Meep does not work very well with contracts that use modern CashScript / BCH features, like native introspection, P2SH32 or CashTokens.
+:::
 
 
 ## Transaction errors

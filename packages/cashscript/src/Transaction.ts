@@ -78,10 +78,10 @@ export class Transaction {
     return this;
   }
 
-  experimentalFromP2PKH(input: Utxo, template: SignatureTemplate): this;
-  experimentalFromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
+  fromP2PKH(input: Utxo, template: SignatureTemplate): this;
+  fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
 
-  experimentalFromP2PKH(inputOrInputs: Utxo | Utxo[], template: SignatureTemplate): this {
+  fromP2PKH(inputOrInputs: Utxo | Utxo[], template: SignatureTemplate): this {
     if (!Array.isArray(inputOrInputs)) {
       inputOrInputs = [inputOrInputs];
     }

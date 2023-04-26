@@ -169,9 +169,9 @@ describe('P2PKH-no-tokens', () => {
       // when
       const tx = await p2pkhInstance.functions
         .spend(bobPub, new SignatureTemplate(bobPriv))
-        .experimentalFromP2PKH(bobUtxos[0], new SignatureTemplate(bobPriv))
+        .fromP2PKH(bobUtxos[0], new SignatureTemplate(bobPriv))
         .from(contractUtxos[0])
-        .experimentalFromP2PKH(bobUtxos[1], new SignatureTemplate(bobPriv))
+        .fromP2PKH(bobUtxos[1], new SignatureTemplate(bobPriv))
         .from(contractUtxos[1])
         .to(to, amount)
         .to(to, amount)
