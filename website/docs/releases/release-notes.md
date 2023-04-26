@@ -23,6 +23,8 @@ This release also contains several breaking changes, please refer to the [migrat
   - Add `.withoutTokenChange()` to disable automatic token change outputs.
   - Note that only the `ElectrumNetworkProvider` supports CashTokens at this time.
 - :sparkles: Add `contract.tokenAddress` to get the token-enabled address of a contract.
+- :sparkles: Add `fromP2PKH()` to add P2PKH inputs to a smart contract transaction.
+  - Note: this was in the SDK before as `experimentalFromP2PKH()`. It has now been released as an official feature.
 - :boom: **BREAKING**: Move to Pure ESM.
 - :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.
 - :boom: **BREAKING**: `contract.address` returns `p2sh32` address by default, this can be configured to be `p2sh20` on contract initialization.
