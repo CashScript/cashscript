@@ -293,7 +293,7 @@ export class Transaction {
     const tokenInputs = manualTokenInputs.length > 0 ? manualTokenInputs : automaticTokenInputs;
 
     if (this.tokenChange) {
-      const tokenChangeOutputs = createTokenChangeOutputs(tokenInputs, this.outputs, this.address);
+      const tokenChangeOutputs = createFungibleTokenChangeOutputs(tokenInputs, this.outputs, this.address);
       this.outputs.push(...tokenChangeOutputs);
     }
 
@@ -515,15 +515,20 @@ const selectAllTokenUtxos = (utxos: Utxo[], outputs: Output[]): Utxo[] => {
   );
 };
 
-const createTokenChangeOutputs = (utxos: Utxo[], outputs: Output[], address: string): Output[] => {
+const createFungibleTokenChangeOutputs = (utxos: Utxo[], outputs: Output[], address: string): Output[] => {
   const tokenCategories = getTokenCategories(utxos);
 
-  return tokenCategories.map((tokenCategory) => {
+  const changeOutputs = tokenCategories.map((tokenCategory) => {
     const required = calculateTotalTokenAmount(outputs, tokenCategory);
     const available = calculateTotalTokenAmount(utxos, tokenCategory);
     const change = available - required;
+
+    if (change === 0n) return undefined;
+
     return { to: address, amount: BigInt(1000), token: { category: tokenCategory, amount: change } };
   });
+
+  return changeOutputs.filter((output) => output !== undefined) as Output[];
 };
 
 // Note: the below is a very simple implementation of a "decimal point" system for BigInt numbers
