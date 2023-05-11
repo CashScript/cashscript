@@ -29,6 +29,10 @@ contract HTLC(pubkey sender, pubkey recipient, int expiration, bytes32 hash) {
 }
 ```
 
+:::note
+Upon initialization of the contract, constructor parameters are encoded and added to the contract's bytecode in the reversed order of their declaration. This can be important when manually initializing contracts for debugging purposes.
+:::
+
 ## Functions
 The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. In the basics the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. But by using a technique called covenants, it is possible to specify other conditions, like restricting *where* money can be sent. To read more about this technique, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
 
@@ -46,6 +50,10 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     }
 }
 ```
+
+:::note
+Function parameters are passed in the reversed order of their declaration. This can be important when manually creating contract transactions for debugging purposes.
+:::
 
 ## Statements
 CashScript functions are made up of a collection of statements that determine whether money may be spent from the contract.
