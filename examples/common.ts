@@ -19,7 +19,7 @@ if (typeof aliceNode === 'string') throw new Error();
 export const alicePub = secp256k1.derivePublicKeyCompressed(aliceNode.privateKey) as Uint8Array;
 export const alicePriv = aliceNode.privateKey;
 export const alicePkh = hash160(alicePub);
-export const aliceAddress = encodeCashAddress('bchtest', 'p2pkh', alicePkh);
+export const aliceAddress = encodeCashAddress('bchtest', 'p2pkhWithTokens', alicePkh);
 
 // Derive Bob's private key, public key, public key hash and address
 const bobNode = deriveHdPath(rootNode, `${baseDerivationPath}/1`);
@@ -27,7 +27,7 @@ if (typeof bobNode === 'string') throw new Error();
 export const bobPub = secp256k1.derivePublicKeyCompressed(bobNode.privateKey) as Uint8Array;
 export const bobPriv = bobNode.privateKey;
 export const bobPkh = hash160(bobPub);
-export const bobAddress = encodeCashAddress('bchtest', 'p2pkh', bobPkh);
+export const bobAddress = encodeCashAddress('bchtest', 'p2pkhWithTokens', bobPkh);
 
 // Initialise a price oracle with a private key
 const oracleNode = deriveHdPath(rootNode, `${baseDerivationPath}/2`);
@@ -36,4 +36,4 @@ export const oraclePub = secp256k1.derivePublicKeyCompressed(oracleNode.privateK
 export const oraclePriv = oracleNode.privateKey;
 export const oracle = new PriceOracle(oracleNode.privateKey);
 export const oraclePkh = hash160(oraclePub);
-export const oracleAddress = encodeCashAddress('bchtest', 'p2pkh', oraclePkh);
+export const oracleAddress = encodeCashAddress('bchtest', 'p2pkhWithTokens', oraclePkh);
