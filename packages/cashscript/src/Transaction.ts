@@ -42,6 +42,7 @@ import {
 } from './utils.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
+import { P2PKH_INPUT_SIZE } from './constants.js';
 
 const bip68 = await import('bip68');
 
@@ -398,7 +399,7 @@ export class Transaction {
     );
 
     // Add one extra byte per input to over-estimate tx-in count
-    const inputSize = getInputSize(placeholderScript) + 1;
+    const contractInputSize = getInputSize(placeholderScript) + 1;
 
     // Note that we use the addPrecision function to add "decimal points" to BigInt numbers
 
@@ -410,7 +411,14 @@ export class Transaction {
     let satsAvailable = 0n;
     if (this.inputs.length > 0) {
       // If inputs are already defined, the user provided the UTXOs and we perform no further UTXO selection
-      if (!this.hardcodedFee) fee += addPrecision(this.inputs.length * inputSize * this.feePerByte);
+      if (!this.hardcodedFee) {
+        const totalInputSize = this.inputs.reduce(
+          (acc, input) => acc + (isSignableUtxo(input) ? P2PKH_INPUT_SIZE : contractInputSize),
+          0,
+        );
+        fee += addPrecision(totalInputSize * this.feePerByte);
+      }
+
       satsAvailable = addPrecision(this.inputs.reduce((acc, input) => acc + input.satoshis, 0n));
     } else {
       // If inputs are not defined yet, we retrieve the contract's UTXOs and perform selection
@@ -424,14 +432,14 @@ export class Transaction {
       for (const utxo of automaticTokenInputs) {
         this.inputs.push(utxo);
         satsAvailable += addPrecision(utxo.satoshis);
-        if (!this.hardcodedFee) fee += addPrecision(inputSize * this.feePerByte);
+        if (!this.hardcodedFee) fee += addPrecision(contractInputSize * this.feePerByte);
       }
 
       for (const utxo of bchUtxos) {
         if (satsAvailable > amount + fee) break;
         this.inputs.push(utxo);
         satsAvailable += addPrecision(utxo.satoshis);
-        if (!this.hardcodedFee) fee += addPrecision(inputSize * this.feePerByte);
+        if (!this.hardcodedFee) fee += addPrecision(contractInputSize * this.feePerByte);
       }
     }
 
@@ -480,12 +488,9 @@ const calculateTotalTokenAmount = (outputs: Array<Output | Utxo>, tokenCategory:
 
 const selectTokenUtxos = (utxos: Utxo[], amountNeeded: bigint, tokenCategory: string): Utxo[] => {
   const genesisUtxo = getTokenGenesisUtxo(utxos, tokenCategory);
+  if (genesisUtxo) return [genesisUtxo];
 
-  if (genesisUtxo) {
-    return [genesisUtxo];
-  }
-
-  const tokenUtxos = utxos.filter((utxo) => utxo.token?.category === tokenCategory);
+  const tokenUtxos = utxos.filter((utxo) => utxo.token?.category === tokenCategory && utxo.token?.amount > 0n);
 
   // We sort the UTXOs mainly so there is consistent behaviour between network providers
   // even if they report UTXOs in a different order
@@ -496,9 +501,9 @@ const selectTokenUtxos = (utxos: Utxo[], amountNeeded: bigint, tokenCategory: st
 
   // Add token UTXOs until we have enough to cover the amount needed (no fee calculation because it's a token)
   for (const utxo of tokenUtxos) {
+    if (amountAvailable >= amountNeeded) break;
     selectedUtxos.push(utxo);
     amountAvailable += utxo.token!.amount;
-    if (amountAvailable >= amountNeeded) break;
   }
 
   if (amountAvailable < amountNeeded) {
