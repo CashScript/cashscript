@@ -88,8 +88,6 @@ describe('Contract', () => {
       const p2sh20Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, addressType: 'p2sh20' });
       const p2sh32Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, addressType: 'p2sh32' });
 
-      console.log(p2sh20Instance.address, p2sh32Instance.address);
-
       const P2SH20_ADDRESS_SIZE = 42;
       const P2SH32_ADDRESS_SIZE = 61;
       expect(p2sh20Instance.address.split(':')[1]).toHaveLength(P2SH20_ADDRESS_SIZE);

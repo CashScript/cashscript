@@ -121,7 +121,6 @@ describe('P2PKH-tokens', () => {
         .send();
 
       const contractUtxos = await p2pkhInstance.getUtxos();
-      console.log(contractUtxos);
       const [genesisUtxo] = contractUtxos.filter((utxo) => utxo.vout === 0 && utxo.satoshis > 2000);
 
       if (!genesisUtxo) {
@@ -254,9 +253,6 @@ describe('P2PKH-tokens', () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
       const nftUtxo = contractUtxos.find(isNftUtxo);
       const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
-
-      console.log(nftUtxo);
-      console.log(contractUtxos);
 
       if (!nftUtxo) {
         throw new Error('No token UTXO found with an NFT');
