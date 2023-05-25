@@ -5,32 +5,38 @@ title: Migration Notes
 ## v0.7 to v0.8
 
 ### cashc compiler
-- `cashc` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
-- `LockingBytecodeP2SH` has been renamed to `LockingBytecodeP2SH20` but it is recommended to use the newly introduced `LockingBytecodeP2SH32` instead.
+`cashc` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
+
+`LockingBytecodeP2SH` should be replaced with `LockingBytecodeP2SH20` to keep the same behaviour, or updated to `LockingBytecodeP2SH32` to use the recommended new `P2SH32` Address type.
 
 ### CashScript SDK
-- `cashscript` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
-- The SDK now returns `p2sh32` addresses by default. The address type can be changed to the old `p2sh20` in the options object when initializing a contract.
-- The configuration of the network provider is also part of this options object.
-  ```ts
-  // old
-  const contract = new Contract(artifact, constructorArgs, provider);
+`cashscript` is now a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require` to import `cashscript`. For more information, see the [ESM documentation](https://nodejs.org/api/esm.html).
 
-  // new
-  const options = { provider, addressType: 'p2sh20' };
-  const contract = new Contract(artifact, constructorArgs, options);
-  ```
+#### Contract instantiation
+When instantiating a `Contract` object, you now have to pass an options object as a third parameter instead of a network provider. This options object contains the network provider, as well as the address type. The address type defaults to `p2sh32` but can be changed to `p2sh20` if you want to keep the same address type as in earlier versions of the SDK.
+```ts
+// old
+const contract = new Contract(artifact, constructorArgs, provider);
 
-- Network options `"testnet"` & `"staging"` have been renamed to `"testnet3"` and `"testnet4"` respectively in version 0.7.3. The old option names are removed with this major release.
-- You can no longer use `number` inputs for constructor arguments, function arguments, or input/output amounts. Use `bigint` instead.
-- `contract.getBalance()` and `contract.getUtxos()` now return `bigint` for satoshi amounts instead of `number`.
-- `contract.getRedeemScriptHex()` has been replaced with `contract.bytecode`.
+// new
+const options = { provider, addressType: 'p2sh20' };
+const contract = new Contract(artifact, constructorArgs, options);
+```
+
+#### SIGHASH_UTXO
+All signature templates use `SIGHASH_ALL | SIGHASH_UTXOS` now, to keep using the only the previous `SIGHASH_ALL` overwrite it in the following way:
+```ts
+const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL);
+```
+Note that you *need* to use only `SIGHASH_ALL` if you're still using "old-style" covenants (from CashScript v0.6.0 and lower). It is recommended to upgrade to the new "native" covenants (from CashScript v0.7.0 and higher) instead.
+
+#### bigint
+You can no longer use `number` inputs for constructor arguments, function arguments, or input/output amounts. Use `bigint` instead. `contract.getBalance()` and `contract.getUtxos()` now also return `bigint` for satoshi amounts instead of `number`.
+
+#### Name changes & removal of deprecated features
+- Network options `"testnet"` and `"staging"` should be replaced with `"testnet3"` and `"testnet4"` respectively.
+- `contract.getRedeemScriptHex()` should be replaced with `contract.bytecode`.
 - `BitboxNetworkProvider` has been removed since Bitbox is long deprecated. Switch to modern solutions like `ElectrumNetworkProvider` instead.
-- :boom: **BREAKING**: All signature templates use  `SIGHASH_ALL | SIGHASH_UTXOS` now, to keep using the only the previous `SIGHASH_ALL` overwrite it in the following way:
- ```ts
-  const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL);
-  ```
-  Note that you *need* to use only `SIGHASH_ALL` if you're still using "old-style" covenants (from CashScript v0.6.0 and lower). It is recommended to upgrade to the new "native" covenants (from CashScript v0.7.0 and higher) instead.
 
 ## v0.6 to v0.7
 ### cashc compiler

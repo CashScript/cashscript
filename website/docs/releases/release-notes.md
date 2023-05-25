@@ -13,7 +13,7 @@ This release also contains several breaking changes, please refer to the [migrat
 - :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script.
 - :bug: Fix optimisation bug that caused `OP_0NOTEQUAL` to be applied to non-integer values.
 - :boom: **BREAKING**: Move to Pure ESM.
-- :boom: **BREAKING**: renamed `LockingBytecodeP2SH` to `LockingBytecodeP2SH20` but it is recommended to change over to the new P2SH32 for security reasons.
+- :boom: **BREAKING**: Rename `LockingBytecodeP2SH` to `LockingBytecodeP2SH20` - but it is recommended to change over to the new P2SH32 for security reasons.
 
 #### CashScript SDK
 - :sparkles: Add support for CashTokens.
@@ -22,13 +22,14 @@ This release also contains several breaking changes, please refer to the [migrat
   - UTXOs that are passed into `.from()` can also include this `token` field to send tokens.
   - Add `.withoutTokenChange()` to disable automatic token change outputs.
   - Note that only the `ElectrumNetworkProvider` supports CashTokens at this time.
+  - Note that NFTs do not support automatic UTXO selection
 - :sparkles: Add `contract.tokenAddress` to get the token-enabled address of a contract.
 - :sparkles: Add `fromP2PKH()` to add P2PKH inputs to a smart contract transaction.
   - Note: this was in the SDK before as `experimentalFromP2PKH()`. It has now been released as an official feature.
 - :boom: **BREAKING**: Move to Pure ESM.
 - :boom: **BREAKING**: Remove `"testnet"` & `"staging"` network options.
 - :boom: **BREAKING**: `contract.address` returns `p2sh32` address by default, this can be configured to be `p2sh20` on contract initialization.
-- :boom: **BREAKING**: Moved the configuration of the network provider to an options object on contract initialization.
+- :boom: **BREAKING**: Move the configuration of the network provider to an options object on contract initialization.
 - :boom: **BREAKING**: Use `bigint` rather than `number` for all instances of "script numbers" (e.g. function arguments) and satoshi amounts.
 - :boom: **BREAKING**: Replace `contract.getRedeemScriptHex()` with `contract.bytecode`.
 - :boom: **BREAKING**: Remove `BitboxNetworkProvider`.
