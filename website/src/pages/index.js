@@ -11,12 +11,10 @@ const features = [
     title: 'Efficient and Reliable Verification',
     description: (
       <>
-        <p>
-          Smart contracts on Bitcoin Cash are stateless and UTXO-based. This
-          model allows transactions to be verified independently and efficiently.
-          Because there is no state that can impact the execution of these smart
-          contracts, the results are deterministic and predictable.
-        </p>
+        Smart contracts on Bitcoin Cash are stateless and UTXO-based. This
+        model allows transactions to be verified independently and efficiently.
+        Because there is no state that can impact the execution of these smart
+        contracts, the results are deterministic and predictable.
       </>
     ),
   },
@@ -24,12 +22,10 @@ const features = [
     title: 'Private and Isolated Contracts',
     description: (
       <>
-        <p>
-          Because of Bitcoin Cash' UTXO-based model, each contract is fully
-          independent and isolated from each other. This limits systemic risk
-          and makes contract upgrades much simpler. Furthermore, Bitcoin Cash
-          contracts use P2SH, preserving the privacy of participants.
-        </p>
+        Because of Bitcoin Cash' UTXO-based model, each contract is fully
+        independent and isolated from each other. This limits systemic risk
+        and makes contract upgrades much simpler. Furthermore, Bitcoin Cash
+        contracts use P2SH, preserving the privacy of participants.
       </>
     ),
   },
@@ -37,12 +33,10 @@ const features = [
     title: 'Strong Abstraction',
     description: (
       <>
-        <p>
-          Bitcoin Cash transactions run on a virtual machine called Bitcoin Script.
-          Writing bytecode for this virtual machine is difficult and error-prone.
-          CashScript offers a strong abstraction for writing Bitcoin Cash smart
-          contracts, improving developer experience and reliability of contracts.
-        </p>
+        Bitcoin Cash transactions run on a virtual machine called Bitcoin Script.
+        Writing bytecode for this virtual machine is difficult and error-prone.
+        CashScript offers a strong abstraction for writing Bitcoin Cash smart
+        contracts, improving developer experience and reliability of contracts.
       </>
     ),
   },
@@ -50,12 +44,10 @@ const features = [
     title: 'DeFi on Bitcoin Cash',
     description: (
       <>
-        <p>
-          Most DeFi applications are currently running on top of Ethereum. Bitcoin
-          Cash contracts use a different and functionally more limited paradigm.
-          But with techniques such as covenants, local state and trust-minimised
-          price oracles, DeFi is very much possible on Bitcoin Cash.
-        </p>
+        Most DeFi applications are currently running on top of Ethereum. Bitcoin
+        Cash contracts use a different and functionally more limited paradigm.
+        But with techniques such as covenants, local state and trust-minimised
+        price oracles, DeFi is very much possible on Bitcoin Cash.
       </>
     ),
   },

@@ -8,8 +8,8 @@ module.exports = {
   projectName: 'cashscript',
   themeConfig: {
     prism: {
-      theme: require('prism-react-renderer/themes/nightOwlLight'),
-      darkTheme: require('prism-react-renderer/themes/nightOwl'),
+      theme: require('prism-react-renderer').themes.nightOwlLight,
+      darkTheme: require('prism-react-renderer').themes.nightOwl,
       additionalLanguages: ['solidity', 'antlr4'],
     },
     image: 'img/logo.svg',
@@ -18,7 +18,7 @@ module.exports = {
         alt: 'CashScript',
         src: 'img/logo.svg',
       },
-      links: [
+      items: [
         {to: '/docs/basics/about', label: 'Docs', position: 'right'},
         {
           href: 'https://playground.cashscript.org',
@@ -31,6 +31,7 @@ module.exports = {
           position: 'right',
         },
       ],
+      style: 'dark',
     },
     footer: {
       style: 'light',
@@ -90,12 +91,10 @@ module.exports = {
       ],
       copyright: `<b>Donations:</b> bitcoincash:qz6uftqp7dyc4ca9e94d7wsle06u0z2ccc223dkpl8`,
     },
-    googleAnalytics: {
-      trackingID: 'UA-26805430-6',
-    },
     algolia: {
-      apiKey: 'b0b29787f1ed36aa2c1057bf4f6e6dde',
-      indexName: 'cashscript',
+      apiKey: 'd1e059f9bd6bf56667612a41a5115c6b',
+      appId: 'XBVJRKV38F',
+      indexName: 'cashscript'
     },
   },
   presets: [
@@ -128,5 +127,6 @@ module.exports = {
         ],
       },
     ],
+    ['@branchup/docusaurus-plugin-simple-analytics', {}],
   ],
 };

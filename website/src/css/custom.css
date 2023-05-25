@@ -45,6 +45,11 @@
   --ifm-code-font-size: 95%;
 }
 
+.navbar--dark {
+  --ifm-navbar-background-color: var(--ifm-color-dark);
+  --ifm-navbar-link-hover-color: var(--ifm-color-secondary);
+}
+
 html[data-theme="dark"] {
   /* Theme colours inverted in dark mode */
   --ifm-color-primary: #04FF84;
