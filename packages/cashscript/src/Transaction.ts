@@ -284,14 +284,14 @@ export class Transaction {
 
     const allUtxos = await this.provider.getUtxos(this.address);
 
-    const manualTokenInputs = this.inputs.filter((input) => input.token);
-    // This will throw if the amount is not enough
-    if (manualTokenInputs.length > 0) {
-      selectAllTokenUtxos(manualTokenInputs, this.outputs);
-    }
+    const tokenInputs = this.inputs.length > 0
+      ? this.inputs.filter((input) => input.token)
+      : selectAllTokenUtxos(allUtxos, this.outputs);
 
-    const automaticTokenInputs = selectAllTokenUtxos(allUtxos, this.outputs);
-    const tokenInputs = manualTokenInputs.length > 0 ? manualTokenInputs : automaticTokenInputs;
+    // This throws if the manually selected inputs are not enough to cover the outputs
+    if (this.inputs.length > 0) {
+      selectAllTokenUtxos(this.inputs, this.outputs);
+    }
 
     if (this.tokenChange) {
       const tokenChangeOutputs = createFungibleTokenChangeOutputs(tokenInputs, this.outputs, this.address);
@@ -429,7 +429,7 @@ export class Transaction {
       bchUtxos.sort(utxoComparator).reverse();
 
       // Add all automatically added token inputs to the transaction
-      for (const utxo of automaticTokenInputs) {
+      for (const utxo of tokenInputs) {
         this.inputs.push(utxo);
         satsAvailable += addPrecision(utxo.satoshis);
         if (!this.hardcodedFee) fee += addPrecision(contractInputSize * this.feePerByte);
