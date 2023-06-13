@@ -44,26 +44,39 @@ describe('P2PKH-tokens', () => {
 
     it('can send NFTs', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
-      const nftUtxo = contractUtxos.find(isNftUtxo);
+      const [nftUtxo1, nftUtxo2] = contractUtxos.filter(isNftUtxo);
       const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
 
-      if (!nftUtxo) {
-        throw new Error('No token UTXO found with an NFT');
+      if (!nftUtxo1 || !nftUtxo2) {
+        throw new Error('Less than two token UTXOs found with an NFT');
       }
 
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
-      const { token } = nftUtxo;
+
+      // We ran into a bug with the order of the properties, so we re-order the properties here to test that it works
+      const reorderedToken1 = {
+        nft: {
+          commitment: nftUtxo1.token!.nft!.commitment,
+          capability: nftUtxo1.token!.nft!.capability,
+        },
+        category: nftUtxo1.token!.category,
+        amount: 0n,
+      };
 
       const tx = await p2pkhInstance.functions
         .spend(alicePub, new SignatureTemplate(alicePriv))
         .from(nonTokenUtxos)
-        .from(nftUtxo)
-        .to(to, amount, token)
+        .from(nftUtxo1)
+        .from(nftUtxo2)
+        .to(to, amount, reorderedToken1)
+        .to(to, amount, nftUtxo2.token)
         .send();
 
       const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
+      expect(txOutputs).toEqual(
+        expect.arrayContaining([{ to, amount, token: nftUtxo1.token }, { to, amount, token: nftUtxo2.token }]),
+      );
     });
 
     it('can automatically select UTXOs for fungible tokens', async () => {

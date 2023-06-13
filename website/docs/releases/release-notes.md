@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.8.1
+
+#### CashScript SDK
+- :bug: Fix bug where a different property order of NFT inputs/outputs would cause errors.
+
 ## v0.8.0
 
 :warning: From v0.8.0 onwards, CashScript is a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c). This means that you can no longer use `require()` to import `cashscript` or `cashc`.

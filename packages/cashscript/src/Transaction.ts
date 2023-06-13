@@ -13,6 +13,7 @@ import {
   Script,
   scriptToBytecode,
 } from '@cashscript/utils';
+import deepEqual from 'fast-deep-equal';
 import {
   Utxo,
   Output,
@@ -327,9 +328,9 @@ export class Transaction {
         if (nftInput.capability === 'none') {
           for (let i = 0; i < listNftsOutputs.length; i += 1) {
             // Deep equality check token objects
-            if (JSON.stringify(listNftsOutputs[i]) === JSON.stringify(nftInput)) {
+            if (deepEqual(listNftsOutputs[i], nftInput)) {
               listNftsOutputs.splice(i, 1);
-              unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
+              unusedNfts = unusedNfts.filter((nft) => !deepEqual(nft, nftInput));
               break;
             }
           }
@@ -340,7 +341,7 @@ export class Transaction {
           // eslint-disable-next-line max-len
           const newListNftsOutputs: NftObject[] = listNftsOutputs.filter((nftOutput) => nftOutput.category !== nftInput.category);
           if (newListNftsOutputs !== listNftsOutputs) {
-            unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
+            unusedNfts = unusedNfts.filter((nft) => !deepEqual(nft, nftInput));
             listNftsOutputs = newListNftsOutputs;
           }
         }
@@ -348,7 +349,7 @@ export class Transaction {
           for (let i = 0; i < listNftsOutputs.length; i += 1) {
             if (listNftsOutputs[i].category === nftInput.category) {
               listNftsOutputs.splice(i, 1);
-              unusedNfts = unusedNfts.filter((nft) => nft !== nftInput);
+              unusedNfts = unusedNfts.filter((nft) => !deepEqual(nft, nftInput));
               break;
             }
           }
@@ -357,7 +358,7 @@ export class Transaction {
       for (const nftOutput of listNftsOutputs) {
         const genesisUtxo = getTokenGenesisUtxo(this.inputs, nftOutput.category);
         if (genesisUtxo) {
-          listNftsOutputs = listNftsOutputs.filter((nft) => nft !== nftOutput);
+          listNftsOutputs = listNftsOutputs.filter((nft) => !deepEqual(nft, nftOutput));
         }
       }
       if (listNftsOutputs.length !== 0) {

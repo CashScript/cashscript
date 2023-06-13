@@ -48,7 +48,8 @@
     "bip68": "^1.0.4",
     "bitcoin-rpc-promise-retry": "^1.3.0",
     "delay": "^5.0.0",
-    "electrum-cash": "^2.0.10"
+    "electrum-cash": "^2.0.10",
+    "fast-deep-equal": "^3.1.3"
   },
   "devDependencies": {
     "@jest/globals": "^29.4.1",
