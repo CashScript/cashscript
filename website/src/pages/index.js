@@ -44,10 +44,10 @@ const features = [
     title: 'DeFi on Bitcoin Cash',
     description: (
       <>
-        Most DeFi applications are currently running on top of Ethereum. Bitcoin
-        Cash contracts use a different and functionally more limited paradigm.
-        But with techniques such as covenants, local state and trust-minimised
-        price oracles, DeFi is very much possible on Bitcoin Cash.
+        Most DeFi applications are currently built on top of the EVM. Bitcoin
+        Cash contracts use a different paradigm than EVM chains due to its UTXO
+        architecture. But with CashTokens, transaction introspection and local
+        state, DeFi is very much possible on Bitcoin Cash.
       </>
     ),
   },
