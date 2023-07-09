@@ -84,7 +84,7 @@ export function bytecodeToAsm(bytecode: Uint8Array): string {
 export function countOpcodes(script: Script): number {
   return script
     .filter((opOrData) => typeof opOrData === 'number')
-    .filter((op) => op > Op.OP_16)
+    .filter((op) => (op as number) > Op.OP_16)
     .length;
 }
 

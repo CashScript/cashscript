@@ -431,7 +431,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.emit(compileBinaryOp(node.operator, isNumeric));
     this.popFromStack(2);
     this.pushToStack('(value)');
-    if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value');
+    if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value)');
     return node;
   }
 
