@@ -38,6 +38,7 @@ module.exports = {
       items: [
         'guides/syntax-highlighting',
         'guides/covenants',
+        'guides/optimization'
       ],
     },
     {
