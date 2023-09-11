@@ -34,4 +34,4 @@ Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project
     <a href="https://unspent.app/" target="_blank"><img src="/img/unspent_phi.png" /></a>
 </div>
 
-Unspent Phi allows users to convert Bitcoin Cash they have today into a series of periodic payments over a long period of time.  It's a set of simple contracts that rely on timelocks and introspection rather than signatures; meaning as long as the correct recipients are paid, anyone may build and submit transactions. 
+Unspent Phi allows users to convert Bitcoin Cash they have today into a series of periodic payments over a long period of time.  It's a set of simple contracts that rely on rolling timelocks and introspection rather than signatures; meaning as long as the correct recipients are paid, anyone may build and submit transactions. 
