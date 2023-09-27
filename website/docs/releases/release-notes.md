@@ -2,6 +2,12 @@
 title: Release Notes
 ---
 
+## v0.8.2
+
+#### CashScript SDK
+- :bug: Fix bug with Vite build.
+- :sparkles: Expose `ElectrumNetworkProvider#performRequest` to allow raw Electrum requests if needed.
+
 ## v0.8.1
 
 #### CashScript SDK
