@@ -220,7 +220,7 @@ The FullStackNetworkProvider does not currently support CashTokens. If you want 
 
 #### Example
 ```js
-const { default: BCHJS } = await import('@psf/bch-js');
+import BCHJS from '@psf/bch-js';
 
 const restURL = 'https://api.fullstack.cash/v3/';
 const apiToken = 'eyJhbGciO...'; // Your JWT token here.

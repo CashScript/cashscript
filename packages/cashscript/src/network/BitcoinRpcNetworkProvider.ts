@@ -1,7 +1,6 @@
+import RpcClientRetry from 'bitcoin-rpc-promise-retry';
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
-
-const { default: RpcClientRetry } = await import('bitcoin-rpc-promise-retry');
 
 export default class BitcoinRpcNetworkProvider implements NetworkProvider {
   private rpcClient: IRpcClientRetry;

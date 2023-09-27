@@ -1,3 +1,4 @@
+import bip68 from 'bip68';
 import {
   hexToBin,
   binToHex,
@@ -44,8 +45,6 @@ import {
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { P2PKH_INPUT_SIZE } from './constants.js';
-
-const bip68 = await import('bip68');
 
 export class Transaction {
   private inputs: Utxo[] = [];
