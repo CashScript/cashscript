@@ -6,14 +6,19 @@ import {
   calculateBytesize,
   countOpcodes,
   generateRedeemScript,
+  hash256,
   Script,
   scriptToBytecode,
 } from '@cashscript/utils';
 import { Transaction } from './Transaction.js';
 import { Argument, encodeArgument } from './Argument.js';
-import { ContractOptions, Utxo } from './interfaces.js';
+import {
+  Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
+} from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
-import { scriptToAddress } from './utils.js';
+import {
+  addressToLockScript, createInputScript, createSighashPreimage, scriptToAddress,
+} from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
 
@@ -25,9 +30,8 @@ export class Contract {
   bytesize: number;
   opcount: number;
 
-  functions: {
-    [name: string]: ContractFunction,
-  };
+  functions: Record<string, ContractFunction>;
+  unlock: Record<string, ContractUnlocker>;
 
   private redeemScript: Script;
   private provider: NetworkProvider;
@@ -38,10 +42,8 @@ export class Contract {
     constructorArgs: Argument[],
     private options?: ContractOptions,
   ) {
-    const defaultProvider = new ElectrumNetworkProvider();
-    const defaultAddressType = 'p2sh32';
-    this.provider = this.options?.provider ?? defaultProvider;
-    this.addressType = this.options?.addressType ?? defaultAddressType;
+    this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
+    this.addressType = this.options?.addressType ?? 'p2sh32';
 
     const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName'];
     if (!expectedProperties.every((property) => property in artifact)) {
@@ -76,6 +78,18 @@ export class Contract {
     } else {
       artifact.abi.forEach((f, i) => {
         this.functions[f.name] = this.createFunction(f, i);
+      });
+    }
+
+    // Populate the functions object with the contract's functions
+    // (with a special case for single function, which has no "function selector")
+    this.unlock = {};
+    if (artifact.abi.length === 1) {
+      const f = artifact.abi[0];
+      this.unlock[f.name] = this.createUnlocker(f);
+    } else {
+      artifact.abi.forEach((f, i) => {
+        this.unlock[f.name] = this.createUnlocker(f, i);
       });
     }
 
@@ -116,6 +130,39 @@ export class Contract {
       );
     };
   }
+
+  private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
+    return (...args: Argument[]) => {
+      const bytecode = scriptToBytecode(this.redeemScript);
+
+      const encodedArgs = args
+        .map((arg, i) => encodeArgument(arg, abiFunction.inputs[i].type));
+
+      const generateUnlockingBytecode = (
+        { transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions,
+      ): Uint8Array => {
+        const completeArgs = encodedArgs.map((arg) => {
+          if (!(arg instanceof SignatureTemplate)) return arg;
+
+          const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, bytecode, arg.getHashType());
+          const sighash = hash256(preimage);
+
+          return arg.generateSignature(sighash);
+        });
+
+        const unlockingBytecode = createInputScript(
+          this.redeemScript, completeArgs, selector,
+        );
+
+        return unlockingBytecode;
+      };
+
+      const generateLockingBytecode = (): Uint8Array => addressToLockScript(this.address);
+
+      return { generateUnlockingBytecode, generateLockingBytecode };
+    };
+  }
 }
 
 export type ContractFunction = (...args: Argument[]) => Transaction;
+export type ContractUnlocker = (...args: Argument[]) => Unlocker;
