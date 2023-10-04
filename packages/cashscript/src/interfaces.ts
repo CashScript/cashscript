@@ -14,6 +14,10 @@ export interface UnlockableUtxo extends Utxo {
   options?: InputOptions;
 }
 
+export function isUnlockableUtxo(utxo: Utxo): utxo is UnlockableUtxo {
+  return 'unlocker' in utxo;
+}
+
 export interface InputOptions {
   sequence?: number;
 }

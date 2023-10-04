@@ -9,6 +9,7 @@ import {
   UnlockableUtxo,
   Utxo,
   InputOptions,
+  isUnlockableUtxo,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import { buildError, cashScriptOutputToLibauthOutput, createOpReturnOutput } from './utils.js';
@@ -38,7 +39,22 @@ export class TransactionBuilder {
     return this;
   }
 
-  addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this {
+  addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
+  addInputs(utxos: UnlockableUtxo[]): this;
+
+  addInputs(utxos: Utxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
+    if (
+      (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
+      || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
+    ) {
+      throw new Error('Either all UTXOs must have an individual unlocker speciifed, or no UTXOs must have an individual unlocker specified and a shared unlocker must be provided');
+    }
+
+    if (!unlocker) {
+      this.inputs = this.inputs.concat(utxos as UnlockableUtxo[]);
+      return this;
+    }
+
     this.inputs = this.inputs.concat(utxos.map(((utxo) => ({ ...utxo, unlocker, options }))));
     return this;
   }
