@@ -1,202 +1,72 @@
 ---
-title: Simple Transaction Builder
+title: Advanced Transaction Builder
 ---
 
-When calling a contract function on a Contract object, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
+With the introduction of newer smart contract features to BCH, such as native introspection and CashTokens, we've seen use cases for combining UTXOs of multiple different smart contracts within a single transaction - such as [Fex][fex]. The [simplified transaction builder][transactions-simple] only operates on a single smart contract, so to support more advanced use cases, you can use the Advanced Transaction Builder.
 
-Most of the available transaction options are only useful in very specific use cases, but the functions [`to()`][to()], [`withOpReturn()`][withOpReturn()] and [`send()`][send()] are commonly used. [`withHardcodedFee()`][withHardcodedFee()] is also commonly used with covenant contracts.
+The Advanced Transaction Builder supports adding UTXOs from any number of different smart contracts and P2PKH UTXOs. While the simplified transaction builder automatically selects UTXOs for you and adds change outputs, the advanced transaction builder requires you to provide the UTXOs yourself and manage change carefully.
+
+## Instantiating a transaction builder
+```ts
+new TransactionBuilder(options: TransactionBuilderOptions)
+
+interface TransactionBuilderOptions {
+  provider: NetworkProvider;
+}
+```
+
+To start, you need to instantiate a transaction builder and pass in a `NetworkProvider` instance.
+
+#### Example
+```ts
+import { ElectrumNetworkProvider, TransactionBuilder, Network } from 'cashscript';
+
+const provider = new ElectrumNetworkProvider(Network.MAINNET);
+const transactionBuilder = new TransactionBuilder({ provider });
+```
 
 ## Transaction options
 
-### to()
+### addInput()
 ```ts
-transaction.to(to: string, amount: bigint, token?: TokenDetails): this
-transaction.to(outputs: Array<Recipient>): this
+transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
 ```
 
-The `to()` function allows you to add outputs to the transaction. Either a single pair `to/amount` pair can be provided, or a list of them. This function can be called any number of times, and the provided outputs will be added to the list of earlier added outputs. Tokens can be sent by providing a `TokenDetails` object as the third parameter, or including it in your array of outputs with the `.token` property.
-
+### addInputs()
 ```ts
-interface Recipient {
-  to: string;
-  amount: bigint;
-  token?: TokenDetails;
-}
-
-interface TokenDetails {
-  amount: bigint;
-  category: string;
-  nft?: {
-    capability: 'none' | 'mutable' | 'minting';
-    commitment: string;
-  };
-}
+transactionBuilder.addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this
+transactionBuilder.addInputs(utxos: UnlockableUtxo[]): this
 ```
 
-:::note
-The CashScript SDK supports automatic UTXO selection for BCH and fungible CashTokens. However, if you want to send Non-Fungible CashTokens, you will need to do manual UTXO selection using `from()`.
-:::
-
-#### Example
+### addOutput()
 ```ts
-.to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
+transactionBuilder.addOutput(output: Output): this
 ```
 
-### withOpReturn()
+### addOutputs()
 ```ts
-transaction.withOpReturn(chunks: string[]): this
+transactionBuilder.addOutputs(outputs: Output[]): this
 ```
 
-The `withOpReturn()` function allows you to add `OP_RETURN` outputs to the transaction. The `chunks` parameter can include regular UTF-8 encoded strings, or hex strings prefixed with `0x`. This function can be called any number of times, and the provided outputs will be added to the list of earlier added outputs.
-
-#### Example
+### addOpReturnOutput()
 ```ts
-.withOpReturn(['0x6d02', 'Hello World!'])
+transactionBuilder.addOpReturnOutput(chunks: string[]): this
 ```
 
-### from()
+### setLocktime()
 ```ts
-transaction.from(inputs: Utxo[]): this
+transactionBuilder.setLocktime(locktime: number): this
 ```
 
-The `from()` function allows you to provide a hardcoded list of contract UTXOs to be used in the transaction. This overrides the regular UTXO selection performed by the CashScript SDK, so **no further selection will be performed** on the provided UTXOs. This function can be called any number of times, and the provided UTXOs will be added to the list of earlier added UTXOs.
-
-:::tip
-The built-in UTXO selection is generally sufficient. But there are specific use cases for which it makes sense to use a custom selection algorithm.
-:::
-
-#### Example
+### setMaxFee()
 ```ts
-.from(await instance.getUtxos())
-```
-
-### fromP2PKH()
-```ts
-fromP2PKH(input: Utxo, template: SignatureTemplate): this;
-fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
-```
-
-The `fromP2PKH()` function allows you to provide a list of P2PKH UTXOs to be used in the transaction. The passed `SignatureTemplate` is used to sign these UTXOs. This function can be called any number of times, and the provided UTXOs will be added to the list of earlier added UTXOs.
-
-:::note
-If you are using meep to debug a `fromP2PKH()` transaction, meep will always use the first input for the debugging. So if you want to debug the smart contract bytecode, make sure that the first input is not a P2PKH input.
-:::
-
-#### Example
-```ts
-import { bobAddress, bobPrivateKey } from 'somewhere';
-import { ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
-
-const provider = new ElectrumNetworkProvider();
-const bobUtxos = await provider.getUtxos(bobAddress);
-
-.fromP2PKH(bobUtxos, new SignatureTemplate(bobPrivateKey))
-```
-
-
-### withFeePerByte()
-```ts
-transaction.withFeePerByte(feePerByte: number): this
-```
-
-The `withFeePerByte()` function allows you to specify the fee per per bytes for the transaction. By default the fee per bytes is set to 1.0 satoshis, which is nearly always enough to be included in the next block. So it's generally not necessary to change this.
-
-#### Example
-```ts
-.withFeePerByte(2.3)
-```
-
-### withHardcodedFee()
-```ts
-transaction.withHardcodedFee(hardcodedFee: bigint): this
-```
-
-The `withHardcodedFee()` function allows you to specify a hardcoded fee to the transaction. By default the transaction fee is automatically calculated by the CashScript SDK, but there are certain use cases where the smart contract relies on a hardcoded fee.
-
-:::tip
-If you're not building a covenant contract, you probably do not need a hardcoded transaction fee.
-:::
-
-#### Example
-```ts
-.withHardcodedFee(1000n)
-```
-
-### withMinChange()
-```ts
-transaction.withMinChange(minChange: bigint): this
-```
-
-The `withMinChange()` function allows you to set a threshold for including a change output. Any remaining amount under this threshold will be added to the transaction fee instead.
-
-:::tip
-This is generally only useful in specific covenant use cases.
-:::
-
-#### Example
-```ts
-.withMinChange(1000n)
-```
-
-### withoutChange()
-```ts
-transaction.withoutChange(): this
-```
-
-The `withoutChange()` function allows you to disable the change output. The remaining amount will be added to the transaction fee instead. This is equivalent to `withMinChange(Number.MAX_VALUE)`.
-
-:::caution
-Be sure to check that the remaining amount (sum of inputs - sum of outputs) is not too high. The difference will be added to the transaction fee and cannot be reclaimed.
-:::
-
-#### Example
-```ts
-.withoutChange()
-```
-
-### withoutTokenChange()
-```ts
-transaction.withoutTokenChange(): this
-```
-
-The `withoutTokenChange()` function allows you to disable the change output for tokens.
-
-:::caution
-Be sure to check that the remaining amount (sum of inputs - sum of outputs) is not too high. The difference will be burned and cannot be reclaimed.
-:::
-
-### withAge()
-```ts
-transaction.withAge(age: number): this
-```
-
-The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to to use the `tx.age` CashScript functionality, and the `age` parameter passed into this function will be the value of `tx.age` inside the smart contract. For more information, refer to [BIP68][bip68].
-
-#### Example
-```ts
-.withAge(10)
-```
-
-### withTime()
-```ts
-transaction.withTime(time: number): this
-```
-
-The `withTime()` function allows you to specify the minimum block number that the transaction can be included in. The `time` parameter will be the value of `tx.time` inside the smart contract.
-
-:::tip
-By default, the transaction's `time` variable is set to the most recent block number, which is the most common use case. So you should only override this in specific use cases.
-:::
-
-#### Example
-```ts
-.withTime(700000)
+transactionBuilder.setMaxFee(maxFee: bigint): this
 ```
 
 ## Transaction building
 ### send()
 ```ts
-async transaction.send(): Promise<TransactionDetails>
+async transactionBuilder.send(): Promise<TransactionDetails>
 ```
 
 After completing a transaction, the `send()` function can be used to send the transaction to the BCH network. An incomplete transaction cannot be sent.
@@ -231,7 +101,7 @@ const txDetails = await instance.functions
 
 ### build()
 ```ts
-async transaction.build(): Promise<string>
+async transactionBuilder.build(): Promise<string>
 ```
 
 After completing a transaction, the `build()` function can be used to build the entire transaction and return the signed transaction hex string. This can then be imported into other libraries or applications as necessary.
@@ -348,6 +218,7 @@ enum Reason {
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [meep]: https://github.com/gcash/meep
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
+[fex]: https://github.com/fex-cash/fex
 
 [to()]: /docs/sdk/transactions#to
 [withOpReturn()]: /docs/sdk/transactions#withopreturn
@@ -357,6 +228,7 @@ enum Reason {
 [withMinChange()]: /docs/sdk/transactions#withminchange
 [withAge()]: /docs/sdk/transactions#withage
 [withTime()]: /docs/sdk/transactions#withtime
+[transactions-simple]: /docs/sdk/transactions
 
 [send()]: /docs/sdk/transactions#send
 [build()]: /docs/sdk/transactions#build
