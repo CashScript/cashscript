@@ -11,7 +11,7 @@ import {
   InputOptions,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
-import { buildError, cashScriptOutputToLibauthOutput } from './utils.js';
+import { buildError, cashScriptOutputToLibauthOutput, createOpReturnOutput } from './utils.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -53,11 +53,9 @@ export class TransactionBuilder {
     return this;
   }
 
-  addOpReturnOutput(data: Uint8Array): this {
-    this.outputs.push({
-      to: data,
-      amount: 0n,
-    });
+  // TODO: allow uint8array for chunks
+  addOpReturnOutput(chunks: string[]): this {
+    this.outputs.push(createOpReturnOutput(chunks));
     return this;
   }
 

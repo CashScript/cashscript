@@ -4,21 +4,29 @@ import {
   bobAddress,
   bobPub,
   bobPriv,
-  bobPkh,
+  carolPkh,
+  carolPub,
+  carolAddress,
+  carolPriv,
 } from '../../fixture/vars.js';
 import { Network, Utxo } from '../../../src/interfaces.js';
 import { utxoComparator, calculateDust } from '../../../src/utils.js';
-import artifact from '../../fixture/p2pkh.json' assert { type: "json" };
+import p2pkhArtifact from '../../fixture/p2pkh.json' assert { type: "json" };
+import twtArtifact from '../../fixture/transfer_with_timeout.json' assert { type: "json" };
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
+import { getTxOutputs } from '../../test-util.js';
 
 describe('Transaction Builder', () => {
   const provider = new ElectrumNetworkProvider(Network.CHIPNET);
   let p2pkhInstance: Contract;
+  let twtInstance: Contract;
 
   beforeAll(() => {
-    // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other (P2PKH tokens) tests
-    p2pkhInstance = new Contract(artifact, [bobPkh], { provider });
+    // Note: We instantiate the contract with carolPkh to avoid mempool conflicts with other (P2PKH) tests
+    p2pkhInstance = new Contract(p2pkhArtifact, [carolPkh], { provider });
+    twtInstance = new Contract(twtArtifact, [bobPub, carolPub, 100000n], { provider });
     console.log(p2pkhInstance.tokenAddress);
+    console.log(twtInstance.tokenAddress);
   });
 
   describe('should return the same transaction as the simple transaction builder', () => {
@@ -76,8 +84,6 @@ describe('Transaction Builder', () => {
 
       const change = totalInputAmount - (amount * 2n) - fee;
       const dustAmount = calculateDust({ to, amount: change });
-      console.log('bob UTXOs', bobUtxos);
-      console.log('contract UTXOs', contractUtxos);
 
       if (change < 0) {
         throw new Error('Not enough funds to send transaction');
@@ -112,12 +118,129 @@ describe('Transaction Builder', () => {
       // then
       expect(advancedDecoded).toEqual(simpleDecoded);
     });
-
-    it.todo('2 different smart contracts and P2PKH');
-    it.todo('op_return');
-    it.todo('locktime fail + success cases');
-    it.todo('max fee fail + success cases');
   });
+
+  it('should build a transaction that can spend from 2 different contracts and P2PKH + OP_RETURN', async () => {
+    const fee = 1000n;
+
+    const carolUtxos = await provider.getUtxos(carolAddress);
+    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+    const twtUtxos = await twtInstance.getUtxos();
+
+    const change = carolUtxos[0].satoshis - fee;
+    const dustAmount = calculateDust({ to: carolAddress, amount: change });
+
+    const outputs = [
+      { to: p2pkhInstance.address, amount: p2pkhUtxos[0].satoshis },
+      { to: twtInstance.address, amount: twtUtxos[0].satoshis },
+      ...(change > dustAmount ? [{ to: carolAddress, amount: change }] : []),
+    ];
+
+    if (change < 0) {
+      throw new Error('Not enough funds to send transaction');
+    }
+
+    const tx = await new TransactionBuilder({ provider })
+      .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addInput(twtUtxos[0], twtInstance.unlock.transfer(new SignatureTemplate(carolPriv)))
+      .addInput(carolUtxos[0], new SignatureTemplate(carolPriv).unlockP2PKH())
+      .addOpReturnOutput(['Hello new transaction builder'])
+      .addOutputs(outputs)
+      .send();
+
+    const txOutputs = getTxOutputs(tx);
+    expect(txOutputs).toEqual(expect.arrayContaining(outputs));
+  });
+
+  it('should fail when fee is higher than maxFee', async () => {
+    const fee = 2000n;
+    const maxFee = 1000n;
+    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+
+    const amount = p2pkhUtxos[0].satoshis - fee;
+    const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
+
+    if (amount < dustAmount) {
+      throw new Error('Not enough funds to send transaction');
+    }
+
+    const txPromise = new TransactionBuilder({ provider })
+      .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: p2pkhInstance.address, amount })
+      .setMaxFee(maxFee)
+      .send();
+
+    await expect(txPromise).rejects.toThrow(`Transaction fee of ${fee} is higher than max fee of ${maxFee}`);
+  });
+
+  it('should succeed when fee is lower than maxFee', async () => {
+    const fee = 1000n;
+    const maxFee = 2000n;
+    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+
+    const amount = p2pkhUtxos[0].satoshis - fee;
+    const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
+
+    if (amount < dustAmount) {
+      throw new Error('Not enough funds to send transaction');
+    }
+
+    const tx = await new TransactionBuilder({ provider })
+      .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: p2pkhInstance.address, amount })
+      .setMaxFee(maxFee)
+      .send();
+
+    const txOutputs = getTxOutputs(tx);
+    expect(txOutputs).toEqual(expect.arrayContaining([{ to: p2pkhInstance.address, amount }]));
+  });
+
+  it('should fail when locktime is higher than current block height', async () => {
+    const fee = 1000n;
+    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+
+    const amount = p2pkhUtxos[0].satoshis - fee;
+    const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
+
+    if (amount < dustAmount) {
+      throw new Error('Not enough funds to send transaction');
+    }
+
+    const blockHeight = await provider.getBlockHeight();
+
+    const txPromise = new TransactionBuilder({ provider })
+      .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: p2pkhInstance.address, amount })
+      .setLocktime(blockHeight + 100)
+      .send();
+
+    await expect(txPromise).rejects.toThrow(/non-final transaction/);
+  });
+
+  it('should succeed when locktime is lower than current block height', async () => {
+    const fee = 1000n;
+    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+
+    const amount = p2pkhUtxos[0].satoshis - fee;
+    const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
+
+    if (amount < dustAmount) {
+      throw new Error('Not enough funds to send transaction');
+    }
+
+    const blockHeight = await provider.getBlockHeight();
+
+    const tx = await new TransactionBuilder({ provider })
+      .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: p2pkhInstance.address, amount })
+      .setLocktime(blockHeight - 100)
+      .send();
+
+    const txOutputs = getTxOutputs(tx);
+    expect(txOutputs).toEqual(expect.arrayContaining([{ to: p2pkhInstance.address, amount }]));
+  });
+
+  it.todo('test sequence numbers');
 });
 
 async function getAddressUtxos(address: string): Promise<Utxo[]> {
