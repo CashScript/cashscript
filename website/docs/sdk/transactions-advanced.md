@@ -9,13 +9,16 @@ The Advanced Transaction Builder supports adding UTXOs from any number of differ
 ## Instantiating a transaction builder
 ```ts
 new TransactionBuilder(options: TransactionBuilderOptions)
+```
 
+To start, you need to instantiate a transaction builder and pass in a `NetworkProvider` instance.
+
+```ts
 interface TransactionBuilderOptions {
   provider: NetworkProvider;
 }
 ```
 
-To start, you need to instantiate a transaction builder and pass in a `NetworkProvider` instance.
 
 #### Example
 ```ts
@@ -32,20 +35,99 @@ const transactionBuilder = new TransactionBuilder({ provider });
 transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
 ```
 
+Adds a single input UTXOs to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input.
+
+:::note
+It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases are covered by the `SignatureTemplate` and `Contract` classes.
+:::
+
+#### Example
+```ts
+import { contract, aliceTemplate, aliceAdress, transactionBuilder } from './somewhere.js';
+
+const contractUtxos = await contract.getUtxos();
+const aliceUtxos = await provider.getUtxos(aliceAdress);
+
+transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
+transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
+```
+
 ### addInputs()
 ```ts
 transactionBuilder.addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this
 transactionBuilder.addInputs(utxos: UnlockableUtxo[]): this
 ```
 
-### addOutput()
 ```ts
-transactionBuilder.addOutput(output: Output): this
+interface UnlockableUtxo extends Utxo {
+  unlocker: Unlocker;
+  options?: InputOptions;
+}
 ```
 
-### addOutputs()
+Adds a list of input UTXOs, either with a single shared unlocker or with individual unlockers for each UTXO. The `InputOptions` object can be used to specify the sequence number of the inputs.
+
+#### Example
 ```ts
+import { contract, aliceTemplate, aliceAdress, transactionBuilder } from './somewhere.js';
+
+const contractUtxos = await contract.getUtxos();
+const aliceUtxos = await provider.getUtxos(aliceAdress);
+
+// Use a single unlocker for all inputs you're adding at a time
+transactionBuilder.addInputs(contractUtxos, contract.unlock.spend());
+transactionBuilder.addInputs(aliceUtxos, aliceTemplate.unlockP2PKH());
+
+// Or combine the UTXOs with their unlockers in an array
+const unlockableUtxos = [
+  { ...contractUtxos[0], unlocker: contract.unlock.spend() },
+  { ...aliceUtxos[0], unlocker: aliceTemplate.unlockP2PKH() },
+];
+transactionBuilder.addInputs(unlockableUtxos);
+```
+
+### addOutput() & addOutputs()
+```ts
+transactionBuilder.addOutput(output: Output): this
 transactionBuilder.addOutputs(outputs: Output[]): this
+```
+
+Adds a single output or a list of outputs to the transaction.
+
+```ts
+interface Output {
+  to: string | Uint8Array;
+  amount: bigint;
+  token?: TokenDetails;
+}
+
+interface TokenDetails {
+  amount: bigint;
+  category: string;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: string;
+  };
+}
+```
+
+#### Example
+```ts
+import { aliceAddress, bobAddress, transactionBuilder, tokenCategory } from './somewhere.js';
+
+transactionBuilder.addOutput({
+  to: aliceAddress,
+  amount: 100_000n,
+  token: {
+    amount: 1000n,
+    category: tokenCategory,
+  }
+});
+
+transactionBuilder.addOutputs([
+  { to: aliceAddress, amount: 50_000n }
+  { to: bobAddress, amount: 50_000n },
+]);
 ```
 
 ### addOpReturnOutput()
@@ -53,14 +135,33 @@ transactionBuilder.addOutputs(outputs: Output[]): this
 transactionBuilder.addOpReturnOutput(chunks: string[]): this
 ```
 
+Adds an OP_RETURN output to the transaction with the provided data chunks in string format. If the string is `0x`-prefixed, it is treated as a hex string, otherwise it is treated as a UTF-8 string.
+
+#### Example
+```ts
+// Post "Hello World!" to memo.cash
+transactionBuilder.addOpReturnOutput(['0x6d02', 'Hello World!']);
+```
+
+
 ### setLocktime()
 ```ts
 transactionBuilder.setLocktime(locktime: number): this
 ```
 
+Sets the locktime for the transaction to set a transaction-level absolute timelock (see [Timelock documentation][bitcoin-wiki-timelocks] for more information). The locktime can be set to a specific block height or a unix timestamp.
+
+
 ### setMaxFee()
 ```ts
 transactionBuilder.setMaxFee(maxFee: bigint): this
+```
+
+Sets a max fee for the transaction. Because the advanced transaction builder does not automatically add a change output, you can set a max fee as a safety measure to make sure you don't accidentally pay too much in fees. If the transaction fee exceeds the max fee, an error will be thrown when building the transaction.
+
+#### Example
+```ts
+transactionBuilder.setMaxFee(1000n);
 ```
 
 ## Transaction building
@@ -82,154 +183,51 @@ interface TransactionDetails {
 }
 ```
 
-:::tip
-If the transaction fails, a meep command is automatically returned. This command can be used to debug the transaction using the [meep debugger][meep]
-:::
-
 #### Example
 ```ts
-import { alice } from './somewhere';
+import { aliceTemplate, aliceAddress, bobAddress, contract, provider } from './somewhere.js';
 
-const txDetails = await instance.functions
-  .transfer(new SignatureTemplate(alice))
-  .withOpReturn(['0x6d02', 'Hello World!'])
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 200000n)
-  .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 100000n)
-  .withHardcodedFee(1000n)
+const contractUtxos = await contract.getUtxos();
+const aliceUtxos = await provider.getUtxos(aliceAddress);
+
+const txDetails = await new TransactionBuilder({ provider })
+  .addInput(contractUtxos[0], contract.unlock.spend(aliceTemplate, 1000n))
+  .addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH())
+  .addOutput({ to: bobAddress, amount: 100_000n })
+  .addOpReturnOutput(['0x6d02', 'Hello World!'])
+  .setMaxFee(2000n)
   .send()
 ```
 
 ### build()
 ```ts
-async transactionBuilder.build(): Promise<string>
+transactionBuilder.build(): string
 ```
 
 After completing a transaction, the `build()` function can be used to build the entire transaction and return the signed transaction hex string. This can then be imported into other libraries or applications as necessary.
 
 #### Example
 ```ts
-const txHex = await instance.functions
-  .transfer(new SignatureTemplate(alice))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
-  .withAge(10)
-  .withFeePerByte(10)
+import { aliceTemplate, aliceAddress, bobAddress, contract, provider } from './somewhere.js';
+
+const contractUtxos = await contract.getUtxos();
+const aliceUtxos = await provider.getUtxos(aliceAddress);
+
+const txHex = new TransactionBuilder({ provider })
+  .addInput(contractUtxos[0], contract.unlock.spend(aliceTemplate, 1000n))
+  .addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH())
+  .addOutput({ to: bobAddress, amount: 100_000n })
+  .addOpReturnOutput(['0x6d02', 'Hello World!'])
+  .setMaxFee(2000n)
   .build()
 ```
 
-### meep()
-```ts
-async transaction.meep(): Promise<string>
-```
-
-After completing a transaction, the `meep()` function can be used to return the required debugging command for the [meep debugger][meep]. This command string can then be used to debug the transaction.
-
-#### Example
-```ts
-const meepStr = await instance.functions
-  .transfer(new SignatureTemplate(alice))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
-  .withTime(700000)
-  .meep()
-```
-
-:::note
-Meep does not work very well with contracts that use modern CashScript / BCH features, like native introspection, P2SH32 or CashTokens.
-:::
-
-
 ## Transaction errors
-Transactions can fail for a number of reasons. Most of these are related to the execution of the smart contract (e.g. wrong parameters or a bug in the contract code). But errors can also occur because of other reasons (e.g. a fee that's too low or the same transaction already exists in the mempool). To facilitate error handling in your applications, the CashScript SDK provides an enum of different *reasons* for a failure.
 
-This `Reason` enum only includes errors that are related to smart contract execution, so other reasons have to be caught separately. Besides the `Reason` enum, there are also several error classes that can be caught and acted on:
+Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information.
 
-* **`FailedRequireError`**, signifies a failed require statement. This includes the following reasons:
-  * `Reason.EVAL_FALSE`
-  * `Reason.VERIFY`
-  * `Reason.EQUALVERIFY`
-  * `Reason.CHECKMULTISIGVERIFY`
-  * `Reason.CHECKSIGVERIFY`
-  * `Reason.CHECKDATASIGVERIFY`
-  * `Reason.NUMEQUALVERIFY`
-* **`FailedTimeCheckError`**, signifies a failed time check using `tx.time` or `tx.age`. This includes the following reasons:
-  * `Reason.NEGATIVE_LOCKTIME`
-  * `Reason.UNSATISFIED_LOCKTIME`
-* **`FailedSigCHeckError`**, signifies a failed signature check. This includes the following reasons:
-  * `Reason.SIG_COUNT`
-  * `Reason.PUBKEY_COUNT`
-  * `Reason.SIG_HASHTYPE`
-  * `Reason.SIG_DER`
-  * `Reason.SIG_HIGH_S`
-  * `Reason.SIG_NULLFAIL`
-  * `Reason.SIG_BADLENGTH`
-  * `Reason.SIG_NONSCHNORR`
-* **`FailedTransactionError`**, signifies a general fallback error. This includes all remaining reasons listed in the `Reason` enum as well as any other reasons unrelated to the smart contract execution.
-
-```ts
-enum Reason {
-  EVAL_FALSE = 'Script evaluated without error but finished with a false/empty top stack element',
-  VERIFY = 'Script failed an OP_VERIFY operation',
-  EQUALVERIFY = 'Script failed an OP_EQUALVERIFY operation',
-  CHECKMULTISIGVERIFY = 'Script failed an OP_CHECKMULTISIGVERIFY operation',
-  CHECKSIGVERIFY = 'Script failed an OP_CHECKSIGVERIFY operation',
-  CHECKDATASIGVERIFY = 'Script failed an OP_CHECKDATASIGVERIFY operation',
-  NUMEQUALVERIFY = 'Script failed an OP_NUMEQUALVERIFY operation',
-  SCRIPT_SIZE = 'Script is too big',
-  PUSH_SIZE = 'Push value size limit exceeded',
-  OP_COUNT = 'Operation limit exceeded',
-  STACK_SIZE = 'Stack size limit exceeded',
-  SIG_COUNT = 'Signature count negative or greater than pubkey count',
-  PUBKEY_COUNT = 'Pubkey count negative or limit exceeded',
-  INVALID_OPERAND_SIZE = 'Invalid operand size',
-  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range',
-  IMPOSSIBLE_ENCODING = 'The requested encoding is impossible to satisfy',
-  INVALID_SPLIT_RANGE = 'Invalid OP_SPLIT range',
-  INVALID_BIT_COUNT = 'Invalid number of bit set in OP_CHECKMULTISIG',
-  BAD_OPCODE = 'Opcode missing or not understood',
-  DISABLED_OPCODE = 'Attempted to use a disabled opcode',
-  INVALID_STACK_OPERATION = 'Operation not valid with the current stack size',
-  INVALID_ALTSTACK_OPERATION = 'Operation not valid with the current altstack size',
-  OP_RETURN = 'OP_RETURN was encountered',
-  UNBALANCED_CONDITIONAL = 'Invalid OP_IF construction',
-  DIV_BY_ZERO = 'Division by zero error',
-  MOD_BY_ZERO = 'Modulo by zero error',
-  INVALID_BITFIELD_SIZE = 'Bitfield of unexpected size error',
-  INVALID_BIT_RANGE = 'Bitfield\'s bit out of the expected range',
-  NEGATIVE_LOCKTIME = 'Negative locktime',
-  UNSATISFIED_LOCKTIME = 'Locktime requirement not satisfied',
-  SIG_HASHTYPE = 'Signature hash type missing or not understood',
-  SIG_DER = 'Non-canonical DER signature',
-  MINIMALDATA = 'Data push larger than necessary',
-  SIG_PUSHONLY = 'Only push operators allowed in signature scripts',
-  SIG_HIGH_S = 'Non-canonical signature: S value is unnecessarily high',
-  MINIMALIF = 'OP_IF/NOTIF argument must be minimal',
-  SIG_NULLFAIL = 'Signature must be zero for failed CHECK(MULTI)SIG operation',
-  SIG_BADLENGTH = 'Signature cannot be 65 bytes in CHECKMULTISIG',
-  SIG_NONSCHNORR = 'Only Schnorr signatures allowed in this operation',
-  DISCOURAGE_UPGRADABLE_NOPS = 'NOPx reserved for soft-fork upgrades',
-  PUBKEYTYPE = 'Public key is neither compressed or uncompressed',
-  CLEANSTACK = 'Script did not clean its stack',
-  NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
-  ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
-  MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
-  UNKNOWN = 'unknown error',
-}
-```
-
-[fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
-[meep]: https://github.com/gcash/meep
-[bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [fex]: https://github.com/fex-cash/fex
+[bitcoin-wiki-timelocks]: https://en.bitcoin.it/wiki/Timelock
 
-[to()]: /docs/sdk/transactions#to
-[withOpReturn()]: /docs/sdk/transactions#withopreturn
-[from()]: /docs/sdk/transactions#from
-[withFeePerByte()]: /docs/sdk/transactions#withfeeperbyte
-[withHardcodedFee()]: /docs/sdk/transactions#withhardcodedfee
-[withMinChange()]: /docs/sdk/transactions#withminchange
-[withAge()]: /docs/sdk/transactions#withage
-[withTime()]: /docs/sdk/transactions#withtime
 [transactions-simple]: /docs/sdk/transactions
-
-[send()]: /docs/sdk/transactions#send
-[build()]: /docs/sdk/transactions#build
-[meep()]: /docs/sdk/transactions#meep
+[transactions-simple-errors]: /docs/sdk/transactions#transaction-errors
