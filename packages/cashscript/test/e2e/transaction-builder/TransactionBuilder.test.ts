@@ -54,6 +54,7 @@ describe('Transaction Builder', () => {
         .to(to, amount)
         .to(change > dustAmount ? [{ to, amount: change }] : [])
         .withoutChange()
+        .withTime(0)
         .build();
 
       const advancedTransaction = await new TransactionBuilder({ provider })
@@ -100,6 +101,7 @@ describe('Transaction Builder', () => {
         .to(to, amount)
         .to(change > dustAmount ? [{ to, amount: change }] : [])
         .withoutChange()
+        .withTime(0)
         .build();
 
       const advancedTransaction = await new TransactionBuilder({ provider })

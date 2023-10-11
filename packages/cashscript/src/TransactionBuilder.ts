@@ -97,10 +97,8 @@ export class TransactionBuilder {
     }
   }
 
-  async build(): Promise<string> {
+  build(): string {
     this.checkMaxFee();
-
-    this.locktime = this.locktime ?? await this.provider.getBlockHeight();
 
     const inputs = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
@@ -144,7 +142,7 @@ export class TransactionBuilder {
   async send(): Promise<TransactionDetails>;
   async send(raw: true): Promise<string>;
   async send(raw?: true): Promise<TransactionDetails | string> {
-    const tx = await this.build();
+    const tx = this.build();
     try {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
