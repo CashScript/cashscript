@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.9.1
+
+#### CashScript SDK
+- :bug: Fix TransactionBuilder export bug.
+
 ## v0.9.0
 
 #### CashScript SDK
