@@ -1,6 +1,11 @@
 import { decodePrivateKeyWif, secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
 import { hash256, scriptToBytecode } from '@cashscript/utils';
-import { Unlocker, GenerateUnlockingBytecodeOptions, HashType, SignatureAlgorithm } from './interfaces.js';
+import {
+  Unlocker,
+  GenerateUnlockingBytecodeOptions,
+  HashType,
+  SignatureAlgorithm,
+} from './interfaces.js';
 import { createSighashPreimage, publicKeyToP2PKHLockingBytecode } from './utils.js';
 
 export default class SignatureTemplate {
@@ -44,7 +49,7 @@ export default class SignatureTemplate {
 
     return {
       generateLockingBytecode: () => prevOutScript,
-      generateUnlockingBytecode: ({ transaction, sourceOutputs, inputIndex}: GenerateUnlockingBytecodeOptions) => {
+      generateUnlockingBytecode: ({ transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions) => {
         const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, prevOutScript, hashtype);
         const sighash = hash256(preimage);
         const signature = this.generateSignature(sighash);

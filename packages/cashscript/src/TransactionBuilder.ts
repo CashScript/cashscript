@@ -174,15 +174,3 @@ export class TransactionBuilder {
     throw new Error('Could not retrieve transaction details for over 10 minutes');
   }
 }
-
-// const provider = new ElectrumNetworkProvider(Network.MAINNET);
-// const contract = new Contract(artifact, params, { provider });
-// const sigantureTemplate = new SignatureTemplate(privateKey);
-// new TransactionBuilder({ provider })
-//   .addInput(utxo, contract.unlock.spend(template), { sequence: bip68.encode({ blocks: age }) })
-//   .addInput(utxo, contract.unlock.spend(template))
-//   .addInput(utxo, template.unlockP2PKH())
-//   .addInput(utxo, {
-//     generateLockingBytecode: () => ''0xc0ffee'',
-//     generateUnlockingBytecode: () => '0xdeadbeef',
-//   })
