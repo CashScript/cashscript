@@ -24,7 +24,7 @@ As an example, below is a simple [hodl](https://github.com/mainnet-pat/hodl_ec_p
 
 ```solidity
 // hodl.cash
-pragma cashscript ^0.8.0;
+pragma cashscript ^0.9.0;
 
 contract hodl(
     int locktime,
@@ -66,7 +66,7 @@ cashc hodl.cash | grep bytecode;
 
 As you can see, in this case, the logic to spend time-locked funds and verify the spender takes up six (6) bytes of information.
 
-The simplest workflow to optimize the redeem script of `hodl.cash`, or any contract, would be to compile it directly from the command line with `cashc` then look at the `bytecode` field on the generated artifact to see if there are any unnecessary or duplicative operations. 
+The simplest workflow to optimize the redeem script of `hodl.cash`, or any contract, would be to compile it directly from the command line with `cashc` then look at the `bytecode` field on the generated artifact to see if there are any unnecessary or duplicative operations.
 
 In this toy example, the redeem script is so small there isn't a lot of need or use in making it smaller. The [anyhedge contracts](https://gitlab.com/GeneralProtocols/anyhedge/contracts/) are again a great example of a more complex progressive optimization over time.
 
@@ -77,7 +77,7 @@ There are two important alternative approaches to optimization to consider.
 
 ### OP_NOP
 
->We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%. 
+>We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%.
 
 It's worth considering whether optimizing the redeem script is necessary at all. If the contract is accepted by the network, and there is no glaring inefficiency in the bytecode, perhaps the best optimization is to not to obsess prematurely about things like blocksize.
 
@@ -85,5 +85,5 @@ It's worth considering whether optimizing the redeem script is necessary at all.
 
 Finally, there have been a number of novel approaches taken since 2009 to approximate higher level functionality with bitcoin's deliberately restricted instruction set. These techniques include using a cumbersome [old covenant style](https://fc16.ifca.ai/bitcoin/papers/MES16.pdf) of storing data, [`OP_CODESEPARATOR`](https://web.archive.org/web/20210507164307/https://mistcoin.org/#appendix-b) to split contracts around an old 520-byte limitation, and hiding redeem paths in "sidecars".
 
-It's **very** important to be up-to-date on documentation covering introspection, as it greatly simplifies using state and writing more complex contracts. If a contract has been developed from an old example or a pre-introspection design pattern, the fastest way to achieve significant optimization is to utilize the [the latest introspection design patterns](./covenants).  
+It's **very** important to be up-to-date on documentation covering introspection, as it greatly simplifies using state and writing more complex contracts. If a contract has been developed from an old example or a pre-introspection design pattern, the fastest way to achieve significant optimization is to utilize the [the latest introspection design patterns](./covenants).
 
