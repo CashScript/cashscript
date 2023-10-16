@@ -330,7 +330,6 @@ const P2PKH = compileString(source);
 ```
 
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
-[meep]: https://github.com/gcash/meep
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
 [ecpair]: https://bchjs.fullstack.cash/#api-ECPair

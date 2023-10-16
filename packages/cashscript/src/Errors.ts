@@ -19,8 +19,8 @@ export class TokensToNonTokenAddressError extends Error {
 }
 
 export class FailedTransactionError extends Error {
-  constructor(public reason: string, public meep: string) {
-    super(`Transaction failed with reason: ${reason}\n${meep}`);
+  constructor(public reason: string, public meep?: string) {
+    super(`Transaction failed with reason: ${reason}${meep ? `\n${meep}` : ''}`);
   }
 }
 

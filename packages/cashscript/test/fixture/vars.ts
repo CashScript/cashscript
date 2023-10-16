@@ -18,8 +18,10 @@ const baseDerivationPath = "m/44'/145'/0'/0";
 
 const aliceNode = deriveHdPath(rootNode, `${baseDerivationPath}/0`);
 const bobNode = deriveHdPath(rootNode, `${baseDerivationPath}/1`);
+const carolNode = deriveHdPath(rootNode, `${baseDerivationPath}/2`);
 if (typeof aliceNode === 'string') throw new Error();
 if (typeof bobNode === 'string') throw new Error();
+if (typeof carolNode === 'string') throw new Error();
 
 export const alicePriv = aliceNode.privateKey;
 export const alicePub = secp256k1.derivePublicKeyCompressed(alicePriv) as Uint8Array;
@@ -31,7 +33,12 @@ export const bobPub = secp256k1.derivePublicKeyCompressed(bobPriv) as Uint8Array
 export const bobPkh = hash160(bobPub);
 export const bobAddress = encodeCashAddress('bchtest', 'p2pkh', bobPkh);
 
+export const carolPriv = carolNode.privateKey;
+export const carolPub = secp256k1.derivePublicKeyCompressed(carolPriv) as Uint8Array;
+export const carolPkh = hash160(carolPub);
+export const carolAddress = encodeCashAddress('bchtest', 'p2pkh', carolPkh);
+
 export const oracle = new PriceOracle(bobPriv);
 export const oraclePub = bobPub;
 
-console.log(aliceAddress, bobAddress);
+console.log(aliceAddress, bobAddress, carolAddress);

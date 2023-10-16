@@ -12,7 +12,7 @@ export {
   SignatureAlgorithm,
   HashType,
   Network,
-  isSignableUtxo,
+  isUtxoP2PKH,
 } from './interfaces.js';
 export * from './Errors.js';
 export {

@@ -1,5 +1,12 @@
 import { decodePrivateKeyWif, secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
-import { HashType, SignatureAlgorithm } from './interfaces.js';
+import { hash256, scriptToBytecode } from '@cashscript/utils';
+import {
+  Unlocker,
+  GenerateUnlockingBytecodeOptions,
+  HashType,
+  SignatureAlgorithm,
+} from './interfaces.js';
+import { createSighashPreimage, publicKeyToP2PKHLockingBytecode } from './utils.js';
 
 export default class SignatureTemplate {
   private privateKey: Uint8Array;
@@ -33,6 +40,23 @@ export default class SignatureTemplate {
 
   getPublicKey(): Uint8Array {
     return secp256k1.derivePublicKeyCompressed(this.privateKey) as Uint8Array;
+  }
+
+  unlockP2PKH(): Unlocker {
+    const publicKey = this.getPublicKey();
+    const prevOutScript = publicKeyToP2PKHLockingBytecode(publicKey);
+    const hashtype = this.getHashType();
+
+    return {
+      generateLockingBytecode: () => prevOutScript,
+      generateUnlockingBytecode: ({ transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions) => {
+        const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, prevOutScript, hashtype);
+        const sighash = hash256(preimage);
+        const signature = this.generateSignature(sighash);
+        const unlockingBytecode = scriptToBytecode([signature, publicKey]);
+        return unlockingBytecode;
+      },
+    };
   }
 }
 

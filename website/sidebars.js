@@ -29,6 +29,7 @@ module.exports = {
       items: [
         'sdk/instantiation',
         'sdk/transactions',
+        'sdk/transactions-advanced',
         'sdk/examples',
       ],
     },

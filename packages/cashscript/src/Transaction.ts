@@ -21,7 +21,7 @@ import {
   Recipient,
   TokenDetails,
   NftObject,
-  isSignableUtxo,
+  isUtxoP2PKH,
   TransactionDetails,
 } from './interfaces.js';
 import {
@@ -169,7 +169,7 @@ export class Transaction {
     const sourceOutputs = this.inputs.map((input) => {
       const sourceOutput = {
         amount: input.satoshis,
-        to: isSignableUtxo(input) ? publicKeyToP2PKHLockingBytecode(input.template.getPublicKey()) : lockingBytecode,
+        to: isUtxoP2PKH(input) ? publicKeyToP2PKHLockingBytecode(input.template.getPublicKey()) : lockingBytecode,
         token: input.token,
       };
 
@@ -189,7 +189,7 @@ export class Transaction {
 
     this.inputs.forEach((utxo, i) => {
       // UTXO's with signature templates are signed using P2PKH
-      if (isSignableUtxo(utxo)) {
+      if (isUtxoP2PKH(utxo)) {
         const pubkey = utxo.template.getPublicKey();
         const prevOutScript = publicKeyToP2PKHLockingBytecode(pubkey);
 
@@ -413,7 +413,7 @@ export class Transaction {
       // If inputs are already defined, the user provided the UTXOs and we perform no further UTXO selection
       if (!this.hardcodedFee) {
         const totalInputSize = this.inputs.reduce(
-          (acc, input) => acc + (isSignableUtxo(input) ? P2PKH_INPUT_SIZE : contractInputSize),
+          (acc, input) => acc + (isUtxoP2PKH(input) ? P2PKH_INPUT_SIZE : contractInputSize),
           0,
         );
         fee += addPrecision(totalInputSize * this.feePerByte);

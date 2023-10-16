@@ -44,16 +44,6 @@ const txDetails = await contract.functions
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
   .send();
 console.log(txDetails);
-
-// Call the timeout function with Alice's signature
-// i.e. Alice recovers the money that Bob has not claimed
-// But because the timeout has not passed yet, the function fails and
-// we call the meep function so the transaction can be debugged instead
-const meepStr = await contract.functions
-  .timeout(new SignatureTemplate(alicePriv))
-  .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000n)
-  .meep();
-console.log(meepStr);
 ```
 
 ## Memo.cash Announcement
