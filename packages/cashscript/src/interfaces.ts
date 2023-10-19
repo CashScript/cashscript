@@ -9,11 +9,35 @@ export interface Utxo {
   token?: TokenDetails;
 }
 
-export interface SignableUtxo extends Utxo {
+export interface UnlockableUtxo extends Utxo {
+  unlocker: Unlocker;
+  options?: InputOptions;
+}
+
+export function isUnlockableUtxo(utxo: Utxo): utxo is UnlockableUtxo {
+  return 'unlocker' in utxo;
+}
+
+export interface InputOptions {
+  sequence?: number;
+}
+
+export interface GenerateUnlockingBytecodeOptions {
+  transaction: Transaction;
+  sourceOutputs: LibauthOutput[];
+  inputIndex: number;
+}
+
+export interface Unlocker {
+  generateLockingBytecode: () => Uint8Array;
+  generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
+}
+
+export interface UtxoP2PKH extends Utxo {
   template: SignatureTemplate;
 }
 
-export function isSignableUtxo(utxo: Utxo): utxo is SignableUtxo {
+export function isUtxoP2PKH(utxo: Utxo): utxo is UtxoP2PKH {
   return 'template' in utxo;
 }
 

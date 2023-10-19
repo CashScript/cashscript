@@ -1,3 +1,4 @@
+import BCHJS from '@psf/bch-js';
 import { Contract, SignatureTemplate, FullStackNetworkProvider } from '../../src/index.js';
 import {
   alicePriv,
@@ -8,8 +9,6 @@ import {
 import { getTxOutputs } from '../test-util.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/p2pkh.json' assert { type: "json" };
-
-const { default: BCHJS } = await import('@psf/bch-js');
 
 describe.skip('P2PKH (using FullStackNetworkProvider)', () => {
   let p2pkhInstance: Contract;

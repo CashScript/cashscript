@@ -97,7 +97,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return this.electrum.shutdown();
   }
 
-  private async performRequest(
+  async performRequest(
     name: string,
     ...parameters: (string | number | boolean)[]
   ): Promise<RequestResponse> {

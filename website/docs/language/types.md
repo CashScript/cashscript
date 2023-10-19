@@ -71,6 +71,9 @@ Operators:
 - `+` (concatenation)
 - `==` (equality)
 - `!=` (inequality)
+- `&` (bitwise AND)
+- `|` (bitwise OR)
+- `^` (bitwise XOR)
 
 Members:
 

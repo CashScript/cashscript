@@ -29,6 +29,7 @@ module.exports = {
       items: [
         'sdk/instantiation',
         'sdk/transactions',
+        'sdk/transactions-advanced',
         'sdk/examples',
       ],
     },
@@ -38,6 +39,7 @@ module.exports = {
       items: [
         'guides/syntax-highlighting',
         'guides/covenants',
+        'guides/optimization'
       ],
     },
     {

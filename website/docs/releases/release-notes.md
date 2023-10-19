@@ -2,6 +2,23 @@
 title: Release Notes
 ---
 
+## v0.9.1
+
+#### CashScript SDK
+- :bug: Fix TransactionBuilder export bug.
+
+## v0.9.0
+
+#### CashScript SDK
+- :sparkles: Add new advanced `TransactionBuilder` class that allows combining UTXOs from multiple different smart contracts and P2PKH UTXOs in a single transaction.
+- :hammer_and_wrench: Deprecate all `meep` functionality. Meep has been unmaintained for years and does not support many new CashScript features. Meep functionality will be removed in a future release.
+
+## v0.8.2
+
+#### CashScript SDK
+- :bug: Fix bug with Vite build.
+- :sparkles: Expose `ElectrumNetworkProvider#performRequest` to allow raw Electrum requests if needed.
+
 ## v0.8.1
 
 #### CashScript SDK

@@ -44,16 +44,6 @@ const txDetails = await contract.functions
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
   .send();
 console.log(txDetails);
-
-// Call the timeout function with Alice's signature
-// i.e. Alice recovers the money that Bob has not claimed
-// But because the timeout has not passed yet, the function fails and
-// we call the meep function so the transaction can be debugged instead
-const meepStr = await contract.functions
-  .timeout(new SignatureTemplate(alicePriv))
-  .to('bitcoincash:qqeht8vnwag20yv8dvtcrd4ujx09fwxwsqqqw93w88', 10000n)
-  .meep();
-console.log(meepStr);
 ```
 
 ## Memo.cash Announcement
@@ -64,7 +54,7 @@ This contract expects a hardcoded transaction fee of 1000 satoshis. This is nece
 To ensure that this leftover money does not get lost in the contract, the contract performs an extra check, and adds the remainder to the transaction fee if it's too low.
 
 ```solidity title="Announcement.cash"
-pragma cashscript ^0.8.0;
+pragma cashscript ^0.9.0;
 
 // This contract enforces making an announcement on Memo.cash and sending the
 // remaining balance back to the contract.

@@ -1,5 +1,5 @@
 ---
-title: Sending Transactions
+title: Simple Transaction Builder
 ---
 
 When calling a contract function on a Contract object, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
@@ -212,10 +212,6 @@ interface TransactionDetails {
 }
 ```
 
-:::tip
-If the transaction fails, a meep command is automatically returned. This command can be used to debug the transaction using the [meep debugger][meep]
-:::
-
 #### Example
 ```ts
 import { alice } from './somewhere';
@@ -245,27 +241,6 @@ const txHex = await instance.functions
   .withFeePerByte(10)
   .build()
 ```
-
-### meep()
-```ts
-async transaction.meep(): Promise<string>
-```
-
-After completing a transaction, the `meep()` function can be used to return the required debugging command for the [meep debugger][meep]. This command string can then be used to debug the transaction.
-
-#### Example
-```ts
-const meepStr = await instance.functions
-  .transfer(new SignatureTemplate(alice))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
-  .withTime(700000)
-  .meep()
-```
-
-:::note
-Meep does not work very well with contracts that use modern CashScript / BCH features, like native introspection, P2SH32 or CashTokens.
-:::
-
 
 ## Transaction errors
 Transactions can fail for a number of reasons. Most of these are related to the execution of the smart contract (e.g. wrong parameters or a bug in the contract code). But errors can also occur because of other reasons (e.g. a fee that's too low or the same transaction already exists in the mempool). To facilitate error handling in your applications, the CashScript SDK provides an enum of different *reasons* for a failure.
@@ -346,7 +321,6 @@ enum Reason {
 ```
 
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
-[meep]: https://github.com/gcash/meep
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 
 [to()]: /docs/sdk/transactions#to
@@ -360,4 +334,3 @@ enum Reason {
 
 [send()]: /docs/sdk/transactions#send
 [build()]: /docs/sdk/transactions#build
-[meep()]: /docs/sdk/transactions#meep

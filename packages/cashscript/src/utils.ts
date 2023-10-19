@@ -191,7 +191,7 @@ export function createSighashPreimage(
   return sighashPreimage;
 }
 
-export function buildError(reason: string, meepStr: string): FailedTransactionError {
+export function buildError(reason: string, meepStr?: string): FailedTransactionError {
   const require = [
     Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
     Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
