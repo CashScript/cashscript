@@ -28,6 +28,14 @@ Tapswap is the first non-custodial marketplace to trade CashTokens, both fungibl
 
 Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project uses CashScript for its non-custodial minting contract. This way the NFT minting guarantees fair access and a transparent NFT launch. The minting page uses a web3 wallet connect feature to allow minting directly from the user's smart contract wallet.
 
+## Cash-Ninjas
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://ninjas.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/cashninjas.jpg" /></a>
+</div>
+
+Cash-Ninjas is a collectibele NFT project on Bitcoin Cash which focuses on building open-source tooling! The Cash-Ninjas project uses CashScript for its non-custodial, multi-threaded minting contract. The contract is open source for others to inspect and use the contract code. The Cash-Ninjas minting page uses wallet connect to allow minting directly from the user's smart contract wallet.
+
 ## Unspent Phi
 
 <div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>
