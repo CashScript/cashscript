@@ -250,7 +250,7 @@ describe('P2PKH-tokens', () => {
 
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
-      const token = { ...tokenUtxo.token!, category: '0x0000000000000000000000000000000000000000000000000000000000000000' };
+      const token = { ...tokenUtxo.token!, category: '0000000000000000000000000000000000000000000000000000000000000000' };
 
       const txPromise = p2pkhInstance.functions
         .spend(alicePub, new SignatureTemplate(alicePriv))
@@ -273,7 +273,7 @@ describe('P2PKH-tokens', () => {
 
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
-      const token = { ...nftUtxo.token!, category: '0x0000000000000000000000000000000000000000000000000000000000000000' };
+      const token = { ...nftUtxo.token!, category: '0000000000000000000000000000000000000000000000000000000000000000' };
 
       const txPromise = p2pkhInstance.functions
         .spend(alicePub, new SignatureTemplate(alicePriv))

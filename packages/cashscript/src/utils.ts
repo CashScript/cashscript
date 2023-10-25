@@ -11,6 +11,7 @@ import {
   flattenBinArray,
   LockingBytecodeType,
   encodeTransactionOutput,
+  isHex,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -69,6 +70,16 @@ export function encodeOutput(output: Output): Uint8Array {
 }
 
 export function cashScriptOutputToLibauthOutput(output: Output): LibauthOutput {
+  if (output.token) {
+    if (typeof output.token.category !== 'string' || !isHex(output.token.category)) {
+      throw new Error(`Provided token category ${output.token?.category} is not a hex string`);
+    }
+
+    if (output.token.nft && (typeof output.token.nft.commitment !== 'string' || !isHex(output.token.nft.commitment))) {
+      throw new Error(`Provided token commitment ${output.token.nft?.commitment} is not a hex string`);
+    }
+  }
+
   return {
     lockingBytecode: typeof output.to === 'string' ? addressToLockScript(output.to) : output.to,
     valueSatoshis: output.amount,
