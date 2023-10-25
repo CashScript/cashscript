@@ -12,6 +12,7 @@ import {
   LockingBytecodeType,
   encodeTransactionOutput,
   isHex,
+  bigIntToCompactSize,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -148,7 +149,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   let size = VERSION_SIZE + LOCKTIME_SIZE;
   size += outputs.reduce((acc, output) => acc + getOutputSize(output), 0);
   // Add tx-out count (accounting for a potential change output)
-  size += encodeInt(BigInt(outputs.length + 1)).byteLength;
+  size += bigIntToCompactSize(BigInt(outputs.length + 1)).byteLength;
 
   return size;
 }
