@@ -282,7 +282,12 @@ export class Transaction {
       throw Error('Attempted to build a transaction without outputs');
     }
 
-    const allUtxos = await this.provider.getUtxos(this.address);
+    // Fetched utxos are only used when no inputs are available, so only fetch in that case.
+    let allUtxos: Utxo[] = [];
+    if(this.inputs.length === 0)
+    {
+      allUtxos = await this.provider.getUtxos(this.address);
+    }
 
     const tokenInputs = this.inputs.length > 0
       ? this.inputs.filter((input) => input.token)
