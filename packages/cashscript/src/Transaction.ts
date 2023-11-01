@@ -8,7 +8,6 @@ import delay from 'delay';
 import {
   AbiFunction,
   placeholder,
-  Script,
   scriptToBytecode,
 } from '@cashscript/utils';
 import deepEqual from 'fast-deep-equal';
@@ -36,10 +35,10 @@ import {
   getOutputSize,
   utxoTokenComparator,
 } from './utils.js';
-import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
+import { Contract } from './Contract.js';
 
 export class Transaction {
   private inputs: Utxo[] = [];
@@ -53,9 +52,7 @@ export class Transaction {
   private tokenChange: boolean = true;
 
   constructor(
-    private address: string,
-    private provider: NetworkProvider,
-    private redeemScript: Script,
+    private contract: Contract,
     private unlocker: Unlocker,
     private abiFunction: AbiFunction,
     private args: (Uint8Array | SignatureTemplate)[],
@@ -148,10 +145,10 @@ export class Transaction {
   }
 
   async build(): Promise<string> {
-    this.locktime = this.locktime ?? await this.provider.getBlockHeight();
+    this.locktime = this.locktime ?? await this.contract.provider.getBlockHeight();
     await this.setInputsAndOutputs();
 
-    const builder = new TransactionBuilder({ provider: this.provider });
+    const builder = new TransactionBuilder({ provider: this.contract.provider });
 
     this.inputs.forEach((utxo) => {
       if (isUtxoP2PKH(utxo)) {
@@ -173,11 +170,11 @@ export class Transaction {
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = await this.build();
     try {
-      const txid = await this.provider.sendRawTransaction(tx);
+      const txid = await this.contract.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw buildError(reason, meep(tx, this.inputs, this.redeemScript));
+      throw buildError(reason, meep(tx, this.inputs, this.contract.redeemScript));
     }
   }
 
@@ -188,7 +185,7 @@ export class Transaction {
     for (let retries = 0; retries < 1200; retries += 1) {
       await delay(500);
       try {
-        const hex = await this.provider.getRawTransaction(txid);
+        const hex = await this.contract.provider.getRawTransaction(txid);
 
         if (raw) return hex;
 
@@ -205,7 +202,7 @@ export class Transaction {
 
   async meep(): Promise<string> {
     const tx = await this.build();
-    return meep(tx, this.inputs, this.redeemScript);
+    return meep(tx, this.inputs, this.contract.redeemScript);
   }
 
   private async setInputsAndOutputs(): Promise<void> {
@@ -214,7 +211,9 @@ export class Transaction {
     }
 
     // Fetched utxos are only used when no inputs are available, so only fetch in that case.
-    const allUtxos: Utxo[] = this.inputs.length === 0 ? await this.provider.getUtxos(this.address) : [];
+    const allUtxos: Utxo[] = this.inputs.length === 0
+      ? await this.contract.provider.getUtxos(this.contract.address)
+      : [];
 
     const tokenInputs = this.inputs.length > 0
       ? this.inputs.filter((input) => input.token)
@@ -226,7 +225,9 @@ export class Transaction {
     }
 
     if (this.tokenChange) {
-      const tokenChangeOutputs = createFungibleTokenChangeOutputs(tokenInputs, this.outputs, this.address);
+      const tokenChangeOutputs = createFungibleTokenChangeOutputs(
+        tokenInputs, this.outputs, this.contract.tokenAddress,
+      );
       this.outputs.push(...tokenChangeOutputs);
     }
 
@@ -305,7 +306,7 @@ export class Transaction {
               commitment: unusedNft.commitment,
             },
           };
-          const nftChangeOutput = { to: this.address, amount: BigInt(1000), token: tokenDetails };
+          const nftChangeOutput = { to: this.contract.tokenAddress, amount: BigInt(1000), token: tokenDetails };
           this.outputs.push(nftChangeOutput);
         }
       }
@@ -318,13 +319,13 @@ export class Transaction {
 
     // Create a placeholder preimage of the correct size
     const placeholderPreimage = this.abiFunction.covenant
-      ? placeholder(getPreimageSize(scriptToBytecode(this.redeemScript)))
+      ? placeholder(getPreimageSize(scriptToBytecode(this.contract.redeemScript)))
       : undefined;
 
     // Create a placeholder input script for size calculation using the placeholder
     // arguments and correctly sized placeholder preimage
     const placeholderScript = createInputScript(
-      this.redeemScript,
+      this.contract.redeemScript,
       placeholderArgs,
       this.selector,
       placeholderPreimage,
@@ -389,12 +390,12 @@ export class Transaction {
 
     // Account for the fee of adding a change output
     if (!this.hardcodedFee) {
-      const changeOutputSize = getOutputSize({ to: this.address, amount: 0n });
+      const changeOutputSize = getOutputSize({ to: this.contract.address, amount: 0n });
       change -= BigInt(changeOutputSize * this.feePerByte);
     }
 
     // Add a change output if applicable
-    const changeOutput = { to: this.address, amount: change };
+    const changeOutput = { to: this.contract.address, amount: change };
     if (change >= this.minChange && change >= calculateDust(changeOutput)) {
       this.outputs.push(changeOutput);
     }

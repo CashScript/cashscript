@@ -33,8 +33,8 @@ export class Contract {
   functions: Record<string, ContractFunction>;
   unlock: Record<string, ContractUnlocker>;
 
-  private redeemScript: Script;
-  private provider: NetworkProvider;
+  redeemScript: Script;
+  provider: NetworkProvider;
   private addressType: 'p2sh20' | 'p2sh32';
 
   constructor(
@@ -123,9 +123,7 @@ export class Contract {
       const unlocker = this.createUnlocker(abiFunction, selector)(...args);
 
       return new Transaction(
-        this.address,
-        this.provider,
-        this.redeemScript,
+        this,
         unlocker,
         abiFunction,
         encodedArgs,
