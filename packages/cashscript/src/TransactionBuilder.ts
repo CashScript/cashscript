@@ -12,7 +12,12 @@ import {
   isUnlockableUtxo,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
-import { buildError, cashScriptOutputToLibauthOutput, createOpReturnOutput } from './utils.js';
+import {
+  buildError,
+  cashScriptOutputToLibauthOutput,
+  createOpReturnOutput,
+  validateOutput,
+} from './utils.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -60,11 +65,11 @@ export class TransactionBuilder {
   }
 
   addOutput(output: Output): this {
-    this.outputs.push(output);
-    return this;
+    return this.addOutputs([output]);
   }
 
   addOutputs(outputs: Output[]): this {
+    outputs.forEach(validateOutput);
     this.outputs = this.outputs.concat(outputs);
     return this;
   }

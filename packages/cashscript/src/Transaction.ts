@@ -30,7 +30,7 @@ import {
   getTxSizeWithoutInputs,
   getPreimageSize,
   buildError,
-  validateRecipient,
+  validateOutput,
   utxoComparator,
   calculateDust,
   getOutputSize,
@@ -100,7 +100,7 @@ export class Transaction {
     }
 
     if (Array.isArray(toOrOutputs) && amount === undefined) {
-      toOrOutputs.forEach(validateRecipient);
+      toOrOutputs.forEach(validateOutput);
       this.outputs = this.outputs.concat(toOrOutputs);
       return this;
     }

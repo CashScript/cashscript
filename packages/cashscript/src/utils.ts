@@ -26,7 +26,6 @@ import {
   Utxo,
   Output,
   Network,
-  Recipient,
   LibauthOutput,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
@@ -41,21 +40,23 @@ import {
 } from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
-export function validateRecipient(recipient: Recipient): void {
-  const minimumAmount = calculateDust(recipient);
-  if (recipient.amount < minimumAmount) {
-    throw new OutputSatoshisTooSmallError(recipient.amount, BigInt(minimumAmount));
+export function validateOutput(output: Output): void {
+  if (typeof output.to !== 'string') return;
+
+  const minimumAmount = calculateDust(output);
+  if (output.amount < minimumAmount) {
+    throw new OutputSatoshisTooSmallError(output.amount, BigInt(minimumAmount));
   }
 
-  if (recipient.token) {
-    if (!isTokenAddress(recipient.to)) {
-      throw new TokensToNonTokenAddressError(recipient.to);
+  if (output.token) {
+    if (!isTokenAddress(output.to)) {
+      throw new TokensToNonTokenAddressError(output.to);
     }
   }
 }
 
-export function calculateDust(recipient: Recipient): number {
-  const outputSize = getOutputSize(recipient);
+export function calculateDust(output: Output): number {
+  const outputSize = getOutputSize(output);
   // Formula used to calculate the minimum allowed output
   const dustAmount = 444 + outputSize * 3;
   return dustAmount;
