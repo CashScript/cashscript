@@ -1,15 +1,12 @@
 import bip68 from 'bip68';
 import {
   hexToBin,
-  binToHex,
-  encodeTransaction,
   decodeTransaction,
   Transaction as LibauthTransaction,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
   AbiFunction,
-  hash256,
   placeholder,
   Script,
   scriptToBytecode,
@@ -23,6 +20,7 @@ import {
   NftObject,
   isUtxoP2PKH,
   TransactionDetails,
+  Unlocker,
 } from './interfaces.js';
 import {
   meep,
@@ -32,19 +30,16 @@ import {
   getTxSizeWithoutInputs,
   getPreimageSize,
   buildError,
-  createSighashPreimage,
   validateRecipient,
   utxoComparator,
-  cashScriptOutputToLibauthOutput,
   calculateDust,
   getOutputSize,
-  addressToLockScript,
-  publicKeyToP2PKHLockingBytecode,
   utxoTokenComparator,
 } from './utils.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { P2PKH_INPUT_SIZE } from './constants.js';
+import { TransactionBuilder } from './TransactionBuilder.js';
 
 export class Transaction {
   private inputs: Utxo[] = [];
@@ -61,6 +56,7 @@ export class Transaction {
     private address: string,
     private provider: NetworkProvider,
     private redeemScript: Script,
+    private unlocker: Unlocker,
     private abiFunction: AbiFunction,
     private args: (Uint8Array | SignatureTemplate)[],
     private selector?: number,
@@ -155,85 +151,20 @@ export class Transaction {
     this.locktime = this.locktime ?? await this.provider.getBlockHeight();
     await this.setInputsAndOutputs();
 
-    const bytecode = scriptToBytecode(this.redeemScript);
-    const lockingBytecode = addressToLockScript(this.address);
+    const builder = new TransactionBuilder({ provider: this.provider });
 
-    const inputs = this.inputs.map((utxo) => ({
-      outpointIndex: utxo.vout,
-      outpointTransactionHash: hexToBin(utxo.txid),
-      sequenceNumber: this.sequence,
-      unlockingBytecode: new Uint8Array(),
-    }));
-
-    // Generate source outputs from inputs (for signing with SIGHASH_UTXOS)
-    const sourceOutputs = this.inputs.map((input) => {
-      const sourceOutput = {
-        amount: input.satoshis,
-        to: isUtxoP2PKH(input) ? publicKeyToP2PKHLockingBytecode(input.template.getPublicKey()) : lockingBytecode,
-        token: input.token,
-      };
-
-      return cashScriptOutputToLibauthOutput(sourceOutput);
-    });
-
-    const outputs = this.outputs.map(cashScriptOutputToLibauthOutput);
-
-    const transaction = {
-      inputs,
-      locktime: this.locktime,
-      outputs,
-      version: 2,
-    };
-
-    const inputScripts: Uint8Array[] = [];
-
-    this.inputs.forEach((utxo, i) => {
-      // UTXO's with signature templates are signed using P2PKH
+    this.inputs.forEach((utxo) => {
       if (isUtxoP2PKH(utxo)) {
-        const pubkey = utxo.template.getPublicKey();
-        const prevOutScript = publicKeyToP2PKHLockingBytecode(pubkey);
-
-        const hashtype = utxo.template.getHashType();
-        const preimage = createSighashPreimage(transaction, sourceOutputs, i, prevOutScript, hashtype);
-        const sighash = hash256(preimage);
-
-        const signature = utxo.template.generateSignature(sighash);
-
-        const inputScript = scriptToBytecode([signature, pubkey]);
-        inputScripts.push(inputScript);
-
-        return;
+        builder.addInput(utxo, utxo.template.unlockP2PKH(), { sequence: this.sequence });
+      } else {
+        builder.addInput(utxo, this.unlocker, { sequence: this.sequence });
       }
-
-      let covenantHashType = -1;
-      const completeArgs = this.args.map((arg) => {
-        if (!(arg instanceof SignatureTemplate)) return arg;
-
-        // First signature is used for sighash preimage (maybe not the best way)
-        if (covenantHashType < 0) covenantHashType = arg.getHashType();
-
-        const preimage = createSighashPreimage(transaction, sourceOutputs, i, bytecode, arg.getHashType());
-        const sighash = hash256(preimage);
-
-        return arg.generateSignature(sighash);
-      });
-
-      const preimage = this.abiFunction.covenant
-        ? createSighashPreimage(transaction, sourceOutputs, i, bytecode, covenantHashType)
-        : undefined;
-
-      const inputScript = createInputScript(
-        this.redeemScript, completeArgs, this.selector, preimage,
-      );
-
-      inputScripts.push(inputScript);
     });
 
-    inputScripts.forEach((script, i) => {
-      transaction.inputs[i].unlockingBytecode = script;
-    });
+    builder.addOutputs(this.outputs);
+    builder.setLocktime(this.locktime);
 
-    return binToHex(encodeTransaction(transaction));
+    return builder.build();
   }
 
   async send(): Promise<TransactionDetails>;
