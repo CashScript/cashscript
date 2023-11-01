@@ -2,6 +2,16 @@
 title: Release Notes
 ---
 
+## v0.9.2
+
+#### CashScript SDK
+
+- :bug: Fix bug where UTXOs would be needlessly retrieved from the network during `build()` calls.
+- :bug: Fix off-by-one fee calculation error with transactions that have many outputs.
+- :bug: Fix bug where no error was thrown when invalid NFT commitment or token category were provided.
+- :hammer_and_wrench: Export all interfaces from CashScript's `interfaces.ts`.
+- :hammer_and_wrench: Merge duplicate code between Transaction.ts and TransactionBuilder.ts
+
 ## v0.9.1
 
 #### CashScript SDK
