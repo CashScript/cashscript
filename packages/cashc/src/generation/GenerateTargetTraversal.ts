@@ -44,7 +44,6 @@ import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
   compileCast,
-  compileGlobalFunction,
   compileNullaryOp,
   compileTimeOp,
   compileUnaryOp,
@@ -311,7 +310,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     node.parameters = this.visitList(node.parameters);
 
-    this.emit(compileGlobalFunction(node.identifier.name as GlobalFunction));
+    if (!node.identifier.definition?.bytecode) {
+      throw new Error('Somehow function symbol definition does not exist or does not specify bytecode'); // Should not happen
+    }
+
+    this.emit(node.identifier.definition.bytecode);
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
 

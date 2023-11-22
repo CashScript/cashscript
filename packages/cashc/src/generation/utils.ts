@@ -7,7 +7,7 @@ import {
   Type,
 } from '@cashscript/utils';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from '../ast/Operator.js';
-import { GlobalFunction, TimeOp } from '../ast/Globals.js';
+import { TimeOp } from '../ast/Globals.js';
 
 export function compileTimeOp(op: TimeOp): Script {
   const mapping = {
@@ -28,25 +28,6 @@ export function compileCast(from: Type, to: Type): Script {
   }
 
   return [];
-}
-
-export function compileGlobalFunction(fn: GlobalFunction): Script {
-  const mapping = {
-    [GlobalFunction.ABS]: [Op.OP_ABS],
-    [GlobalFunction.CHECKDATASIG]: [Op.OP_CHECKDATASIG],
-    [GlobalFunction.CHECKMULTISIG]: [Op.OP_CHECKMULTISIG],
-    [GlobalFunction.CHECKSIG]: [Op.OP_CHECKSIG],
-    [GlobalFunction.MAX]: [Op.OP_MAX],
-    [GlobalFunction.MIN]: [Op.OP_MIN],
-    [GlobalFunction.RIPEMD160]: [Op.OP_RIPEMD160],
-    [GlobalFunction.SHA1]: [Op.OP_SHA1],
-    [GlobalFunction.SHA256]: [Op.OP_SHA256],
-    [GlobalFunction.HASH160]: [Op.OP_HASH160],
-    [GlobalFunction.HASH256]: [Op.OP_HASH256],
-    [GlobalFunction.WITHIN]: [Op.OP_WITHIN],
-  };
-
-  return mapping[fn];
 }
 
 export function compileBinaryOp(op: BinaryOperator, numeric: boolean = false): Script {
