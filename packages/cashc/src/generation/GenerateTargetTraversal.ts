@@ -10,6 +10,9 @@ import {
   resultingType,
   Script,
   scriptToAsm,
+  generateSourceMap,
+  LocationI,
+  LocationData
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -49,19 +52,24 @@ import {
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
+import { Location } from '../ast/Location.js';
 
-export default class GenerateTargetTraversal extends AstTraversal {
+export default class GenerateTargetTraversalWithLocation extends AstTraversal {
+  locationData: LocationData = [];
   output: Script = [];
   stack: string[] = [];
+  souceMap: string;
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
 
-  private emit(op: OpOrData | OpOrData[]): void {
+  private emit(op: OpOrData | OpOrData[], location: LocationI, positionHint?: number): void {
     if (Array.isArray(op)) {
-      this.output.push(...op);
+      op.forEach(val => this.output.push(val as Op));
+      op.forEach(_ => this.locationData.push([location, positionHint]));
     } else {
       this.output.push(op);
+      this.locationData.push([location, positionHint]);
     }
   }
 
@@ -99,6 +107,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // Minimally encode output by going Script -> ASM -> Script
     this.output = asmToScript(scriptToAsm(this.output));
 
+    this.souceMap = generateSourceMap(this.locationData);
+
     return node;
   }
 
@@ -111,35 +121,35 @@ export default class GenerateTargetTraversal extends AstTraversal {
       node.functions = node.functions.map((f, i) => {
         const stackCopy = [...this.stack];
         const selectorIndex = this.getStackIndex('$$');
-        this.emit(encodeInt(BigInt(selectorIndex)));
+        this.emit(encodeInt(BigInt(selectorIndex)), f.location!);
         if (i === node.functions.length - 1) {
-          this.emit(Op.OP_ROLL);
+          this.emit(Op.OP_ROLL, f.location!);
           this.removeFromStack(selectorIndex);
         } else {
-          this.emit(Op.OP_PICK);
+          this.emit(Op.OP_PICK, f.location!);
         }
 
         // All functions are if-else statements, except the final one which is
         // enforced with NUMEQUALVERIFY
-        this.emit(encodeInt(BigInt(i)));
-        this.emit(Op.OP_NUMEQUAL);
+        this.emit(encodeInt(BigInt(i)), f.location!);
+        this.emit(Op.OP_NUMEQUAL, f.location!);
         if (i < node.functions.length - 1) {
-          this.emit(Op.OP_IF);
+          this.emit(Op.OP_IF, f.location!);
         } else {
-          this.emit(Op.OP_VERIFY);
+          this.emit(Op.OP_VERIFY, f.location!);
         }
 
         f = this.visit(f) as FunctionDefinitionNode;
 
         if (i < node.functions.length - 1) {
-          this.emit(Op.OP_ELSE);
+          this.emit(Op.OP_ELSE, f.location!, 1);
         }
 
         this.stack = [...stackCopy];
         return f;
       });
       for (let i = 0; i < node.functions.length - 1; i += 1) {
-        this.emit(Op.OP_ENDIF);
+        this.emit(Op.OP_ENDIF, node.functions[i+1].location!, 1);
       }
     }
 
@@ -152,17 +162,18 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
 
-    this.removeFinalVerify();
-    this.cleanStack();
+    this.removeFinalVerify(node.body);
+    this.cleanStack(node.body);
 
     return node;
   }
 
-  removeFinalVerify(): void {
+  removeFinalVerify(node: Node): void {
     // After EnsureFinalRequireTraversal, we know that the final opcodes are either
     // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
 
     const finalOp = this.output.pop() as Op;
+    const [location] = this.locationData.pop() as [Location, number?];
 
     // If the final op is OP_VERIFY and the stack size is less than 4 we remove it from the script
     // - We have the stack size check because it is more efficient to use 2DROP rather than NIP
@@ -172,22 +183,22 @@ export default class GenerateTargetTraversal extends AstTraversal {
       // we add it back to the stack
       this.pushToStack('(value)');
     } else {
-      this.emit(finalOp);
+      this.emit(finalOp, location!);
 
       // At this point there is no verification value left on the stack:
       //  - scoped stack is cleared inside branch ended by OP_ENDIF
       //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
       // so we add OP_1 to the script (indicating success)
-      this.emit(Op.OP_1);
+      this.emit(Op.OP_1, node.location!, 1);
       this.pushToStack('(value)');
     }
   }
 
-  cleanStack(): void {
+  cleanStack(node: Node): void {
     // Keep final verification value, OP_NIP the other stack values
     const stackSize = this.stack.length;
     for (let i = 0; i < stackSize - 1; i += 1) {
-      this.emit(Op.OP_NIP);
+      this.emit(Op.OP_NIP, node.location!, 1);
       this.nipFromStack();
     }
   }
@@ -215,7 +226,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitAssign(node: AssignNode): Node {
     node.expression = this.visit(node.expression);
     if (this.scopeDepth > 0) {
-      this.emitReplace(this.getStackIndex(node.identifier.name));
+      this.emitReplace(this.getStackIndex(node.identifier.name), node);
       this.popFromStack();
     } else {
       this.popFromStack();
@@ -226,24 +237,25 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   // This algorithm can be optimised for hardcoded depths
   // See thesis for explanation
-  emitReplace(index: number): void {
-    this.emit(encodeInt(BigInt(index)));
-    this.emit(Op.OP_ROLL);
-    this.emit(Op.OP_DROP);
+  emitReplace(index: number, node: Node): void {
+    console.log("replace", index, node)
+    this.emit(encodeInt(BigInt(index)), node.location!);
+    this.emit(Op.OP_ROLL, node.location!);
+    this.emit(Op.OP_DROP, node.location!);
     for (let i = 0; i < index - 1; i += 1) {
-      this.emit(Op.OP_SWAP);
+      this.emit(Op.OP_SWAP, node.location!);
       if (i < index - 2) {
-        this.emit(Op.OP_TOALTSTACK);
+        this.emit(Op.OP_TOALTSTACK, node.location!);
       }
     }
     for (let i = 0; i < index - 2; i += 1) {
-      this.emit(Op.OP_FROMALTSTACK);
+      this.emit(Op.OP_FROMALTSTACK, node.location!);
     }
   }
 
   visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(compileTimeOp(node.timeOp));
+    this.emit(compileTimeOp(node.timeOp), node.location!);
     this.popFromStack();
     return node;
   }
@@ -251,7 +263,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitRequire(node: RequireNode): Node {
     node.expression = this.visit(node.expression);
 
-    this.emit(Op.OP_VERIFY);
+    this.emit(Op.OP_VERIFY, node.location!);
     this.popFromStack();
     return node;
   }
@@ -261,29 +273,30 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.popFromStack();
 
     this.scopeDepth += 1;
-    this.emit(Op.OP_IF);
+    this.emit(Op.OP_IF, node.ifBlock.location!);
 
     let stackDepth = this.stack.length;
     node.ifBlock = this.visit(node.ifBlock);
-    this.removeScopedVariables(stackDepth);
+    this.removeScopedVariables(stackDepth, node);
 
     if (node.elseBlock) {
-      this.emit(Op.OP_ELSE);
+      this.emit(Op.OP_ELSE, node.elseBlock.location!, 1);
       stackDepth = this.stack.length;
       node.elseBlock = this.visit(node.elseBlock);
-      this.removeScopedVariables(stackDepth);
+      this.removeScopedVariables(stackDepth, node);
     }
 
-    this.emit(Op.OP_ENDIF);
+    this.emit(Op.OP_ENDIF, node.elseBlock ? node.elseBlock.location! : node.ifBlock.location!, 1);
     this.scopeDepth -= 1;
 
     return node;
   }
 
-  removeScopedVariables(depthBeforeScope: number): void {
+  removeScopedVariables(depthBeforeScope: number, node: Node): void {
     const dropCount = this.stack.length - depthBeforeScope;
+    console.warn(dropCount)
     for (let i = 0; i < dropCount; i += 1) {
-      this.emit(Op.OP_DROP);
+      this.emit(Op.OP_DROP, node.location!);
       this.popFromStack();
     }
   }
@@ -294,11 +307,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // Special case for sized bytes cast, since it has another node to traverse
     if (node.size) {
       node.size = this.visit(node.size);
-      this.emit(Op.OP_NUM2BIN);
+      this.emit(Op.OP_NUM2BIN, node.location!);
       this.popFromStack();
     }
 
-    this.emit(compileCast(node.expression.type as PrimitiveType, node.type));
+    this.emit(compileCast(node.expression.type as PrimitiveType, node.type), node.location!);
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -311,7 +324,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     node.parameters = this.visitList(node.parameters);
 
-    this.emit(compileGlobalFunction(node.identifier.name as GlobalFunction));
+    this.emit(compileGlobalFunction(node.identifier.name as GlobalFunction), node.location!);
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
 
@@ -319,10 +332,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitMultiSig(node: FunctionCallNode): Node {
-    this.emit(encodeBool(false));
+    this.emit(encodeBool(false), node.location!);
     this.pushToStack('(value)');
     node.parameters = this.visitList(node.parameters);
-    this.emit(Op.OP_CHECKMULTISIG);
+    this.emit(Op.OP_CHECKMULTISIG, node.location!);
     const sigs = node.parameters[0] as ArrayNode;
     const pks = node.parameters[1] as ArrayNode;
     this.popFromStack(sigs.elements.length + pks.elements.length + 3);
@@ -334,70 +347,70 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitInstantiation(node: InstantiationNode): Node {
     if (node.identifier.name === Class.LOCKING_BYTECODE_P2PKH) {
       // OP_DUP OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('76a914'));
+      this.emit(hexToBin('76a914'), node.location!);
       this.pushToStack('(value)');
       // <pkh>
       this.visit(node.parameters[0]);
-      this.emit(Op.OP_CAT);
+      this.emit(Op.OP_CAT, node.location!);
       // OP_EQUAL OP_CHECKSIG
-      this.emit(hexToBin('88ac'));
-      this.emit(Op.OP_CAT);
+      this.emit(hexToBin('88ac'), node.location!);
+      this.emit(Op.OP_CAT, node.location!);
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH20) {
       // OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('a914'));
+      this.emit(hexToBin('a914'), node.location!);
       this.pushToStack('(value)');
       // <script hash>
       this.visit(node.parameters[0]);
-      this.emit(Op.OP_CAT);
+      this.emit(Op.OP_CAT, node.location!);
       // OP_EQUAL
-      this.emit(hexToBin('87'));
-      this.emit(Op.OP_CAT);
+      this.emit(hexToBin('87'), node.location!);
+      this.emit(Op.OP_CAT, node.location!);
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH32) {
       // OP_HASH256 OP_PUSH<32>
-      this.emit(hexToBin('aa20'));
+      this.emit(hexToBin('aa20'), node.location!);
       this.pushToStack('(value)');
       // <script hash>
       this.visit(node.parameters[0]);
-      this.emit(Op.OP_CAT);
+      this.emit(Op.OP_CAT, node.location!);
       // OP_EQUAL
-      this.emit(hexToBin('87'));
-      this.emit(Op.OP_CAT);
+      this.emit(hexToBin('87'), node.location!);
+      this.emit(Op.OP_CAT, node.location!);
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
       // Total script = OP_RETURN (<VarInt> <chunk>)+
       // OP_RETURN
-      this.emit(hexToBin('6a'));
+      this.emit(hexToBin('6a'), node.location!);
       this.pushToStack('(value)');
       const { elements } = node.parameters[0] as ArrayNode;
       // <VarInt data chunk size (dynamic)>
       elements.forEach((el) => {
         this.visit(el);
         // Push the element's size (and calculate VarInt)
-        this.emit(Op.OP_SIZE);
+        this.emit(Op.OP_SIZE, el.location!);
         if (el instanceof HexLiteralNode) {
           // If the argument is a literal, we know its size
           if (el.value.byteLength > 75) {
-            this.emit(hexToBin('4c'));
-            this.emit(Op.OP_SWAP);
-            this.emit(Op.OP_CAT);
+            this.emit(hexToBin('4c'), el.location!);
+            this.emit(Op.OP_SWAP, el.location!);
+            this.emit(Op.OP_CAT, el.location!);
           }
         } else {
           // If the argument is not a literal, the script needs to check size
-          this.emit(Op.OP_DUP);
-          this.emit(encodeInt(75n));
-          this.emit(Op.OP_GREATERTHAN);
-          this.emit(Op.OP_IF);
-          this.emit(hexToBin('4c'));
-          this.emit(Op.OP_SWAP);
-          this.emit(Op.OP_CAT);
-          this.emit(Op.OP_ENDIF);
+          this.emit(Op.OP_DUP, el.location!);
+          this.emit(encodeInt(75n), el.location!);
+          this.emit(Op.OP_GREATERTHAN, el.location!);
+          this.emit(Op.OP_IF, el.location!);
+          this.emit(hexToBin('4c'), el.location!);
+          this.emit(Op.OP_SWAP, el.location!);
+          this.emit(Op.OP_CAT, el.location!);
+          this.emit(Op.OP_ENDIF, el.location!);
         }
         // Concat size and arguments
-        this.emit(Op.OP_SWAP);
-        this.emit(Op.OP_CAT);
-        this.emit(Op.OP_CAT);
+        this.emit(Op.OP_SWAP, el.location!);
+        this.emit(Op.OP_CAT, el.location!);
+        this.emit(Op.OP_CAT, el.location!);
         this.popFromStack();
       });
       this.popFromStack();
@@ -414,10 +427,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.tuple = this.visit(node.tuple);
 
     if (node.index === 0) {
-      this.emit(Op.OP_DROP);
+      this.emit(Op.OP_DROP, node.location!);
       this.popFromStack();
     } else if (node.index === 1) {
-      this.emit(Op.OP_NIP);
+      this.emit(Op.OP_NIP, node.location!);
       this.nipFromStack();
     }
 
@@ -428,7 +441,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
     const isNumeric = resultingType(node.left.type, node.right.type) === PrimitiveType.INT;
-    this.emit(compileBinaryOp(node.operator, isNumeric));
+    this.emit(compileBinaryOp(node.operator, isNumeric), node.location!);
     this.popFromStack(2);
     this.pushToStack('(value)');
     if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value)');
@@ -437,36 +450,36 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(compileUnaryOp(node.operator));
+    this.emit(compileUnaryOp(node.operator), node.location!);
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
   }
 
   visitNullaryOp(node: NullaryOpNode): Node {
-    this.emit(compileNullaryOp(node.operator));
+    this.emit(compileNullaryOp(node.operator), node.location!);
     this.pushToStack('(value)');
     return node;
   }
 
   visitArray(node: ArrayNode): Node {
     node.elements = this.visitList(node.elements);
-    this.emit(encodeInt(BigInt(node.elements.length)));
+    this.emit(encodeInt(BigInt(node.elements.length)), node.location!);
     this.pushToStack('(value)');
     return node;
   }
 
   visitIdentifier(node: IdentifierNode): Node {
     const stackIndex = this.getStackIndex(node.name);
-    this.emit(encodeInt(BigInt(stackIndex)));
+    this.emit(encodeInt(BigInt(stackIndex)), node.location!);
 
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
     if (this.isOpRoll(node)) {
-      this.emit(Op.OP_ROLL);
+      this.emit(Op.OP_ROLL, node.location!);
       this.removeFromStack(stackIndex);
     } else {
-      this.emit(Op.OP_PICK);
+      this.emit(Op.OP_PICK, node.location!);
     }
 
     this.pushToStack('(value)');
@@ -478,25 +491,25 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitBoolLiteral(node: BoolLiteralNode): Node {
-    this.emit(encodeBool(node.value));
+    this.emit(encodeBool(node.value), node.location!);
     this.pushToStack('(value)');
     return node;
   }
 
   visitIntLiteral(node: IntLiteralNode): Node {
-    this.emit(encodeInt(node.value));
+    this.emit(encodeInt(node.value), node.location!);
     this.pushToStack('(value)');
     return node;
   }
 
   visitStringLiteral(node: StringLiteralNode): Node {
-    this.emit(encodeString(node.value));
+    this.emit(encodeString(node.value), node.location!);
     this.pushToStack('(value)');
     return node;
   }
 
   visitHexLiteral(node: HexLiteralNode): Node {
-    this.emit(node.value);
+    this.emit(node.value, node.location!);
     this.pushToStack('(value)');
     return node;
   }

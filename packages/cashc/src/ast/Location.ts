@@ -1,7 +1,8 @@
 import type { ParserRuleContext } from 'antlr4ts/ParserRuleContext.js';
 import type { Token } from 'antlr4ts';
+import { LocationI } from '@cashscript/utils';
 
-export class Location {
+export class Location implements LocationI {
   constructor(public start: Point, public end: Point) {}
 
   static fromCtx(ctx: ParserRuleContext): Location | undefined {
@@ -19,6 +20,13 @@ export class Location {
 
     const start = new Point(token.line, token.charPositionInLine);
     const end = new Point(token.line, token.charPositionInLine + textLength);
+
+    return new Location(start, end);
+  }
+
+  static fromObject(object: LocationI): Location {
+    const start = new Point(object.start.line, object.start.column);
+    const end = new Point(object.end.line, object.end.column);
 
     return new Location(start, end);
   }

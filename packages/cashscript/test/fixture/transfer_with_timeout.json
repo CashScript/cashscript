@@ -35,7 +35,15 @@
     }
   ],
   "bytecode": "OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_ROT OP_CHECKSIG OP_NIP OP_NIP OP_NIP OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_3 OP_ROLL OP_SWAP OP_CHECKSIGVERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 OP_ENDIF",
-  "source": "contract TransferWithTimeout(\n    pubkey sender,\n    pubkey recipient,\n    int timeout\n) {\n    // Require recipient's signature to match\n    function transfer(sig recipientSig) {\n        require(checkSig(recipientSig, recipient));\n    }\n\n    // Require timeout time to be reached and sender's signature to match\n    function timeout(sig senderSig) {\n        require(checkSig(senderSig, sender));\n        require(tx.time >= timeout);\n    }\n}\n",
+  "source": "\npragma cashscript ^0.8.0;\n\ncontract TransferWithTimeout(\n  pubkey sender,\n  pubkey recipient,\n  int timeout\n) {\n  // Require recipient's signature to match\n  function transfer(sig recipientSig) {\n    require(checkSig(recipientSig, recipient));\n  }\n\n  // Require timeout time to be reached and sender's signature to match\n  function timeout(sig senderSig) {\n    require(checkSig(senderSig, sender));\n    require(tx.time >= timeout);\n  }\n}\n",
+  "debug": {
+    "bytecode": "OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG OP_NIP OP_NIP OP_NIP OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_VERIFY OP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP OP_1 OP_NIP OP_ENDIF",
+    "sourceMap": "10:2:12:3;;;;;11:21:11:33;;:35::44;;:12::45;10:2:12:3:1;;;;15::18::0;;;;;16:21:16:30;;:32::38;;:12::39;:4::41;17:23:17:30;;:4::32;;15:2:18:3:1;;",
+    "logs": [
+      { "ip": 18, "line": 14, "data": [{ "stackIndex": 3, "type": "sig" }, "lol"] },
+      { "ip": 18, "line": 14, "data": ["Lol"] }
+    ]
+  },
   "compiler": {
     "name": "cashc",
     "version": "0.8.0-next.0"

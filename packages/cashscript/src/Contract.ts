@@ -34,12 +34,12 @@ export class Contract {
   unlock: Record<string, ContractUnlocker>;
 
   redeemScript: Script;
-  provider: NetworkProvider;
+  public provider: NetworkProvider;
   private addressType: 'p2sh20' | 'p2sh32';
 
   constructor(
-    private artifact: Artifact,
-    constructorArgs: Argument[],
+    public artifact: Artifact,
+    public constructorArgs: Argument[],
     private options?: ContractOptions,
   ) {
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
