@@ -12,7 +12,8 @@ import {
   scriptToAsm,
   generateSourceMap,
   LocationI,
-  LocationData
+  LocationData,
+  LogEntry
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -40,9 +41,11 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
+  ConsoleLogNode,
+  ConsoleLogParameterNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
-import { GlobalFunction, Class } from '../ast/Globals.js';
+import { GlobalFunction, Class, GLOBAL_SYMBOL_TABLE } from '../ast/Globals.js';
 import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
@@ -53,12 +56,14 @@ import {
   compileUnaryOp,
 } from './utils.js';
 import { Location } from '../ast/Location.js';
+import { ParseError } from '../Errors.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   locationData: LocationData = [];
   output: Script = [];
   stack: string[] = [];
   souceMap: string;
+  consoleLogs: LogEntry[];
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
@@ -238,7 +243,6 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   // This algorithm can be optimised for hardcoded depths
   // See thesis for explanation
   emitReplace(index: number, node: Node): void {
-    console.log("replace", index, node)
     this.emit(encodeInt(BigInt(index)), node.location!);
     this.emit(Op.OP_ROLL, node.location!);
     this.emit(Op.OP_DROP, node.location!);
@@ -294,7 +298,6 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   removeScopedVariables(depthBeforeScope: number, node: Node): void {
     const dropCount = this.stack.length - depthBeforeScope;
-    console.warn(dropCount)
     for (let i = 0; i < dropCount; i += 1) {
       this.emit(Op.OP_DROP, node.location!);
       this.popFromStack();
@@ -511,6 +514,38 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitHexLiteral(node: HexLiteralNode): Node {
     this.emit(node.value, node.location!);
     this.pushToStack('(value)');
+    return node;
+  }
+
+  visitConsoleLog(node: ConsoleLogNode): Node {
+    const ip = this.output.length;
+    const line = node.location!.start.line;
+
+    let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
+    if (index === -1) {
+      index = this.consoleLogs.push({
+        ip,
+        line,
+        data: []
+      }) - 1;
+    };
+
+    node.parameters.forEach((parameter: ConsoleLogParameterNode) => {
+      if (parameter.identifier?.name) {
+        const symbol = GLOBAL_SYMBOL_TABLE.get(parameter.identifier.name);
+        if (!symbol) {
+          throw new ParseError(`Invalid symbol for console.log: ${symbol}`);
+        }
+        const stackIndex = this.getStackIndex(parameter.identifier.name);
+        this.consoleLogs[index].data.push({
+          stackIndex,
+          type: typeof symbol.type === "string" ? symbol.type : symbol.toString(),
+        })
+      } else if (parameter.message?.value) {
+        this.consoleLogs[index].data.push(parameter.message.value);
+      }
+    });
+
     return node;
   }
 }

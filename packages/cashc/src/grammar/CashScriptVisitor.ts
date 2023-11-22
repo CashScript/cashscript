@@ -8,6 +8,7 @@ import { CastContext } from "./CashScriptParser.js";
 import { FunctionCallExpressionContext } from "./CashScriptParser.js";
 import { InstantiationContext } from "./CashScriptParser.js";
 import { TupleIndexOpContext } from "./CashScriptParser.js";
+import { ConsoleExpressionContext } from "./CashScriptParser.js";
 import { UnaryIntrospectionOpContext } from "./CashScriptParser.js";
 import { UnaryOpContext } from "./CashScriptParser.js";
 import { BinaryOpContext } from "./CashScriptParser.js";
@@ -89,6 +90,14 @@ export interface CashScriptVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitTupleIndexOp?: (ctx: TupleIndexOpContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `ConsoleExpression`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConsoleExpression?: (ctx: ConsoleExpressionContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by the `UnaryIntrospectionOp`
