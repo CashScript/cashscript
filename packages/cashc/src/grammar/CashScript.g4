@@ -92,6 +92,7 @@ expression
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantiation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
+    | scope='console.' op=('log' | 'warn') expressionList # ConsoleExpression
     | scope='tx.outputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.tokenCategory' | '.nftCommitment' | '.tokenAmount') # UnaryIntrospectionOp
     | scope='tx.inputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.outpointTransactionHash' | '.outpointIndex' | '.unlockingBytecode' | '.sequenceNumber' | '.tokenCategory' | '.nftCommitment' | '.tokenAmount') # UnaryIntrospectionOp
     | expression op=('.reverse()' | '.length') # UnaryOp
@@ -200,3 +201,16 @@ COMMENT
 LINE_COMMENT
     : '//' ~[\r\n]* -> channel(HIDDEN)
     ;
+
+// consoleLogParameter
+//     : Identifier
+//     | StringLiteral
+//     ;
+
+// consoleParameterList
+//     : '(' (consoleLogParameter (',' consoleLogParameter)* ','?)? ')'
+//     ;
+
+// consoleLog
+//     : 'consolelog' consoleParameterList
+//     ;

@@ -33,6 +33,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
+  ConsoleLogNode,
+  ConsoleLogParameterNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -63,6 +65,9 @@ import type {
   InstantiationContext,
   NullaryOpContext,
   UnaryIntrospectionOpContext,
+  ConsoleLogContext,
+  ConsoleLogParameterContext,
+  ConsoleLogExpressionContext,
 } from '../grammar/CashScriptParser.js';
 import type { CashScriptVisitor } from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -376,5 +381,27 @@ export default class AstBuilder
     const hexLiteral = new HexLiteralNode(hexValue);
     hexLiteral.location = Location.fromCtx(ctx);
     return hexLiteral;
+  }
+
+  visitConsoleLogExpression(ctx: ConsoleLogExpressionContext): ConsoleLogNode {
+    return this.visit(ctx.consoleLog()) as ConsoleLogNode;
+  }
+
+  visitConsoleLog(ctx: ConsoleLogContext): ConsoleLogNode {
+    const parameters = ctx.consoleParameterList().consoleLogParameter().map((p) => this.visit(p) as ConsoleLogParameterNode);
+
+    const node = new ConsoleLogNode(parameters);
+    node.location = Location.fromCtx(ctx);
+
+    return node;
+  }
+
+  visitConsoleLogParameter(ctx: ConsoleLogParameterContext): ConsoleLogParameterNode {
+    const stringLiteral = ctx.StringLiteral() ? this.createStringLiteral(ctx as any) : undefined;
+    const identifier = ctx.Identifier() as IdentifierNode | undefined;
+
+    const node = new ConsoleLogParameterNode(stringLiteral, identifier);
+    node.location = Location.fromCtx(ctx);
+    return node;
   }
 }
