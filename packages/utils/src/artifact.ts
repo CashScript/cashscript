@@ -11,12 +11,23 @@ export interface AbiFunction {
   inputs: AbiInput[];
 }
 
+export interface LogEntry {
+  ip: number;
+  line: number;
+  data: Array<{ stackIndex: number, type: string } | string>;
+}
+
 export interface Artifact {
   contractName: string;
   constructorInputs: AbiInput[];
   abi: AbiFunction[];
   bytecode: string;
   source: string;
+  debug?: {
+    bytecode: string;
+    sourceMap: string;
+    logs?: LogEntry[];
+  };
   compiler: {
     name: string;
     version: string;

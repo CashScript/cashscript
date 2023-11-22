@@ -1,4 +1,4 @@
-import { Artifact, optimiseBytecode } from '@cashscript/utils';
+import { Artifact, generateSourceMap, optimiseBytecode } from '@cashscript/utils';
 import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
@@ -28,8 +28,9 @@ export function compileString(code: string): Artifact {
 
   // Bytecode optimisation
   const optimisedBytecode = optimiseBytecode(bytecode);
+  const sourceMap = generateSourceMap(traversal.locationData);
 
-  return generateArtifact(ast, optimisedBytecode, code);
+  return generateArtifact(ast, optimisedBytecode, code, bytecode, sourceMap);
 }
 
 export function compileFile(codeFile: PathLike): Artifact {
