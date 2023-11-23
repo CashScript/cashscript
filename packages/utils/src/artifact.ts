@@ -17,6 +17,12 @@ export interface LogEntry {
   data: Array<{ stackIndex: number, type: string } | string>;
 }
 
+export interface RequireMessage {
+  ip: number;
+  line: number;
+  message: string;
+}
+
 export interface Artifact {
   contractName: string;
   constructorInputs: AbiInput[];
@@ -27,6 +33,7 @@ export interface Artifact {
     bytecode: string;
     sourceMap: string;
     logs?: LogEntry[];
+    requireMessages?: RequireMessage[];
   };
   compiler: {
     name: string;

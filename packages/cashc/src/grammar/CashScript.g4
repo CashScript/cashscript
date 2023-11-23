@@ -68,11 +68,11 @@ assignStatement
     ;
 
 timeOpStatement
-    : 'require' '(' TxVar '>=' expression ')' ';'
+    : 'require' '(' TxVar '>=' expression (',' StringLiteral)? ')' ';'
     ;
 
 requireStatement
-    : 'require' '(' expression ')' ';'
+    : 'require' '(' expression (',' StringLiteral)? ')' ';'
     ;
 
 ifStatement
