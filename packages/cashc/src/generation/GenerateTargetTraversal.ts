@@ -41,11 +41,11 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-  ConsoleLogNode,
-  ConsoleLogParameterNode,
+  ConsoleParameterNode,
+  ConsoleStatementNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
-import { GlobalFunction, Class, GLOBAL_SYMBOL_TABLE } from '../ast/Globals.js';
+import { GlobalFunction, Class } from '../ast/Globals.js';
 import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
@@ -57,16 +57,22 @@ import {
 } from './utils.js';
 import { Location } from '../ast/Location.js';
 import { ParseError } from '../Errors.js';
+import { Symbol } from '../ast/SymbolTable.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
-  locationData: LocationData = [];
+  private locationData: LocationData = []; // detailed location data needed for sourcemap creation
+  souceMap: string;
   output: Script = [];
   stack: string[] = [];
-  souceMap: string;
-  consoleLogs: LogEntry[];
+  consoleLogs: LogEntry[] = [];
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
+  private constructorParameterCount: number;
+
+  constructor(private logSymbols: Symbol[]) {
+    super();
+  }
 
   private emit(op: OpOrData | OpOrData[], location: LocationI, positionHint?: number): void {
     if (Array.isArray(op)) {
@@ -119,6 +125,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    this.constructorParameterCount = node.parameters.length;
     if (node.functions.length === 1) {
       node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
     } else {
@@ -517,10 +524,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return node;
   }
 
-  visitConsoleLog(node: ConsoleLogNode): Node {
-    const ip = this.output.length;
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    // instruction pointer is the count of emitted opcodes + number of constructor data pushes
+    const ip = this.output.length + this.constructorParameterCount;
+
     const line = node.location!.start.line;
 
+    // check if log entry exists for the instruction pointer, create if not
     let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
     if (index === -1) {
       index = this.consoleLogs.push({
@@ -530,19 +540,25 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       }) - 1;
     };
 
-    node.parameters.forEach((parameter: ConsoleLogParameterNode) => {
-      if (parameter.identifier?.name) {
-        const symbol = GLOBAL_SYMBOL_TABLE.get(parameter.identifier.name);
+    node.parameters.forEach((parameter: ConsoleParameterNode) => {
+      if (parameter.identifier) {
+        // we look for all symbols with identifier name
+        // then take the first which is declared in the nearest code block
+        const symbol = this.logSymbols.
+          filter(symbol => symbol.name === parameter.identifier).
+          sort((a, b) => b.definition?.location?.start.line! - a.definition?.location?.start.line!)[0];
+
         if (!symbol) {
-          throw new ParseError(`Invalid symbol for console.log: ${symbol}`);
+          throw new ParseError(`Undefined reference to symbol ${parameter.identifier} at ${parameter.location?.start}`);
         }
-        const stackIndex = this.getStackIndex(parameter.identifier.name);
+
+        const stackIndex = this.getStackIndex(parameter.identifier);
         this.consoleLogs[index].data.push({
           stackIndex,
           type: typeof symbol.type === "string" ? symbol.type : symbol.toString(),
         })
-      } else if (parameter.message?.value) {
-        this.consoleLogs[index].data.push(parameter.message.value);
+      } else if (parameter.message) {
+        this.consoleLogs[index].data.push(parameter.message);
       }
     });
 

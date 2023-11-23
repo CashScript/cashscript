@@ -352,28 +352,28 @@ export class HexLiteralNode extends LiteralNode {
   }
 }
 
-export class ConsoleLogNode extends Node {
+export class ConsoleStatementNode extends Node {
   constructor(
-    public parameters: ConsoleLogParameterNode[],
+    public parameters: ConsoleParameterNode[],
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitConsoleLog(this);
+    return visitor.visitConsoleStatement(this);
   }
 }
 
 
-export class ConsoleLogParameterNode extends Node {
+export class ConsoleParameterNode extends Node {
   constructor(
-    public message?: StringLiteralNode,
-    public identifier?: IdentifierNode,
+    public message?: string,
+    public identifier?: string,
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitConsoleLogParameter(this);
+    return visitor.visitConsoleParameter(this);
   }
 }
