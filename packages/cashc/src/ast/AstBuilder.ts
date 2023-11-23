@@ -183,7 +183,8 @@ export default class AstBuilder
 
   visitTimeOpStatement(ctx: TimeOpStatementContext): TimeOpNode {
     const expression = this.visit(ctx.expression());
-    const timeOp = new TimeOpNode(ctx.TxVar().text as TimeOp, expression);
+    const message = ctx.StringLiteral() && this.createStringLiteral(ctx as any)?.value;
+    const timeOp = new TimeOpNode(ctx.TxVar().text as TimeOp, expression, message);
     timeOp.location = Location.fromCtx(ctx);
 
     return timeOp;
@@ -191,7 +192,8 @@ export default class AstBuilder
 
   visitRequireStatement(ctx: RequireStatementContext): RequireNode {
     const expression = this.visit(ctx.expression());
-    const require = new RequireNode(expression);
+    const message = ctx.StringLiteral() && this.createStringLiteral(ctx as any)?.value;
+    const require = new RequireNode(expression, message);
     require.location = Location.fromCtx(ctx);
     return require;
   }

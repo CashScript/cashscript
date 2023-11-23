@@ -13,7 +13,8 @@ import {
   generateSourceMap,
   LocationI,
   LocationData,
-  LogEntry
+  LogEntry,
+  RequireMessage
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -65,6 +66,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   output: Script = [];
   stack: string[] = [];
   consoleLogs: LogEntry[] = [];
+  requireMessages: RequireMessage[] = [];
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
@@ -267,6 +269,16 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitTimeOp(node: TimeOpNode): Node {
     node.expression = this.visit(node.expression);
     this.emit(compileTimeOp(node.timeOp), node.location!);
+
+    // add debug require message
+    if (node.message) {
+      this.requireMessages.push({
+        ip: this.output.length + this.constructorParameterCount - 1,
+        line: node.location!.start.line,
+        message: node.message
+      });
+    }
+
     this.popFromStack();
     return node;
   }
@@ -275,6 +287,16 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.expression = this.visit(node.expression);
 
     this.emit(Op.OP_VERIFY, node.location!);
+
+    // add debug require message
+    if (node.message) {
+      this.requireMessages.push({
+        ip: this.output.length + this.constructorParameterCount - 1,
+        line: node.location!.start.line,
+        message: node.message
+      });
+    }
+
     this.popFromStack();
     return node;
   }

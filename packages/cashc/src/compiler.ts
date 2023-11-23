@@ -32,7 +32,8 @@ export function compileString(code: string): Artifact {
   return generateArtifact(ast, optimisedBytecode, code, {
     script: traversal.output,
     sourceMap: traversal.souceMap,
-    logs: traversal.consoleLogs
+    logs: traversal.consoleLogs,
+    requireMessages: traversal.requireMessages,
   });
 }
 

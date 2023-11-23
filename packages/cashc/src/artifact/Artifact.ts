@@ -1,4 +1,4 @@
-import { Artifact, LogEntry, Script, scriptToAsm } from '@cashscript/utils';
+import { Artifact, LogEntry, RequireMessage, Script, scriptToAsm } from '@cashscript/utils';
 import { version } from '../index.js';
 import { Ast } from '../ast/AST.js';
 
@@ -9,7 +9,8 @@ export function generateArtifact(
     debug: {
       script: Script,
       sourceMap: string,
-      logs: LogEntry[]
+      logs: LogEntry[],
+      requireMessages: RequireMessage[],
     }
   ): Artifact {
   const { contract } = ast;
@@ -38,6 +39,7 @@ export function generateArtifact(
       bytecode: debugBytecode,
       sourceMap: debug.sourceMap,
       logs: debug.logs,
+      requireMessages: debug.requireMessages,
     },
     compiler: {
       name: 'cashc',

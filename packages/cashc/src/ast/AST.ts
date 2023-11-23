@@ -126,6 +126,7 @@ export class TimeOpNode extends StatementNode {
   constructor(
     public timeOp: TimeOp,
     public expression: ExpressionNode,
+    public message?: string,
   ) {
     super();
   }
@@ -138,6 +139,7 @@ export class TimeOpNode extends StatementNode {
 export class RequireNode extends StatementNode {
   constructor(
     public expression: ExpressionNode,
+    public message?: string,
   ) {
     super();
   }
