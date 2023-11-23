@@ -3,6 +3,7 @@ import {
   hexToBin,
   decodeTransaction,
   Transaction as LibauthTransaction,
+  AuthenticationTemplate,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -39,6 +40,8 @@ import SignatureTemplate from './SignatureTemplate.js';
 import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
+import MockNetworkProvider from './network/MockNetworkProvider.js';
+import { buildTemplate, debugTemplate, evaluateTemplate } from './LibauthTemplate.js';
 
 export class Transaction {
   private inputs: Utxo[] = [];
@@ -169,12 +172,42 @@ export class Transaction {
 
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = await this.build();
+    let template: AuthenticationTemplate | undefined;
     try {
+      if (this.contract.provider instanceof MockNetworkProvider) {
+        template = await buildTemplate({
+          contract: this.contract,
+          transaction: this,
+          transactionHex: tx,
+        });
+        evaluateTemplate(template);
+      }
+
       const txid = await this.contract.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
-    } catch (e: any) {
-      const reason = e.error ?? e.message;
-      throw buildError(reason, meep(tx, this.inputs, this.contract.redeemScript));
+    } catch (maybeNodeError: any) {
+      if (!template) {
+        template = await buildTemplate({
+          contract: this.contract,
+          transaction: this,
+        });
+      }
+
+      const reason = maybeNodeError.error ?? maybeNodeError.message ?? maybeNodeError;
+
+      try {
+        debugTemplate(template, this.contract.artifact);
+      } catch (libauthError: any) {
+        if (this.contract.provider instanceof MockNetworkProvider) {
+          throw buildError(libauthError, "");
+        } else {
+          const message = libauthError + `\n\nUnderlying node error: ${reason}`;
+          throw buildError(message, "");
+        }
+      }
+
+      // this must be unreachable
+      throw buildError(reason, "");
     }
   }
 

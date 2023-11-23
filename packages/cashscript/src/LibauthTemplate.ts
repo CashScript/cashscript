@@ -81,11 +81,13 @@ export const stringify = (any: any, spaces?: number) =>
 export const buildTemplate = async ({
   contract,
   transaction,
+  transactionHex = undefined,
   manglePrivateKeys,
   includeSource = false,
 }: {
   contract: Contract;
   transaction: Transaction;
+  transactionHex?: string;
   manglePrivateKeys?: boolean;
   includeSource?: boolean;
 }): Promise<AuthenticationTemplate> => {
@@ -95,7 +97,7 @@ export const buildTemplate = async ({
     manglePrivateKeys = false;
   }
 
-  const txHex = await transaction.build();
+  const txHex = transactionHex ?? await transaction.build();
 
   const libauthTransaction = decodeTransaction(hexToBin(txHex));
   if (typeof libauthTransaction === "string") {
@@ -537,6 +539,18 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
 
       line += ` ${value}`;
     });
+  }
+
+  const lastState = debugResult[debugResult.length - 1];
+  if (lastState.error) {
+    const requireMessage = (artifact.debug?.requireMessages ?? []).filter(message => message.ip === lastState.ip)[0];
+    if (requireMessage) {
+      throw `${artifact.contractName}.cash:${requireMessage.line} Error in evaluating input index ${lastState.program.inputIndex} with the following message: ${requireMessage.message}.
+${lastState.error}`;
+    } else {
+      throw `Error in evaluating input index ${lastState.program.inputIndex}.
+${lastState.error}`;
+    }
   }
 
   return debugResult;

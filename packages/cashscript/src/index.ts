@@ -14,4 +14,5 @@ export {
   BitcoinRpcNetworkProvider,
   ElectrumNetworkProvider,
   FullStackNetworkProvider,
+  MockNetworkProvider,
 } from './network/index.js';
