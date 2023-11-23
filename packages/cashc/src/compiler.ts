@@ -17,20 +17,23 @@ export function compileString(code: string): Artifact {
   let ast = parseCode(code);
 
   // Semantic analysis
-  ast = ast.accept(new SymbolTableTraversal()) as Ast;
+  const symbolTableTraversal = new SymbolTableTraversal();
+  ast = ast.accept(symbolTableTraversal) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
 
   // Code generation
-  const traversal = new GenerateTargetTraversal();
+  const traversal = new GenerateTargetTraversal(symbolTableTraversal.logSymbols);
   ast = ast.accept(traversal) as Ast;
-  const bytecode = traversal.output;
 
   // Bytecode optimisation
-  const optimisedBytecode = optimiseBytecode(bytecode);
-  const sourceMap = generateSourceMap(traversal.locationData);
+  const optimisedBytecode = optimiseBytecode(traversal.output);
 
-  return generateArtifact(ast, optimisedBytecode, code, bytecode, sourceMap);
+  return generateArtifact(ast, optimisedBytecode, code, {
+    script: traversal.output,
+    sourceMap: traversal.souceMap,
+    logs: traversal.consoleLogs
+  });
 }
 
 export function compileFile(codeFile: PathLike): Artifact {

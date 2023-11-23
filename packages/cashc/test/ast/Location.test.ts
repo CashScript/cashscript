@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { URL } from 'url';
 import { compileString, parseCode } from '../../src/compiler.js';
+import { binToHex, hexToBin, vmNumberToBigInt } from '@bitauth/libauth';
 
 describe('Location', () => {
   it('should retrieve correct text from location', () => {
@@ -29,7 +30,7 @@ contract TransferWithTimeout(
 
     // Require timeout time to be reached and sender's signature to match
     function timeout(sig senderSig) {
-        conolelog("asdf", senderSig, "zxcv");
+      console.log(senderSig, "a", senderSig);
         require(checkSig(senderSig, sender));
         require(tx.time >= timeout);
     }
@@ -37,6 +38,7 @@ contract TransferWithTimeout(
 `;
     const artifact = compileString(code);
     console.log(artifact);
+    // console.log(hexToBin(""), `'${binToHex(Uint8Array.from([]))}'`, vmNumberToBigInt(Uint8Array.from([])));
 
   });
 });

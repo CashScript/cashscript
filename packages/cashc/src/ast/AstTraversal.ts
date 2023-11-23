@@ -25,8 +25,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-  ConsoleLogNode,
-  ConsoleLogParameterNode,
+  ConsoleStatementNode,
+  ConsoleParameterNode,
 } from './AST.js';
 import AstVisitor from './AstVisitor.js';
 
@@ -153,12 +153,12 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
-  visitConsoleLog(node: ConsoleLogNode): Node {
-    node.parameters = this.visitList(node.parameters) as ConsoleLogParameterNode[];
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    node.parameters = this.visitList(node.parameters) as ConsoleParameterNode[];
     return node;
   }
 
-  visitConsoleLogParameter(node: ConsoleLogParameterNode): Node {
+  visitConsoleParameter(node: ConsoleParameterNode): Node {
     return node;
   }
 }

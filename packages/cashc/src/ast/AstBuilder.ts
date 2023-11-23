@@ -33,8 +33,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
-  ConsoleLogNode,
-  ConsoleLogParameterNode,
+  ConsoleStatementNode,
+  ConsoleParameterNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -65,9 +65,8 @@ import type {
   InstantiationContext,
   NullaryOpContext,
   UnaryIntrospectionOpContext,
-  ConsoleLogContext,
-  ConsoleLogParameterContext,
-  ConsoleLogExpressionContext,
+  ConsoleStatementContext,
+  ConsoleParameterContext,
 } from '../grammar/CashScriptParser.js';
 import type { CashScriptVisitor } from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -383,24 +382,22 @@ export default class AstBuilder
     return hexLiteral;
   }
 
-  visitConsoleLogExpression(ctx: ConsoleLogExpressionContext): ConsoleLogNode {
-    return this.visit(ctx.consoleLog()) as ConsoleLogNode;
-  }
-
-  visitConsoleLog(ctx: ConsoleLogContext): ConsoleLogNode {
-    const parameters = ctx.consoleParameterList().consoleLogParameter().map((p) => this.visit(p) as ConsoleLogParameterNode);
-
-    const node = new ConsoleLogNode(parameters);
+  visitConsoleStatement(ctx: ConsoleStatementContext): ConsoleStatementNode {
+    const parameters = ctx.consoleParameterList().consoleParameter().map((p) => this.visit(p) as ConsoleParameterNode);
+    const node = new ConsoleStatementNode(parameters);
     node.location = Location.fromCtx(ctx);
 
     return node;
   }
 
-  visitConsoleLogParameter(ctx: ConsoleLogParameterContext): ConsoleLogParameterNode {
-    const stringLiteral = ctx.StringLiteral() ? this.createStringLiteral(ctx as any) : undefined;
-    const identifier = ctx.Identifier() as IdentifierNode | undefined;
+  visitConsoleParameter(ctx: ConsoleParameterContext): ConsoleParameterNode {
+    let message = (ctx.BooleanLiteral() ?? ctx.HexLiteral() ?? ctx.NumberLiteral() ?? ctx.StringLiteral())?.text;
+    if (message?.[0] === '"') {
+      message = message.slice(1, -1);
+    }
+    const identifier = ctx.Identifier()?.text;
 
-    const node = new ConsoleLogParameterNode(stringLiteral, identifier);
+    const node = new ConsoleParameterNode(message, identifier);
     node.location = Location.fromCtx(ctx);
     return node;
   }

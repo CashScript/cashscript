@@ -15,6 +15,8 @@ import {
   authenticationTemplateToCompilerConfiguration,
   createCompiler,
   createVirtualMachineBCHCHIPs,
+  binToBase64,
+  utf8ToBin,
 } from "@bitauth/libauth";
 import { deflate } from "pako";
 import {
@@ -29,6 +31,7 @@ import { Argument, encodeArgument as csEncodeArgument } from "./Argument.js";
 import SignatureTemplate from "./SignatureTemplate.js";
 import { Transaction } from "./Transaction.js";
 
+// all bitauth variables must be in snake case
 function snake_case(str: string) {
   return (
     str &&
@@ -59,6 +62,7 @@ const encodeArgument = (
   return csEncodeArgument(argument, typeStr);
 };
 
+// stringify version which can serialize otherwise unsupported types
 export const stringify = (any: any, spaces?: number) =>
   JSON.stringify(
     any,
@@ -73,15 +77,6 @@ export const stringify = (any: any, spaces?: number) =>
     },
     spaces
   );
-
-export const getBitauthUri = (template: AuthenticationTemplate) => {
-  const base64toBase64Url = (base64: string) =>
-    base64.replace(/\+/g, "-").replace(/\//g, "_");
-  const payload = base64toBase64Url(
-    binToBase64(deflate(utf8ToBin(stringify(template))))
-  );
-  return `https://ide.bitauth.com/import-template/${payload}`;
-};
 
 export const buildTemplate = async ({
   contract,
@@ -464,7 +459,16 @@ export const buildTemplate = async ({
   } as AuthenticationTemplate;
 };
 
+export const getBitauthUri = (template: AuthenticationTemplate) => {
+  const base64toBase64Url = (base64: string) =>
+    base64.replace(/\+/g, "-").replace(/\//g, "_");
+  const payload = base64toBase64Url(
+    binToBase64(deflate(utf8ToBin(stringify(template))))
+  );
+  return `https://ide.bitauth.com/import-template/${payload}`;
+};
 
+// internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: AuthenticationTemplate) => {
   const configuration = authenticationTemplateToCompilerConfiguration(template);
   const vm = createVirtualMachineBCHCHIPs();
@@ -487,6 +491,7 @@ const createProgram = (template: AuthenticationTemplate) => {
   return { vm, program: scenarioGeneration.scenario.program };
 }
 
+// evaluates the fully defined template, throws upon error
 export const evaluateTemplate = (template: AuthenticationTemplate) => {
   const { vm, program } = createProgram(template);
 
@@ -498,13 +503,14 @@ export const evaluateTemplate = (template: AuthenticationTemplate) => {
   return verifyResult;
 };
 
+// debugs the template, optionally logging the execution data
 export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifact) => {
   const { vm, program } = createProgram(template);
 
   const debugResult = vm.debug(program);
 
   for (const log of artifact.debug?.logs ?? []) {
-    const state = debugResult[log.ip];
+    const state = debugResult.find(state => state.ip === log.ip)!;
 
     let line = `${artifact.contractName}.cash:${log.line}`
     log.data.forEach(element => {
@@ -512,7 +518,7 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
       if (typeof element === "string") {
         value = element;
       } else {
-        const stackItem = state.stack[element.stackIndex];
+        const stackItem = state.stack.slice().reverse()[element.stackIndex];
         switch (element.type) {
           case PrimitiveType.BOOL:
             value = decodeBool(stackItem);
@@ -531,17 +537,8 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
 
       line += ` ${value}`;
     });
-
-    console.log(line);
   }
 
   return debugResult;
 };
-function binToBase64(arg0: Uint8Array): string {
-  throw new Error("Function not implemented.");
-}
-
-function utf8ToBin(arg0: string): string | import("pako").Data {
-  throw new Error("Function not implemented.");
-}
 
