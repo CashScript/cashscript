@@ -1,12 +1,30 @@
-import type { Transaction } from '@bitauth/libauth';
+import { bigIntToVmNumber, binToHex, type Transaction } from '@bitauth/libauth';
 import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
+import { sha256 } from '@cashscript/utils';
 
 export interface Utxo {
   txid: string;
   vout: number;
   satoshis: bigint;
   token?: TokenDetails;
+}
+
+const randomInt = () => BigInt(Math.floor(Math.random() * 10000));
+
+export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => {
+  return {...{
+    txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    vout: Math.floor(Math.random() * 10),
+    satoshis: 10000n + randomInt(),
+  }, ...defaults};
+}
+
+export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => {
+  return {...{
+    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    amount: 10000n + randomInt(),
+  }, ...defaults};
 }
 
 export interface UnlockableUtxo extends Utxo {

@@ -13,6 +13,7 @@ import {
   encodeTransactionOutput,
   isHex,
   bigIntToCompactSize,
+  AuthenticationErrorCommon,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -209,10 +210,14 @@ export function buildError(reason: string, meepStr?: string): FailedTransactionE
     Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
     Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
   ];
-  const timeCheck = [Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME];
+  const timeCheck = [Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME,
+    AuthenticationErrorCommon.negativeLocktime, AuthenticationErrorCommon.unsatisfiedLocktime,
+  ];
   const sigCheck = [
     Reason.SIG_COUNT, Reason.PUBKEY_COUNT, Reason.SIG_HASHTYPE, Reason.SIG_DER,
     Reason.SIG_HIGH_S, Reason.SIG_NULLFAIL, Reason.SIG_BADLENGTH, Reason.SIG_NONSCHNORR,
+
+    AuthenticationErrorCommon.nonNullSignatureFailure,
   ];
 
   if (toRegExp(require).test(reason)) {
