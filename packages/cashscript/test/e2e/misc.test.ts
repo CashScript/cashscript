@@ -1,14 +1,15 @@
-import { Contract, ElectrumNetworkProvider, Network } from '../../src/index.js';
+import { Contract, MockNetworkProvider, ElectrumNetworkProvider, randomUtxo, Network } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import artifact from '../fixture/simple_covenant.json' assert { type: "json" };
 
 describe('Simple Covenant', () => {
-  const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
   let covenant: Contract;
 
   beforeAll(() => {
     covenant = new Contract(artifact, [], { provider });
     console.log(covenant.address);
+    (provider as any).addUtxo?.(covenant.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -27,6 +28,9 @@ describe('Simple Covenant', () => {
 
     it('should succeed with bip68 relative timelock', async () => {
       // given
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+      const covenant = new Contract(artifact, [], { provider });
+
       const to = covenant.address;
       const amount = 1000n;
 

@@ -1,20 +1,29 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider, MockNetworkProvider } from '../../src/index.js';
 import {
   alicePkh,
   alicePub,
   alicePriv,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { Network, TokenDetails, Utxo } from '../../src/interfaces.js';
+import { Network, TokenDetails, Utxo, randomNFT, randomToken, randomUtxo } from '../../src/interfaces.js';
 import artifact from '../fixture/p2pkh.json' assert { type: "json" };
 
 describe('P2PKH-tokens', () => {
   let p2pkhInstance: Contract;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
     p2pkhInstance = new Contract(artifact, [alicePkh], { provider });
     console.log(p2pkhInstance.tokenAddress);
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({vout: 0}));
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({satoshis: 1000n, token: randomToken()}));
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({satoshis: 1000n, token: randomToken()}));
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({satoshis: 1000n, token: randomNFT()}));
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({satoshis: 1000n, token: randomNFT()}));
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({satoshis: 1000n, token: {...randomNFT(), ...randomToken()}}));
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({satoshis: 1000n, token: {...randomToken(), ...randomNFT()}}));
   });
 
   describe('send (tokens)', () => {
