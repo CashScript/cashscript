@@ -22,7 +22,7 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   async getBlockHeight(): Promise<number> {
-    return 1337;
+    return 133700;
   }
 
   async getRawTransaction(txid: string): Promise<string> {

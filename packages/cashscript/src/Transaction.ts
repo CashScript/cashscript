@@ -179,6 +179,7 @@ export class Transaction {
           contract: this.contract,
           transaction: this,
           transactionHex: tx,
+          manglePrivateKeys: false,
         });
         evaluateTemplate(template);
       }
@@ -190,6 +191,7 @@ export class Transaction {
         template = await buildTemplate({
           contract: this.contract,
           transaction: this,
+          manglePrivateKeys: false,
         });
       }
 

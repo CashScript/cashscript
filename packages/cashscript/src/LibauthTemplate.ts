@@ -17,6 +17,7 @@ import {
   createVirtualMachineBCHCHIPs,
   binToBase64,
   utf8ToBin,
+  isHex,
 } from "@bitauth/libauth";
 import { deflate } from "pako";
 import {
@@ -131,9 +132,9 @@ export const buildTemplate = async ({
     contract.artifact.debug ?
       formatLibauthScript(asmToScript(contract.artifact.debug.bytecode), contract.artifact.debug?.sourceMap!, contract.artifact.source).split("\n") :
       contract.artifact.bytecode.split(" ").map((val) => {
-        try {
-          return `<0x${BigInt("0x" + val).toString(16)}>`;
-        } catch {
+        if (isHex(val)) {
+          return `<0x${val}>`
+        } else {
           return val;
         }
       });
