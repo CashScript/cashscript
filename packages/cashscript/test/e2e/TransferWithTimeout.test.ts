@@ -1,3 +1,4 @@
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
   SignatureTemplate,
@@ -12,14 +13,15 @@ import { getTxOutputs } from '../test-util.js';
 import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors.js';
 import artifact from '../fixture/transfer_with_timeout.json' assert { type: "json" };
 import { randomUtxo, toRegExp } from '../../src/utils.js';
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 
 describe('TransferWithTimeout', () => {
   let twtInstancePast: Contract;
   let twtInstanceFuture: Contract;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     twtInstancePast = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
     twtInstanceFuture = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
     console.log(twtInstancePast.address);
@@ -45,7 +47,7 @@ describe('TransferWithTimeout', () => {
       await expect(txPromise).rejects.toThrow(FailedSigCheckError);
       await expect(txPromise).rejects.toThrow(toRegExp([
         Reason.SIG_NULLFAIL,
-        AuthenticationErrorCommon.nonNullSignatureFailure
+        AuthenticationErrorCommon.nonNullSignatureFailure,
       ]));
     });
 
@@ -64,7 +66,7 @@ describe('TransferWithTimeout', () => {
       await expect(txPromise).rejects.toThrow(FailedSigCheckError);
       await expect(txPromise).rejects.toThrow(toRegExp([
         Reason.SIG_NULLFAIL,
-        AuthenticationErrorCommon.nonNullSignatureFailure
+        AuthenticationErrorCommon.nonNullSignatureFailure,
       ]));
     });
 
@@ -83,7 +85,7 @@ describe('TransferWithTimeout', () => {
       await expect(txPromise).rejects.toThrow(FailedTimeCheckError);
       await expect(txPromise).rejects.toThrow(toRegExp([
         Reason.UNSATISFIED_LOCKTIME,
-        AuthenticationErrorCommon.unsatisfiedLocktime
+        AuthenticationErrorCommon.unsatisfiedLocktime,
       ]));
     });
 

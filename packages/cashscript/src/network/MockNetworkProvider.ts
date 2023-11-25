@@ -5,9 +5,9 @@ import NetworkProvider from './NetworkProvider.js';
 import { randomUtxo } from '../utils.js';
 
 // redeclare the addresses from vars.ts instead of importing them
-const aliceAddress = "bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp";
-const bobAddress = "bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc";
-const carolAddress = "bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj";
+const aliceAddress = 'bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp';
+const bobAddress = 'bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc';
+const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
 
 export default class MockNetworkProvider implements NetworkProvider {
   private utxoMap: Record<string, Utxo[]> = {};
@@ -15,7 +15,7 @@ export default class MockNetworkProvider implements NetworkProvider {
   public network: Network = Network.CHIPNET;
 
   constructor() {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i += 1) {
       this.addUtxo(aliceAddress, randomUtxo());
       this.addUtxo(bobAddress, randomUtxo());
       this.addUtxo(carolAddress, randomUtxo());

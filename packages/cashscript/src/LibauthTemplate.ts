@@ -18,6 +18,7 @@ import {
   binToBase64,
   utf8ToBin,
   isHex,
+  AuthenticationProgramStateBCHCHIPs,
 } from "@bitauth/libauth";
 import { deflate } from "pako";
 import {
@@ -33,7 +34,7 @@ import SignatureTemplate from "./SignatureTemplate.js";
 import { Transaction } from "./Transaction.js";
 
 // all bitauth variables must be in snake case
-function snake_case(str: string) {
+const snakeCase = (str: string): string => {
   return (
     str &&
     str
@@ -44,7 +45,7 @@ function snake_case(str: string) {
       .join("_")
   );
 }
-const merge = (array: any) =>
+const merge = (array: any): any =>
   array.reduce(
     (prev: any, cur: any) => ({
       ...prev,
@@ -64,7 +65,7 @@ const encodeArgument = (
 };
 
 // stringify version which can serialize otherwise unsupported types
-export const stringify = (any: any, spaces?: number) =>
+export const stringify = (any: any, spaces?: number): string =>
   JSON.stringify(
     any,
     (_, v) => {
@@ -105,7 +106,7 @@ export const buildTemplate = async ({
 
   const libauthTransaction = decodeTransaction(hexToBin(txHex));
   if (typeof libauthTransaction === "string") {
-    throw libauthTransaction;
+    throw Error(libauthTransaction);
   }
 
   const constructorInputs = contract.artifact.constructorInputs
@@ -176,14 +177,14 @@ export const buildTemplate = async ({
             },
           },
           ...constructorInputs.map((input) => ({
-            [snake_case(input.name)]: {
+            [snakeCase(input.name)]: {
               description: `"${input.name}" parameter of this contract`,
               name: input.name,
               type: "WalletData",
             },
           })),
           ...functionInputs.map((input) => ({
-            [snake_case(input.name)]: {
+            [snakeCase(input.name)]: {
               description: `"${input.name}" parameter of function "${func.name}"`,
               name: input.name,
               type: input.type === PrimitiveType.SIG ? "Key" : "WalletData",
@@ -202,7 +203,7 @@ export const buildTemplate = async ({
                 const hex = binToHex(arg as Uint8Array);
                 const result = hex.length ? `0x${hex}` : hex;
                 return {
-                  [snake_case(input.name)]: result,
+                  [snakeCase(input.name)]: result,
                 };
               }),
             { function_index: functionIndex.toString() },
@@ -215,7 +216,7 @@ export const buildTemplate = async ({
               );
               const result = hex.length ? `0x${hex}` : hex;
               return {
-                [snake_case(input.name)]: result,
+                [snakeCase(input.name)]: result,
               };
             }),
           ]),
@@ -235,7 +236,7 @@ export const buildTemplate = async ({
                 .filter(([input]) => input.type === PrimitiveType.SIG)
                 .map(([input, arg]) => {
                   return {
-                    [snake_case(input.name)]: binToHex(
+                    [snakeCase(input.name)]: binToHex(
                       manglePrivateKeys
                         ? (arg as SignatureTemplate)
                             .getPublicKey()
@@ -399,10 +400,10 @@ export const buildTemplate = async ({
           ...(functionInputs.length
             ? zip(functionInputs, args).map(([input, arg]) =>
                 input.type === PrimitiveType.SIG
-                  ? `<${snake_case(
+                  ? `<${snakeCase(
                       input.name
                     )}.schnorr_signature.all_outputs> // ${input.type}`
-                  : `<${snake_case(input.name)}> // ${input.type} = <${
+                  : `<${snakeCase(input.name)}> // ${input.type} = <${
                       "0x" + binToHex(arg)
                     }>`
               )
@@ -430,7 +431,7 @@ export const buildTemplate = async ({
                   contractParameters[index],
                   constructorInputs[index].type
                 ) as Uint8Array;
-                return `<${snake_case(input.name)}> // ${
+                return `<${snakeCase(input.name)}> // ${
                   input.type === "bytes" ? "bytes" + encoded.length : input.type
                 } = <${"0x" + binToHex(encoded)}>`;
               })
@@ -462,8 +463,8 @@ export const buildTemplate = async ({
   } as AuthenticationTemplate;
 };
 
-export const getBitauthUri = (template: AuthenticationTemplate) => {
-  const base64toBase64Url = (base64: string) =>
+export const getBitauthUri = (template: AuthenticationTemplate): string => {
+  const base64toBase64Url = (base64: string): string =>
     base64.replace(/\+/g, "-").replace(/\//g, "_");
   const payload = base64toBase64Url(
     binToBase64(deflate(utf8ToBin(stringify(template))))
@@ -472,7 +473,7 @@ export const getBitauthUri = (template: AuthenticationTemplate) => {
 };
 
 // internal util. instantiates the virtual machine and compiles the template into a program
-const createProgram = (template: AuthenticationTemplate) => {
+const createProgram = (template: AuthenticationTemplate): any => {
   const configuration = authenticationTemplateToCompilerConfiguration(template);
   const vm = createVirtualMachineBCHCHIPs();
   const compiler = createCompiler(configuration);
@@ -495,7 +496,7 @@ const createProgram = (template: AuthenticationTemplate) => {
 }
 
 // evaluates the fully defined template, throws upon error
-export const evaluateTemplate = (template: AuthenticationTemplate) => {
+export const evaluateTemplate = (template: AuthenticationTemplate): boolean => {
   const { vm, program } = createProgram(template);
 
   const verifyResult = vm.verify(program);
@@ -506,8 +507,10 @@ export const evaluateTemplate = (template: AuthenticationTemplate) => {
   return verifyResult;
 };
 
+export type DebugResult = AuthenticationProgramStateBCHCHIPs[];
+
 // debugs the template, optionally logging the execution data
-export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifact) => {
+export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifact): DebugResult  => {
   const { vm, program } = createProgram(template);
 
   const debugResult = vm.debug(program);
@@ -559,4 +562,3 @@ ${lastState.error}`;
 
   return debugResult;
 };
-

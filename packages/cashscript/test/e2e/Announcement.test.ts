@@ -1,17 +1,23 @@
-import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network } from '../../src/index.js';
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
+import {
+  Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
+} from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import { createOpReturnOutput, randomUtxo, toRegExp, utxoComparator } from '../../src/utils.js';
+import {
+  createOpReturnOutput, randomUtxo, toRegExp, utxoComparator,
+} from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
 import artifact from '../fixture/announcement.json' assert { type: "json" };
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 
 describe('Announcement', () => {
   let announcement: Contract;
   const minerFee = 1000n;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     announcement = new Contract(artifact, [], { provider });
     console.log(announcement.address);
     (provider as any).addUtxo?.(announcement.address, randomUtxo());

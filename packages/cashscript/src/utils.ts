@@ -214,18 +214,18 @@ export function buildError(reason: string, debugStr?: string): FailedTransaction
     Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
     Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
 
-    AuthenticationErrorCommon.failedVerify
+    AuthenticationErrorCommon.failedVerify,
   ];
   const timeCheck = [
     Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME,
 
-    AuthenticationErrorCommon.negativeLocktime, AuthenticationErrorCommon.unsatisfiedLocktime
+    AuthenticationErrorCommon.negativeLocktime, AuthenticationErrorCommon.unsatisfiedLocktime,
   ];
   const sigCheck = [
     Reason.SIG_COUNT, Reason.PUBKEY_COUNT, Reason.SIG_HASHTYPE, Reason.SIG_DER,
     Reason.SIG_HIGH_S, Reason.SIG_NULLFAIL, Reason.SIG_BADLENGTH, Reason.SIG_NONSCHNORR,
 
-    AuthenticationErrorCommon.nonNullSignatureFailure
+    AuthenticationErrorCommon.nonNullSignatureFailure,
   ];
 
   if (toRegExp(require).test(reason)) {
@@ -337,31 +337,33 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   throw Error('Pushdata too large');
 }
 
+const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
 
-const randomInt = () => BigInt(Math.floor(Math.random() * 10000));
-
-export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => {
-  return {...{
+export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
+  ...{
     txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
     vout: Math.floor(Math.random() * 10),
     satoshis: 20000n + randomInt(),
-  }, ...defaults};
-}
+  },
+  ...defaults,
+});
 
-export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => {
-  return {...{
+export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => ({
+  ...{
     category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
     amount: 10000n + randomInt(),
-  }, ...defaults};
-}
+  },
+  ...defaults,
+});
 
-export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => {
-  return {...{
+export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => ({
+  ...{
     category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
     amount: 0n,
     nft: {
       commitment: binToHex(sha256(bigIntToVmNumber(randomInt()))).slice(0, 8),
-      capability: NonFungibleTokenCapability.none
-    }
-  }, ...defaults};
-}
+      capability: NonFungibleTokenCapability.none,
+    },
+  },
+  ...defaults,
+});

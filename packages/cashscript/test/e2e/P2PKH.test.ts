@@ -1,5 +1,7 @@
 import { AuthenticationErrorCommon, binToHex } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, MockNetworkProvider, ElectrumNetworkProvider } from '../../src/index.js';
+import {
+  Contract, SignatureTemplate, MockNetworkProvider, ElectrumNetworkProvider,
+} from '../../src/index.js';
 import {
   bobAddress,
   bobPub,
@@ -9,14 +11,18 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { Network, Utxo } from '../../src/interfaces.js';
-import { createOpReturnOutput, randomUtxo, toRegExp, utxoComparator } from '../../src/utils.js';
+import {
+  createOpReturnOutput, randomUtxo, toRegExp, utxoComparator,
+} from '../../src/utils.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/p2pkh.json' assert { type: "json" };
 
 describe('P2PKH-no-tokens', () => {
   let p2pkhInstance: Contract;
 
-  const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_MOCKNET
+    ? new MockNetworkProvider()
+    : new ElectrumNetworkProvider(Network.CHIPNET);
 
   beforeAll(() => {
     // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other (P2PKH tokens) tests
@@ -42,7 +48,7 @@ describe('P2PKH-no-tokens', () => {
       await expect(txPromise).rejects.toThrow(FailedSigCheckError);
       await expect(txPromise).rejects.toThrow(toRegExp([
         Reason.SIG_NULLFAIL,
-        AuthenticationErrorCommon.nonNullSignatureFailure
+        AuthenticationErrorCommon.nonNullSignatureFailure,
       ]));
     });
 

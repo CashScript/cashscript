@@ -40,7 +40,10 @@ import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
 import MockNetworkProvider from './network/MockNetworkProvider.js';
-import { buildTemplate, debugTemplate, evaluateTemplate, getBitauthUri } from './LibauthTemplate.js';
+import {
+  DebugResult,
+  buildTemplate, debugTemplate, evaluateTemplate, getBitauthUri,
+} from './LibauthTemplate.js';
 
 export class Transaction {
   private inputs: Utxo[] = [];
@@ -204,7 +207,7 @@ export class Transaction {
         if (this.contract.provider instanceof MockNetworkProvider) {
           throw buildError(libauthError, biatuthUri);
         } else {
-          const message = libauthError + `\n\nUnderlying node error: ${reason}`;
+          const message = `${libauthError}\n\nUnderlying node error: ${reason}`;
           throw buildError(message, biatuthUri);
         }
       }
@@ -215,7 +218,7 @@ export class Transaction {
   }
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
-  async debug() {
+  async debug(): Promise<DebugResult> {
     const template = await buildTemplate({
       contract: this.contract,
       transaction: this,
