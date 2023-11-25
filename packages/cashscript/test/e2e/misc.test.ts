@@ -1,6 +1,7 @@
-import { Contract, MockNetworkProvider, ElectrumNetworkProvider, randomUtxo, Network } from '../../src/index.js';
+import { Contract, MockNetworkProvider, ElectrumNetworkProvider, Network } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import artifact from '../fixture/simple_covenant.json' assert { type: "json" };
+import { randomUtxo } from 'cashscript/src/utils.js';
 
 describe('Simple Covenant', () => {
   const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);

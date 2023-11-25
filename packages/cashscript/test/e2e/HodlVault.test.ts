@@ -2,7 +2,6 @@ import {
   Contract,
   SignatureTemplate,
   MockNetworkProvider,
-  randomUtxo,
   ElectrumNetworkProvider,
   Network,
 } from '../../src/index.js';
@@ -16,7 +15,7 @@ import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.json' assert { type: "json" };
 import { AuthenticationErrorCommon } from '@bitauth/libauth';
-import { toRegExp } from '../../src/utils.js';
+import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 describe('HodlVault', () => {
   let hodlVault: Contract;

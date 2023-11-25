@@ -4,7 +4,6 @@ import {
   ElectrumNetworkProvider,
   Network,
   MockNetworkProvider,
-  randomUtxo,
 } from '../../src/index.js';
 import {
   alicePriv, alicePub, bobPriv, bobPub,
@@ -12,7 +11,7 @@ import {
 import { getTxOutputs } from '../test-util.js';
 import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors.js';
 import artifact from '../fixture/transfer_with_timeout.json' assert { type: "json" };
-import { toRegExp } from '../../src/utils.js';
+import { randomUtxo, toRegExp } from '../../src/utils.js';
 import { AuthenticationErrorCommon } from '@bitauth/libauth';
 
 describe('TransferWithTimeout', () => {

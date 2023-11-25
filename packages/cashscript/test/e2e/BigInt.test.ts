@@ -4,14 +4,14 @@ import {
   FailedRequireError,
   FailedTransactionError,
   Reason,
-  randomUtxo,
   ElectrumNetworkProvider,
   Network,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import artifact from '../fixture/bigint.json' assert { type: "json" };
 import { AuthenticationErrorCommon } from '@bitauth/libauth';
-import { toRegExp } from '../../src/utils.js';
+import { randomUtxo, toRegExp } from '../../src/utils.js';
+import { aliceAddress, bobAddress } from '../fixture/vars.js';
 
 describe('BigInt', () => {
   let bigintContract: Contract;

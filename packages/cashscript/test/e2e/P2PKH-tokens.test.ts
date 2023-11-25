@@ -5,8 +5,9 @@ import {
   alicePriv,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { Network, TokenDetails, Utxo, randomNFT, randomToken, randomUtxo } from '../../src/interfaces.js';
+import { Network, TokenDetails, Utxo } from '../../src/interfaces.js';
 import artifact from '../fixture/p2pkh.json' assert { type: "json" };
+import { randomUtxo, randomToken, randomNFT } from 'cashscript/src/utils.js';
 
 describe('P2PKH-tokens', () => {
   let p2pkhInstance: Contract;
