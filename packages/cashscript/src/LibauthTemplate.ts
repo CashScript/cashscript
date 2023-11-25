@@ -79,6 +79,9 @@ export const stringify = (any: any, spaces?: number) =>
     spaces
   );
 
+const zip = (a: any[], b: any[]) =>
+  Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
+
 export const buildTemplate = async ({
   contract,
   transaction,
@@ -125,10 +128,7 @@ export const buildTemplate = async ({
     (val) => isUtxoP2PKH(val)
   ).length;
 
-  const zip = (a: any[], b: any[]) =>
-    Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
-
-  const formattedBytecode =
+    const formattedBytecode =
     contract.artifact.debug ?
       formatLibauthScript(asmToScript(contract.artifact.debug.bytecode), contract.artifact.debug?.sourceMap!, contract.artifact.source).split("\n") :
       contract.artifact.bytecode.split(" ").map((val) => {

@@ -1,6 +1,6 @@
 import { MatcherContext  } from '@jest/expect';
 import { Transaction } from '../src/index.js';
-import { ExpectationResult, SyncExpectationResult } from 'expect';
+import { SyncExpectationResult } from 'expect';
 import { printExpected, printReceived, matcherHint } from "jest-matcher-utils"
 
 export {};
@@ -72,7 +72,7 @@ Contract function did not fail a require statement`;
     message = error as any;
   }
 
-  // // should not have failed
+  // should not have failed
   if (this.isNot) {
     return {
       message: () => `${matcherHint(
@@ -101,5 +101,3 @@ Contract function did not fail a require statement`;
   }
  }
 });
-
-// revertedWith
