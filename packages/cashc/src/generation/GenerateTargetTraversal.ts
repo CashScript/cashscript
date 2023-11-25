@@ -163,7 +163,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
         return f;
       });
       for (let i = 0; i < node.functions.length - 1; i += 1) {
-        this.emit(Op.OP_ENDIF, node.functions[i+1].location!, 1);
+        this.emit(Op.OP_ENDIF, node.location!, 1);
       }
     }
 
