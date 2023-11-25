@@ -117,7 +117,7 @@ export const buildTemplate = async ({
   const abiFunction = (transaction as any).abiFunction as AbiFunction;
   const funcName = abiFunction.name;
   const functionIndex = contract.artifact.abi.findIndex(
-    (val) => val.name === funcName,
+    (abiFunction) => abiFunction.name === funcName,
   )!;
   const func: AbiFunction = contract.artifact.abi[functionIndex];
   const functionInputs = func.inputs.slice().reverse();
@@ -126,16 +126,16 @@ export const buildTemplate = async ({
     .reverse();
 
   const hasSignatureTemplates = ((transaction as any).inputs as Utxo[]).filter(
-    (val) => isUtxoP2PKH(val),
+    (input) => isUtxoP2PKH(input),
   ).length;
 
   const formattedBytecode = contract.artifact.debug
     ? formatLibauthScript(asmToScript(contract.artifact.debug.bytecode), contract.artifact.debug?.sourceMap!, contract.artifact.source).split('\n')
-    : contract.artifact.bytecode.split(' ').map((val) => {
-      if (isHex(val)) {
-        return `<0x${val}>`;
+    : contract.artifact.bytecode.split(' ').map((asmElement) => {
+      if (isHex(asmElement)) {
+        return `<0x${asmElement}>`;
       }
-      return val;
+      return asmElement;
     });
 
   return {
