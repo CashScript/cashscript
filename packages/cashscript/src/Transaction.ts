@@ -23,7 +23,6 @@ import {
   Unlocker,
 } from './interfaces.js';
 import {
-  meep,
   createInputScript,
   getInputSize,
   createOpReturnOutput,
@@ -197,19 +196,21 @@ export class Transaction {
 
       const reason = maybeNodeError.error ?? maybeNodeError.message ?? maybeNodeError;
 
+      const biatuthUri = getBitauthUri(template);
+
       try {
         debugTemplate(template, this.contract.artifact);
       } catch (libauthError: any) {
         if (this.contract.provider instanceof MockNetworkProvider) {
-          throw buildError(libauthError, "");
+          throw buildError(libauthError, biatuthUri);
         } else {
           const message = libauthError + `\n\nUnderlying node error: ${reason}`;
-          throw buildError(message, "");
+          throw buildError(message, biatuthUri);
         }
       }
 
       // this must be unreachable
-      throw buildError(reason, "");
+      throw buildError(reason, biatuthUri);
     }
   }
 
@@ -243,11 +244,6 @@ export class Transaction {
 
     // Should not happen
     throw new Error('Could not retrieve transaction details for over 10 minutes');
-  }
-
-  async meep(): Promise<string> {
-    const tx = await this.build();
-    return meep(tx, this.inputs, this.contract.redeemScript);
   }
 
   private async setInputsAndOutputs(): Promise<void> {

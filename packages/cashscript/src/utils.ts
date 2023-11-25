@@ -209,7 +209,7 @@ export function createSighashPreimage(
   return sighashPreimage;
 }
 
-export function buildError(reason: string, meepStr?: string): FailedTransactionError {
+export function buildError(reason: string, debugStr?: string): FailedTransactionError {
   const require = [
     Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
     Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
@@ -229,28 +229,22 @@ export function buildError(reason: string, meepStr?: string): FailedTransactionE
   ];
 
   if (toRegExp(require).test(reason)) {
-    return new FailedRequireError(reason, meepStr);
+    return new FailedRequireError(reason, debugStr);
   }
 
   if (toRegExp(timeCheck).test(reason)) {
-    return new FailedTimeCheckError(reason, meepStr);
+    return new FailedTimeCheckError(reason, debugStr);
   }
 
   if (toRegExp(sigCheck).test(reason)) {
-    return new FailedSigCheckError(reason, meepStr);
+    return new FailedSigCheckError(reason, debugStr);
   }
 
-  return new FailedTransactionError(reason, meepStr);
+  return new FailedTransactionError(reason, debugStr);
 }
 
 export function toRegExp(reasons: string[]): RegExp {
   return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
-}
-
-// ////////// MISC ////////////////////////////////////////////////////////////
-export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey = binToHex(scriptToLockingBytecode(script, 'p2sh20'));
-  return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
 export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32', tokenSupport: boolean): string {
