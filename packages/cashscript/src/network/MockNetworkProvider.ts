@@ -1,8 +1,13 @@
 import { binToHex, hexToBin } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
-import { Utxo, Network, randomUtxo } from '../interfaces.js';
+import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
-import { aliceAddress, bobAddress, carolAddress } from '../../test/fixture/vars.js';
+import { randomUtxo } from '../utils.js';
+
+// redeclare the addresses from vars.ts instead of importing them
+const aliceAddress = "bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp";
+const bobAddress = "bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc";
+const carolAddress = "bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj";
 
 export default class MockNetworkProvider implements NetworkProvider {
   private utxoMap: Record<string, Utxo[]> = {};
