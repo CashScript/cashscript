@@ -1,5 +1,6 @@
-import { Contract } from "./Contract.js";
-import { AbiFunction, Artifact, PrimitiveType, asmToScript, decodeBool, decodeInt, decodeString, formatLibauthScript } from "@cashscript/utils";
+import {
+  AbiFunction, Artifact, PrimitiveType, asmToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
+} from '@cashscript/utils';
 import {
   hash160,
   hexToBin,
@@ -19,8 +20,12 @@ import {
   utf8ToBin,
   isHex,
   AuthenticationProgramStateBCHCHIPs,
-} from "@bitauth/libauth";
-import { deflate } from "pako";
+  AuthenticationProgramCommon,
+  AuthenticationVirtualMachine,
+  ResolvedTransactionCommon,
+} from '@bitauth/libauth';
+import { deflate } from 'pako';
+import { Contract } from './Contract.js';
 import {
   UtxoP2PKH,
   LibauthOutput,
@@ -28,35 +33,32 @@ import {
   Network,
   Utxo,
   isUtxoP2PKH,
-} from "../src/interfaces.js";
-import { Argument, encodeArgument as csEncodeArgument } from "./Argument.js";
-import SignatureTemplate from "./SignatureTemplate.js";
-import { Transaction } from "./Transaction.js";
+} from '../src/interfaces.js';
+import { Argument, encodeArgument as csEncodeArgument } from './Argument.js';
+import SignatureTemplate from './SignatureTemplate.js';
+import { Transaction } from './Transaction.js';
 
 // all bitauth variables must be in snake case
-const snakeCase = (str: string): string => {
-  return (
-    str &&
-    str
+const snakeCase = (str: string): string => (
+  str
+    && str
       .match(
-        /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g
+        /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
       )!
       .map((s) => s.toLowerCase())
-      .join("_")
-  );
-}
-const merge = (array: any): any =>
-  array.reduce(
-    (prev: any, cur: any) => ({
-      ...prev,
-      ...{ [Object.keys(cur)[0]]: cur[Object.keys(cur)[0]] },
-    }),
-    {}
-  );
+      .join('_')
+);
+const merge = (array: any): any => array.reduce(
+  (prev: any, cur: any) => ({
+    ...prev,
+    ...{ [Object.keys(cur)[0]]: cur[Object.keys(cur)[0]] },
+  }),
+  {},
+);
 
 const encodeArgument = (
   argument: Argument,
-  typeStr: string
+  typeStr: string,
 ): Uint8Array | SignatureTemplate => {
   if (typeStr === PrimitiveType.INT && argument === 0n) {
     return Uint8Array.from([0]);
@@ -65,23 +67,21 @@ const encodeArgument = (
 };
 
 // stringify version which can serialize otherwise unsupported types
-export const stringify = (any: any, spaces?: number): string =>
-  JSON.stringify(
-    any,
-    (_, v) => {
-      if (typeof v === "bigint") {
-        return `${v.toString()}`;
-      }
-      if (v instanceof Uint8Array) {
-        return `${binToHex(v)}`;
-      }
-      return v;
-    },
-    spaces
-  );
+export const stringify = (any: any, spaces?: number): string => JSON.stringify(
+  any,
+  (_, v) => {
+    if (typeof v === 'bigint') {
+      return `${v.toString()}`;
+    }
+    if (v instanceof Uint8Array) {
+      return `${binToHex(v)}`;
+    }
+    return v;
+  },
+  spaces,
+);
 
-const zip = (a: any[], b: any[]) =>
-  Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
+const zip = (a: any[], b: any[]): any[] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
 export const buildTemplate = async ({
   contract,
@@ -105,7 +105,7 @@ export const buildTemplate = async ({
   const txHex = transactionHex ?? await transaction.build();
 
   const libauthTransaction = decodeTransaction(hexToBin(txHex));
-  if (typeof libauthTransaction === "string") {
+  if (typeof libauthTransaction === 'string') {
     throw Error(libauthTransaction);
   }
 
@@ -117,7 +117,7 @@ export const buildTemplate = async ({
   const abiFunction = (transaction as any).abiFunction as AbiFunction;
   const funcName = abiFunction.name;
   const functionIndex = contract.artifact.abi.findIndex(
-    (val) => val.name === funcName
+    (val) => val.name === funcName,
   )!;
   const func: AbiFunction = contract.artifact.abi[functionIndex];
   const functionInputs = func.inputs.slice().reverse();
@@ -126,68 +126,66 @@ export const buildTemplate = async ({
     .reverse();
 
   const hasSignatureTemplates = ((transaction as any).inputs as Utxo[]).filter(
-    (val) => isUtxoP2PKH(val)
+    (val) => isUtxoP2PKH(val),
   ).length;
 
-    const formattedBytecode =
-    contract.artifact.debug ?
-      formatLibauthScript(asmToScript(contract.artifact.debug.bytecode), contract.artifact.debug?.sourceMap!, contract.artifact.source).split("\n") :
-      contract.artifact.bytecode.split(" ").map((val) => {
-        if (isHex(val)) {
-          return `<0x${val}>`
-        } else {
-          return val;
-        }
-      });
+  const formattedBytecode = contract.artifact.debug
+    ? formatLibauthScript(asmToScript(contract.artifact.debug.bytecode), contract.artifact.debug?.sourceMap!, contract.artifact.source).split('\n')
+    : contract.artifact.bytecode.split(' ').map((val) => {
+      if (isHex(val)) {
+        return `<0x${val}>`;
+      }
+      return val;
+    });
 
   return {
-    $schema: "https://ide.bitauth.com/authentication-template-v0.schema.json",
+    $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: `Imported from cashscript${
-      includeSource ? contract.artifact.source : ""
+      includeSource ? contract.artifact.source : ''
     }`,
     name: contract.artifact.contractName,
     entities: {
       parameters: {
-        description: "Contract creation and function parameters",
-        name: "parameters",
+        description: 'Contract creation and function parameters',
+        name: 'parameters',
         scripts: [
-          "lock",
-          "unlock_lock",
+          'lock',
+          'unlock_lock',
           ...(hasSignatureTemplates
-            ? ["p2pkh_placeholder_lock", "p2pkh_placeholder_unlock"]
+            ? ['p2pkh_placeholder_lock', 'p2pkh_placeholder_unlock']
             : []),
         ],
         variables: merge([
           ...(hasSignatureTemplates
             ? [
-                {
-                  placeholder_key: {
-                    description: "placeholder_key",
-                    name: "placeholder_key",
-                    type: "Key",
-                  },
+              {
+                placeholder_key: {
+                  description: 'placeholder_key',
+                  name: 'placeholder_key',
+                  type: 'Key',
                 },
-              ]
+              },
+            ]
             : []),
           {
             function_index: {
-              description: "Script function index to execute",
-              name: "function_index",
-              type: "WalletData",
+              description: 'Script function index to execute',
+              name: 'function_index',
+              type: 'WalletData',
             },
           },
           ...constructorInputs.map((input) => ({
             [snakeCase(input.name)]: {
               description: `"${input.name}" parameter of this contract`,
               name: input.name,
-              type: "WalletData",
+              type: 'WalletData',
             },
           })),
           ...functionInputs.map((input) => ({
             [snakeCase(input.name)]: {
               description: `"${input.name}" parameter of function "${func.name}"`,
               name: input.name,
-              type: input.type === PrimitiveType.SIG ? "Key" : "WalletData",
+              type: input.type === PrimitiveType.SIG ? 'Key' : 'WalletData',
             },
           })),
         ]),
@@ -211,8 +209,8 @@ export const buildTemplate = async ({
               const hex = binToHex(
                 encodeArgument(
                   contractParameters[index],
-                  constructorInputs[index].type
-                ) as Uint8Array
+                  constructorInputs[index].type,
+                ) as Uint8Array,
               );
               const result = hex.length ? `0x${hex}` : hex;
               return {
@@ -226,31 +224,29 @@ export const buildTemplate = async ({
             privateKeys: merge([
               ...(hasSignatureTemplates
                 ? [
-                    {
-                      placeholder_key:
-                        "<Uint8Array: 0x0000000000000000000000000000000000000000000000000000000000000000>",
-                    },
-                  ]
+                  {
+                    placeholder_key:
+                        '<Uint8Array: 0x0000000000000000000000000000000000000000000000000000000000000000>',
+                  },
+                ]
                 : []),
               ...zip(functionInputs, args)
                 .filter(([input]) => input.type === PrimitiveType.SIG)
-                .map(([input, arg]) => {
-                  return {
-                    [snakeCase(input.name)]: binToHex(
-                      manglePrivateKeys
-                        ? (arg as SignatureTemplate)
-                            .getPublicKey()
-                            .slice(0, 32)
-                            .slice(0, 32)
-                        : (arg as SignatureTemplate | any).privateKey
-                    ),
-                  };
-                }),
+                .map(([input, arg]) => ({
+                  [snakeCase(input.name)]: binToHex(
+                    manglePrivateKeys
+                      ? (arg as SignatureTemplate)
+                        .getPublicKey()
+                        .slice(0, 32)
+                        .slice(0, 32)
+                      : (arg as SignatureTemplate | any).privateKey,
+                  ),
+                })),
             ]),
           },
         },
         transaction: [libauthTransaction].map((val: TransactionBCH) => {
-          const result = {} as AuthenticationTemplateScenario["transaction"];
+          const result = {} as AuthenticationTemplateScenario['transaction'];
           let inputSlotInserted = false;
           result!.inputs = val!.inputs!.map((input, index) => {
             const csInput = (transaction as any).inputs[index] as Utxo;
@@ -258,17 +254,17 @@ export const buildTemplate = async ({
             let unlockingBytecode = {};
             if (signable) {
               unlockingBytecode = {
-                script: "p2pkh_placeholder_unlock",
+                script: 'p2pkh_placeholder_unlock',
                 overrides: {
                   keys: {
                     privateKeys: {
                       placeholder_key: binToHex(
                         manglePrivateKeys
                           ? (csInput as UtxoP2PKH).template
-                              .getPublicKey()
-                              .slice(0, 32)
+                            .getPublicKey()
+                            .slice(0, 32)
                           : ((csInput as UtxoP2PKH).template as any)
-                              .privateKey
+                            .privateKey,
                       ),
                     },
                   },
@@ -276,8 +272,9 @@ export const buildTemplate = async ({
               };
             } else {
               // assume it is our contract's input
+              // eslint-disable-next-line
               if (!inputSlotInserted) {
-                unlockingBytecode = ["slot"];
+                unlockingBytecode = ['slot'];
                 inputSlotInserted = true;
               }
             }
@@ -288,7 +285,7 @@ export const buildTemplate = async ({
                   ? binToHex(input.outpointTransactionHash)
                   : input.outpointTransactionHash,
               sequenceNumber: input.sequenceNumber,
-              unlockingBytecode: unlockingBytecode,
+              unlockingBytecode,
             } as AuthenticationTemplateScenarioInput;
           });
           result!.locktime = val?.locktime;
@@ -296,8 +293,8 @@ export const buildTemplate = async ({
           result!.outputs = val?.outputs?.map(
             (output: LibauthOutput, index) => {
               const csOutput = (transaction as any).outputs[index] as Output;
-              let lockingBytecode: any = output.lockingBytecode;
-              if (typeof csOutput.to === "string") {
+              let { lockingBytecode }: any = output;
+              if (typeof csOutput.to === 'string') {
                 if (
                   [
                     contract.address,
@@ -310,20 +307,20 @@ export const buildTemplate = async ({
                     if (isUtxoP2PKH(csInput)) {
                       const inputPkh = hash160(csInput.template.getPublicKey());
                       if (
-                        binToHex(output.lockingBytecode).slice(6, 46) ===
-                        binToHex(inputPkh)
+                        binToHex(output.lockingBytecode).slice(6, 46)
+                        === binToHex(inputPkh)
                       ) {
                         lockingBytecode = {
-                          script: "p2pkh_placeholder_lock",
+                          script: 'p2pkh_placeholder_lock',
                           overrides: {
                             keys: {
                               privateKeys: {
                                 placeholder_key: binToHex(
                                   manglePrivateKeys
                                     ? csInput.template
-                                        .getPublicKey()
-                                        .slice(0, 32)
-                                    : (csInput.template as any).privateKey
+                                      .getPublicKey()
+                                      .slice(0, 32)
+                                    : (csInput.template as any).privateKey,
                                 ),
                               },
                             },
@@ -342,138 +339,145 @@ export const buildTemplate = async ({
                 token: output.token,
                 valueSatoshis: Number(output.valueSatoshis),
               } as AuthenticationTemplateScenarioTransactionOutput;
-            }
+            },
           );
           result!.version = libauthTransaction.version;
           return result;
-        })[0] as AuthenticationTemplateScenario["transaction"],
+        })[0] as AuthenticationTemplateScenario['transaction'],
         sourceOutputs: [transaction].map((val: Transaction) => {
           let inputSlotInserted = false;
           return ((val as any).inputs as Utxo[]).map(
-          (_, index) => {
-            const result = {} as
+            (_, index) => {
+              const result = {} as
               | AuthenticationTemplateScenarioSourceOutput
               | any;
-            const csInput = (transaction as any).inputs[index] as Utxo;
-            const signable = isUtxoP2PKH(csInput);
-            let unlockingBytecode = {};
-            if (signable) {
-              unlockingBytecode = {
-                script: "p2pkh_placeholder_lock",
-                overrides: {
-                  keys: {
-                    privateKeys: {
-                      placeholder_key: binToHex(
-                        manglePrivateKeys
-                          ? csInput.template.getPublicKey().slice(0, 32)
-                          : (csInput.template as any).privateKey
-                      ),
+              const csInput = (transaction as any).inputs[index] as Utxo;
+              const signable = isUtxoP2PKH(csInput);
+              let unlockingBytecode = {};
+              if (signable) {
+                unlockingBytecode = {
+                  script: 'p2pkh_placeholder_lock',
+                  overrides: {
+                    keys: {
+                      privateKeys: {
+                        placeholder_key: binToHex(
+                          manglePrivateKeys
+                            ? csInput.template.getPublicKey().slice(0, 32)
+                            : (csInput.template as any).privateKey,
+                        ),
+                      },
                     },
                   },
-                },
-              } as AuthenticationTemplateScenarioBytecode;
-            } else {
-              // assume it is our contract's input
-              if (!inputSlotInserted) {
-                unlockingBytecode = ["slot"];
-                inputSlotInserted = true;
+                } as AuthenticationTemplateScenarioBytecode;
+              } else {
+                // assume it is our contract's input
+                // eslint-disable-next-line
+                if (!inputSlotInserted) {
+                  unlockingBytecode = ['slot'];
+                  inputSlotInserted = true;
+                }
               }
-            }
 
-            result.lockingBytecode = unlockingBytecode;
-            result.valueSatoshis = Number(csInput.satoshis);
-            result.token = csInput.token;
-            return result;
-          });
+              result.lockingBytecode = unlockingBytecode;
+              result.valueSatoshis = Number(csInput.satoshis);
+              result.token = csInput.token;
+              return result;
+            },
+          );
         })[0],
         description:
-          "An example evaluation where this script execution passes.",
-        name: "Evaluate",
+          'An example evaluation where this script execution passes.',
+        name: 'Evaluate',
       },
     },
     scripts: {
       unlock_lock: {
-        passes: ["evaluate_function"],
-        name: "unlock",
+        passes: ['evaluate_function'],
+        name: 'unlock',
         script: [
           `// "${func.name}" function parameters`,
           ...(functionInputs.length
-            ? zip(functionInputs, args).map(([input, arg]) =>
-                input.type === PrimitiveType.SIG
-                  ? `<${snakeCase(
-                      input.name
-                    )}.schnorr_signature.all_outputs> // ${input.type}`
-                  : `<${snakeCase(input.name)}> // ${input.type} = <${
-                      "0x" + binToHex(arg)
-                    }>`
-              )
-            : ["// none"]),
-          "",
+            ? zip(functionInputs, args).map(([input, arg]) => (input.type === PrimitiveType.SIG
+              ? `<${snakeCase(
+                input.name,
+              )}.schnorr_signature.all_outputs> // ${input.type}`
+              : `<${snakeCase(input.name)}> // ${input.type} = <${
+                `0x${binToHex(arg)}`
+              }>`))
+            : ['// none']),
+          '',
 
           ...(contract.artifact.abi.length > 1
             ? [
-                "// function index in contract",
-                `<function_index> // int = <${functionIndex.toString()}>`,
-                "",
-              ]
+              '// function index in contract',
+              `<function_index> // int = <${functionIndex.toString()}>`,
+              '',
+            ]
             : []),
-        ].join("\n"),
-        unlocks: "lock",
+        ].join('\n'),
+        unlocks: 'lock',
       },
       lock: {
-        lockingType: "p2sh20",
-        name: "lock",
+        lockingType: 'p2sh20',
+        name: 'lock',
         script: [
           `// "${contract.artifact.contractName}" contract constructor parameters`,
           ...(constructorInputs.length
             ? constructorInputs.map((input, index) => {
-                const encoded = encodeArgument(
-                  contractParameters[index],
-                  constructorInputs[index].type
-                ) as Uint8Array;
-                return `<${snakeCase(input.name)}> // ${
-                  input.type === "bytes" ? "bytes" + encoded.length : input.type
-                } = <${"0x" + binToHex(encoded)}>`;
-              })
-            : ["// none"]),
-          "",
-          "// bytecode",
+              const encoded = encodeArgument(
+                contractParameters[index],
+                constructorInputs[index].type,
+              ) as Uint8Array;
+              return `<${snakeCase(input.name)}> // ${
+                input.type === 'bytes' ? `bytes${encoded.length}` : input.type
+              } = <${`0x${binToHex(encoded)}`}>`;
+            })
+            : ['// none']),
+          '',
+          '// bytecode',
           ...formattedBytecode,
-        ].join("\n"),
+        ].join('\n'),
       },
       ...(hasSignatureTemplates
         ? {
-            p2pkh_placeholder_unlock: {
-              name: "p2pkh_placeholder_unlock",
-              script:
-                "<placeholder_key.schnorr_signature.all_outputs>\n<placeholder_key.public_key>",
-              unlocks: "p2pkh_placeholder_lock",
-            },
-            p2pkh_placeholder_lock: {
-              lockingType: "standard",
-              name: "p2pkh_placeholder_lock",
-              script:
-                "OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG",
-            },
-          }
+          p2pkh_placeholder_unlock: {
+            name: 'p2pkh_placeholder_unlock',
+            script:
+                '<placeholder_key.schnorr_signature.all_outputs>\n<placeholder_key.public_key>',
+            unlocks: 'p2pkh_placeholder_lock',
+          },
+          p2pkh_placeholder_lock: {
+            lockingType: 'standard',
+            name: 'p2pkh_placeholder_lock',
+            script:
+                'OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
+          },
+        }
         : {}),
     },
-    supported: ["BCH_SPEC"],
+    supported: ['BCH_SPEC'],
     version: 0,
   } as AuthenticationTemplate;
 };
 
 export const getBitauthUri = (template: AuthenticationTemplate): string => {
-  const base64toBase64Url = (base64: string): string =>
-    base64.replace(/\+/g, "-").replace(/\//g, "_");
+  const base64toBase64Url = (base64: string): string => base64.replace(/\+/g, '-').replace(/\//g, '_');
   const payload = base64toBase64Url(
-    binToBase64(deflate(utf8ToBin(stringify(template))))
+    binToBase64(deflate(utf8ToBin(stringify(template)))),
   );
   return `https://ide.bitauth.com/import-template/${payload}`;
 };
 
+type VM = AuthenticationVirtualMachine<
+ResolvedTransactionCommon,
+AuthenticationProgramCommon,
+AuthenticationProgramStateBCHCHIPs
+>;
+type Program = AuthenticationProgramCommon;
+type CreateProgramResult = { vm: VM, program: Program };
+
 // internal util. instantiates the virtual machine and compiles the template into a program
-const createProgram = (template: AuthenticationTemplate): any => {
+const createProgram = (template: AuthenticationTemplate): CreateProgramResult => {
   const configuration = authenticationTemplateToCompilerConfiguration(template);
   const vm = createVirtualMachineBCHCHIPs();
   const compiler = createCompiler(configuration);
@@ -481,26 +485,28 @@ const createProgram = (template: AuthenticationTemplate): any => {
   const scenarioGeneration = compiler.generateScenario({
     debug: true,
     lockingScriptId: undefined,
-    unlockingScriptId: "unlock_lock",
-    scenarioId: "evaluate_function",
+    unlockingScriptId: 'unlock_lock',
+    scenarioId: 'evaluate_function',
   });
 
   if (
-    typeof scenarioGeneration === "string" ||
-    typeof scenarioGeneration.scenario === "string"
+    typeof scenarioGeneration === 'string'
+    || typeof scenarioGeneration.scenario === 'string'
   ) {
+    // eslint-disable-next-line
     throw scenarioGeneration;
   }
 
   return { vm, program: scenarioGeneration.scenario.program };
-}
+};
 
 // evaluates the fully defined template, throws upon error
 export const evaluateTemplate = (template: AuthenticationTemplate): boolean => {
   const { vm, program } = createProgram(template);
 
   const verifyResult = vm.verify(program);
-  if (typeof verifyResult === "string") {
+  if (typeof verifyResult === 'string') {
+    // eslint-disable-next-line
     throw verifyResult;
   }
 
@@ -510,21 +516,21 @@ export const evaluateTemplate = (template: AuthenticationTemplate): boolean => {
 export type DebugResult = AuthenticationProgramStateBCHCHIPs[];
 
 // debugs the template, optionally logging the execution data
-export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifact): DebugResult  => {
+export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifact): DebugResult => {
   const { vm, program } = createProgram(template);
 
   const debugResult = vm.debug(program);
 
   for (const log of artifact.debug?.logs ?? []) {
-    const state = debugResult.find(state => state.ip === log.ip)!;
+    const { stack } = debugResult.find((state: AuthenticationProgramStateBCHCHIPs) => state.ip === log.ip)!;
 
-    let line = `${artifact.contractName}.cash:${log.line}`
-    log.data.forEach(element => {
+    let line = `${artifact.contractName}.cash:${log.line}`;
+    log.data.forEach((element) => {
       let value: any;
-      if (typeof element === "string") {
+      if (typeof element === 'string') {
         value = element;
       } else {
-        const stackItem = state.stack.slice().reverse()[element.stackIndex];
+        const stackItem = stack.slice().reverse()[element.stackIndex];
         switch (element.type) {
           case PrimitiveType.BOOL:
             value = decodeBool(stackItem);
@@ -550,11 +556,13 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
 
   const lastState = debugResult[debugResult.length - 1];
   if (lastState.error) {
-    const requireMessage = (artifact.debug?.requireMessages ?? []).filter(message => message.ip === lastState.ip)[0];
+    const requireMessage = (artifact.debug?.requireMessages ?? []).filter((message) => message.ip === lastState.ip)[0];
     if (requireMessage) {
+      // eslint-disable-next-line
       throw `${artifact.contractName}.cash:${requireMessage.line} Error in evaluating input index ${lastState.program.inputIndex} with the following message: ${requireMessage.message}.
 ${lastState.error}`;
     } else {
+      // eslint-disable-next-line
       throw `Error in evaluating input index ${lastState.program.inputIndex}.
 ${lastState.error}`;
     }
