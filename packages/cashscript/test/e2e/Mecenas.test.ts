@@ -1,4 +1,4 @@
-import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network, randomUtxo } from '../../src/index.js';
+import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network } from '../../src/index.js';
 import {
   alicePkh,
   bobPkh,
@@ -9,7 +9,7 @@ import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/mecenas.json' assert { type: "json" };
 import { AuthenticationErrorCommon } from '@bitauth/libauth';
-import { toRegExp } from '../../src/utils.js';
+import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {

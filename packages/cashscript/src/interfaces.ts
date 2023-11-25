@@ -10,34 +10,6 @@ export interface Utxo {
   token?: TokenDetails;
 }
 
-const randomInt = () => BigInt(Math.floor(Math.random() * 10000));
-
-export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => {
-  return {...{
-    txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
-    vout: Math.floor(Math.random() * 10),
-    satoshis: 20000n + randomInt(),
-  }, ...defaults};
-}
-
-export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => {
-  return {...{
-    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
-    amount: 10000n + randomInt(),
-  }, ...defaults};
-}
-
-export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => {
-  return {...{
-    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
-    amount: 0n,
-    nft: {
-      commitment: binToHex(sha256(bigIntToVmNumber(randomInt()))).slice(0, 8),
-      capability: NonFungibleTokenCapability.none
-    }
-  }, ...defaults};
-}
-
 export interface UnlockableUtxo extends Utxo {
   unlocker: Unlocker;
   options?: InputOptions;

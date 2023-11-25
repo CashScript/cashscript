@@ -8,8 +8,8 @@ import {
   alicePriv,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { Network, Utxo, randomUtxo } from '../../src/interfaces.js';
-import { createOpReturnOutput, toRegExp, utxoComparator } from '../../src/utils.js';
+import { Network, Utxo } from '../../src/interfaces.js';
+import { createOpReturnOutput, randomUtxo, toRegExp, utxoComparator } from '../../src/utils.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/p2pkh.json' assert { type: "json" };
 

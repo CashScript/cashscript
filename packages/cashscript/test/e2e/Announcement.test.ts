@@ -1,7 +1,7 @@
-import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network, randomUtxo } from '../../src/index.js';
+import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import { createOpReturnOutput, toRegExp, utxoComparator } from '../../src/utils.js';
+import { createOpReturnOutput, randomUtxo, toRegExp, utxoComparator } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
 import artifact from '../fixture/announcement.json' assert { type: "json" };
 import { AuthenticationErrorCommon } from '@bitauth/libauth';

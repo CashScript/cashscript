@@ -14,11 +14,14 @@ import {
   isHex,
   bigIntToCompactSize,
   AuthenticationErrorCommon,
+  NonFungibleTokenCapability,
+  bigIntToVmNumber,
 } from '@bitauth/libauth';
 import {
   encodeInt,
   hash160,
   hash256,
+  sha256,
   Op,
   Script,
   scriptToBytecode,
@@ -28,6 +31,7 @@ import {
   Output,
   Network,
   LibauthOutput,
+  TokenDetails,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -337,4 +341,33 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   if (byteLength < 76) return Uint8Array.from([byteLength]);
   if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
   throw Error('Pushdata too large');
+}
+
+
+const randomInt = () => BigInt(Math.floor(Math.random() * 10000));
+
+export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => {
+  return {...{
+    txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    vout: Math.floor(Math.random() * 10),
+    satoshis: 20000n + randomInt(),
+  }, ...defaults};
+}
+
+export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => {
+  return {...{
+    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    amount: 10000n + randomInt(),
+  }, ...defaults};
+}
+
+export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => {
+  return {...{
+    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    amount: 0n,
+    nft: {
+      commitment: binToHex(sha256(bigIntToVmNumber(randomInt()))).slice(0, 8),
+      capability: NonFungibleTokenCapability.none
+    }
+  }, ...defaults};
 }
