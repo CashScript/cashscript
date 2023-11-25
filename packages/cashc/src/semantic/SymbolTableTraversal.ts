@@ -174,9 +174,9 @@ export default class SymbolTableTraversal extends AstTraversal {
   visitConsoleStatement(node: ConsoleStatementNode): ConsoleStatementNode {
     // there might be same-name symbols in different code scopes
     // so we collect all symbols with their location, which will be analyzed later
-    const symbols = node.parameters.
-      map(parameter => this.symbolTables[0].get(parameter.identifier!)!).
-      filter(symbol => symbol);
+    const symbols = node.parameters
+      .map((parameter) => this.symbolTables[0].get(parameter.identifier!)!)
+      .filter((symbol) => symbol);
 
     this.logSymbols.push(...symbols);
     return node;

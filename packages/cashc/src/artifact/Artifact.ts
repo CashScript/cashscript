@@ -1,18 +1,20 @@
-import { Artifact, LogEntry, RequireMessage, Script, scriptToAsm } from '@cashscript/utils';
+import {
+  Artifact, LogEntry, RequireMessage, Script, scriptToAsm,
+} from '@cashscript/utils';
 import { version } from '../index.js';
 import { Ast } from '../ast/AST.js';
 
 export function generateArtifact(
-    ast: Ast,
+  ast: Ast,
+  script: Script,
+  source: string,
+  debug: {
     script: Script,
-    source: string,
-    debug: {
-      script: Script,
-      sourceMap: string,
-      logs: LogEntry[],
-      requireMessages: RequireMessage[],
-    }
-  ): Artifact {
+    sourceMap: string,
+    logs: LogEntry[],
+    requireMessages: RequireMessage[],
+  },
+): Artifact {
   const { contract } = ast;
 
   const constructorInputs = contract.parameters
@@ -50,7 +52,7 @@ export function generateArtifact(
 }
 
 // strip verbose debug info from artifact for production use
-export function stripArtifact(artifact: Artifact): Omit<Artifact, "debug"> {
+export function stripArtifact(artifact: Artifact): Omit<Artifact, 'debug'> {
   delete artifact.debug;
   return artifact;
 }
