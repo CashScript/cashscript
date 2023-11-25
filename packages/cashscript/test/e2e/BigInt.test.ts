@@ -1,3 +1,4 @@
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
   MockNetworkProvider,
@@ -9,9 +10,7 @@ import {
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import artifact from '../fixture/bigint.json' assert { type: "json" };
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import { randomUtxo, toRegExp } from '../../src/utils.js';
-import { aliceAddress, bobAddress } from '../fixture/vars.js';
 
 describe('BigInt', () => {
   let bigintContract: Contract;
@@ -19,7 +18,9 @@ describe('BigInt', () => {
   const MAX_INT64 = BigInt('9223372036854775807');
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     bigintContract = new Contract(artifact, [], { provider });
     console.log(bigintContract.address);
     (provider as any).addUtxo?.(bigintContract.address, randomUtxo());

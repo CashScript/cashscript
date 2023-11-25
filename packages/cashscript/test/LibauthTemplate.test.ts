@@ -1,10 +1,12 @@
-import { Contract, MockNetworkProvider, SignatureTemplate } from '../src/index.js';
-import { alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import { compileString } from 'cashc';
-import "./JestExtensions.js";
+import { Contract, MockNetworkProvider, SignatureTemplate } from '../src/index.js';
+import {
+  alicePriv, alicePub, bobPriv, bobPub,
+} from './fixture/vars.js';
+import './JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 
-describe(`Libauth template generation tests`, () => {
+describe('Libauth template generation tests', () => {
   it('should log console statements', async () => {
     const code = `
     pragma cashscript ^0.9.0;
@@ -38,7 +40,7 @@ describe(`Libauth template generation tests`, () => {
     const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
 
     await (expect(transaction)).toLog(/0x[0-9a-f]{130} 100000 0x[0-9a-f]{66} 0x[0-9a-f]{66} 0xbeef 1 test true/);
-    await (expect(transaction)).toLog("beef");
+    await (expect(transaction)).toLog('beef');
   });
 
   it('should check for failed requires', async () => {

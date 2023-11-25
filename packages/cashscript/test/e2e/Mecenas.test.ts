@@ -1,4 +1,7 @@
-import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network } from '../../src/index.js';
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
+import {
+  Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
+} from '../../src/index.js';
 import {
   alicePkh,
   bobPkh,
@@ -8,7 +11,6 @@ import {
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/mecenas.json' assert { type: "json" };
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 // Mecenas has tx.age check omitted for testing
@@ -18,7 +20,9 @@ describe('Mecenas', () => {
   const minerFee = 1000n;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider });
     console.log(mecenas.address);
     (provider as any).addUtxo?.(mecenas.address, randomUtxo());

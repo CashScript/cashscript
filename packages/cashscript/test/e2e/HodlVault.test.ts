@@ -1,3 +1,4 @@
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
   SignatureTemplate,
@@ -14,14 +15,15 @@ import {
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.json' assert { type: "json" };
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 describe('HodlVault', () => {
   let hodlVault: Contract;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET ? new MockNetworkProvider() : new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
     console.log(hodlVault.address);
     (provider as any).addUtxo?.(hodlVault.address, randomUtxo());
