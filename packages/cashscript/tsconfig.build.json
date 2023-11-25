@@ -7,5 +7,10 @@
 
   "include": [
     "src/**/*",
+    "test/JestExtensions.ts",
+  ],
+
+  "exclude": [
+    "test/fixture"
   ],
 }
