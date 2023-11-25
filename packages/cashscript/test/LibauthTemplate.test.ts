@@ -1,97 +1,98 @@
-import { Contract, MockNetworkProvider, Network, SignatureTemplate, Utxo, randomUtxo } from '../src/index.js';
-import artifact from './fixture/transfer_with_timeout.json' assert { type: "json" };
+import { Contract, MockNetworkProvider, SignatureTemplate } from '../src/index.js';
 import { alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
-import { buildTemplate, debugTemplate, evaluateTemplate, stringify } from '../src/LibauthTemplate.js';
 import { compileString } from 'cashc';
-import { binToHex } from '@bitauth/libauth';
+import "./JestExtensions.js";
+import { randomUtxo } from '../src/utils.js';
 
 describe(`Libauth template generation tests`, () => {
-  test("Test transfer with timeout template", async () => {
-    // {
-    //   const code = `
-    //   pragma cashscript ^0.9.0;
-      
-    //   contract TransferWithTimeout(
-    //       pubkey sender,
-    //       pubkey recipient,
-    //       int timeout
-    //   ) {
-    //       // Require recipient's signature to match
-    //       function transfer(sig recipientSig) {
-    //         console.log(recipientSig, timeout, recipient, sender, 1, "A");
-    //           require(checkSig(recipientSig, recipient));
-    //       }
+  it('should log console statements', async () => {
+    const code = `
+    pragma cashscript ^0.9.0;
 
-    //       // Require timeout time to be reached and sender's signature to match
-    //       function timeout(sig senderSig) {
+    contract TransferWithTimeout(
+        pubkey sender,
+        pubkey recipient,
+        int timeout
+    ) {
+        // Require recipient's signature to match
+        function transfer(sig recipientSig) {
+            bytes2 beef = 0xbeef;
+            console.log(recipientSig, timeout, recipient, sender, beef, 1, "test", true);
+            require(beef != 0xfeed);
+            require(checkSig(recipientSig, recipient));
+        }
 
-    //           require(checkSig(senderSig, sender));
-    //           require(tx.time >= timeout);
-    //       }
-    //   }
-    //   `;
-    //       const artifact = compileString(code);
+        // Require timeout time to be reached and sender's signature to match
+        function timeout(sig senderSig) {
+            require(checkSig(senderSig, sender));
+            require(tx.time >= timeout);
+        }
+    }
+    `;
+    const artifact = compileString(code);
 
-    //   const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-    //   const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
-    //   console.log(binToHex(alicePub), binToHex(bobPub));
+    const provider = new MockNetworkProvider();
+    const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+    provider.addUtxo(contract.address, randomUtxo());
 
-    //   const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
-    //   const template = await buildTemplate({
-    //     contract,
-    //     transaction,
-    //     manglePrivateKeys: false
-    //   });
+    const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
 
-    //   console.log(stringify(template));
-    //   debugTemplate(template, artifact);
+    await (expect(transaction)).toLog(/0x[0-9a-f]{130} 100000 0x[0-9a-f]{66} 0x[0-9a-f]{66} 0xbeef 1 test true/);
+    await (expect(transaction)).toLog("beef");
+  });
 
+  it('should check for failed requires', async () => {
+    const code = `
+    pragma cashscript ^0.9.0;
 
-    //   // expect(evaluateTemplate(template)).toBe(true);
-    // }
+    contract TransferWithTimeout(
+        pubkey sender,
+        pubkey recipient,
+        int timeout
+    ) {
+        // Require recipient's signature to match
+        function transfer(sig recipientSig) {
+            require(checkSig(recipientSig, recipient));
+        }
 
+        // Require timeout time to be reached and sender's signature to match
+        function timeout(sig senderSig) {
+            require(checkSig(senderSig, sender), "sigcheck custom fail");
+            require(tx.time >= timeout);
+        }
+
+        function timeout2(sig senderSig) {
+            require(tx.time >= timeout, "timecheck custom fail");
+            require(checkSig(senderSig, sender));
+        }
+    }
+    `;
+
+    const artifact = compileString(code);
+
+    const provider = new MockNetworkProvider();
     {
-      const code = `
-      pragma cashscript ^0.9.0;
-
-      contract TransferWithTimeout(
-          pubkey sender,
-          pubkey recipient,
-          int timeout
-      ) {
-          // Require recipient's signature to match
-          function transfer(sig recipientSig) {
-              require(checkSig(recipientSig, recipient));
-          }
-
-          // Require timeout time to be reached and sender's signature to match
-          function timeout(sig senderSig) {
-              // require(checkSig(senderSig, sender), "lol");
-              // require(checkSig(senderSig, sender));
-              require(senderSig == senderSig);
-              require(sender == sender);
-              require(tx.time >= timeout);
-          }
-      }
-      `;
-      const artifact = compileString(code);
-
-      // const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const provider = new MockNetworkProvider();
       const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.timeout(new SignatureTemplate(alicePriv)).to(contract.address, 1000n);
-      const template = await buildTemplate({
-        contract,
-        transaction,
-        manglePrivateKeys: false
-      });
+      const transaction = contract.functions.timeout(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/sigcheck custom fail/);
+    }
 
-      // debugTemplate(template, artifact);
-      await transaction.send();
+    {
+      const contract = new Contract(artifact, [alicePub, bobPub, 1000000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
 
-      // expect(debugTemplate(template)).toBe(false);
+      const transaction = contract.functions.timeout2(new SignatureTemplate(alicePriv)).to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/timecheck custom fail/);
+    }
+
+    {
+      const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
+      await expect(transaction).not.toFailRequireWith(/timecheck custom fail/);
     }
   });
 });
