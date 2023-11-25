@@ -41,7 +41,7 @@ import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
 import MockNetworkProvider from './network/MockNetworkProvider.js';
-import { buildTemplate, debugTemplate, evaluateTemplate } from './LibauthTemplate.js';
+import { buildTemplate, debugTemplate, evaluateTemplate, getBitauthUri } from './LibauthTemplate.js';
 
 export class Transaction {
   private inputs: Utxo[] = [];
@@ -211,6 +211,16 @@ export class Transaction {
       // this must be unreachable
       throw buildError(reason, "");
     }
+  }
+
+  // method to debug the transaction with libauth VM, throws upon evaluation error
+  async debug() {
+    const template = await buildTemplate({
+      contract: this.contract,
+      transaction: this,
+      manglePrivateKeys: false,
+    });
+    return debugTemplate(template, this.contract.artifact);
   }
 
   private async getTxDetails(txid: string): Promise<TransactionDetails>

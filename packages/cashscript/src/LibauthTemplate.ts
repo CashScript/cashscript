@@ -128,7 +128,7 @@ export const buildTemplate = async ({
   const zip = (a: any[], b: any[]) =>
     Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
-  const formattedBytecode = 
+  const formattedBytecode =
     contract.artifact.debug ?
       formatLibauthScript(asmToScript(contract.artifact.debug.bytecode), contract.artifact.debug?.sourceMap!, contract.artifact.source).split("\n") :
       contract.artifact.bytecode.split(" ").map((val) => {
@@ -540,6 +540,9 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
 
       line += ` ${value}`;
     });
+
+    // actual log, do not delete :)
+    console.log(line);
   }
 
   const lastState = debugResult[debugResult.length - 1];
