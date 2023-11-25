@@ -14,7 +14,7 @@ import {
   LocationI,
   LocationData,
   LogEntry,
-  RequireMessage
+  RequireMessage,
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -78,8 +78,8 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   private emit(op: OpOrData | OpOrData[], location: LocationI, positionHint?: number): void {
     if (Array.isArray(op)) {
-      op.forEach(val => this.output.push(val as Op));
-      op.forEach(_ => this.locationData.push([location, positionHint]));
+      op.forEach((element) => this.output.push(element as Op));
+      op.forEach(() => this.locationData.push([location, positionHint]));
     } else {
       this.output.push(op);
       this.locationData.push([location, positionHint]);
@@ -275,7 +275,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.requireMessages.push({
         ip: this.output.length + this.constructorParameterCount - 1,
         line: node.location!.start.line,
-        message: node.message
+        message: node.message,
       });
     }
 
@@ -293,7 +293,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.requireMessages.push({
         ip: this.output.length + this.constructorParameterCount - 1,
         line: node.location!.start.line,
-        message: node.message
+        message: node.message,
       });
     }
 
@@ -550,7 +550,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // instruction pointer is the count of emitted opcodes + number of constructor data pushes
     const ip = this.output.length + this.constructorParameterCount;
 
-    const line = node.location!.start.line;
+    const { line } = node.location!.start;
 
     // check if log entry exists for the instruction pointer, create if not
     let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
@@ -558,17 +558,17 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       index = this.consoleLogs.push({
         ip,
         line,
-        data: []
+        data: [],
       }) - 1;
-    };
+    }
 
     node.parameters.forEach((parameter: ConsoleParameterNode) => {
       if (parameter.identifier) {
         // we look for all symbols with identifier name
         // then take the first which is declared in the nearest code block
-        const symbol = this.logSymbols.
-          filter(symbol => symbol.name === parameter.identifier).
-          sort((a, b) => b.definition?.location?.start.line! - a.definition?.location?.start.line!)[0];
+        const symbol = this.logSymbols
+          .filter((logSymbol) => logSymbol.name === parameter.identifier)
+          .sort((a, b) => b.definition?.location?.start.line! - a.definition?.location?.start.line!)[0];
 
         if (!symbol) {
           throw new ParseError(`Undefined reference to symbol ${parameter.identifier} at ${parameter.location?.start}`);
@@ -577,8 +577,8 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
         const stackIndex = this.getStackIndex(parameter.identifier);
         this.consoleLogs[index].data.push({
           stackIndex,
-          type: typeof symbol.type === "string" ? symbol.type : symbol.toString(),
-        })
+          type: typeof symbol.type === 'string' ? symbol.type : symbol.toString(),
+        });
       } else if (parameter.message) {
         this.consoleLogs[index].data.push(parameter.message);
       }

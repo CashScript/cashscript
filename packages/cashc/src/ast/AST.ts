@@ -366,7 +366,6 @@ export class ConsoleStatementNode extends Node {
   }
 }
 
-
 export class ConsoleParameterNode extends Node {
   constructor(
     public message?: string,
