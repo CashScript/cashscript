@@ -16,8 +16,10 @@ export type LocationData = Array<[location: LocationI, positionHint?: number]>;
  *
  * `sl:sc:el:ec:h`
  *
- * Where `sl` is the start line, `sc` - start column, `el` - end line, and `ec` - end column of the range in the source file.
- * `h` is the position hint denoting where to place the instruction - at the beginning of the parent AST block or at the end.
+ * Where `sl` is the start line, `sc` - start column, `el` - end line, and `ec` - end column
+ * of the range in the source file.
+ * `h` is the position hint denoting where to place the instruction - at the beginning of the parent AST block
+ * or at the end.
  * `h` is used with AST blocks, instructions of which surround children blocks, like function declarations and
  * if-then-else blocks.
  *
@@ -63,22 +65,22 @@ export function generateSourceMap(locationData: LocationData): string {
       result += prevStartLineString;
     }
 
-    result += ":";
+    result += ':';
     if (prevStartColumnString) {
       result += prevStartColumnString;
     }
 
-    result += ":";
+    result += ':';
     if (prevEndLineString) {
       result += prevEndLineString;
     }
 
-    result += ":";
+    result += ':';
     if (prevEndColumnString) {
       result += prevEndColumnString;
     }
 
-    result += ":";
+    result += ':';
     if (prevHintString) {
       result += prevHintString;
     }
@@ -93,9 +95,9 @@ export const sourceMapToLocationData = (sourceMap: string): LocationData => {
   let prevStartColumn = 0;
   let prevEndLine = 0;
   let prevEndColumn = 0;
-  let prevHint: any = undefined;
+  let prevHint: any;
 
-  return sourceMap.split(";").map((entry: string) => {
+  return sourceMap.split(';').map((entry: string) => {
     const val = entry.split(':');
     const startLine = val[0] ? Number(val[0]) : prevStartLine; prevStartLine = startLine;
     const startColumn = val[1] ? Number(val[1]) : prevStartColumn; prevStartColumn = startColumn;
@@ -106,9 +108,9 @@ export const sourceMapToLocationData = (sourceMap: string): LocationData => {
     return [
       {
         start: { line: startLine, column: startColumn },
-        end: { line: endLine, column: endColumn }
+        end: { line: endLine, column: endColumn },
       },
-      ...(hint ? [hint] : [])
+      ...(hint ? [hint] : []),
     ] as any;
   });
-}
+};
