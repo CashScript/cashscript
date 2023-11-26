@@ -197,7 +197,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       // we add it back to the stack
       this.pushToStack('(value)');
     } else {
-      this.emit(finalOp, location!);
+      this.emit(finalOp, location!, 1);
 
       // At this point there is no verification value left on the stack:
       //  - scoped stack is cleared inside branch ended by OP_ENDIF
@@ -267,8 +267,9 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitTimeOp(node: TimeOpNode): Node {
+    // const countBefore = this.output.length;
     node.expression = this.visit(node.expression);
-    this.emit(compileTimeOp(node.timeOp), node.location!);
+    this.emit(compileTimeOp(node.timeOp), node.location!, 1);
 
     // add debug require message
     if (node.message) {
@@ -286,7 +287,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitRequire(node: RequireNode): Node {
     node.expression = this.visit(node.expression);
 
-    this.emit(Op.OP_VERIFY, node.location!);
+    this.emit(Op.OP_VERIFY, node.location!, 1);
 
     // add debug require message
     if (node.message) {
@@ -343,7 +344,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.popFromStack();
     }
 
-    this.emit(compileCast(node.expression.type as PrimitiveType, node.type), node.location!);
+    this.emit(compileCast(node.expression.type as PrimitiveType, node.type), node.location!, 1);
     this.popFromStack();
     this.pushToStack('(value)');
     return node;
@@ -356,7 +357,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     node.parameters = this.visitList(node.parameters);
 
-    this.emit(compileGlobalFunction(node.identifier.name as GlobalFunction), node.location!);
+    this.emit(compileGlobalFunction(node.identifier.name as GlobalFunction), node.location!, 1);
     this.popFromStack(node.parameters.length);
     this.pushToStack('(value)');
 
@@ -367,7 +368,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.emit(encodeBool(false), node.location!);
     this.pushToStack('(value)');
     node.parameters = this.visitList(node.parameters);
-    this.emit(Op.OP_CHECKMULTISIG, node.location!);
+    this.emit(Op.OP_CHECKMULTISIG, node.location!, 1);
     const sigs = node.parameters[0] as ArrayNode;
     const pks = node.parameters[1] as ArrayNode;
     this.popFromStack(sigs.elements.length + pks.elements.length + 3);
@@ -459,10 +460,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.tuple = this.visit(node.tuple);
 
     if (node.index === 0) {
-      this.emit(Op.OP_DROP, node.location!);
+      this.emit(Op.OP_DROP, node.location!, 1);
       this.popFromStack();
     } else if (node.index === 1) {
-      this.emit(Op.OP_NIP, node.location!);
+      this.emit(Op.OP_NIP, node.location!, 1);
       this.nipFromStack();
     }
 
@@ -473,7 +474,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
     const isNumeric = resultingType(node.left.type, node.right.type) === PrimitiveType.INT;
-    this.emit(compileBinaryOp(node.operator, isNumeric), node.location!);
+    this.emit(compileBinaryOp(node.operator, isNumeric), node.location!, 1);
     this.popFromStack(2);
     this.pushToStack('(value)');
     if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value)');
@@ -496,7 +497,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitArray(node: ArrayNode): Node {
     node.elements = this.visitList(node.elements);
-    this.emit(encodeInt(BigInt(node.elements.length)), node.location!);
+    this.emit(encodeInt(BigInt(node.elements.length)), node.location!, 1);
     this.pushToStack('(value)');
     return node;
   }
