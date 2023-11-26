@@ -12,15 +12,15 @@ export interface AbiFunction {
 }
 
 export interface LogEntry {
-  ip: number;
-  line: number;
-  data: Array<{ stackIndex: number, type: string } | string>;
+  ip: number; // instruction pointer
+  line: number; // line in the source code
+  data: Array<{ stackIndex: number, type: string } | string>; // data to be logged
 }
 
 export interface RequireMessage {
-  ip: number;
-  line: number;
-  message: string;
+  ip: number; // instruction pointer
+  line: number; // line in the source code
+  message: string; // custom message for failing `require` statement
 }
 
 export interface Artifact {
@@ -30,10 +30,10 @@ export interface Artifact {
   bytecode: string;
   source: string;
   debug?: {
-    bytecode: string;
-    sourceMap: string;
-    logs?: LogEntry[];
-    requireMessages?: RequireMessage[];
+    bytecode: string; // unlike `bytecode` property above, this is a hex-encoded binary string
+    sourceMap: string; // see documentation for `generateSourceMap`
+    logs: LogEntry[]; // log entries generated from `console.log` statements
+    requireMessages: RequireMessage[]; // messages for failing `require` statements
   };
   compiler: {
     name: string;
