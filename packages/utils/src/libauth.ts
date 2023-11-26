@@ -2,7 +2,7 @@ import { binToHex } from '@bitauth/libauth';
 import { Script, Op } from './script.js';
 import { sourceMapToLocationData } from './sourceMap.js';
 
-export function formatLibauthScript(bytecode: Script, souceMap: string, sourceCode: string): string {
+function buildLineMap(bytecode: Script, souceMap: string): { [line: string]: Script; } {
   const lineMap: { [line: string]: Script } = {} as any;
 
   const locationData = sourceMapToLocationData(souceMap);
@@ -15,9 +15,9 @@ export function formatLibauthScript(bytecode: Script, souceMap: string, sourceCo
       // eslint-disable-next-line
       positionHint
         ? location?.end.line
-        : (op === Op.OP_ENDIF || op === Op.OP_ELSE || op === Op.OP_NIP || op === Op.OP_CHECKLOCKTIMEVERIFY
-          ? location?.end.line
-          : location?.start.line),
+        // : (op === Op.OP_ENDIF || op === Op.OP_ELSE || op === Op.OP_NIP || op === Op.OP_CHECKLOCKTIMEVERIFY
+        //   ? location?.end.line
+          : location?.start.line,
     ];
   });
 
@@ -27,6 +27,12 @@ export function formatLibauthScript(bytecode: Script, souceMap: string, sourceCo
     }
     lineMap[line as string].push(op as any);
   });
+
+  return lineMap;
+}
+
+export function buildOpCodeMap(bytecode: Script, souceMap: string) {
+  const lineMap = buildLineMap(bytecode, souceMap);
 
   const opCodeMap: { [key: string]: string } = {};
   for (const [key, value] of Object.entries(lineMap)) {
@@ -40,6 +46,12 @@ export function formatLibauthScript(bytecode: Script, souceMap: string, sourceCo
       return Object.keys(Op)[Object.values(Op).indexOf(asmElement)];
     }).join(' ');
   }
+
+  return opCodeMap;
+}
+
+export function formatLibauthScript(bytecode: Script, souceMap: string, sourceCode: string): string {
+  const opCodeMap = buildOpCodeMap(bytecode, souceMap);
 
   const split = sourceCode.split('\n');
 
