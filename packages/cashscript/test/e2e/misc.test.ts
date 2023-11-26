@@ -1,4 +1,4 @@
-import { randomUtxo } from 'cashscript/src/utils.js';
+import { randomUtxo } from '../../src/utils.js';
 import {
   Contract, MockNetworkProvider, ElectrumNetworkProvider, Network,
 } from '../../src/index.js';

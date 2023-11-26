@@ -1,4 +1,4 @@
-import { randomUtxo, randomToken, randomNFT } from 'cashscript/src/utils.js';
+import { randomUtxo, randomToken, randomNFT } from '../../src/utils.js';
 import {
   Contract, SignatureTemplate, ElectrumNetworkProvider, MockNetworkProvider,
 } from '../../src/index.js';
