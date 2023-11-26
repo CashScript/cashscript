@@ -1,5 +1,5 @@
 import {
-  AbiFunction, Artifact, PrimitiveType, asmToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
+  AbiFunction, Artifact, PrimitiveType, asmToScript, bytecodeToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
 } from '@cashscript/utils';
 import {
   hash160,
@@ -130,7 +130,10 @@ export const buildTemplate = async ({
   ).length;
 
   const formattedBytecode = contract.artifact.debug
-    ? formatLibauthScript(asmToScript(contract.artifact.debug.bytecode), contract.artifact.debug?.sourceMap!, contract.artifact.source).split('\n')
+    ? formatLibauthScript(
+        bytecodeToScript(hexToBin(contract.artifact.debug.bytecode)),
+        contract.artifact.debug?.sourceMap!,
+        contract.artifact.source).split('\n')
     : contract.artifact.bytecode.split(' ').map((asmElement) => {
       if (isHex(asmElement)) {
         return `<0x${asmElement}>`;
