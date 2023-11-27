@@ -37,6 +37,7 @@
     "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
     "update-version": "ts-node-esm update-version.ts",
-    "publish-all": "lerna publish from-package"
+    "publish-all": "lerna publish from-package",
+    "build": "lerna run build"
   }
 }
