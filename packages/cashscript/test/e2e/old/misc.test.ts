@@ -13,8 +13,8 @@ import {
   alicePriv,
 } from '../../fixture/vars.js';
 import { getTxOutputs } from '../../test-util.js';
-import simpleCovenantArtifact from '../../fixture/old/simple_covenant.json' assert { type: "json" };
-import mecenasBorderArtifact from '../../fixture/old/mecenas_border.json' assert { type: "json" };
+import simpleCovenantArtifact from '../../fixture/old/simple_covenant.json' assert { type: 'json' };
+import mecenasBorderArtifact from '../../fixture/old/mecenas_border.json' assert { type: 'json' };
 
 if (!process.env.TESTS_USE_MOCKNET) {
   describe('v0.6.0 - Simple Covenant', () => {

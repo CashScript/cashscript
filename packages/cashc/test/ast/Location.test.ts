@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { URL } from 'url';
 import { compileString, parseCode } from '../../src/compiler.js';
-import { buildOpCodeMap, bytecodeToAsm, bytecodeToScript, formatLibauthScript } from '@cashscript/utils';
+import { buildOpCodeMap, bytecodeToAsm, bytecodeToScript } from '@cashscript/utils';
 import { hexToBin } from '@bitauth/libauth';
 
 describe('Location', () => {
@@ -21,7 +21,7 @@ contract test() {
   function test() {
     require(${code});
   }
-}`
+}`;
   };
 
   describe('should produce same bytecode', () => {
@@ -47,20 +47,27 @@ contract test() {
           const source = wrap(block);
           const artifact = compileString(source);
           const expected = bytecodeToAsm(hexToBin(artifact.debug!.bytecode));
-          const opCodeMap = buildOpCodeMap(bytecodeToScript(hexToBin(artifact.debug!.bytecode)), artifact.debug!.sourceMap);
+          const opCodeMap = buildOpCodeMap(
+            bytecodeToScript(hexToBin(artifact.debug!.bytecode)), artifact.debug!.sourceMap,
+          );
 
-          const received = Object.values(opCodeMap).join(' ').replaceAll('<0x', '').replaceAll('>', '').replace(/\s+/g, ' ');
+          const received = Object.values(opCodeMap).join(' ')
+            .replaceAll('<0x', '').replaceAll('>', '').replace(/\s+/g, ' ');
           expect(received).toBe(expected);
         }
 
         {
           // break statements into separate lines, test `hint`
-          const source = wrap(block.replaceAll(' ', '\n').replaceAll(')', '\n)')).replaceAll('(\n)', '()').replace(/\((?!\))/g, '(\n');
+          const source = wrap(block.replaceAll(' ', '\n').replaceAll(')', '\n)'))
+            .replaceAll('(\n)', '()').replace(/\((?!\))/g, '(\n');
           const artifact = compileString(source);
           const expected = bytecodeToAsm(hexToBin(artifact.debug!.bytecode));
-          const opCodeMap = buildOpCodeMap(bytecodeToScript(hexToBin(artifact.debug!.bytecode)), artifact.debug!.sourceMap);
+          const opCodeMap = buildOpCodeMap(
+            bytecodeToScript(hexToBin(artifact.debug!.bytecode)), artifact.debug!.sourceMap,
+          );
 
-          const received = Object.values(opCodeMap).join(' ').replaceAll('<0x', '').replaceAll('>', '').replace(/\s+/g, ' ');
+          const received = Object.values(opCodeMap).join(' ')
+            .replaceAll('<0x', '').replaceAll('>', '').replace(/\s+/g, ' ');
           expect(received).toBe(expected);
         }
       });

@@ -11,7 +11,7 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors.js';
-import artifact from '../fixture/transfer_with_timeout.json' assert { type: "json" };
+import artifact from '../fixture/transfer_with_timeout.json' assert { type: 'json' };
 import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 describe('TransferWithTimeout', () => {

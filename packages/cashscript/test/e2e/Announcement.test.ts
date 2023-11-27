@@ -8,7 +8,7 @@ import {
   createOpReturnOutput, randomUtxo, toRegExp, utxoComparator,
 } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
-import artifact from '../fixture/announcement.json' assert { type: "json" };
+import artifact from '../fixture/announcement.json' assert { type: 'json' };
 
 describe('Announcement', () => {
   let announcement: Contract;

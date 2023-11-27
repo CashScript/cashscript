@@ -8,7 +8,7 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
-import artifact from '../fixture/p2pkh.json' assert { type: "json" };
+import artifact from '../fixture/p2pkh.json' assert { type: 'json' };
 
 describe.skip('P2PKH (using FullStackNetworkProvider)', () => {
   let p2pkhInstance: Contract;

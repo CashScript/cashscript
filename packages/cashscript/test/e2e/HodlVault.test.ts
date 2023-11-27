@@ -14,7 +14,7 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import artifact from '../fixture/hodl_vault.json' assert { type: "json" };
+import artifact from '../fixture/hodl_vault.json' assert { type: 'json' };
 import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 describe('HodlVault', () => {
