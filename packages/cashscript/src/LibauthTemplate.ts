@@ -525,7 +525,14 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
   const debugResult = vm.debug(program);
 
   for (const log of artifact.debug?.logs ?? []) {
-    const { stack } = debugResult.find((state: AuthenticationProgramStateBCHCHIPs) => state.ip === log.ip)!;
+    // there might be 2 elements with same instruction pointer, first from unllocking script, second from locking
+    const state = debugResult
+      .filter((state: AuthenticationProgramStateBCHCHIPs) => state.ip === log.ip)!
+      .slice().reverse()[0];
+
+    if (!state) {
+      throw Error(`Instruction pointer ${log.ip} points to a non-existing state of the program`);
+    }
 
     let line = `${artifact.contractName}.cash:${log.line}`;
     log.data.forEach((element) => {
@@ -533,7 +540,10 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
       if (typeof element === 'string') {
         value = element;
       } else {
-        const stackItem = stack.slice().reverse()[element.stackIndex];
+        const stackItem = state.stack.slice().reverse()[element.stackIndex];
+        if (!stackItem) {
+          throw Error(`Stack item at index ${element.stackIndex} not found at instruction pointer ${log.ip}`);
+        }
         switch (element.type) {
           case PrimitiveType.BOOL:
             value = decodeBool(stackItem);
