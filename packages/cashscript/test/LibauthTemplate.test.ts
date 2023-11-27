@@ -9,7 +9,7 @@ import { randomUtxo } from '../src/utils.js';
 describe('Libauth template generation tests', () => {
   it('should log console statements', async () => {
     const code = `
-    pragma cashscript ^0.9.0;
+    pragma cashscript ^0.10.0;
 
     contract TransferWithTimeout(
         pubkey sender,
@@ -74,7 +74,7 @@ describe('Libauth template generation tests', () => {
 
   it('should check for failed requires', async () => {
     const code = `
-    pragma cashscript ^0.9.0;
+    pragma cashscript ^0.10.0;
 
     contract TransferWithTimeout(
         pubkey sender,
@@ -95,6 +95,10 @@ describe('Libauth template generation tests', () => {
         function timeout2(sig senderSig) {
             require(tx.time >= timeout, "timecheck custom fail");
             require(checkSig(senderSig, sender));
+        }
+
+        function test(int a) {
+          require(a == 1, "dropped last verify fail");
         }
     }
     `;
@@ -124,6 +128,14 @@ describe('Libauth template generation tests', () => {
 
       const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
       await expect(transaction).not.toFailRequireWith(/timecheck custom fail/);
+    }
+
+    {
+      const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.test(0n).to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/dropped last verify fail/);
     }
   });
 });

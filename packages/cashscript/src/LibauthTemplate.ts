@@ -1,5 +1,5 @@
 import {
-  AbiFunction, Artifact, PrimitiveType, bytecodeToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
+  AbiFunction, Artifact, Op, PrimitiveType, bytecodeToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
 } from '@cashscript/utils';
 import {
   hash160,
@@ -23,6 +23,7 @@ import {
   AuthenticationProgramCommon,
   AuthenticationVirtualMachine,
   ResolvedTransactionCommon,
+  AuthenticationErrorCommon,
 } from '@bitauth/libauth';
 import { deflate } from 'pako';
 import { Contract } from './Contract.js';
@@ -37,6 +38,7 @@ import {
 import { Argument, encodeArgument as csEncodeArgument } from './Argument.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
+import { toRegExp } from './utils.js';
 
 // all bitauth variables must be in snake case
 const snakeCase = (str: string): string => (
@@ -579,6 +581,34 @@ ${lastState.error}`;
       // eslint-disable-next-line
       throw `Error in evaluating input index ${lastState.program.inputIndex}.
 ${lastState.error}`;
+    }
+  } else {
+    // one last pass of verifications not covered by the above debugging
+    // checks for removed final verify
+    const evaluationResult = vm.verify(program);
+
+    if (typeof evaluationResult === 'string' && toRegExp([
+      AuthenticationErrorCommon.requiresCleanStack,
+      AuthenticationErrorCommon.nonEmptyControlStack,
+      AuthenticationErrorCommon.unsuccessfulEvaluation,
+    ]).test(evaluationResult)) {
+      const lastMessage = artifact.debug?.requireMessages.sort((a, b) => b.ip - a.ip)[0];
+      if (!lastMessage) {
+        // eslint-disable-next-line
+        throw evaluationResult;
+      }
+
+      const instructionsLeft = lastState.instructions.slice(lastMessage.ip);
+      if (instructionsLeft.length === 0
+          || instructionsLeft.every(instruction => [Op.OP_NIP, Op.OP_ENDIF].includes(instruction.opcode))
+      ) {
+        // eslint-disable-next-line
+        throw `${artifact.contractName}.cash:${lastMessage.line} Error in evaluating input index ${lastState.program.inputIndex} with the following message: ${lastMessage.message}.
+${evaluationResult.replace(/Error in evaluating input index \d: /, '')}`;
+      }
+
+      // eslint-disable-next-line
+      throw evaluationResult;
     }
   }
 
