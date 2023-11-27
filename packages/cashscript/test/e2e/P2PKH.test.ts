@@ -15,7 +15,7 @@ import {
   createOpReturnOutput, randomUtxo, toRegExp, utxoComparator,
 } from '../../src/utils.js';
 import { FailedSigCheckError, Reason } from '../../src/Errors.js';
-import artifact from '../fixture/p2pkh.json' assert { type: "json" };
+import artifact from '../fixture/p2pkh.json' assert { type: 'json' };
 
 describe('P2PKH-no-tokens', () => {
   let p2pkhInstance: Contract;

@@ -227,7 +227,7 @@ export class Transaction {
     return debugTemplate(template, this.contract.artifact);
   }
 
-  private async getTxDetails(txid: string): Promise<TransactionDetails>
+  private async getTxDetails(txid: string): Promise<TransactionDetails>;
   private async getTxDetails(txid: string, raw: true): Promise<string>;
 
   private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {

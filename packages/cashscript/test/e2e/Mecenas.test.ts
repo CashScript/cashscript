@@ -10,7 +10,7 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import artifact from '../fixture/mecenas.json' assert { type: "json" };
+import artifact from '../fixture/mecenas.json' assert { type: 'json' };
 import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 // Mecenas has tx.age check omitted for testing

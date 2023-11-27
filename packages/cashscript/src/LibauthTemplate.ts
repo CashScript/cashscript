@@ -1,5 +1,5 @@
 import {
-  AbiFunction, Artifact, PrimitiveType, asmToScript, bytecodeToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
+  AbiFunction, Artifact, PrimitiveType, bytecodeToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
 } from '@cashscript/utils';
 import {
   hash160,
@@ -117,7 +117,7 @@ export const buildTemplate = async ({
   const abiFunction = (transaction as any).abiFunction as AbiFunction;
   const funcName = abiFunction.name;
   const functionIndex = contract.artifact.abi.findIndex(
-    (abiFunction) => abiFunction.name === funcName,
+    (func) => func.name === funcName,
   )!;
   const func: AbiFunction = contract.artifact.abi[functionIndex];
   const functionInputs = func.inputs.slice().reverse();
@@ -131,9 +131,10 @@ export const buildTemplate = async ({
 
   const formattedBytecode = contract.artifact.debug
     ? formatLibauthScript(
-        bytecodeToScript(hexToBin(contract.artifact.debug.bytecode)),
-        contract.artifact.debug?.sourceMap!,
-        contract.artifact.source).split('\n')
+      bytecodeToScript(hexToBin(contract.artifact.debug.bytecode)),
+      contract.artifact.debug?.sourceMap!,
+      contract.artifact.source,
+    ).split('\n')
     : contract.artifact.bytecode.split(' ').map((asmElement) => {
       if (isHex(asmElement)) {
         return `<0x${asmElement}>`;
@@ -527,7 +528,7 @@ export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifa
   for (const log of artifact.debug?.logs ?? []) {
     // there might be 2 elements with same instruction pointer, first from unllocking script, second from locking
     const state = debugResult
-      .filter((state: AuthenticationProgramStateBCHCHIPs) => state.ip === log.ip)!
+      .filter((debugState: AuthenticationProgramStateBCHCHIPs) => debugState.ip === log.ip)!
       .slice().reverse()[0];
 
     if (!state) {

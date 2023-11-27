@@ -12,12 +12,7 @@ function buildLineMap(bytecode: Script, souceMap: string): { [line: string]: Scr
     return [
       op,
       Object.keys(Op)[Object.values(Op).indexOf(op as Op)],
-      // eslint-disable-next-line
-      positionHint
-        ? location?.end.line
-        // : (op === Op.OP_ENDIF || op === Op.OP_ELSE || op === Op.OP_NIP || op === Op.OP_CHECKLOCKTIMEVERIFY
-        //   ? location?.end.line
-          : location?.start.line,
+      positionHint ? location?.end.line : location?.start.line,
     ];
   });
 
@@ -31,7 +26,7 @@ function buildLineMap(bytecode: Script, souceMap: string): { [line: string]: Scr
   return lineMap;
 }
 
-export function buildOpCodeMap(bytecode: Script, souceMap: string) {
+export function buildOpCodeMap(bytecode: Script, souceMap: string): { [key: string]: string; } {
   const lineMap = buildLineMap(bytecode, souceMap);
 
   const opCodeMap: { [key: string]: string } = {};

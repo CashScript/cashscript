@@ -15,7 +15,7 @@ import {
 } from '../../fixture/vars.js';
 import { getTxOutputs } from '../../test-util.js';
 import { FailedRequireError, Reason } from '../../../src/Errors.js';
-import artifact from '../../fixture/old/mecenas.json' assert { type: "json" };
+import artifact from '../../fixture/old/mecenas.json' assert { type: 'json' };
 
 if (!process.env.TESTS_USE_MOCKNET) {
 // Mecenas has tx.age check omitted for testing

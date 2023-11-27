@@ -22,11 +22,11 @@ contract Example(string cash) {
     const artifact = compileString(code);
 
     const provider = new MockNetworkProvider();
-    const contract = new Contract(artifact, ["cash"], { provider });
+    const contract = new Contract(artifact, ['cash'], { provider });
     provider.addUtxo(contract.address, randomUtxo());
 
-    const transaction = contract.functions.test("script").to(contract.address, 10000n);
-    await transaction.debug()
+    const transaction = contract.functions.test('script').to(contract.address, 10000n);
+    await transaction.debug();
   });
 
   it('should log console statements', async () => {
@@ -75,7 +75,9 @@ contract Example(string cash) {
 
       const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
 
-      await (expect(transaction.debug())).rejects.toThrow(/Instruction pointer 100 points to a non-existing state of the program/);
+      await (expect(transaction.debug())).rejects.toThrow(
+        /Instruction pointer 100 points to a non-existing state of the program/,
+      );
     }
 
     artifact.debug!.logs[0].ip = ip;
@@ -86,7 +88,9 @@ contract Example(string cash) {
 
       const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
 
-      await (expect(transaction.debug())).rejects.toThrow(/Stack item at index 100 not found at instruction pointer 9/);
+      await (expect(transaction.debug())).rejects.toThrow(
+        /Stack item at index 100 not found at instruction pointer 9/,
+      );
     }
   });
 
