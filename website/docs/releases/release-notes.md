@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.9.3
+## v0.10.0
 
 #### cashc compiler
 - compiler code was extended to understand:
