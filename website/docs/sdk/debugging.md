@@ -11,6 +11,8 @@ For a quick start, all beginners should check out the demo toolkit allowing to b
 `MockNetworkProvider` allows to set up the testing environment for the contract under test. It allows the developer to add inputs with well-defined parameters of an `Utxo` class, or randomized set of properties.
 
 ```ts
+import { MockNetworkProvider, randomUtxo } from 'cashscript/dist/src';
+
 const provider = new MockNetworkProvider();
 provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
 
