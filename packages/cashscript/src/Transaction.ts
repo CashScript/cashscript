@@ -227,6 +227,15 @@ export class Transaction {
     return debugTemplate(template, this.contract.artifact);
   }
 
+  async bitauthUri(): Promise<string> {
+    const template = await buildTemplate({
+      contract: this.contract,
+      transaction: this,
+      manglePrivateKeys: false,
+    });
+    return getBitauthUri(template);
+  }
+
   private async getTxDetails(txid: string): Promise<TransactionDetails>;
   private async getTxDetails(txid: string, raw: true): Promise<string>;
 
