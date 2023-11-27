@@ -25,7 +25,9 @@ expect.extend({
 
     // silence actual stdout output
     spyOnLoggerError.mockImplementation(() => {});
-    await transaction.debug();
+    try {
+      await transaction.debug();
+    } catch {}
     let message: string = '';
 
     const failMessage = (received: string, expected: RegExp | string) => () => `${matcherHint(
