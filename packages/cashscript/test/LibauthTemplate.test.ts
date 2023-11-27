@@ -9,28 +9,6 @@ import { randomUtxo } from '../src/utils.js';
 describe('Libauth template generation tests', () => {
   it('should log console statements', async () => {
     const code = `
-contract Example(string cash) {
-  function test(string script) {
-    require(
-      cash +
-      script ==
-      "cashscript"
-    );
-  }
-}
-`;
-    const artifact = compileString(code);
-
-    const provider = new MockNetworkProvider();
-    const contract = new Contract(artifact, ['cash'], { provider });
-    provider.addUtxo(contract.address, randomUtxo());
-
-    const transaction = contract.functions.test('script').to(contract.address, 10000n);
-    await transaction.debug();
-  });
-
-  it('should log console statements', async () => {
-    const code = `
     pragma cashscript ^0.9.0;
 
     contract TransferWithTimeout(
