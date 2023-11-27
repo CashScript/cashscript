@@ -40,7 +40,7 @@ it('test sourcemap generation and decoding', () => {
     [{ start: { line: 20, column: 12 }, end: { line: 20, column: 40 } }, 1 ],
     [{ start: { line: 18, column: 8 }, end: { line: 21, column: 9 } }, 1 ],
     [{ start: { line: 18, column: 8 }, end: { line: 21, column: 9 } }, 1 ],
-    [{ start: { line: 4, column: 4 }, end: { line: 22, column: 5 } }, 1 ]
+    [{ start: { line: 4, column: 4 }, end: { line: 22, column: 5 } }, 1 ],
   ] as LocationData;
 
   const sourceMap = generateSourceMap(locationData);
