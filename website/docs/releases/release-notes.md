@@ -2,6 +2,34 @@
 title: Release Notes
 ---
 
+## v0.9.3
+
+#### cashc compiler
+- compiler code was extended to understand:
+  * `console.log()` statements, debug only
+  * extended require syntax `require(expression, message)`, debug only
+- compiler now outputs the debug information into artifact:
+  * log messages
+  * failed require messages
+  * unoptimized contract bytecode for debugging
+  * sourcemap to map emitted VM instructions to CashScript source code
+
+
+#### CashScript SDK
+
+- Add MockNetworkProvider to simulate network interaction
+- Add libauth template creation
+- Add support for transaction evaluation and debugging using libauth templates
+- Add extended Jest utilities specifically crafted for CashScript:
+  * await expect(transaction).toLog(message)
+  * await expect(transaction).toFailRequireWith(message)
+- Meep tool got replaced with libauth template debug evaluation
+
+#### Demo
+
+- A new demo toolkit was added for everyone to bootstrap the contract creation and
+  debugging environment similar to `hardat` on Ethereum. See `demo/testing-suite` path.
+
 ## v0.9.2
 
 #### CashScript SDK

@@ -31,6 +31,7 @@ module.exports = {
         'sdk/transactions',
         'sdk/transactions-advanced',
         'sdk/examples',
+        'sdk/debugging',
       ],
     },
     {
