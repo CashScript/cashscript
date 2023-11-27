@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2021",
+    "module": "esnext",
+    "declaration": true,
+    "lib": ["es2021", "dom"],
+    "types": ["node", "jest"],
+    "sourceMap": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/dist-test",
+    "taksks",
+  ],
+}
