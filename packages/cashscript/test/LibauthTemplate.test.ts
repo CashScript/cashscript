@@ -56,13 +56,38 @@ contract Example(string cash) {
     const artifact = compileString(code);
 
     const provider = new MockNetworkProvider();
-    const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
-    provider.addUtxo(contract.address, randomUtxo());
 
-    const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
+    {
+      const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
 
-    await (expect(transaction)).toLog(/0x[0-9a-f]{130} 100000 0x[0-9a-f]{66} 0x[0-9a-f]{66} 0xbeef 1 test true/);
-    await (expect(transaction)).toLog('beef');
+      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
+
+      await (expect(transaction)).toLog(/0x[0-9a-f]{130} 100000 0x[0-9a-f]{66} 0x[0-9a-f]{66} 0xbeef 1 test true/);
+      await (expect(transaction)).toLog('beef');
+    }
+
+    const ip = artifact.debug!.logs[0].ip;
+    {
+      artifact.debug!.logs[0].ip = 100;
+      const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
+
+      await (expect(transaction.debug())).rejects.toThrow(/Instruction pointer 100 points to a non-existing state of the program/);
+    }
+
+    artifact.debug!.logs[0].ip = ip;
+    {
+      (artifact.debug!.logs[0].data[0] as any).stackIndex = 100;
+      const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
+
+      await (expect(transaction.debug())).rejects.toThrow(/Stack item at index 100 not found at instruction pointer 9/);
+    }
   });
 
   it('should check for failed requires', async () => {
