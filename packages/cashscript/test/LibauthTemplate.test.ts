@@ -136,6 +136,8 @@ describe('Libauth template generation tests', () => {
 
       const transaction = contract.functions.test(0n).to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/dropped last verify fail/);
+
+      await expect(transaction.send()).rejects.toThrow(/Stack contents after evaluation: 0x/);
     }
   });
 });

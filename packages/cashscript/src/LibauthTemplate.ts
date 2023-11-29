@@ -592,10 +592,13 @@ ${lastState.error}`;
       AuthenticationErrorCommon.nonEmptyControlStack,
       AuthenticationErrorCommon.unsuccessfulEvaluation,
     ]).test(evaluationResult)) {
+      const stackContents = lastState.stack.map(item => `0x${binToHex(item)}`).join(", ");
+      const stackContentsMessage = `\nStack contents after evaluation: ${lastState.stack.length ? stackContents : "empty"}`;
+
       const lastMessage = artifact.debug?.requireMessages.sort((a, b) => b.ip - a.ip)[0];
       if (!lastMessage) {
         // eslint-disable-next-line
-        throw evaluationResult;
+        throw evaluationResult + stackContentsMessage;
       }
 
       const instructionsLeft = lastState.instructions.slice(lastMessage.ip);
@@ -604,11 +607,11 @@ ${lastState.error}`;
       ) {
         // eslint-disable-next-line
         throw `${artifact.contractName}.cash:${lastMessage.line} Error in evaluating input index ${lastState.program.inputIndex} with the following message: ${lastMessage.message}.
-${evaluationResult.replace(/Error in evaluating input index \d: /, '')}`;
+${evaluationResult.replace(/Error in evaluating input index \d: /, '')}` + stackContentsMessage;
       }
 
       // eslint-disable-next-line
-      throw evaluationResult;
+      throw evaluationResult + stackContentsMessage;
     }
   }
 
