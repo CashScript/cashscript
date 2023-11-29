@@ -592,8 +592,8 @@ ${lastState.error}`;
       AuthenticationErrorCommon.nonEmptyControlStack,
       AuthenticationErrorCommon.unsuccessfulEvaluation,
     ]).test(evaluationResult)) {
-      const stackContents = lastState.stack.map(item => `0x${binToHex(item)}`).join(", ");
-      const stackContentsMessage = `\nStack contents after evaluation: ${lastState.stack.length ? stackContents : "empty"}`;
+      const stackContents = lastState.stack.map(item => `0x${binToHex(item)}`).join(', ');
+      const stackContentsMessage = `\nStack contents after evaluation: ${lastState.stack.length ? stackContents : 'empty'}`;
 
       const lastMessage = artifact.debug?.requireMessages.sort((a, b) => b.ip - a.ip)[0];
       if (!lastMessage) {
