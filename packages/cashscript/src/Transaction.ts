@@ -46,8 +46,8 @@ import {
 } from './LibauthTemplate.js';
 
 export class Transaction {
-  private inputs: Utxo[] = [];
-  private outputs: Output[] = [];
+  public inputs: Utxo[] = [];
+  public outputs: Output[] = [];
 
   private sequence = 0xfffffffe;
   private locktime: number;
@@ -57,10 +57,10 @@ export class Transaction {
   private tokenChange: boolean = true;
 
   constructor(
-    private contract: Contract,
+    public contract: Contract,
     private unlocker: Unlocker,
-    private abiFunction: AbiFunction,
-    private args: (Uint8Array | SignatureTemplate)[],
+    public abiFunction: AbiFunction,
+    public args: (Uint8Array | SignatureTemplate)[],
     private selector?: number,
   ) {}
 
@@ -178,10 +178,8 @@ export class Transaction {
     try {
       if (this.contract.provider instanceof MockNetworkProvider) {
         template = await buildTemplate({
-          contract: this.contract,
           transaction: this,
           transactionHex: tx,
-          manglePrivateKeys: false,
         });
         evaluateTemplate(template);
       }
@@ -191,9 +189,8 @@ export class Transaction {
     } catch (maybeNodeError: any) {
       if (!template) {
         template = await buildTemplate({
-          contract: this.contract,
           transaction: this,
-          manglePrivateKeys: false,
+          transactionHex: tx,
         });
       }
 
@@ -220,18 +217,14 @@ export class Transaction {
   // method to debug the transaction with libauth VM, throws upon evaluation error
   async debug(): Promise<DebugResult> {
     const template = await buildTemplate({
-      contract: this.contract,
       transaction: this,
-      manglePrivateKeys: false,
     });
     return debugTemplate(template, this.contract.artifact);
   }
 
   async bitauthUri(): Promise<string> {
     const template = await buildTemplate({
-      contract: this.contract,
       transaction: this,
-      manglePrivateKeys: false,
     });
     return getBitauthUri(template);
   }
