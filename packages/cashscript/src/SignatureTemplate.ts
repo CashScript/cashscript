@@ -9,7 +9,7 @@ import {
 import { createSighashPreimage, publicKeyToP2PKHLockingBytecode } from './utils.js';
 
 export default class SignatureTemplate {
-  private privateKey: Uint8Array;
+  public privateKey: Uint8Array;
 
   constructor(
     signer: Keypair | Uint8Array | string,

@@ -86,24 +86,13 @@ export const stringify = (any: any, spaces?: number): string => JSON.stringify(
 const zip = (a: any[], b: any[]): any[] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
 export const buildTemplate = async ({
-  contract,
   transaction,
-  transactionHex = undefined,
-  manglePrivateKeys,
-  includeSource = false,
+  transactionHex = undefined, // set this argument to prevent unnecessary call `transaction.build()`
 }: {
-  contract: Contract;
   transaction: Transaction;
   transactionHex?: string;
-  manglePrivateKeys?: boolean;
-  includeSource?: boolean;
 }): Promise<AuthenticationTemplate> => {
-  if (manglePrivateKeys === undefined && contract.provider.network !== Network.REGTEST) {
-    manglePrivateKeys = true;
-  } else {
-    manglePrivateKeys = false;
-  }
-
+  const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
   const libauthTransaction = decodeTransaction(hexToBin(txHex));
@@ -116,18 +105,16 @@ export const buildTemplate = async ({
     .reverse();
   const contractParameters = contract.constructorArgs.slice().reverse();
 
-  const abiFunction = (transaction as any).abiFunction as AbiFunction;
+  const abiFunction = transaction.abiFunction;
   const funcName = abiFunction.name;
   const functionIndex = contract.artifact.abi.findIndex(
     (func) => func.name === funcName,
   )!;
   const func: AbiFunction = contract.artifact.abi[functionIndex];
   const functionInputs = func.inputs.slice().reverse();
-  const args = ((transaction as any).args as (Uint8Array | SignatureTemplate)[])
-    .slice()
-    .reverse();
+  const args = transaction.args.slice().reverse();
 
-  const hasSignatureTemplates = ((transaction as any).inputs as Utxo[]).filter(
+  const hasSignatureTemplates = transaction.inputs.filter(
     (input) => isUtxoP2PKH(input),
   ).length;
 
@@ -146,9 +133,7 @@ export const buildTemplate = async ({
 
   return {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
-    description: `Imported from cashscript${
-      includeSource ? contract.artifact.source : ''
-    }`,
+    description: `Imported from cashscript`,
     name: contract.artifact.contractName,
     entities: {
       parameters: {
@@ -240,12 +225,7 @@ export const buildTemplate = async ({
                 .filter(([input]) => input.type === PrimitiveType.SIG)
                 .map(([input, arg]) => ({
                   [snakeCase(input.name)]: binToHex(
-                    manglePrivateKeys
-                      ? (arg as SignatureTemplate)
-                        .getPublicKey()
-                        .slice(0, 32)
-                        .slice(0, 32)
-                      : (arg as SignatureTemplate | any).privateKey,
+                    (arg as SignatureTemplate).privateKey,
                   ),
                 })),
             ]),
@@ -255,7 +235,7 @@ export const buildTemplate = async ({
           const result = {} as AuthenticationTemplateScenario['transaction'];
           let inputSlotInserted = false;
           result!.inputs = val!.inputs!.map((input, index) => {
-            const csInput = (transaction as any).inputs[index] as Utxo;
+            const csInput = transaction.inputs[index] as Utxo;
             const signable = isUtxoP2PKH(csInput);
             let unlockingBytecode = {};
             if (signable) {
@@ -265,12 +245,7 @@ export const buildTemplate = async ({
                   keys: {
                     privateKeys: {
                       placeholder_key: binToHex(
-                        manglePrivateKeys
-                          ? (csInput as UtxoP2PKH).template
-                            .getPublicKey()
-                            .slice(0, 32)
-                          : ((csInput as UtxoP2PKH).template as any)
-                            .privateKey,
+                          (csInput as UtxoP2PKH).template.privateKey,
                       ),
                     },
                   },
@@ -298,7 +273,7 @@ export const buildTemplate = async ({
 
           result!.outputs = val?.outputs?.map(
             (output: LibauthOutput, index) => {
-              const csOutput = (transaction as any).outputs[index] as Output;
+              const csOutput = transaction.outputs[index];
               let { lockingBytecode }: any = output;
               if (typeof csOutput.to === 'string') {
                 if (
@@ -309,7 +284,7 @@ export const buildTemplate = async ({
                 ) {
                   lockingBytecode = {};
                 } else {
-                  for (const csInput of (transaction as any).inputs as Utxo[]) {
+                  for (const csInput of transaction.inputs) {
                     if (isUtxoP2PKH(csInput)) {
                       const inputPkh = hash160(csInput.template.getPublicKey());
                       if (
@@ -322,11 +297,7 @@ export const buildTemplate = async ({
                             keys: {
                               privateKeys: {
                                 placeholder_key: binToHex(
-                                  manglePrivateKeys
-                                    ? csInput.template
-                                      .getPublicKey()
-                                      .slice(0, 32)
-                                    : (csInput.template as any).privateKey,
+                                  csInput.template.privateKey,
                                 ),
                               },
                             },
@@ -352,12 +323,12 @@ export const buildTemplate = async ({
         })[0] as AuthenticationTemplateScenario['transaction'],
         sourceOutputs: [transaction].map((val: Transaction) => {
           let inputSlotInserted = false;
-          return ((val as any).inputs as Utxo[]).map(
+          return val.inputs.map(
             (_, index) => {
               const result = {} as
               | AuthenticationTemplateScenarioSourceOutput
               | any;
-              const csInput = (transaction as any).inputs[index] as Utxo;
+              const csInput = transaction.inputs[index] as Utxo;
               const signable = isUtxoP2PKH(csInput);
               let unlockingBytecode = {};
               if (signable) {
@@ -367,9 +338,7 @@ export const buildTemplate = async ({
                     keys: {
                       privateKeys: {
                         placeholder_key: binToHex(
-                          manglePrivateKeys
-                            ? csInput.template.getPublicKey().slice(0, 32)
-                            : (csInput.template as any).privateKey,
+                          csInput.template.privateKey,
                         ),
                       },
                     },
