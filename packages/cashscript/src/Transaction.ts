@@ -196,21 +196,21 @@ export class Transaction {
 
       const reason = maybeNodeError.error ?? maybeNodeError.message ?? maybeNodeError;
 
-      const biatuthUri = getBitauthUri(template);
+      const bitauthUri = getBitauthUri(template);
 
       try {
         debugTemplate(template, this.contract.artifact);
       } catch (libauthError: any) {
         if (this.contract.provider instanceof MockNetworkProvider) {
-          throw buildError(libauthError, biatuthUri);
+          throw buildError(libauthError, bitauthUri);
         } else {
           const message = `${libauthError}\n\nUnderlying node error: ${reason}`;
-          throw buildError(message, biatuthUri);
+          throw buildError(message, bitauthUri);
         }
       }
 
       // this must be unreachable
-      throw buildError(reason, biatuthUri);
+      throw buildError(reason, bitauthUri);
     }
   }
 
