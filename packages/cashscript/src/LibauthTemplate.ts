@@ -121,7 +121,7 @@ export const buildTemplate = async ({
   const formattedBytecode = contract.artifact.debug
     ? formatLibauthScript(
       bytecodeToScript(hexToBin(contract.artifact.debug.bytecode)),
-      contract.artifact.debug?.sourceMap!,
+      contract.artifact.debug.sourceMap,
       contract.artifact.source,
     ).split('\n')
     : contract.artifact.bytecode.split(' ').map((asmElement) => {
@@ -131,10 +131,15 @@ export const buildTemplate = async ({
       return asmElement;
     });
 
-  return {
+  const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: `Imported from cashscript`,
     name: contract.artifact.contractName,
+    supported: ['BCH_SPEC'],
+    version: 0,
+  } as AuthenticationTemplate;
+
+  return {...template,
     entities: {
       parameters: {
         description: 'Contract creation and function parameters',
@@ -147,17 +152,13 @@ export const buildTemplate = async ({
             : []),
         ],
         variables: merge([
-          ...(hasSignatureTemplates
-            ? [
-              {
-                placeholder_key: {
-                  description: 'placeholder_key',
-                  name: 'placeholder_key',
-                  type: 'Key',
-                },
-              },
-            ]
-            : []),
+          ...functionInputs.map((input) => ({
+            [snakeCase(input.name)]: {
+              description: `"${input.name}" parameter of function "${func.name}"`,
+              name: input.name,
+              type: input.type === PrimitiveType.SIG ? 'Key' : 'WalletData',
+            },
+          })),
           {
             function_index: {
               description: 'Script function index to execute',
@@ -172,13 +173,17 @@ export const buildTemplate = async ({
               type: 'WalletData',
             },
           })),
-          ...functionInputs.map((input) => ({
-            [snakeCase(input.name)]: {
-              description: `"${input.name}" parameter of function "${func.name}"`,
-              name: input.name,
-              type: input.type === PrimitiveType.SIG ? 'Key' : 'WalletData',
-            },
-          })),
+          ...(hasSignatureTemplates
+            ? [
+              {
+                placeholder_key: {
+                  description: 'placeholder_key',
+                  name: 'placeholder_key',
+                  type: 'Key',
+                },
+              },
+            ]
+            : []),
         ]),
       },
     },
@@ -213,6 +218,13 @@ export const buildTemplate = async ({
           currentBlockTime: Math.round(+new Date() / 1000),
           keys: {
             privateKeys: merge([
+              ...zip(functionInputs, args)
+                .filter(([input]) => input.type === PrimitiveType.SIG)
+                .map(([input, arg]) => ({
+                  [snakeCase(input.name)]: binToHex(
+                    (arg as SignatureTemplate).privateKey,
+                  ),
+                })),
               ...(hasSignatureTemplates
                 ? [
                   {
@@ -221,20 +233,13 @@ export const buildTemplate = async ({
                   },
                 ]
                 : []),
-              ...zip(functionInputs, args)
-                .filter(([input]) => input.type === PrimitiveType.SIG)
-                .map(([input, arg]) => ({
-                  [snakeCase(input.name)]: binToHex(
-                    (arg as SignatureTemplate).privateKey,
-                  ),
-                })),
             ]),
           },
         },
         transaction: [libauthTransaction].map((val: TransactionBCH) => {
-          const result = {} as AuthenticationTemplateScenario['transaction'];
+          const result = ({} as AuthenticationTemplateScenario['transaction'])!;
           let inputSlotInserted = false;
-          result!.inputs = val!.inputs!.map((input, index) => {
+          result.inputs = val.inputs.map((input, index) => {
             const csInput = transaction.inputs[index] as Utxo;
             const signable = isUtxoP2PKH(csInput);
             let unlockingBytecode = {};
@@ -269,9 +274,9 @@ export const buildTemplate = async ({
               unlockingBytecode,
             } as AuthenticationTemplateScenarioInput;
           });
-          result!.locktime = val?.locktime;
+          result.locktime = val.locktime;
 
-          result!.outputs = val?.outputs?.map(
+          result.outputs = val.outputs.map(
             (output: LibauthOutput, index) => {
               const csOutput = transaction.outputs[index];
               let { lockingBytecode }: any = output;
@@ -318,7 +323,7 @@ export const buildTemplate = async ({
               } as AuthenticationTemplateScenarioTransactionOutput;
             },
           );
-          result!.version = libauthTransaction.version;
+          result.version = val.version;
           return result;
         })[0] as AuthenticationTemplateScenario['transaction'],
         sourceOutputs: [transaction].map((val: Transaction) => {
@@ -381,7 +386,6 @@ export const buildTemplate = async ({
               }>`))
             : ['// none']),
           '',
-
           ...(contract.artifact.abi.length > 1
             ? [
               '// function index in contract',
@@ -393,7 +397,7 @@ export const buildTemplate = async ({
         unlocks: 'lock',
       },
       lock: {
-        lockingType: 'p2sh20',
+        lockingType: transaction.contract.addressType,
         name: 'lock',
         script: [
           `// "${contract.artifact.contractName}" contract constructor parameters`,
@@ -430,8 +434,6 @@ export const buildTemplate = async ({
         }
         : {}),
     },
-    supported: ['BCH_SPEC'],
-    version: 0,
   } as AuthenticationTemplate;
 };
 

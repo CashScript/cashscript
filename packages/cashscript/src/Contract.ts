@@ -35,7 +35,7 @@ export class Contract {
 
   redeemScript: Script;
   public provider: NetworkProvider;
-  private addressType: 'p2sh20' | 'p2sh32';
+  public addressType: 'p2sh20' | 'p2sh32';
 
   constructor(
     public artifact: Artifact,
