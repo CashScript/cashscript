@@ -28,7 +28,7 @@ title: Release Notes
 #### Demo
 
 - A new demo toolkit was added for everyone to bootstrap the contract creation and
-  debugging environment similar to `hardat` on Ethereum. See `demo/testing-suite` path.
+  debugging environment similar to `hardat` on Ethereum. See `examples/testing-suite` path.
 
 ## v0.9.2
 

@@ -4,7 +4,7 @@ title: Debug tools
 
 To speed up the contract development and ensure the contract quality and security, CashScript takes advantage of deep integration with libauth. It allows for local transacaction evaluation, without actual interaction with BitcoinCash network of nodes.
 
-For a quick start, all beginners should check out the demo toolkit allowing to bootstrap the contract creation and debugging environment similar to `hardat` on Ethereum. See [`demo/testing-suite`](https://github.com/CashScript/cashscript/tree/master/demo/testing-suite) project path.
+For a quick start, all beginners should check out the demo toolkit allowing to bootstrap the contract creation and debugging environment similar to `hardat` on Ethereum. See [`examples/testing-suite`](https://github.com/CashScript/cashscript/tree/master/examples/testing-suite) project path.
 
 ### MockNetworkProvider
 
