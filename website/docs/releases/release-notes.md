@@ -5,30 +5,21 @@ title: Release Notes
 ## v0.10.0
 
 #### cashc compiler
-- compiler code was extended to understand:
-  * `console.log()` statements, debug only
-  * extended require syntax `require(expression, message)`, debug only
-- compiler now outputs the debug information into artifact:
-  * log messages
-  * failed require messages
-  * unoptimized contract bytecode for debugging
-  * sourcemap to map emitted VM instructions to CashScript source code
-
+- :sparkles: Add `console.log()` statements for debugging.
+- :sparkles: Extend `require()` statements to allow custom error messages for debugging.
+- :hammer_and_wrench: Update artifact format to allow for new debugging features.
 
 #### CashScript SDK
+- :sparkles: Add `MockNetworkProvider` to simulate network interaction for debugging and testing.
+- :sparkles: Add support for transaction evaluation and debugging using libauth templates.
+- :sparkles: Add extended Jest utilities specifically crafted for CashScript:
+  * `await expect(transaction).toLog(message)`
+  * `await expect(transaction).toFailRequireWith(message)`
+- :sparkles: Output BitAuth IDE URI for debugging when transaction is rejected.
 
-- Add MockNetworkProvider to simulate network interaction
-- Add libauth template creation
-- Add support for transaction evaluation and debugging using libauth templates
-- Add extended Jest utilities specifically crafted for CashScript:
-  * await expect(transaction).toLog(message)
-  * await expect(transaction).toFailRequireWith(message)
-- Meep tool got replaced with libauth template debug evaluation
+We also added a new example project with a full testing suite to demonstrate the new debugging features under `examples/testing-suite`.
 
-#### Demo
-
-- A new demo toolkit was added for everyone to bootstrap the contract creation and
-  debugging environment similar to `hardat` on Ethereum. See `examples/testing-suite` path.
+Thanks [mainnet_pat](https://twitter.com/mainnet_pat) for the contributions!
 
 ## v0.9.2
 
@@ -38,7 +29,7 @@ title: Release Notes
 - :bug: Fix off-by-one fee calculation error with transactions that have many outputs.
 - :bug: Fix bug where no error was thrown when invalid NFT commitment or token category were provided.
 - :hammer_and_wrench: Export all interfaces from CashScript's `interfaces.ts`.
-- :hammer_and_wrench: Merge duplicate code between Transaction.ts and TransactionBuilder.ts
+- :hammer_and_wrench: Merge duplicate code between Transaction.ts and TransactionBuilder.ts.
 
 ## v0.9.1
 

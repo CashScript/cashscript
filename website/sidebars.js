@@ -30,8 +30,8 @@ module.exports = {
         'sdk/instantiation',
         'sdk/transactions',
         'sdk/transactions-advanced',
-        'sdk/examples',
         'sdk/debugging',
+        'sdk/examples',
       ],
     },
     {
