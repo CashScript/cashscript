@@ -2,7 +2,7 @@
 title: Debugging & Testing
 ---
 
-To speed up contract development and ensure contract quality and security, CashScript takes advantage of deep integration with libauth. This allows for local transaction evaluation without actual interaction with the Bitcoin Cash network. For a quick start, you can check out [our testing-suite example]((https://github.com/CashScript/cashscript/tree/master/examples/testing-suite)) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
+To speed up contract development and ensure contract quality and security, CashScript takes advantage of deep integration with libauth. This allows for local transaction evaluation without actual interaction with the Bitcoin Cash network. For a quick start, you can check out [our testing-suite example]((https://github.com/CashScript/cashscript/tree/next/examples/testing-suite)) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
 
 :::caution
 The CashScript debugging tools only work with the [Simple Transaction Builder](/docs/sdk/transactions). We plan to extend the debugging tools to work with the [Advanced Transaction Builder](/docs/sdk/transactions-advanced) in the future.
