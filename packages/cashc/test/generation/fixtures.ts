@@ -20,6 +20,13 @@ export const fixtures: Fixture[] = [
         'OP_OVER OP_HASH160 OP_EQUALVERIFY '
         // require(checkSig(s, pk))
         + 'OP_CHECKSIG',
+      // TODO: Add debug info to all fixtures
+      // debug: {
+      //   bytecode: "5179a9517a8769517a517aac",
+      //   logs: [],
+      //   requireMessages: [],
+      //   sourceMap: "3:24:3:26;;:16::27:1;:31::34:0;;:16:::1;:8::36;4:25:4:26:0;;:28::30;;:16::31:1",
+      // },
       source: fs.readFileSync(new URL('../valid-contract-files/p2pkh.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
