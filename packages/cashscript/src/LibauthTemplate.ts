@@ -81,7 +81,7 @@ export const stringify = (any: any, spaces?: number): string => JSON.stringify(
 
 const zip = (a: any[], b: any[]): any[] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
-const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransaction: Transaction) => {
+const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransaction: Transaction): AuthenticationTemplateScenario['transaction'] => {
   const contract = csTransaction.contract;
   const result = ({} as AuthenticationTemplateScenario['transaction'])!;
 
@@ -97,9 +97,7 @@ const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransac
         overrides: {
           keys: {
             privateKeys: {
-              placeholder_key: binToHex(
-                  (csInput as UtxoP2PKH).template.privateKey,
-              ),
+              placeholder_key: binToHex((csInput as UtxoP2PKH).template.privateKey),
             },
           },
         },
@@ -173,15 +171,15 @@ const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransac
   );
   result.version = libauthTransaction.version;
   return result;
-}
+};
 
-const createScenarioSourceOutputs = (csTransaction: Transaction) => {
-    // only one 'slot' is allowed, otherwise {} must be used
+const createScenarioSourceOutputs = (csTransaction: Transaction): Array<AuthenticationTemplateScenarioOutput<true>> => {
+  // only one 'slot' is allowed, otherwise {} must be used
   let inputSlotInserted = false;
   return csTransaction.inputs.map(
     (csInput) => {
       const signable = isUtxoP2PKH(csInput);
-      let lockingBytecode = {} as AuthenticationTemplateScenarioOutput<true>["lockingBytecode"];
+      let lockingBytecode = {} as AuthenticationTemplateScenarioOutput<true>['lockingBytecode'];
       if (signable) {
         lockingBytecode = {
           script: 'p2pkh_placeholder_lock',
@@ -213,20 +211,20 @@ const createScenarioSourceOutputs = (csTransaction: Transaction) => {
         result.token = {
           amount: csInput.token.amount.toString(),
           category: csInput.token.category,
-        }
+        };
 
         if (csInput.token.nft) {
           result.token.nft = {
             capability: csInput.token.nft.capability,
-            commitment: csInput.token.nft.commitment
-          }
+            commitment: csInput.token.nft.commitment,
+          };
         }
       }
 
       return result;
     },
   );
-}
+};
 
 export const buildTemplate = async ({
   transaction,
@@ -276,7 +274,7 @@ export const buildTemplate = async ({
 
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
-    description: `Imported from cashscript`,
+    description: 'Imported from cashscript',
     name: contract.artifact.contractName,
     supported: ['BCH_SPEC'],
     version: 0,
@@ -314,7 +312,7 @@ export const buildTemplate = async ({
           },
         })),
       ]),
-    }
+    },
   };
 
   // add extra variables for the p2pkh utxos spent together with our contract
@@ -327,7 +325,7 @@ export const buildTemplate = async ({
         name: 'placeholder_key',
         type: 'Key',
       },
-    }
+    };
   }
 
   template.scenarios = {
@@ -421,7 +419,7 @@ export const buildTemplate = async ({
       unlocks: 'lock',
     },
     lock: {
-      lockingType: "p2sh20", //transaction.contract.addressType,
+      lockingType: 'p2sh20', //transaction.contract.addressType,
       name: 'lock',
       // locking script contains the CashScript contract parameters followed by the contract opcodes
       // we output these values as pushdata, comment will contain the type and the value of the variable

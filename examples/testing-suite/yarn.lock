@@ -302,10 +302,10 @@
   resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-2.0.0-alpha.8.tgz#352ade2075517f1548e05553e7bb1c5e1023d1fe"
   integrity sha512-KINAJbzg5pKs+WM8wCjWw6Ct/CeZG1JMrRXsIyPFztjNtwA5eeQL8eFkyquePsf8aZ5peRYK2eFPUDo/1rkg+w==
 
-"@cashscript/utils@^0.9.2":
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/@cashscript/utils/-/utils-0.9.2.tgz#9146411902a50f0b7b9a9629d6b57be03ec08c22"
-  integrity sha512-6x8YOg6uVONRB5RfygQtBvtwkbjFAMz2kma5HkC2LUYa3bVdR4hQx3wp0hgXhpdqSQvhlQxJQ3Rtbp3AJdt0dw==
+"@cashscript/utils@^0.10.0-next.0":
+  version "0.10.0-next.0"
+  resolved "https://registry.yarnpkg.com/@cashscript/utils/-/utils-0.10.0-next.0.tgz#d8a47c2e9b18840678e62c58c3190afb86794f9a"
+  integrity sha512-cqTniDARlZqqThMTd33LtwSFhRdVe15tTq1K4Zs0gYFgBcT1l40B3P57szN+2gXsffGmN77I33IXv+wPoObcDg==
   dependencies:
     "@bitauth/libauth" "^2.0.0-alpha.8"
     hash.js "^1.1.7"
@@ -914,29 +914,30 @@ caniuse-lite@^1.0.30001541:
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001565.tgz#a528b253c8a2d95d2b415e11d8b9942acc100c4f"
   integrity sha512-xrE//a3O7TP0vaJ8ikzkD2c2NgcVUvsEe2IvFTntV4Yd1Z9FVzh+gW+enX96L0psrbaFMcVcH2l90xNuGDWc8w==
 
-cashc@^0.9.2:
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/cashc/-/cashc-0.9.2.tgz#e001dd392a1a4efe0a3e5ce1cdb0399eb8868c1f"
-  integrity sha512-EQDksXEV9scQtrbSrIIC/XynFtFHtudClxHLFSOp+jSGcwpAsEzsLdMlSDIWO3uQUIcr7dgAoMREZUmRhERV8Q==
+cashc@^0.10.0:
+  version "0.10.0-next.0"
+  resolved "https://registry.yarnpkg.com/cashc/-/cashc-0.10.0-next.0.tgz#ba8f803abca77ad1ac629cfa3e794fa691906c81"
+  integrity sha512-PeOiU/5u+MyugcICuzb1aD5TitVRKbXD/4cBz9WNR7PCjdMX+3NpYDZi0Ql61YrcHP1s4z8a3Xw+w4FKcCL5LQ==
   dependencies:
     "@bitauth/libauth" "^2.0.0-alpha.8"
-    "@cashscript/utils" "^0.9.2"
+    "@cashscript/utils" "^0.10.0-next.0"
     antlr4ts "^0.5.0-alpha.4"
     commander "^7.1.0"
     semver "^7.3.4"
 
-cashscript@^0.9.2:
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/cashscript/-/cashscript-0.9.2.tgz#0c9260fdd3c4466ebb582239fc621349a6ee37b1"
-  integrity sha512-IxvcJluRAoWA8ruQXsvOgmDeuyXc4DnwDF2UfU3l6/0fn5HQkLLVhH5hroc/TbExKWQPBEwR3Nql7aTQhPb9vA==
+cashscript@^0.10.0:
+  version "0.10.0-next.0"
+  resolved "https://registry.yarnpkg.com/cashscript/-/cashscript-0.10.0-next.0.tgz#6959a5d0872660094e10a77fb59a8aec52ead3bf"
+  integrity sha512-ph6gmsLA7q7birLyFIE6gAAS4QRnA5Msa+T4Dx5sxLoQERIUHn8nJ8w/QjE1+UdcwimK43YV6fwaEVRXYm0UZQ==
   dependencies:
     "@bitauth/libauth" "^2.0.0-alpha.8"
-    "@cashscript/utils" "^0.9.2"
+    "@cashscript/utils" "^0.10.0-next.0"
     bip68 "^1.0.4"
     bitcoin-rpc-promise-retry "^1.3.0"
     delay "^5.0.0"
     electrum-cash "^2.0.10"
     fast-deep-equal "^3.1.3"
+    pako "^2.1.0"
 
 chalk@^2.4.2:
   version "2.4.2"
@@ -1963,6 +1964,11 @@ p-try@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
+
+pako@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/pako/-/pako-2.1.0.tgz#266cc37f98c7d883545d11335c00fbd4062c9a86"
+  integrity sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==
 
 parse-json@^5.2.0:
   version "5.2.0"
