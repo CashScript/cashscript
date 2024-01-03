@@ -1,5 +1,5 @@
 import {
-  AbiFunction, Artifact, Op, PrimitiveType, bytecodeToScript, decodeBool, decodeInt, decodeString, formatLibauthScript,
+  AbiFunction, Artifact, Op, PrimitiveType, bytecodeToScript, decodeBool, decodeInt, decodeString, formatBitAuthScript,
 } from '@cashscript/utils';
 import {
   hash160,
@@ -260,7 +260,7 @@ export const buildTemplate = async ({
   ).length;
 
   const formattedBytecode = contract.artifact.debug
-    ? formatLibauthScript(
+    ? formatBitAuthScript(
       bytecodeToScript(hexToBin(contract.artifact.debug.bytecode)),
       contract.artifact.debug.sourceMap,
       contract.artifact.source,

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { URL } from 'url';
 import { compileString, parseCode } from '../../src/compiler.js';
-import { buildOpCodeMap, bytecodeToAsm, bytecodeToScript } from '@cashscript/utils';
+import { buildLineToAsmMap, bytecodeToAsm, bytecodeToScript } from '@cashscript/utils';
 import { hexToBin } from '@bitauth/libauth';
 
 describe('Location', () => {
@@ -51,7 +51,7 @@ contract test() {
           const expected = bytecodeToAsm(hexToBin(artifact.debug!.bytecode));
 
           // Generate the opCodeMap from the source code
-          const opCodeMap = buildOpCodeMap(
+          const opCodeMap = buildLineToAsmMap(
             bytecodeToScript(hexToBin(artifact.debug!.bytecode)), artifact.debug!.sourceMap,
           );
 
@@ -68,7 +68,7 @@ contract test() {
             .replaceAll('(\n)', '()').replace(/\((?!\))/g, '(\n');
           const artifact = compileString(source);
           const expected = bytecodeToAsm(hexToBin(artifact.debug!.bytecode));
-          const opCodeMap = buildOpCodeMap(
+          const opCodeMap = buildLineToAsmMap(
             bytecodeToScript(hexToBin(artifact.debug!.bytecode)), artifact.debug!.sourceMap,
           );
 

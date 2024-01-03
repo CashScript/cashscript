@@ -19,8 +19,19 @@ export function scriptToAsm(script: Script): string {
   return bytecodeToAsm(scriptToBytecode(script));
 }
 
+// TODO: See note at bytecodeToAsm
+export function scriptToBitAuthAsm(script: Script): string {
+  return bytecodeToBitAuthAsm(scriptToBytecode(script));
+}
+
+// TODO: Figure out why OP_0 is decoded to an empty Uint8Array (while e.g. OP_3 is just OP_3)
 export function asmToScript(asm: string): Script {
   return bytecodeToScript(asmToBytecode(asm));
+}
+
+// asmToBytecode also works for BitAuth ASM
+export function bitAuthAsmToScript(asm: string): Script {
+  return asmToScript(asm);
 }
 
 export function scriptToBytecode(script: Script): Uint8Array {
@@ -59,7 +70,9 @@ export function asmToBytecode(asm: string): Uint8Array {
       return { opcode: Op[token as keyof typeof Op] };
     }
 
-    return decodeAuthenticationInstructions(encodeDataPush(hexToBin(token)))[0];
+    const data = token.replace(/<|>/g, '').replace(/^0x/, '');
+
+    return decodeAuthenticationInstructions(encodeDataPush(hexToBin(data)))[0];
   });
 
   // Convert the AuthenticationInstructions to bytecode
@@ -74,6 +87,23 @@ export function bytecodeToAsm(bytecode: Uint8Array): string {
   asm = asm.replace(/OP_PUSHBYTES_[^\s]+/g, '');
   asm = asm.replace(/OP_PUSHDATA[^\s]+ [^\s]+/g, '');
   asm = asm.replace(/(^|\s)0x/g, ' ');
+
+  // Remove any duplicate whitespace
+  asm = asm.replace(/\s+/g, ' ').trim();
+
+  return asm;
+}
+
+// TODO: If we decide to change the ASM / artifact format, we can remove this function and merge it
+// with bytecodeToAsm
+export function bytecodeToBitAuthAsm(bytecode: Uint8Array): string {
+  // Convert the bytecode to libauth's ASM format
+  let asm = disassembleBytecodeBCH(bytecode);
+
+  // COnvert libauth's ASM format to BITBOX's
+  asm = asm.replace(/OP_PUSHBYTES_[^\s]+/g, '');
+  asm = asm.replace(/OP_PUSHDATA[^\s]+ [^\s]+/g, '');
+  asm = asm.replace(/(^|\s)(0x\w*)/g, ' \<$2\>');
 
   // Remove any duplicate whitespace
   asm = asm.replace(/\s+/g, ' ').trim();
