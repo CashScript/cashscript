@@ -3,7 +3,6 @@ import { buildLineToOpcodesMap, buildLineToAsmMap, formatBitAuthScript } from '.
 import { fixtures } from './fixtures/bitauth-script.fixture.js';
 
 describe('Libauth Script formatting', () => {
-
   fixtures.forEach((fixture) => {
     describe(fixture.name, () => {
       const scriptBytecode = asmToScript(fixture.asmBytecode);
@@ -17,7 +16,8 @@ describe('Libauth Script formatting', () => {
       });
 
       it('should format script as debugging output for BitAuth IDE', () => {
-        expect(formatBitAuthScript(scriptBytecode, fixture.sourceMap, fixture.sourceCode)).toBe(fixture.expectedBitAuthScript);
+        expect(formatBitAuthScript(scriptBytecode, fixture.sourceMap, fixture.sourceCode))
+          .toBe(fixture.expectedBitAuthScript);
       });
     });
   });

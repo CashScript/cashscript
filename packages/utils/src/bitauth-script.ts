@@ -1,5 +1,5 @@
 import { Script, scriptToBitAuthAsm } from './script.js';
-import { sourceMapToLocationData } from './sourceMap.js';
+import { sourceMapToLocationData } from './source-map.js';
 
 export type LineToOpcodesMap = Record<string, Script>;
 export type LineToAsmMap = Record<string, string>;
