@@ -366,6 +366,7 @@ export class ConsoleStatementNode extends Node {
   }
 }
 
+// TODO: Couldn't we just use existing nodes for this? e.g. IdentifierNode + StringLiteralNode etc.
 export class ConsoleParameterNode extends Node {
   constructor(
     public message?: string,
