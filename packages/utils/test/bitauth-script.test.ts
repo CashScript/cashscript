@@ -1,6 +1,6 @@
 import { asmToScript } from '../src/script.js';
-import { buildLineToOpcodesMap, buildLineToAsmMap, formatBitAuthScript } from '../src/libauth.js';
-import { fixtures } from './fixtures/libauth.fixture.js';
+import { buildLineToOpcodesMap, buildLineToAsmMap, formatBitAuthScript } from '../src/bitauth-script.js';
+import { fixtures } from './fixtures/bitauth-script.fixture.js';
 
 describe('Libauth Script formatting', () => {
 
