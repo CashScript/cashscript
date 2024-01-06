@@ -36,6 +36,14 @@ Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project
 
 Cash-Ninjas is a collectibele NFT project on Bitcoin Cash which focuses on building open-source tooling! The Cash-Ninjas project uses CashScript for its non-custodial, multi-threaded minting contract. The contract is open source for others to inspect and use the contract code. The Cash-Ninjas minting page uses wallet connect to allow minting directly from the user's smart contract wallet.
 
+## BCH Guru
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://bch.guru/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/bchguru.jpg" /></a>
+</div>
+
+BCH Guru is a non-custodial price-prediction platform and a collectible NFT project. BCH Guru uses CashScript for its price-prediction smart contracts to have players commit to a secret price-prediction. The project was the first to pioneer integration with CashConnect, which allows wallets to recognize the smart contract template and understand contract details.
+
 ## Unspent Phi
 
 <div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>
