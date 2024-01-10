@@ -1,8 +1,6 @@
+import { ParseTree, ParseTreeVisitor } from 'antlr4';
 import { hexToBin } from '@bitauth/libauth';
 import { parseType } from '@cashscript/utils';
-import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor.js';
-import { ParseTree } from 'antlr4ts/tree/ParseTree.js';
-import { TerminalNode } from 'antlr4ts/tree/TerminalNode.js';
 import semver from 'semver';
 import {
   Node,
@@ -46,7 +44,6 @@ import type {
   FunctionCallContext,
   CastContext,
   LiteralContext,
-  NumberLiteralContext,
   SourceFileContext,
   BlockContext,
   TimeOpStatementContext,
@@ -63,8 +60,9 @@ import type {
   InstantiationContext,
   NullaryOpContext,
   UnaryIntrospectionOpContext,
+  StatementContext,
 } from '../grammar/CashScriptParser.js';
-import type { CashScriptVisitor } from '../grammar/CashScriptVisitor.js';
+import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
 import {
   NumberUnit,
@@ -75,7 +73,7 @@ import { version } from '../index.js';
 import { ParseError, VersionError } from '../Errors.js';
 
 export default class AstBuilder
-  extends AbstractParseTreeVisitor<Node>
+  extends ParseTreeVisitor<Node>
   implements CashScriptVisitor<Node> {
   constructor(private tree: ParseTree) {
     super();
@@ -90,7 +88,7 @@ export default class AstBuilder
   }
 
   visitSourceFile(ctx: SourceFileContext): SourceFileNode {
-    ctx.pragmaDirective().forEach((pragma) => {
+    ctx.pragmaDirective_list().forEach((pragma) => {
       this.processPragma(pragma);
     });
 
@@ -101,15 +99,15 @@ export default class AstBuilder
   }
 
   processPragma(ctx: PragmaDirectiveContext): void {
-    const pragmaName = getPragmaName(ctx.pragmaName().text);
+    const pragmaName = getPragmaName(ctx.pragmaName().getText());
     if (pragmaName !== PragmaName.CASHSCRIPT) throw new Error(); // Shouldn't happen
 
     // Strip any -beta tags
     const actualVersion = version.replace(/-.*/g, '');
 
-    ctx.pragmaValue().versionConstraint().forEach((constraint) => {
+    ctx.pragmaValue().versionConstraint_list().forEach((constraint) => {
       const op = getVersionOpFromCtx(constraint.versionOperator());
-      const versionConstraint = `${op}${constraint.VersionLiteral().text}`;
+      const versionConstraint = `${op}${constraint.VersionLiteral().getText()}`;
       if (!semver.satisfies(actualVersion, versionConstraint)) {
         throw new VersionError(actualVersion, versionConstraint);
       }
@@ -117,18 +115,18 @@ export default class AstBuilder
   }
 
   visitContractDefinition(ctx: ContractDefinitionContext): ContractNode {
-    const name = ctx.Identifier().text;
-    const parameters = ctx.parameterList().parameter().map((p) => this.visit(p) as ParameterNode);
-    const functions = ctx.functionDefinition().map((f) => this.visit(f) as FunctionDefinitionNode);
+    const name = ctx.Identifier().getText();
+    const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
+    const functions = ctx.functionDefinition_list().map((f) => this.visit(f) as FunctionDefinitionNode);
     const contract = new ContractNode(name, parameters, functions);
     contract.location = Location.fromCtx(ctx);
     return contract;
   }
 
   visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
-    const name = ctx.Identifier().text;
-    const parameters = ctx.parameterList().parameter().map((p) => this.visit(p) as ParameterNode);
-    const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
+    const name = ctx.Identifier().getText();
+    const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
+    const statements = ctx.statement_list().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
 
@@ -138,17 +136,22 @@ export default class AstBuilder
   }
 
   visitParameter(ctx: ParameterContext): ParameterNode {
-    const type = parseType(ctx.typeName().text);
-    const name = ctx.Identifier().text;
+    const type = parseType(ctx.typeName().getText());
+    const name = ctx.Identifier().getText();
     const parameter = new ParameterNode(type, name);
     parameter.location = Location.fromCtx(ctx);
     return parameter;
   }
 
+  visitStatement(ctx: StatementContext): StatementNode {
+    // Statement nodes only have a single child, so we can just visit that child
+    return this.visit(ctx.getChild(0));
+  }
+
   visitVariableDefinition(ctx: VariableDefinitionContext): VariableDefinitionNode {
-    const type = parseType(ctx.typeName().text);
-    const modifiers = ctx.modifier().map((modifier) => modifier.text);
-    const name = ctx.Identifier().text;
+    const type = parseType(ctx.typeName().getText());
+    const modifiers = ctx.modifier_list().map((modifier) => modifier.getText());
+    const name = ctx.Identifier().getText();
     const expression = this.visit(ctx.expression());
     const variableDefinition = new VariableDefinitionNode(type, modifiers, name, expression);
     variableDefinition.location = Location.fromCtx(ctx);
@@ -157,18 +160,19 @@ export default class AstBuilder
 
   visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
-    const names = ctx.Identifier();
-    const types = ctx.typeName();
-    const [var1, var2] = names.map((name, i) => (
-      { name: name.text, type: parseType(types[i].text) }
-    ));
+    const names = ctx.Identifier_list();
+    const types = ctx.typeName_list();
+    const [var1, var2] = names.map((name, i) => ({
+      name: name.getText(),
+      type: parseType(types[i].getText()),
+    }));
     const tupleAssignment = new TupleAssignmentNode(var1, var2, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
     return tupleAssignment;
   }
 
   visitAssignStatement(ctx: AssignStatementContext): AssignNode {
-    const identifier = new IdentifierNode(ctx.Identifier().text);
+    const identifier = new IdentifierNode(ctx.Identifier().getText());
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
 
     const expression = this.visit(ctx.expression());
@@ -179,7 +183,7 @@ export default class AstBuilder
 
   visitTimeOpStatement(ctx: TimeOpStatementContext): TimeOpNode {
     const expression = this.visit(ctx.expression());
-    const timeOp = new TimeOpNode(ctx.TxVar().text as TimeOp, expression);
+    const timeOp = new TimeOpNode(ctx.TxVar().getText() as TimeOp, expression);
     timeOp.location = Location.fromCtx(ctx);
 
     return timeOp;
@@ -202,7 +206,7 @@ export default class AstBuilder
   }
 
   visitBlock(ctx: BlockContext): BlockNode {
-    const statements = ctx.statement().map((s) => this.visit(s) as StatementNode);
+    const statements = ctx.statement_list().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
     return block;
@@ -213,7 +217,7 @@ export default class AstBuilder
   }
 
   visitCast(ctx: CastContext): CastNode {
-    const type = parseType(ctx.typeName().text);
+    const type = parseType(ctx.typeName().getText());
     const expression = this.visit(ctx._castable);
     const size = ctx._size && this.visit(ctx._size);
     const cast = new CastNode(type, expression, size);
@@ -226,18 +230,18 @@ export default class AstBuilder
   }
 
   visitFunctionCall(ctx: FunctionCallContext): FunctionCallNode {
-    const identifier = new IdentifierNode(ctx.Identifier().text as string);
+    const identifier = new IdentifierNode(ctx.Identifier().getText());
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
-    const parameters = ctx.expressionList().expression().map((e) => this.visit(e));
+    const parameters = ctx.expressionList().expression_list().map((e) => this.visit(e));
     const functionCall = new FunctionCallNode(identifier, parameters);
     functionCall.location = Location.fromCtx(ctx);
     return functionCall;
   }
 
   visitInstantiation(ctx: InstantiationContext): InstantiationNode {
-    const identifier = new IdentifierNode(ctx.Identifier().text as string);
+    const identifier = new IdentifierNode(ctx.Identifier().getText());
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
-    const parameters = ctx.expressionList().expression().map((e) => this.visit(e));
+    const parameters = ctx.expressionList().expression_list().map((e) => this.visit(e));
     const instantiation = new InstantiationNode(identifier, parameters);
     instantiation.location = Location.fromCtx(ctx);
     return instantiation;
@@ -245,14 +249,14 @@ export default class AstBuilder
 
   visitTupleIndexOp(ctx: TupleIndexOpContext): TupleIndexOpNode {
     const tuple = this.visit(ctx.expression());
-    const index = parseInt(ctx._index.text as string, 10);
+    const index = parseInt(ctx._index.text, 10);
     const tupleIndexOp = new TupleIndexOpNode(tuple, index);
     tupleIndexOp.location = Location.fromCtx(ctx);
     return tupleIndexOp;
   }
 
   visitNullaryOp(ctx: NullaryOpContext): NullaryOpNode {
-    const operator = ctx.text as NullaryOperator;
+    const operator = ctx.getText() as NullaryOperator;
     const nullaryOp = new NullaryOpNode(operator);
     nullaryOp.location = Location.fromCtx(ctx);
     return nullaryOp;
@@ -284,14 +288,14 @@ export default class AstBuilder
   }
 
   visitArray(ctx: ArrayContext): ArrayNode {
-    const elements = ctx.expression().map((e) => this.visit(e));
+    const elements = ctx.expression_list().map((e) => this.visit(e));
     const array = new ArrayNode(elements);
     array.location = Location.fromCtx(ctx);
     return array;
   }
 
   visitIdentifier(ctx: IdentifierContext): IdentifierNode {
-    const identifier = new IdentifierNode((ctx.Identifier() as TerminalNode).text);
+    const identifier = new IdentifierNode(ctx.Identifier().getText());
     identifier.location = Location.fromCtx(ctx);
     return identifier;
   }
@@ -325,7 +329,7 @@ export default class AstBuilder
   }
 
   createBooleanLiteral(ctx: LiteralContext): BoolLiteralNode {
-    const boolString = (ctx.BooleanLiteral() as TerminalNode).text;
+    const boolString = ctx.BooleanLiteral().getText();
     const boolValue = boolString === 'true';
     const booleanLiteral = new BoolLiteralNode(boolValue);
     booleanLiteral.location = Location.fromCtx(ctx);
@@ -333,9 +337,9 @@ export default class AstBuilder
   }
 
   createIntLiteral(ctx: LiteralContext): IntLiteralNode {
-    const numberCtx = ctx.numberLiteral() as NumberLiteralContext;
-    const numberString = numberCtx.NumberLiteral().text;
-    const numberUnit = numberCtx.NumberUnit()?.text;
+    const numberCtx = ctx.numberLiteral();
+    const numberString = numberCtx.NumberLiteral().getText();
+    const numberUnit = numberCtx.NumberUnit()?.getText();
     const numberValue = BigInt(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit.toUpperCase()] : 1);
     const intLiteral = new IntLiteralNode(numberValue);
     intLiteral.location = Location.fromCtx(ctx);
@@ -343,7 +347,7 @@ export default class AstBuilder
   }
 
   createStringLiteral(ctx: LiteralContext): StringLiteralNode {
-    const rawString = (ctx.StringLiteral() as TerminalNode).text;
+    const rawString = ctx.StringLiteral().getText();
     const stringValue = rawString.substring(1, rawString.length - 1);
     const quote = rawString.substring(0, 1);
     const stringLiteral = new StringLiteralNode(stringValue, quote);
@@ -352,7 +356,7 @@ export default class AstBuilder
   }
 
   createDateLiteral(ctx: LiteralContext): IntLiteralNode {
-    const rawString = (ctx.DateLiteral() as TerminalNode).text;
+    const rawString = ctx.DateLiteral().getText();
     const stringValue = rawString.substring(6, rawString.length - 2).trim();
 
     if (!/^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/.test(stringValue)) {
@@ -371,10 +375,16 @@ export default class AstBuilder
   }
 
   createHexLiteral(ctx: LiteralContext): HexLiteralNode {
-    const hexString = (ctx.HexLiteral() as TerminalNode).text;
+    const hexString = ctx.HexLiteral().getText();
     const hexValue = hexToBin(hexString.substring(2));
     const hexLiteral = new HexLiteralNode(hexValue);
     hexLiteral.location = Location.fromCtx(ctx);
     return hexLiteral;
+  }
+
+  // For safety reasons, we throw an error when the "default" visitChildren is called. *All* nodes
+  // must have a custom visit method, so that we can be sure that we've covered all cases.
+  visitChildren(): Node {
+    throw new Error('Safety Warning: Unhandled node in AST builder');
   }
 }

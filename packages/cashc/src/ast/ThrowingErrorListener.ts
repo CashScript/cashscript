@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ANTLRErrorListener, RecognitionException, Recognizer } from 'antlr4ts';
+import { ErrorListener, RecognitionException, Recognizer } from 'antlr4';
 import { ParseError } from '../Errors.js';
 import { Point } from './Location.js';
 
@@ -7,12 +7,12 @@ import { Point } from './Location.js';
  * ANTLR Error Listener that immediately throws on error. This is used so that
  * ANTLR doesn't attempt any error recovery during lexing/parsing and fails early.
  */
-export default class ThrowingErrorListener implements ANTLRErrorListener<any> {
+export default class ThrowingErrorListener<TSymbol> extends ErrorListener<TSymbol> {
   static readonly INSTANCE = new ThrowingErrorListener();
 
-  syntaxError<T>(
-    recognizer: Recognizer<T, any>,
-    offendingSymbol: T,
+  syntaxError(
+    recognizer: Recognizer<TSymbol>,
+    offendingSymbol: TSymbol,
     line: number,
     charPositionInLine: number,
     message: string,

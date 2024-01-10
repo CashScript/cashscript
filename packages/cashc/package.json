@@ -34,7 +34,7 @@
     "test": "test"
   },
   "scripts": {
-    "antlr": "antlr4ts -visitor -no-listener src/grammar/CashScript.g4",
+    "antlr": "antlr -Dlanguage=TypeScript -visitor -no-listener src/grammar/CashScript.g4",
     "postantlr": "find src/grammar -type f -name '*.ts' | xargs sed -i '' 's|\\(import .* \".*/.*\\)\";|\\1\\.js\";|g'",
     "build": "yarn clean && yarn compile",
     "build:test": "yarn clean:test && yarn compile:test && cpy './test/**/*.cash' ./dist-test/test",
@@ -51,7 +51,7 @@
   "dependencies": {
     "@bitauth/libauth": "^2.0.0-alpha.8",
     "@cashscript/utils": "^0.9.2",
-    "antlr4ts": "^0.5.0-alpha.4",
+    "antlr4": "^4.13.1-patch-1",
     "commander": "^7.1.0",
     "semver": "^7.3.4"
   },
@@ -59,7 +59,6 @@
     "@jest/globals": "^29.4.1",
     "@types/node": "^18.11.18",
     "@types/semver": "^7.3.4",
-    "antlr4ts-cli": "^0.5.0-alpha.4",
     "cpy-cli": "^4.2.0",
     "eslint": "^7.20.0",
     "jest": "^29.4.1",
