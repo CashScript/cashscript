@@ -1,4 +1,4 @@
-import { VersionOperatorContext } from '../grammar/CashScriptParser.js';
+import type { VersionOperatorContext } from '../grammar/CashScriptParser.js';
 
 export enum PragmaName {
   CASHSCRIPT = 'cashscript',
@@ -19,5 +19,5 @@ export function getPragmaName(name: string): PragmaName {
 }
 
 export function getVersionOpFromCtx(ctx?: VersionOperatorContext): VersionOp {
-  return <VersionOp>(ctx ? ctx.text : '=');
+  return <VersionOp>(ctx ? ctx.getText() : '=');
 }
