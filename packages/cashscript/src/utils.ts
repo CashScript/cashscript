@@ -343,7 +343,7 @@ export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
   ...{
     txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
     vout: Math.floor(Math.random() * 10),
-    satoshis: 20000n + randomInt(),
+    satoshis: 100_000n + randomInt(),
   },
   ...defaults,
 });
@@ -351,7 +351,7 @@ export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
 export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => ({
   ...{
     category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
-    amount: 10000n + randomInt(),
+    amount: 100_000n + randomInt(),
   },
   ...defaults,
 });
