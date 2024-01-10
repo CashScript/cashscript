@@ -30,7 +30,7 @@ import {
   LibauthOutput,
   Utxo,
   isUtxoP2PKH,
-} from '../src/interfaces.js';
+} from './interfaces.js';
 import { Argument, encodeArgument as csEncodeArgument } from './Argument.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
