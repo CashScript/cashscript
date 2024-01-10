@@ -3,7 +3,7 @@ import { Contract, MockNetworkProvider, SignatureTemplate } from '../src/index.j
 import {
   alicePriv, alicePub, bobPriv, bobPub,
 } from './fixture/vars.js';
-import './JestExtensions.js';
+import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 
 describe('Libauth template generation tests', () => {

@@ -1,7 +1,7 @@
 import { MatcherContext } from '@jest/expect';
 import { SyncExpectationResult } from 'expect';
 import { printExpected, printReceived, matcherHint } from 'jest-matcher-utils';
-import { Transaction } from '../src/index.js';
+import { Transaction } from '../index.js';
 
 export {};
 

@@ -7,7 +7,6 @@
 
   "include": [
     "src/**/*",
-    "test/JestExtensions.ts",
   ],
 
   "exclude": [
