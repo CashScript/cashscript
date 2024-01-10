@@ -52,6 +52,14 @@ BCH Guru is a non-custodial price-prediction platform and a collectible NFT proj
 
 The CashTokens Studio is an application for creating CashTokens and for their managing metadata updates and reserved supply. The CashTokens Studio uses CashScript to lock the AuthUTXO in an AuthGuard contract to prevent accidentally spending the authority to be able to update the token's metadata or release reserved supply.
 
+## BCHouse
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://bchouse.fly.dev/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/bchouse.svg" /></a>
+</div>
+
+BCHouse is a brand new BCH social media site and the first CashTokens-based crowdfunding application on Bitcoin Cash. BCHouse uses CashScript for the crowdfunding smart contract to allow an unlimited number of contributions to a campaign and to enable any BCH wallet to pledge by using forwarding addresses.
+
 ## Unspent Phi
 
 <div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>
