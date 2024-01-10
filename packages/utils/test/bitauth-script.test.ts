@@ -16,8 +16,8 @@ describe('Libauth Script formatting', () => {
       });
 
       it('should format script as debugging output for BitAuth IDE', () => {
-        expect(formatBitAuthScript(scriptBytecode, fixture.sourceMap, fixture.sourceCode))
-          .toBe(fixture.expectedBitAuthScript);
+        const expectedBitAuthScript = fixture.expectedBitAuthScript.replace(/^\n+/, '').replace(/\n+$/, '');
+        expect(formatBitAuthScript(scriptBytecode, fixture.sourceMap, fixture.sourceCode)).toBe(expectedBitAuthScript);
       });
     });
   });
