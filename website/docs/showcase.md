@@ -44,6 +44,14 @@ Cash-Ninjas is a collectibele NFT project on Bitcoin Cash which focuses on build
 
 BCH Guru is a non-custodial price-prediction platform and a collectible NFT project. BCH Guru uses CashScript for its price-prediction smart contracts to have players commit to a secret price-prediction. The project was the first to pioneer integration with CashConnect, which allows wallets to recognize the smart contract template and understand contract details.
 
+## BCHouse
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://bchouse.fly.dev/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/bchouse.svg" /></a>
+</div>
+
+BCHouse is a brand new BCH social media site and the first CashTokens-based crowdfunding application on Bitcoin Cash. BCHouse uses CashScript for the crowdfunding smart contract to allow an unlimited number of contributions to a campaign and to enable any BCH wallet to pledge by using forwarding addresses.
+
 ## Unspent Phi
 
 <div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>
