@@ -3,7 +3,7 @@ import {
   hexToBin,
   decodeTransaction,
   Transaction as LibauthTransaction,
-  AuthenticationTemplate,
+  WalletTemplate,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -174,7 +174,7 @@ export class Transaction {
 
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = await this.build();
-    let template: AuthenticationTemplate | undefined;
+    let template: WalletTemplate | undefined;
     try {
       if (this.contract.provider instanceof MockNetworkProvider) {
         template = await buildTemplate({

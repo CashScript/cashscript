@@ -4,14 +4,14 @@ import {
 import {
   hash160,
   hexToBin,
-  AuthenticationTemplateScenarioTransactionOutput,
-  AuthenticationTemplateScenario,
+  WalletTemplateScenarioTransactionOutput,
+  WalletTemplateScenario,
   decodeTransaction,
   binToHex,
-  AuthenticationTemplate,
-  AuthenticationTemplateScenarioInput,
+  WalletTemplate,
+  WalletTemplateScenarioInput,
   TransactionBCH,
-  authenticationTemplateToCompilerConfiguration,
+  walletTemplateToCompilerConfiguration,
   createCompiler,
   createVirtualMachineBCHCHIPs,
   binToBase64,
@@ -22,7 +22,7 @@ import {
   AuthenticationVirtualMachine,
   ResolvedTransactionCommon,
   AuthenticationErrorCommon,
-  AuthenticationTemplateScenarioOutput,
+  WalletTemplateScenarioOutput,
 } from '@bitauth/libauth';
 import { deflate } from 'pako';
 import {
@@ -81,9 +81,9 @@ export const stringify = (any: any, spaces?: number): string => JSON.stringify(
 
 const zip = (a: any[], b: any[]): any[] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
-const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransaction: Transaction): AuthenticationTemplateScenario['transaction'] => {
+const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransaction: Transaction): WalletTemplateScenario['transaction'] => {
   const contract = csTransaction.contract;
-  const result = ({} as AuthenticationTemplateScenario['transaction'])!;
+  const result = ({} as WalletTemplateScenario['transaction'])!;
 
   // only one 'slot' is allowed, otherwise {} must be used
   let inputSlotInserted = false;
@@ -118,7 +118,7 @@ const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransac
           : input.outpointTransactionHash,
       sequenceNumber: input.sequenceNumber,
       unlockingBytecode,
-    } as AuthenticationTemplateScenarioInput;
+    } as WalletTemplateScenarioInput;
   });
   result.locktime = libauthTransaction.locktime;
 
@@ -166,20 +166,20 @@ const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransac
             : lockingBytecode,
         token: output.token,
         valueSatoshis: Number(output.valueSatoshis),
-      } as AuthenticationTemplateScenarioTransactionOutput;
+      } as WalletTemplateScenarioTransactionOutput;
     },
   );
   result.version = libauthTransaction.version;
   return result;
 };
 
-const createScenarioSourceOutputs = (csTransaction: Transaction): Array<AuthenticationTemplateScenarioOutput<true>> => {
+const createScenarioSourceOutputs = (csTransaction: Transaction): Array<WalletTemplateScenarioOutput<true>> => {
   // only one 'slot' is allowed, otherwise {} must be used
   let inputSlotInserted = false;
   return csTransaction.inputs.map(
     (csInput) => {
       const signable = isUtxoP2PKH(csInput);
-      let lockingBytecode = {} as AuthenticationTemplateScenarioOutput<true>['lockingBytecode'];
+      let lockingBytecode = {} as WalletTemplateScenarioOutput<true>['lockingBytecode'];
       if (signable) {
         lockingBytecode = {
           script: 'p2pkh_placeholder_lock',
@@ -205,7 +205,7 @@ const createScenarioSourceOutputs = (csTransaction: Transaction): Array<Authenti
       const result = {
         lockingBytecode: lockingBytecode,
         valueSatoshis: Number(csInput.satoshis),
-      } as AuthenticationTemplateScenarioOutput<true>;
+      } as WalletTemplateScenarioOutput<true>;
 
       if (csInput.token) {
         result.token = {
@@ -232,7 +232,7 @@ export const buildTemplate = async ({
 }: {
   transaction: Transaction;
   transactionHex?: string;
-}): Promise<AuthenticationTemplate> => {
+}): Promise<WalletTemplate> => {
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
@@ -278,7 +278,7 @@ export const buildTemplate = async ({
     name: contract.artifact.contractName,
     supported: ['BCH_SPEC'],
     version: 0,
-  } as AuthenticationTemplate;
+  } as WalletTemplate;
 
   // declaration of template variables and their types
   template.entities = {
@@ -464,7 +464,7 @@ export const buildTemplate = async ({
   return template;
 };
 
-export const getBitauthUri = (template: AuthenticationTemplate): string => {
+export const getBitauthUri = (template: WalletTemplate): string => {
   const base64toBase64Url = (base64: string): string => base64.replace(/\+/g, '-').replace(/\//g, '_');
   const payload = base64toBase64Url(
     binToBase64(deflate(utf8ToBin(stringify(template)))),
@@ -481,8 +481,8 @@ type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
 
 // internal util. instantiates the virtual machine and compiles the template into a program
-const createProgram = (template: AuthenticationTemplate): CreateProgramResult => {
-  const configuration = authenticationTemplateToCompilerConfiguration(template);
+const createProgram = (template: WalletTemplate): CreateProgramResult => {
+  const configuration = walletTemplateToCompilerConfiguration(template);
   const vm = createVirtualMachineBCHCHIPs();
   const compiler = createCompiler(configuration);
 
@@ -505,7 +505,7 @@ const createProgram = (template: AuthenticationTemplate): CreateProgramResult =>
 };
 
 // evaluates the fully defined template, throws upon error
-export const evaluateTemplate = (template: AuthenticationTemplate): boolean => {
+export const evaluateTemplate = (template: WalletTemplate): boolean => {
   const { vm, program } = createProgram(template);
 
   const verifyResult = vm.verify(program);
@@ -520,7 +520,7 @@ export const evaluateTemplate = (template: AuthenticationTemplate): boolean => {
 export type DebugResult = AuthenticationProgramStateBCHCHIPs[];
 
 // debugs the template, optionally logging the execution data
-export const debugTemplate = (template: AuthenticationTemplate, artifact: Artifact): DebugResult => {
+export const debugTemplate = (template: WalletTemplate, artifact: Artifact): DebugResult => {
   const { vm, program } = createProgram(template);
 
   const debugResult = vm.debug(program);

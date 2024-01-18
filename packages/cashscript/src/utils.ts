@@ -12,7 +12,7 @@ import {
   LockingBytecodeType,
   encodeTransactionOutput,
   isHex,
-  bigIntToCompactSize,
+  bigIntToCompactUint,
   AuthenticationErrorCommon,
   NonFungibleTokenCapability,
   bigIntToVmNumber,
@@ -155,7 +155,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   let size = VERSION_SIZE + LOCKTIME_SIZE;
   size += outputs.reduce((acc, output) => acc + getOutputSize(output), 0);
   // Add tx-out count (accounting for a potential change output)
-  size += bigIntToCompactSize(BigInt(outputs.length + 1)).byteLength;
+  size += bigIntToCompactUint(BigInt(outputs.length + 1)).byteLength;
 
   return size;
 }
