@@ -25,7 +25,6 @@ import {
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
-  ConsoleParameterNode,
 } from './AST.js';
 
 export default abstract class AstVisitor<T> {
@@ -54,7 +53,6 @@ export default abstract class AstVisitor<T> {
   abstract visitStringLiteral(node: StringLiteralNode): T;
   abstract visitHexLiteral(node: HexLiteralNode): T;
   abstract visitConsoleStatement(node: ConsoleStatementNode): T;
-  abstract visitConsoleParameter(node: ConsoleParameterNode): T;
 
   visit(node: Node): T {
     return node.accept(this);

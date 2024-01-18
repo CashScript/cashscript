@@ -57,8 +57,6 @@ import {
   compileUnaryOp,
 } from './utils.js';
 import { Location } from '../ast/Location.js';
-import { ParseError } from '../Errors.js';
-import { Symbol } from '../ast/SymbolTable.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: LocationData = []; // detailed location data needed for sourcemap creation
@@ -71,10 +69,6 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
-
-  constructor(private logSymbols: Symbol[]) {
-    super();
-  }
 
   private emit(op: OpOrData | OpOrData[], location: LocationI, positionHint?: number): void {
     if (Array.isArray(op)) {
@@ -550,38 +544,24 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitConsoleStatement(node: ConsoleStatementNode): Node {
     // instruction pointer is the count of emitted opcodes + number of constructor data pushes
     const ip = this.output.length + this.constructorParameterCount;
-
     const { line } = node.location!.start;
 
+    // TODO: refactor to use a map instead of array (also in the artifact and other places where console logs and
+    // require statements are used)
     // check if log entry exists for the instruction pointer, create if not
     let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
     if (index === -1) {
-      index = this.consoleLogs.push({
-        ip,
-        line,
-        data: [],
-      }) - 1;
+      index = this.consoleLogs.push({ ip, line, data: [] }) - 1;
     }
 
     node.parameters.forEach((parameter: ConsoleParameterNode) => {
-      if (parameter.identifier) {
-        // we look for all symbols with identifier name
-        // then take the first which is declared in the nearest code block
-        const symbol = this.logSymbols
-          .filter((logSymbol) => logSymbol.name === parameter.identifier)
-          .sort((a, b) => b.definition?.location?.start.line! - a.definition?.location?.start.line!)[0];
-
-        if (!symbol) {
-          throw new ParseError(`Undefined reference to symbol ${parameter.identifier} at ${parameter.location?.start}`);
-        }
-
-        const stackIndex = this.getStackIndex(parameter.identifier);
-        this.consoleLogs[index].data.push({
-          stackIndex,
-          type: typeof symbol.type === 'string' ? symbol.type : symbol.toString(),
-        });
-      } else if (parameter.message) {
-        this.consoleLogs[index].data.push(parameter.message);
+      if (parameter instanceof IdentifierNode) {
+        const symbol = parameter.definition!;
+        const stackIndex = this.getStackIndex(parameter.name);
+        const type = typeof symbol.type === 'string' ? symbol.type : symbol.toString();
+        this.consoleLogs[index].data.push({ stackIndex, type });
+      } else {
+        this.consoleLogs[index].data.push(parameter.toString());
       }
     });
 

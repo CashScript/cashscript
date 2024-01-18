@@ -17,13 +17,12 @@ export function compileString(code: string): Artifact {
   let ast = parseCode(code);
 
   // Semantic analysis
-  const symbolTableTraversal = new SymbolTableTraversal();
-  ast = ast.accept(symbolTableTraversal) as Ast;
+  ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
 
   // Code generation
-  const traversal = new GenerateTargetTraversal(symbolTableTraversal.logSymbols);
+  const traversal = new GenerateTargetTraversal();
   ast = ast.accept(traversal) as Ast;
 
   // Bytecode optimisation

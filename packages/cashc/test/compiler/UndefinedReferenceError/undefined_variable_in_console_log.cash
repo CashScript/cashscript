@@ -1,0 +1,5 @@
+contract Test() {
+    function hello() {
+        console.log(a, 'hello');
+    }
+}

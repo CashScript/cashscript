@@ -157,8 +157,4 @@ export default class AstTraversal extends AstVisitor<Node> {
     node.parameters = this.visitList(node.parameters) as ConsoleParameterNode[];
     return node;
   }
-
-  visitConsoleParameter(node: ConsoleParameterNode): Node {
-    return node;
-  }
 }

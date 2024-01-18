@@ -25,7 +25,6 @@ import {
   UnaryOpNode,
   InstantiationNode,
   ConsoleStatementNode,
-  ConsoleParameterNode,
 } from '../../src/ast/AST.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator.js';
 import { Class, TimeOp } from '../../src/ast/Globals.js';
@@ -901,8 +900,8 @@ export const fixtures: Fixture[] = [
             [new ParameterNode(PrimitiveType.INT, 'value')],
             new BlockNode([
               new ConsoleStatementNode([
-                new ConsoleParameterNode(undefined, 'value'),
-                new ConsoleParameterNode('test'),
+                new IdentifierNode('value'),
+                new StringLiteralNode('test', '"'),
               ]),
               new RequireNode(
                 new BinaryOpNode(

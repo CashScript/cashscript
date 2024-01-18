@@ -4,6 +4,7 @@ import AstVisitor from './AstVisitor.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator.js';
 import { Location } from './Location.js';
 import { SymbolTable, Symbol } from './SymbolTable.js';
+import { binToHex } from '@bitauth/libauth';
 
 export type Ast = SourceFileNode;
 
@@ -97,8 +98,8 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
 
 export class TupleAssignmentNode extends StatementNode {
   constructor(
-    public var1: { name:string, type:Type },
-    public var2: { name:string, type:Type },
+    public var1: { name: string, type: Type },
+    public var2: { name: string, type: Type },
     public tuple: ExpressionNode,
   ) {
     super();
@@ -299,9 +300,15 @@ export class IdentifierNode extends ExpressionNode implements Named {
   }
 }
 
-export abstract class LiteralNode extends ExpressionNode {}
+export abstract class LiteralNode<T = any> extends ExpressionNode {
+  public value: T;
 
-export class BoolLiteralNode extends LiteralNode {
+  toString(): string {
+    return `${this.value}`;
+  }
+}
+
+export class BoolLiteralNode extends LiteralNode<boolean> {
   constructor(
     public value: boolean,
   ) {
@@ -314,7 +321,7 @@ export class BoolLiteralNode extends LiteralNode {
   }
 }
 
-export class IntLiteralNode extends LiteralNode {
+export class IntLiteralNode extends LiteralNode<bigint> {
   constructor(
     public value: bigint,
   ) {
@@ -327,7 +334,7 @@ export class IntLiteralNode extends LiteralNode {
   }
 }
 
-export class StringLiteralNode extends LiteralNode {
+export class StringLiteralNode extends LiteralNode<string> {
   constructor(
     public value: string,
     public quote: string,
@@ -341,12 +348,16 @@ export class StringLiteralNode extends LiteralNode {
   }
 }
 
-export class HexLiteralNode extends LiteralNode {
+export class HexLiteralNode extends LiteralNode<Uint8Array> {
   constructor(
     public value: Uint8Array,
   ) {
     super();
     this.type = new BytesType(value.byteLength);
+  }
+
+  toString(): string {
+    return `0x${binToHex(this.value)}`;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -366,16 +377,4 @@ export class ConsoleStatementNode extends Node {
   }
 }
 
-// TODO: Couldn't we just use existing nodes for this? e.g. IdentifierNode + StringLiteralNode etc.
-export class ConsoleParameterNode extends Node {
-  constructor(
-    public message?: string,
-    public identifier?: string,
-  ) {
-    super();
-  }
-
-  accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitConsoleParameter(this);
-  }
-}
+export type ConsoleParameterNode = LiteralNode | IdentifierNode;

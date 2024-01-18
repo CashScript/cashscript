@@ -65,6 +65,7 @@ import type {
   ConsoleStatementContext,
   ConsoleParameterContext,
   StatementContext,
+  RequireMessageContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -187,7 +188,7 @@ export default class AstBuilder
 
   visitTimeOpStatement(ctx: TimeOpStatementContext): TimeOpNode {
     const expression = this.visit(ctx.expression());
-    const message = ctx.StringLiteral() ? this.createStringLiteral(ctx as any)?.value : undefined;
+    const message = ctx.requireMessage() ? this.createStringLiteral(ctx.requireMessage()).value : undefined;
     const timeOp = new TimeOpNode(ctx.TxVar().getText() as TimeOp, expression, message);
     timeOp.location = Location.fromCtx(ctx);
 
@@ -196,7 +197,7 @@ export default class AstBuilder
 
   visitRequireStatement(ctx: RequireStatementContext): RequireNode {
     const expression = this.visit(ctx.expression());
-    const message = ctx.StringLiteral() ? this.createStringLiteral(ctx as any)?.value : undefined;
+    const message = ctx.requireMessage() ? this.createStringLiteral(ctx.requireMessage()).value : undefined;
     const require = new RequireNode(expression, message);
     require.location = Location.fromCtx(ctx);
     return require;
@@ -352,7 +353,7 @@ export default class AstBuilder
     return intLiteral;
   }
 
-  createStringLiteral(ctx: LiteralContext): StringLiteralNode {
+  createStringLiteral(ctx: LiteralContext | RequireMessageContext): StringLiteralNode {
     const rawString = ctx.StringLiteral().getText();
     const stringValue = rawString.substring(1, rawString.length - 1);
     const quote = rawString.substring(0, 1);
@@ -392,20 +393,14 @@ export default class AstBuilder
     const parameters = ctx.consoleParameterList()
       .consoleParameter_list()
       .map((p) => this.visit(p) as ConsoleParameterNode);
+
     const node = new ConsoleStatementNode(parameters);
     node.location = Location.fromCtx(ctx);
-
     return node;
   }
 
   visitConsoleParameter(ctx: ConsoleParameterContext): ConsoleParameterNode {
-    let message = (ctx.BooleanLiteral() ?? ctx.HexLiteral() ?? ctx.NumberLiteral() ?? ctx.StringLiteral())?.getText();
-    if (message?.[0] === '"') {
-      message = message.slice(1, -1);
-    }
-    const identifier = ctx.Identifier()?.getText();
-
-    const node = new ConsoleParameterNode(message, identifier);
+    const node = ctx.literal() ? this.createLiteral(ctx.literal()) : new IdentifierNode(ctx.Identifier().getText());
     node.location = Location.fromCtx(ctx);
     return node;
   }

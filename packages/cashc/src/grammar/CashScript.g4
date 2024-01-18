@@ -68,11 +68,11 @@ assignStatement
     ;
 
 timeOpStatement
-    : 'require' '(' TxVar '>=' expression (',' StringLiteral)? ')' ';'
+    : 'require' '(' TxVar '>=' expression (',' requireMessage)? ')' ';'
     ;
 
 requireStatement
-    : 'require' '(' expression (',' StringLiteral)? ')' ';'
+    : 'require' '(' expression (',' requireMessage)? ')' ';'
     ;
 
 ifStatement
@@ -83,12 +83,13 @@ consoleStatement
     : 'console.log' consoleParameterList ';'
     ;
 
+requireMessage
+    : StringLiteral
+    ;
+
 consoleParameter
     : Identifier
-    | StringLiteral
-    | NumberLiteral
-    | HexLiteral
-    | BooleanLiteral
+    | literal
     ;
 
 consoleParameterList

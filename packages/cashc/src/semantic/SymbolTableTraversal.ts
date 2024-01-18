@@ -12,7 +12,6 @@ import {
   InstantiationNode,
   AssignNode,
   TupleAssignmentNode,
-  ConsoleStatementNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable.js';
@@ -30,7 +29,6 @@ export default class SymbolTableTraversal extends AstTraversal {
   private functionNames: Map<string, boolean> = new Map<string, boolean>();
   private currentFunction: FunctionDefinitionNode;
   private expectedSymbolType: SymbolType = SymbolType.VARIABLE;
-  public logSymbols: Symbol[] = [];
 
   visitContract(node: ContractNode): Node {
     node.symbolTable = new SymbolTable(this.symbolTables[0]);
@@ -168,17 +166,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     // Keep track of final use of variables for code generation
     this.currentFunction.opRolls.set(node.name, node);
 
-    return node;
-  }
-
-  visitConsoleStatement(node: ConsoleStatementNode): ConsoleStatementNode {
-    // there might be same-name symbols in different code scopes
-    // so we collect all symbols with their location, which will be analyzed later
-    const symbols = node.parameters
-      .map((parameter) => this.symbolTables[0].get(parameter.identifier!)!)
-      .filter((symbol) => symbol);
-
-    this.logSymbols.push(...symbols);
     return node;
   }
 }
