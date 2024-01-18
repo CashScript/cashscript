@@ -36,6 +36,30 @@ Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project
 
 Cash-Ninjas is a collectibele NFT project on Bitcoin Cash which focuses on building open-source tooling! The Cash-Ninjas project uses CashScript for its non-custodial, multi-threaded minting contract. The contract is open source for others to inspect and use the contract code. The Cash-Ninjas minting page uses wallet connect to allow minting directly from the user's smart contract wallet.
 
+## BCH Guru
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://bch.guru/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/bchguru.jpg" /></a>
+</div>
+
+BCH Guru is a non-custodial price-prediction platform and a collectible NFT project. BCH Guru uses CashScript for its price-prediction smart contracts to have players commit to a secret price-prediction. The project was the first to pioneer integration with CashConnect, which allows wallets to recognize the smart contract template and understand contract details.
+
+## CashTokens Studio
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://cashtokens.studio" target="_blank"><img style={{borderRadius: '100%'}} src="/img/cashtokens-studio.png" /></a>
+</div>
+
+The CashTokens Studio is an application for creating CashTokens and for their managing metadata updates and reserved supply. The CashTokens Studio uses CashScript to lock the AuthUTXO in an AuthGuard contract to prevent accidentally spending the authority to be able to update the token's metadata or release reserved supply.
+
+## BCHouse
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://bchouse.fly.dev/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/bchouse.svg" /></a>
+</div>
+
+BCHouse is a brand new BCH social media site and the first CashTokens-based crowdfunding application on Bitcoin Cash. BCHouse uses CashScript for the crowdfunding smart contract to allow an unlimited number of contributions to a campaign and to enable any BCH wallet to pledge by using forwarding addresses.
+
 ## Unspent Phi
 
 <div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>

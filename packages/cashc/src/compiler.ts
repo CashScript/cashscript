@@ -1,13 +1,13 @@
+import { CharStream, CommonTokenStream } from 'antlr4';
 import { Artifact, optimiseBytecode } from '@cashscript/utils';
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
 import AstBuilder from './ast/AstBuilder.js';
 import ThrowingErrorListener from './ast/ThrowingErrorListener.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
-import { CashScriptLexer } from './grammar/CashScriptLexer.js';
-import { CashScriptParser } from './grammar/CashScriptParser.js';
+import CashScriptLexer from './grammar/CashScriptLexer.js';
+import CashScriptParser from './grammar/CashScriptParser.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
@@ -44,7 +44,7 @@ export function compileFile(codeFile: PathLike): Artifact {
 
 export function parseCode(code: string): Ast {
   // Lexing (throwing on errors)
-  const inputStream = new ANTLRInputStream(code);
+  const inputStream = new CharStream(code);
   const lexer = new CashScriptLexer(inputStream);
   lexer.removeErrorListeners();
   lexer.addErrorListener(ThrowingErrorListener.INSTANCE);

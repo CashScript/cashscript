@@ -21,6 +21,11 @@ We also added a new example project with a full testing suite to demonstrate the
 
 Thanks [mainnet_pat](https://twitter.com/mainnet_pat) for the contributions!
 
+## v0.9.3
+
+#### cashc compiler
+- :hammer_and_wrench: Migrate from antlr4ts to ANTLR's official TypeScript target to remove circular dependency issues.
+
 ## v0.9.2
 
 #### CashScript SDK
