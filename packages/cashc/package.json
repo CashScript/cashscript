@@ -35,7 +35,7 @@
   },
   "scripts": {
     "antlr": "antlr -Dlanguage=TypeScript -visitor -no-listener src/grammar/CashScript.g4",
-    "postantlr": "find src/grammar -type f -name '*.ts' | xargs sed -i '' 's|\\(import .* \".*/.*\\)\";|\\1\\.js\";|g'",
+    "postantlr": "find src/grammar -type f -name 'CashScriptVisitor.ts' | xargs sed -i '' 's|\\(import .* \".*/.*\\)\";|\\1\\.js\";|g'",
     "build": "yarn clean && yarn compile",
     "build:test": "yarn clean:test && yarn compile:test && cpy './test/**/*.cash' ./dist-test/test",
     "clean": "rm -rf ./dist",
