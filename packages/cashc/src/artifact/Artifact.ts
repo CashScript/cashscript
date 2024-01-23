@@ -1,21 +1,10 @@
 import {
-  Artifact, LogEntry, RequireMessage, Script, scriptToAsm, scriptToBytecode,
+  Artifact, DebugInformation, Script, scriptToAsm,
 } from '@cashscript/utils';
 import { version } from '../index.js';
 import { Ast } from '../ast/AST.js';
-import { binToHex } from '@bitauth/libauth';
 
-export function generateArtifact(
-  ast: Ast,
-  script: Script,
-  source: string,
-  debug: {
-    script: Script,
-    sourceMap: string,
-    logs: LogEntry[],
-    requireMessages: RequireMessage[],
-  },
-): Artifact {
+export function generateArtifact(ast: Ast, script: Script, source: string, debug: DebugInformation): Artifact {
   const { contract } = ast;
 
   const constructorInputs = contract.parameters
@@ -30,7 +19,6 @@ export function generateArtifact(
   }));
 
   const bytecode = scriptToAsm(script);
-  const debugBytecode = binToHex(scriptToBytecode(debug.script));
 
   return {
     contractName: contract.name,
@@ -38,12 +26,7 @@ export function generateArtifact(
     abi,
     bytecode,
     source,
-    debug: {
-      bytecode: debugBytecode,
-      sourceMap: debug.sourceMap,
-      logs: debug.logs,
-      requireMessages: debug.requireMessages,
-    },
+    debug,
     compiler: {
       name: 'cashc',
       version,

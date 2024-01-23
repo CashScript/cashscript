@@ -1,5 +1,6 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
-import { Artifact, optimiseBytecode } from '@cashscript/utils';
+import { binToHex } from '@bitauth/libauth';
+import { Artifact, optimiseBytecode, scriptToBytecode } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -28,12 +29,15 @@ export function compileString(code: string): Artifact {
   // Bytecode optimisation
   const optimisedBytecode = optimiseBytecode(traversal.output);
 
-  return generateArtifact(ast, optimisedBytecode, code, {
-    script: traversal.output,
+  // Attach debug information
+  const debug = {
+    bytecode: binToHex(scriptToBytecode(traversal.output)),
     sourceMap: traversal.souceMap,
     logs: traversal.consoleLogs,
     requireMessages: traversal.requireMessages,
-  });
+  };
+
+  return generateArtifact(ast, optimisedBytecode, code, debug);
 }
 
 export function compileFile(codeFile: PathLike): Artifact {

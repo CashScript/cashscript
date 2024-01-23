@@ -11,6 +11,13 @@ export interface AbiFunction {
   inputs: AbiInput[];
 }
 
+export interface DebugInformation {
+  bytecode: string; // unlike `bytecode` property above, this is a hex-encoded binary string
+  sourceMap: string; // see documentation for `generateSourceMap`
+  logs: LogEntry[]; // log entries generated from `console.log` statements
+  requireMessages: RequireMessage[]; // messages for failing `require` statements
+}
+
 export interface LogEntry {
   ip: number; // instruction pointer
   line: number; // line in the source code
@@ -29,12 +36,7 @@ export interface Artifact {
   abi: AbiFunction[];
   bytecode: string;
   source: string;
-  debug?: {
-    bytecode: string; // unlike `bytecode` property above, this is a hex-encoded binary string
-    sourceMap: string; // see documentation for `generateSourceMap`
-    logs: LogEntry[]; // log entries generated from `console.log` statements
-    requireMessages: RequireMessage[]; // messages for failing `require` statements
-  };
+  debug?: DebugInformation;
   compiler: {
     name: string;
     version: string;
