@@ -549,6 +549,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // TODO: refactor to use a map instead of array (also in the artifact and other places where console logs and
     // require statements are used)
     // check if log entry exists for the instruction pointer, create if not
+    // TODO: Do we really want to merge different console logs at the same instruction pointer?
     let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
     if (index === -1) {
       index = this.consoleLogs.push({ ip, line, data: [] }) - 1;

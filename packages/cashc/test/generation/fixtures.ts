@@ -649,12 +649,12 @@ export const fixtures: Fixture[] = [
       abi: [
         { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
       ],
-      bytecode: 'OP_1 OP_NUMEQUAL',
+      bytecode: 'OP_DUP OP_1 OP_NUMEQUALVERIFY OP_1ADD OP_2 OP_NUMEQUAL',
       debug: {
-        bytecode: '007a519c',
-        logs: [{ data: [{ stackIndex: 0, type: 'int' }, 'test'], ip: 0, line: 3 }],
-        requireMessages: [{ ip: 4, line: 4, message: 'Wrong value passed' }],
-        sourceMap: '4:12:4:17;;:21::22;:12:::1',
+        bytecode: '0079519c69007a5193529c',
+        logs: [{ data: [{ stackIndex: 0, type: 'int' }, 'test', { stackIndex: 0, type: 'int' }, 'test2'], ip: 5, line: 4 }],
+        requireMessages: [{ ip: 4, line: 3, message: 'Wrong value passed' }, { ip: 11, line: 6, message: 'Sum doesn\'t work' }],
+        sourceMap: '3:12:3:17;;:21::22;:12:::1;:4::46;6:12:6:17:0;;:20::21;:12:::1;:25::26:0;:12:::1',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/debug_messages.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
