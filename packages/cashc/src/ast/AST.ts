@@ -9,7 +9,7 @@ import { binToHex } from '@bitauth/libauth';
 export type Ast = SourceFileNode;
 
 export abstract class Node {
-  location?: Location;
+  location: Location;
   abstract accept<T>(visitor: AstVisitor<T>): T;
 }
 

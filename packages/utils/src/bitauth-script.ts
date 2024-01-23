@@ -1,5 +1,6 @@
 import { Script, scriptToBitAuthAsm } from './script.js';
 import { sourceMapToLocationData } from './source-map.js';
+import { PositionHint } from './types.js';
 
 export type LineToOpcodesMap = Record<string, Script>;
 export type LineToAsmMap = Record<string, string>;
@@ -7,9 +8,9 @@ export type LineToAsmMap = Record<string, string>;
 export function buildLineToOpcodesMap(bytecode: Script, sourceMap: string): LineToOpcodesMap {
   const locationData = sourceMapToLocationData(sourceMap);
 
-  return locationData.reduce<LineToOpcodesMap>((lineToOpcodeMap, [location, positionHint], index) => {
+  return locationData.reduce<LineToOpcodesMap>((lineToOpcodeMap, { location, positionHint }, index) => {
     const opcode = bytecode[index];
-    const line = positionHint ? location?.end.line : location?.start.line;
+    const line = positionHint === PositionHint.END ? location?.end.line : location?.start.line;
 
     return {
       ...lineToOpcodeMap,

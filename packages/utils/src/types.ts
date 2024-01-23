@@ -185,3 +185,27 @@ export function parseType(str: string): Type {
 export function isPrimitive(type: Type): type is PrimitiveType {
   return !!PrimitiveType[type.toString().toUpperCase() as keyof typeof PrimitiveType];
 }
+
+export interface LocationI {
+  start: {
+    line: number,
+    column: number
+  };
+  end: {
+    line: number,
+    column: number
+  };
+}
+
+export type SingleLocationData = {
+  location: LocationI;
+  positionHint?: PositionHint;
+};
+
+export type FullLocationData = Array<SingleLocationData>;
+
+// Denotes whether an opcode belongs to the "start" or "end" of the statement it's in (defaults to "start")
+export enum PositionHint {
+  START = 0,
+  END = 1,
+}

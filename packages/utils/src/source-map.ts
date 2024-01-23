@@ -1,15 +1,4 @@
-export interface LocationI {
-  start: {
-    line: number,
-    column: number
-  };
-  end: {
-    line: number,
-    column: number
-  };
-}
-
-export type LocationData = Array<[location: LocationI, positionHint?: number]>;
+import { FullLocationData, PositionHint, SingleLocationData } from './types.js';
 
 /*
  * The source mappings for the bytecode use the following notation (similar to Solidity):
@@ -36,27 +25,27 @@ export type LocationData = Array<[location: LocationI, positionHint?: number]>;
  * 14:20:14:29;;:12::30;:34::43;
  *
  */
-export function generateSourceMap(locationData: LocationData): string {
+export function generateSourceMap(locationData: FullLocationData): string {
   let prevStartLine = 0;
   let prevStartColumn = 0;
   let prevEndLine = 0;
   let prevEndColumn = 0;
-  let prevHint = 0;
+  let prevHint = PositionHint.START;
 
-  return locationData.map((row: any) => {
-    const prevStartLineString = prevStartLine === row[0].start.line ? '' : String(row[0].start.line);
-    prevStartLine = row[0].start.line;
+  return locationData.map(({ location, positionHint }: SingleLocationData) => {
+    const prevStartLineString = prevStartLine === location.start.line ? '' : String(location.start.line);
+    prevStartLine = location.start.line;
 
-    const prevStartColumnString = prevStartColumn === row[0].start.column ? '' : String(row[0].start.column);
-    prevStartColumn = row[0].start.column;
+    const prevStartColumnString = prevStartColumn === location.start.column ? '' : String(location.start.column);
+    prevStartColumn = location.start.column;
 
-    const prevEndLineString = prevEndLine === row[0].end.line ? '' : String(row[0].end.line);
-    prevEndLine = row[0].end.line;
+    const prevEndLineString = prevEndLine === location.end.line ? '' : String(location.end.line);
+    prevEndLine = location.end.line;
 
-    const prevEndColumnString = prevEndColumn === row[0].end.column ? '' : String(row[0].end.column);
-    prevEndColumn = row[0].end.column;
+    const prevEndColumnString = prevEndColumn === location.end.column ? '' : String(location.end.column);
+    prevEndColumn = location.end.column;
 
-    const hint = row[1] ?? 0;
+    const hint = positionHint ?? PositionHint.START;
     const prevHintString = prevHint === hint ? '' : String(hint);
     prevHint = hint;
 
@@ -90,27 +79,43 @@ export function generateSourceMap(locationData: LocationData): string {
   }).join(';');
 }
 
-export const sourceMapToLocationData = (sourceMap: string): LocationData => {
+export const sourceMapToLocationData = (sourceMap: string): FullLocationData => {
   let prevStartLine = 0;
   let prevStartColumn = 0;
   let prevEndLine = 0;
   let prevEndColumn = 0;
-  let prevHint: any;
+  let prevHint: PositionHint | undefined;
 
   return sourceMap.split(';').map((entry: string) => {
-    const val = entry.split(':');
-    const startLine = val[0] ? Number(val[0]) : prevStartLine; prevStartLine = startLine;
-    const startColumn = val[1] ? Number(val[1]) : prevStartColumn; prevStartColumn = startColumn;
-    const endLine = val[2] ? Number(val[2]) : prevEndLine; prevEndLine = endLine;
-    const endColumn = val[3] ? Number(val[3]) : prevEndColumn; prevEndColumn = endColumn;
-    const hint: number | undefined = val[4] ? Number(val[4]) : prevHint; prevHint = hint;
+    const [startLineStr, startColumnStr, endLineStr, endColumnStr, positionHintStr] = entry.split(':');
 
-    return [
-      {
+    const startLine = startLineStr ? Number(startLineStr) : prevStartLine;
+    prevStartLine = startLine;
+
+    const startColumn = startColumnStr ? Number(startColumnStr) : prevStartColumn;
+    prevStartColumn = startColumn;
+
+    const endLine = endLineStr ? Number(endLineStr) : prevEndLine;
+    prevEndLine = endLine;
+
+    const endColumn = endColumnStr ? Number(endColumnStr) : prevEndColumn;
+    prevEndColumn = endColumn;
+
+    const hint: PositionHint | undefined = parsePositionHint(positionHintStr) ?? prevHint;
+    prevHint = hint;
+
+    return {
+      location: {
         start: { line: startLine, column: startColumn },
         end: { line: endLine, column: endColumn },
       },
-      ...(hint ? [hint] : []),
-    ] as any;
+      ...(hint ? { positionHint: hint } : {}),
+    };
   });
+};
+
+const parsePositionHint = (hint: string): PositionHint | undefined => {
+  if (hint === '1') return PositionHint.END;
+  if (hint === '0') return PositionHint.START;
+  return undefined;
 };
