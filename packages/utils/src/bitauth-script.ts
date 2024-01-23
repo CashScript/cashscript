@@ -4,8 +4,8 @@ import { sourceMapToLocationData } from './source-map.js';
 export type LineToOpcodesMap = Record<string, Script>;
 export type LineToAsmMap = Record<string, string>;
 
-export function buildLineToOpcodesMap(bytecode: Script, souceMap: string): LineToOpcodesMap {
-  const locationData = sourceMapToLocationData(souceMap);
+export function buildLineToOpcodesMap(bytecode: Script, sourceMap: string): LineToOpcodesMap {
+  const locationData = sourceMapToLocationData(sourceMap);
 
   return locationData.reduce<LineToOpcodesMap>((lineToOpcodeMap, [location, positionHint], index) => {
     const opcode = bytecode[index];
@@ -18,16 +18,16 @@ export function buildLineToOpcodesMap(bytecode: Script, souceMap: string): LineT
   }, {});
 }
 
-export function buildLineToAsmMap(bytecode: Script, souceMap: string): LineToAsmMap {
-  const lineToOpcodesMap = buildLineToOpcodesMap(bytecode, souceMap);
+export function buildLineToAsmMap(bytecode: Script, sourceMap: string): LineToAsmMap {
+  const lineToOpcodesMap = buildLineToOpcodesMap(bytecode, sourceMap);
 
   return Object.fromEntries(
     Object.entries(lineToOpcodesMap).map(([lineNumber, opcodeList]) => [lineNumber, scriptToBitAuthAsm(opcodeList)]),
   );
 }
 
-export function formatBitAuthScript(bytecode: Script, souceMap: string, sourceCode: string): string {
-  const lineToAsmMap = buildLineToAsmMap(bytecode, souceMap);
+export function formatBitAuthScript(bytecode: Script, sourceMap: string, sourceCode: string): string {
+  const lineToAsmMap = buildLineToAsmMap(bytecode, sourceMap);
 
   const sourceCodeLines = sourceCode.split('\n');
 

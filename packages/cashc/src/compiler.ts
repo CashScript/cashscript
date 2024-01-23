@@ -32,7 +32,7 @@ export function compileString(code: string): Artifact {
   // Attach debug information
   const debug = {
     bytecode: binToHex(scriptToBytecode(traversal.output)),
-    sourceMap: traversal.souceMap,
+    sourceMap: traversal.sourceMap,
     logs: traversal.consoleLogs,
     requireMessages: traversal.requireMessages,
   };

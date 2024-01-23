@@ -60,7 +60,7 @@ import { Location } from '../ast/Location.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: LocationData = []; // detailed location data needed for sourcemap creation
-  souceMap: string;
+  sourceMap: string;
   output: Script = [];
   stack: string[] = [];
   consoleLogs: LogEntry[] = [];
@@ -114,7 +114,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // Minimally encode output by going Script -> ASM -> Script
     this.output = asmToScript(scriptToAsm(this.output));
 
-    this.souceMap = generateSourceMap(this.locationData);
+    this.sourceMap = generateSourceMap(this.locationData);
 
     return node;
   }
