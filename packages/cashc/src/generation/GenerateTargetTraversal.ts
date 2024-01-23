@@ -108,6 +108,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return index;
   }
 
+  private getCurrentInstructionPointer(): number {
+    // instruction pointer is the count of emitted opcodes + number of constructor data pushes
+    return this.output.length + this.constructorParameterCount;
+  }
+
   visitSourceFile(node: SourceFileNode): Node {
     node.contract = this.visit(node.contract) as ContractNode;
 
@@ -179,7 +184,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return node;
   }
 
-  removeFinalVerify(node: Node): void {
+  removeFinalVerify(functionBodyNode: Node): void {
     // After EnsureFinalRequireTraversal, we know that the final opcodes are either
     // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
 
@@ -200,16 +205,16 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       //  - scoped stack is cleared inside branch ended by OP_ENDIF
       //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
       // so we add OP_1 to the script (indicating success)
-      this.emit(Op.OP_1, { location: node.location, positionHint: PositionHint.END });
+      this.emit(Op.OP_1, { location: functionBodyNode.location, positionHint: PositionHint.END });
       this.pushToStack('(value)');
     }
   }
 
-  cleanStack(node: Node): void {
+  cleanStack(functionBodyNode: Node): void {
     // Keep final verification value, OP_NIP the other stack values
     const stackSize = this.stack.length;
     for (let i = 0; i < stackSize - 1; i += 1) {
-      this.emit(Op.OP_NIP, { location: node.location, positionHint: PositionHint.END });
+      this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
       this.nipFromStack();
     }
   }
@@ -273,7 +278,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // add debug require message
     if (node.message) {
       this.requireMessages.push({
-        ip: this.output.length + this.constructorParameterCount - 1,
+        ip: this.getCurrentInstructionPointer() - 1, // TODO: Why is there a minus 1 here?
         line: node.location.start.line,
         message: node.message,
       });
@@ -291,13 +296,40 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // add debug require message
     if (node.message) {
       this.requireMessages.push({
-        ip: this.output.length + this.constructorParameterCount - 1,
+        ip: this.getCurrentInstructionPointer() - 1, // TODO: Why is there a minus 1 here?
         line: node.location.start.line,
         message: node.message,
       });
     }
 
     this.popFromStack();
+    return node;
+  }
+
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    const ip = this.getCurrentInstructionPointer();
+    const { line } = node.location.start;
+
+    // TODO: refactor to use a map instead of array (also in the artifact and other places where console logs and
+    // require statements are used)
+    // check if log entry exists for the instruction pointer, create if not
+    // TODO: Do we really want to merge different console logs at the same instruction pointer?
+    let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
+    if (index === -1) {
+      index = this.consoleLogs.push({ ip, line, data: [] }) - 1;
+    }
+
+    node.parameters.forEach((parameter: ConsoleParameterNode) => {
+      if (parameter instanceof IdentifierNode) {
+        const symbol = parameter.definition!;
+        const stackIndex = this.getStackIndex(parameter.name);
+        const type = typeof symbol.type === 'string' ? symbol.type : symbol.toString();
+        this.consoleLogs[index].data.push({ stackIndex, type });
+      } else {
+        this.consoleLogs[index].data.push(parameter.toString());
+      }
+    });
+
     return node;
   }
 
@@ -561,34 +593,6 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitHexLiteral(node: HexLiteralNode): Node {
     this.emit(node.value, { location: node.location });
     this.pushToStack('(value)');
-    return node;
-  }
-
-  visitConsoleStatement(node: ConsoleStatementNode): Node {
-    // instruction pointer is the count of emitted opcodes + number of constructor data pushes
-    const ip = this.output.length + this.constructorParameterCount;
-    const { line } = node.location.start;
-
-    // TODO: refactor to use a map instead of array (also in the artifact and other places where console logs and
-    // require statements are used)
-    // check if log entry exists for the instruction pointer, create if not
-    // TODO: Do we really want to merge different console logs at the same instruction pointer?
-    let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
-    if (index === -1) {
-      index = this.consoleLogs.push({ ip, line, data: [] }) - 1;
-    }
-
-    node.parameters.forEach((parameter: ConsoleParameterNode) => {
-      if (parameter instanceof IdentifierNode) {
-        const symbol = parameter.definition!;
-        const stackIndex = this.getStackIndex(parameter.name);
-        const type = typeof symbol.type === 'string' ? symbol.type : symbol.toString();
-        this.consoleLogs[index].data.push({ stackIndex, type });
-      } else {
-        this.consoleLogs[index].data.push(parameter.toString());
-      }
-    });
-
     return node;
   }
 }
