@@ -14,9 +14,15 @@
   ],
   "bytecode": "OP_DUP OP_REVERSEBYTES OP_EQUAL",
   "source": "contract P2Palindrome() {\n    function spend(string palindrome) {\n        require(palindrome.reverse() == palindrome);\n    }\n}\n",
+  "debug": {
+    "bytecode": "0079bc517a87",
+    "sourceMap": "3:16:3:26;;:::36;:40::50;;:16:::1",
+    "logs": [],
+    "requireMessages": []
+  },
   "compiler": {
     "name": "cashc",
-    "version": "0.8.0-next.0"
+    "version": "0.10.0-next.0"
   },
-  "updatedAt": "2023-02-10T15:22:50.274Z"
+  "updatedAt": "2024-02-01T10:15:36.058Z"
 }
