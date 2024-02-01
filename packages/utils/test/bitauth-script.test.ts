@@ -1,11 +1,18 @@
 import { asmToScript } from '../src/script.js';
 import { buildLineToOpcodesMap, buildLineToAsmMap, formatBitAuthScript } from '../src/bitauth-script.js';
 import { fixtures } from './fixtures/bitauth-script.fixture.js';
+import { compileString } from 'cashc';
 
 describe('Libauth Script formatting', () => {
   fixtures.forEach((fixture) => {
     describe(fixture.name, () => {
       const scriptBytecode = asmToScript(fixture.asmBytecode);
+
+      // Note: this also tests the compiler (but the compiler is tested much more thoroughly in its own test suite)
+      it('should generate a correct source map from freshly compiled source code', () => {
+        const artifact = compileString(fixture.sourceCode);
+        expect(artifact.debug?.sourceMap).toEqual(fixture.sourceMap);
+      });
 
       it('should build a line-to-opcodes map', () => {
         expect(buildLineToOpcodesMap(scriptBytecode, fixture.sourceMap)).toEqual(fixture.expectedLineToOpcodeMap);
