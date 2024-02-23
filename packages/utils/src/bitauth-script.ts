@@ -30,7 +30,8 @@ export function buildLineToAsmMap(bytecode: Script, sourceMap: string): LineToAs
 export function formatBitAuthScript(bytecode: Script, sourceMap: string, sourceCode: string): string {
   const lineToAsmMap = buildLineToAsmMap(bytecode, sourceMap);
 
-  const sourceCodeLines = sourceCode.split('\n');
+  const escapedSourceCode = sourceCode.replaceAll('/*', '\\/*').replaceAll('*/', '*\\/');
+  const sourceCodeLines = escapedSourceCode.split('\n');
 
   const sourceCodeLineLengths = sourceCodeLines.map((line) => line.length);
   const bytecodeLineLengths = Object.values(lineToAsmMap).map((line) => line.length);
