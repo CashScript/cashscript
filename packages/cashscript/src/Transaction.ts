@@ -216,17 +216,17 @@ export class Transaction {
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
   async debug(): Promise<DebugResult> {
-    const template = await buildTemplate({
-      transaction: this,
-    });
+    const template = await this.getLibauthTemplate();
     return debugTemplate(template, this.contract.artifact);
   }
 
   async bitauthUri(): Promise<string> {
-    const template = await buildTemplate({
-      transaction: this,
-    });
+    const template = await this.getLibauthTemplate();
     return getBitauthUri(template);
+  }
+
+  async getLibauthTemplate(): Promise<WalletTemplate> {
+    return buildTemplate({ transaction: this });
   }
 
   private async getTxDetails(txid: string): Promise<TransactionDetails>;
