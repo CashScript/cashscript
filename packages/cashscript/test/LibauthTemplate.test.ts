@@ -5,71 +5,141 @@ import {
 } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
+import { binToHex } from '@bitauth/libauth';
 
 describe('Libauth template generation tests', () => {
-  it('should log console statements', async () => {
-    const code = `
-    pragma cashscript ^0.10.0;
+  describe('console.log statements', () => {
+    const BASE_CONTRACT_CODE = `
+      contract Test(pubkey owner) {
+        function transfer(sig ownerSig, int num) {
+          require(checkSig(ownerSig, owner));
 
-    contract TransferWithTimeout(
-        pubkey sender,
-        pubkey recipient,
-        int timeout
-    ) {
-        // Require recipient's signature to match
-        function transfer(sig recipientSig) {
-            bytes2 beef = 0xbeef;
-            console.log(recipientSig, timeout, recipient, sender, beef, 1, "test", true);
-            require(beef != 0xfeed);
-            require(checkSig(recipientSig, recipient));
-        }
+          bytes2 beef = 0xbeef;
+          require(beef != 0xfeed);
 
-        // Require timeout time to be reached and sender's signature to match
-        function timeout(sig senderSig) {
-            require(checkSig(senderSig, sender));
-            require(tx.time >= timeout);
+          console.log(ownerSig, owner, num, beef, 1, "test", true);
+
+          require(num == 1000);
         }
-    }
+      }
     `;
-    const artifact = compileString(code);
 
+    const artifact = compileString(BASE_CONTRACT_CODE);
     const provider = new MockNetworkProvider();
 
-    {
-      const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+    it('should log correct values', async () => {
+      const contract = new Contract(artifact, [alicePub], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
+      const transaction = contract.functions
+        .transfer(new SignatureTemplate(alicePriv), 1000n)
+        .to(contract.address, 10000n);
 
-      await (expect(transaction)).toLog(/0x[0-9a-f]{130} 100000 0x[0-9a-f]{66} 0x[0-9a-f]{66} 0xbeef 1 test true/);
-      await (expect(transaction)).toLog('beef');
-    }
+      // console.log(ownerSig, owner, num, beef, 1, "test", true);
+      const expectedLog = new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+      await expect(transaction).toLog(expectedLog);
+    });
 
-    const ip = artifact.debug!.logs[0].ip;
-    {
-      artifact.debug!.logs[0].ip = 100;
-      const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+    it('should log when logging happens before a failing require statement', async () => {
+      const contract = new Contract(artifact, [alicePub], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
+      const incorrectNum = 100n;
+      const transaction = contract.functions
+        .transfer(new SignatureTemplate(alicePriv), incorrectNum)
+        .to(contract.address, 10000n);
 
-      await (expect(transaction.debug())).rejects.toThrow(
-        /Instruction pointer 100 points to a non-existing state of the program/,
-      );
-    }
+      // console.log(ownerSig, owner, num, beef, 1, "test", true);
+      const expectedLog = new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100 0xbeef 1 test true$`);
+      await expect(transaction).toLog(expectedLog);
+    });
 
-    artifact.debug!.logs[0].ip = ip;
-    {
-      (artifact.debug!.logs[0].data[0] as any).stackIndex = 100;
-      const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+    it('should not log when logging happens after a failing require statement', async () => {
+      const contract = new Contract(artifact, [alicePub], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 10000n);
+      const incorrectPriv = bobPriv;
+      const transaction = contract.functions
+        .transfer(new SignatureTemplate(incorrectPriv), 1000n)
+        .to(contract.address, 10000n);
 
-      await (expect(transaction.debug())).rejects.toThrow(
-        /Stack item at index 100 not found at instruction pointer 9/,
-      );
-    }
+      // TODO: This is a super ugly test, we should fix this by improving the JestExtensions
+      try {
+        const expectedLog = new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+        await expect(transaction).toLog(expectedLog);
+        throw new Error('Expected to fail');
+      } catch (e) {
+        if ((e as any)?.message === 'Expected to fail') throw e;
+      }
+    });
+
+    it('should log multiple consecutive console.log statements on a single line', async () => {
+      const contractCode = `
+        contract Test(pubkey owner) {
+          function transfer(sig ownerSig, int num) {
+            require(checkSig(ownerSig, owner));
+
+            bytes2 beef = 0xbeef;
+            require(beef != 0xfeed);
+
+            console.log(ownerSig, owner, num);
+            console.log(beef, 1, "test", true);
+
+            require(num == 1000);
+          }
+        }
+      `;
+
+      const artifact2 = compileString(contractCode);
+
+      const contract = new Contract(artifact2, [alicePub], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const incorrectNum = 100n;
+      const transaction = contract.functions
+        .transfer(new SignatureTemplate(alicePriv), incorrectNum)
+        .to(contract.address, 10000n);
+
+      // console.log(ownerSig, owner, num, beef, 1, "test", true);
+      const expectedLog = new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100 0xbeef 1 test true$`);
+      await expect(transaction).toLog(expectedLog);
+    });
+
+    it('should log multiple console.log statements with other statements in between', async () => {
+      const contractCode = `
+        contract Test(pubkey owner) {
+          function transfer(sig ownerSig, int num) {
+            require(checkSig(ownerSig, owner));
+
+            console.log(ownerSig, owner, num);
+
+            bytes2 beef = 0xbeef;
+            require(beef != 0xfeed);
+
+            console.log(beef, 1, "test", true);
+
+            require(num == 1000);
+          }
+        }
+      `;
+
+      const artifact2 = compileString(contractCode);
+
+      const contract = new Contract(artifact2, [alicePub], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const incorrectNum = 100n;
+      const transaction = contract.functions
+        .transfer(new SignatureTemplate(alicePriv), incorrectNum)
+        .to(contract.address, 10000n);
+
+      // console.log(ownerSig, owner, num);
+      const expectedFirstLog = new RegExp(`^Test.cash:6 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`);
+      await expect(transaction).toLog(expectedFirstLog);
+
+      const expectedSecondLog = new RegExp('^Test.cash:11 0xbeef 1 test true$');
+      await expect(transaction).toLog(expectedSecondLog);
+    });
   });
 
   it('should check for failed requires', async () => {

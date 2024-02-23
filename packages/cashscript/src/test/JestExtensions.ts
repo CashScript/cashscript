@@ -45,6 +45,8 @@ Received: ${printReceived(received)}`;
       message = error as any;
     }
 
+    // TODO: If no console.log was called, then spyOnLoggerError.mock.calls[0] is undefined.
+    // We should handle that case properly.
     const received = spyOnLoggerError.mock.calls[0][0];
     spyOnLoggerError.mockClear();
 
