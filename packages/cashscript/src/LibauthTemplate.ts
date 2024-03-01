@@ -164,7 +164,14 @@ const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransac
           lockingBytecode instanceof Uint8Array
             ? binToHex(lockingBytecode)
             : lockingBytecode,
-        token: output.token,
+        token: output.token ? {
+          amount: output.token.amount.toString(),
+          category: binToHex(output.token.category),
+          nft: output.token.nft ? {
+            capability: output.token.nft.capability,
+            commitment: binToHex(output.token.nft.commitment),
+          } : undefined,
+        } : undefined,
         valueSatoshis: Number(output.valueSatoshis),
       } as WalletTemplateScenarioTransactionOutput;
     },

@@ -23,7 +23,7 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
-    return this.utxoMap[address];
+    return this.utxoMap[address] ?? [];
   }
 
   async getBlockHeight(): Promise<number> {
