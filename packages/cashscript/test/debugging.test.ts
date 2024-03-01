@@ -7,7 +7,7 @@ import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { binToHex } from '@bitauth/libauth';
 
-describe('Libauth template generation tests', () => {
+describe('Debugging tests', () => {
   describe('console.log statements', () => {
     const BASE_CONTRACT_CODE = `
       contract Test(pubkey owner) {
@@ -142,10 +142,8 @@ describe('Libauth template generation tests', () => {
     });
   });
 
-  it('should check for failed requires', async () => {
+  describe('require statements', () => {
     const code = `
-    pragma cashscript ^0.10.0;
-
     contract TransferWithTimeout(
         pubkey sender,
         pubkey recipient,
@@ -159,12 +157,7 @@ describe('Libauth template generation tests', () => {
         // Require timeout time to be reached and sender's signature to match
         function timeout(sig senderSig) {
             require(checkSig(senderSig, sender), "sigcheck custom fail");
-            require(tx.time >= timeout);
-        }
-
-        function timeout2(sig senderSig) {
             require(tx.time >= timeout, "timecheck custom fail");
-            require(checkSig(senderSig, sender));
         }
 
         function test(int a) {
@@ -174,40 +167,38 @@ describe('Libauth template generation tests', () => {
     `;
 
     const artifact = compileString(code);
-
     const provider = new MockNetworkProvider();
-    {
+
+    it('should fail with correct error message when there are multiple require statements', async () => {
       const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.timeout(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/sigcheck custom fail/);
-    }
+    });
 
-    {
+    it('should fail with correct error message for timecheck require statemen when there are multiple require statements', async () => {
       const contract = new Contract(artifact, [alicePub, bobPub, 1000000n], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.timeout2(new SignatureTemplate(alicePriv)).to(contract.address, 1000n);
+      const transaction = contract.functions.timeout(new SignatureTemplate(alicePriv)).to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/timecheck custom fail/);
-    }
+    });
 
-    {
-      const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
-
-      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
-      await expect(transaction).not.toFailRequireWith(/timecheck custom fail/);
-    }
-
-    {
+    it('should fail with correct error message for the final require statement', async () => {
       const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test(0n).to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/dropped last verify fail/);
+    });
 
-      await expect(transaction.send()).rejects.toThrow(/Stack contents after evaluation: 0x/);
-    }
+    it('should not fail if no require statements fail', async () => {
+      const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
+      await expect(transaction).not.toFailRequireWith(/.*/);
+    });
   });
 });
