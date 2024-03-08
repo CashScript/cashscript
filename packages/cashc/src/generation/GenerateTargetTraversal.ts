@@ -345,9 +345,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.removeScopedVariables(stackDepth, node);
 
     if (node.elseBlock) {
-      // TODO: Why would the *start* of the else block be PositionHint.END? Is it because it is also the end of
-      // the if block?
-      this.emit(Op.OP_ELSE, { location: node.elseBlock.location, positionHint: PositionHint.END });
+      this.emit(Op.OP_ELSE, { location: node.elseBlock.location });
       stackDepth = this.stack.length;
       node.elseBlock = this.visit(node.elseBlock);
       this.removeScopedVariables(stackDepth, node);
