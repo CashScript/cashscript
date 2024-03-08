@@ -2,7 +2,8 @@ import { Contract, MockNetworkProvider, SignatureTemplate, Transaction, randomNF
 import TransferWithTimeout from '../transfer_with_timeout.json' assert { type: 'json' };
 import Mecenas from '../mecenas.json' assert { type: 'json' };
 import P2PKH from '../p2pkh.json' assert { type: 'json' };
-import { aliceAddress, alicePkh, alicePriv, alicePub, bobPkh, bobPriv, bobPub } from '../vars.js';
+import HoldVault from '../hodl_vault.json' assert { type: 'json' };
+import { aliceAddress, alicePkh, alicePriv, alicePub, bobPkh, bobPriv, bobPub, oracle, oraclePub } from '../vars.js';
 import { WalletTemplate } from '@bitauth/libauth';
 
 const provider = new MockNetworkProvider();
@@ -687,6 +688,354 @@ export const fixtures: Fixture[] = [
       },
     },
   },
-  // TODO: Add fixture with datasig arguments
-  // TODO: Add fixture with different signing types (other than all_outputs)
+  {
+    name: 'HodlVault (datasig)',
+    transaction: (() => {
+      const contract = new Contract(HoldVault, [alicePub, oraclePub, 99000n, 30000n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      // given
+      const message = oracle.createMessage(100000n, 30000n);
+      const oracleSig = oracle.signMessage(message);
+      const to = contract.address;
+      const amount = 10000n;
+
+      // when
+      const tx = contract.functions
+        .spend(new SignatureTemplate(alicePriv), oracleSig, message)
+        .to(to, amount);
+
+      return tx;
+    })(),
+    template: {
+      '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
+      'description': 'Imported from cashscript',
+      'name': 'HodlVault',
+      'supported': [
+        'BCH_SPEC',
+      ],
+      'version': 0,
+      'entities': {
+        'parameters': {
+          'description': 'Contract creation and function parameters',
+          'name': 'parameters',
+          'scripts': [
+            'lock',
+            'unlock_lock',
+          ],
+          'variables': {
+            'oracle_message': {
+              'description': '"oracleMessage" parameter of function "spend"',
+              'name': 'oracleMessage',
+              'type': 'WalletData',
+            },
+            'oracle_sig': {
+              'description': '"oracleSig" parameter of function "spend"',
+              'name': 'oracleSig',
+              'type': 'WalletData',
+            },
+            'owner_sig': {
+              'description': '"ownerSig" parameter of function "spend"',
+              'name': 'ownerSig',
+              'type': 'Key',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'function_index',
+              'type': 'WalletData',
+            },
+            'price_target': {
+              'description': '"priceTarget" parameter of this contract',
+              'name': 'priceTarget',
+              'type': 'WalletData',
+            },
+            'min_block': {
+              'description': '"minBlock" parameter of this contract',
+              'name': 'minBlock',
+              'type': 'WalletData',
+            },
+            'oracle_pk': {
+              'description': '"oraclePk" parameter of this contract',
+              'name': 'oraclePk',
+              'type': 'WalletData',
+            },
+            'owner_pk': {
+              'description': '"ownerPk" parameter of this contract',
+              'name': 'ownerPk',
+              'type': 'WalletData',
+            },
+          },
+        },
+      },
+      'scenarios': {
+        'evaluate_function': {
+          'name': 'Evaluate',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'oracle_message': '0xa086010030750000',
+              'oracle_sig': '0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b',
+              'function_index': '0',
+              'price_target': '0x3075',
+              'min_block': '0xb88201',
+              'oracle_pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+              'owner_pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+            },
+            'currentBlockHeight': 2,
+            'currentBlockTime': expect.any(Number),
+            'keys': {
+              'privateKeys': {
+                'owner_sig': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+              },
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+            ],
+            'locktime': 133700,
+            'outputs': [
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': 10000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+      },
+      'scripts': {
+        'unlock_lock': {
+          'passes': [
+            'evaluate_function',
+          ],
+          'name': 'unlock',
+          'script': '// "spend" function parameters\n<oracle_message> // bytes8 = <0xa086010030750000>\n<oracle_sig> // datasig = <0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b>\n<owner_sig.schnorr_signature.all_outputs> // sig\n',
+          'unlocks': 'lock',
+        },
+        'lock': {
+          'lockingType': 'p2sh20',
+          'name': 'lock',
+          'script': '// "HodlVault" contract constructor parameters\n<price_target> // int = <0x3075>\n<min_block> // int = <0xb88201>\n<oracle_pk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n<owner_pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// bytecode\n                                                                 /* // This contract forces HODLing until a certain price target has been reached                                          */\n                                                                 /* // A minimum block is provided to ensure that oracle price entries from before this block are disregarded              */\n                                                                 /* // i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used. */\n                                                                 /* // Instead, a message with a block number and price from after the minBlock needs to be passed.                        */\n                                                                 /* // This contract serves as a simple example for checkDataSig-based contracts.                                          */\n                                                                 /* contract HodlVault(                                                                                                    */\n                                                                 /*     pubkey ownerPk,                                                                                                    */\n                                                                 /*     pubkey oraclePk,                                                                                                   */\n                                                                 /*     int minBlock,                                                                                                      */\n                                                                 /*     int priceTarget                                                                                                    */\n                                                                 /* ) {                                                                                                                    */\n                                                                 /*     function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {                                            */\n                                                                 /*         // message: { blockHeight, price }                                                                             */\nOP_6 OP_PICK OP_4 OP_SPLIT                                       /*         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);                                               */\nOP_1 OP_ROLL OP_BIN2NUM                                          /*         int blockHeight = int(blockHeightBin);                                                                         */\nOP_1 OP_ROLL OP_BIN2NUM                                          /*         int price = int(priceBin);                                                                                     */\n                                                                 /*                                                                                                                        */\n                                                                 /*         // Check that blockHeight is after minBlock and not in the future                                              */\nOP_1 OP_PICK OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY        /*         require(blockHeight >= minBlock);                                                                              */\nOP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP                      /*         require(tx.time >= blockHeight);                                                                               */\n                                                                 /*                                                                                                                        */\n                                                                 /*         // Check that current price is at least priceTarget                                                            */\nOP_0 OP_ROLL OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY        /*         require(price >= priceTarget);                                                                                 */\n                                                                 /*                                                                                                                        */\n                                                                 /*         // Handle necessary signature checks                                                                           */\nOP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIG OP_VERIFY /*         require(checkDataSig(oracleSig, oracleMessage, oraclePk));                                                     */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                            /*         require(checkSig(ownerSig, ownerPk));                                                                          */\n                                                                 /*     }                                                                                                                  */\n                                                                 /* }                                                                                                                      */\n                                                                 /*                                                                                                                        */',
+        },
+      },
+    },
+  },
+  // TODO: Make it work with different hashtypes and signature algorithms
+  // {
+  //   name: 'P2PKH (sending NFTs)',
+  //   transaction: (() => {
+  //     const contract = new Contract(P2PKH, [alicePkh], { provider });
+  //     provider.addUtxo(contract.address, randomUtxo());
+
+  //     const to = contract.address;
+  //     const amount = 1000n;
+
+  //     const hashtype = HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY;
+  //     const signatureAlgorithm = SignatureAlgorithm.ECDSA;
+
+  //     const tx = contract.functions
+  //       .spend(alicePub, new SignatureTemplate(alicePriv, hashtype, signatureAlgorithm))
+  //       .to(to, amount);
+
+  //     return tx;
+  //   })(),
+  //   template: {} as any,
+  // },
+  {
+    name: 'P2PKH (with P2PKH inputs)',
+    transaction: (() => {
+      const contract = new Contract(P2PKH, [alicePkh], { provider });
+
+      const regularUtxo = randomUtxo();
+      provider.addUtxo(contract.address, regularUtxo);
+
+      const p2pkhUtxo = randomUtxo();
+      provider.addUtxo(aliceAddress, p2pkhUtxo);
+
+      const to = contract.tokenAddress;
+      const amount = 1000n;
+
+      const tx = contract.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .fromP2PKH(p2pkhUtxo, new SignatureTemplate(alicePriv))
+        .from(regularUtxo)
+        .to(to, amount);
+
+      return tx;
+    })(),
+    template: {
+      '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
+      'description': 'Imported from cashscript',
+      'name': 'P2PKH',
+      'supported': [
+        'BCH_SPEC',
+      ],
+      'version': 0,
+      'entities': {
+        'parameters': {
+          'description': 'Contract creation and function parameters',
+          'name': 'parameters',
+          'scripts': [
+            'lock',
+            'unlock_lock',
+            'p2pkh_placeholder_lock',
+            'p2pkh_placeholder_unlock',
+          ],
+          'variables': {
+            's': {
+              'description': '"s" parameter of function "spend"',
+              'name': 's',
+              'type': 'Key',
+            },
+            'pk': {
+              'description': '"pk" parameter of function "spend"',
+              'name': 'pk',
+              'type': 'WalletData',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'function_index',
+              'type': 'WalletData',
+            },
+            'pkh': {
+              'description': '"pkh" parameter of this contract',
+              'name': 'pkh',
+              'type': 'WalletData',
+            },
+            'placeholder_key': {
+              'description': 'placeholder_key',
+              'name': 'placeholder_key',
+              'type': 'Key',
+            },
+          },
+        },
+      },
+      'scenarios': {
+        'evaluate_function': {
+          'name': 'Evaluate',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+              'function_index': '0',
+              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+            },
+            'currentBlockHeight': 2,
+            'currentBlockTime': expect.any(Number),
+            'keys': {
+              'privateKeys': {
+                's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                'placeholder_key': '<Uint8Array: 0x0000000000000000000000000000000000000000000000000000000000000000>',
+              },
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock',
+                  'overrides': {
+                    'keys': {
+                      'privateKeys': {
+                        'placeholder_key': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+            ],
+            'locktime': 133700,
+            'outputs': [
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock',
+                'overrides': {
+                  'keys': {
+                    'privateKeys': {
+                      'placeholder_key': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                    },
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+      },
+      'scripts': {
+        'unlock_lock': {
+          'passes': [
+            'evaluate_function',
+          ],
+          'name': 'unlock',
+          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
+          'unlocks': 'lock',
+        },
+        'lock': {
+          'lockingType': 'p2sh20',
+          'name': 'lock',
+          'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
+        },
+        'p2pkh_placeholder_unlock': {
+          'name': 'p2pkh_placeholder_unlock',
+          'script': '<placeholder_key.schnorr_signature.all_outputs>\n<placeholder_key.public_key>',
+          'unlocks': 'p2pkh_placeholder_lock',
+        },
+        'p2pkh_placeholder_lock': {
+          'lockingType': 'standard',
+          'name': 'p2pkh_placeholder_lock',
+          'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
+        },
+      },
+    },
+  },
 ];
