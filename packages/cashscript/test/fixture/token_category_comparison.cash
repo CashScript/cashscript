@@ -1,0 +1,5 @@
+contract Test() {
+    function send() {
+        require(tx.inputs[1].tokenCategory == 0x);
+    }
+}
