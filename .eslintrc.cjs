@@ -3,11 +3,11 @@ const path = require('path');
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
+  plugins: ['@typescript-eslint', 'import'],
   extends: ['airbnb-typescript/base'],
   parserOptions: {
     project: path.join(__dirname, 'tsconfig.json'),
-    ecmaVersion: 2018,  // Allows for the parsing of modern ECMAScript features
+    ecmaVersion: 2021,  // Allows for the parsing of modern ECMAScript features
     sourceType: 'module',  // Allows for the use of imports
     extraFileExtensions: ['.cjs'],
   },

@@ -85,3 +85,7 @@ console.log(timeoutDetails);
 :::tip
 Read more about the JavaScript SDK in the [SDK documentation](/docs/sdk/instantiation).
 :::
+
+:::tip
+Read more about CashScript contract development and testing suite in the [Debug tools](/docs/sdk/debugging).
+:::

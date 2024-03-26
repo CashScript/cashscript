@@ -1,6 +1,8 @@
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
   SignatureTemplate,
+  MockNetworkProvider,
   ElectrumNetworkProvider,
   Network,
 } from '../../src/index.js';
@@ -12,15 +14,19 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import artifact from '../fixture/hodl_vault.json' assert { type: "json" };
+import artifact from '../fixture/hodl_vault.json' assert { type: 'json' };
+import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 describe('HodlVault', () => {
   let hodlVault: Contract;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
     console.log(hodlVault.address);
+    (provider as any).addUtxo?.(hodlVault.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -40,7 +46,10 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.VERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.VERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should fail when price is too low', async () => {
@@ -58,7 +67,10 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.VERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.VERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should succeed when price is high enough', async () => {

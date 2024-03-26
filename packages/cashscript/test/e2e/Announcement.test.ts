@@ -1,18 +1,26 @@
-import { Contract, ElectrumNetworkProvider, Network } from '../../src/index.js';
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
+import {
+  Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
+} from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
+import {
+  createOpReturnOutput, randomUtxo, toRegExp, utxoComparator,
+} from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
-import artifact from '../fixture/announcement.json' assert { type: "json" };
+import artifact from '../fixture/announcement.json' assert { type: 'json' };
 
 describe('Announcement', () => {
   let announcement: Contract;
   const minerFee = 1000n;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     announcement = new Contract(artifact, [], { provider });
     console.log(announcement.address);
+    (provider as any).addUtxo?.(announcement.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -37,7 +45,10 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.NUMEQUALVERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should fail when trying to announce incorrect announcement', async () => {
@@ -59,7 +70,10 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.EQUALVERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should fail when sending incorrect amount of change', async () => {
@@ -81,7 +95,10 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.NUMEQUALVERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should fail when sending the correct change amount to an incorrect address', async () => {
@@ -105,7 +122,10 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.EQUALVERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should succeed when announcing correct announcement', async () => {

@@ -14,4 +14,6 @@ export {
   BitcoinRpcNetworkProvider,
   ElectrumNetworkProvider,
   FullStackNetworkProvider,
+  MockNetworkProvider,
 } from './network/index.js';
+export { randomUtxo, randomToken, randomNFT } from './utils.js';

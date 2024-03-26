@@ -158,7 +158,7 @@ export class TransactionBuilder {
   }
 
   // TODO: see if we can merge with Transaction.ts
-  private async getTxDetails(txid: string): Promise<TransactionDetails>
+  private async getTxDetails(txid: string): Promise<TransactionDetails>;
   private async getTxDetails(txid: string, raw: true): Promise<string>;
   private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {
     for (let retries = 0; retries < 1200; retries += 1) {

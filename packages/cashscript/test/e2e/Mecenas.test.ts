@@ -1,4 +1,7 @@
-import { Contract, ElectrumNetworkProvider, Network } from '../../src/index.js';
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
+import {
+  Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
+} from '../../src/index.js';
 import {
   alicePkh,
   bobPkh,
@@ -7,7 +10,8 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError, Reason } from '../../src/Errors.js';
-import artifact from '../fixture/mecenas.json' assert { type: "json" };
+import artifact from '../fixture/mecenas.json' assert { type: 'json' };
+import { randomUtxo, toRegExp } from '../../src/utils.js';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {
@@ -16,9 +20,12 @@ describe('Mecenas', () => {
   const minerFee = 1000n;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider });
     console.log(mecenas.address);
+    (provider as any).addUtxo?.(mecenas.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -36,7 +43,10 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.NUMEQUALVERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should fail when trying to send to wrong person', async () => {
@@ -53,7 +63,10 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.VERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should fail when trying to send to multiple people', async () => {
@@ -71,7 +84,10 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.VERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should fail when sending incorrect amount of change', async () => {
@@ -88,7 +104,10 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
+      await expect(txPromise).rejects.toThrow(toRegExp([
+        Reason.NUMEQUALVERIFY,
+        AuthenticationErrorCommon.failedVerify,
+      ]));
     });
 
     it('should succeed when sending pledge to receiver', async () => {

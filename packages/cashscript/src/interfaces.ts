@@ -1,4 +1,4 @@
-import type { Transaction } from '@bitauth/libauth';
+import { type Transaction } from '@bitauth/libauth';
 import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
 

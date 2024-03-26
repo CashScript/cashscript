@@ -245,6 +245,13 @@ The BitcoinRpcNetworkProvider does not currently support CashTokens. If you want
 const provider = new BitcoinRpcNetworkProvider('mainnet', 'http://localhost:8332');
 ```
 
+### MockNetworkProvider
+```ts
+new MockNetworkProvider()
+```
+
+The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. You can read more about the `MockNetworkProvider` and debugging in the [debugging guide](/docs/sdk/debugging).
+
 ### Custom NetworkProviders
 A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if new BCH libraries are created in the future, it is simple to use them with CashScript. This also potentially enables the CashScript SDK to be used with other (partially) compatible networks, such as BTC or BSV.
 

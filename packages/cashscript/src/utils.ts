@@ -12,12 +12,16 @@ import {
   LockingBytecodeType,
   encodeTransactionOutput,
   isHex,
-  bigIntToCompactSize,
+  bigIntToCompactUint,
+  AuthenticationErrorCommon,
+  NonFungibleTokenCapability,
+  bigIntToVmNumber,
 } from '@bitauth/libauth';
 import {
   encodeInt,
   hash160,
   hash256,
+  sha256,
   Op,
   Script,
   scriptToBytecode,
@@ -27,6 +31,7 @@ import {
   Output,
   Network,
   LibauthOutput,
+  TokenDetails,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -150,7 +155,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   let size = VERSION_SIZE + LOCKTIME_SIZE;
   size += outputs.reduce((acc, output) => acc + getOutputSize(output), 0);
   // Add tx-out count (accounting for a potential change output)
-  size += bigIntToCompactSize(BigInt(outputs.length + 1)).byteLength;
+  size += bigIntToCompactUint(BigInt(outputs.length + 1)).byteLength;
 
   return size;
 }
@@ -204,40 +209,42 @@ export function createSighashPreimage(
   return sighashPreimage;
 }
 
-export function buildError(reason: string, meepStr?: string): FailedTransactionError {
+export function buildError(reason: string, debugStr?: string): FailedTransactionError {
   const require = [
     Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
     Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
+
+    AuthenticationErrorCommon.failedVerify,
   ];
-  const timeCheck = [Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME];
+  const timeCheck = [
+    Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME,
+
+    AuthenticationErrorCommon.negativeLocktime, AuthenticationErrorCommon.unsatisfiedLocktime,
+  ];
   const sigCheck = [
     Reason.SIG_COUNT, Reason.PUBKEY_COUNT, Reason.SIG_HASHTYPE, Reason.SIG_DER,
     Reason.SIG_HIGH_S, Reason.SIG_NULLFAIL, Reason.SIG_BADLENGTH, Reason.SIG_NONSCHNORR,
+
+    AuthenticationErrorCommon.nonNullSignatureFailure,
   ];
 
   if (toRegExp(require).test(reason)) {
-    return new FailedRequireError(reason, meepStr);
+    return new FailedRequireError(reason, debugStr);
   }
 
   if (toRegExp(timeCheck).test(reason)) {
-    return new FailedTimeCheckError(reason, meepStr);
+    return new FailedTimeCheckError(reason, debugStr);
   }
 
   if (toRegExp(sigCheck).test(reason)) {
-    return new FailedSigCheckError(reason, meepStr);
+    return new FailedSigCheckError(reason, debugStr);
   }
 
-  return new FailedTransactionError(reason, meepStr);
+  return new FailedTransactionError(reason, debugStr);
 }
 
-function toRegExp(reasons: string[]): RegExp {
+export function toRegExp(reasons: string[]): RegExp {
   return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
-}
-
-// ////////// MISC ////////////////////////////////////////////////////////////
-export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey = binToHex(scriptToLockingBytecode(script, 'p2sh20'));
-  return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
 }
 
 export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32', tokenSupport: boolean): string {
@@ -329,3 +336,34 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
   throw Error('Pushdata too large');
 }
+
+const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
+
+export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
+  ...{
+    txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    vout: Math.floor(Math.random() * 10),
+    satoshis: 100_000n + randomInt(),
+  },
+  ...defaults,
+});
+
+export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => ({
+  ...{
+    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    amount: 100_000n + randomInt(),
+  },
+  ...defaults,
+});
+
+export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => ({
+  ...{
+    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    amount: 0n,
+    nft: {
+      commitment: binToHex(sha256(bigIntToVmNumber(randomInt()))).slice(0, 8),
+      capability: NonFungibleTokenCapability.none,
+    },
+  },
+  ...defaults,
+});

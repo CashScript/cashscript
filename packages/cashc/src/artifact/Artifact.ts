@@ -1,8 +1,10 @@
-import { Artifact, Script, scriptToAsm } from '@cashscript/utils';
+import {
+  Artifact, DebugInformation, Script, scriptToAsm,
+} from '@cashscript/utils';
 import { version } from '../index.js';
 import { Ast } from '../ast/AST.js';
 
-export function generateArtifact(ast: Ast, script: Script, source: string): Artifact {
+export function generateArtifact(ast: Ast, script: Script, source: string, debug: DebugInformation): Artifact {
   const { contract } = ast;
 
   const constructorInputs = contract.parameters
@@ -24,10 +26,17 @@ export function generateArtifact(ast: Ast, script: Script, source: string): Arti
     abi,
     bytecode,
     source,
+    debug,
     compiler: {
       name: 'cashc',
       version,
     },
     updatedAt: new Date().toISOString(),
   };
+}
+
+// strip verbose debug info from artifact for production use
+export function stripArtifact(artifact: Artifact): Omit<Artifact, 'debug'> {
+  delete artifact.debug;
+  return artifact;
 }

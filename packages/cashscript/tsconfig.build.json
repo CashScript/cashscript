@@ -8,4 +8,8 @@
   "include": [
     "src/**/*",
   ],
+
+  "exclude": [
+    "test/fixture"
+  ],
 }

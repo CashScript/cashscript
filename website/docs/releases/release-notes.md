@@ -2,6 +2,25 @@
 title: Release Notes
 ---
 
+## v0.10.0
+
+#### cashc compiler
+- :sparkles: Add `console.log()` statements for debugging.
+- :sparkles: Extend `require()` statements to allow custom error messages for debugging.
+- :hammer_and_wrench: Update artifact format to allow for new debugging features.
+
+#### CashScript SDK
+- :sparkles: Add `MockNetworkProvider` to simulate network interaction for debugging and testing.
+- :sparkles: Add support for transaction evaluation and debugging using libauth templates.
+- :sparkles: Add extended Jest utilities specifically crafted for CashScript:
+  * `await expect(transaction).toLog(message)`
+  * `await expect(transaction).toFailRequireWith(message)`
+- :sparkles: Output BitAuth IDE URI for debugging when transaction is rejected.
+
+We also added a new example project with a full testing suite to demonstrate the new debugging features under `examples/testing-suite`.
+
+Thanks [mainnet_pat](https://twitter.com/mainnet_pat) for the contributions!
+
 ## v0.9.3
 
 #### cashc compiler
@@ -15,7 +34,7 @@ title: Release Notes
 - :bug: Fix off-by-one fee calculation error with transactions that have many outputs.
 - :bug: Fix bug where no error was thrown when invalid NFT commitment or token category were provided.
 - :hammer_and_wrench: Export all interfaces from CashScript's `interfaces.ts`.
-- :hammer_and_wrench: Merge duplicate code between Transaction.ts and TransactionBuilder.ts
+- :hammer_and_wrench: Merge duplicate code between Transaction.ts and TransactionBuilder.ts.
 
 ## v0.9.1
 

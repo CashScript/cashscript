@@ -25,6 +25,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
+  ConsoleStatementNode,
+  ConsoleParameterNode,
 } from './AST.js';
 import AstVisitor from './AstVisitor.js';
 
@@ -148,6 +150,11 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitHexLiteral(node: HexLiteralNode): Node {
+    return node;
+  }
+
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    node.parameters = this.visitList(node.parameters) as ConsoleParameterNode[];
     return node;
   }
 }

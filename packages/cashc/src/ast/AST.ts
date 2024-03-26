@@ -4,11 +4,12 @@ import AstVisitor from './AstVisitor.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator.js';
 import { Location } from './Location.js';
 import { SymbolTable, Symbol } from './SymbolTable.js';
+import { binToHex } from '@bitauth/libauth';
 
 export type Ast = SourceFileNode;
 
 export abstract class Node {
-  location?: Location;
+  location: Location;
   abstract accept<T>(visitor: AstVisitor<T>): T;
 }
 
@@ -97,8 +98,8 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
 
 export class TupleAssignmentNode extends StatementNode {
   constructor(
-    public var1: { name:string, type:Type },
-    public var2: { name:string, type:Type },
+    public var1: { name: string, type: Type },
+    public var2: { name: string, type: Type },
     public tuple: ExpressionNode,
   ) {
     super();
@@ -126,6 +127,7 @@ export class TimeOpNode extends StatementNode {
   constructor(
     public timeOp: TimeOp,
     public expression: ExpressionNode,
+    public message?: string,
   ) {
     super();
   }
@@ -138,6 +140,7 @@ export class TimeOpNode extends StatementNode {
 export class RequireNode extends StatementNode {
   constructor(
     public expression: ExpressionNode,
+    public message?: string,
   ) {
     super();
   }
@@ -297,9 +300,15 @@ export class IdentifierNode extends ExpressionNode implements Named {
   }
 }
 
-export abstract class LiteralNode extends ExpressionNode {}
+export abstract class LiteralNode<T = any> extends ExpressionNode {
+  public value: T;
 
-export class BoolLiteralNode extends LiteralNode {
+  toString(): string {
+    return `${this.value}`;
+  }
+}
+
+export class BoolLiteralNode extends LiteralNode<boolean> {
   constructor(
     public value: boolean,
   ) {
@@ -312,7 +321,7 @@ export class BoolLiteralNode extends LiteralNode {
   }
 }
 
-export class IntLiteralNode extends LiteralNode {
+export class IntLiteralNode extends LiteralNode<bigint> {
   constructor(
     public value: bigint,
   ) {
@@ -325,7 +334,7 @@ export class IntLiteralNode extends LiteralNode {
   }
 }
 
-export class StringLiteralNode extends LiteralNode {
+export class StringLiteralNode extends LiteralNode<string> {
   constructor(
     public value: string,
     public quote: string,
@@ -339,7 +348,7 @@ export class StringLiteralNode extends LiteralNode {
   }
 }
 
-export class HexLiteralNode extends LiteralNode {
+export class HexLiteralNode extends LiteralNode<Uint8Array> {
   constructor(
     public value: Uint8Array,
   ) {
@@ -347,7 +356,25 @@ export class HexLiteralNode extends LiteralNode {
     this.type = new BytesType(value.byteLength);
   }
 
+  toString(): string {
+    return `0x${binToHex(this.value)}`;
+  }
+
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitHexLiteral(this);
   }
 }
+
+export class ConsoleStatementNode extends Node {
+  constructor(
+    public parameters: ConsoleParameterNode[],
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitConsoleStatement(this);
+  }
+}
+
+export type ConsoleParameterNode = LiteralNode | IdentifierNode;
