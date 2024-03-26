@@ -28,31 +28,24 @@ expect.extend({
     try {
       await transaction.debug();
     } catch {}
-    let message: string = '';
-
-    const failMessage = (received: string, expected: RegExp | string) => () => `${matcherHint(
-      '.toLog',
-      'received',
-      'expected',
-    )}
-
-Expected: ${printExpected(expected)}
-Received: ${printReceived(received)}`;
+    let error: string = '';
 
     try {
       expect(spyOnLoggerError).toBeCalledWith(expect.stringMatching(match));
-    } catch (error) {
-      message = error as any;
+    } catch (e) {
+      error = e as any;
     }
 
-    // TODO: If no console.log was called, then spyOnLoggerError.mock.calls[0] is undefined.
-    // We should handle that case properly.
-    const received = spyOnLoggerError.mock.calls[0][0];
+    // We concatenate all the logs into a single string - if no logs are present, we set received to undefined
+    const receivedBase = spyOnLoggerError.mock.calls.reduce((acc, [log]) => `${acc}\n${log}`, '').trim();
+    const received = receivedBase === '' ? undefined : receivedBase;
+
     spyOnLoggerError.mockClear();
 
     return {
       message: failMessage(received, match),
-      pass: !message,
+      // message: () =>'Hello',
+      pass: !error,
     };
   },
 });
@@ -108,3 +101,13 @@ Contract function did not fail a require statement`;
     };
   },
 });
+
+// TODO: Update to have the same failMessage function for .toLog and .toFailRequireWith
+const failMessage = (received?: string, expected?: RegExp | string) => () => `${matcherHint(
+  '.toLog',
+  'received',
+  'expected',
+)}
+
+Expected: ${printExpected(expected)}
+Received: ${printReceived(received)}`;
