@@ -310,25 +310,18 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     const ip = this.getCurrentInstructionPointer();
     const { line } = node.location.start;
 
-    // TODO: refactor to use a map instead of array (also in the artifact and other places where console logs and
-    // require statements are used)
-    // check if log entry exists for the instruction pointer, create if not
-    // TODO: Do we really want to merge different console logs at the same instruction pointer?
-    let index = this.consoleLogs.findIndex((entry: LogEntry) => entry.ip === ip);
-    if (index === -1) {
-      index = this.consoleLogs.push({ ip, line, data: [] }) - 1;
-    }
-
-    node.parameters.forEach((parameter: ConsoleParameterNode) => {
+    const data = node.parameters.map((parameter: ConsoleParameterNode) => {
       if (parameter instanceof IdentifierNode) {
         const symbol = parameter.definition!;
         const stackIndex = this.getStackIndex(parameter.name);
         const type = typeof symbol.type === 'string' ? symbol.type : symbol.toString();
-        this.consoleLogs[index].data.push({ stackIndex, type });
-      } else {
-        this.consoleLogs[index].data.push(parameter.toString());
+        return { stackIndex, type };
       }
+
+      return parameter.toString();
     });
+
+    this.consoleLogs.push({ ip, line, data });
 
     return node;
   }

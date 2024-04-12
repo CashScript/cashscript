@@ -9,7 +9,6 @@ import { binToHex } from '@bitauth/libauth';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
-    // TODO: Double check if multiple console.log statements are two separate entries in the artifact OR one single one
     const BASE_CONTRACT_CODE = `
       contract Test(pubkey owner) {
         function transfer(sig ownerSig, int num) {
@@ -119,7 +118,7 @@ describe('Debugging tests', () => {
       await expect(transaction2).not.toLog(/a is 1/);
     });
 
-    it('should log multiple consecutive console.log statements on a single line', async () => {
+    it('should log multiple consecutive console.log statements on separate lines', async () => {
       const contractCode = `
         contract Test(pubkey owner) {
           function transfer(sig ownerSig, int num) {
@@ -146,9 +145,10 @@ describe('Debugging tests', () => {
         .transfer(new SignatureTemplate(alicePriv), incorrectNum)
         .to(contract.address, 10000n);
 
-      // console.log(ownerSig, owner, num, beef, 1, "test", true);
-      const expectedLog = new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100 0xbeef 1 test true$`);
-      await expect(transaction).toLog(expectedLog);
+      // console.log(ownerSig, owner, num, beef);
+      await expect(transaction).toLog(new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`));
+      // console.log(1, "test", true)
+      await expect(transaction).toLog(new RegExp('^Test.cash:10 0xbeef 1 test true$'));
     });
 
     it('should log multiple console.log statements with other statements in between', async () => {
