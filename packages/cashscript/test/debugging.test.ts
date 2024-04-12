@@ -9,7 +9,7 @@ import { binToHex } from '@bitauth/libauth';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
-
+    // TODO: Double check if multiple console.log statements are two separate entries in the artifact OR one single one
     const BASE_CONTRACT_CODE = `
       contract Test(pubkey owner) {
         function transfer(sig ownerSig, int num) {
@@ -96,7 +96,7 @@ describe('Debugging tests', () => {
         .secondFunction()
         .to(contract.address, 10000n);
 
-      await expect(transaction).toLog(new RegExp('^Test.cash:14 Hello Second Function$'));
+      await expect(transaction).toLog(new RegExp('^Test.cash:16 Hello Second Function$'));
       await expect(transaction).not.toLog(/Hello First Function/);
     });
 
@@ -108,14 +108,14 @@ describe('Debugging tests', () => {
         .functionWithIfStatement(1n)
         .to(contract.address, 10000n);
 
-      await expect(transaction1).toLog(new RegExp('^Test.cash:21 a is 1$'));
+      await expect(transaction1).toLog(new RegExp('^Test.cash:22 a is 1$'));
       await expect(transaction1).not.toLog(/a is not 1/);
 
       const transaction2 = contract.functions
         .functionWithIfStatement(2n)
         .to(contract.address, 10000n);
 
-      await expect(transaction2).toLog(new RegExp('^Test.cash:23 a is not 1$'));
+      await expect(transaction2).toLog(new RegExp('^Test.cash:24 a is not 1$'));
       await expect(transaction2).not.toLog(/a is 1/);
     });
 

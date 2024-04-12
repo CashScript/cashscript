@@ -1,5 +1,16 @@
 import {
-  AbiFunction, Artifact, Op, PrimitiveType, bytecodeToScript, decodeBool, decodeInt, decodeString, formatBitAuthScript,
+  AbiFunction,
+  Artifact,
+  LogData,
+  LogEntry,
+  Op,
+  PrimitiveType,
+  StackItem,
+  bytecodeToScript,
+  decodeBool,
+  decodeInt,
+  decodeString,
+  formatBitAuthScript,
 } from '@cashscript/utils';
 import {
   hash160,
@@ -34,7 +45,7 @@ import {
 import { Argument, encodeArgument as csEncodeArgument } from './Argument.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
-import { toRegExp } from './utils.js';
+import { findLastIndex, toRegExp } from './utils.js';
 
 // all bitauth variables must be in snake case
 const snakeCase = (str: string): string => (
@@ -532,47 +543,21 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
 
   const debugResult = vm.debug(program);
 
-  for (const log of artifact.debug?.logs ?? []) {
-    // there might be 2 elements with same instruction pointer, first from unllocking script, second from locking
-    const state = debugResult
-      .filter((debugState: AuthenticationProgramStateBCHCHIPs) => debugState.ip === log.ip)!
-      .slice().reverse()[0];
+  // P2SH executions have 3 phases, we only want the last one (locking script execution)
+  // https://libauth.org/types/AuthenticationVirtualMachine.html#__type.debug
+  const lockingScriptDebugResult = debugResult.slice(findLastIndex(debugResult, (state) => state.ip === 0));
 
-    if (!state) {
-      throw Error(`Instruction pointer ${log.ip} points to a non-existing state of the program`);
-    }
+  // The controlStack determines whether the current debug step is in the executed branch
+  // https://libauth.org/types/AuthenticationProgramStateControlStack.html
+  const executedDebugSteps = lockingScriptDebugResult
+    .filter((debugStep) => debugStep.controlStack.every(item => item === true));
 
-    let line = `${artifact.contractName}.cash:${log.line}`;
-    log.data.forEach((element) => {
-      let value: any;
-      if (typeof element === 'string') {
-        value = element;
-      } else {
-        const stackItem = state.stack.slice().reverse()[element.stackIndex];
-        if (!stackItem) {
-          throw Error(`Stack item at index ${element.stackIndex} not found at instruction pointer ${log.ip}`);
-        }
-        switch (element.type) {
-          case PrimitiveType.BOOL:
-            value = decodeBool(stackItem);
-            break;
-          case PrimitiveType.INT:
-            value = decodeInt(stackItem);
-            break;
-          case PrimitiveType.STRING:
-            value = decodeString(stackItem);
-            break;
-          default:
-            value = `0x${binToHex(stackItem)}`;
-            break;
-        }
-      }
+  const executedLogs = (artifact.debug?.logs ?? [])
+    .filter((debugStep) => executedDebugSteps.some((log) => log.ip === debugStep.ip));
 
-      line += ` ${value}`;
-    });
-
-    // actual log, do not delete :)
-    console.log(line);
+  for (const log of executedLogs) {
+    const correspondingDebugStep = executedDebugSteps.find((debugStep) => debugStep.ip === log.ip)!;
+    logConsoleLogStatement(log, correspondingDebugStep, artifact);
   }
 
   const lastState = debugResult[debugResult.length - 1];
@@ -602,6 +587,7 @@ ${lastState.error}`;
 
       const lastMessage = artifact.debug?.requireMessages.sort((a, b) => b.ip - a.ip)[0];
       if (!lastMessage) {
+        // TODO: Throw an ERROR instead of string
         // eslint-disable-next-line
         throw evaluationResult + stackContentsMessage;
       }
@@ -621,4 +607,31 @@ ${evaluationResult.replace(/Error in evaluating input index \d: /, '')}` + stack
   }
 
   return debugResult;
+};
+
+const logConsoleLogStatement = (
+  log: LogEntry,
+  debugStep: AuthenticationProgramStateBCHCHIPs,
+  artifact: Artifact,
+): void => {
+  let line = `${artifact.contractName}.cash:${log.line}`;
+  const decodedData = log.data.map((element) => decodeLogData(element, debugStep.stack, log.ip));
+  console.log(`${line} ${decodedData.join(' ')}`);
+};
+
+const decodeLogData = (element: LogData, stack: Uint8Array[], ip: number): any => {
+  if (typeof element === 'string') return element;
+
+  // Reversed since stack is in reverse order
+  const stackItem = [...stack].reverse()[element.stackIndex];
+
+  if (!stackItem) {
+    throw Error(`Stack item at index ${(element as StackItem).stackIndex} not found at instruction pointer ${ip}`);
+  }
+
+  if (element.type === PrimitiveType.BOOL) return decodeBool(stackItem);
+  if (element.type === PrimitiveType.INT) return decodeInt(stackItem);
+  if (element.type === PrimitiveType.STRING) return decodeString(stackItem);
+
+  return `0x${binToHex(stackItem)}`;
 };

@@ -21,8 +21,15 @@ export interface DebugInformation {
 export interface LogEntry {
   ip: number; // instruction pointer
   line: number; // line in the source code
-  data: Array<{ stackIndex: number, type: string } | string>; // data to be logged
+  data: Array<LogData>; // data to be logged
 }
+
+export interface StackItem {
+  type: string;
+  stackIndex: number;
+}
+
+export type LogData = StackItem | string;
 
 export interface RequireMessage {
   ip: number; // instruction pointer
