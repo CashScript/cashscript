@@ -275,10 +275,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.emit(compileTimeOp(node.timeOp), { location: node.location, positionHint: PositionHint.END });
 
-    // add debug require message
+    // TODO: Same comment as in require
     if (node.message) {
       this.requireMessages.push({
-        ip: this.getCurrentInstructionPointer() - 1, // TODO: Why is there a minus 1 here?
+        // We're removing 1 from the IP because the error message needs to match the OP_XXX_VERIFY, not the OP_DROP that
+        // is emitted directly after
+        ip: this.getCurrentInstructionPointer() - 1,
         line: node.location.start.line,
         message: node.message,
       });
@@ -293,10 +295,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     this.emit(Op.OP_VERIFY, { location: node.location, positionHint: PositionHint.END });
 
-    // add debug require message
+    // TODO: Add *all* require messages to the artifact, so we can report on line number for the failed require(),
+    // even if there is no message in the require() call
+    // TODO: We don't even have to display the Libauth message if we just say "this and this require failed"
     if (node.message) {
       this.requireMessages.push({
-        ip: this.getCurrentInstructionPointer() - 1, // TODO: Why is there a minus 1 here?
+        ip: this.getCurrentInstructionPointer(),
         line: node.location.start.line,
         message: node.message,
       });
@@ -335,13 +339,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     let stackDepth = this.stack.length;
     node.ifBlock = this.visit(node.ifBlock);
-    this.removeScopedVariables(stackDepth, node);
+    this.removeScopedVariables(stackDepth, node.ifBlock);
 
     if (node.elseBlock) {
       this.emit(Op.OP_ELSE, { location: node.elseBlock.location });
       stackDepth = this.stack.length;
       node.elseBlock = this.visit(node.elseBlock);
-      this.removeScopedVariables(stackDepth, node);
+      this.removeScopedVariables(stackDepth, node.elseBlock);
     }
 
     const endLocationData = {
@@ -358,7 +362,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   removeScopedVariables(depthBeforeScope: number, node: Node): void {
     const dropCount = this.stack.length - depthBeforeScope;
     for (let i = 0; i < dropCount; i += 1) {
-      this.emit(Op.OP_DROP, { location: node.location });
+      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack();
     }
   }

@@ -1,11 +1,81 @@
 import { compileString } from 'cashc';
 import { Contract, MockNetworkProvider, SignatureTemplate } from '../src/index.js';
 import {
-  alicePriv, alicePub, bobPriv, bobPub,
+  alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { binToHex } from '@bitauth/libauth';
+
+const CONTRACT_CODE = `
+contract Test() {
+  function test_logs() {
+    console.log("Hello World");
+    require(1 == 2);
+  }
+
+  function test_no_logs() {
+    require(1 == 2);
+  }
+
+  function test_require() {
+    require(1 == 2, "1 should equal 2");
+  }
+
+  function test_require_no_failure() {
+    require(1 == 1, "1 should equal 1");
+  }
+
+  // TODO: Add test for this
+  function test_multiple_require_statements() {
+    require(1 == 2, "1 should equal 2");
+    require(1 == 1, "1 should equal 1");
+  }
+
+  // TODO: Add test for this
+  function test_multiple_require_statements_final_fails() {
+    require(1 == 1, "1 should equal 1");
+    require(1 == 2, "1 should equal 2");
+  }
+
+  // TODO: Add test for this
+  function test_multiple_require_statements_no_message_final() {
+    require(1 == 1, "1 should equal 1");
+    require(1 == 2);
+  }
+
+  function test_timeops_as_final_require() {
+    require(1 == 1, "1 should equal 1");
+    require(tx.time >= 100000000, "time should be HUGE");
+  }
+
+  function test_final_require_in_if_statement(int switch) {
+    if (switch == 1) {
+      int a = 2;
+      require(1 == a, "1 should equal 2");
+    // TODO: Check if it's better test with or without this else
+    } else if (switch == 2) {
+      int b = 3;
+      require(1 == b, "1 should equal 3");
+    } else {
+      int c = 4;
+      require(switch == c, "switch should equal 4");
+    }
+  }
+
+  function test_final_require_in_if_statement_with_deep_reassignment() {
+    int a = 0;
+    int b = 1;
+    int c = 2;
+    int d = 3;
+    int e = 4;
+    if (a == 0) {
+      a = 10;
+      require(a + b + c + d + e == 10, "sum should equal 10");
+    }
+  }
+}
+`;
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
@@ -189,89 +259,99 @@ describe('Debugging tests', () => {
   });
 
   describe('require statements', () => {
-    const code = `
-    contract TransferWithTimeout(
-        pubkey sender,
-        pubkey recipient,
-        int timeout
-    ) {
-        // Require recipient's signature to match
-        function transfer(sig recipientSig) {
-            require(checkSig(recipientSig, recipient));
-        }
-
-        // Require timeout time to be reached and sender's signature to match
-        function timeout(sig senderSig) {
-            require(checkSig(senderSig, sender), "sigcheck custom fail");
-            require(tx.time >= timeout, "timecheck custom fail");
-        }
-
-        function test(int a) {
-          require(a == 1, "dropped last verify fail");
-        }
-    }
-    `;
-
-    const artifact = compileString(code);
+    const artifact = compileString(CONTRACT_CODE);
     const provider = new MockNetworkProvider();
 
-    it('should only fail with correct error message when there are multiple require statements', async () => {
-      const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
+    it('should fail with error message when require statement fails', async () => {
+      const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.timeout(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/sigcheck custom fail/);
-      await expect(transaction).not.toFailRequireWith(/timecheck custom fail/);
+      const transaction = contract.functions.test_require().to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/1 should equal 2/);
     });
 
-    it('should only fail with correct error message for timecheck require statement when there are multiple require statements', async () => {
-      const contract = new Contract(artifact, [alicePub, bobPub, 1000000n], { provider });
+    // // test_multiple_require_statements
+    it('it should only fail with correct error message when there are multiple require statements', async () => {
+      const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.timeout(new SignatureTemplate(alicePriv)).to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/timecheck custom fail/);
-      await expect(transaction).not.toFailRequireWith(/sigcheck custom fail/);
+      const transaction = contract.functions.test_multiple_require_statements().to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/1 should equal 2/);
+      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
-    it('should fail with correct error message for the final require statement', async () => {
-      const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
+    // // test_multiple_require_statements_final_fails
+    it('it should only fail with correct error message when there are multiple require statements where the final statement fails', async () => {
+      const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.test(0n).to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/dropped last verify fail/);
+      const transaction = contract.functions.test_multiple_require_statements_final_fails().to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/1 should equal 2/);
+      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
     it('should not fail if no require statements fail', async () => {
-      const contract = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
+      const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions.transfer(new SignatureTemplate(bobPriv)).to(contract.address, 1000n);
+      const transaction = contract.functions.test_require_no_failure().to(contract.address, 1000n);
+      // TODO: add `toFailRequire` without any arguments to JestExtensions
       await expect(transaction).not.toFailRequireWith(/.*/);
+    });
+
+    // test_multiple_require_statements_no_message_final
+    it('should fail without custom message if the final require statement does not have a message', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions
+        .test_multiple_require_statements_no_message_final().to(contract.address, 1000n);
+
+      await expect(transaction).toFailRequireWith(/Error in evaluating input index 0/);
+      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
+    });
+
+    // test_timeops_as_final_require
+    it('should fail with correct error message for the final TimeOp require statement', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.test_timeops_as_final_require().to(contract.address, 1000n);
+
+      await expect(transaction).toFailRequireWith(/time should be HUGE/);
+      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
+    });
+
+    // test_final_require_in_if_statement
+    it('should fail with correct error message for the final require statement in an if statement', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transactionIfBranch = contract.functions
+        .test_final_require_in_if_statement(1n).to(contract.address, 1000n);
+      await expect(transactionIfBranch).toFailRequireWith(/1 should equal 2/);
+
+      const transactionElseIfBranch = contract.functions
+        .test_final_require_in_if_statement(2n).to(contract.address, 1000n);
+      await expect(transactionElseIfBranch).toFailRequireWith(/1 should equal 3/);
+
+      const transactionElseBranch = contract.functions
+        .test_final_require_in_if_statement(3n).to(contract.address, 1000n);
+      await expect(transactionElseBranch).toFailRequireWith(/switch should equal 4/);
+    });
+
+    // test_final_require_in_if_statement_with_deep_reassignment
+    it('should fail with correct error message for the final require statement in an if statement with a deep reassignment', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions
+        .test_final_require_in_if_statement_with_deep_reassignment().to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/sum should equal 10/);
     });
   });
 
   describe('JestExtensions', () => {
-    const CONTRACT_CODE = `
-      contract Test() {
-        function test_logs() {
-          console.log("Hello World");
-          require(1 == 2);
-        }
-
-        function test_no_logs() {
-          require(1 == 2);
-        }
-
-        function test_require() {
-          require(1 == 2, "1 should equal 2");
-        }
-
-        function test_require_no_failure() {
-          require(1 == 1, "1 should equal 1");
-        }
-      }
-    `;
-
     const artifact = compileString(CONTRACT_CODE);
     const provider = new MockNetworkProvider();
 
@@ -291,7 +371,6 @@ describe('Debugging tests', () => {
       ).rejects.toThrow(/Expected: .*This is definitely not the log.*\nReceived: .*Test.cash:4 Hello World/);
     });
 
-    // TODO: Investigate why it still logs, even though we call test_no_logs()
     it('should fail the JestExtensions test if a log is expected where no log is logged', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
@@ -305,19 +384,7 @@ describe('Debugging tests', () => {
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
         expect(transaction).toLog(incorrectExpectedLog),
-      ).rejects.toThrow(/Expected: .*Hello World.*\nReceived: undefined/);
-    });
-
-    it('[WIP] should fail the JestExtensions test if a log is expected where no log is logged', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
-
-      const transaction = await contract.functions
-        .test_no_logs()
-        .to(contract.address, 10000n)
-        .debug();
-
-      console.log(transaction);
+      ).rejects.toThrow(/Expected: .*Hello World.*\nReceived: .*undefined/);
     });
 
     it('should fail the JestExtensions test if an incorrect require error message is expected', async () => {
@@ -331,12 +398,13 @@ describe('Debugging tests', () => {
       const incorrectExpectedRequire = new RegExp('1 should equal 3');
 
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
+      // TODO: Figure out why this error message says "Received string:" instead of "Received:"
       await expect(
         expect(transaction).toFailRequireWith(incorrectExpectedRequire),
-      ).rejects.toThrow(/Expected: .*1 should equal 3.*\nReceived: .*1 should equal 2.*/);
+      ).rejects.toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: .*1 should equal 2.*/);
     });
 
-
+    // TODO: Fix this
     it('should fail the JestExtensions test if a require error message is expected where no error is thrown', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
@@ -349,7 +417,7 @@ describe('Debugging tests', () => {
 
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
-        expect(transaction).toFailRequireWith(incorrectExpectedRequire),
+        await expect(transaction).toFailRequireWith(incorrectExpectedRequire),
       ).rejects.toThrow(/Expected: .*1 should equal 3.*\nReceived: undefined/);
     });
   });

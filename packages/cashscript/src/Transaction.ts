@@ -40,10 +40,8 @@ import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
 import MockNetworkProvider from './network/MockNetworkProvider.js';
-import {
-  DebugResult,
-  buildTemplate, debugTemplate, evaluateTemplate, getBitauthUri,
-} from './LibauthTemplate.js';
+import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
+import { debugTemplate, evaluateTemplate, DebugResult } from './debugging.js';
 
 export class Transaction {
   public inputs: Utxo[] = [];

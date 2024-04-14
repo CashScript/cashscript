@@ -1,15 +1,7 @@
 import {
   AbiFunction,
-  Artifact,
-  LogData,
-  LogEntry,
-  Op,
   PrimitiveType,
-  StackItem,
   bytecodeToScript,
-  decodeBool,
-  decodeInt,
-  decodeString,
   formatBitAuthScript,
 } from '@cashscript/utils';
 import {
@@ -22,17 +14,9 @@ import {
   WalletTemplate,
   WalletTemplateScenarioInput,
   TransactionBCH,
-  walletTemplateToCompilerConfiguration,
-  createCompiler,
-  createVirtualMachineBCHCHIPs,
   binToBase64,
   utf8ToBin,
   isHex,
-  AuthenticationProgramStateBCHCHIPs,
-  AuthenticationProgramCommon,
-  AuthenticationVirtualMachine,
-  ResolvedTransactionCommon,
-  AuthenticationErrorCommon,
   WalletTemplateScenarioOutput,
 } from '@bitauth/libauth';
 import { deflate } from 'pako';
@@ -45,7 +29,6 @@ import {
 import { Argument, encodeArgument as csEncodeArgument } from './Argument.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
-import { findLastIndex, toRegExp } from './utils.js';
 
 // all bitauth variables must be in snake case
 const snakeCase = (str: string): string => (
@@ -488,150 +471,4 @@ export const getBitauthUri = (template: WalletTemplate): string => {
     binToBase64(deflate(utf8ToBin(stringify(template)))),
   );
   return `https://ide.bitauth.com/import-template/${payload}`;
-};
-
-type VM = AuthenticationVirtualMachine<
-ResolvedTransactionCommon,
-AuthenticationProgramCommon,
-AuthenticationProgramStateBCHCHIPs
->;
-type Program = AuthenticationProgramCommon;
-type CreateProgramResult = { vm: VM, program: Program };
-
-// internal util. instantiates the virtual machine and compiles the template into a program
-const createProgram = (template: WalletTemplate): CreateProgramResult => {
-  const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachineBCHCHIPs();
-  const compiler = createCompiler(configuration);
-
-  const scenarioGeneration = compiler.generateScenario({
-    debug: true,
-    lockingScriptId: undefined,
-    unlockingScriptId: 'unlock_lock',
-    scenarioId: 'evaluate_function',
-  });
-
-  if (
-    typeof scenarioGeneration === 'string'
-    || typeof scenarioGeneration.scenario === 'string'
-  ) {
-    // eslint-disable-next-line
-    throw scenarioGeneration;
-  }
-
-  return { vm, program: scenarioGeneration.scenario.program };
-};
-
-// evaluates the fully defined template, throws upon error
-export const evaluateTemplate = (template: WalletTemplate): boolean => {
-  const { vm, program } = createProgram(template);
-
-  const verifyResult = vm.verify(program);
-  if (typeof verifyResult === 'string') {
-    // eslint-disable-next-line
-    throw verifyResult;
-  }
-
-  return verifyResult;
-};
-
-export type DebugResult = AuthenticationProgramStateBCHCHIPs[];
-
-// debugs the template, optionally logging the execution data
-export const debugTemplate = (template: WalletTemplate, artifact: Artifact): DebugResult => {
-  const { vm, program } = createProgram(template);
-
-  const debugResult = vm.debug(program);
-
-  // P2SH executions have 3 phases, we only want the last one (locking script execution)
-  // https://libauth.org/types/AuthenticationVirtualMachine.html#__type.debug
-  const lockingScriptDebugResult = debugResult.slice(findLastIndex(debugResult, (state) => state.ip === 0));
-
-  // The controlStack determines whether the current debug step is in the executed branch
-  // https://libauth.org/types/AuthenticationProgramStateControlStack.html
-  const executedDebugSteps = lockingScriptDebugResult
-    .filter((debugStep) => debugStep.controlStack.every(item => item === true));
-
-  const executedLogs = (artifact.debug?.logs ?? [])
-    .filter((debugStep) => executedDebugSteps.some((log) => log.ip === debugStep.ip));
-
-  for (const log of executedLogs) {
-    const correspondingDebugStep = executedDebugSteps.find((debugStep) => debugStep.ip === log.ip)!;
-    logConsoleLogStatement(log, correspondingDebugStep, artifact);
-  }
-
-  const lastState = debugResult[debugResult.length - 1];
-  if (lastState.error) {
-    const requireMessage = (artifact.debug?.requireMessages ?? []).filter((message) => message.ip === lastState.ip)[0];
-    if (requireMessage) {
-      // eslint-disable-next-line
-      throw `${artifact.contractName}.cash:${requireMessage.line} Error in evaluating input index ${lastState.program.inputIndex} with the following message: ${requireMessage.message}.
-${lastState.error}`;
-    } else {
-      // eslint-disable-next-line
-      throw `Error in evaluating input index ${lastState.program.inputIndex}.
-${lastState.error}`;
-    }
-  } else {
-    // one last pass of verifications not covered by the above debugging
-    // checks for removed final verify
-    const evaluationResult = vm.verify(program);
-
-    if (typeof evaluationResult === 'string' && toRegExp([
-      AuthenticationErrorCommon.requiresCleanStack,
-      AuthenticationErrorCommon.nonEmptyControlStack,
-      AuthenticationErrorCommon.unsuccessfulEvaluation,
-    ]).test(evaluationResult)) {
-      const stackContents = lastState.stack.map(item => `0x${binToHex(item)}`).join(', ');
-      const stackContentsMessage = `\nStack contents after evaluation: ${lastState.stack.length ? stackContents : 'empty'}`;
-
-      const lastMessage = artifact.debug?.requireMessages.sort((a, b) => b.ip - a.ip)[0];
-      if (!lastMessage) {
-        // TODO: Throw an ERROR instead of string
-        // eslint-disable-next-line
-        throw evaluationResult + stackContentsMessage;
-      }
-
-      const instructionsLeft = lastState.instructions.slice(lastMessage.ip);
-      if (instructionsLeft.length === 0
-          || instructionsLeft.every(instruction => [Op.OP_NIP, Op.OP_ENDIF].includes(instruction.opcode))
-      ) {
-        // eslint-disable-next-line
-        throw `${artifact.contractName}.cash:${lastMessage.line} Error in evaluating input index ${lastState.program.inputIndex} with the following message: ${lastMessage.message}.
-${evaluationResult.replace(/Error in evaluating input index \d: /, '')}` + stackContentsMessage;
-      }
-
-      // eslint-disable-next-line
-      throw evaluationResult + stackContentsMessage;
-    }
-  }
-
-  return debugResult;
-};
-
-const logConsoleLogStatement = (
-  log: LogEntry,
-  debugStep: AuthenticationProgramStateBCHCHIPs,
-  artifact: Artifact,
-): void => {
-  let line = `${artifact.contractName}.cash:${log.line}`;
-  const decodedData = log.data.map((element) => decodeLogData(element, debugStep.stack, log.ip));
-  console.log(`${line} ${decodedData.join(' ')}`);
-};
-
-const decodeLogData = (element: LogData, stack: Uint8Array[], ip: number): any => {
-  if (typeof element === 'string') return element;
-
-  // Reversed since stack is in reverse order
-  const stackItem = [...stack].reverse()[element.stackIndex];
-
-  if (!stackItem) {
-    throw Error(`Stack item at index ${(element as StackItem).stackIndex} not found at instruction pointer ${ip}`);
-  }
-
-  if (element.type === PrimitiveType.BOOL) return decodeBool(stackItem);
-  if (element.type === PrimitiveType.INT) return decodeInt(stackItem);
-  if (element.type === PrimitiveType.STRING) return decodeString(stackItem);
-
-  return `0x${binToHex(stackItem)}`;
 };

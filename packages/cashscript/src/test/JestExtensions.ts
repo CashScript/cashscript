@@ -69,7 +69,7 @@ expect.extend({
 
 Contract function did not fail a require statement`;
     } catch (error) {
-      message = error as any;
+      message = (error as any)?.message;
     }
 
     // should not have failed
