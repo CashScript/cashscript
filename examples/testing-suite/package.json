@@ -1,6 +1,6 @@
 {
   "name": "testing-suite",
-  "version": "0.10.0",
+  "version": "0.10.0-next.4",
   "description": "Example project to develop and test CashScript contracts",
   "main": "index.js",
   "type": "module",
@@ -25,8 +25,8 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
   },
   "dependencies": {
-    "cashc": "^0.10.0",
-    "cashscript": "^0.10.0"
+    "cashc": "^0.10.0-next.4",
+    "cashscript": "^0.10.0-next.4"
   },
   "devDependencies": {
     "@jest/globals": "^29.4.1",

@@ -4,7 +4,8 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "examples"
+    "examples",
+    "examples/testing-suite"
   ],
   "devDependencies": {
     "@jest/reporters": "^26.6.2",
@@ -24,8 +25,8 @@
     "typescript": "^4.9.5"
   },
   "scripts": {
-    "test": "lerna run test --ignore cashscript-examples",
-    "lint": "lerna run lint --ignore cashscript-examples",
+    "test": "lerna run test --ignore cashscript-examples --ignore testing-suite",
+    "lint": "lerna run lint --ignore cashscript-examples --ignore testing-suite",
     "preproof:opt": "cp packages/utils/src/cashproof-optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv",
     "proof:opt": "yarn cashproof opt.equiv",
     "postproof:opt": "rm opt.equiv",
@@ -34,7 +35,7 @@
     "cashproof": "python3 node_modules/cashproof/run.py",
     "examples": "tsx examples/p2pkh.ts && tsx examples/transfer_with_timeout.ts && tsx examples/hodl_vault.ts",
     "coverage": "codecov",
-    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
+    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples --ignore testing-suite",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
     "update-version": "tsx update-version.ts",
     "publish-all": "lerna publish from-package",
