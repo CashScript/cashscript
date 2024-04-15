@@ -20,7 +20,7 @@
     "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-plugin-import": "^2.29.0",
     "lerna": "^3.22.1",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.7.2",
     "typescript": "^4.9.5"
   },
   "scripts": {
@@ -32,11 +32,11 @@
     "proof:0.2.0": "yarn cashproof packages/cashc/test/cashproof/0.1.2=0.2.0.equiv",
     "proof": "yarn proof:opt && yarn proof:0.2.0",
     "cashproof": "python3 node_modules/cashproof/run.py",
-    "examples": "ts-node-esm examples/p2pkh.ts && ts-node-esm examples/transfer_with_timeout.ts && ts-node-esm examples/hodl_vault.ts",
+    "examples": "tsx examples/p2pkh.ts && tsx examples/transfer_with_timeout.ts && tsx examples/hodl_vault.ts",
     "coverage": "codecov",
     "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
-    "update-version": "ts-node-esm update-version.ts",
+    "update-version": "tsx update-version.ts",
     "publish-all": "lerna publish from-package",
     "build": "lerna run build"
   }
