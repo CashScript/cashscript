@@ -1,6 +1,5 @@
 import { MatcherContext } from '@jest/expect';
 import { SyncExpectationResult } from 'expect';
-import { printExpected, printReceived, matcherHint } from 'jest-matcher-utils';
 import { Transaction } from '../index.js';
 
 export {};
@@ -9,7 +8,7 @@ declare global {
   namespace jest {
     // eslint-disable-next-line
     interface Matchers<R> {
-      toLog(value: RegExp | string): Promise<void>;
+      toLog(value?: RegExp | string): Promise<void>;
       toFailRequireWith(value: RegExp | string): Promise<void>;
     }
   }
@@ -19,34 +18,32 @@ expect.extend({
   async toLog(
     this: MatcherContext,
     transaction: Transaction,
-    match: RegExp | string,
+    match?: RegExp | string,
   ): Promise<SyncExpectationResult> {
-    const spyOnLoggerError = jest.spyOn(console, 'log');
+    const loggerSpy = jest.spyOn(console, 'log');
 
     // silence actual stdout output
-    spyOnLoggerError.mockImplementation(() => {});
-    try {
-      await transaction.debug();
-    } catch {}
-    let error: string = '';
-
-    try {
-      expect(spyOnLoggerError).toBeCalledWith(expect.stringMatching(match));
-    } catch (e) {
-      error = e as any;
-    }
+    loggerSpy.mockImplementation(() => {});
+    try { await transaction.debug(); } catch {}
 
     // We concatenate all the logs into a single string - if no logs are present, we set received to undefined
-    const receivedBase = spyOnLoggerError.mock.calls.reduce((acc, [log]) => `${acc}\n${log}`, '').trim();
+    const receivedBase = loggerSpy.mock.calls.reduce((acc, [log]) => `${acc}\n${log}`, '').trim();
     const received = receivedBase === '' ? undefined : receivedBase;
 
-    spyOnLoggerError.mockClear();
+    const matcherHint = this.utils.matcherHint('toLog', 'received', 'expected', { isNot: this.isNot });
+    const expectedText = `Expected: ${this.isNot ? 'not ' : ''}${this.utils.printExpected(match)}`;
+    const receivedText = `Received: ${this.utils.printReceived(received)}`;
+    const message = (): string => `${matcherHint}\n\n${expectedText}\n${receivedText}`;
 
-    return {
-      message: failMessage(received, match),
-      // message: () =>'Hello',
-      pass: !error,
-    };
+    try {
+      expect(loggerSpy).toBeCalledWith(match ? expect.stringMatching(match) : expect.anything());
+    } catch (e) {
+      return { message, pass: false };
+    }
+
+    loggerSpy.mockClear();
+
+    return { message, pass: true };
   },
 });
 
@@ -56,58 +53,24 @@ expect.extend({
     transaction: Transaction,
     match: RegExp | string,
   ): Promise<SyncExpectationResult> {
-    let message: string = '';
-    let failMessage: any = () => {};
-
     try {
       await transaction.debug();
-      failMessage = () => () => `${matcherHint(
-        '.toFailRequireWith',
-        undefined,
-        '',
-      )}
 
-Contract function did not fail a require statement`;
-    } catch (error) {
-      message = (error as any)?.message;
-    }
+      const matcherHint = this.utils.matcherHint('.toFailRequireWith', undefined, match.toString(), { isNot: this.isNot });
+      const message = (): string => `${matcherHint}\n\nContract function did not fail a require statement`;
+      return { message, pass: false };
+    } catch (transactionError: any) {
+      const matcherHint = this.utils.matcherHint('toFailRequireWith', 'received', 'expected', { isNot: this.isNot });
+      const expectedText = `Expected pattern: ${this.isNot ? 'not ' : ''}${this.utils.printExpected(match)}`;
+      const receivedText = `Received string: ${this.utils.printReceived(transactionError?.message ?? '')}`;
+      const message = (): string => `${matcherHint}\n\n${expectedText}\n${receivedText}`;
 
-    // should not have failed
-    if (this.isNot) {
-      return {
-        message: () => `${matcherHint(
-          '.toFailRequireWith',
-          'received',
-          '',
-          { isNot: true },
-        )}`,
-        pass: false,
-      };
-    }
-
-    if (message) {
       try {
-        expect(message).toMatch(match);
-        message = '';
-      } catch (error: any) {
-        message = error.message;
-        failMessage = () => () => message.replace('.toMatch', '.toFailRequireWith');
+        expect(transactionError?.message ?? '').toMatch(match);
+        return { message, pass: true };
+      } catch {
+        return { message, pass: false };
       }
     }
-
-    return {
-      message: failMessage(message, match),
-      pass: !message,
-    };
   },
 });
-
-// TODO: Update to have the same failMessage function for .toLog and .toFailRequireWith
-const failMessage = (received?: string, expected?: RegExp | string) => () => `${matcherHint(
-  '.toLog',
-  'received',
-  'expected',
-)}
-
-Expected: ${printExpected(expected)}
-Received: ${printReceived(received)}`;

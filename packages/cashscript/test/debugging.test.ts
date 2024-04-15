@@ -355,35 +355,45 @@ describe('Debugging tests', () => {
     const artifact = compileString(CONTRACT_CODE);
     const provider = new MockNetworkProvider();
 
+    // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use JestExtensions
+
     it('should fail the JestExtensions test if an incorrect log is expected', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions
-        .test_logs()
-        .to(contract.address, 10000n);
-
-      const incorrectExpectedLog = new RegExp('^This is definitely not the log$');
+      const transaction = contract.functions.test_logs().to(contract.address, 10000n);
 
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
-        expect(transaction).toLog(incorrectExpectedLog),
+        expect(transaction).toLog('^This is definitely not the log$'),
       ).rejects.toThrow(/Expected: .*This is definitely not the log.*\nReceived: .*Test.cash:4 Hello World/);
+    });
+
+    it('should fail the JestExtensions test if a log is logged that is NOT expected', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.test_logs().to(contract.address, 10000n);
+
+      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
+      await expect(
+        expect(transaction).not.toLog('^Test.cash:4 Hello World$'),
+      ).rejects.toThrow(/Expected: not .*Test.cash:4 Hello World.*\nReceived: .*Test.cash:4 Hello World/);
+
+      await expect(
+        expect(transaction).not.toLog(),
+      ).rejects.toThrow(/Expected: not .*undefined.*\nReceived: .*Test.cash:4 Hello World/);
     });
 
     it('should fail the JestExtensions test if a log is expected where no log is logged', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions
-        .test_no_logs()
-        .to(contract.address, 10000n);
-
-      const incorrectExpectedLog = new RegExp('Hello World');
+      const transaction = contract.functions.test_no_logs().to(contract.address, 10000n);
 
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
-        expect(transaction).toLog(incorrectExpectedLog),
+        expect(transaction).toLog('Hello World'),
       ).rejects.toThrow(/Expected: .*Hello World.*\nReceived: .*undefined/);
     });
 
@@ -391,16 +401,11 @@ describe('Debugging tests', () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions
-        .test_require()
-        .to(contract.address, 10000n);
-
-      const incorrectExpectedRequire = new RegExp('1 should equal 3');
+      const transaction = contract.functions.test_require().to(contract.address, 10000n);
 
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      // TODO: Figure out why this error message says "Received string:" instead of "Received:"
       await expect(
-        expect(transaction).toFailRequireWith(incorrectExpectedRequire),
+        expect(transaction).toFailRequireWith('1 should equal 3'),
       ).rejects.toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: .*1 should equal 2.*/);
     });
 
@@ -409,16 +414,28 @@ describe('Debugging tests', () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
-      const transaction = contract.functions
-        .test_require_no_failure()
-        .to(contract.address, 10000n);
-
-      const incorrectExpectedRequire = new RegExp('1 should equal 3');
+      const transaction = contract.functions.test_require_no_failure().to(contract.address, 10000n);
 
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
-        await expect(transaction).toFailRequireWith(incorrectExpectedRequire),
-      ).rejects.toThrow(/Expected: .*1 should equal 3.*\nReceived: undefined/);
+        expect(transaction).toFailRequireWith('1 should equal 3'),
+      ).rejects.toThrow(/Contract function did not fail a require statement/);
+    });
+
+    it('should fail the JestExtensions test if an error is thrown where it is NOT expected', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.test_require().to(contract.address, 10000n);
+
+      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
+      await expect(
+        expect(transaction).not.toFailRequireWith('1 should equal 2'),
+      ).rejects.toThrow(/Expected pattern: not .*1 should equal 2.*\nReceived string: .*1 should equal 2.*/);
+
+      await expect(
+        expect(transaction).not.toFailRequireWith(/.*/),
+      ).rejects.toThrow(/Expected pattern: not .*\nReceived string: .*1 should equal 2.*/);
     });
   });
 });
