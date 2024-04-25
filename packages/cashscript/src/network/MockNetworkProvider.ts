@@ -2,7 +2,7 @@ import { binToHex, hexToBin } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
-import { randomUtxo } from '../utils.js';
+import { addressToLockScript, randomUtxo } from '../utils.js';
 
 // redeclare the addresses from vars.ts instead of importing them
 const aliceAddress = 'bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp';
@@ -23,7 +23,8 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
-    return this.utxoMap[address] ?? [];
+    const lockingBytecode = binToHex(addressToLockScript(address));
+    return this.utxoMap[lockingBytecode] ?? [];
   }
 
   async getBlockHeight(): Promise<number> {
@@ -43,11 +44,12 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   addUtxo(address: string, utxo: Utxo): void {
-    if (!this.utxoMap[address]) {
-      this.utxoMap[address] = [];
+    const lockingBytecode = binToHex(addressToLockScript(address));
+    if (!this.utxoMap[lockingBytecode]) {
+      this.utxoMap[lockingBytecode] = [];
     }
 
-    this.utxoMap[address].push(utxo);
+    this.utxoMap[lockingBytecode].push(utxo);
   }
 
   reset(): void {
