@@ -60,7 +60,7 @@ export function encodeArgument(
     type = new BytesType(65);
   }
 
-  // Redefine SIG as a bytes64 so it is included in the size checks below
+  // Redefine DATASIG as a bytes64 so it is included in the size checks below
   // Note that ONLY Schnorr signatures are accepted
   if (type === PrimitiveType.DATASIG && argument.byteLength !== 0) {
     type = new BytesType(64);

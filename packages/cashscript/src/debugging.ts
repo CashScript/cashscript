@@ -43,8 +43,11 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
 
   // If an error is present in the last step, that means a require statement in the middle of the function failed
   if (lastExecutedDebugStep.error) {
+    const isNullFail = lastExecutedDebugStep.error === AuthenticationErrorCommon.nonNullSignatureFailure;
+    const messageIp = lastExecutedDebugStep.ip + (isNullFail ? 1 : 0);
+
     const requireStatement = (artifact.debug?.requireMessages ?? [])
-      .find((message) => message.ip === lastExecutedDebugStep.ip);
+      .find((message) => message.ip === messageIp);
 
     if (requireStatement) {
       throw new Error(`${artifact.contractName}.cash:${requireStatement.line} Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex} with the following message: ${requireStatement.message}.\n${lastExecutedDebugStep.error}`);

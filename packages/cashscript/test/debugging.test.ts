@@ -1,11 +1,12 @@
 import { compileString } from 'cashc';
-import { Contract, MockNetworkProvider, SignatureTemplate } from '../src/index.js';
+import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate } from '../src/index.js';
 import {
   alicePriv, alicePub, bobPriv,
+  bobPub,
 } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
-import { binToHex } from '@bitauth/libauth';
+import { binToHex, hexToBin } from '@bitauth/libauth';
 
 const CONTRACT_CODE = `
 contract Test() {
@@ -73,6 +74,18 @@ contract Test() {
       a = 10;
       require(a + b + c + d + e == 10, "sum should equal 10");
     }
+  }
+
+  function test_fail_checksig(sig s, pubkey pk) {
+    require(checkSig(s, pk), "Signatures do not match");
+  }
+
+  function test_fail_checkdatasig(datasig s, bytes message, pubkey pk) {
+    require(checkDataSig(s, message, pk), "Data Signatures do not match");
+  }
+
+  function test_fail_checkmultisig(sig s1, pubkey pk1, sig s2, pubkey pk2) {
+    require(checkMultiSig([s1, s2], [pk1, pk2]), "Multi Signatures do not match");
   }
 }
 `;
@@ -348,6 +361,54 @@ describe('Debugging tests', () => {
       const transaction = contract.functions
         .test_final_require_in_if_statement_with_deep_reassignment().to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/sum should equal 10/);
+    });
+
+    // test_fail_checksig
+    it('should fail with correct error message when checkSig fails', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const checkSigTransaction = contract.functions
+        .test_fail_checksig(new SignatureTemplate(alicePriv), bobPub).to(contract.address, 1000n);
+      await expect(checkSigTransaction).toFailRequireWith(/Signatures do not match/);
+
+      // TODO: Add test for checksig with a NULL Signature (after we refactor Libauth Template generation)
+      // const checkSigTransactionNullSignature = contract.functions
+      //   .test_fail_checksig('', bobPub).to(contract.address, 1000n);
+      // await expect(checkSigTransactionNullSignature).toFailRequireWith(/Signatures do not match/);
+    });
+
+    // test_fail_checkdatasig
+    it('should fail with correct error message when checkDataSig fails', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const checkDataSigTransaction = contract.functions
+        .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xbeef')).slice(0, -1), '0xbeef', bobPub)
+        .to(contract.address, 1000n);
+      await expect(checkDataSigTransaction).toFailRequireWith(/Data Signatures do not match/);
+
+      const checkDataSigTransactionWrongMessage = contract.functions
+        .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xc0ffee')).slice(0, -1), '0xbeef', alicePub)
+        .to(contract.address, 1000n);
+      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith(/Data Signatures do not match/);
+    });
+
+    // test_fail_checkmultisig
+    // TODO: Add test for checkmultisig (requires ECDSA signatures) after refactoring Libauth Template generation
+    it.skip('should fail with correct error message when checkMultiSig fails', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const checkmultiSigTransaction = contract.functions
+        .test_fail_checkmultisig(
+          new SignatureTemplate(alicePriv, undefined, SignatureAlgorithm.ECDSA),
+          bobPub,
+          new SignatureTemplate(bobPriv, undefined, SignatureAlgorithm.ECDSA),
+          alicePub,
+        )
+        .to(contract.address, 1000n);
+      await expect(checkmultiSigTransaction).toFailRequireWith(/Multi Signatures do not match/);
     });
   });
 

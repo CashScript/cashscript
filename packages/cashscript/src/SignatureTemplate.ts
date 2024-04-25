@@ -26,6 +26,7 @@ export default class SignatureTemplate {
     }
   }
 
+  // TODO: Allow signing of non-transaction messages (i.e. don't add the hashtype)
   generateSignature(payload: Uint8Array, bchForkId?: boolean): Uint8Array {
     const signature = this.signatureAlgorithm === SignatureAlgorithm.SCHNORR
       ? secp256k1.signMessageHashSchnorr(this.privateKey, payload) as Uint8Array
