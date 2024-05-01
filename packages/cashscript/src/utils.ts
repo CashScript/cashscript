@@ -401,3 +401,7 @@ export const extendedStringify = (obj: any, spaces?: number): string => JSON.str
   },
   spaces,
 );
+
+export const mergeObjects = (array: Array<Record<string, any>>): Record<string, any> => {
+  return Object.fromEntries(array.flatMap(Object.entries));
+};

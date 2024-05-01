@@ -432,11 +432,6 @@ export const fixtures: Fixture[] = [
               'name': 'pk',
               'type': 'WalletData',
             },
-            'function_index': {
-              'description': 'Script function index to execute',
-              'name': 'function_index',
-              'type': 'WalletData',
-            },
             'pkh': {
               'description': '"pkh" parameter of this contract',
               'name': 'pkh',
@@ -578,11 +573,6 @@ export const fixtures: Fixture[] = [
             'pk': {
               'description': '"pk" parameter of function "spend"',
               'name': 'pk',
-              'type': 'WalletData',
-            },
-            'function_index': {
-              'description': 'Script function index to execute',
-              'name': 'function_index',
               'type': 'WalletData',
             },
             'pkh': {
@@ -738,11 +728,6 @@ export const fixtures: Fixture[] = [
               'description': '"ownerSig" parameter of function "spend"',
               'name': 'ownerSig',
               'type': 'Key',
-            },
-            'function_index': {
-              'description': 'Script function index to execute',
-              'name': 'function_index',
-              'type': 'WalletData',
             },
             'price_target': {
               'description': '"priceTarget" parameter of this contract',
@@ -910,11 +895,6 @@ export const fixtures: Fixture[] = [
             'pk': {
               'description': '"pk" parameter of function "spend"',
               'name': 'pk',
-              'type': 'WalletData',
-            },
-            'function_index': {
-              'description': 'Script function index to execute',
-              'name': 'function_index',
               'type': 'WalletData',
             },
             'pkh': {

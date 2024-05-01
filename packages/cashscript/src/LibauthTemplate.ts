@@ -19,6 +19,7 @@ import {
   utf8ToBin,
   isHex,
   WalletTemplateScenarioOutput,
+  WalletTemplateVariable,
 } from '@bitauth/libauth';
 import { deflate } from 'pako';
 import {
@@ -30,16 +31,7 @@ import {
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
 import { Argument, encodeArgumentForLibauthTemplate } from './Argument.js';
-import { extendedStringify, snakeCase } from './utils.js';
-
-// wtf is this
-const merge = (array: any): any => array.reduce(
-  (prev: any, cur: any) => ({
-    ...prev,
-    ...{ [Object.keys(cur)[0]]: cur[Object.keys(cur)[0]] },
-  }),
-  {},
-);
+import { extendedStringify, mergeObjects, snakeCase } from './utils.js';
 
 const zip = <T, U>(a: T[], b: U[]): [T, U][] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
@@ -234,42 +226,8 @@ export const buildTemplate = async ({
     name: contract.artifact.contractName,
     supported: ['BCH_SPEC'],
     version: 0,
+    entities: generateTemplateEntities(contract.artifact, abiFunction),
   } as WalletTemplate;
-
-  // declaration of template variables and their types
-  template.entities = {
-    parameters: {
-      description: 'Contract creation and function parameters',
-      name: 'parameters',
-      scripts: [
-        'lock',
-        'unlock_lock',
-      ],
-      variables: merge([
-        ...functionInputs.map((input) => ({
-          [snakeCase(input.name)]: {
-            description: `"${input.name}" parameter of function "${func.name}"`,
-            name: input.name,
-            type: input.type === PrimitiveType.SIG ? 'Key' : 'WalletData',
-          },
-        })),
-        {
-          function_index: {
-            description: 'Script function index to execute',
-            name: 'function_index',
-            type: 'WalletData',
-          },
-        },
-        ...constructorInputs.map((input) => ({
-          [snakeCase(input.name)]: {
-            description: `"${input.name}" parameter of this contract`,
-            name: input.name,
-            type: 'WalletData',
-          },
-        })),
-      ]),
-    },
-  };
 
   // add extra variables for the p2pkh utxos spent together with our contract
   if (hasSignatureTemplates) {
@@ -291,7 +249,7 @@ export const buildTemplate = async ({
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
-        bytecode: merge([
+        bytecode: mergeObjects([
           ...zip(functionInputs, args)
             .filter(([input]) => input.type !== PrimitiveType.SIG)
             .map(([input, arg]) => {
@@ -318,7 +276,7 @@ export const buildTemplate = async ({
         currentBlockHeight: 2,
         currentBlockTime: Math.round(+new Date() / 1000),
         keys: {
-          privateKeys: merge([
+          privateKeys: mergeObjects([
             ...zip(functionInputs, args)
               .filter(([input]) => input.type === PrimitiveType.SIG)
               .map(([input, arg]) => ({
@@ -454,4 +412,54 @@ const formatBytecodeForDebugging = (artifact: Artifact): string => {
     artifact.debug.sourceMap,
     artifact.source,
   );
+};
+
+const generateTemplateEntities = (artifact: Artifact, abiFunction: AbiFunction): WalletTemplate['entities'] => {
+  const functionParameters = Object.fromEntries<WalletTemplateVariable>(
+    abiFunction.inputs.map((input) => ([
+      snakeCase(input.name),
+      {
+        description: `"${input.name}" parameter of function "${abiFunction.name}"`,
+        name: input.name,
+        type: input.type === PrimitiveType.SIG ? 'Key' : 'WalletData',
+      },
+    ])),
+  );
+
+  const constructorParameters = Object.fromEntries<WalletTemplateVariable>(
+    artifact.constructorInputs.map((input) => ([
+      snakeCase(input.name),
+      {
+        description: `"${input.name}" parameter of this contract`,
+        name: input.name,
+        type: 'WalletData',
+      },
+    ])),
+  );
+
+  const entities = {
+    parameters: {
+      description: 'Contract creation and function parameters',
+      name: 'parameters',
+      scripts: [
+        'lock',
+        'unlock_lock',
+      ],
+      variables: {
+        ...functionParameters,
+        ...constructorParameters,
+      },
+    },
+  };
+
+  // function_index is a special variable that indicates the function to execute
+  if (artifact.abi.length > 1) {
+    entities.parameters.variables.function_index = {
+      description: 'Script function index to execute',
+      name: 'function_index',
+      type: 'WalletData',
+    };
+  }
+
+  return entities;
 };
