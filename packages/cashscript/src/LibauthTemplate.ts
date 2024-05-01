@@ -1,5 +1,6 @@
 import {
   AbiFunction,
+  AbiInput,
   Artifact,
   PrimitiveType,
   bytecodeToScript,
@@ -20,6 +21,8 @@ import {
   isHex,
   WalletTemplateScenarioOutput,
   WalletTemplateVariable,
+  WalletTemplateScriptLocking,
+  WalletTemplateScriptUnlocking,
 } from '@bitauth/libauth';
 import { deflate } from 'pako';
 import {
@@ -31,10 +34,7 @@ import {
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
 import { Argument, encodeArgumentForLibauthTemplate } from './Argument.js';
-import { extendedStringify, mergeObjects, snakeCase } from './utils.js';
-
-const zip = <T, U>(a: T[], b: U[]): [T, U][] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
-
+import { extendedStringify, mergeObjects, snakeCase, zip } from './utils.js';
 
 const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransaction: Transaction): WalletTemplateScenario['transaction'] => {
   const contract = csTransaction.contract;
@@ -216,9 +216,7 @@ export const buildTemplate = async ({
   const functionInputs = func.inputs.slice().reverse();
   const args = transaction.args.slice().reverse();
 
-  const hasSignatureTemplates = transaction.inputs.filter(
-    (input) => isUtxoP2PKH(input),
-  ).length;
+  const hasSignatureTemplates = transaction.inputs.filter((input) => isUtxoP2PKH(input)).length > 0;
 
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
@@ -227,6 +225,7 @@ export const buildTemplate = async ({
     supported: ['BCH_SPEC'],
     version: 0,
     entities: generateTemplateEntities(contract.artifact, abiFunction),
+    scripts: generateTemplateScripts(contract.artifact, abiFunction, transaction.args, contract.constructorArgs),
   } as WalletTemplate;
 
   // add extra variables for the p2pkh utxos spent together with our contract
@@ -239,6 +238,21 @@ export const buildTemplate = async ({
         name: 'placeholder_key',
         type: 'Key',
       },
+    };
+
+    // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
+    // this is needed for correct cross-referrences in the template
+    template.scripts.p2pkh_placeholder_unlock = {
+      name: 'p2pkh_placeholder_unlock',
+      script:
+          '<placeholder_key.schnorr_signature.all_outputs>\n<placeholder_key.public_key>',
+      unlocks: 'p2pkh_placeholder_lock',
+    };
+    template.scripts.p2pkh_placeholder_lock = {
+      lockingType: 'standard',
+      name: 'p2pkh_placeholder_lock',
+      script:
+          'OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
     };
   }
 
@@ -301,61 +315,6 @@ export const buildTemplate = async ({
     },
   };
 
-  // definition of locking scripts and unlocking scripts with their respective bytecode
-  template.scripts = {
-    unlock_lock: {
-      // this unlocking script must pass our only scenario
-      passes: ['evaluate_function'],
-      name: 'unlock',
-      // unlocking script contains the CashScript function parameters and function selector
-      // we output these values as pushdata, comment will contain the type and the value of the variable
-      // example: '<timeout> // int = <0xa08601>'
-      script: [
-        `// "${func.name}" function parameters`,
-        ...(functionInputs.length
-          ? zip(functionInputs, args).map(([input, arg]) => (input.type === PrimitiveType.SIG
-            ? `<${snakeCase(
-              input.name,
-            )}.schnorr_signature.all_outputs> // ${input.type}`
-            : `<${snakeCase(input.name)}> // ${input.type} = <${
-              `0x${binToHex(arg as any)}` // TODO: remove any cast
-            }>`))
-          : ['// none']),
-        '',
-        ...(contract.artifact.abi.length > 1
-          ? [
-            '// function index in contract',
-            `<function_index> // int = <${functionIndex.toString()}>`,
-            '',
-          ]
-          : []),
-      ].join('\n'),
-      unlocks: 'lock',
-    },
-    lock: {
-      lockingType: 'p2sh20', //transaction.contract.addressType,
-      name: 'lock',
-      script: formatBitAuthScriptForDebugging(contract.artifact, contract.constructorArgs),
-    },
-  };
-
-  // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
-  // this is needed for correct cross-referrences in the template
-  if (hasSignatureTemplates) {
-    template.scripts.p2pkh_placeholder_unlock = {
-      name: 'p2pkh_placeholder_unlock',
-      script:
-          '<placeholder_key.schnorr_signature.all_outputs>\n<placeholder_key.public_key>',
-      unlocks: 'p2pkh_placeholder_lock',
-    };
-    template.scripts.p2pkh_placeholder_lock = {
-      lockingType: 'standard',
-      name: 'p2pkh_placeholder_lock',
-      script:
-          'OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
-    };
-  }
-
   return template;
 };
 
@@ -365,54 +324,6 @@ export const getBitauthUri = (template: WalletTemplate): string => {
   return `https://ide.bitauth.com/import-template/${payload}`;
 };
 
-const formatBitAuthScriptForDebugging = (artifact: Artifact, constructorArguments: Argument[]): string => {
-  // locking script contains the CashScript contract parameters followed by the contract opcodes
-  // we output these values as pushdata, comment will contain the type and the value of the variable
-  return [
-    `// "${artifact.contractName}" contract constructor parameters`,
-    formatConstructorParametersForDebugging(artifact, constructorArguments),
-    '',
-    '// bytecode',
-    formatBytecodeForDebugging(artifact),
-  ].join('\n');
-};
-
-const formatConstructorParametersForDebugging = (artifact: Artifact, constructorArguments: Argument[]): string => {
-  const constructorTypesReversed = [...artifact.constructorInputs].reverse();
-  const constructorArgumentsReversed = [...constructorArguments].reverse();
-
-  if (constructorArgumentsReversed.length === 0) {
-    return '// none';
-  }
-
-  return constructorTypesReversed.map((input, index) => {
-    const encodedArgument = encodeArgumentForLibauthTemplate(
-      constructorArgumentsReversed[index],
-      constructorTypesReversed[index].type,
-    ) as Uint8Array;
-
-    const typeStr = input.type === 'bytes' ? `bytes${encodedArgument.length}` : input.type;
-
-    // e.g. <timeout> // int = <0xa08601>
-    return `<${snakeCase(input.name)}> // ${typeStr} = <${`0x${binToHex(encodedArgument)}`}>`;
-  }).join('\n');
-};
-
-const formatBytecodeForDebugging = (artifact: Artifact): string => {
-  if (!artifact.debug) {
-    // TODO: See if we can merge this with code from @cashscript/utils -> script.ts
-    return artifact.bytecode
-      .split(' ')
-      .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
-      .join('\n');
-  }
-
-  return formatBitAuthScript(
-    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
-    artifact.debug.sourceMap,
-    artifact.source,
-  );
-};
 
 const generateTemplateEntities = (artifact: Artifact, abiFunction: AbiFunction): WalletTemplate['entities'] => {
   const functionParameters = Object.fromEntries<WalletTemplateVariable>(
@@ -462,4 +373,97 @@ const generateTemplateEntities = (artifact: Artifact, abiFunction: AbiFunction):
   }
 
   return entities;
+};
+
+const generateTemplateScripts = (
+  artifact: Artifact,
+  abiFunction: AbiFunction,
+  functionArguments: Argument[],
+  constructorArguments: Argument[],
+): WalletTemplate['scripts'] => {
+  // definition of locking scripts and unlocking scripts with their respective bytecode
+  return {
+    unlock_lock: generateTemplateUnlockScript(artifact, abiFunction, functionArguments),
+    lock: generateTemplateLockScript(artifact, constructorArguments),
+  };
+};
+
+const generateTemplateLockScript = (
+  artifact: Artifact,
+  constructorArguments: Argument[],
+): WalletTemplateScriptLocking => {
+  return {
+    lockingType: 'p2sh20', // TODO: use 'transaction.contract.addressType',
+    name: 'lock',
+    script: [
+      `// "${artifact.contractName}" contract constructor parameters`,
+      formatParametersForDebugging(artifact.constructorInputs, constructorArguments),
+      '',
+      '// bytecode',
+      formatBytecodeForDebugging(artifact),
+    ].join('\n'),
+  };
+};
+
+const generateTemplateUnlockScript = (
+  artifact: Artifact,
+  abiFunction: AbiFunction,
+  functionArguments: Argument[],
+): WalletTemplateScriptUnlocking => {
+  const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
+
+  const functionIndexString = artifact.abi.length > 1
+    ? ['// function index in contract', `<function_index> // int = <${functionIndex}>`, '']
+    : [];
+
+  return {
+    // this unlocking script must pass our only scenario
+    passes: ['evaluate_function'],
+    name: 'unlock',
+    script: [
+      `// "${abiFunction.name}" function parameters`,
+      formatParametersForDebugging(abiFunction.inputs, functionArguments),
+      '',
+      ...functionIndexString,
+    ].join('\n'),
+    unlocks: 'lock',
+  };
+};
+
+const formatParametersForDebugging = (types: AbiInput[], args: Argument[]): string => {
+  if (types.length === 0) return '// none';
+
+  const typesAndArguments = zip(types, args).reverse();
+
+  return typesAndArguments.map(([input, arg]) => {
+    const encodedArgument = encodeArgumentForLibauthTemplate(arg, input.type);
+    const typeStr = input.type === 'bytes' && encodedArgument instanceof Uint8Array
+      ? `bytes${encodedArgument.length}`
+      : input.type;
+
+    if (encodedArgument instanceof SignatureTemplate) {
+      // TODO: Different signing algorithms / hashtypes
+      return `<${snakeCase(input.name)}.schnorr_signature.all_outputs> // ${input.type}`;
+    }
+
+    // we output these values as pushdata, comment will contain the type and the value of the variable
+    // e.g. <timeout> // int = <0xa08601>
+    return `<${snakeCase(input.name)}> // ${typeStr} = <${`0x${binToHex(encodedArgument)}`}>`;
+  }).join('\n');
+};
+
+const formatBytecodeForDebugging = (artifact: Artifact): string => {
+  if (!artifact.debug) {
+    // TODO: See if we can merge this with code from @cashscript/utils -> script.ts
+    return artifact.bytecode
+      .split(' ')
+      .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
+      .join('\n');
+  }
+
+  return formatBitAuthScript(
+    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
+    artifact.debug.sourceMap,
+    artifact.source,
+  );
 };
