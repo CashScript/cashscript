@@ -11,7 +11,7 @@ import {
   scriptToBytecode,
 } from '@cashscript/utils';
 import { Transaction } from './Transaction.js';
-import { Argument, encodeArgument } from './Argument.js';
+import { Argument, encodeArgument, encodeConstructorArguments } from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
 } from './interfaces.js';
@@ -55,14 +55,7 @@ export class Contract {
     }
 
     // Encode arguments (this also performs type checking)
-    const encodedArgs = constructorArgs
-      .map((arg, i) => encodeArgument(arg, artifact.constructorInputs[i].type))
-      .reverse();
-
-    // Check there's no signature templates in the constructor
-    if (encodedArgs.some((arg) => arg instanceof SignatureTemplate)) {
-      throw new Error('Cannot use signatures in constructor');
-    }
+    const encodedArgs = encodeConstructorArguments(artifact, constructorArgs);
 
     this.redeemScript = generateRedeemScript(
       asmToScript(this.artifact.bytecode),

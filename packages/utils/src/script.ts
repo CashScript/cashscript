@@ -100,7 +100,7 @@ export function bytecodeToBitAuthAsm(bytecode: Uint8Array): string {
   // Convert the bytecode to libauth's ASM format
   let asm = disassembleBytecodeBCH(bytecode);
 
-  // COnvert libauth's ASM format to BITBOX's
+  // COnvert libauth's ASM format to BitAuth Script ASM
   asm = asm.replace(/OP_PUSHBYTES_[^\s]+/g, '');
   asm = asm.replace(/OP_PUSHDATA[^\s]+ [^\s]+/g, '');
   asm = asm.replace(/(^|\s)(0x\w*)/g, ' \<$2\>');

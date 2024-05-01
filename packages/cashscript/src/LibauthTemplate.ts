@@ -1,5 +1,6 @@
 import {
   AbiFunction,
+  Artifact,
   PrimitiveType,
   bytecodeToScript,
   formatBitAuthScript,
@@ -26,20 +27,12 @@ import {
   Utxo,
   isUtxoP2PKH,
 } from './interfaces.js';
-import { Argument, encodeArgument as csEncodeArgument } from './Argument.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
+import { Argument, encodeArgumentForLibauthTemplate } from './Argument.js';
+import { extendedStringify, snakeCase } from './utils.js';
 
-// all bitauth variables must be in snake case
-const snakeCase = (str: string): string => (
-  str
-    && str
-      .match(
-        /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
-      )!
-      .map((s) => s.toLowerCase())
-      .join('_')
-);
+// wtf is this
 const merge = (array: any): any => array.reduce(
   (prev: any, cur: any) => ({
     ...prev,
@@ -48,32 +41,8 @@ const merge = (array: any): any => array.reduce(
   {},
 );
 
-const encodeArgument = (
-  argument: Argument,
-  typeStr: string,
-): Uint8Array | SignatureTemplate => {
-  if (typeStr === PrimitiveType.INT && argument === 0n) {
-    return Uint8Array.from([0]);
-  }
-  return csEncodeArgument(argument, typeStr);
-};
+const zip = <T, U>(a: T[], b: U[]): [T, U][] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
-// stringify version which can serialize otherwise unsupported types
-export const stringify = (any: any, spaces?: number): string => JSON.stringify(
-  any,
-  (_, v) => {
-    if (typeof v === 'bigint') {
-      return `${v.toString()}`;
-    }
-    if (v instanceof Uint8Array) {
-      return `${binToHex(v)}`;
-    }
-    return v;
-  },
-  spaces,
-);
-
-const zip = (a: any[], b: any[]): any[] => Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]]);
 
 const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransaction: Transaction): WalletTemplateScenario['transaction'] => {
   const contract = csTransaction.contract;
@@ -227,24 +196,23 @@ const createScenarioSourceOutputs = (csTransaction: Transaction): Array<WalletTe
   );
 };
 
+interface BuildTemplateOptions {
+  transaction: Transaction;
+  transactionHex?: string;
+}
+
+// TODO: Can we change this so we don't need to pass in both the transaction and the transactionHex?
 export const buildTemplate = async ({
   transaction,
   transactionHex = undefined, // set this argument to prevent unnecessary call `transaction.build()`
-}: {
-  transaction: Transaction;
-  transactionHex?: string;
-}): Promise<WalletTemplate> => {
+}: BuildTemplateOptions): Promise<WalletTemplate> => {
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
   const libauthTransaction = decodeTransaction(hexToBin(txHex));
-  if (typeof libauthTransaction === 'string') {
-    throw Error(libauthTransaction);
-  }
+  if (typeof libauthTransaction === 'string') throw Error(libauthTransaction);
 
-  const constructorInputs = contract.artifact.constructorInputs
-    .slice()
-    .reverse();
+  const constructorInputs = contract.artifact.constructorInputs.slice().reverse();
   const contractParameters = contract.constructorArgs.slice().reverse();
 
   const abiFunction = transaction.abiFunction;
@@ -259,19 +227,6 @@ export const buildTemplate = async ({
   const hasSignatureTemplates = transaction.inputs.filter(
     (input) => isUtxoP2PKH(input),
   ).length;
-
-  const formattedBytecode = contract.artifact.debug
-    ? formatBitAuthScript(
-      bytecodeToScript(hexToBin(contract.artifact.debug.bytecode)),
-      contract.artifact.debug.sourceMap,
-      contract.artifact.source,
-    ).split('\n')
-    : contract.artifact.bytecode.split(' ').map((asmElement) => {
-      if (isHex(asmElement)) {
-        return `<0x${asmElement}>`;
-      }
-      return asmElement;
-    });
 
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
@@ -349,7 +304,7 @@ export const buildTemplate = async ({
           { function_index: functionIndex.toString() },
           ...constructorInputs.map((input, index) => {
             const hex = binToHex(
-              encodeArgument(
+              encodeArgumentForLibauthTemplate(
                 contractParameters[index],
                 constructorInputs[index].type,
               ) as Uint8Array,
@@ -367,9 +322,9 @@ export const buildTemplate = async ({
             ...zip(functionInputs, args)
               .filter(([input]) => input.type === PrimitiveType.SIG)
               .map(([input, arg]) => ({
-                [snakeCase(input.name)]: binToHex(
-                  (arg as SignatureTemplate).privateKey,
-                ),
+                [snakeCase(input.name)]: arg instanceof SignatureTemplate
+                  ? binToHex(arg.privateKey)
+                  : binToHex((arg)), // TODO: Double check if this makes sense
               })),
             ...(hasSignatureTemplates
               ? [
@@ -405,7 +360,7 @@ export const buildTemplate = async ({
               input.name,
             )}.schnorr_signature.all_outputs> // ${input.type}`
             : `<${snakeCase(input.name)}> // ${input.type} = <${
-              `0x${binToHex(arg)}`
+              `0x${binToHex(arg as any)}` // TODO: remove any cast
             }>`))
           : ['// none']),
         '',
@@ -422,26 +377,7 @@ export const buildTemplate = async ({
     lock: {
       lockingType: 'p2sh20', //transaction.contract.addressType,
       name: 'lock',
-      // locking script contains the CashScript contract parameters followed by the contract opcodes
-      // we output these values as pushdata, comment will contain the type and the value of the variable
-      // example: '<timeout> // int = <0xa08601>'
-      script: [
-        `// "${contract.artifact.contractName}" contract constructor parameters`,
-        ...(constructorInputs.length
-          ? constructorInputs.map((input, index) => {
-            const encoded = encodeArgument(
-              contractParameters[index],
-              constructorInputs[index].type,
-            ) as Uint8Array;
-            return `<${snakeCase(input.name)}> // ${
-              input.type === 'bytes' ? `bytes${encoded.length}` : input.type
-            } = <${`0x${binToHex(encoded)}`}>`;
-          })
-          : ['// none']),
-        '',
-        '// bytecode',
-        ...formattedBytecode,
-      ].join('\n'),
+      script: formatBitAuthScriptForDebugging(contract.artifact, contract.constructorArgs),
     },
   };
 
@@ -467,8 +403,55 @@ export const buildTemplate = async ({
 
 export const getBitauthUri = (template: WalletTemplate): string => {
   const base64toBase64Url = (base64: string): string => base64.replace(/\+/g, '-').replace(/\//g, '_');
-  const payload = base64toBase64Url(
-    binToBase64(deflate(utf8ToBin(stringify(template)))),
-  );
+  const payload = base64toBase64Url(binToBase64(deflate(utf8ToBin(extendedStringify(template)))));
   return `https://ide.bitauth.com/import-template/${payload}`;
+};
+
+const formatBitAuthScriptForDebugging = (artifact: Artifact, constructorArguments: Argument[]): string => {
+  // locking script contains the CashScript contract parameters followed by the contract opcodes
+  // we output these values as pushdata, comment will contain the type and the value of the variable
+  return [
+    `// "${artifact.contractName}" contract constructor parameters`,
+    formatConstructorParametersForDebugging(artifact, constructorArguments),
+    '',
+    '// bytecode',
+    formatBytecodeForDebugging(artifact),
+  ].join('\n');
+};
+
+const formatConstructorParametersForDebugging = (artifact: Artifact, constructorArguments: Argument[]): string => {
+  const constructorTypesReversed = [...artifact.constructorInputs].reverse();
+  const constructorArgumentsReversed = [...constructorArguments].reverse();
+
+  if (constructorArgumentsReversed.length === 0) {
+    return '// none';
+  }
+
+  return constructorTypesReversed.map((input, index) => {
+    const encodedArgument = encodeArgumentForLibauthTemplate(
+      constructorArgumentsReversed[index],
+      constructorTypesReversed[index].type,
+    ) as Uint8Array;
+
+    const typeStr = input.type === 'bytes' ? `bytes${encodedArgument.length}` : input.type;
+
+    // e.g. <timeout> // int = <0xa08601>
+    return `<${snakeCase(input.name)}> // ${typeStr} = <${`0x${binToHex(encodedArgument)}`}>`;
+  }).join('\n');
+};
+
+const formatBytecodeForDebugging = (artifact: Artifact): string => {
+  if (!artifact.debug) {
+    // TODO: See if we can merge this with code from @cashscript/utils -> script.ts
+    return artifact.bytecode
+      .split(' ')
+      .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
+      .join('\n');
+  }
+
+  return formatBitAuthScript(
+    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
+    artifact.debug.sourceMap,
+    artifact.source,
+  );
 };

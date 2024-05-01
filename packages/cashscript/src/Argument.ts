@@ -1,5 +1,6 @@
 import { hexToBin } from '@bitauth/libauth';
 import {
+  Artifact,
   BytesType,
   encodeBool,
   encodeInt,
@@ -10,12 +11,13 @@ import {
 import { TypeError } from './Errors.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
+// TODO: Separate ConstructorArgument (no SignatureTemplate) and FunctionArgument (with SignatureTemplate)
 export type Argument = bigint | boolean | string | Uint8Array | SignatureTemplate;
+export type EncodedArgument = Uint8Array | SignatureTemplate;
 
-export function encodeArgument(
-  argument: Argument,
-  typeStr: string,
-): Uint8Array | SignatureTemplate {
+export type EncodeFunction = (arg: Argument, typeStr: string) => EncodedArgument;
+
+export function encodeArgument(argument: Argument, typeStr: string): EncodedArgument {
   let type = parseType(typeStr);
 
   if (type === PrimitiveType.BOOL) {
@@ -72,4 +74,31 @@ export function encodeArgument(
   }
 
   return argument;
+}
+
+export const encodeConstructorArguments = (
+  artifact: Artifact,
+  constructorArgs: Argument[],
+  encodeFunction: EncodeFunction = encodeArgument,
+): Uint8Array[] => {
+  // Check there's no signature templates in the constructor
+  if (constructorArgs.some((arg) => arg instanceof SignatureTemplate)) {
+    throw new Error('Cannot use signatures in constructor');
+  }
+
+  const encodedArgs = constructorArgs
+    .map((arg, i) => encodeFunction(arg, artifact.constructorInputs[i].type))
+    .reverse();
+
+  return encodedArgs as Uint8Array[];
+};
+
+// Note: BitAuth IDE requires 0 to be encoded as a single byte (rather than the default empty byte array)
+// TODO: Double check this with Pat
+export function encodeArgumentForLibauthTemplate(
+  argument: Argument,
+  typeStr: string,
+): Uint8Array | SignatureTemplate {
+  if (typeStr === PrimitiveType.INT && argument === 0n) return Uint8Array.from([0]);
+  return encodeArgument(argument, typeStr);
 }
