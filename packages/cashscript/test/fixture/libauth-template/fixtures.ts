@@ -4,7 +4,7 @@ import Mecenas from '../mecenas.json' assert { type: 'json' };
 import P2PKH from '../p2pkh.json' assert { type: 'json' };
 import HoldVault from '../hodl_vault.json' assert { type: 'json' };
 import { aliceAddress, alicePkh, alicePriv, alicePub, bobPkh, bobPriv, bobPub, oracle, oraclePub } from '../vars.js';
-import { WalletTemplate } from '@bitauth/libauth';
+import { WalletTemplate, hexToBin } from '@bitauth/libauth';
 
 const provider = new MockNetworkProvider();
 
@@ -447,7 +447,6 @@ export const fixtures: Fixture[] = [
           'data': {
             'bytecode': {
               'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'function_index': '0',
               'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
             },
             'currentBlockHeight': 2,
@@ -528,6 +527,127 @@ export const fixtures: Fixture[] = [
     },
   },
   {
+    name: 'P2PKH (hardcoded signature)',
+    transaction: (() => {
+      const contract = new Contract(P2PKH, [alicePkh], { provider });
+
+      const regularUtxo = randomUtxo();
+      provider.addUtxo(contract.address, regularUtxo);
+
+      const to = contract.tokenAddress;
+      const amount = 1000n;
+
+      const hardcodedSignature = new SignatureTemplate(alicePriv).generateSignature(hexToBin('c0ffee'));
+      const tx = contract.functions
+        .spend(alicePub, hardcodedSignature)
+        .from(regularUtxo)
+        .to(to, amount);
+
+      return tx;
+    })(),
+    template: {
+      '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
+      'description': 'Imported from cashscript',
+      'name': 'P2PKH',
+      'supported': [
+        'BCH_SPEC',
+      ],
+      'version': 0,
+      'entities': {
+        'parameters': {
+          'description': 'Contract creation and function parameters',
+          'name': 'parameters',
+          'scripts': [
+            'lock',
+            'unlock_lock',
+          ],
+          'variables': {
+            's': {
+              'description': '"s" parameter of function "spend"',
+              'name': 's',
+              'type': 'Key',
+            },
+            'pk': {
+              'description': '"pk" parameter of function "spend"',
+              'name': 'pk',
+              'type': 'WalletData',
+            },
+            'pkh': {
+              'description': '"pkh" parameter of this contract',
+              'name': 'pkh',
+              'type': 'WalletData',
+            },
+          },
+        },
+      },
+      'scenarios': {
+        'evaluate_function': {
+          'name': 'Evaluate',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              's': '0x65f72c5cce773383b45032a3f9f9255814e3d53ee260056e3232cd89e91a0a84278b35daf8938d47047e7d3bd3407fe90b07dfabf4407947af6fb09730a34c0b61',
+            },
+            'currentBlockHeight': 2,
+            'currentBlockTime': expect.any(Number),
+            'keys': {
+              'privateKeys': {},
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+            ],
+            'locktime': 133700,
+            'outputs': [
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+      },
+      'scripts': {
+        'unlock_lock': {
+          'passes': [
+            'evaluate_function',
+          ],
+          'name': 'unlock',
+          'script': '// "spend" function parameters\n<s> // sig = <0x65f72c5cce773383b45032a3f9f9255814e3d53ee260056e3232cd89e91a0a84278b35daf8938d47047e7d3bd3407fe90b07dfabf4407947af6fb09730a34c0b61>\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
+          'unlocks': 'lock',
+        },
+        'lock': {
+          'lockingType': 'p2sh20',
+          'name': 'lock',
+          'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
+        },
+      },
+    },
+  },
+  {
     name: 'P2PKH (sending NFTs)',
     transaction: (() => {
       const contract = new Contract(P2PKH, [alicePkh], { provider });
@@ -590,7 +710,6 @@ export const fixtures: Fixture[] = [
           'data': {
             'bytecode': {
               'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'function_index': '0',
               'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
             },
             'currentBlockHeight': 2,
@@ -760,7 +879,6 @@ export const fixtures: Fixture[] = [
             'bytecode': {
               'oracle_message': '0xa086010030750000',
               'oracle_sig': '0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b',
-              'function_index': '0',
               'price_target': '0x3075',
               'min_block': '0xb88201',
               'oracle_pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
@@ -917,7 +1035,6 @@ export const fixtures: Fixture[] = [
           'data': {
             'bytecode': {
               'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'function_index': '0',
               'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
             },
             'currentBlockHeight': 2,
@@ -925,7 +1042,7 @@ export const fixtures: Fixture[] = [
             'keys': {
               'privateKeys': {
                 's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                'placeholder_key': '<Uint8Array: 0x0000000000000000000000000000000000000000000000000000000000000000>',
+                'placeholder_key': '0x0000000000000000000000000000000000000000000000000000000000000000',
               },
             },
           },

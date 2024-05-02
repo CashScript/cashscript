@@ -402,10 +402,6 @@ export const extendedStringify = (obj: any, spaces?: number): string => JSON.str
   spaces,
 );
 
-export const mergeObjects = (array: Array<Record<string, any>>): Record<string, any> => {
-  return Object.fromEntries(array.flatMap(Object.entries));
-};
-
 export const zip = <T, U>(a: T[], b: U[]): [T, U][] => (
   Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]])
 );
