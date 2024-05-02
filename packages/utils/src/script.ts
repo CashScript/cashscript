@@ -186,8 +186,8 @@ export function replaceBytecodeNop(script: Script): Script {
   return asmToScript(scriptToAsm(script));
 }
 
-export function generateRedeemScript(baseScript: Script, encodedArgs: Script): Script {
-  return replaceBytecodeNop([...encodedArgs, ...baseScript]);
+export function generateRedeemScript(baseScript: Script, encodedConstructorArgs: Script): Script {
+  return replaceBytecodeNop([...encodedConstructorArgs.slice().reverse(), ...baseScript]);
 }
 
 export function optimiseBytecode(script: Script, runs: number = 1000): Script {

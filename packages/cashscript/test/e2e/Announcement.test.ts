@@ -104,11 +104,11 @@ describe('Announcement', () => {
     it('should fail when sending the correct change amount to an incorrect address', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const largestUtxo = (await announcement.getUtxos())
+      const [largestUtxo] = (await announcement.getUtxos())
         .sort(utxoComparator)
         .reverse()
         .slice(0, 1);
-      const changeAmount = largestUtxo[0]?.satoshis - minerFee;
+      const changeAmount = largestUtxo?.satoshis - minerFee;
 
       // when
       const txPromise = announcement.functions

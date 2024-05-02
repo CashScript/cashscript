@@ -168,7 +168,7 @@ export function createInputScript(
   preimage?: Uint8Array,
 ): Uint8Array {
   // Create unlock script / redeemScriptSig (add potential preimage and selector)
-  const unlockScript = encodedArgs.reverse();
+  const unlockScript = [...encodedArgs].reverse();
   if (preimage !== undefined) unlockScript.push(preimage);
   if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 

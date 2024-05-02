@@ -42,6 +42,7 @@ import { Contract } from './Contract.js';
 import MockNetworkProvider from './network/MockNetworkProvider.js';
 import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
 import { debugTemplate, evaluateTemplate, DebugResult } from './debugging.js';
+import { EncodedArgument } from './Argument.js';
 
 export class Transaction {
   public inputs: Utxo[] = [];
@@ -58,7 +59,7 @@ export class Transaction {
     public contract: Contract,
     private unlocker: Unlocker,
     public abiFunction: AbiFunction,
-    public args: (Uint8Array | SignatureTemplate)[],
+    public encodedFunctionArgs: EncodedArgument[],
     private selector?: number,
   ) {}
 
@@ -357,7 +358,7 @@ export class Transaction {
     }
 
     // Replace all SignatureTemplate with 65-length placeholder Uint8Arrays
-    const placeholderArgs = this.args.map((arg) => (
+    const placeholderArgs = this.encodedFunctionArgs.map((arg) => (
       arg instanceof SignatureTemplate ? placeholder(65) : arg
     ));
 

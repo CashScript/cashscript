@@ -1,5 +1,6 @@
 import { hexToBin } from '@bitauth/libauth';
 import {
+  AbiFunction,
   Artifact,
   BytesType,
   encodeBool,
@@ -87,10 +88,19 @@ export const encodeConstructorArguments = (
   }
 
   const encodedArgs = constructorArgs
-    .map((arg, i) => encodeFunction(arg, artifact.constructorInputs[i].type))
-    .reverse();
+    .map((arg, i) => encodeFunction(arg, artifact.constructorInputs[i].type));
 
   return encodedArgs as Uint8Array[];
+};
+
+export const encodeFunctionArguments = (
+  abiFunction: AbiFunction,
+  functionArgs: Argument[],
+  encodeFunction: EncodeFunction = encodeArgument,
+): EncodedArgument[] => {
+  const encodedArgs = functionArgs.map((arg, i) => encodeFunction(arg, abiFunction.inputs[i].type));
+
+  return encodedArgs;
 };
 
 // Note: BitAuth IDE requires 0 to be encoded as a single byte (rather than the default empty byte array)

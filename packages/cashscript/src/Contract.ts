@@ -11,7 +11,7 @@ import {
   scriptToBytecode,
 } from '@cashscript/utils';
 import { Transaction } from './Transaction.js';
-import { Argument, encodeArgument, encodeConstructorArguments } from './Argument.js';
+import { Argument, encodeArgument, encodeConstructorArguments, encodeFunctionArguments } from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
 } from './interfaces.js';
@@ -36,10 +36,11 @@ export class Contract {
   redeemScript: Script;
   public provider: NetworkProvider;
   public addressType: 'p2sh20' | 'p2sh32';
+  public encodedConstructorArgs: Uint8Array[];
 
   constructor(
     public artifact: Artifact,
-    public constructorArgs: Argument[],
+    constructorArgs: Argument[],
     private options?: ContractOptions,
   ) {
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
@@ -55,12 +56,9 @@ export class Contract {
     }
 
     // Encode arguments (this also performs type checking)
-    const encodedArgs = encodeConstructorArguments(artifact, constructorArgs);
+    this.encodedConstructorArgs = encodeConstructorArguments(artifact, constructorArgs);
 
-    this.redeemScript = generateRedeemScript(
-      asmToScript(this.artifact.bytecode),
-      encodedArgs as Uint8Array[],
-    );
+    this.redeemScript = generateRedeemScript(asmToScript(this.artifact.bytecode), this.encodedConstructorArgs);
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
@@ -110,8 +108,7 @@ export class Contract {
       }
 
       // Encode passed args (this also performs type checking)
-      const encodedArgs = args
-        .map((arg, i) => encodeArgument(arg, abiFunction.inputs[i].type));
+      const encodedArgs = encodeFunctionArguments(abiFunction, args);
 
       const unlocker = this.createUnlocker(abiFunction, selector)(...args);
 
