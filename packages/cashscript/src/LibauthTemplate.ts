@@ -201,13 +201,6 @@ export const buildTemplate = async ({
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
-  const libauthTransaction = decodeTransaction(hexToBin(txHex));
-  if (typeof libauthTransaction === 'string') throw Error(libauthTransaction);
-
-  const functionIndex = contract.artifact.abi.findIndex(
-    (func) => func.name === transaction.abiFunction.name,
-  )!;
-
   const hasSignatureTemplates = transaction.inputs.filter((input) => isUtxoP2PKH(input)).length > 0;
 
   const template = {
@@ -219,6 +212,15 @@ export const buildTemplate = async ({
     entities: generateTemplateEntities(contract.artifact, transaction.abiFunction),
     scripts: generateTemplateScripts(
       contract.artifact, transaction.abiFunction, transaction.encodedFunctionArgs, contract.encodedConstructorArgs,
+    ),
+    scenarios: generateTemplateScenarios(
+      transaction,
+      txHex,
+      contract.artifact,
+      transaction.abiFunction,
+      transaction.encodedFunctionArgs,
+      contract.encodedConstructorArgs,
+      hasSignatureTemplates,
     ),
   } as WalletTemplate;
 
@@ -248,36 +250,6 @@ export const buildTemplate = async ({
       script:
           'OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
     };
-  }
-
-  template.scenarios = {
-    // single scenario to spend out transaction under test given the CashScript parameters provided
-    evaluate_function: {
-      name: 'Evaluate',
-      description: 'An example evaluation where this script execution passes.',
-      data: {
-        // encode values for the variables defined above in `entities` property
-        bytecode: {
-          ...generateTemplateScenarioParametersValues(transaction.abiFunction.inputs, transaction.encodedFunctionArgs),
-          ...generateTemplateScenarioParametersValues(
-            contract.artifact.constructorInputs, contract.encodedConstructorArgs,
-          ),
-        },
-        currentBlockHeight: 2,
-        currentBlockTime: Math.round(+new Date() / 1000),
-        keys: {
-          privateKeys: generateTemplateScenarioKeys(
-            transaction.abiFunction.inputs, transaction.encodedFunctionArgs, hasSignatureTemplates,
-          ),
-        },
-      },
-      transaction: createScenarioTransaction(libauthTransaction, transaction),
-      sourceOutputs: createScenarioSourceOutputs(transaction),
-    },
-  };
-
-  if (contract.artifact.abi.length > 1) {
-    template.scenarios!.evaluate_function!.data!.bytecode!.function_index = functionIndex.toString();
   }
 
   return template;
@@ -393,6 +365,52 @@ const generateTemplateUnlockScript = (
     ].join('\n'),
     unlocks: 'lock',
   };
+};
+
+const generateTemplateScenarios = (
+  transaction: Transaction,
+  transactionHex: string,
+  artifact: Artifact,
+  abiFunction: AbiFunction,
+  encodedFunctionArgs: EncodedArgument[],
+  encodedConstructorArgs: EncodedArgument[],
+  hasSignatureTemplates: boolean,
+): WalletTemplate['scenarios'] => {
+  const libauthTransaction = decodeTransaction(hexToBin(transactionHex));
+  if (typeof libauthTransaction === 'string') throw Error(libauthTransaction);
+
+  const scenarios = {
+    // single scenario to spend out transaction under test given the CashScript parameters provided
+    evaluate_function: {
+      name: 'Evaluate',
+      description: 'An example evaluation where this script execution passes.',
+      data: {
+        // encode values for the variables defined above in `entities` property
+        bytecode: {
+          ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
+          ...generateTemplateScenarioParametersValues(artifact.constructorInputs, encodedConstructorArgs),
+        },
+        // TODO: Don't hardcode these values
+        currentBlockHeight: 2,
+        currentBlockTime: Math.round(+new Date() / 1000),
+        keys: {
+          privateKeys: generateTemplateScenarioKeys(
+            abiFunction.inputs, encodedFunctionArgs, hasSignatureTemplates,
+          ),
+        },
+      },
+      transaction: createScenarioTransaction(libauthTransaction, transaction),
+      sourceOutputs: createScenarioSourceOutputs(transaction),
+    },
+  };
+
+
+  if (artifact.abi.length > 1) {
+    const functionIndex = artifact.abi.findIndex((func) => func.name === transaction.abiFunction.name);
+    scenarios!.evaluate_function!.data!.bytecode!.function_index = functionIndex.toString();
+  }
+
+  return scenarios;
 };
 
 const generateTemplateScenarioParametersValues = (
