@@ -32,4 +32,22 @@ When updating the grammar file in `src/grammar/CashScript.g4`, we also need to m
 
 ```bash
 yarn antlr
-``````
+```
+
+## cashscript
+
+### Running tests
+
+By default, running tests in the `cashscript` package uses chipnet contracts, which requires the test accounts to have some chipnet BCH. To run the tests against a local "mock network", you can use the `TESTS_USE_MOCKNET` environment variable.
+
+```bash
+# Run all tests using the mock network
+TESTS_USE_MOCKNET=true yarn test
+```
+
+To run specific tests, you can use the `-t` flag to match the name mentioned in the `it` or `describe` block:
+
+```bash
+# Run all tests in the 'Transaction Builder' describe block (test/e2e/transaction-builder/TransactionBuilder.test.ts)
+yarn test -t 'Transaction Builder'
+```
