@@ -1,4 +1,4 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateBCHCHIPs, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBCHCHIPs, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateBCH, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBCH2023, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogData, LogEntry, Op, PrimitiveType, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 
@@ -14,7 +14,7 @@ export const evaluateTemplate = (template: WalletTemplate): boolean => {
   return verifyResult;
 };
 
-export type DebugResult = AuthenticationProgramStateBCHCHIPs[];
+export type DebugResult = AuthenticationProgramStateCommon[];
 
 // debugs the template, optionally logging the execution data
 export const debugTemplate = (template: WalletTemplate, artifact: Artifact): DebugResult => {
@@ -83,7 +83,7 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
 type VM = AuthenticationVirtualMachine<
 ResolvedTransactionCommon,
 AuthenticationProgramCommon,
-AuthenticationProgramStateBCHCHIPs
+AuthenticationProgramStateBCH
 >;
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
@@ -91,9 +91,7 @@ type CreateProgramResult = { vm: VM, program: Program };
 // internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: WalletTemplate): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  // TODO: We disabled standardness checks due to an issue with Libauth (https://github.com/bitauth/libauth/issues/133).
-  // We should re-enable this once the issue is resolved.
-  const vm = createVirtualMachineBCHCHIPs(false);
+  const vm = createVirtualMachineBCH2023();
   const compiler = createCompiler(configuration);
 
   const scenarioGeneration = compiler.generateScenario({
@@ -116,7 +114,7 @@ const createProgram = (template: WalletTemplate): CreateProgramResult => {
 
 const logConsoleLogStatement = (
   log: LogEntry,
-  debugStep: AuthenticationProgramStateBCHCHIPs,
+  debugStep: AuthenticationProgramStateCommon,
   artifact: Artifact,
 ): void => {
   let line = `${artifact.contractName}.cash:${log.line}`;

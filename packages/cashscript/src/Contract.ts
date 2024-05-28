@@ -14,6 +14,7 @@ import { Transaction } from './Transaction.js';
 import { Argument, encodeArgument, encodeConstructorArguments, encodeFunctionArguments } from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
+  AddressType,
 } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
@@ -35,7 +36,7 @@ export class Contract {
 
   redeemScript: Script;
   public provider: NetworkProvider;
-  public addressType: 'p2sh20' | 'p2sh32';
+  public addressType: AddressType;
   public encodedConstructorArgs: Uint8Array[];
 
   constructor(

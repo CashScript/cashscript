@@ -31,11 +31,13 @@ import {
   TokenDetails,
   LibauthTokenDetails,
   Output,
+  AddressType,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
 import { EncodedArgument } from './Argument.js';
 import { addressToLockScript, extendedStringify, snakeCase, zip } from './utils.js';
+import { Contract } from './Contract.js';
 
 interface BuildTemplateOptions {
   transaction: Transaction;
@@ -56,13 +58,18 @@ export const buildTemplate = async ({
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
     name: contract.artifact.contractName,
-    supported: ['BCH_SPEC'],
+    supported: ['BCH_2023_05'],
     version: 0,
     entities: generateTemplateEntities(contract.artifact, transaction.abiFunction),
     scripts: generateTemplateScripts(
-      contract.artifact, transaction.abiFunction, transaction.encodedFunctionArgs, contract.encodedConstructorArgs,
+      contract.artifact,
+      contract.addressType,
+      transaction.abiFunction,
+      transaction.encodedFunctionArgs,
+      contract.encodedConstructorArgs,
     ),
     scenarios: generateTemplateScenarios(
+      contract,
       transaction,
       txHex,
       contract.artifact,
@@ -163,6 +170,7 @@ const generateTemplateEntities = (artifact: Artifact, abiFunction: AbiFunction):
 
 const generateTemplateScripts = (
   artifact: Artifact,
+  addressType: AddressType,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedArgument[],
   encodedConstructorArgs: EncodedArgument[],
@@ -170,16 +178,17 @@ const generateTemplateScripts = (
   // definition of locking scripts and unlocking scripts with their respective bytecode
   return {
     unlock_lock: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
-    lock: generateTemplateLockScript(artifact, encodedConstructorArgs),
+    lock: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
 
 const generateTemplateLockScript = (
   artifact: Artifact,
+  addressType: AddressType,
   constructorArguments: EncodedArgument[],
 ): WalletTemplateScriptLocking => {
   return {
-    lockingType: 'p2sh20', // TODO: use 'transaction.contract.addressType',
+    lockingType: addressType,
     name: 'lock',
     script: [
       `// "${artifact.contractName}" contract constructor parameters`,
@@ -217,6 +226,7 @@ const generateTemplateUnlockScript = (
 };
 
 const generateTemplateScenarios = (
+  contract: Contract,
   transaction: Transaction,
   transactionHex: string,
   artifact: Artifact,
@@ -248,7 +258,7 @@ const generateTemplateScenarios = (
           ),
         },
       },
-      transaction: generateTemplateScenarioTransaction(libauthTransaction, transaction),
+      transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, transaction),
       sourceOutputs: generateTemplateScenarioSourceOutputs(transaction),
     },
   };
@@ -263,6 +273,7 @@ const generateTemplateScenarios = (
 };
 
 const generateTemplateScenarioTransaction = (
+  contract: Contract,
   libauthTransaction: TransactionBCH,
   csTransaction: Transaction,
 ): WalletTemplateScenario['transaction'] => {
@@ -289,7 +300,7 @@ const generateTemplateScenarioTransaction = (
     const csOutput = csTransaction.outputs[index]; // TODO: Change
 
     return {
-      lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput),
+      lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput, contract),
       token: serialiseTokenDetails(output.token),
       valueSatoshis: Number(output.valueSatoshis),
     } as WalletTemplateScenarioTransactionOutput;
@@ -302,8 +313,10 @@ const generateTemplateScenarioTransaction = (
 
 const generateTemplateScenarioTransactionOutputLockingBytecode = (
   csOutput: Output,
-): string => {
+  contract: Contract,
+): string | {} => {
   if (csOutput.to instanceof Uint8Array) return binToHex(csOutput.to);
+  if ([contract.address, contract.tokenAddress].includes(csOutput.to)) return {};
   return binToHex(addressToLockScript(csOutput.to));
 };
 

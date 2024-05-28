@@ -32,6 +32,7 @@ import {
   Network,
   LibauthOutput,
   TokenDetails,
+  AddressType,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -247,14 +248,16 @@ export function toRegExp(reasons: string[]): RegExp {
   return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
 }
 
-export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32', tokenSupport: boolean): string {
+export function scriptToAddress(
+  script: Script, network: string, addressType: AddressType, tokenSupport: boolean,
+): string {
   const lockingBytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
   const address = lockingBytecodeToCashAddress(lockingBytecode, prefix, { tokenSupport }) as string;
   return address;
 }
 
-export function scriptToLockingBytecode(script: Script, addressType: 'p2sh20' | 'p2sh32'): Uint8Array {
+export function scriptToLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
   const scriptBytecode = scriptToBytecode(script);
   const scriptHash = (addressType === 'p2sh20') ? hash160(scriptBytecode) : hash256(scriptBytecode);
   const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };

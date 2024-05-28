@@ -116,5 +116,7 @@ export interface TransactionDetails extends Transaction {
 
 export interface ContractOptions {
   provider?: NetworkProvider,
-  addressType?: 'p2sh20' | 'p2sh32',
+  addressType?: AddressType,
 }
+
+export type AddressType = 'p2sh20' | 'p2sh32';
