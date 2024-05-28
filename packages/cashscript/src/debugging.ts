@@ -91,7 +91,9 @@ type CreateProgramResult = { vm: VM, program: Program };
 // internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: WalletTemplate): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachineBCHCHIPs();
+  // TODO: We disabled standardness checks due to an issue with Libauth (https://github.com/bitauth/libauth/issues/133).
+  // We should re-enable this once the issue is resolved.
+  const vm = createVirtualMachineBCHCHIPs(false);
   const compiler = createCompiler(configuration);
 
   const scenarioGeneration = compiler.generateScenario({

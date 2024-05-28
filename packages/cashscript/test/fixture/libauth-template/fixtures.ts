@@ -106,7 +106,7 @@ export const fixtures: Fixture[] = [
             'locktime': expect.any(Number),
             'outputs': [
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa203f567c4556a3b1fe2d6dd250ee07a939c54f22ce4cb87fb0581800063eaca0b187',
                 'valueSatoshis': 10000,
               },
             ],
@@ -230,7 +230,7 @@ export const fixtures: Fixture[] = [
             'locktime': expect.any(Number),
             'outputs': [
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa203f567c4556a3b1fe2d6dd250ee07a939c54f22ce4cb87fb0581800063eaca0b187',
                 'valueSatoshis': 10000,
               },
             ],
@@ -351,7 +351,7 @@ export const fixtures: Fixture[] = [
                 'valueSatoshis': 10000,
               },
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa209c6c87b192226fa02ed3834607a94a6ea040acc59df983c49a648406c695816b87',
                 'valueSatoshis': expect.any(Number),
               },
             ],
@@ -477,7 +477,7 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'token': {
                   'amount': expect.stringMatching(/^[0-9]+$/),
                   'category': expect.stringMatching(/^[0-9a-f]{64}$/),
@@ -485,7 +485,7 @@ export const fixtures: Fixture[] = [
                 'valueSatoshis': 1000,
               },
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'valueSatoshis': expect.any(Number),
               },
             ],
@@ -610,11 +610,11 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'valueSatoshis': 1000,
               },
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'valueSatoshis': expect.any(Number),
               },
             ],
@@ -740,7 +740,7 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'token': {
                   'amount': '0',
                   'category': expect.stringMatching(/^[0-9a-f]{64}$/),
@@ -752,7 +752,7 @@ export const fixtures: Fixture[] = [
                 'valueSatoshis': 1000,
               },
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'valueSatoshis': expect.any(Number),
               },
             ],
@@ -906,11 +906,11 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa202b9369ac73606fc710cb756d82807e45e283bbf2a642df014bfce7a1c749c5e087',
                 'valueSatoshis': 10000,
               },
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa202b9369ac73606fc710cb756d82807e45e283bbf2a642df014bfce7a1c749c5e087',
                 'valueSatoshis': expect.any(Number),
               },
             ],
@@ -1075,11 +1075,11 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'valueSatoshis': 1000,
               },
               {
-                'lockingBytecode': {},
+                'lockingBytecode': 'aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587',
                 'valueSatoshis': expect.any(Number),
               },
             ],

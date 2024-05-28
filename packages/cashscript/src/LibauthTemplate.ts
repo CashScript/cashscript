@@ -7,7 +7,6 @@ import {
   formatBitAuthScript,
 } from '@cashscript/utils';
 import {
-  hash160,
   hexToBin,
   WalletTemplateScenarioTransactionOutput,
   WalletTemplateScenario,
@@ -23,18 +22,20 @@ import {
   WalletTemplateVariable,
   WalletTemplateScriptLocking,
   WalletTemplateScriptUnlocking,
+  WalletTemplateScenarioBytecode,
 } from '@bitauth/libauth';
 import { deflate } from 'pako';
 import {
-  UtxoP2PKH,
-  LibauthOutput,
   Utxo,
   isUtxoP2PKH,
+  TokenDetails,
+  LibauthTokenDetails,
+  Output,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
 import { EncodedArgument } from './Argument.js';
-import { extendedStringify, snakeCase, zip } from './utils.js';
+import { addressToLockScript, extendedStringify, snakeCase, zip } from './utils.js';
 
 interface BuildTemplateOptions {
   transaction: Transaction;
@@ -247,8 +248,8 @@ const generateTemplateScenarios = (
           ),
         },
       },
-      transaction: createScenarioTransaction(libauthTransaction, transaction),
-      sourceOutputs: generateScenarioSourceOutputs(transaction),
+      transaction: generateTemplateScenarioTransaction(libauthTransaction, transaction),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(transaction),
     },
   };
 
@@ -261,132 +262,72 @@ const generateTemplateScenarios = (
   return scenarios;
 };
 
-const createScenarioTransaction = (libauthTransaction: TransactionBCH, csTransaction: Transaction): WalletTemplateScenario['transaction'] => {
-  const contract = csTransaction.contract;
-  const result = ({} as WalletTemplateScenario['transaction'])!;
+const generateTemplateScenarioTransaction = (
+  libauthTransaction: TransactionBCH,
+  csTransaction: Transaction,
+): WalletTemplateScenario['transaction'] => {
+  const slotIndex = csTransaction.inputs.findIndex((input) => !isUtxoP2PKH(input));
 
-  // only one 'slot' is allowed, otherwise {} must be used
-  let inputSlotInserted = false;
-  result.inputs = libauthTransaction.inputs.map((input, index) => {
-    const csInput = csTransaction.inputs[index] as Utxo;
-    const signable = isUtxoP2PKH(csInput);
-    let unlockingBytecode = {};
-    if (signable) {
-      unlockingBytecode = {
-        script: 'p2pkh_placeholder_unlock',
-        overrides: {
-          keys: {
-            privateKeys: {
-              placeholder_key: binToHex((csInput as UtxoP2PKH).template.privateKey),
-            },
-          },
-        },
-      };
-    } else {
-      // assume it is our contract's input
-      // eslint-disable-next-line
-      if (!inputSlotInserted) {
-        unlockingBytecode = ['slot'];
-        inputSlotInserted = true;
-      }
-    }
+  const inputs = libauthTransaction.inputs.map((input, index) => {
+    const csInput = csTransaction.inputs[index] as Utxo; // TODO: Change
+
     return {
       outpointIndex: input.outpointIndex,
       outpointTransactionHash:
+      // TODO: This should always be Uint8Array according to the libauth transaction types
         input.outpointTransactionHash instanceof Uint8Array
           ? binToHex(input.outpointTransactionHash)
           : input.outpointTransactionHash,
       sequenceNumber: input.sequenceNumber,
-      unlockingBytecode,
+      unlockingBytecode: generateTemplateScenarioBytecode(csInput, 'p2pkh_placeholder_unlock', index === slotIndex),
     } as WalletTemplateScenarioInput;
   });
-  result.locktime = libauthTransaction.locktime;
 
-  result.outputs = libauthTransaction.outputs.map(
-    (output: LibauthOutput, index) => {
-      const csOutput = csTransaction.outputs[index];
-      let { lockingBytecode }: any = output;
-      if (typeof csOutput.to === 'string') {
-        if (
-          [
-            contract.address,
-            contract.tokenAddress,
-          ].includes(csOutput.to)
-        ) {
-          lockingBytecode = {};
-        } else {
-          for (const csInput of csTransaction.inputs) {
-            if (isUtxoP2PKH(csInput)) {
-              const inputPkh = hash160(csInput.template.getPublicKey());
-              if (
-                binToHex(output.lockingBytecode).slice(6, 46)
-                === binToHex(inputPkh)
-              ) {
-                lockingBytecode = {
-                  script: 'p2pkh_placeholder_lock',
-                  overrides: {
-                    keys: {
-                      privateKeys: {
-                        placeholder_key: binToHex(
-                          csInput.template.privateKey,
-                        ),
-                      },
-                    },
-                  },
-                };
-              }
-            }
-          }
-        }
-      }
-      return {
-        lockingBytecode:
-          lockingBytecode instanceof Uint8Array
-            ? binToHex(lockingBytecode)
-            : lockingBytecode,
-        token: output.token ? {
-          amount: output.token.amount.toString(),
-          category: binToHex(output.token.category),
-          nft: output.token.nft ? {
-            capability: output.token.nft.capability,
-            commitment: binToHex(output.token.nft.commitment),
-          } : undefined,
-        } : undefined,
-        valueSatoshis: Number(output.valueSatoshis),
-      } as WalletTemplateScenarioTransactionOutput;
-    },
-  );
-  result.version = libauthTransaction.version;
-  return result;
+  const locktime = libauthTransaction.locktime;
+
+  const outputs = libauthTransaction.outputs.map((output, index) => {
+    const csOutput = csTransaction.outputs[index]; // TODO: Change
+
+    return {
+      lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput),
+      token: serialiseTokenDetails(output.token),
+      valueSatoshis: Number(output.valueSatoshis),
+    } as WalletTemplateScenarioTransactionOutput;
+  });
+
+  const version = libauthTransaction.version;
+
+  return { inputs, locktime, outputs, version };
 };
 
-const generateScenarioSourceOutputs = (csTransaction: Transaction): Array<WalletTemplateScenarioOutput<true>> => {
+const generateTemplateScenarioTransactionOutputLockingBytecode = (
+  csOutput: Output,
+): string => {
+  if (csOutput.to instanceof Uint8Array) return binToHex(csOutput.to);
+  return binToHex(addressToLockScript(csOutput.to));
+};
+
+const generateTemplateScenarioSourceOutputs = (
+  csTransaction: Transaction,
+): Array<WalletTemplateScenarioOutput<true>> => {
   const slotIndex = csTransaction.inputs.findIndex((input) => !isUtxoP2PKH(input));
 
   return csTransaction.inputs.map((input, index) => {
-    const lockingBytecode = generateTemplateScenarioSourceOutputLockingBytecode(input, index === slotIndex);
-    const valueSatoshis = Number(input.satoshis);
-
-    if (input.token) {
-      const token = {
-        amount: input.token.amount.toString(),
-        category: input.token.category,
-        nft: input.token.nft,
-      };
-
-      return { lockingBytecode, valueSatoshis, token };
-    }
-
-    return { lockingBytecode, valueSatoshis };
+    return {
+      lockingBytecode: generateTemplateScenarioBytecode(input, 'p2pkh_placeholder_lock', index === slotIndex),
+      valueSatoshis: Number(input.satoshis),
+      token: serialiseTokenDetails(input.token),
+    };
   });
 };
 
-const generateTemplateScenarioSourceOutputLockingBytecode = (
-  input: Utxo, insertSlot?: boolean,
-): WalletTemplateScenarioOutput<true>['lockingBytecode'] => {
+// Used for generating the locking / unlocking bytecode for source outputs and inputs
+const generateTemplateScenarioBytecode = (
+  input: Utxo, p2pkhScriptName: string, insertSlot?: boolean,
+): WalletTemplateScenarioBytecode | ['slot'] => {
   if (isUtxoP2PKH(input)) {
     return {
-      script: 'p2pkh_placeholder_lock',
+      script: p2pkhScriptName,
       overrides: {
         keys: {
           privateKeys: {
@@ -472,3 +413,26 @@ const formatBytecodeForDebugging = (artifact: Artifact): string => {
     artifact.source,
   );
 };
+
+// TODO: Maybe move / refactor
+const serialiseTokenDetails = (token?: TokenDetails | LibauthTokenDetails): LibauthTemplateTokenDetails | undefined => {
+  if (!token) return undefined;
+
+  return {
+    amount: token.amount.toString(),
+    category: token.category instanceof Uint8Array ? binToHex(token.category) : token.category,
+    nft: token.nft ? {
+      capability: token.nft.capability,
+      commitment: token.nft.commitment instanceof Uint8Array ? binToHex(token.nft.commitment) : token.nft.commitment,
+    } : undefined,
+  };
+};
+
+export interface LibauthTemplateTokenDetails {
+  amount: string;
+  category: string;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: string;
+  };
+}
