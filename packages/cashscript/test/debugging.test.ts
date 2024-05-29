@@ -90,6 +90,13 @@ contract Test() {
 }
 `;
 
+const CONTRACT_CODE2 = `
+contract Test() {
+  function test_require_single_function() {
+    require(tx.outputs.length == 1, "should have 1 output");
+  }
+}`;
+
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
     const BASE_CONTRACT_CODE = `
@@ -273,14 +280,27 @@ describe('Debugging tests', () => {
 
   describe('require statements', () => {
     const artifact = compileString(CONTRACT_CODE);
+    const artifact2 = compileString(CONTRACT_CODE2);
     const provider = new MockNetworkProvider();
 
+    // test_require
     it('should fail with error message when require statement fails', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_require().to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/1 should equal 2/);
+    });
+
+    // test_require_single_function
+    it('should fail with error message when require statement fails in single function', async () => {
+      const contract = new Contract(artifact2, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.test_require_single_function()
+        .to(contract.address, 1000n)
+        .to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/should have 1 output/);
     });
 
     // // test_multiple_require_statements
