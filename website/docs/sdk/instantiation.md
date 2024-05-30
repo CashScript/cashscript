@@ -306,40 +306,6 @@ interface Utxo {
 }
 ```
 
-## CashScript Compiler
-Generally CashScript contracts are compiled to an Artifact JSON file using the CLI compiler. As an alternative to this, CashScript contracts can be compiled from within JavaScript apps using the `cashc` package. This package needs to be installed separately and exports two compilation functions.
-
-```bash
-npm install cashc
-```
-
-### compileFile()
-```ts
-compileFile(sourceFile: PathLike): Artifact
-```
-
-Compiles a CashScript contract from a source file. This is the recommended compile method if you're using Node.js and you have a source file available.
-
-#### Example
-```ts
-const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
-```
-
-### compileString()
-```ts
-compileString(sourceCode: string): Artifact
-```
-
-Compiles a CashScript contract from a source code string. This is the recommended compile method if you're building a webapp, because `compileFile()` only works from a Node.js context. This is also the recommended method if no source file is locally available (e.g. the source code is retrieved with a REST API).
-
-```ts
-const baseUrl = 'https://raw.githubusercontent.com/Bitcoin-com/cashscript'
-const result = await fetch(`${baseUrl}/master/examples/p2pkh.cash`);
-const source = await result.text();
-
-const P2PKH = compileString(source);
-```
-
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
