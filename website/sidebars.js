@@ -28,10 +28,10 @@ module.exports = {
       label: 'JavaScript SDK',
       items: [
         'sdk/instantiation',
+        'sdk/network-provider',
         'sdk/transactions',
         'sdk/transactions-advanced',
         'sdk/debugging',
-        'sdk/examples',
       ],
     },
     {
