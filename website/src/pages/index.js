@@ -11,21 +11,10 @@ const features = [
     title: 'Efficient and Reliable Verification',
     description: (
       <>
-        Smart contracts on Bitcoin Cash are stateless and UTXO-based. This
+        Smart contracts on Bitcoin Cash are UTXO-based with local state. This
         model allows transactions to be verified independently and efficiently.
-        Because there is no state that can impact the execution of these smart
+        Because there is no global state that can impact the execution of these smart
         contracts, the results are deterministic and predictable.
-      </>
-    ),
-  },
-  {
-    title: 'Private and Isolated Contracts',
-    description: (
-      <>
-        Because of Bitcoin Cash' UTXO-based model, each contract is fully
-        independent and isolated from each other. This limits systemic risk
-        and makes contract upgrades much simpler. Furthermore, Bitcoin Cash
-        contracts use P2SH, preserving the privacy of participants.
       </>
     ),
   },
@@ -33,7 +22,7 @@ const features = [
     title: 'Strong Abstraction',
     description: (
       <>
-        Bitcoin Cash transactions run on a virtual machine called Bitcoin Script.
+        Bitcoin Cash transactions run on a virtual machine called 'BCH Script'.
         Writing bytecode for this virtual machine is difficult and error-prone.
         CashScript offers a strong abstraction for writing Bitcoin Cash smart
         contracts, improving developer experience and reliability of contracts.
@@ -44,10 +33,20 @@ const features = [
     title: 'DeFi on Bitcoin Cash',
     description: (
       <>
-        Most DeFi applications are currently built on top of the EVM. Bitcoin
-        Cash contracts use a different paradigm than EVM chains due to its UTXO
-        architecture. But with CashTokens, transaction introspection and local
-        state, DeFi is very much possible on Bitcoin Cash.
+        Bitcoin Cash has had many script upgrades on such as CashTokens and transaction introspection.
+        Because of this DeFi is very much possible on Bitcoin Cash.
+        However, compared to EVM smart contracts work very differently due to BCH's UTXO
+        architecture.
+      </>
+    ),
+  },
+  {
+    title: 'Integrated Tooling',
+    description: (
+      <>
+        CashScript offers integrated tooling through the Javascript SDK.
+        The SDK has utilities for easy transaction building and other network functionality.
+        CashScript has built-in debug tooling comaptible with the Bitauth-IDE to offer the best developer experience.  
       </>
     ),
   },
