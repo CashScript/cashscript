@@ -1,8 +1,10 @@
 ---
-title: Debugging & Testing
+title: Testing Setup
 ---
 
-To speed up contract development and ensure contract quality and security, CashScript takes advantage of deep integration with libauth. This allows for local transaction evaluation without actual interaction with the Bitcoin Cash network. For a quick start, you can check out [our testing-suite example](https://github.com/CashScript/cashscript/tree/next/examples/testing-suite) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
+Because of deep integration with libauth, CashScript allows for local transaction evaluation without actual interaction with any Bitcoin Cash test network. With a MockNetwork environment you can create virtual UTXOs without doing additional preparations. This has the advantages of not needing any testnet balances, not having to set up smart contract UTXOs and not having network latency. This setup allows for using a testing framework to run repeated automated tests for increased smart contract security.
+
+For a quick start with a CashScript testing setup, you can check out [our testing-suite example](https://github.com/CashScript/cashscript/tree/next/examples/testing-suite) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
 
 :::caution
 The CashScript debugging tools only work with the [Simple Transaction Builder](/docs/sdk/transactions). We plan to extend the debugging tools to work with the [Advanced Transaction Builder](/docs/sdk/transactions-advanced) in the future.
@@ -28,19 +30,12 @@ provider.addUtxo(aliceAddress, randomUtxo({
 The `MockNetworkProvider` only evaluates the transactions locally, so any UTXOs added to a transaction still count as "unspent", even after mocking a `sendTransaction` using the provider.
 :::
 
-## Transaction evaluation
+## Jest extension
 
-If a CashScript transaction is sent using any network provider and is rejected by the network (or the `MockNetworkProvider`), the transaction will be evaluated locally using libauth to provide failure reasons and debug information in addition to the failure reason communicated by the network.
+To make writing automated tests for CashScript contracts easier, we provide a Jest extension that enables easy testing of `console.log` values and `require` error messages. To use the extension, you can import it from `cashscript/dist/test/JestExtensions`.
 
-It is possible to export the transaction for step-by-step debugging in the BitAuth IDE. This will allow you to inspect the transaction in detail, and see exactly why the transaction failed. To do so, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
-
-```ts
-const transaction = contract.functions.exampleFunction(0n).to(contract.address, 10000n);
-const uri = await transaction.bitauthUri();
-```
-
-:::caution
-It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
+:::tip
+If you're using a different testing framework, you can test for `console.log` values by spying on the console output, and test for `require` error messages by asserting that an error is thrown with a specific error message.
 :::
 
 ## Automated testing
@@ -63,15 +58,7 @@ The `require` statement accepts an optional error message as a second argument. 
 Similar to `console.log`, the error message in a `require` statement is only available in debug evaluation of a transaction, so the error message has no impact on the compiled bytecode or regular (non-debug) execution.
 :::
 
-### Jest extension
-
-To make writing automated tests for CashScript contracts easier, we provide a Jest extension that enables easy testing of `console.log` values and `require` error messages. To use the extension, you can import it from `cashscript/dist/test/JestExtensions`.
-
-:::tip
-If you're using a different testing framework, you can test for `console.log` values by spying on the console output, and test for `require` error messages by asserting that an error is thrown with a specific error message.
-:::
-
-### Example
+## Example
 
 ```solidity title="Example contract"
 contract Example() {

@@ -31,7 +31,7 @@ module.exports = {
         'sdk/network-provider',
         'sdk/transactions',
         'sdk/transactions-advanced',
-        'sdk/debugging',
+        'sdk/testing-setup',
       ],
     },
     {
@@ -40,6 +40,7 @@ module.exports = {
       items: [
         'guides/syntax-highlighting',
         'guides/covenants',
+        'guides/debugging',
         'guides/optimization'
       ],
     },
