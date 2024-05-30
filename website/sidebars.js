@@ -7,7 +7,7 @@ module.exports = {
         'basics/about',
         // 'basics/about-bch',
         'basics/getting-started',
-        'basics/cli',
+        'basics/compiler',
       ],
     },
     {

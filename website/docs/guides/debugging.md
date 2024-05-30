@@ -6,8 +6,10 @@ Debugging is no walk in the park, this is especially true for debugging complex 
 
 Generally there are 2 broad categories of smart contract bugs
 
-- A bug in the smart contract which doesn't allow for valid spending
-- A bug in your invokation making the transaction invalid.
+- A bug in your invocation making the transaction invalid
+- A bug in the smart contract which prohibits valid spending
+
+Whatever category your bug falls into, the first step is discovering what line in your CashScript contract is making your transaction get rejected. Afterwards, investigation needs to start whether it's a contract bug, or a invocation bug.
 
 ## Simple Transaction Builder
 

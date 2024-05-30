@@ -114,7 +114,7 @@ console.log(await contract.getUtxos())
 For a code example of how to generate key-pairs with Libauth see the [CashScript Examples](https://github.com/CashScript/cashscript/blob/master/examples/common.ts) `common-ts` file where Alice and Bob's key-pairs are created!
 :::
 
-### Creating a Transction
+### Creating a Transaction
 
 Lastly to spend from the smart contract we've initialised you need to make sure there is an actual contract balance on the smart contract address. Or in other words, you need to make sure there's at least one UTXO with the smart contract locking bytecode so we can spend from it!
 
