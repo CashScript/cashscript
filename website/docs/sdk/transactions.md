@@ -248,7 +248,7 @@ If you want to debug a transaction locally instead of sending it to the network,
 
 If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
 
-You can read more about debugging transactions [here](/docs/sdk/debugging).
+You can read more about debugging transactions [here](/docs/guides/debugging).
 
 :::caution
 It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.

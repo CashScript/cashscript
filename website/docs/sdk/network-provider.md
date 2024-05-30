@@ -97,7 +97,7 @@ All network functionality that the CashScript SDK needs is encapsulated in a net
 new MockNetworkProvider()
 ```
 
-The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. You can read more about the `MockNetworkProvider` and debugging in the [debugging guide](/docs/sdk/debugging).
+The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. You can read more about the `MockNetworkProvider` and automated tests on the [testing-setup](/docs/sdk/testing-setup) page.
 
 #### Example
 ```ts
