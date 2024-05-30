@@ -77,7 +77,7 @@ This will create an artifact file `TransferWithTimeout.json` from your CashScrip
 
 ## Creating a CashScript Transaction
 
-After creating a contract artifact we can now use the JavaScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs.We'll continue with the `TransferWithTimeout` artifact generated in the previous steps.
+After creating a contract artifact we can now use the JavaScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated in the previous steps.
 
 ### Installing the JavaScript SDK
 The JavaScript SDK can be installed into your project with NPM. Note that CashScript is a [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
