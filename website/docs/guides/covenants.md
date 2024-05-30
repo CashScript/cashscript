@@ -135,11 +135,17 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
 
 This contract applies similar techniques as the previous two examples to verify the signature, although in this case it does not matter who the *signer* of the transaction is. Since the outputs are restricted with covenants, there is **no way** someone could call this function to send money **anywhere but to the correct outputs**.
 
+## Local State
+
+Smart contracts which persist for multiple transactions might want to keep data for later use, this is called local state. With the CashTokens upgrade local state can be kept in the commitment field of the NFT of the smart contract UTXO. Because the state is not kept in the script of the smart contract itself, the address can remain the same. 
+
+:::info
+Covenants can also use 'simulated state', where state is kept in the contract script and the contract enforces a new P2SH locking bytecode of the contract with a different state update. This method causes the contract address to change with each state update.
+:::
+
 ### Keeping local State in NFTs
 
-Smart contracts which persist for multiple transactions might want to keep data for later use, this is called local state. With the CashTokens upgrade local state can be kept in the commitment field of the NFT of the smart contract UTXO. Because the state is not kept in the script of the smart contract itself, the address can remain the same unlike with the "simulated state" strategy where the P2SH locking bytecode of the new iteration of the contract was restricted to contain the updated state, which caused the address to change each time.
-
-To demonstrate this we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `tx.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
+To demonstrate the concept of 'local state' we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `tx.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
 
 Besides these wasted days it can also be inconvenient to claim at set intervals, rather than the "streaming" model that the Ethereum project [Sablier](https://www.sablier.finance/) employs. Instead of set intervals, you should be able to claim funds at any time during the "money stream". Using local state, we can approach a similar system with BCH.
 
@@ -199,9 +205,22 @@ contract StreamingMecenas(
 
 Instead of having a pledge per 30 day period, we define a pledge per block. At any point in time we can calculate how much money the recipient has earned. Then the covenant **enforces that this amount is withdrawn from the contract**. The remainder is sent to a new stream that **starts at the end of of the previous one**. The locktime used for the last withdrawal from the covenant is kept in the local state to calculate the amount of money the recipient has earned over the passed time. This process of changing the local state in the NFT associated with the smart contractUTXO can be applied to the new stream until the money in the stream runs out.
 
+:::tip
+We use `tx.locktime` to introspect the value of the timelock, and to write the value to the contract local state: the NFT commitment field.
+:::
+
 ### Issuing NFTs as receipts
 
-A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. Instead of keeping track of which address contributed how much in the local state, a better strategy is to issue a receipt for each time funds are added to the pool. Technically this happens by minting a new NFT with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool and sending this to the address of the contributor. All outputs need to be carefully controlled in the covenant contract code so no additional NFTs can be minted in other outputs. The minted NFTs only differ from the covenant's minting NFT in that there is no minting capability added to the token's categoryID when calling `.tokenCategory`. At withdrawal this NFT commitment data needs to be read and the receipt NFT needs to be burned.
+A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. It would be incredibly hard continuously updating a data structure to keep track of which address contributed how much in the local state of the contract. A much better solution is to issue receipts each time funds are added to the pool! This way the contract does not have a 'global view' of who owns what at any time, but it can validate the receipts when invocing a withdrawal. 
+
+Technically this happens by minting a new NFT with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool and sending this to the address of the contributor.
+
+:::tip
+Minting NFT receipts allows the contract to offload state to an NFT helf by a user. By default these receipts are easily transferable and tradable because they are generic NFTs.
+:::
+
+Let's take a look at an example contract called `PooledFunds` which has two contract functions: `addFunds` and `withdrawFunds`
+
 
 ```solidity
 contract PooledFunds(
@@ -250,7 +269,7 @@ contract PooledFunds(
             require(tx.outputs[2].tokenCategory == bytes(0));
         }
     }
-    function withdraw(
+    function withdrawFunds(
     ) {
         // Require the covenant contract always lives at index zero with a minting NFT
         require(this.activeInputIndex == 0);
@@ -288,10 +307,17 @@ contract PooledFunds(
 }
 ```
 
-Keeping local state in NFTs and issuing NFTs as receipts are two strategies which can be used to create much more sophisticated decentralized applications such as the AMM-style DEX named [Jedex](https://blog.bitjson.com/jedex-decentralized-exchanges-on-bitcoin-cash/).
+All outputs of the `PooledFunds` contract need to be carefully controlled in the contract code so no additional NFTs can be minted in other outputs as this would allow 'fake' receipts to be created. The user receipt NFTs only differ from the covenant's minting NFT in that there is no minting capability added to the token's categoryID when calling `.tokenCategory`. At withdrawal the receipt needs to be validated and then the NFT commitment data is read to understand the contents of the receipt. In the current contract the receipt NFT also needs to be burned (simply not re-created in the outputs) ensuring the same receipt cannot be used to withdraw twice.
+
+:::caution
+With contracts holding minting NFTs, all outputs need to be carefully controlled in the covenant contract code so no additional (minting) NFTs can un-intentionally be created in other outputs.
+:::
+
 
 ## Conclusion
-We have discussed the main uses for covenants as they exist on Bitcoin Cash today. We've seen how we can achieve different use case by combining transaction output restrictions to `P2SH` and `P2PKH` outputs. We also touched on more advanced subjects such as keeping local state in NFTs. Covenants and CashTokens are the **main differentiating factor** for BCH smart contracts when compared to BTC, while keeping the same **efficient stateless verification**. If you're interested in learning more about the differences in smart contracts among BCH, BTC and ETH, read the article [*Smart contracts on Ethereum, Bitcoin and Bitcoin Cash*](https://kalis.me/smart-contracts-eth-btc-bch/).
+We have discussed the main uses for covenants as they exist on Bitcoin Cash today. We've seen how we can achieve different use case by combining transaction output restrictions to `P2SH` and `P2PKH` outputs. We also touched on more advanced subjects such as keeping local state in NFTs. Covenants and CashTokens are the **main differentiating factor** for BCH smart contracts when compared to BTC, while keeping the same **efficient, atomic verification**.
+
+Keeping local state in NFTs and issuing NFTs as receipts are two strategies which can be used to create much more sophisticated decentralized applications such as the AMM-style DEX named [Jedex](https://blog.bitjson.com/jedex-decentralized-exchanges-on-bitcoin-cash/).
 
 [bitcoin-covenants]: https://fc16.ifca.ai/bitcoin/papers/MES16.pdf
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
