@@ -22,7 +22,71 @@ import {
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
 
-export class Contract {
+/**
+ * Merge intersection type
+ * {foo: "foo"} & {bar: "bar"} will become {foo: "foo", bar: "bar"}
+ */
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
+
+type TypeMap = {
+  bool: boolean;
+  int: bigint;
+  string: string;
+  bytes: Uint8Array;
+  bytes4: Uint8Array;
+  bytes32: Uint8Array;
+  bytes64: Uint8Array;
+  bytes1: Uint8Array;
+  // TODO: use proper value for types below
+  pubkey: Uint8Array;
+  sig: Uint8Array;
+  datasig: Uint8Array;
+};
+
+/**
+ * Artifact format to tuple
+ * T = {name: string, type: keyof TypeMap}[]
+ * output = [ValueOfTypeMap, ...]
+ */
+type GetTypeAsTuple<T> = T extends readonly [infer A, ...infer O]
+  ? A extends { type: infer Type }
+    ? Type extends keyof TypeMap
+      ? [TypeMap[Type], ...GetTypeAsTuple<O>]
+      : [any, ...GetTypeAsTuple<O>]
+    : [any, ...GetTypeAsTuple<O>]
+  : T extends []
+  ? []
+  : any[];
+
+/**
+ * Iterate to each function in artifact.abi
+ * then use GetTypeAsTuple passing the artifact.abi[number].inputs
+ *    to get the parameters for the function
+ * 
+ * T = {name: string, inputs: {name: string, type: keyof TypeMap}[] }[]
+ * Output = {[NameOfTheFunction]: (...params: GetTypeAsTuple) => any}
+ * 
+ */
+type _InferContractFunction<T> = T extends { length: infer L }
+  ? L extends number
+    ? T extends readonly [infer A, ...infer O]
+      ? A extends { name: string; inputs: readonly any[] }
+        ? {
+            [k in A['name']]: (...p: GetTypeAsTuple<A['inputs']>) => Transaction;
+          } & _InferContractFunction<O>
+        : {} & _InferContractFunction<O>
+      : T extends []
+      ? {}
+      : { [k: string]: (...p: any[]) => Transaction }
+    : { [k: string]: (...p: any[]) => Transaction }
+  : never;
+type InferContractFunction<T> = Prettify<_InferContractFunction<T>>;
+
+export class Contract<
+  const TArtifact extends Artifact = any,
+  TContractType extends { constructorArgs: (TypeMap[keyof TypeMap])[], functions: Record<string, any> }
+    = { constructorArgs: GetTypeAsTuple<TArtifact["constructorInputs"]>, functions: InferContractFunction<TArtifact["abi"]> }
+  > {
   name: string;
   address: string;
   tokenAddress: string;
@@ -30,7 +94,8 @@ export class Contract {
   bytesize: number;
   opcount: number;
 
-  functions: Record<string, ContractFunction>;
+  functions: TContractType["functions"];
+  // ? Also do inferon unlock?
   unlock: Record<string, ContractUnlocker>;
 
   redeemScript: Script;
@@ -38,8 +103,8 @@ export class Contract {
   private addressType: 'p2sh20' | 'p2sh32';
 
   constructor(
-    private artifact: Artifact,
-    constructorArgs: Argument[],
+    private artifact: TArtifact,
+    constructorArgs: TContractType["constructorArgs"],
     private options?: ContractOptions,
   ) {
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
@@ -74,9 +139,11 @@ export class Contract {
     this.functions = {};
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
+      // @ts-ignore generic and can only be indexed for reading
       this.functions[f.name] = this.createFunction(f);
     } else {
       artifact.abi.forEach((f, i) => {
+        // @ts-ignore generic and can only be indexed for reading
         this.functions[f.name] = this.createFunction(f, i);
       });
     }
