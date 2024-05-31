@@ -131,4 +131,4 @@ console.log(txDetails);
 [bchjs]: https://bchjs.fullstack.cash/
 [bitcore]: https://github.com/bitpay/bitcore/tree/master/packages/bitcore-lib-cash
 [libauth]: https://libauth.org/
-[github-examples]: https://github.com/Bitcoin-com/cashscript/tree/master/examples
+[github-examples]: https://github.com/CashScript/cashscript/tree/master/examples

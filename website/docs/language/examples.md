@@ -2,7 +2,7 @@
 title: Examples
 ---
 
-An extensive collection of examples is available in the [GitHub repository](https://github.com/Bitcoin-com/cashscript/tree/master/examples). Below we discuss a few of these examples in more details and go through the functionality.
+An extensive collection of examples is available in the [GitHub repository](https://github.com/CashScript/cashscript/tree/master/examples). Below we discuss a few of these examples in more details and go through the functionality.
 
 ## Transfer With Timeout
 One interesting use case of Bitcoin Cash is using it for *paper tips*. With paper tips, you send a small amount of money to an address, and print the corresponding private key on a piece of paper. Then you can hand out these pieces of paper as a tip or gift to people in person. In practice, however, people might not know what to do with these gifts or they might lose or forget about it.

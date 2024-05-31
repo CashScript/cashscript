@@ -26,7 +26,7 @@ module.exports = {
           position: 'right',
         },
         {
-          href: 'https://github.com/Bitcoin-com/cashscript',
+          href: 'https://github.com/CashScript/cashscript',
           label: 'GitHub',
           position: 'right',
         },
