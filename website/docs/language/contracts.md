@@ -14,7 +14,7 @@ The pragma directive follows regular [semantic versioning rules](https://semver.
 #### Example
 ```solidity
 pragma cashscript ^0.9.0;
-pragma cashscript >= 0.4.0 < 0.5.4;
+pragma cashscript >= 0.7.0 < 0.9.3;
 ```
 
 ## Constructor
