@@ -52,6 +52,14 @@ BCH Guru is a non-custodial price-prediction platform and a collectible NFT proj
 
 The CashTokens Studio is an application for creating CashTokens and for their managing metadata updates and reserved supply. The CashTokens Studio uses CashScript to lock the AuthUTXO in an AuthGuard contract to prevent accidentally spending the authority to be able to update the token's metadata or release reserved supply.
 
+## Badgers.cash
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://badgers.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/badgers.png" /></a>
+</div>
+
+BadgerCoin is a fungible CashToken using a novel distibution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoce contract unlocks.
+
 ## BCHouse
 
 <div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
