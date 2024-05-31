@@ -101,11 +101,6 @@ module.exports = {
     [
       '@docusaurus/preset-classic',
       {
-        docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
-          editUrl:
-            'https://github.com/Bitcoin-com/cashscript/edit/master/website/',
-        },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
