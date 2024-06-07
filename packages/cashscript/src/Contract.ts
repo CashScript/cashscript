@@ -61,10 +61,9 @@ type GetTypeAsTuple<T> = T extends readonly [infer A, ...infer O]
 /**
  * Iterate to each function in artifact.abi
  * then use GetTypeAsTuple passing the artifact.abi[number].inputs
- *    to get the parameters for the function
  * 
  * T = {name: string, inputs: {name: string, type: keyof TypeMap}[] }[]
- * Output = {[NameOfTheFunction]: (...params: GetTypeAsTuple) => any}
+ * Output = {[NameOfTheFunction]: GetTypeAsTuple}
  * 
  */
 type _InferContractFunction<T> = T extends { length: infer L }
@@ -72,20 +71,26 @@ type _InferContractFunction<T> = T extends { length: infer L }
     ? T extends readonly [infer A, ...infer O]
       ? A extends { name: string; inputs: readonly any[] }
         ? {
-            [k in A['name']]: (...p: GetTypeAsTuple<A['inputs']>) => Transaction;
+            [k in A['name']]: GetTypeAsTuple<A['inputs']>;
           } & _InferContractFunction<O>
         : {} & _InferContractFunction<O>
       : T extends []
       ? {}
-      : { [k: string]: (...p: any[]) => Transaction }
-    : { [k: string]: (...p: any[]) => Transaction }
+      : { [k: string]: any[] }
+    : { [k: string]: any[] }
   : never;
 type InferContractFunction<T> = Prettify<_InferContractFunction<T>>;
 
+type KeyArgsToFunction<T extends Record<string, any[]>, ReturnVal> = {
+  [K in keyof T]: (...p: T[K]) => ReturnVal
+}
+
 export class Contract<
-  const TArtifact extends Artifact = any,
+  const TArtifact extends Artifact = Artifact,
   TContractType extends { constructorArgs: (TypeMap[keyof TypeMap])[], functions: Record<string, any> }
-    = { constructorArgs: GetTypeAsTuple<TArtifact["constructorInputs"]>, functions: InferContractFunction<TArtifact["abi"]> }
+    = { constructorArgs: GetTypeAsTuple<TArtifact["constructorInputs"]>, functions: InferContractFunction<TArtifact["abi"]> },
+  TFunctions extends Record<string, () => Transaction> = KeyArgsToFunction<TContractType["functions"], Transaction>,
+  TUnlock extends Record<string, () => Unlocker> = KeyArgsToFunction<TContractType["functions"], Unlocker>,
   > {
   name: string;
   address: string;
@@ -94,9 +99,8 @@ export class Contract<
   bytesize: number;
   opcount: number;
 
-  functions: TContractType["functions"];
-  // ? Also do inferon unlock?
-  unlock: Record<string, ContractUnlocker>;
+  functions: TFunctions;
+  unlock: TUnlock;
 
   redeemScript: Script;
   provider: NetworkProvider;
@@ -136,7 +140,7 @@ export class Contract<
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
-    this.functions = {};
+    this.functions = {} as TFunctions;
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
       // @ts-ignore generic and can only be indexed for reading
@@ -150,12 +154,14 @@ export class Contract<
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
-    this.unlock = {};
+    this.unlock = {} as TUnlock;
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
+      // @ts-ignore generic and can only be indexed for reading
       this.unlock[f.name] = this.createUnlocker(f);
     } else {
       artifact.abi.forEach((f, i) => {
+      // @ts-ignore generic and can only be indexed for reading
         this.unlock[f.name] = this.createUnlocker(f, i);
       });
     }
