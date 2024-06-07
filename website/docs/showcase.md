@@ -26,7 +26,7 @@ Tapswap is the first non-custodial marketplace to trade CashTokens, both fungibl
     <a href="https://bitcatsheroes.club/" target="_blank"><img src="/img/bitcats.png" /></a>
 </div>
 
-Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project uses CashScript for its non-custodial minting contract. This way the NFT minting guarantees fair access and a transparent NFT launch. The minting page uses a web3 wallet connect feature to allow minting directly from the user's smart contract wallet.
+Bitcats Heroes is the first collectible NFT series on Bitcoin Cash. The project uses CashScript for its non-custodial minting contract. This way the NFT minting guarantees fair access and a transparent NFT launch. The minting page uses a web3 wallet connect feature to allow minting directly from the user's smart contract wallet.
 
 ## Cash-Ninjas
 
@@ -34,7 +34,7 @@ Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project
     <a href="https://ninjas.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/cashninjas.jpg" /></a>
 </div>
 
-Cash-Ninjas is a collectibele NFT project on Bitcoin Cash which focuses on building open-source tooling! The Cash-Ninjas project uses CashScript for its non-custodial, multi-threaded minting contract. The contract is open source for others to inspect and use the contract code. The Cash-Ninjas minting page uses wallet connect to allow minting directly from the user's smart contract wallet.
+Cash-Ninjas is a collectible NFT project on Bitcoin Cash which focuses on building open-source tooling! The Cash-Ninjas project uses CashScript for its non-custodial, multi-threaded minting contract. The contract is open source for others to inspect and use the contract code. The Cash-Ninjas minting page uses wallet connect to allow minting directly from the user's smart contract wallet.
 
 ## BCH Guru
 
@@ -58,7 +58,7 @@ The CashTokens Studio is an application for creating CashTokens and for their ma
     <a href="https://badgers.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/badgers.png" /></a>
 </div>
 
-BadgerCoin is a fungible CashToken using a novel distibution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoce contract unlocks.
+BadgerCoin is a fungible CashToken using a novel distibution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoke contract unlocks.
 
 ## BCHouse
 

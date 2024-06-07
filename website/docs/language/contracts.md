@@ -34,7 +34,7 @@ Upon initialization of the contract, constructor parameters are encoded and adde
 :::
 
 ## Functions
-The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. In the basics the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. But by using a technique called covenants, it is possible to specify other conditions, like restricting *where* money can be sent. To read more about this technique, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
+The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using a technique called covenants, it's possible to specify additional conditions — like restricting *where* money can be sent. To read more about this technique, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
 
 #### Example
 ```solidity
@@ -80,7 +80,7 @@ contract P2PKH(bytes20 pkh) {
 ```
 
 ### Variable declaration
-Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on - unless specifying the `constant` keyword. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
+Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on — unless specifying the `constant` keyword. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
 
 :::caution
 CashScript disallows variable shadowing and unused variables.
@@ -103,7 +103,7 @@ myString = 'Cash';
 ```
 
 ### Control structures
-The only control structures in CashScript are `if` and `else` statements. This is due to limitations in the underlying Bitcoin Script which prevent loops, recursion, and `return` statements. If-else statements follow usual semantics known from languages like C or JavaScript.
+The only control structures in CashScript are `if...else` statements. This is due to limitations in the underlying Bitcoin Script which prevents loops, recursion, and `return` statements. If-else statements follow usual semantics known from languages like C or JavaScript.
 
 :::note
 There is no implicit type conversion from non-boolean to boolean types. So `if (1) { ... }` is not valid CashScript and should instead be written as `if (bool(1)) { ... }`

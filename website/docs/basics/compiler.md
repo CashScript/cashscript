@@ -32,7 +32,7 @@ Options:
   -?, --help           Display help
 ```
 
-## Javascript Compilation
+## JavaScript Compilation
 Generally CashScript contracts are compiled to an Artifact JSON file using the CLI compiler. As an alternative to this, CashScript contracts can be compiled from within JavaScript apps using the `cashc` package. This package exports two compilation functions.
 
 ```bash
