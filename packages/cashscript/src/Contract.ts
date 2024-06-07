@@ -89,8 +89,6 @@ export class Contract<
   const TArtifact extends Artifact = Artifact,
   TContractType extends { constructorArgs: (TypeMap[keyof TypeMap])[], functions: Record<string, any> }
     = { constructorArgs: GetTypeAsTuple<TArtifact["constructorInputs"]>, functions: InferContractFunction<TArtifact["abi"]> },
-  TFunctions extends Record<string, () => Transaction> = KeyArgsToFunction<TContractType["functions"], Transaction>,
-  TUnlock extends Record<string, () => Unlocker> = KeyArgsToFunction<TContractType["functions"], Unlocker>,
   > {
   name: string;
   address: string;
@@ -99,8 +97,8 @@ export class Contract<
   bytesize: number;
   opcount: number;
 
-  functions: TFunctions;
-  unlock: TUnlock;
+  functions: KeyArgsToFunction<TContractType["functions"], Transaction>;
+  unlock: KeyArgsToFunction<TContractType["functions"], Unlocker>;
 
   redeemScript: Script;
   provider: NetworkProvider;
@@ -140,7 +138,7 @@ export class Contract<
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
-    this.functions = {} as TFunctions;
+    this.functions = {} as any;
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
       // @ts-ignore generic and can only be indexed for reading
@@ -154,7 +152,7 @@ export class Contract<
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
-    this.unlock = {} as TUnlock;
+    this.unlock = {} as any;
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
       // @ts-ignore generic and can only be indexed for reading
