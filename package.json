@@ -35,10 +35,10 @@
     "cashproof": "python3 node_modules/cashproof/run.py",
     "examples": "tsx examples/p2pkh.ts && tsx examples/transfer_with_timeout.ts && tsx examples/hodl_vault.ts",
     "coverage": "codecov",
-    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples --ignore testing-suite",
+    "postinstall": "lerna bootstrap && yarn build",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
     "update-version": "tsx update-version.ts",
     "publish-all": "lerna publish from-package",
-    "build": "lerna run build"
+    "build": "lerna run build --ignore cashscript-examples --ignore testing-suite"
   }
 }

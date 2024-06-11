@@ -1,6 +1,10 @@
 We use yarn workspaces + lerna for monorepo management. So to get started, clone this repository and run `yarn` in the root directory to install all dependencies for all packages.
 
-When updating code in one package, you can run `yarn build` in the root directory to build all packages so the changes get propagated to the other packages as well.
+When updating code in one package, you can run `yarn build` in the root directory to build all packages so the changes get propagated to the other packages as well. If you're already in a package directory, you can run the following command to do so:
+
+```bash
+pushd ../.. && yarn build && popd
+```
 
 ### Publishing a release
 
