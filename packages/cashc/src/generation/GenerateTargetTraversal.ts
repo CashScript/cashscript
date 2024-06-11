@@ -108,9 +108,9 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return index;
   }
 
-  private getCurrentInstructionPointer(): number {
-    // instruction pointer is the count of emitted opcodes + number of constructor data pushes
-    return this.output.length + this.constructorParameterCount;
+  private getMostRecentInstructionPointer(): number {
+    // instruction pointer is the count of emitted opcodes + number of constructor data pushes (minus 1 for 0-indexing)
+    return this.output.length + this.constructorParameterCount - 1;
   }
 
   visitSourceFile(node: SourceFileNode): Node {
@@ -126,7 +126,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+
+    // Keep track of constructor parameter count for instructor pointer calculation
     this.constructorParameterCount = node.parameters.length;
+
     if (node.functions.length === 1) {
       node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
     } else {
@@ -178,13 +181,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
 
-    this.removeFinalVerify(node.body);
+    this.removeFinalVerifyFromFunction(node.body);
     this.cleanStack(node.body);
 
     return node;
   }
 
-  removeFinalVerify(functionBodyNode: Node): void {
+  removeFinalVerifyFromFunction(functionBodyNode: Node): void {
     // After EnsureFinalRequireTraversal, we know that the final opcodes are either
     // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
 
@@ -204,6 +207,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       // At this point there is no verification value left on the stack:
       //  - scoped stack is cleared inside branch ended by OP_ENDIF
       //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
+      //  - OP_VERIFY does not leave a verification value
       // so we add OP_1 to the script (indicating success)
       this.emit(Op.OP_1, { location: functionBodyNode.location, positionHint: PositionHint.END });
       this.pushToStack('(value)');
@@ -280,7 +284,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.requireMessages.push({
         // We're removing 1 from the IP because the error message needs to match the OP_XXX_VERIFY, not the OP_DROP that
         // is emitted directly after
-        ip: this.getCurrentInstructionPointer() - 1,
+        ip: this.getMostRecentInstructionPointer() - 1,
         line: node.location.start.line,
         message: node.message,
       });
@@ -300,7 +304,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // TODO: We don't even have to display the Libauth message if we just say "this and this require failed"
     if (node.message) {
       this.requireMessages.push({
-        ip: this.getCurrentInstructionPointer(),
+        ip: this.getMostRecentInstructionPointer(),
         line: node.location.start.line,
         message: node.message,
       });
@@ -311,7 +315,9 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitConsoleStatement(node: ConsoleStatementNode): Node {
-    const ip = this.getCurrentInstructionPointer();
+    // We add a plus 1 to the most recent instruction pointer, because we want to log the state
+    // of the stack *after* the most recent instruction has been executed
+    const ip = this.getMostRecentInstructionPointer() + 1;
     const { line } = node.location.start;
 
     const data = node.parameters.map((parameter: ConsoleParameterNode) => {

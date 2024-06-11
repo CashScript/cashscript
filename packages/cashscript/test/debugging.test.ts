@@ -27,19 +27,16 @@ contract Test() {
     require(1 == 1, "1 should equal 1");
   }
 
-  // TODO: Add test for this
   function test_multiple_require_statements() {
     require(1 == 2, "1 should equal 2");
     require(1 == 1, "1 should equal 1");
   }
 
-  // TODO: Add test for this
   function test_multiple_require_statements_final_fails() {
     require(1 == 1, "1 should equal 1");
     require(1 == 2, "1 should equal 2");
   }
 
-  // TODO: Add test for this
   function test_multiple_require_statements_no_message_final() {
     require(1 == 1, "1 should equal 1");
     require(1 == 2);
@@ -78,6 +75,11 @@ contract Test() {
 
   function test_fail_checksig(sig s, pubkey pk) {
     require(checkSig(s, pk), "Signatures do not match");
+    require(1 == 2, "1 should equal 2");
+  }
+
+  function test_fail_checksig_final_verify(sig s, pubkey pk) {
+    require(checkSig(s, pk), "Signatures do not match");
   }
 
   function test_fail_checkdatasig(datasig s, bytes message, pubkey pk) {
@@ -96,6 +98,29 @@ contract Test() {
     require(tx.outputs.length == 1, "should have 1 output");
   }
 }`;
+
+const CONTRACT_CODE3 = `
+contract Test() {
+  // We test this because the cleanup looks different and the final OP_VERIFY isn't removed for these kinds of functions
+  function test_fail_large_cleanup() {
+    int a = 1;
+    int b = 2;
+    int c = 3;
+    int d = 4;
+    int e = 5;
+    int f = 6;
+    int g = 7;
+    int h = 8;
+
+    // Use all variables inside this if-statement so they do not get OP_ROLL'ed
+    if (1 == 2) {
+      require(a + b + c + d + e + f + g + h == 1, "sum should equal 36");
+    }
+
+    require(1 == 2, "1 should equal 2");
+  }
+}
+`;
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
@@ -281,6 +306,7 @@ describe('Debugging tests', () => {
   describe('require statements', () => {
     const artifact = compileString(CONTRACT_CODE);
     const artifact2 = compileString(CONTRACT_CODE2);
+    const artifact3 = compileString(CONTRACT_CODE3);
     const provider = new MockNetworkProvider();
 
     // test_require
@@ -303,7 +329,7 @@ describe('Debugging tests', () => {
       await expect(transaction).toFailRequireWith(/should have 1 output/);
     });
 
-    // // test_multiple_require_statements
+    // test_multiple_require_statements
     it('it should only fail with correct error message when there are multiple require statements', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
@@ -313,7 +339,7 @@ describe('Debugging tests', () => {
       await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
-    // // test_multiple_require_statements_final_fails
+    // test_multiple_require_statements_final_fails
     it('it should only fail with correct error message when there are multiple require statements where the final statement fails', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
@@ -398,6 +424,16 @@ describe('Debugging tests', () => {
       // await expect(checkSigTransactionNullSignature).toFailRequireWith(/Signatures do not match/);
     });
 
+    // test_fail_checksig_final_verify
+    it('should fail with correct error message when checkSig fails as the final verify', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const checkSigTransaction = contract.functions
+        .test_fail_checksig_final_verify(new SignatureTemplate(alicePriv), bobPub).to(contract.address, 1000n);
+      await expect(checkSigTransaction).toFailRequireWith(/Signatures do not match/);
+    });
+
     // test_fail_checkdatasig
     it('should fail with correct error message when checkDataSig fails', async () => {
       const contract = new Contract(artifact, [], { provider });
@@ -429,6 +465,15 @@ describe('Debugging tests', () => {
         )
         .to(contract.address, 1000n);
       await expect(checkmultiSigTransaction).toFailRequireWith(/Multi Signatures do not match/);
+    });
+
+    // test_fail_large_cleanup
+    it('should fail with correct error message when a require statement fails in a function with a large cleanup', async () => {
+      const contract = new Contract(artifact3, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.test_fail_large_cleanup().to(contract.address, 1000n);
+      await expect(transaction).toFailRequireWith(/1 should equal 2/);
     });
   });
 
