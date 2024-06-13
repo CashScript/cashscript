@@ -53,7 +53,7 @@ export class Contract {
     }
 
     if (artifact.constructorInputs.length !== constructorArgs.length) {
-      throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor`);
+      throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor. Expected ${artifact.constructorInputs.length} arguments (${artifact.constructorInputs.map(input => input.type)}) but got ${constructorArgs.length}`);
     }
 
     // Encode arguments (this also performs type checking)
@@ -105,7 +105,7 @@ export class Contract {
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
     return (...args: Argument[]) => {
       if (abiFunction.inputs.length !== args.length) {
-        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}`);
+        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map(input => input.type)}) but got ${args.length}`);
       }
 
       // Encode passed args (this also performs type checking)
@@ -125,6 +125,10 @@ export class Contract {
 
   private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
     return (...args: Argument[]) => {
+      if (abiFunction.inputs.length !== args.length) {
+        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map(input => input.type)}) but got ${args.length}`);
+      }
+
       const bytecode = scriptToBytecode(this.redeemScript);
 
       const encodedArgs = args
