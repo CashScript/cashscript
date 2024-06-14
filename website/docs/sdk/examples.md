@@ -87,7 +87,7 @@ contract Announcement() {
 }
 ```
 
-The CashScript code above ensures that the smart contract **can only** be used in the way specified in the code. But the transaction needs to be created by the SDK, and to ensure that it complies with the rules of the smart contract, we need to use some of the more advanced options of the SDK.
+The CashScript code above ensures that the smart contract **can only** be used in the way specified in the code. But the transaction needs to be created by the SDK. To ensure that it complies with the rules of the smart contract, we need to use some of the more advanced options of the SDK.
 
 ```ts title="Announcement.js"
 import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
