@@ -653,10 +653,10 @@ export const fixtures: Fixture[] = [
       debug: {
         bytecode: '0079519c69007a5193529c',
         logs: [
-          { data: [{ stackIndex: 0, type: 'int' }, 'test'], ip: 5, line: 4 },
-          { data: [{ stackIndex: 0, type: 'int' }, 'test2'], ip: 5, line: 5 },
+          { data: [{ stackIndex: 0, type: 'int', ip: 5 }, 'test'], ip: 5, line: 4 },
+          { data: [{ stackIndex: 0, type: 'int', ip: 5 }, 'test2'], ip: 5, line: 5 },
         ],
-        requireMessages: [{ ip: 5, line: 3, message: 'Wrong value passed' }, { ip: 12, line: 6, message: 'Sum doesn\'t work' }],
+        requireMessages: [{ ip: 4, line: 3, message: 'Wrong value passed' }, { ip: 11, line: 6, message: 'Sum doesn\'t work' }],
         sourceMap: '3:12:3:17;;:21::22;:12:::1;:4::46;6:12:6:17:0;;:20::21;:12:::1;:25::26:0;:12:::1',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/debug_messages.cash', import.meta.url), { encoding: 'utf-8' }),

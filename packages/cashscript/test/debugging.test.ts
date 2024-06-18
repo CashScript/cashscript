@@ -144,11 +144,18 @@ describe('Debugging tests', () => {
         }
 
         function functionWithIfStatement(int a) {
+          int b = 0;
+
           if (a == 1) {
             console.log("a is 1");
+            b = a;
           } else {
             console.log("a is not 1");
+            b = 2;
           }
+
+          console.log('a equals', a);
+          console.log('b equals', b);
 
           require(1 == 1);
         }
@@ -222,14 +229,18 @@ describe('Debugging tests', () => {
         .functionWithIfStatement(1n)
         .to(contract.address, 10000n);
 
-      await expect(transaction1).toLog(new RegExp('^Test.cash:22 a is 1$'));
+      await expect(transaction1).toLog(new RegExp('^Test.cash:24 a is 1$'));
+      await expect(transaction1).toLog(new RegExp('^Test.cash:31 a equals 1$'));
+      await expect(transaction1).toLog(new RegExp('^Test.cash:32 b equals 1$'));
       await expect(transaction1).not.toLog(/a is not 1/);
 
       const transaction2 = contract.functions
         .functionWithIfStatement(2n)
         .to(contract.address, 10000n);
 
-      await expect(transaction2).toLog(new RegExp('^Test.cash:24 a is not 1$'));
+      await expect(transaction2).toLog(new RegExp('^Test.cash:27 a is not 1$'));
+      await expect(transaction2).toLog(new RegExp('^Test.cash:31 a equals 2$'));
+      await expect(transaction2).toLog(new RegExp('^Test.cash:32 b equals 2$'));
       await expect(transaction2).not.toLog(/a is 1/);
     });
 

@@ -1,5 +1,5 @@
 import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateBCH, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBCH2023, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
-import { Artifact, LogData, LogEntry, Op, PrimitiveType, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
+import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 
 // evaluates the fully defined template, throws upon error
@@ -35,8 +35,7 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     .filter((debugStep) => executedDebugSteps.some((log) => log.ip === debugStep.ip));
 
   for (const log of executedLogs) {
-    const correspondingDebugStep = executedDebugSteps.find((debugStep) => debugStep.ip === log.ip)!;
-    logConsoleLogStatement(log, correspondingDebugStep, artifact);
+    logConsoleLogStatement(log, executedDebugSteps, artifact);
   }
 
   const lastExecutedDebugStep = executedDebugSteps[executedDebugSteps.length - 1];
@@ -122,22 +121,25 @@ const createProgram = (template: WalletTemplate): CreateProgramResult => {
 
 const logConsoleLogStatement = (
   log: LogEntry,
-  debugStep: AuthenticationProgramStateCommon,
+  debugSteps: AuthenticationProgramStateCommon[],
   artifact: Artifact,
 ): void => {
   let line = `${artifact.contractName}.cash:${log.line}`;
-  const decodedData = log.data.map((element) => decodeLogData(element, debugStep.stack, log.ip));
+  const decodedData = log.data.map((element) => {
+    if (typeof element === 'string') return element;
+
+    const debugStep = debugSteps.find((step) => step.ip === element.ip)!;
+    return decodeStackItem(element, debugStep.stack);
+  });
   console.log(`${line} ${decodedData.join(' ')}`);
 };
 
-const decodeLogData = (element: LogData, stack: Uint8Array[], ip: number): any => {
-  if (typeof element === 'string') return element;
-
+const decodeStackItem = (element: StackItem, stack: Uint8Array[]): any => {
   // Reversed since stack is in reverse order
   const stackItem = [...stack].reverse()[element.stackIndex];
 
   if (!stackItem) {
-    throw Error(`Stack item at index ${element.stackIndex} not found at instruction pointer ${ip}`);
+    throw Error(`Stack item at index ${element.stackIndex} not found at instruction pointer ${element.ip}`);
   }
 
   if (element.type === PrimitiveType.BOOL) return decodeBool(stackItem);

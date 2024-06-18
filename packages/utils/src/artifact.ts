@@ -27,6 +27,7 @@ export interface LogEntry {
 export interface StackItem {
   type: string;
   stackIndex: number;
+  ip: number;
 }
 
 export type LogData = StackItem | string;

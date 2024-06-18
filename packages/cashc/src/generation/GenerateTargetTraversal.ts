@@ -16,6 +16,7 @@ import {
   RequireMessage,
   PositionHint,
   SingleLocationData,
+  StackItem,
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -65,6 +66,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   stack: string[] = [];
   consoleLogs: LogEntry[] = [];
   requireMessages: RequireMessage[] = [];
+  finalStackUsage: Record<string, StackItem> = {};
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
@@ -102,9 +104,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.stack.splice(1, 1);
   }
 
-  private getStackIndex(value: string): number {
+  private getStackIndex(value: string, canBeUndefined?: boolean): number {
     const index = this.stack.indexOf(value);
-    if (index === -1) throw new Error(); // Should not happen
+
+    if (index === -1 && !canBeUndefined) {
+      throw new Error(`Expected variable '${value}' does not exist on the stack`);
+    }
+
     return index;
   }
 
@@ -323,9 +329,19 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     const data = node.parameters.map((parameter: ConsoleParameterNode) => {
       if (parameter instanceof IdentifierNode) {
         const symbol = parameter.definition!;
-        const stackIndex = this.getStackIndex(parameter.name);
+        const stackIndex = this.getStackIndex(parameter.name, true);
+
+        // If the variable is not on the stack, then we add the final stack usage to the console log
+        if (stackIndex === -1) {
+          if (!this.finalStackUsage[parameter.name]) {
+            throw new Error(`Expected variable '${parameter.name}' does not exist on the stack or in final stack usage`);
+          }
+          return this.finalStackUsage[parameter.name];
+        }
+
+        // If the variable is on the stack, we add the stack index and type to the console log
         const type = typeof symbol.type === 'string' ? symbol.type : symbol.toString();
-        return { stackIndex, type };
+        return { stackIndex, type, ip };
       }
 
       return parameter.toString();
@@ -559,6 +575,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
     if (this.isOpRoll(node)) {
+      const symbol = node.definition!;
+      this.finalStackUsage[node.name] = {
+        type:  typeof symbol.type === 'string' ? symbol.type : symbol.toString(),
+        stackIndex,
+        ip: this.getMostRecentInstructionPointer(),
+      };
+
       this.emit(Op.OP_ROLL, { location: node.location });
       this.removeFromStack(stackIndex);
     } else {
