@@ -2,7 +2,7 @@
 title: Advanced Transaction Builder
 ---
 
-With the introduction of newer smart contract features to BCH, such as native introspection and CashTokens, we've seen use cases for combining UTXOs of multiple different smart contracts within a single transaction - such as [Fex][fex]. The [simplified transaction builder][transactions-simple] only operates on a single smart contract, so to support more advanced use cases, you can use the Advanced Transaction Builder.
+With the introduction of newer smart contract features to BCH, such as native introspection and CashTokens, we've seen use cases for combining UTXOs of multiple different smart contracts within a single transaction — such as [Fex][fex]. The [simple transaction builder][transactions-simple] only operates on a single smart contract. To support more advanced use cases, you can use the Advanced Transaction Builder.
 
 The Advanced Transaction Builder supports adding UTXOs from any number of different smart contracts and P2PKH UTXOs. While the simplified transaction builder automatically selects UTXOs for you and adds change outputs, the advanced transaction builder requires you to provide the UTXOs yourself and manage change carefully.
 
@@ -35,7 +35,7 @@ const transactionBuilder = new TransactionBuilder({ provider });
 transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
 ```
 
-Adds a single input UTXOs to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input.
+Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input.
 
 :::note
 It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases are covered by the `SignatureTemplate` and `Contract` classes.
@@ -125,7 +125,7 @@ transactionBuilder.addOutput({
 });
 
 transactionBuilder.addOutputs([
-  { to: aliceAddress, amount: 50_000n }
+  { to: aliceAddress, amount: 50_000n },
   { to: bobAddress, amount: 50_000n },
 ]);
 ```
@@ -135,7 +135,7 @@ transactionBuilder.addOutputs([
 transactionBuilder.addOpReturnOutput(chunks: string[]): this
 ```
 
-Adds an OP_RETURN output to the transaction with the provided data chunks in string format. If the string is `0x`-prefixed, it is treated as a hex string, otherwise it is treated as a UTF-8 string.
+Adds an OP_RETURN output to the transaction with the provided data chunks in string format. If the string is `0x`-prefixed, it is treated as a hex string. Otherwise it is treated as a UTF-8 string.
 
 #### Example
 ```ts
@@ -151,6 +151,11 @@ transactionBuilder.setLocktime(locktime: number): this
 
 Sets the locktime for the transaction to set a transaction-level absolute timelock (see [Timelock documentation][bitcoin-wiki-timelocks] for more information). The locktime can be set to a specific block height or a unix timestamp.
 
+#### Example
+```ts
+// Set locktime one day from now
+transactionBuilder.setLocktime(((Date.now() / 1000) + 24 * 60 * 60) * 1000);
+```
 
 ### setMaxFee()
 ```ts

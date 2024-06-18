@@ -72,19 +72,19 @@ The built-in UTXO selection is generally sufficient. But there are specific use 
 
 ### fromP2PKH()
 ```ts
-fromP2PKH(input: Utxo, template: SignatureTemplate): this;
-fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
+transaction.fromP2PKH(input: Utxo, template: SignatureTemplate): this;
+transaction.fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
 ```
 
 The `fromP2PKH()` function allows you to provide a list of P2PKH UTXOs to be used in the transaction. The passed `SignatureTemplate` is used to sign these UTXOs. This function can be called any number of times, and the provided UTXOs will be added to the list of earlier added UTXOs.
 
 :::note
-If you are using meep to debug a `fromP2PKH()` transaction, meep will always use the first input for the debugging. So if you want to debug the smart contract bytecode, make sure that the first input is not a P2PKH input.
+If you are using [meep](https://github.com/gcash/meep) to debug a `fromP2PKH()` transaction, meep will always use the first input for the debugging. So if you want to debug the smart contract bytecode, make sure that the first input is not a P2PKH input.
 :::
 
 #### Example
 ```ts
-import { bobAddress, bobPrivateKey } from 'somewhere';
+import { bobAddress, bobPrivateKey } from './somewhere';
 import { ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
 
 const provider = new ElectrumNetworkProvider();
@@ -165,12 +165,17 @@ The `withoutTokenChange()` function allows you to disable the change output for 
 Be sure to check that the remaining amount (sum of inputs - sum of outputs) is not too high. The difference will be burned and cannot be reclaimed.
 :::
 
+#### Example
+```ts
+.withoutTokenChange()
+```
+
 ### withAge()
 ```ts
 transaction.withAge(age: number): this
 ```
 
-The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to to use the `tx.age` CashScript functionality, and the `age` parameter passed into this function will be the value of `tx.age` inside the smart contract. For more information, refer to [BIP68][bip68].
+The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to use the `tx.age` CashScript functionality. The `age` parameter passed into this function will be the value of `tx.age` inside the smart contract. For more information, refer to [BIP68][bip68].
 
 #### Example
 ```ts
@@ -248,7 +253,7 @@ If you want to debug a transaction locally instead of sending it to the network,
 
 If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
 
-You can read more about debugging transactions [here](/docs/guides/debugging).
+You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
 
 :::caution
 It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
@@ -259,7 +264,7 @@ Transactions can fail for a number of reasons. Most of these are related to the 
 
 This `Reason` enum only includes errors that are related to smart contract execution, so other reasons have to be caught separately. Besides the `Reason` enum, there are also several error classes that can be caught and acted on:
 
-* **`FailedRequireError`**, signifies a failed require statement. This includes the following reasons:
+* **`FailedRequireError`** signifies a failed require statement. This includes the following reasons:
   * `Reason.EVAL_FALSE`
   * `Reason.VERIFY`
   * `Reason.EQUALVERIFY`
@@ -267,10 +272,10 @@ This `Reason` enum only includes errors that are related to smart contract execu
   * `Reason.CHECKSIGVERIFY`
   * `Reason.CHECKDATASIGVERIFY`
   * `Reason.NUMEQUALVERIFY`
-* **`FailedTimeCheckError`**, signifies a failed time check using `tx.time` or `tx.age`. This includes the following reasons:
+* **`FailedTimeCheckError`** signifies a failed time check using `tx.time` or `tx.age`. This includes the following reasons:
   * `Reason.NEGATIVE_LOCKTIME`
   * `Reason.UNSATISFIED_LOCKTIME`
-* **`FailedSigCHeckError`**, signifies a failed signature check. This includes the following reasons:
+* **`FailedSigCHeckError`** signifies a failed signature check. This includes the following reasons:
   * `Reason.SIG_COUNT`
   * `Reason.PUBKEY_COUNT`
   * `Reason.SIG_HASHTYPE`
@@ -279,7 +284,7 @@ This `Reason` enum only includes errors that are related to smart contract execu
   * `Reason.SIG_NULLFAIL`
   * `Reason.SIG_BADLENGTH`
   * `Reason.SIG_NONSCHNORR`
-* **`FailedTransactionError`**, signifies a general fallback error. This includes all remaining reasons listed in the `Reason` enum as well as any other reasons unrelated to the smart contract execution.
+* **`FailedTransactionError`** signifies a general fallback error. This includes all remaining reasons listed in the `Reason` enum as well as any other reasons unrelated to the smart contract execution.
 
 ```ts
 enum Reason {

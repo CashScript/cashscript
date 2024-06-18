@@ -97,7 +97,7 @@ All network functionality that the CashScript SDK needs is encapsulated in a net
 new MockNetworkProvider()
 ```
 
-The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. You can read more about the `MockNetworkProvider` and automated tests on the [testing-setup](/docs/sdk/testing-setup) page.
+The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. You can read more about the `MockNetworkProvider` and automated tests on the [testing setup](/docs/sdk/testing-setup) page.
 
 #### Example
 ```ts
@@ -108,13 +108,17 @@ provider.addUtxo(contractAddress, newUtxo);
 
 ### Other NetworkProviders
 
-There are two alternative network providers implemented. There is the `FullStackNetworkProvider` which uses [FullStack.cash][fullstack]' infrastructure to connect to the BCH network. There's also the `BitcoinRpcNetworkProvider` uses a direct connection to a Bitcoin Cash node. Currently neither supports CashTokens, so it is recommended to use the ElectrumNetworkProvider.
+There are two alternative network providers implemented:
+- `FullStackNetworkProvider`: uses [FullStack.cash][fullstack]' infrastructure to connect to the BCH network. 
+- `BitcoinRpcNetworkProvider`: uses a direct connection to a Bitcoin Cash node. 
+
+Currently neither supports CashTokens, so it is recommended to use the `ElectrumNetworkProvider`.
 
 ### Custom NetworkProviders
 A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if new BCH libraries are created in the future, it is simple to use them with CashScript. Custom NetworkProviders also potentially enables the CashScript SDK to be used with other (partially) compatible networks, such as BTC or BSV.
 
 :::info
-To implement a Custom NetworkProvider refer to the [NetworkProvider interface](https://github.com/CashScript/cashscript/blob/master/packages/cashscript/src/network/NetworkProvider.ts).
+To implement a Custom NetworkProvider, refer to the [NetworkProvider interface](https://github.com/CashScript/cashscript/blob/master/packages/cashscript/src/network/NetworkProvider.ts).
 :::
 
 

@@ -33,9 +33,9 @@ const features = [
     title: 'DeFi on Bitcoin Cash',
     description: (
       <>
-        Bitcoin Cash has had many script upgrades on such as CashTokens and transaction introspection.
-        Because of this DeFi is very much possible on Bitcoin Cash.
-        However, compared to EVM smart contracts work very differently due to BCH's UTXO
+        Bitcoin Cash has had many script upgrades, such as CashTokens and transaction introspection.
+        Because of this, DeFi is very much possible on Bitcoin Cash.
+        However, compared to EVM, smart contracts work very differently due to BCH's UTXO
         architecture.
       </>
     ),
@@ -44,9 +44,9 @@ const features = [
     title: 'Integrated Tooling',
     description: (
       <>
-        CashScript offers integrated tooling through the Javascript SDK.
+        CashScript offers integrated tooling through the JavaScript SDK.
         The SDK has utilities for easy transaction building and other network functionality.
-        CashScript has built-in debug tooling comaptible with the Bitauth-IDE to offer the best developer experience.  
+        CashScript has built-in debug tooling compatible with the Bitauth-IDE to offer the best developer experience.  
       </>
     ),
   },

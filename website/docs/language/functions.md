@@ -2,7 +2,7 @@
 title: Global Functions & Operators
 ---
 
-CashScript has several builtin functions for things like cryptographic and arithmetic applications, and it includes many common arithmetic and other operators that you would expect in a programming language.
+CashScript has several built-in functions for things like cryptographic and arithmetic applications, and it includes many common arithmetic and other operators that you would expect in a programming language.
 
 ## Arithmetic functions
 ### abs()

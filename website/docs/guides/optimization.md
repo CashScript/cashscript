@@ -9,16 +9,16 @@ Depending on the complexity of the contract or system design, it may sometimes b
 
 ## Optimization Tips & Tricks
 
-The `cashc` compiler does some optimisations automatically, but by writing your CashScript code in a specific way, the compiler is better able to optimise it. Trial & error is a definately part of it, but here are some tricks that may help:
+The `cashc` compiler does some optimisations automatically. By writing your CashScript code in a specific way, the compiler is better able to optimise it. Trial & error is definitely part of it, but here are some tricks that may help:
 
 ### 1. Consume stack items
 
-It's best to "consume" values as soon as possible ("consume" meaning their final use in the contract). This frees up space on the stack.
-Use/consume values as close to their declaration as possible, both for variables and for parameters. This avoids having to do deep stack operations. This [example](https://gitlab.com/GeneralProtocols/anyhedge/contracts/-/blob/development/contracts/v0.11/contract.cash#L61-72) from anyhedge illustrates consuming values immediately.
+It's best to "consume" values (i.e. their final use in the contract) as soon as possible. This frees up space on the stack.
+Use/consume values as close to their declaration as possible, both for variables and for parameters. This avoids having to do deep stack operations. This [example](https://gitlab.com/GeneralProtocols/anyhedge/contracts/-/blob/development/contracts/v0.11/contract.cash#L61-72) from AnyHedge illustrates consuming values immediately.
 
 ### 2. Declare variables
 
-Declare variables when re-using certain common introspection items to avoid duplicate expressions
+Declare variables when re-using certain common introspection items to avoid duplicate expressions.
 
 ```solidity title="Example CashScript code"
     // do this
@@ -33,7 +33,7 @@ Declare variables when re-using certain common introspection items to avoid dupl
 ```
 
 ### 3. Parse efficiently
-When using `.split()` to use both sides of a `bytes` element, declare both parts immediately to save on opcodes aprsing the byte array.
+When using `.split()` to use both sides of a `bytes` element, declare both parts immediately to save on opcodes parsing the byte array.
 
 ```solidity title="Example CashScript code"
     // do this
@@ -46,7 +46,7 @@ When using `.split()` to use both sides of a `bytes` element, declare both parts
 ```
 ### 4. Avoid if-else
 
-Avoid if-statements if possible, instead try to "inline" them. This is because the compiler cannot know which branches will be taken, and therefore cannot optimise those branches as well. This [example](https://gitlab.com/GeneralProtocols/anyhedge/contracts/-/blob/development/contracts/v0.11/contract.cash#L128-130) from anyhedge illustrates inlining flow control:
+Avoid if-statements when possible. Instead, try to "inline" them. This is because the compiler cannot know which branches will be taken, and therefore cannot optimise those branches as well. This [example](https://gitlab.com/GeneralProtocols/anyhedge/contracts/-/blob/development/contracts/v0.11/contract.cash#L128-130) from AnyHedge illustrates inlining flow control:
 
 ```solidity title="AnyHedge CashScript code"
     // do this
@@ -63,11 +63,11 @@ Avoid if-statements if possible, instead try to "inline" them. This is because t
 
 ## Modular Contract Design
 
-An alternative to optimizing your contract to shrink it in size is to redesign your contract to use a composable architecture so the contract logic is separated out in to multiple componenets which only some of which can be used in a transaction and hence shrink your contract size.
+An alternative to optimizing your contract to shrink in size is to redesign your contract to use a composable architecture. The contract logic is separated out in to multiple components of which only some can be used in a transaction, and hence shrink your contract size.
 
 ### NFT contract functions
 
-The concept of having NFT functions was firt introduced by the [Jedex demo](https://github.com/bitjson/jedex#demonstrated-concepts) and was first implemented in a CashScript contract by the [FexCash DEX](https://github.com/fex-cash/fex/blob/main/whitepaper/fex_whitepaper.md). The concept is that by authenticating NFTs you can make each function a separate contract with the same tokenId. This way you can offload logic from the main contract and one function NFT contract attached to the main contract on spending so the other contract functions exist as unused UTXOs separate from the transaction.
+The concept of having NFT functions was first introduced by the [Jedex demo](https://github.com/bitjson/jedex#demonstrated-concepts) and was first implemented in a CashScript contract by the [FexCash DEX](https://github.com/fex-cash/fex/blob/main/whitepaper/fex_whitepaper.md). The concept is that by authenticating NFTs, you can make each function a separate contract with the same tokenId. This way, you can offload logic from the main contract. One function NFT contract is attached to the main contract during spending, while the other contract functions exist as unused UTXOs, separate from the transaction.
 
 :::tip
 By using function NFTs you can use a modular contract design where the contract functions are offloaded to different UTXOs, each identifiable by the main contract by using the same tokenId.
@@ -75,8 +75,8 @@ By using function NFTs you can use a modular contract design where the contract 
 
 ## Example Workflow
 
-When trying to optimizing your contract, you will need to compare the contract size to see if the changes have a positive impact.
-You can easily check the opcode count and bytesize with the compiler CLI directly from the contract (without creating a new artifact).
+When trying to optimize your contract, you will need to compare the contract size to see if the changes have a positive impact.
+With the compiler CLI, you can easily check the opcode count and bytesize directly from the contract (without creating a new artifact).
 It's important to know the minimum fees on the Bitcoin Cash network are based on the bytesize of a transaction (including your contract).
 
 ```bash
@@ -87,7 +87,7 @@ cashc ./contract.cash --opcount --size
 The size output of the `cashc` compiler will always be an underestimate, as the contract hasn't been initialized with contract arguments.
 :::
 
-The `cashc` compiler only knows the opcount and bytesize of a contract before it is initialised with function arguments. Because of this, to get an accurate view of a contracts size initialise the contract instance first, then get the size from there. This means you will have to re-compile the artifact before checking with contract size through the Javascript SDK.
+The `cashc` compiler only knows the opcount and bytesize of a contract before it is initialised with function arguments. Because of this, to get an accurate view of a contracts size, initialise the contract instance first, then get the size from there. This means you will have to re-compile the artifact before checking the contract size through the JavaScript SDK.
 
 ```javascript
 import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
@@ -109,13 +109,12 @@ console.log(contract.opcount);
 console.log(contract.bytesize);
 ```
 
-With this workflow you can make changes to the contract and the run the Javascript program to
-
- get an accurate measure of how the bytesize of your contract changes with different optimizations.
+With this workflow, you can make changes to the contract and the run the JavaScript program to 
+get an accurate measure of how the bytesize of your contract changes with different optimizations.
 
 ## To optimize or not to optimize?
 
-There is a last important alternative approache to optimization contract bytecode to consider:
+In the context of optimizing contract bytecode, there's an important remark to consider:
 
 ### OP_NOP
 

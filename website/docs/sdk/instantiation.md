@@ -2,14 +2,14 @@
 title: Contract Instantiation
 ---
 
-Before interacting with smart contracts on the BCH network, the CashScript SDK needs to instantiate a `Contract` object. This is done by providing the contract's information and constructor arguments. After this instantiation, the CashScript SDK can interact with BCH contracts.
+Before interacting with a smart contract on the BCH network, the CashScript SDK needs to instantiate a `Contract` object. This is done by providing the contract's information and constructor arguments. After this instantiation, the CashScript SDK can interact with the BCH contract.
 
 :::note
 CashScript only offers a JavaScript SDK, but CashScript contracts can be integrated into other languages as well. Because there are no ready-to-use SDKs available for them, this is considered advanced usage.
 :::
 
 ## Contract class
-The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance. They can be used to interact with the contract by calling the contract's functions.
+The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance. They can also be used to interact with the contract by calling the contract's functions.
 
 ### Constructor
 ```ts
@@ -25,14 +25,14 @@ new Contract(
 
 A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `addressType`.
 
-An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/basics/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](#cashscript-compiler)).
+An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/basics/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/basics/compiler#javascript-compilation)).
 
 The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but the network providers can be configured. See the docs on [NetworkProvider](/docs/sdk/network-provider).
 
-The `addressType` option is used to choose between a `p2sh32` and `p2sh20` address for the CashScript contract. By default `p2sh32` is used because it has increased cryptographic security but it is not yet supported by all wallets.
+The `addressType` option is used to choose between a `p2sh20` and `p2sh32` address type for the CashScript contract. By default `p2sh32` is used because it has increased cryptographic security — but it is not yet supported by all wallets.
 
 :::caution
-P2sh32 was introduced because p2sh20 is cryptographically insecure for a large subset of smart contracts. For contracts holding large sums of BCH this provides an incentive to find a hash collision and hack the contract.
+p2sh32 was introduced because p2sh20 is cryptographically insecure for a large subset of smart contracts. For contracts holding large sums of BCH this provides an incentive to find a hash collision and hack the contract.
 :::
 
 #### Example
@@ -61,7 +61,7 @@ contract.address: string
 A contract's regular address (without token-support) can be retrieved through the `address` member field.
 
 :::note
-Wallets will not allow you to send CashTokens to this address, for that you must use the tokenAddress below. Wallets which have not upgraded might not recognize this new address type.
+Wallets will not allow you to send CashTokens to this address. For that you must use the [tokenAddress](#tokenaddress) below. Wallets which have not upgraded might not recognize this new address type.
 :::
 
 #### Example
@@ -156,7 +156,7 @@ contract.functions.<functionName>(...args: Argument[]): Transaction
 ```
 
 Once a smart contract has been instantiated, you can invoke a contract function to spend from the contract with the '[Simple transaction-builder](/docs/sdk/transactions)' by calling the function name under the `functions` member field of a contract object.
-To call these functions succesfully, the parameters provided to the function need to match ones defined in the CashScript code.
+To call these functions successfully, the provided parameters must match the function signature defined in the CashScript code.
 
 These contract functions return an incomplete `Transaction` object, which needs to be completed by providing outputs of the transaction. For more information see the [Simple transaction-builder](/docs/sdk/transactions) page.
 
@@ -177,7 +177,7 @@ contract.unlock.<functionName>(...args: Argument[]): Unlocker
 ```
 
 Once a smart contract has been instantiated, you can invoke a contract function on a smart contract UTXO to use the '[Advanced transaction-builder](/docs/sdk/transactions-advanced)' by calling the function name under the `unlock` member field of a contract object.
-To call these functions succesfully, the parameters provided to the function need to match ones defined in the CashScript code.
+To call these functions successfully, the provided parameters must match the function signature defined in the CashScript code.
 
 These contract functions return an incomplete `transactionBuilder` object, which needs to be completed by providing outputs of the transaction. For more information see the [Advanced transaction-builder](/docs/sdk/transactions-advanced) page.
 
@@ -194,7 +194,7 @@ transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
 new SignatureTemplate(signer: Keypair | Uint8Array | string, hashtype?: HashType)
 ```
 
-You may notice the `SignatureTemplate` object in the example above. When a contract function has a `sig` parameter, it requires a cryptographic signature over the spending transaction. But to generate this signature, the transaction needs to be built first, which is not yet the case when a contract function is first called.
+You may notice the `SignatureTemplate` object in the [example](#example-8) above. When a contract function has a `sig` parameter, it requires a cryptographic signature over the spending transaction. But to generate this signature, the transaction needs to be built first, which is not yet the case when a contract function is first called.
 
 So in the place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
 

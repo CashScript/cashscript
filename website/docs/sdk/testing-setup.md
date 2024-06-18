@@ -40,14 +40,14 @@ If you're using a different testing framework, you can test for `console.log` va
 
 ## Automated testing
 
-With local transaction evaluation and debugging, it is possible to write efficient automated tests for CashScript contracts and test specific contract behaviour and check `console.log` values and `require` error messages.
+With local transaction evaluation and debugging, it is possible to write efficient automated tests for CashScript contracts to test specific contract behaviour and check `console.log` values and `require` error messages.
 
 ### Logging values
 
-You can log values during debug evaluation using the `console.log` statement. Any variables or primitive values (such as ints, strings, bytes, etc) can be logged.
+You can log values during debug evaluation using the `console.log` statement. Any variables or primitive values (such as ints, strings, bytes, ...) can be logged.
 
 :::note
-Logging is only available in debug evaluation of a transaction, but has no impact on the compiled bytecode or regular (non-debug) execution.
+Logging is only available in debug evaluation of a transaction. It has no impact on the compiled bytecode or regular (non-debug) execution.
 :::
 
 ### Error messages

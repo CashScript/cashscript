@@ -31,7 +31,7 @@ Note the lack of the `**` (exponentiation) operator as well as any bitwise opera
 
 ### Over- & Underflows
 
-The maximum range for 64-bit integers is `-9223372036854775807` to `9223372036854775807`, operations exceeding these limits will fail the transaction. So operations like summation, subtraction and multiplation should take in to account these boundry cases with over- or underflows.
+The maximum range for 64-bit integers is `-9223372036854775807` to `9223372036854775807`, operations exceeding these limits will fail the transaction. So operations like summation, subtraction and multiplication should take into account these boundary cases with over- or underflows.
 
 :::caution
 Contract authors should always consider whether `+`, `-` and `*` operations can cause under- or overflows and how this would impact contract security.
@@ -104,7 +104,7 @@ bytes noCapability = 0x;
 ```
 
 ## Bytes types with semantic meaning
-Some byte sequences hold specific meanings inside Bitcoin Cash contracts. These have been granted their own types separate from the regular `bytes` type.
+Some byte sequences hold specific meanings inside Bitcoin Cash contracts. These have been granted their own types, separate from the regular `bytes` type.
 
 ### Public Key
 `pubkey`: Byte sequence representing a public key. Generally 33 bytes long.
@@ -176,10 +176,10 @@ bytes4 integer = bytes4(25);
 
 ### Int to Byte Casting
 
-When casting integer types to bytes of a certain size, the integer value is padded with zeros. e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros, by passing in a `size` parameter, which indicates the size of the output. e.g. `bytes(0, 4 - 2) == 0x0000`. The size casting can be a very important feature when keeping local state in an nftCommitment or in the simulated state.
+When casting integer types to bytes of a certain size, the integer value is padded with zeros, e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros by passing in a `size` parameter, which indicates the size of the output, e.g. `bytes(0, 4 - 2) == 0x0000`. The size casting can be a very important feature when keeping local state in an nftCommitment or in the simulated state.
 
 :::note
-VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the revserse, it's recommended to use helperfunctions for these conversions from libraries like Libauth.
+VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
 :::
 
 
