@@ -38,6 +38,24 @@ When updating the grammar file in `src/grammar/CashScript.g4`, we also need to m
 yarn antlr
 ```
 
+### Running `cashproof`
+
+Most of the bytecode optimisations that the `cashc` compiler uses can be verified for correctness using the [`cashproof` tool](https://github.com/EyeOfPython/cashproof). This tool needs to be installed separately by installing its dependencies using `pip` and cloning its repository from GitHub.
+
+From there, you can run `python <cashproof_path> [filenames]` to verify that the optimisations contained in these files are provably correct.
+
+Example:
+```bash
+python <cashproof_path> packages/cashc/test/cashproof/0.1.2=0.2.0.equiv
+```
+
+Note that if you want to run `cashproof` on the "main" CashScript optimisations file, you need to first extract the optimisations from the `cashc` compiler and save them in a separate file. This can be done using the following commands:
+
+```bash
+cp packages/utils/src/cashproof-optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv
+python <cashproof_path> opt.equiv
+```
+
 ## cashscript
 
 ### Running tests
