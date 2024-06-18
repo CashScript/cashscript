@@ -9,7 +9,7 @@ CashScript only offers a JavaScript SDK, but CashScript contracts can be integra
 :::
 
 ## Contract class
-The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance,. They can also be used to interact with the contract by calling the contract's functions.
+The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance. They can also be used to interact with the contract by calling the contract's functions.
 
 ### Constructor
 ```ts
