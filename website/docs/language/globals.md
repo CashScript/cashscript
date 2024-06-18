@@ -32,32 +32,32 @@ It can be difficult to fully grasp the intricacies of time locks, so if you're s
 ### tx.time
 `tx.time` is used to create *absolute* time locks. The value of `tx.time` can either represent the block number of the spending transaction or its timestamp. When comparing it with values below `500,000,000`, it is treated as a blocknumber, while higher values are treated as a timestamp.
 
-Due to limitations in the underlying Bitcoin Script, `tx.time` can only be used in the following way:
+`tx.time` corresponds to the `nLocktime` field of the current transaction using the `OP_CHECKLOCKTIMEVERIFY` opcode. Because of this `tx.time` can only be used in the following way:
 
 ```solidity
 require(tx.time >= <expression>);
 ```
 
-Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. The CashScript SDK automatically sets this *transaction level* time lock to the most recent block number, as this is the most common use case. If you need to use a different block number or timestamp, this should be passed into the CashScript SDK using the [`withTime()`][withTime()] function. If the default matches your use case, **no additional actions are required**.
-
 :::note
-`tx.time` corresponds to the `nLocktime` field of the current transaction and the `OP_CHECKLOCKTIMEVERIFY` opcode.
+To access the value of the `nLocktime` field for assignment, use the `tx.locktime` introspection variable.
 :::
+
+Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. The CashScript SDK automatically sets this *transaction level* time lock to the most recent block number, as this is the most common use case. If you need to use a different block number or timestamp, this should be passed into the CashScript SDK using the [`withTime()`][withTime()] function. If the default matches your use case, **no additional actions are required**.
 
 ### tx.age
 `tx.age` is used to create *relative* time locks. The value of `tx.age` can either represent a number of blocks, or a number of *chunks*, which are 512 seconds. The corresponding *transaction level* time lock determines which of the two options is used.
 
-Due to limitations in the underlying Bitcoin Script, `tx.age` can only be used in the following way:
+`tx.age` corresponds to the `nSequence` field of the current *UTXO* using the `OP_CHECKSEQUENCEVERIFY` opcode. Because of this `tx.age` can only be used in the following way:
 
 ```solidity
 require(tx.age >= <expression>);
 ```
 
-Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done in the CashScript SDK using the [`withAge()`][withAge()] function. However, the value passed into this function will always be treated as a number of blocks, so **it is currently not supported to use `tx.age` as a number of second chunks**.
-
 :::note
-`tx.age` corresponds to the `nSequence` field of the current *UTXO* and the `OP_CHECKSEQUENCEVERIFY` opcode.
+To access the value of the `nSequence` field for assignment, use the `tx.inputs[i].sequenceNumber` introspection variable.
 :::
+
+Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done in the CashScript SDK using the [`withAge()`][withAge()] function. However, the value passed into this function will always be treated as a number of blocks, so **it is currently not supported to use `tx.age` as a number of second chunks**.
 
 ## Introspection variables
 Introspection functionality is used to create *covenant* contracts. Covenants are a technique used to put constraints on spending the money inside a smart contract. The main use case of this is limiting the addresses where money can be sent and the amount sent. To explore the possible uses of covenants inside smart contracts, read the [CashScript Covenants Guide][covenants-guide].
@@ -89,10 +89,10 @@ Represents the version of the current transaction. Different transaction version
 int tx.locktime
 ```
 
-Represents the `nLocktime` field of the transaction.
+Represents the `nLocktime` field of the transaction. This is similar to the [`tx.time`][tx.time] global variable but `tx.time` can only be used in `require` statements, not for variable declaration.
 
-:::note
-`tx.locktime` is similar to the [`tx.time`][tx.time] global variable. It is recommended to only use `tx.locktime` for adding `nLocktime` to simulated state and [`tx.time`][tx.time] in all other cases.
+:::tip
+ The usecase for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/guides/covenants#keeping-local-state-in-nfts).
 :::
 
 ### tx.inputs
