@@ -44,6 +44,32 @@ const uri = await transaction.bitauthUri();
 It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
 
+The Bithauth IDE will show you the two-way mapping between the CashScript contract code generated opcodes. Here is [a Bithauth IDE link][BitauthIDE] for the basic `TransferWithTimeout` contract as an example:
+
+```js
+// "TransferWithTimeout" contract constructor parameters
+<timeout> // int = <0x07>
+<recipient> // pubkey = <0x0262f5c18adf3d9800c18b5e63fa6505ec8eb1d49c65855d62aea698425a39966e>
+<sender> // pubkey = <0x0262f5c18adf3d9800c18b5e63fa6505ec8eb1d49c65855d62aea698425a39966e>
+
+// bytecode
+                                                /* pragma cashscript >= 0.10.0;                                                  */
+                                                /*                                                                              */
+                                                /* contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) { */
+                                                /*     // Require recipient's signature to match                                */
+OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF             /*     function transfer(sig recipientSig) {                                    */
+OP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG           /*         require(checkSig(recipientSig, recipient));                          */
+OP_NIP OP_NIP OP_NIP OP_ELSE                    /*     }                                                                        */
+                                                /*                                                                              */
+                                                /*     // Require timeout time to be reached and sender's signature to match    */
+OP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_VERIFY         /*     function timeout(sig senderSig) {                                        */
+OP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY /*         require(checkSig(senderSig, sender));                                */
+OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP     /*         require(tx.time >= timeout);                                         */
+OP_1 OP_NIP                                     /*     }                                                                        */
+OP_ENDIF                                        /* }                                                                            */
+                                                /*      
+```
+
 ## Advanced Transaction Builder
 
 Because the advanced transaction builder does not yet support the advanced debugging tooling, you are left with just a few strategies.
@@ -61,3 +87,5 @@ To use this strategy effectively, the contract setup with funding should be auto
 ### Single Check Contract
 
 If it is unclear whether the issue is the contract invocation or the `require` statement in the CashScript file, it might prove handy to create a 'single-check' contract, which has only the previously failing `require` statement. The goal then is to discover if your transaction is the issue, and you are violating a correct contract requirement, or whether the contract is enforcing an incorrect/impossible condition to hold in the spending transaction.
+
+[BitauthIDE]: https://ide.bitauth.com/import-template/eJzVWG1v2zYQ_isCMWBJ4drUG21lbYAmcRsjaZIl6YqhDgyKomItNuVRVJbA8H_fUe9-qeF06Yfxg0WRvLvnjs9RR8_RLwkb8ylFB2is1Cw56HSigLf9SNFUjdssnnZ0hwsVMaqiWLxVfDqbUMXfPuJ2Ltv-K4kFaqGAJ0xGM70K1A2ms1gqHhihjKcGo8k4n4WFgk45rLiVVCQhl18jNb6NpjxO9WSSznJBdPANHR2fjixs2SPsorsWeuQyybTjFtKQVMQTdDBHMypBpYJZ_baM4zgWSlKmDCZ55oFBBYBKBcteGqIVsKWxXFei0Uxi9gAjqdCdUfamQVEZUX-SI5GcRbMIsI2S6H4dzLBecBPdD1Ft3ojDGtQQqSI2Q1TDaorCqHqe6dEz_owWAJOLgMtNFvOZVVtqHCUGK2JT2yjUVNq_0smEqxOqqDZSIdjq2Y6mamXfsaYKTmywVUztaElV5Npopwz7KALfn9bN3WT9eneyZYaKDf7EWap4bWhF00Z70Bqkmi-xKaNykvCMbfyRTlJItFGpVZOtMJQLVeyEkU5niTWbCD4U75boqdNXxFLqvqAqlbwNOEcQqVmqkkMDVMLMUAwF9Fa8j0QVZ1C77HcmGQllvDfe4cOhqFIG3MpzCCJQ-qufkbi_zQM1s5KxbdUB3ejlhnMDHGZVnsciUTJlKpbLzhc0WIL3hLuHzbhkk7PUf-DPxbxFrNBlZo8GoR14PYyh77uc2CElLnY563HfDByPEbfnugGxKKfE6zmWS23PI4Rr_Xla_Rzl2fb4z4qzOOBDYbywdd4YM0nvp7RxRhuH7w3c7rXxby_VZhhvOj-E4VXbD2KoKLSBYXvFvuU72Sq3sSJOK6NUQbF9Y_5f4gD7ec3_TiPJa_2_JkaVpvrsmVLFxrvE4fJqZBvwczU4PtNPrH8uvnzu__7lw7nuDz5uwlDle3mm7IF5o_kJ0k7u0AoMjjZ1fXmembSaL8en_eOzm8GndQy6yTwQe1BpsAewuteE0KoB7e9v4WqB4WJwZaw9-uc3_U0yBYbFLj7u0v7HeZE9ak4WJM-emoq-pimFDQqy0irPkO_ytcnJkgLmKif_6F8PPv65iqHmZJGTmpK5ud35uBXDGidrLNs4WWFoFXC2snEJw7rZ88vjs9vB535hF4ZPri-vmnFoYlBP7Wwf4MQuD5_dD-0mBp0Ou7SfkRc6DS9OVg6i7RhezX6J4aUyr5-bKK8MuYALRZzVhuslIAwWpVG_mFu7eH0QUJhSuKRxo5DXKfPPmOtE1AVy8Y3Pq9e8RNQ1Z1tr0iUq2CjLCd0vbxboNeoVtHSJeC2V1U1BK-yi9ZIeYV1zslRKsHukq8pTHt2PQcJaHtZfe3Rgds1e1_QcDLPwlc_vmDJ6hHCfFa8rFz3EnYAwSrnjmbbj-TYLzSBgVkg8jK0uDT3sU9-1AuZzjwQMRm2XEmb1HOLTrk1Qdi_IPra02upI6EocLgNzpKvyGEqMQe6Q2apGbmuZU6jgAItHHdMnNMDEcmyn1w2xF1oEguoHDrFcn1gcez4Ofdt1Qs58gu3ANonjEerYZtDTFTccL1wwfpFOfb35juXBdBd-y2IeivajiiXfUDKJFbpb3OWVvcrCaGGX2FaOtPRjTXS-0FfoScpvqIoT4Cc4hzFetHZb27U9Z9H8a8DSSRSnkvHLbWZLxGsKe8TrLu5gN_4FON-z9w==
