@@ -8,7 +8,7 @@ pushd ../.. && yarn build && popd
 
 ### Publishing a release
 
-To publish a new release, we use `yarn update-version 'x.x.x'` in the root directory to bump the version before release, and then `yarn publish-all` in the root directory to publish the release. In case of a tagged release (such as `next`), we use `yarn publish-all --dist-tag <tag name>` to publish the release with the specified tag.
+To publish a new release, we use `yarn update-version 'x.x.x'` in the root directory to bump the version before release, and then `yarn publish-all` in the root directory to publish the release. In case of a tagged release (such as `next`), we use `TESTS_USE_MOCKNET=true yarn publish-all --dist-tag <tag name>` to publish the release with the specified tag.
 
 ## cashc
 

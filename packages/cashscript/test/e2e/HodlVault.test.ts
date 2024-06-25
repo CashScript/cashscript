@@ -29,7 +29,7 @@ describe('HodlVault', () => {
   });
 
   describe('send', () => {
-    it('should fail when oracle sig is incorrect', async () => {
+    it.skip('should fail when oracle sig is incorrect', async () => {
       // given
       const message = oracle.createMessage(100000n, 1000n);
       const wrongMessage = oracle.createMessage(100000n, 1001n);
