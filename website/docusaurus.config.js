@@ -104,6 +104,9 @@ module.exports = {
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
+        docs: {
+          sidebarPath: './sidebars.js',
+        },
       },
     ],
   ],
