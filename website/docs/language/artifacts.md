@@ -24,7 +24,7 @@ interface Artifact {
     bytecode: string // unlike `bytecode` property above, this is a hex-encoded binary string
     sourceMap: string // see documentation for `generateSourceMap`
     logs: LogEntry[] // log entries generated from `console.log` statements
-    requireMessages: RequireMessage[] // messages for failing `require` statements
+    requires: RequireStatement[] // messages for failing `require` statements
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
 }

@@ -13,7 +13,7 @@ import {
   generateSourceMap,
   FullLocationData,
   LogEntry,
-  RequireMessage,
+  RequireStatement,
   PositionHint,
   SingleLocationData,
   StackItem,
@@ -65,7 +65,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   output: Script = [];
   stack: string[] = [];
   consoleLogs: LogEntry[] = [];
-  requireMessages: RequireMessage[] = [];
+  requires: RequireStatement[] = [];
   finalStackUsage: Record<string, StackItem> = {};
 
   private scopeDepth = 0;
@@ -285,16 +285,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.expression = this.visit(node.expression);
     this.emit(compileTimeOp(node.timeOp), { location: node.location, positionHint: PositionHint.END });
 
-    // TODO: Same comment as in require
-    if (node.message) {
-      this.requireMessages.push({
-        // We're removing 1 from the IP because the error message needs to match the OP_XXX_VERIFY, not the OP_DROP that
-        // is emitted directly after
-        ip: this.getMostRecentInstructionPointer() - 1,
-        line: node.location.start.line,
-        message: node.message,
-      });
-    }
+    this.requires.push({
+      // We're removing 1 from the IP because the error message needs to match the OP_XXX_VERIFY, not the OP_DROP that
+      // is emitted directly after
+      ip: this.getMostRecentInstructionPointer() - 1,
+      line: node.location.start.line,
+      message: node.message,
+    });
 
     this.popFromStack();
     return node;
@@ -305,16 +302,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     this.emit(Op.OP_VERIFY, { location: node.location, positionHint: PositionHint.END });
 
-    // TODO: Add *all* require messages to the artifact, so we can report on line number for the failed require(),
-    // even if there is no message in the require() call
-    // TODO: We don't even have to display the Libauth message if we just say "this and this require failed"
-    if (node.message) {
-      this.requireMessages.push({
-        ip: this.getMostRecentInstructionPointer(),
-        line: node.location.start.line,
-        message: node.message,
-      });
-    }
+    this.requires.push({
+      ip: this.getMostRecentInstructionPointer(),
+      line: node.location.start.line,
+      message: node.message,
+    });
 
     this.popFromStack();
     return node;

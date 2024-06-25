@@ -34,7 +34,7 @@ export function compileString(code: string): Artifact {
     bytecode: binToHex(scriptToBytecode(traversal.output)),
     sourceMap: traversal.sourceMap,
     logs: traversal.consoleLogs,
-    requireMessages: traversal.requireMessages,
+    requires: traversal.requires,
   };
 
   return generateArtifact(ast, optimisedBytecode, code, debug);

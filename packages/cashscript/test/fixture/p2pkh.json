@@ -27,11 +27,20 @@
     "bytecode": "5179a9517a8769517a517aac",
     "sourceMap": "4:24:4:26;;:16::27:1;:31::34:0;;:16:::1;:8::36;5:25:5:26:0;;:28::30;;:16::31:1",
     "logs": [],
-    "requireMessages": []
+    "requires": [
+      {
+        "ip": 7,
+        "line": 4
+      },
+      {
+        "ip": 13,
+        "line": 5
+      }
+    ]
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.10.0-next.3"
+    "version": "0.10.0-next.5"
   },
-  "updatedAt": "2024-03-19T06:40:56.694Z"
+  "updatedAt": "2024-06-25T09:01:11.867Z"
 }

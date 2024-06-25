@@ -30,7 +30,7 @@
         ]
       }
     ],
-    "requireMessages": [
+    "requires": [
       {
         "ip": 4,
         "line": 4,

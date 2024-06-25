@@ -15,7 +15,7 @@ export interface DebugInformation {
   bytecode: string; // unlike `bytecode` property above, this is a hex-encoded binary string
   sourceMap: string; // see documentation for `generateSourceMap`
   logs: LogEntry[]; // log entries generated from `console.log` statements
-  requireMessages: RequireMessage[]; // messages for failing `require` statements
+  requires: RequireStatement[]; // messages for failing `require` statements
 }
 
 export interface LogEntry {
@@ -32,10 +32,10 @@ export interface StackItem {
 
 export type LogData = StackItem | string;
 
-export interface RequireMessage {
+export interface RequireStatement {
   ip: number; // instruction pointer
   line: number; // line in the source code
-  message: string; // custom message for failing `require` statement
+  message?: string; // custom message for failing `require` statement
 }
 
 export interface Artifact {

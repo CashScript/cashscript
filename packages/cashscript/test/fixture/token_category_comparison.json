@@ -13,11 +13,16 @@
     "bytecode": "51ce0087",
     "sourceMap": "3:26:3:27;:16::42;:46::48;:16:::1",
     "logs": [],
-    "requireMessages": []
+    "requires": [
+      {
+        "ip": 4,
+        "line": 3
+      }
+    ]
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.10.0-next.3"
+    "version": "0.10.0-next.5"
   },
-  "updatedAt": "2024-03-19T06:40:56.440Z"
+  "updatedAt": "2024-06-25T09:01:11.613Z"
 }
