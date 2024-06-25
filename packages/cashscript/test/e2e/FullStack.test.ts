@@ -7,7 +7,7 @@ import {
   bobPub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { FailedSigCheckError, Reason } from '../../src/Errors.js';
+import { FailedRequireError, NodeErrorReason } from '../../src/Errors.js';
 import artifact from '../fixture/p2pkh.json' assert { type: 'json' };
 
 describe.skip('P2PKH (using FullStackNetworkProvider)', () => {
@@ -33,8 +33,8 @@ describe.skip('P2PKH (using FullStackNetworkProvider)', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
-      await expect(txPromise).rejects.toThrow(Reason.SIG_NULLFAIL);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow(NodeErrorReason.SIG_NULLFAIL);
     });
 
     it('should succeed when using correct function arguments', async () => {

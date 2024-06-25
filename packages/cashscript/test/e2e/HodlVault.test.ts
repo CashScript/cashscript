@@ -1,4 +1,3 @@
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
   SignatureTemplate,
@@ -13,9 +12,9 @@ import {
   oraclePub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { FailedRequireError, Reason } from '../../src/Errors.js';
+import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.json' assert { type: 'json' };
-import { randomUtxo, toRegExp } from '../../src/utils.js';
+import { randomUtxo } from '../../src/utils.js';
 
 describe('HodlVault', () => {
   let hodlVault: Contract;
@@ -46,10 +45,7 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.VERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('HodlVault.cash:26 Require statement failed at line 26');
     });
 
     it('should fail when price is too low', async () => {
@@ -67,10 +63,7 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.VERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('HodlVault.cash:23 Require statement failed at line 23');
     });
 
     it('should succeed when price is high enough', async () => {

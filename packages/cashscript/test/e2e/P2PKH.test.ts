@@ -1,6 +1,7 @@
-import { AuthenticationErrorCommon, binToHex } from '@bitauth/libauth';
+import { binToHex } from '@bitauth/libauth';
 import {
   Contract, SignatureTemplate, MockNetworkProvider, ElectrumNetworkProvider,
+  FailedRequireError,
 } from '../../src/index.js';
 import {
   bobAddress,
@@ -8,13 +9,13 @@ import {
   bobPriv,
   bobPkh,
   alicePriv,
+  alicePub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { Network, Utxo } from '../../src/interfaces.js';
 import {
-  createOpReturnOutput, randomUtxo, toRegExp, utxoComparator,
+  createOpReturnOutput, randomUtxo, utxoComparator,
 } from '../../src/utils.js';
-import { FailedSigCheckError, Reason } from '../../src/Errors.js';
 import artifact from '../fixture/p2pkh.json' assert { type: 'json' };
 
 describe('P2PKH-no-tokens', () => {
@@ -33,7 +34,23 @@ describe('P2PKH-no-tokens', () => {
   });
 
   describe('send', () => {
-    it('should fail when using incorrect function arguments', async () => {
+    it('should fail when using incorrect public key', async () => {
+      // given
+      const to = p2pkhInstance.address;
+      const amount = 10000n;
+
+      // when
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(bobPriv))
+        .to(to, amount)
+        .send();
+
+      // then
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('P2PKH.cash:4 Require statement failed at line 4');
+    });
+
+    it('should fail when using incorrect signature', async () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 10000n;
@@ -45,11 +62,8 @@ describe('P2PKH-no-tokens', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.SIG_NULLFAIL,
-        AuthenticationErrorCommon.nonNullSignatureFailure,
-      ]));
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('P2PKH.cash:5 Require statement failed at line 5');
     });
 
     it('should succeed when using correct function arguments', async () => {

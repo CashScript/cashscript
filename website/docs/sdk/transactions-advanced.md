@@ -229,7 +229,7 @@ const txHex = new TransactionBuilder({ provider })
 
 ## Transaction errors
 
-Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information.
+Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information. Note that the advanced transaction builder does not yet support the `FailedRequireError` mentioned in the simplified transaction builder documentation so any error will be of type `FailedTransactionError` and include any of the mentioned error reasons in its message.
 
 [fex]: https://github.com/fex-cash/fex
 [bitcoin-wiki-timelocks]: https://en.bitcoin.it/wiki/Timelock

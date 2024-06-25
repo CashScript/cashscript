@@ -1,6 +1,7 @@
 import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateBCH, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBCH2023, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
+import { FailedRequireError, FailedTransactionError } from './Errors.js';
 
 // evaluates the fully defined template, throws upon error
 export const evaluateTemplate = (template: WalletTemplate): boolean => {
@@ -8,7 +9,7 @@ export const evaluateTemplate = (template: WalletTemplate): boolean => {
 
   const verifyResult = vm.verify(program);
   if (typeof verifyResult === 'string') {
-    throw new Error(verifyResult);
+    throw new FailedTransactionError(verifyResult);
   }
 
   return verifyResult;
@@ -51,37 +52,38 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     // preceding OP_CHECKSIG opcode. The error message is registered in the next instruction, so we need to increment
     // the instruction pointer to get the correct error message.
     const isNullFail = lastExecutedDebugStep.error === AuthenticationErrorCommon.nonNullSignatureFailure;
-    const messageIp = failingIp + (isNullFail ? 1 : 0);
+    const requireStatementIp = failingIp + (isNullFail ? 1 : 0);
 
-    const requireStatement = (artifact.debug?.requireMessages ?? [])
-      .find((message) => message.ip === messageIp);
+    const requireStatement = (artifact.debug?.requires ?? [])
+      .find((statement) => statement.ip === requireStatementIp);
 
+    // TODO: Also log the require statement that failed (e.g. "require(1 == 2, '1 is not equal to 2')")
     if (requireStatement) {
-      throw new Error(`${artifact.contractName}.cash:${requireStatement.line} Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex} with the following message: ${requireStatement.message}.\n${lastExecutedDebugStep.error}`);
+      const { program: { inputIndex }, error } = lastExecutedDebugStep;
+      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, error);
     }
 
-    throw new Error(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${lastExecutedDebugStep.error}`);
+    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${lastExecutedDebugStep.error}`);
   }
 
   const evaluationResult = vm.verify(program);
 
   if (failedFinalVerify(evaluationResult)) {
-    const stackContents = lastExecutedDebugStep.stack.map(item => `0x${binToHex(item)}`).join(', ');
-    const stackContentsMessage = `\nStack contents after evaluation: ${lastExecutedDebugStep.stack.length ? stackContents : 'empty'}`;
-
     const finalExecutedVerifyIp = getFinalExecutedVerifyIp(executedDebugSteps);
 
     // logDebugSteps(executedDebugSteps, lastExecutedDebugStep.instructions);
     // console.warn('message', finalExecutedVerifyIp);
-    // console.warn(artifact.debug?.requireMessages);
+    // console.warn(artifact.debug?.requires);
 
-    const finalVerifyMessage = artifact.debug?.requireMessages.find((message) => message.ip === finalExecutedVerifyIp);
+    const requireStatement = (artifact.debug?.requires ?? [])
+      .find((message) => message.ip === finalExecutedVerifyIp);
 
-    if (finalVerifyMessage) {
-      throw new Error(`${artifact.contractName}.cash:${finalVerifyMessage.line} Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex} with the following message: ${finalVerifyMessage.message}.\n${evaluationResult.replace(/Error in evaluating input index \d: /, '')}` + stackContentsMessage);
+    if (requireStatement) {
+      const { program: { inputIndex }, error } = lastExecutedDebugStep;
+      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, error);
     }
 
-    throw new Error(evaluationResult + stackContentsMessage);
+    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${evaluationResult}`);
   }
 
   return fullDebugSteps;
@@ -109,11 +111,11 @@ const createProgram = (template: WalletTemplate): CreateProgramResult => {
   });
 
   if (typeof scenarioGeneration === 'string') {
-    throw new Error(scenarioGeneration);
+    throw new FailedTransactionError(scenarioGeneration);
   }
 
   if (typeof scenarioGeneration.scenario === 'string') {
-    throw new Error(scenarioGeneration.scenario);
+    throw new FailedTransactionError(scenarioGeneration.scenario);
   }
 
   return { vm, program: scenarioGeneration.scenario.program };

@@ -377,7 +377,7 @@ describe('Debugging tests', () => {
       const transaction = contract.functions
         .test_multiple_require_statements_no_message_final().to(contract.address, 1000n);
 
-      await expect(transaction).toFailRequireWith(/Error in evaluating input index 0/);
+      await expect(transaction).toFailRequireWith(new RegExp('^Test\.cash:32 Require statement failed at line 32$'));
       await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 

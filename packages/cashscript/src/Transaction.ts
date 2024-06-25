@@ -28,7 +28,6 @@ import {
   createOpReturnOutput,
   getTxSizeWithoutInputs,
   getPreimageSize,
-  buildError,
   validateOutput,
   utxoComparator,
   calculateDust,
@@ -43,6 +42,7 @@ import MockNetworkProvider from './network/MockNetworkProvider.js';
 import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
 import { debugTemplate, evaluateTemplate, DebugResult } from './debugging.js';
 import { EncodedArgument } from './Argument.js';
+import { FailedRequireError, FailedTransactionError } from './Errors.js';
 
 export class Transaction {
   public inputs: Utxo[] = [];
@@ -174,7 +174,23 @@ export class Transaction {
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = await this.build();
     let template: WalletTemplate | undefined;
+
+    // Debug the transaction locally before sending so any errors are caught early
     try {
+      // Libauth debugging does not work with old-style covenents (or outdated artifacts)
+      if (!this.abiFunction.covenant && this.contract.artifact.debug) {
+        await this.debug();
+      }
+    } catch (error) {
+      if (error instanceof FailedRequireError) {
+        error.bitauthUri = await this.bitauthUri();
+        error.message += `\n\nBitauth URI: ${error.bitauthUri}`;
+      }
+      throw error;
+    }
+
+    try {
+      // TODO: Can we move this to MockNetworkProvider?
       if (this.contract.provider instanceof MockNetworkProvider) {
         template = await buildTemplate({
           transaction: this,
@@ -185,31 +201,9 @@ export class Transaction {
 
       const txid = await this.contract.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
-    } catch (maybeNodeError: any) {
-      if (!template) {
-        template = await buildTemplate({
-          transaction: this,
-          transactionHex: tx,
-        });
-      }
-
-      const reason = maybeNodeError.error ?? maybeNodeError.message ?? maybeNodeError;
-
-      const bitauthUri = getBitauthUri(template);
-
-      try {
-        debugTemplate(template, this.contract.artifact);
-      } catch (libauthError: any) {
-        if (this.contract.provider instanceof MockNetworkProvider) {
-          throw buildError(libauthError, bitauthUri);
-        } else {
-          const message = `${libauthError}\n\nUnderlying node error: ${reason}`;
-          throw buildError(message, bitauthUri);
-        }
-      }
-
-      // this must be unreachable
-      throw buildError(reason, bitauthUri);
+    } catch (error: any) {
+      const reason = error.error ?? error.message ?? error;
+      throw new FailedTransactionError(reason, await this.bitauthUri());
     }
   }
 

@@ -1,4 +1,3 @@
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
 } from '../../src/index.js';
@@ -9,9 +8,9 @@ import {
   bobAddress,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { FailedRequireError, Reason } from '../../src/Errors.js';
+import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/mecenas.json' assert { type: 'json' };
-import { randomUtxo, toRegExp } from '../../src/utils.js';
+import { randomUtxo } from '../../src/utils.js';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {
@@ -43,10 +42,7 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.NUMEQUALVERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:24 Require statement failed at line 24');
     });
 
     it('should fail when trying to send to wrong person', async () => {
@@ -63,10 +59,7 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.VERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:13 Require statement failed at line 13');
     });
 
     it('should fail when trying to send to multiple people', async () => {
@@ -84,10 +77,7 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.VERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:25 Require statement failed at line 25');
     });
 
     it('should fail when sending incorrect amount of change', async () => {
@@ -104,10 +94,7 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.NUMEQUALVERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:26 Require statement failed at line 26');
     });
 
     it('should succeed when sending pledge to receiver', async () => {

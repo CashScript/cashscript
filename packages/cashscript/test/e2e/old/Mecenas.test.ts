@@ -14,7 +14,7 @@ import {
   alicePriv,
 } from '../../fixture/vars.js';
 import { getTxOutputs } from '../../test-util.js';
-import { FailedRequireError, Reason } from '../../../src/Errors.js';
+import { FailedTransactionError, NodeErrorReason } from '../../../src/Errors.js';
 import artifact from '../../fixture/old/mecenas.json' assert { type: 'json' };
 
 if (!process.env.TESTS_USE_MOCKNET) {
@@ -45,8 +45,8 @@ if (!process.env.TESTS_USE_MOCKNET) {
           .send();
 
         // then
-        await expect(txPromise).rejects.toThrow(FailedRequireError);
-        await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+        await expect(txPromise).rejects.toThrow(FailedTransactionError);
+        await expect(txPromise).rejects.toThrow(NodeErrorReason.EQUALVERIFY);
       });
 
       it('should fail when trying to send to wrong person', async () => {
@@ -62,8 +62,8 @@ if (!process.env.TESTS_USE_MOCKNET) {
           .send();
 
         // then
-        await expect(txPromise).rejects.toThrow(FailedRequireError);
-        await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+        await expect(txPromise).rejects.toThrow(FailedTransactionError);
+        await expect(txPromise).rejects.toThrow(NodeErrorReason.EQUALVERIFY);
       });
 
       it('should fail when trying to send to multiple people', async () => {
@@ -80,8 +80,8 @@ if (!process.env.TESTS_USE_MOCKNET) {
           .send();
 
         // then
-        await expect(txPromise).rejects.toThrow(FailedRequireError);
-        await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+        await expect(txPromise).rejects.toThrow(FailedTransactionError);
+        await expect(txPromise).rejects.toThrow(NodeErrorReason.EQUALVERIFY);
       });
 
       it('should succeed when sending pledge to receiver', async () => {

@@ -1,6 +1,6 @@
 import { randomUtxo, randomToken } from '../../src/utils.js';
 import {
-  Contract, ElectrumNetworkProvider, MockNetworkProvider,
+  Contract, ElectrumNetworkProvider, FailedRequireError, MockNetworkProvider,
 } from '../../src/index.js';
 import { Network, Utxo } from '../../src/interfaces.js';
 import artifact from '../fixture/token_category_comparison.json' assert { type: 'json' };
@@ -48,7 +48,8 @@ describe('TokenCategoryCheck', () => {
         .to(to, amount, token)
         .send();
 
-      await expect(txPromise).rejects.toThrow(/completed with a non-truthy value on top of the stack/);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('Test.cash:3 Require statement failed at line 3');
     });
 
     it('can send if the input at index 1 does not contain tokens', async () => {

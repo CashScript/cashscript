@@ -4,13 +4,12 @@ import {
   MockNetworkProvider,
   FailedRequireError,
   FailedTransactionError,
-  Reason,
   ElectrumNetworkProvider,
   Network,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
 import artifact from '../fixture/bigint.json' assert { type: 'json' };
-import { randomUtxo, toRegExp } from '../../src/utils.js';
+import { randomUtxo } from '../../src/utils.js';
 
 describe('BigInt', () => {
   let bigintContract: Contract;
@@ -40,10 +39,7 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.VERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('BigInt.cash:4 Require statement failed at line 4');
     });
 
     it('should fail when providing numbers that overflow 64 bits when multiplied', async () => {
@@ -59,10 +55,7 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedTransactionError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.INVALID_NUMBER_RANGE,
-        AuthenticationErrorCommon.overflowsVmNumberRange,
-      ]));
+      await expect(txPromise).rejects.toThrow(AuthenticationErrorCommon.overflowsVmNumberRange);
     });
 
     it('should fail when providing a number that does not fit within 64 bits', async () => {
@@ -78,10 +71,7 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedTransactionError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.INVALID_NUMBER_RANGE,
-        AuthenticationErrorCommon.invalidVmNumber,
-      ]));
+      await expect(txPromise).rejects.toThrow(AuthenticationErrorCommon.invalidVmNumber);
     });
 
     it('should succeed when providing a number within 32b < x < 64b', async () => {

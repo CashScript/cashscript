@@ -1,11 +1,10 @@
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
-import { FailedRequireError, Reason } from '../../src/Errors.js';
+import { FailedRequireError } from '../../src/Errors.js';
 import {
-  createOpReturnOutput, randomUtxo, toRegExp, utxoComparator,
+  createOpReturnOutput, randomUtxo, utxoComparator,
 } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
 import artifact from '../fixture/announcement.json' assert { type: 'json' };
@@ -45,10 +44,7 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.NUMEQUALVERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow();
     });
 
     it('should fail when trying to announce incorrect announcement', async () => {
@@ -70,10 +66,7 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.EQUALVERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('Announcement.cash:17 Require statement failed at line 17');
     });
 
     it('should fail when sending incorrect amount of change', async () => {
@@ -95,10 +88,7 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.NUMEQUALVERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('Announcement.cash:25 Require statement failed at line 25');
     });
 
     it('should fail when sending the correct change amount to an incorrect address', async () => {
@@ -122,10 +112,7 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.EQUALVERIFY,
-        AuthenticationErrorCommon.failedVerify,
-      ]));
+      await expect(txPromise).rejects.toThrow('Announcement.cash:24 Require statement failed at line 24');
     });
 
     it('should succeed when announcing correct announcement', async () => {

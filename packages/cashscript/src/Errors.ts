@@ -1,4 +1,4 @@
-import { Type } from '@cashscript/utils';
+import { RequireStatement, Type } from '@cashscript/utils';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -7,7 +7,7 @@ export class TypeError extends Error {
 }
 
 export class OutputSatoshisTooSmallError extends Error {
-  constructor(satoshis: bigint, minimumAmount:bigint) {
+  constructor(satoshis: bigint, minimumAmount: bigint) {
     super(`Tried to add an output with ${satoshis} satoshis, which is less than the required minimum for this output-type (${minimumAmount})`);
   }
 }
@@ -19,17 +19,30 @@ export class TokensToNonTokenAddressError extends Error {
 }
 
 export class FailedTransactionError extends Error {
-  constructor(public reason: string, public debugStr?: string) {
-    super(`Transaction failed with reason: ${reason}${debugStr ? `\n\n${debugStr}` : ''}`);
+  constructor(public reason: string, public bitauthUri?: string) {
+    super(`${reason}\n\nBitauth URI: ${bitauthUri}`);
   }
 }
 
-export class FailedRequireError extends FailedTransactionError {}
-export class FailedTimeCheckError extends FailedTransactionError {}
-export class FailedSigCheckError extends FailedTransactionError {}
+// TODO: Add tests for some non-require evaluation errors (e.g. invalid op_split range)
+
+export class FailedRequireError extends Error {
+  public bitauthUri?: string;
+
+  constructor(
+    public contractName: string,
+    public requireStatement: RequireStatement,
+    public inputIndex: number,
+    public libauthErrorMessage?: string,
+  ) {
+    const baseMessage = `${contractName}.cash:${requireStatement.line} Require statement failed at line ${requireStatement.line}`;
+    const fullMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
+    super(requireStatement.message ? fullMessage : baseMessage);
+  }
+}
 
 // TODO: Expand these reasons with non-script failures (like tx-mempool-conflict)
-export enum Reason {
+export enum NodeErrorReason {
   EVAL_FALSE = 'Script evaluated without error but finished with a false/empty top stack element',
   VERIFY = 'Script failed an OP_VERIFY operation',
   EQUALVERIFY = 'Script failed an OP_EQUALVERIFY operation',

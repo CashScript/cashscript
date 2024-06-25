@@ -259,35 +259,27 @@ You can read more about debugging transactions on the [debugging page](/docs/gui
 It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
 
+TODO: Update this section with the new debugging experience
+
 ## Transaction errors
-Transactions can fail for a number of reasons. Most of these are related to the execution of the smart contract (e.g. wrong parameters or a bug in the contract code). But errors can also occur because of other reasons (e.g. a fee that's too low or the same transaction already exists in the mempool). To facilitate error handling in your applications, the CashScript SDK provides an enum of different *reasons* for a failure.
 
-This `Reason` enum only includes errors that are related to smart contract execution, so other reasons have to be caught separately. Besides the `Reason` enum, there are also several error classes that can be caught and acted on:
-
-* **`FailedRequireError`** signifies a failed require statement. This includes the following reasons:
-  * `Reason.EVAL_FALSE`
-  * `Reason.VERIFY`
-  * `Reason.EQUALVERIFY`
-  * `Reason.CHECKMULTISIGVERIFY`
-  * `Reason.CHECKSIGVERIFY`
-  * `Reason.CHECKDATASIGVERIFY`
-  * `Reason.NUMEQUALVERIFY`
-* **`FailedTimeCheckError`** signifies a failed time check using `tx.time` or `tx.age`. This includes the following reasons:
-  * `Reason.NEGATIVE_LOCKTIME`
-  * `Reason.UNSATISFIED_LOCKTIME`
-* **`FailedSigCHeckError`** signifies a failed signature check. This includes the following reasons:
-  * `Reason.SIG_COUNT`
-  * `Reason.PUBKEY_COUNT`
-  * `Reason.SIG_HASHTYPE`
-  * `Reason.SIG_DER`
-  * `Reason.SIG_HIGH_S`
-  * `Reason.SIG_NULLFAIL`
-  * `Reason.SIG_BADLENGTH`
-  * `Reason.SIG_NONSCHNORR`
-* **`FailedTransactionError`** signifies a general fallback error. This includes all remaining reasons listed in the `Reason` enum as well as any other reasons unrelated to the smart contract execution.
+When sending a transaction, the CashScript SDK will throw an error if the transaction fails. If you are using an artifact compiled with `cashc@0.10.0` or later, the error will be of the type `FailedRequireError` or `FailedTransactionError`. In case of a `FailedRequireError`, the error will refer to the corresponding `require` statement in the contract code so you know where your contract failed. If you want more information about the underlying error, you can check the `libauthErrorMessage` property of the error.
 
 ```ts
-enum Reason {
+interface FailedRequireError {
+  message: string;
+  contractName: string;
+  requireStatement: { ip: number, line: number, message: string };
+  inputIndex: number,
+  libauthErrorMessage?: string,
+  bitauthUri?: string;
+}
+```
+
+If you are using an artifact compiled with an older version of `cashc`, the error will always be of the type `FailedTransactionError`. In this case, you can use the `reason` property of the error to determine the reason for the failure. A list of possible reasons can be found in the `NodeErrorReason` enum below.
+
+```ts
+enum NodeErrorReason {
   EVAL_FALSE = 'Script evaluated without error but finished with a false/empty top stack element',
   VERIFY = 'Script failed an OP_VERIFY operation',
   EQUALVERIFY = 'Script failed an OP_EQUALVERIFY operation',

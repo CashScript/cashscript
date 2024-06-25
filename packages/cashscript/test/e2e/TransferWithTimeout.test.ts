@@ -1,18 +1,17 @@
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
   SignatureTemplate,
   ElectrumNetworkProvider,
   Network,
   MockNetworkProvider,
+  FailedRequireError,
 } from '../../src/index.js';
 import {
   alicePriv, alicePub, bobPriv, bobPub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import { FailedSigCheckError, Reason, FailedTimeCheckError } from '../../src/Errors.js';
 import artifact from '../fixture/transfer_with_timeout.json' assert { type: 'json' };
-import { randomUtxo, toRegExp } from '../../src/utils.js';
+import { randomUtxo } from '../../src/utils.js';
 
 describe('TransferWithTimeout', () => {
   let twtInstancePast: Contract;
@@ -32,7 +31,7 @@ describe('TransferWithTimeout', () => {
   });
 
   describe('send', () => {
-    it('should fail when using incorrect function arguments to transfer', async () => {
+    it('should fail when signing transfer with incorrect private key', async () => {
       // given
       const to = twtInstancePast.address;
       const amount = 10000n;
@@ -44,14 +43,11 @@ describe('TransferWithTimeout', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.SIG_NULLFAIL,
-        AuthenticationErrorCommon.nonNullSignatureFailure,
-      ]));
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:8 Require statement failed at line 8');
     });
 
-    it('should fail when using incorrect function arguments to timeout', async () => {
+    it('should fail when signing timeout with incorrect private key', async () => {
       // given
       const to = twtInstancePast.address;
       const amount = 10000n;
@@ -63,11 +59,8 @@ describe('TransferWithTimeout', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.SIG_NULLFAIL,
-        AuthenticationErrorCommon.nonNullSignatureFailure,
-      ]));
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:13 Require statement failed at line 13');
     });
 
     it('should fail when timeout is called before timeout block', async () => {
@@ -82,11 +75,8 @@ describe('TransferWithTimeout', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedTimeCheckError);
-      await expect(txPromise).rejects.toThrow(toRegExp([
-        Reason.UNSATISFIED_LOCKTIME,
-        AuthenticationErrorCommon.unsatisfiedLocktime,
-      ]));
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:14 Require statement failed at line 14');
     });
 
     it('should succeed when transfer is called after timeout block', async () => {

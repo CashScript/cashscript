@@ -13,11 +13,11 @@ import {
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
-  buildError,
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
   validateOutput,
 } from './utils.js';
+import { FailedTransactionError } from './Errors.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -153,7 +153,7 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw buildError(reason);
+      throw new FailedTransactionError(reason);
     }
   }
 
