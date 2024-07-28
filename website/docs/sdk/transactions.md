@@ -39,7 +39,7 @@ The CashScript SDK supports automatic UTXO selection for BCH and fungible CashTo
 
 #### Example
 ```ts
-.to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 500000n)
+.to('bitcoincash:qr478qhv3d8ypvpfvrlpfvk8e34xrvm8dukdhmacsg', 500000n) 
 ```
 
 ### withOpReturn()
