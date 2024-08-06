@@ -39,6 +39,10 @@ export default class SignatureTemplate {
     return bchForkId ? (this.hashtype | SigningSerializationFlag.forkId) : this.hashtype;
   }
 
+  getSignatureAlgorithm(): SignatureAlgorithm {
+    return this.signatureAlgorithm;
+  }
+
   getPublicKey(): Uint8Array {
     return secp256k1.derivePublicKeyCompressed(this.privateKey) as Uint8Array;
   }

@@ -1,4 +1,4 @@
-import { Contract, MockNetworkProvider, SignatureTemplate, Transaction, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
+import { Contract, HashType, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, Transaction, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
 import TransferWithTimeout from '../transfer_with_timeout.json' assert { type: 'json' };
 import Mecenas from '../mecenas.json' assert { type: 'json' };
 import P2PKH from '../p2pkh.json' assert { type: 'json' };
@@ -965,7 +965,7 @@ export const fixtures: Fixture[] = [
   //   template: {} as any,
   // },
   {
-    name: 'P2PKH (with P2PKH inputs & P2SH20 address type)',
+    name: 'P2PKH (with P2PKH inputs & P2SH20 address type & ECDSA signature algorithm)',
     transaction: (() => {
       const contract = new Contract(P2PKH, [alicePkh], { provider, addressType: 'p2sh20' });
 
@@ -979,8 +979,11 @@ export const fixtures: Fixture[] = [
       const amount = 1000n;
 
       const tx = contract.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .spend(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_NONE, SignatureAlgorithm.ECDSA))
         .fromP2PKH(p2pkhUtxo, new SignatureTemplate(alicePriv))
+        // TODO: Also allow fromP2PKH with different signing algorithms / hashtypes
+        // + support multiple fromP2PKH inputs with different keys
+        // .fromP2PKH(p2pkhUtxo, new SignatureTemplate(bobPriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA))
         .from(regularUtxo)
         .to(to, amount);
 
@@ -1113,7 +1116,7 @@ export const fixtures: Fixture[] = [
             'evaluate_function',
           ],
           'name': 'unlock',
-          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
+          'script': '// "spend" function parameters\n<s.ecdsa_signature.no_outputs> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
           'unlocks': 'lock',
         },
         'lock': {

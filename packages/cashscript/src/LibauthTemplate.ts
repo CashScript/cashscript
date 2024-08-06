@@ -32,6 +32,8 @@ import {
   LibauthTokenDetails,
   Output,
   AddressType,
+  SignatureAlgorithm,
+  HashType,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
@@ -389,8 +391,9 @@ const formatParametersForDebugging = (types: AbiInput[], args: EncodedArgument[]
 
   return typesAndArguments.map(([input, arg]) => {
     if (arg instanceof SignatureTemplate) {
-      // TODO: Different signing algorithms / hashtypes
-      return `<${snakeCase(input.name)}.schnorr_signature.all_outputs> // ${input.type}`;
+      const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
+      const hashtypeName = getHashTypeName(arg.getHashType(false));
+      return `<${snakeCase(input.name)}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
     }
 
     const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;
@@ -399,6 +402,34 @@ const formatParametersForDebugging = (types: AbiInput[], args: EncodedArgument[]
     // e.g. <timeout> // int = <0xa08601>
     return `<${snakeCase(input.name)}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
   }).join('\n');
+};
+
+const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
+  const signatureAlgorithmNames = {
+    [SignatureAlgorithm.SCHNORR]: 'schnorr_signature',
+    [SignatureAlgorithm.ECDSA]: 'ecdsa_signature',
+  };
+
+  return signatureAlgorithmNames[signatureAlgorithm];
+};
+
+const getHashTypeName = (hashType: HashType): string => {
+  const hashtypeNames = {
+    [HashType.SIGHASH_ALL]: 'all_outputs',
+    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
+    [HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
+    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
+    [HashType.SIGHASH_SINGLE]: 'corresponding_output',
+    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
+    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
+    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
+    [HashType.SIGHASH_NONE]: 'no_outputs',
+    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
+    [HashType.SIGHASH_NONE | HashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
+    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
+  };
+
+  return hashtypeNames[hashType];
 };
 
 const formatBytecodeForDebugging = (artifact: Artifact): string => {
