@@ -59,7 +59,7 @@ compileString(sourceCode: string): Artifact
 Compiles a CashScript contract from a source code string. This is the recommended compile method if you're building a webapp, because `compileFile()` only works from a Node.js context. This is also the recommended method if no source file is locally available (e.g. the source code is retrieved with a REST API).
 
 ```ts
-const baseUrl = 'https://raw.githubusercontent.com/Bitcoin-com/cashscript'
+const baseUrl = 'https://raw.githubusercontent.com/CashScript/cashscript'
 const result = await fetch(`${baseUrl}/master/examples/p2pkh.cash`);
 const source = await result.text();
 

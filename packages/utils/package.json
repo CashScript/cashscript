@@ -10,11 +10,11 @@
   ],
   "homepage": "https://cashscript.org",
   "bugs": {
-    "url": "https://github.com/Bitcoin-com/cashscript/issues"
+    "url": "https://github.com/CashScript/cashscript/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Bitcoin-com/cashscript.git"
+    "url": "git+https://github.com/CashScript/cashscript.git"
   },
   "license": "MIT",
   "author": "Rosco Kalis <roscokalis@gmail.com>",

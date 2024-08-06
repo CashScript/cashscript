@@ -1,7 +1,7 @@
 # @cashscript/utils
 
-[![Build Status](https://travis-ci.org/Bitcoin-com/cashscript.svg)](https://travis-ci.org/Bitcoin-com/cashscript)
-[![Coverage Status](https://img.shields.io/codecov/c/github/Bitcoin-com/cashscript.svg)](https://codecov.io/gh/Bitcoin-com/cashscript)
+[![Build Status](https://travis-ci.org/CashScript/cashscript.svg)](https://travis-ci.org/CashScript/cashscript)
+[![Coverage Status](https://img.shields.io/codecov/c/github/CashScript/cashscript.svg)](https://codecov.io/gh/CashScript/cashscript)
 [![NPM Version](https://img.shields.io/npm/v/@cashscript/utils.svg)](https://www.npmjs.com/package/@cashscript/utils)
 [![NPM Monthly Downloads](https://img.shields.io/npm/dm/@cashscript/utils.svg)](hhttps://www.npmjs.com/package/@cashscript/utils)
 [![NPM License](https://img.shields.io/npm/l/@cashscript/utils.svg)](https://www.npmjs.com/package/@cashscript/utils)
