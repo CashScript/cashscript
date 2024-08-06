@@ -1,6 +1,6 @@
 import artifact from '../artifacts/example.json' assert { type: 'json' };
 import { Contract, MockNetworkProvider, randomUtxo } from 'cashscript';
-import 'cashscript/dist/test/JestExtensions.js';
+import 'cashscript/jest';
 
 describe('test example contract functions', () => {
   it('should check for output logs and error messages', async () => {
