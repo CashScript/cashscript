@@ -52,8 +52,6 @@ export const buildTemplate = async ({
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
-  const hasSignatureTemplates = transaction.inputs.filter((input) => isUtxoP2PKH(input)).length > 0;
-
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
@@ -76,11 +74,11 @@ export const buildTemplate = async ({
       transaction.abiFunction,
       transaction.encodedFunctionArgs,
       contract.encodedConstructorArgs,
-      hasSignatureTemplates,
     ),
   } as WalletTemplate;
 
   // add extra variables for the p2pkh utxos spent together with our contract
+  const hasSignatureTemplates = transaction.inputs.filter((input) => isUtxoP2PKH(input)).length > 0;
   if (hasSignatureTemplates) {
     template.entities.parameters.scripts!.push('p2pkh_placeholder_lock', 'p2pkh_placeholder_unlock');
     template.entities.parameters.variables = {
@@ -233,7 +231,6 @@ const generateTemplateScenarios = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedArgument[],
   encodedConstructorArgs: EncodedArgument[],
-  hasSignatureTemplates: boolean,
 ): WalletTemplate['scenarios'] => {
   const libauthTransaction = decodeTransaction(hexToBin(transactionHex));
   if (typeof libauthTransaction === 'string') throw Error(libauthTransaction);
@@ -253,9 +250,7 @@ const generateTemplateScenarios = (
         currentBlockHeight: 2,
         currentBlockTime: Math.round(+new Date() / 1000),
         keys: {
-          privateKeys: generateTemplateScenarioKeys(
-            abiFunction.inputs, encodedFunctionArgs, hasSignatureTemplates,
-          ),
+          privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
         },
       },
       transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, transaction),
@@ -376,7 +371,6 @@ const generateTemplateScenarioParametersValues = (
 const generateTemplateScenarioKeys = (
   types: AbiInput[],
   encodedArgs: EncodedArgument[],
-  hasSignatureTemplates: boolean,
 ): Record<string, string> => {
   const typesAndArguments = zip(types, encodedArgs);
 
@@ -384,11 +378,7 @@ const generateTemplateScenarioKeys = (
     .filter(([, arg]) => arg instanceof SignatureTemplate)
     .map(([input, arg]) => ([snakeCase(input.name), binToHex((arg as SignatureTemplate).privateKey)] as const));
 
-  const placeholderKey = hasSignatureTemplates
-    ? [['placeholder_key', '0x0000000000000000000000000000000000000000000000000000000000000000']]
-    : [];
-
-  return Object.fromEntries([...entries, ...placeholderKey]);
+  return Object.fromEntries(entries);
 };
 
 const formatParametersForDebugging = (types: AbiInput[], args: EncodedArgument[]): string => {

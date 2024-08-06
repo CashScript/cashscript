@@ -965,9 +965,9 @@ export const fixtures: Fixture[] = [
   //   template: {} as any,
   // },
   {
-    name: 'P2PKH (with P2PKH inputs)',
+    name: 'P2PKH (with P2PKH inputs & P2SH20 address type)',
     transaction: (() => {
-      const contract = new Contract(P2PKH, [alicePkh], { provider });
+      const contract = new Contract(P2PKH, [alicePkh], { provider, addressType: 'p2sh20' });
 
       const regularUtxo = randomUtxo();
       provider.addUtxo(contract.address, regularUtxo);
@@ -1042,7 +1042,6 @@ export const fixtures: Fixture[] = [
             'keys': {
               'privateKeys': {
                 's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                'placeholder_key': '0x0000000000000000000000000000000000000000000000000000000000000000',
               },
             },
           },
@@ -1118,7 +1117,7 @@ export const fixtures: Fixture[] = [
           'unlocks': 'lock',
         },
         'lock': {
-          'lockingType': 'p2sh32',
+          'lockingType': 'p2sh20',
           'name': 'lock',
           'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
         },
