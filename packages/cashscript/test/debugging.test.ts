@@ -122,6 +122,16 @@ contract Test() {
 }
 `;
 
+const CONTRACT_CODE_ZERO_HANDLING = `
+contract Test(int a) {
+  function test_zero_handling(int b) {
+    require(a == 0, "a should be 0");
+    require(b == 0, "b should be 0");
+    require(a == b, "a should equal b");
+  }
+}
+`;
+
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
     const BASE_CONTRACT_CODE = `
@@ -485,6 +495,21 @@ describe('Debugging tests', () => {
 
       const transaction = contract.functions.test_fail_large_cleanup().to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/1 should equal 2/);
+    });
+  });
+
+  describe('Template encoding', () => {
+    const artifact = compileString(CONTRACT_CODE_ZERO_HANDLING);
+    const provider = new MockNetworkProvider();
+
+    // test_zero_handling
+    it('should encode a locking and unlocking parameter of value 0 correctly and evaluate the execution', async () => {
+      const contract = new Contract(artifact, [0n], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = contract.functions.test_zero_handling(0n).to(contract.address, 1000n);
+      console.log(await transaction.bitauthUri());
+      await expect(transaction).not.toFailRequireWith(/.*/);
     });
   });
 
