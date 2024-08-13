@@ -2,6 +2,7 @@ import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationPro
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError } from './Errors.js';
+import { getBitauthUri } from './LibauthTemplate.js';
 
 // evaluates the fully defined template, throws upon error
 export const evaluateTemplate = (template: WalletTemplate): boolean => {
@@ -9,7 +10,7 @@ export const evaluateTemplate = (template: WalletTemplate): boolean => {
 
   const verifyResult = vm.verify(program);
   if (typeof verifyResult === 'string') {
-    throw new FailedTransactionError(verifyResult);
+    throw new FailedTransactionError(verifyResult, getBitauthUri(template));
   }
 
   return verifyResult;
@@ -60,10 +61,10 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     // TODO: Also log the require statement that failed (e.g. "require(1 == 2, '1 is not equal to 2')")
     if (requireStatement) {
       const { program: { inputIndex }, error } = lastExecutedDebugStep;
-      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, error);
+      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, error, getBitauthUri(template));
     }
 
-    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${lastExecutedDebugStep.error}`);
+    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${lastExecutedDebugStep.error}`, getBitauthUri(template));
   }
 
   const evaluationResult = vm.verify(program);
@@ -80,10 +81,10 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
 
     if (requireStatement) {
       const { program: { inputIndex }, error } = lastExecutedDebugStep;
-      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, error);
+      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, getBitauthUri(template), error);
     }
 
-    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${evaluationResult}`);
+    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${evaluationResult}`, getBitauthUri(template));
   }
 
   return fullDebugSteps;
@@ -111,11 +112,11 @@ const createProgram = (template: WalletTemplate): CreateProgramResult => {
   });
 
   if (typeof scenarioGeneration === 'string') {
-    throw new FailedTransactionError(scenarioGeneration);
+    throw new FailedTransactionError(scenarioGeneration, getBitauthUri(template));
   }
 
   if (typeof scenarioGeneration.scenario === 'string') {
-    throw new FailedTransactionError(scenarioGeneration.scenario);
+    throw new FailedTransactionError(scenarioGeneration.scenario, getBitauthUri(template));
   }
 
   return { vm, program: scenarioGeneration.scenario.program };

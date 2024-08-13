@@ -42,7 +42,7 @@ import MockNetworkProvider from './network/MockNetworkProvider.js';
 import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
 import { debugTemplate, evaluateTemplate, DebugResult } from './debugging.js';
 import { EncodedArgument } from './Argument.js';
-import { FailedRequireError, FailedTransactionError } from './Errors.js';
+import { FailedTransactionError } from './Errors.js';
 
 export class Transaction {
   public inputs: Utxo[] = [];
@@ -176,17 +176,9 @@ export class Transaction {
     let template: WalletTemplate | undefined;
 
     // Debug the transaction locally before sending so any errors are caught early
-    try {
-      // Libauth debugging does not work with old-style covenents (or outdated artifacts)
-      if (!this.abiFunction.covenant && this.contract.artifact.debug) {
-        await this.debug();
-      }
-    } catch (error) {
-      if (error instanceof FailedRequireError) {
-        error.bitauthUri = await this.bitauthUri();
-        error.message += `\n\nBitauth URI: ${error.bitauthUri}`;
-      }
-      throw error;
+    // Libauth debugging does not work with outdated artifacts)
+    if (this.contract.artifact.debug) {
+      await this.debug();
     }
 
     try {
@@ -203,7 +195,7 @@ export class Transaction {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (error: any) {
       const reason = error.error ?? error.message ?? error;
-      throw new FailedTransactionError(reason, await this.bitauthUri());
+      throw new FailedTransactionError(reason, await this.bitauthUri()); // TODO
     }
   }
 

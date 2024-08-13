@@ -18,21 +18,27 @@ export class TokensToNonTokenAddressError extends Error {
   }
 }
 
+export class NoDebugInformationInArtifactError extends Error {
+  constructor() {
+    super('No debug information found in artifact, please recompile with cashc version 0.10.0 or newer.');
+  }
+}
+
 export class FailedTransactionError extends Error {
+  // TODO: Make bitauthUri required once the advanced transaction builder supports debugging
   constructor(public reason: string, public bitauthUri?: string) {
-    super(`${reason}\n\nBitauth URI: ${bitauthUri}`);
+    super(`${reason}${bitauthUri ? `\n\nBitauth URI: ${bitauthUri}` : ''}`);
   }
 }
 
 // TODO: Add tests for some non-require evaluation errors (e.g. invalid op_split range)
 
 export class FailedRequireError extends Error {
-  public bitauthUri?: string;
-
   constructor(
     public contractName: string,
     public requireStatement: RequireStatement,
     public inputIndex: number,
+    public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
     const baseMessage = `${contractName}.cash:${requireStatement.line} Require statement failed at line ${requireStatement.line}`;
