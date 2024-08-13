@@ -508,7 +508,6 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_zero_handling(0n).to(contract.address, 1000n);
-      console.log(await transaction.bitauthUri());
       await expect(transaction).not.toFailRequireWith(/.*/);
     });
   });
@@ -528,7 +527,7 @@ describe('Debugging tests', () => {
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
         expect(transaction).toLog('^This is definitely not the log$'),
-      ).rejects.toThrow(/Expected: .*This is definitely not the log.*\nReceived: .*Test.cash:4 Hello World/);
+      ).rejects.toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
     });
 
     it('should fail the JestExtensions test if a log is logged that is NOT expected', async () => {
@@ -540,11 +539,11 @@ describe('Debugging tests', () => {
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
         expect(transaction).not.toLog('^Test.cash:4 Hello World$'),
-      ).rejects.toThrow(/Expected: not .*Test.cash:4 Hello World.*\nReceived: .*Test.cash:4 Hello World/);
+      ).rejects.toThrow(/Expected: not .*Test.cash:4 Hello World.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
 
       await expect(
         expect(transaction).not.toLog(),
-      ).rejects.toThrow(/Expected: not .*undefined.*\nReceived: .*Test.cash:4 Hello World/);
+      ).rejects.toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
     });
 
     it('should fail the JestExtensions test if a log is expected where no log is logged', async () => {
@@ -556,7 +555,7 @@ describe('Debugging tests', () => {
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
         expect(transaction).toLog('Hello World'),
-      ).rejects.toThrow(/Expected: .*Hello World.*\nReceived: .*undefined/);
+      ).rejects.toThrow(/Expected: .*Hello World.*\nReceived: (.|\n)*?undefined/);
     });
 
     it('should fail the JestExtensions test if an incorrect require error message is expected', async () => {
@@ -568,7 +567,7 @@ describe('Debugging tests', () => {
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
         expect(transaction).toFailRequireWith('1 should equal 3'),
-      ).rejects.toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: .*1 should equal 2.*/);
+      ).rejects.toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
 
     // TODO: Fix this
@@ -593,11 +592,11 @@ describe('Debugging tests', () => {
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       await expect(
         expect(transaction).not.toFailRequireWith('1 should equal 2'),
-      ).rejects.toThrow(/Expected pattern: not .*1 should equal 2.*\nReceived string: .*1 should equal 2.*/);
+      ).rejects.toThrow(/Expected pattern: not .*1 should equal 2.*\nReceived string: (.|\n)*?1 should equal 2/);
 
       await expect(
         expect(transaction).not.toFailRequireWith(/.*/),
-      ).rejects.toThrow(/Expected pattern: not .*\nReceived string: .*1 should equal 2.*/);
+      ).rejects.toThrow(/Expected pattern: not .*\nReceived string: (.|\n)*?1 should equal 2/);
     });
   });
 });

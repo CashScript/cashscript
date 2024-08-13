@@ -128,7 +128,7 @@ export const fixtures: Fixture[] = [
             'evaluate_function',
           ],
           'name': 'unlock',
-          'script': '// "transfer" function parameters\n<recipient_sig.schnorr_signature.all_outputs> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
+          'script': '// "transfer" function parameters\n<recipient_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
           'unlocks': 'lock',
         },
         'lock': {
@@ -252,7 +252,7 @@ export const fixtures: Fixture[] = [
             'evaluate_function',
           ],
           'name': 'unlock',
-          'script': '// "timeout\" function parameters\n<sender_sig.schnorr_signature.all_outputs> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
+          'script': '// "timeout\" function parameters\n<sender_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
           'unlocks': 'lock',
         },
         'lock': {
@@ -515,7 +515,7 @@ export const fixtures: Fixture[] = [
             'evaluate_function',
           ],
           'name': 'unlock',
-          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
+          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
           'unlocks': 'lock',
         },
         'lock': {
@@ -786,7 +786,7 @@ export const fixtures: Fixture[] = [
             'evaluate_function',
           ],
           'name': 'unlock',
-          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
+          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
           'unlocks': 'lock',
         },
         'lock': {
@@ -932,7 +932,7 @@ export const fixtures: Fixture[] = [
             'evaluate_function',
           ],
           'name': 'unlock',
-          'script': '// "spend" function parameters\n<oracle_message> // bytes8 = <0xa086010030750000>\n<oracle_sig> // datasig = <0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b>\n<owner_sig.schnorr_signature.all_outputs> // sig\n',
+          'script': '// "spend" function parameters\n<oracle_message> // bytes8 = <0xa086010030750000>\n<oracle_sig> // datasig = <0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b>\n<owner_sig.schnorr_signature.all_outputs_all_utxos> // sig\n',
           'unlocks': 'lock',
         },
         'lock': {

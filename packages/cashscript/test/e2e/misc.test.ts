@@ -47,7 +47,7 @@ describe('Simple Covenant', () => {
       const utxo1Info: any = await provider.performRequest('blockchain.utxo.get_info', utxos[1].txid, utxos[1].vout);
       const currentBlockHeight = await provider.getBlockHeight();
 
-      const age = Math.max(utxo0Info.confirmed_height, utxo1Info.confirmed_height) - currentBlockHeight;
+      const age = (Math.max(utxo0Info.confirmed_height, utxo1Info.confirmed_height) - currentBlockHeight) || 0;
 
       // when
       const tx = await covenant.functions.spend()
