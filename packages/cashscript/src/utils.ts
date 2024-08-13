@@ -297,7 +297,7 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   if (byteLength === 0) return Uint8Array.from([0x4c, 0x00]);
   if (byteLength < 76) return Uint8Array.from([byteLength]);
   if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
-  throw Error('Pushdata too large');
+  throw new Error('Pushdata too large');
 }
 
 const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));

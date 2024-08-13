@@ -47,5 +47,6 @@ module.exports = {
     '@typescript-eslint/no-redeclare': 0, // I sometimes name variables an types the same
     'linebreak-style': 0, // Ignore linebreak lints https://stackoverflow.com/a/43008668/1129108
     'import/extensions': ['error', 'ignorePackages'], // ESM requires file extensions
+    '@typescript-eslint/only-throw-error': 'error', // We should only throw Error objects
   },
 }

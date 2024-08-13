@@ -246,7 +246,7 @@ export class Transaction {
 
   private async setInputsAndOutputs(): Promise<void> {
     if (this.outputs.length === 0) {
-      throw Error('Attempted to build a transaction without outputs');
+      throw new Error('Attempted to build a transaction without outputs');
     }
 
     // Fetched utxos are only used when no inputs are available, so only fetch in that case.
