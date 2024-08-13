@@ -47,7 +47,7 @@
     "@jest/globals": "^29.4.1",
     "eslint": "^8.54.0",
     "jest": "^29.4.1",
-    "typescript": "^4.1.5"
+    "typescript": "^5.5.4"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
 }
