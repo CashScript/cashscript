@@ -58,7 +58,6 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((statement) => statement.ip === requireStatementIp);
 
-    // TODO: Also log the require statement that failed (e.g. "require(1 == 2, '1 is not equal to 2')")
     if (requireStatement) {
       const { program: { inputIndex }, error } = lastExecutedDebugStep;
       throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, error, getBitauthUri(template));

@@ -46,7 +46,6 @@ interface BuildTemplateOptions {
   transactionHex?: string;
 }
 
-// TODO: Can we change this so we don't need to pass in both the transaction and the transactionHex?
 export const buildTemplate = async ({
   transaction,
   transactionHex = undefined, // set this argument to prevent unnecessary call `transaction.build()`
@@ -277,15 +276,11 @@ const generateTemplateScenarioTransaction = (
   const slotIndex = csTransaction.inputs.findIndex((input) => !isUtxoP2PKH(input));
 
   const inputs = libauthTransaction.inputs.map((input, index) => {
-    const csInput = csTransaction.inputs[index] as Utxo; // TODO: Change
+    const csInput = csTransaction.inputs[index] as Utxo; // TODO: Improve code quality here (see zip in other places)
 
     return {
       outpointIndex: input.outpointIndex,
-      outpointTransactionHash:
-      // TODO: This should always be Uint8Array according to the libauth transaction types
-        input.outpointTransactionHash instanceof Uint8Array
-          ? binToHex(input.outpointTransactionHash)
-          : input.outpointTransactionHash,
+      outpointTransactionHash: binToHex(input.outpointTransactionHash),
       sequenceNumber: input.sequenceNumber,
       unlockingBytecode: generateTemplateScenarioBytecode(csInput, 'p2pkh_placeholder_unlock', index === slotIndex),
     } as WalletTemplateScenarioInput;
@@ -294,7 +289,7 @@ const generateTemplateScenarioTransaction = (
   const locktime = libauthTransaction.locktime;
 
   const outputs = libauthTransaction.outputs.map((output, index) => {
-    const csOutput = csTransaction.outputs[index]; // TODO: Change
+    const csOutput = csTransaction.outputs[index]; // TODO: Improve code quality here (see zip in other places)
 
     return {
       lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput, contract),
@@ -362,8 +357,7 @@ const generateTemplateScenarioParametersValues = (
     .filter(([, arg]) => !(arg instanceof SignatureTemplate))
     .map(([input, arg]) => {
       const encodedArgumentHex = binToHex(arg as Uint8Array);
-      // TODO: Is this really necessary?
-      const prefixedEncodedArgument = encodedArgumentHex.length ? `0x${encodedArgumentHex}` : encodedArgumentHex;
+      const prefixedEncodedArgument = encodedArgumentHex.length > 0 ? `0x${encodedArgumentHex}` : '';
       return [snakeCase(input.name), prefixedEncodedArgument] as const;
     });
 

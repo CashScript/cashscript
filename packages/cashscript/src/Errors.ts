@@ -31,8 +31,6 @@ export class FailedTransactionError extends Error {
   }
 }
 
-// TODO: Add tests for some non-require evaluation errors (e.g. invalid op_split range)
-
 export class FailedRequireError extends Error {
   constructor(
     public contractName: string,

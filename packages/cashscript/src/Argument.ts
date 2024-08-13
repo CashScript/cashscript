@@ -102,13 +102,3 @@ export const encodeFunctionArguments = (
 
   return encodedArgs;
 };
-
-// Note: BitAuth IDE requires 0 to be encoded as a single byte (rather than the default empty byte array)
-// TODO: Double check this with Pat
-export function encodeArgumentForLibauthTemplate(
-  argument: Argument,
-  typeStr: string,
-): Uint8Array | SignatureTemplate {
-  if (typeStr === PrimitiveType.INT && argument === 0n) return Uint8Array.from([0]);
-  return encodeArgument(argument, typeStr);
-}
