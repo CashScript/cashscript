@@ -38,9 +38,8 @@ import SignatureTemplate from './SignatureTemplate.js';
 import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
-import MockNetworkProvider from './network/MockNetworkProvider.js';
 import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
-import { debugTemplate, evaluateTemplate, DebugResult } from './debugging.js';
+import { debugTemplate, DebugResult } from './debugging.js';
 import { EncodedArgument } from './Argument.js';
 import { FailedTransactionError } from './Errors.js';
 
@@ -173,34 +172,28 @@ export class Transaction {
 
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = await this.build();
-    let template: WalletTemplate | undefined;
 
     // Debug the transaction locally before sending so any errors are caught early
-    // Libauth debugging does not work with outdated artifacts)
-    if (this.contract.artifact.debug) {
+    // Libauth debugging does not work with old-style covenants
+    if (!this.abiFunction.covenant) {
       await this.debug();
     }
 
     try {
-      // TODO: Can we move this to MockNetworkProvider?
-      if (this.contract.provider instanceof MockNetworkProvider) {
-        template = await buildTemplate({
-          transaction: this,
-          transactionHex: tx,
-        });
-        evaluateTemplate(template);
-      }
-
       const txid = await this.contract.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (error: any) {
       const reason = error.error ?? error.message ?? error;
-      throw new FailedTransactionError(reason, await this.bitauthUri()); // TODO
+      throw new FailedTransactionError(reason, await this.bitauthUri());
     }
   }
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
   async debug(): Promise<DebugResult> {
+    if (!this.contract.artifact.debug) {
+      console.warn('No debug information found in artifact. Recompile with cashc version 0.10.0 or newer to get better debugging information.');
+    }
+
     const template = await this.getLibauthTemplate();
     return debugTemplate(template, this.contract.artifact);
   }
