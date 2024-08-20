@@ -6,7 +6,7 @@ import {
 } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
-import { binToHex, hexToBin } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
 
 const CONTRACT_CODE = `
 contract Test() {
@@ -71,6 +71,16 @@ contract Test() {
       a = 10;
       require(a + b + c + d + e == 10, "sum should equal 10");
     }
+  }
+
+  function test_invalid_split_range() {
+    bytes test = 0x1234;
+    bytes test2 = test.split(4)[0];
+    require(test2 == 0x1234);
+  }
+
+  function test_invalid_input_index() {
+    require(tx.inputs[5].value == 1000);
   }
 
   function test_fail_checksig(sig s, pubkey pk) {
@@ -387,7 +397,7 @@ describe('Debugging tests', () => {
       const transaction = contract.functions
         .test_multiple_require_statements_no_message_final().to(contract.address, 1000n);
 
-      await expect(transaction).toFailRequireWith(new RegExp('^Test\.cash:32 Require statement failed at line 32$'));
+      await expect(transaction).toFailRequireWith(new RegExp('^Test\.cash:32 Require statement failed at input 0 in contract Test.cash at line 32'));
       await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
@@ -495,6 +505,35 @@ describe('Debugging tests', () => {
 
       const transaction = contract.functions.test_fail_large_cleanup().to(contract.address, 1000n);
       await expect(transaction).toFailRequireWith(/1 should equal 2/);
+    });
+  });
+
+  describe('Non-require error messages', () => {
+    const artifact = compileString(CONTRACT_CODE);
+    const provider = new MockNetworkProvider();
+
+    // test_invalid_split_range
+    it('should fail with correct error message when an invalid OP_SPLIT range is used', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transactionPromise = contract.functions.test_invalid_split_range()
+        .to(contract.address, 1000n)
+        .debug();
+
+      await expect(transactionPromise).rejects.toThrow(AuthenticationErrorCommon.invalidSplitIndex);
+    });
+
+    // test_invalid_input_index
+    it('should fail with correct error message when an invalid input index is used', async () => {
+      const contract = new Contract(artifact, [], { provider });
+      provider.addUtxo(contract.address, randomUtxo());
+
+      const transactionPromise = contract.functions.test_invalid_input_index()
+        .to(contract.address, 1000n)
+        .debug();
+
+      await expect(transactionPromise).rejects.toThrow(AuthenticationErrorCommon.invalidTransactionUtxoIndex);
     });
   });
 

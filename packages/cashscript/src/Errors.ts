@@ -1,4 +1,4 @@
-import { RequireStatement, Type } from '@cashscript/utils';
+import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -31,17 +31,69 @@ export class FailedTransactionError extends Error {
   }
 }
 
-export class FailedRequireError extends Error {
+// TODO: Merge the location stuff with FailedRequireError
+// TODO: Add tests and make sure it works for multiline statements
+// TODO: Fix that failing statement is incorrect when using multi-function contracts
+export class FailedTransactionEvaluationError extends FailedTransactionError {
   constructor(
-    public contractName: string,
+    public artifact: Artifact,
+    public failingInstructionPointer: number,
+    public inputIndex: number,
+    public bitauthUri: string,
+    public libauthErrorMessage: string,
+  ) {
+    let baseMessage = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.`;
+
+    if (artifact.debug) {
+      const locationData = sourceMapToLocationData(artifact.debug.sourceMap);
+      const failingLocation = locationData[failingInstructionPointer];
+
+      const failingStatementLineString = artifact.source.split('\n')[failingLocation.location.start.line - 1];
+      const failingStatementString = failingStatementLineString.slice(
+        failingLocation.location.start.column,
+        failingLocation.location.end.column,
+      );
+
+      const failingLine = failingLocation.location.start.line;
+
+      baseMessage = `${artifact.contractName}.cash:${failingLine} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${failingLine}.\nFailing statement: ${failingStatementString}`;
+    }
+
+    super(`${baseMessage}\nReason: ${libauthErrorMessage}`, bitauthUri);
+  }
+}
+
+export class FailedRequireError extends FailedTransactionError {
+  constructor(
+    public artifact: Artifact,
+    public failingInstructionPointer: number,
     public requireStatement: RequireStatement,
     public inputIndex: number,
     public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
-    const baseMessage = `${contractName}.cash:${requireStatement.line} Require statement failed at line ${requireStatement.line}`;
-    const fullMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
-    super(requireStatement.message ? fullMessage : baseMessage);
+    const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
+    const failingLocation = locationData[failingInstructionPointer];
+
+    const failingStatementLineString = artifact.source.split('\n')[failingLocation.location.start.line - 1];
+    let failingStatementString = failingStatementLineString.slice(
+      failingLocation.location.start.column,
+      failingLocation.location.end.column,
+    );
+
+    if (!failingStatementString.includes('require')) {
+      failingStatementString = requireStatement.message
+        ? `require(${failingStatementString}, "${requireStatement.message}")`
+        : `require(${failingStatementString})`;
+    }
+
+    const failingLine = failingLocation.location.start.line;
+
+    const baseMessage = `${artifact.contractName}.cash:${failingLine} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${failingLine}`;
+    const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
+    const fullMessage = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.\nFailing statement: ${failingStatementString}`;
+
+    super(fullMessage, bitauthUri);
   }
 }
 

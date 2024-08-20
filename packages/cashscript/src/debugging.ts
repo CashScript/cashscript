@@ -1,7 +1,7 @@
 import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateBCH, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBCH2023, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
-import { FailedRequireError, FailedTransactionError } from './Errors.js';
+import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './LibauthTemplate.js';
 
 // evaluates the fully defined template, throws upon error
@@ -58,18 +58,28 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((statement) => statement.ip === requireStatementIp);
 
+    const { program: { inputIndex }, error } = lastExecutedDebugStep;
+
     if (requireStatement) {
-      const { program: { inputIndex }, error } = lastExecutedDebugStep;
-      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, error, getBitauthUri(template));
+      throw new FailedRequireError(
+        artifact, requireStatementIp, requireStatement, inputIndex, getBitauthUri(template), error,
+      );
     }
 
-    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${lastExecutedDebugStep.error}`, getBitauthUri(template));
+    throw new FailedTransactionEvaluationError(
+      artifact, requireStatementIp, inputIndex, getBitauthUri(template), error,
+    );
   }
 
   const evaluationResult = vm.verify(program);
 
   if (failedFinalVerify(evaluationResult)) {
     const finalExecutedVerifyIp = getFinalExecutedVerifyIp(executedDebugSteps);
+
+    // The final executed verify instruction points to the "implicit" VERIFY that is added at the end of the script.
+    // This instruction does not exist in the sourcemap, so we need to decrement the instruction pointer to get the
+    // actual final executed statement (which is *not* the require statement, but the evaluation within)
+    const sourcemapInstructionPointer = finalExecutedVerifyIp - 1;
 
     // logDebugSteps(executedDebugSteps, lastExecutedDebugStep.instructions);
     // console.warn('message', finalExecutedVerifyIp);
@@ -78,12 +88,17 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((message) => message.ip === finalExecutedVerifyIp);
 
+    const { program: { inputIndex } } = lastExecutedDebugStep;
+
     if (requireStatement) {
-      const { program: { inputIndex }, error } = lastExecutedDebugStep;
-      throw new FailedRequireError(artifact.contractName, requireStatement, inputIndex, getBitauthUri(template), error);
+      throw new FailedRequireError(
+        artifact, sourcemapInstructionPointer, requireStatement, inputIndex, getBitauthUri(template),
+      );
     }
 
-    throw new FailedTransactionError(`Error in evaluating input index ${lastExecutedDebugStep.program.inputIndex}.\n${evaluationResult}`, getBitauthUri(template));
+    throw new FailedTransactionEvaluationError(
+      artifact, sourcemapInstructionPointer, inputIndex, getBitauthUri(template), evaluationResult,
+    );
   }
 
   return fullDebugSteps;
