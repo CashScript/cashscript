@@ -78,34 +78,44 @@ export const buildTemplate = async ({
     ),
   } as WalletTemplate;
 
-  // add extra variables for the p2pkh utxos spent together with our contract
-  const hasSignatureTemplates = transaction.inputs.filter((input) => isUtxoP2PKH(input)).length > 0;
-  if (hasSignatureTemplates) {
-    template.entities.parameters.scripts!.push('p2pkh_placeholder_lock', 'p2pkh_placeholder_unlock');
-    template.entities.parameters.variables = {
-      ...template.entities.parameters.variables,
-      placeholder_key: {
-        description: 'placeholder_key',
-        name: 'placeholder_key',
-        type: 'Key',
-      },
-    };
 
-    // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
-    // this is needed for correct cross-referrences in the template
-    template.scripts.p2pkh_placeholder_unlock = {
-      name: 'p2pkh_placeholder_unlock',
-      script:
-          '<placeholder_key.schnorr_signature.all_outputs>\n<placeholder_key.public_key>',
-      unlocks: 'p2pkh_placeholder_lock',
-    };
-    template.scripts.p2pkh_placeholder_lock = {
-      lockingType: 'standard',
-      name: 'p2pkh_placeholder_lock',
-      script:
-          'OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
-    };
-  }
+  transaction.inputs
+    .forEach((input, index) => {
+      if (!isUtxoP2PKH(input)) return;
+
+      const lockScriptName = `p2pkh_placeholder_lock_${index}`;
+      const unlockScriptName = `p2pkh_placeholder_unlock_${index}`;
+      const placeholderKeyName = `placeholder_key_${index}`;
+
+      const signatureAlgorithmName = getSignatureAlgorithmName(input.template.getSignatureAlgorithm());
+      const hashtypeName = getHashTypeName(input.template.getHashType(false));
+      const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
+
+      template.entities.parameters.scripts!.push(lockScriptName, unlockScriptName);
+      template.entities.parameters.variables = {
+        ...template.entities.parameters.variables,
+        [placeholderKeyName]: {
+          description: placeholderKeyName,
+          name: placeholderKeyName,
+          type: 'Key',
+        },
+      };
+
+      // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
+      // this is needed for correct cross-referrences in the template
+      template.scripts[unlockScriptName] = {
+        name: unlockScriptName,
+        script:
+            `<${signatureString}>\n<${placeholderKeyName}.public_key>`,
+        unlocks: lockScriptName,
+      };
+      template.scripts[lockScriptName] = {
+        lockingType: 'standard',
+        name: lockScriptName,
+        script:
+            `OP_DUP\nOP_HASH160 <$(<${placeholderKeyName}.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
+      };
+    });
 
   return template;
 };
@@ -282,7 +292,7 @@ const generateTemplateScenarioTransaction = (
       outpointIndex: input.outpointIndex,
       outpointTransactionHash: binToHex(input.outpointTransactionHash),
       sequenceNumber: input.sequenceNumber,
-      unlockingBytecode: generateTemplateScenarioBytecode(csInput, 'p2pkh_placeholder_unlock', index === slotIndex),
+      unlockingBytecode: generateTemplateScenarioBytecode(csInput, `p2pkh_placeholder_unlock_${index}`, index === slotIndex),
     } as WalletTemplateScenarioInput;
   });
 
@@ -319,7 +329,7 @@ const generateTemplateScenarioSourceOutputs = (
 
   return csTransaction.inputs.map((input, index) => {
     return {
-      lockingBytecode: generateTemplateScenarioBytecode(input, 'p2pkh_placeholder_lock', index === slotIndex),
+      lockingBytecode: generateTemplateScenarioBytecode(input, `p2pkh_placeholder_lock_${index}`, index === slotIndex),
       valueSatoshis: Number(input.satoshis),
       token: serialiseTokenDetails(input.token),
     };

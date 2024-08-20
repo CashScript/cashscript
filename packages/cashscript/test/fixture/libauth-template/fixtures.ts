@@ -981,10 +981,8 @@ export const fixtures: Fixture[] = [
       const tx = contract.functions
         .spend(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_NONE, SignatureAlgorithm.ECDSA))
         .fromP2PKH(p2pkhUtxo, new SignatureTemplate(alicePriv))
-        // TODO: Also allow fromP2PKH with different signing algorithms / hashtypes
-        // + support multiple fromP2PKH inputs with different keys
-        // .fromP2PKH(p2pkhUtxo, new SignatureTemplate(bobPriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA))
         .from(regularUtxo)
+        .fromP2PKH(p2pkhUtxo, new SignatureTemplate(bobPriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA))
         .to(to, amount);
 
       return tx;
@@ -1004,8 +1002,10 @@ export const fixtures: Fixture[] = [
           'scripts': [
             'lock',
             'unlock_lock',
-            'p2pkh_placeholder_lock',
-            'p2pkh_placeholder_unlock',
+            'p2pkh_placeholder_lock_0',
+            'p2pkh_placeholder_unlock_0',
+            'p2pkh_placeholder_lock_2',
+            'p2pkh_placeholder_unlock_2',
           ],
           'variables': {
             's': {
@@ -1023,9 +1023,14 @@ export const fixtures: Fixture[] = [
               'name': 'pkh',
               'type': 'WalletData',
             },
-            'placeholder_key': {
-              'description': 'placeholder_key',
-              'name': 'placeholder_key',
+            'placeholder_key_0': {
+              'description': 'placeholder_key_0',
+              'name': 'placeholder_key_0',
+              'type': 'Key',
+            },
+            'placeholder_key_2': {
+              'description': 'placeholder_key_2',
+              'name': 'placeholder_key_2',
               'type': 'Key',
             },
           },
@@ -1055,7 +1060,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
-                  'script': 'p2pkh_placeholder_unlock',
+                  'script': 'p2pkh_placeholder_unlock_0',
                   'overrides': {
                     'keys': {
                       'privateKeys': {
@@ -1072,6 +1077,21 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': [
                   'slot',
                 ],
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_2',
+                  'overrides': {
+                    'keys': {
+                      'privateKeys': {
+                        'placeholder_key': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      },
+                    },
+                  },
+                },
               },
             ],
             'locktime': 133700,
@@ -1090,7 +1110,7 @@ export const fixtures: Fixture[] = [
           'sourceOutputs': [
             {
               'lockingBytecode': {
-                'script': 'p2pkh_placeholder_lock',
+                'script': 'p2pkh_placeholder_lock_0',
                 'overrides': {
                   'keys': {
                     'privateKeys': {
@@ -1105,6 +1125,19 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': [
                 'slot',
               ],
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_2',
+                'overrides': {
+                  'keys': {
+                    'privateKeys': {
+                      'placeholder_key': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                    },
+                  },
+                },
+              },
               'valueSatoshis': expect.any(Number),
             },
           ],
@@ -1124,15 +1157,25 @@ export const fixtures: Fixture[] = [
           'name': 'lock',
           'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
         },
-        'p2pkh_placeholder_unlock': {
-          'name': 'p2pkh_placeholder_unlock',
-          'script': '<placeholder_key.schnorr_signature.all_outputs>\n<placeholder_key.public_key>',
-          'unlocks': 'p2pkh_placeholder_lock',
+        'p2pkh_placeholder_unlock_0': {
+          'name': 'p2pkh_placeholder_unlock_0',
+          'script': '<placeholder_key_0.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_0.public_key>',
+          'unlocks': 'p2pkh_placeholder_lock_0',
         },
-        'p2pkh_placeholder_lock': {
+        'p2pkh_placeholder_lock_0': {
           'lockingType': 'standard',
-          'name': 'p2pkh_placeholder_lock',
-          'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
+          'name': 'p2pkh_placeholder_lock_0',
+          'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_0.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
+        },
+        'p2pkh_placeholder_unlock_2': {
+          'name': 'p2pkh_placeholder_unlock_2',
+          'script': '<placeholder_key_2.ecdsa_signature.all_outputs>\n<placeholder_key_2.public_key>',
+          'unlocks': 'p2pkh_placeholder_lock_2',
+        },
+        'p2pkh_placeholder_lock_2': {
+          'lockingType': 'standard',
+          'name': 'p2pkh_placeholder_lock_2',
+          'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_2.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
       },
     },
