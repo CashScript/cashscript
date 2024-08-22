@@ -51,7 +51,8 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
 
     // Generally speaking, an error is thrown by the OP_VERIFY opcode, but for NULLFAIL, the error is thrown in the
     // preceding OP_CHECKSIG opcode. The error message is registered in the next instruction, so we need to increment
-    // the instruction pointer to get the correct error message.
+    // the instruction pointer to get the correct error message from the require messages in the artifact.
+    // Note that we do NOT use this adjusted IP when passing the failing IP into the FailedRequireError
     const isNullFail = lastExecutedDebugStep.error === AuthenticationErrorCommon.nonNullSignatureFailure;
     const requireStatementIp = failingIp + (isNullFail ? 1 : 0);
 
@@ -61,13 +62,15 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     const { program: { inputIndex }, error } = lastExecutedDebugStep;
 
     if (requireStatement) {
+      // Note that we use failingIp here rather than requireStatementIp, see comment above
       throw new FailedRequireError(
-        artifact, requireStatementIp, requireStatement, inputIndex, getBitauthUri(template), error,
+        artifact, failingIp, requireStatement, inputIndex, getBitauthUri(template), error,
       );
     }
 
+    // Note that we use failingIp here rather than requireStatementIp, see comment above
     throw new FailedTransactionEvaluationError(
-      artifact, requireStatementIp, inputIndex, getBitauthUri(template), error,
+      artifact, failingIp, inputIndex, getBitauthUri(template), error,
     );
   }
 

@@ -39,7 +39,8 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('BigInt.cash:4 Require statement failed at line 4');
+      await expect(txPromise).rejects.toThrow('BigInt.cash:4 Require statement failed at input 0 in contract BigInt.cash at line 4');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(x >= maxInt32PlusOne)');
     });
 
     it('should fail when providing numbers that overflow 64 bits when multiplied', async () => {

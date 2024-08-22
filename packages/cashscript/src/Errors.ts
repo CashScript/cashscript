@@ -1,4 +1,4 @@
-import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
+import { Artifact, RequireStatement, SingleLocationData, sourceMapToLocationData, Type } from '@cashscript/utils';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -33,7 +33,6 @@ export class FailedTransactionError extends Error {
 
 // TODO: Merge the location stuff with FailedRequireError
 // TODO: Add tests and make sure it works for multiline statements
-// TODO: Fix that failing statement is incorrect when using multi-function contracts
 export class FailedTransactionEvaluationError extends FailedTransactionError {
   constructor(
     public artifact: Artifact,
@@ -45,8 +44,7 @@ export class FailedTransactionEvaluationError extends FailedTransactionError {
     let baseMessage = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.`;
 
     if (artifact.debug) {
-      const locationData = sourceMapToLocationData(artifact.debug.sourceMap);
-      const failingLocation = locationData[failingInstructionPointer];
+      const failingLocation = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
 
       const failingStatementLineString = artifact.source.split('\n')[failingLocation.location.start.line - 1];
       const failingStatementString = failingStatementLineString.slice(
@@ -72,8 +70,7 @@ export class FailedRequireError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
-    const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
-    const failingLocation = locationData[failingInstructionPointer];
+    const failingLocation = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
 
     const failingStatementLineString = artifact.source.split('\n')[failingLocation.location.start.line - 1];
     let failingStatementString = failingStatementLineString.slice(
@@ -87,6 +84,8 @@ export class FailedRequireError extends FailedTransactionError {
         : `require(${failingStatementString})`;
     }
 
+    failingStatementString = failingStatementString.trim().replace(/;$/g, '');
+
     const failingLine = failingLocation.location.start.line;
 
     const baseMessage = `${artifact.contractName}.cash:${failingLine} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${failingLine}`;
@@ -96,6 +95,21 @@ export class FailedRequireError extends FailedTransactionError {
     super(fullMessage, bitauthUri);
   }
 }
+
+const getLocationDataForInstructionPointer = (
+  artifact: Artifact,
+  instructionPointer: number,
+): SingleLocationData => {
+  const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
+
+  // We subtract the constructor inputs because these are present in the evaluation (and thus the instruction pointer)
+  // but they are not present in the source code (and thus the location data)
+  const modifiedInstructionPointer = instructionPointer - artifact.constructorInputs.length;
+
+  const location = locationData[modifiedInstructionPointer];
+
+  return location;
+};
 
 // TODO: Expand these reasons with non-script failures (like tx-mempool-conflict)
 export enum NodeErrorReason {

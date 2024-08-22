@@ -45,7 +45,8 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('HodlVault.cash:26 Require statement failed at line 26');
+      await expect(txPromise).rejects.toThrow('HodlVault.cash:26 Require statement failed at input 0 in contract HodlVault.cash at line 26.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(checkDataSig(oracleSig, oracleMessage, oraclePk))');
     });
 
     it('should fail when price is too low', async () => {
@@ -63,7 +64,8 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('HodlVault.cash:23 Require statement failed at line 23');
+      await expect(txPromise).rejects.toThrow('HodlVault.cash:23 Require statement failed at input 0 in contract HodlVault.cash at line 23.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(price >= priceTarget)');
     });
 
     it('should succeed when price is high enough', async () => {

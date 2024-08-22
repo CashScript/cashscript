@@ -66,7 +66,8 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Announcement.cash:17 Require statement failed at line 17');
+      await expect(txPromise).rejects.toThrow('Announcement.cash:17 Require statement failed at input 0 in contract Announcement.cash at line 17.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[0].lockingBytecode == announcement)');
     });
 
     it('should fail when sending incorrect amount of change', async () => {
@@ -88,7 +89,8 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Announcement.cash:25 Require statement failed at line 25');
+      await expect(txPromise).rejects.toThrow('Announcement.cash:25 Require statement failed at input 0 in contract Announcement.cash at line 25.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[1].value == changeAmount)');
     });
 
     it('should fail when sending the correct change amount to an incorrect address', async () => {
@@ -112,7 +114,8 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Announcement.cash:24 Require statement failed at line 24');
+      await expect(txPromise).rejects.toThrow('Announcement.cash:24 Require statement failed at input 0 in contract Announcement.cash at line 24.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode)');
     });
 
     it('should succeed when announcing correct announcement', async () => {

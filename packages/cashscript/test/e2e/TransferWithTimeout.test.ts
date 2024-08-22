@@ -44,7 +44,8 @@ describe('TransferWithTimeout', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:8 Require statement failed at line 8');
+      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:8 Require statement failed at input 0 in contract TransferWithTimeout.cash at line 8.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(checkSig(recipientSig, recipient))');
     });
 
     it('should fail when signing timeout with incorrect private key', async () => {
@@ -60,7 +61,8 @@ describe('TransferWithTimeout', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:13 Require statement failed at line 13');
+      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:13 Require statement failed at input 0 in contract TransferWithTimeout.cash at line 13.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(checkSig(senderSig, sender))');
     });
 
     it('should fail when timeout is called before timeout block', async () => {
@@ -76,7 +78,8 @@ describe('TransferWithTimeout', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:14 Require statement failed at line 14');
+      await expect(txPromise).rejects.toThrow('TransferWithTimeout.cash:14 Require statement failed at input 0 in contract TransferWithTimeout.cash at line 14.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.time >= timeout)');
     });
 
     it('should succeed when transfer is called after timeout block', async () => {

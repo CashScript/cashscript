@@ -42,7 +42,8 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Mecenas.cash:24 Require statement failed at line 24');
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:24 Require statement failed at input 0 in contract Mecenas.cash at line 24.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[0].value == pledge)');
     });
 
     it('should fail when trying to send to wrong person', async () => {
@@ -59,7 +60,8 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Mecenas.cash:13 Require statement failed at line 13');
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:13 Require statement failed at input 0 in contract Mecenas.cash at line 13.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient))');
     });
 
     it('should fail when trying to send to multiple people', async () => {
@@ -77,7 +79,8 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Mecenas.cash:25 Require statement failed at line 25');
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:25 Require statement failed at input 0 in contract Mecenas.cash at line 25.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode)');
     });
 
     it('should fail when sending incorrect amount of change', async () => {
@@ -94,7 +97,8 @@ describe('Mecenas', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Mecenas.cash:26 Require statement failed at line 26');
+      await expect(txPromise).rejects.toThrow('Mecenas.cash:26 Require statement failed at input 0 in contract Mecenas.cash at line 26.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[1].value == changeValue)');
     });
 
     it('should succeed when sending pledge to receiver', async () => {

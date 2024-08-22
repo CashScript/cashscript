@@ -15,7 +15,7 @@ export interface Fixture {
 
 export const fixtures: Fixture[] = [
   {
-    name: 'TransferWithTimeout',
+    name: 'TransferWithTimeout (Modified with random extra statements)',
     sourceCode: `
 contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeout) {
   function transfer(pubkey signingPk, sig s) {
@@ -202,6 +202,93 @@ OP_3 OP_PICK OP_HASH160 OP_2 OP_ROLL OP_EQUAL OP_VERIFY                         
 OP_3 OP_ROLL OP_3 OP_ROLL OP_CHECKSIG                                                    /*         require(checkSig(s, pk));                                                                                  */
 OP_NIP OP_NIP                                                                            /*     }                                                                                                              */
 OP_ENDIF                                                                                 /* }                                                                                                                  */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    name: 'HodlVault',
+    sourceCode: `
+// This contract forces HODLing until a certain price target has been reached
+// A minimum block is provided to ensure that oracle price entries from before this block are disregarded
+// i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used.
+// Instead, a message with a block number and price from after the minBlock needs to be passed.
+// This contract serves as a simple example for checkDataSig-based contracts.
+contract HodlVault(
+    pubkey ownerPk,
+    pubkey oraclePk,
+    int minBlock,
+    int priceTarget
+) {
+    function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {
+        // message: { blockHeight, price }
+        bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);
+        int blockHeight = int(blockHeightBin);
+        int price = int(priceBin);
+
+        // Check that blockHeight is after minBlock and not in the future
+        require(blockHeight >= minBlock);
+        require(tx.time >= blockHeight);
+
+        // Check that current price is at least priceTarget
+        require(price >= priceTarget);
+
+        // Handle necessary signature checks
+        require(checkDataSig(oracleSig, oracleMessage, oraclePk));
+        require(checkSig(ownerSig, ownerPk));
+    }
+}
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+    asmBytecode: 'OP_6 OP_PICK OP_4 OP_SPLIT OP_1 OP_ROLL OP_BIN2NUM OP_1 OP_ROLL OP_BIN2NUM OP_1 OP_PICK OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP OP_0 OP_ROLL OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIG OP_VERIFY OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG',
+    sourceMap: '14:49:14:62;;:69::70;:49::71:1;15:30:15:44:0;;:26::45:1;16:24:16:32:0;;:20::33:1;19:16:19:27:0;;:31::39;;:16:::1;:8::41;20:27:20:38:0;;:8::40:1;;23:16:23:21:0;;:25::36;;:16:::1;:8::38;26:29:26::0;;:40::53;;:55::63;;:16::64:1;:8::66;27:25:27:33:0;;:35::42;;:16::43:1',
+    expectedLineToOpcodeMap: {
+      14: [Op.OP_6, Op.OP_PICK, Op.OP_4, Op.OP_SPLIT],
+      15: [Op.OP_1, Op.OP_ROLL, Op.OP_BIN2NUM],
+      16: [Op.OP_1, Op.OP_ROLL, Op.OP_BIN2NUM],
+      19: [Op.OP_1, Op.OP_PICK, Op.OP_5, Op.OP_ROLL, Op.OP_GREATERTHANOREQUAL, Op.OP_VERIFY],
+      20: [Op.OP_1, Op.OP_ROLL, Op.OP_CHECKLOCKTIMEVERIFY, Op.OP_DROP],
+      23: [new Uint8Array([]), Op.OP_ROLL, Op.OP_3, Op.OP_ROLL, Op.OP_GREATERTHANOREQUAL, Op.OP_VERIFY],
+      26: [Op.OP_3, Op.OP_ROLL, Op.OP_4, Op.OP_ROLL, Op.OP_3, Op.OP_ROLL, Op.OP_CHECKDATASIG, Op.OP_VERIFY],
+      27: [Op.OP_1, Op.OP_ROLL, Op.OP_1, Op.OP_ROLL, Op.OP_CHECKSIG],
+    },
+    expectedLineToAsmMap: {
+      14: 'OP_6 OP_PICK OP_4 OP_SPLIT',
+      15: 'OP_1 OP_ROLL OP_BIN2NUM',
+      16: 'OP_1 OP_ROLL OP_BIN2NUM',
+      19: 'OP_1 OP_PICK OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY',
+      20: 'OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP',
+      23: 'OP_0 OP_ROLL OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY',
+      26: 'OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIG OP_VERIFY',
+      27: 'OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG',
+    },
+    expectedBitAuthScript: `
+                                                                 /* // This contract forces HODLing until a certain price target has been reached                                          */
+                                                                 /* // A minimum block is provided to ensure that oracle price entries from before this block are disregarded              */
+                                                                 /* // i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used. */
+                                                                 /* // Instead, a message with a block number and price from after the minBlock needs to be passed.                        */
+                                                                 /* // This contract serves as a simple example for checkDataSig-based contracts.                                          */
+                                                                 /* contract HodlVault(                                                                                                    */
+                                                                 /*     pubkey ownerPk,                                                                                                    */
+                                                                 /*     pubkey oraclePk,                                                                                                   */
+                                                                 /*     int minBlock,                                                                                                      */
+                                                                 /*     int priceTarget                                                                                                    */
+                                                                 /* ) {                                                                                                                    */
+                                                                 /*     function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {                                            */
+                                                                 /*         // message: { blockHeight, price }                                                                             */
+OP_6 OP_PICK OP_4 OP_SPLIT                                       /*         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);                                               */
+OP_1 OP_ROLL OP_BIN2NUM                                          /*         int blockHeight = int(blockHeightBin);                                                                         */
+OP_1 OP_ROLL OP_BIN2NUM                                          /*         int price = int(priceBin);                                                                                     */
+                                                                 /*                                                                                                                        */
+                                                                 /*         // Check that blockHeight is after minBlock and not in the future                                              */
+OP_1 OP_PICK OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY        /*         require(blockHeight >= minBlock);                                                                              */
+OP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP                      /*         require(tx.time >= blockHeight);                                                                               */
+                                                                 /*                                                                                                                        */
+                                                                 /*         // Check that current price is at least priceTarget                                                            */
+OP_0 OP_ROLL OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY        /*         require(price >= priceTarget);                                                                                 */
+                                                                 /*                                                                                                                        */
+                                                                 /*         // Handle necessary signature checks                                                                           */
+OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIG OP_VERIFY /*         require(checkDataSig(oracleSig, oracleMessage, oraclePk));                                                     */
+OP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                            /*         require(checkSig(ownerSig, ownerPk));                                                                          */
+                                                                 /*     }                                                                                                                  */
+                                                                 /* }                                                                                                                      */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
 ];

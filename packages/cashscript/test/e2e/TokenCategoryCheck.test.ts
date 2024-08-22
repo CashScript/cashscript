@@ -49,7 +49,8 @@ describe('TokenCategoryCheck', () => {
         .send();
 
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('Test.cash:3 Require statement failed at line 3');
+      await expect(txPromise).rejects.toThrow('Test.cash:3 Require statement failed at input 0 in contract Test.cash at line 3.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.inputs[1].tokenCategory == 0x)');
     });
 
     it('can send if the input at index 1 does not contain tokens', async () => {

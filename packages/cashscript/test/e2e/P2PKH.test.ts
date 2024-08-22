@@ -47,7 +47,8 @@ describe('P2PKH-no-tokens', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('P2PKH.cash:4 Require statement failed at line 4');
+      await expect(txPromise).rejects.toThrow('P2PKH.cash:4 Require statement failed at input 0 in contract P2PKH.cash at line 4.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(hash160(pk) == pkh)');
     });
 
     it('should fail when using incorrect signature', async () => {
@@ -63,7 +64,8 @@ describe('P2PKH-no-tokens', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('P2PKH.cash:5 Require statement failed at line 5');
+      await expect(txPromise).rejects.toThrow('P2PKH.cash:5 Require statement failed at input 0 in contract P2PKH.cash at line 5.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(checkSig(s, pk))');
     });
 
     it('should succeed when using correct function arguments', async () => {
