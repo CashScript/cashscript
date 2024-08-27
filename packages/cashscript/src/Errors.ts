@@ -1,4 +1,4 @@
-import { Artifact, RequireStatement, SingleLocationData, sourceMapToLocationData, Type } from '@cashscript/utils';
+import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -31,8 +31,6 @@ export class FailedTransactionError extends Error {
   }
 }
 
-// TODO: Merge the location stuff with FailedRequireError
-// TODO: Add tests and make sure it works for multiline statements
 export class FailedTransactionEvaluationError extends FailedTransactionError {
   constructor(
     public artifact: Artifact,
@@ -44,17 +42,8 @@ export class FailedTransactionEvaluationError extends FailedTransactionError {
     let baseMessage = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.`;
 
     if (artifact.debug) {
-      const failingLocation = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
-
-      const failingStatementLineString = artifact.source.split('\n')[failingLocation.location.start.line - 1];
-      const failingStatementString = failingStatementLineString.slice(
-        failingLocation.location.start.column,
-        failingLocation.location.end.column,
-      );
-
-      const failingLine = failingLocation.location.start.line;
-
-      baseMessage = `${artifact.contractName}.cash:${failingLine} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${failingLine}.\nFailing statement: ${failingStatementString}`;
+      const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+      baseMessage = `${artifact.contractName}.cash:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nFailing statement: ${statement}`;
     }
 
     super(`${baseMessage}\nReason: ${libauthErrorMessage}`, bitauthUri);
@@ -70,45 +59,41 @@ export class FailedRequireError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
-    const failingLocation = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+    let { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
 
-    const failingStatementLineString = artifact.source.split('\n')[failingLocation.location.start.line - 1];
-    let failingStatementString = failingStatementLineString.slice(
-      failingLocation.location.start.column,
-      failingLocation.location.end.column,
-    );
-
-    if (!failingStatementString.includes('require')) {
-      failingStatementString = requireStatement.message
-        ? `require(${failingStatementString}, "${requireStatement.message}")`
-        : `require(${failingStatementString})`;
+    if (!statement.includes('require')) {
+      statement = requireStatement.message
+        ? `require(${statement}, "${requireStatement.message}")`
+        : `require(${statement})`;
     }
 
-    failingStatementString = failingStatementString.trim().replace(/;$/g, '');
-
-    const failingLine = failingLocation.location.start.line;
-
-    const baseMessage = `${artifact.contractName}.cash:${failingLine} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${failingLine}`;
+    const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
-    const fullMessage = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.\nFailing statement: ${failingStatementString}`;
+    const fullMessage = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.\nFailing statement: ${statement}`;
 
     super(fullMessage, bitauthUri);
   }
 }
 
+// TODO: Add tests and make sure it works for multiline statements
 const getLocationDataForInstructionPointer = (
   artifact: Artifact,
   instructionPointer: number,
-): SingleLocationData => {
+): { lineNumber: number, statement: string } => {
   const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
 
   // We subtract the constructor inputs because these are present in the evaluation (and thus the instruction pointer)
   // but they are not present in the source code (and thus the location data)
   const modifiedInstructionPointer = instructionPointer - artifact.constructorInputs.length;
 
-  const location = locationData[modifiedInstructionPointer];
+  const { location } = locationData[modifiedInstructionPointer];
 
-  return location;
+  const lineString = artifact.source.split('\n')[location.start.line - 1];
+  const statement = lineString.slice(location.start.column, location.end.column);
+
+  const lineNumber = location.start.line;
+
+  return { statement, lineNumber };
 };
 
 // TODO: Expand these reasons with non-script failures (like tx-mempool-conflict)
