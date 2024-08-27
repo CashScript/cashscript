@@ -346,7 +346,8 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_require().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/1 should equal 2/);
+      await expect(transaction).toFailRequireWith('Test.cash:13 Require statement failed at input 0 in contract Test.cash at line 13 with the following message: 1 should equal 2.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
     });
 
     // test_require_single_function
@@ -357,7 +358,8 @@ describe('Debugging tests', () => {
       const transaction = contract.functions.test_require_single_function()
         .to(contract.address, 1000n)
         .to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/should have 1 output/);
+      await expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: should have 1 output.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(tx.outputs.length == 1, "should have 1 output")');
     });
 
     // test_multiple_require_statements
@@ -366,7 +368,8 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_multiple_require_statements().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/1 should equal 2/);
+      await expect(transaction).toFailRequireWith('Test.cash:21 Require statement failed at input 0 in contract Test.cash at line 21 with the following message: 1 should equal 2.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
       await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
@@ -376,7 +379,8 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_multiple_require_statements_final_fails().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/1 should equal 2/);
+      await expect(transaction).toFailRequireWith('Test.cash:27 Require statement failed at input 0 in contract Test.cash at line 27 with the following message: 1 should equal 2.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
       await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
@@ -397,7 +401,8 @@ describe('Debugging tests', () => {
       const transaction = contract.functions
         .test_multiple_require_statements_no_message_final().to(contract.address, 1000n);
 
-      await expect(transaction).toFailRequireWith(new RegExp('^Test\.cash:32 Require statement failed at input 0 in contract Test.cash at line 32'));
+      await expect(transaction).toFailRequireWith('Test.cash:32 Require statement failed at input 0 in contract Test.cash at line 32.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2)');
       await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
@@ -408,7 +413,8 @@ describe('Debugging tests', () => {
 
       const transaction = contract.functions.test_timeops_as_final_require().to(contract.address, 1000n);
 
-      await expect(transaction).toFailRequireWith(/time should be HUGE/);
+      await expect(transaction).toFailRequireWith('Test.cash:37 Require statement failed at input 0 in contract Test.cash at line 37 with the following message: time should be HUGE.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(tx.time >= 100000000, "time should be HUGE")');
       await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
@@ -419,15 +425,18 @@ describe('Debugging tests', () => {
 
       const transactionIfBranch = contract.functions
         .test_final_require_in_if_statement(1n).to(contract.address, 1000n);
-      await expect(transactionIfBranch).toFailRequireWith(/1 should equal 2/);
+      await expect(transactionIfBranch).toFailRequireWith('Test.cash:43 Require statement failed at input 0 in contract Test.cash at line 43 with the following message: 1 should equal 2.');
+      await expect(transactionIfBranch).toFailRequireWith('Failing statement: require(1 == a, "1 should equal 2")');
 
       const transactionElseIfBranch = contract.functions
         .test_final_require_in_if_statement(2n).to(contract.address, 1000n);
-      await expect(transactionElseIfBranch).toFailRequireWith(/1 should equal 3/);
+      await expect(transactionElseIfBranch).toFailRequireWith('Test.cash:47 Require statement failed at input 0 in contract Test.cash at line 47 with the following message: 1 should equal 3.');
+      await expect(transactionElseIfBranch).toFailRequireWith('Failing statement: require(1 == b, "1 should equal 3")');
 
       const transactionElseBranch = contract.functions
         .test_final_require_in_if_statement(3n).to(contract.address, 1000n);
-      await expect(transactionElseBranch).toFailRequireWith(/switch should equal 4/);
+      await expect(transactionElseBranch).toFailRequireWith('Test.cash:50 Require statement failed at input 0 in contract Test.cash at line 50 with the following message: switch should equal 4.');
+      await expect(transactionElseBranch).toFailRequireWith('Failing statement: require(switch == c, "switch should equal 4")');
     });
 
     // test_final_require_in_if_statement_with_deep_reassignment
@@ -437,7 +446,8 @@ describe('Debugging tests', () => {
 
       const transaction = contract.functions
         .test_final_require_in_if_statement_with_deep_reassignment().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/sum should equal 10/);
+      await expect(transaction).toFailRequireWith('Test.cash:62 Require statement failed at input 0 in contract Test.cash at line 62 with the following message: sum should equal 10.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(a + b + c + d + e == 10, "sum should equal 10")');
     });
 
     // test_fail_checksig
@@ -447,7 +457,8 @@ describe('Debugging tests', () => {
 
       const checkSigTransaction = contract.functions
         .test_fail_checksig(new SignatureTemplate(alicePriv), bobPub).to(contract.address, 1000n);
-      await expect(checkSigTransaction).toFailRequireWith(/Signatures do not match/);
+      await expect(checkSigTransaction).toFailRequireWith('Test.cash:77 Require statement failed at input 0 in contract Test.cash at line 77 with the following message: Signatures do not match.');
+      await expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
 
       // TODO: Add test for checksig with a NULL Signature (after we refactor Libauth Template generation)
       // const checkSigTransactionNullSignature = contract.functions
@@ -462,7 +473,8 @@ describe('Debugging tests', () => {
 
       const checkSigTransaction = contract.functions
         .test_fail_checksig_final_verify(new SignatureTemplate(alicePriv), bobPub).to(contract.address, 1000n);
-      await expect(checkSigTransaction).toFailRequireWith(/Signatures do not match/);
+      await expect(checkSigTransaction).toFailRequireWith('Test.cash:82 Require statement failed at input 0 in contract Test.cash at line 82 with the following message: Signatures do not match.');
+      await expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
     });
 
     // test_fail_checkdatasig
@@ -473,12 +485,14 @@ describe('Debugging tests', () => {
       const checkDataSigTransaction = contract.functions
         .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xbeef')).slice(0, -1), '0xbeef', bobPub)
         .to(contract.address, 1000n);
-      await expect(checkDataSigTransaction).toFailRequireWith(/Data Signatures do not match/);
+      await expect(checkDataSigTransaction).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
+      await expect(checkDataSigTransaction).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
 
       const checkDataSigTransactionWrongMessage = contract.functions
         .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xc0ffee')).slice(0, -1), '0xbeef', alicePub)
         .to(contract.address, 1000n);
-      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith(/Data Signatures do not match/);
+      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
+      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
     });
 
     // test_fail_checkmultisig
@@ -495,7 +509,7 @@ describe('Debugging tests', () => {
           alicePub,
         )
         .to(contract.address, 1000n);
-      await expect(checkmultiSigTransaction).toFailRequireWith(/Multi Signatures do not match/);
+      await expect(checkmultiSigTransaction).toFailRequireWith(/Multi Signatures do not match1/);
     });
 
     // test_fail_large_cleanup
@@ -504,7 +518,8 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_fail_large_cleanup().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith(/1 should equal 2/);
+      await expect(transaction).toFailRequireWith('Test.cash:19 Require statement failed at input 0 in contract Test.cash at line 19 with the following message: 1 should equal 2.');
+      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
     });
   });
 
