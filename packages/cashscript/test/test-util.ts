@@ -20,10 +20,11 @@ export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork)
     const prefix = getNetworkPrefix(network);
     const cashscriptOutput = libauthOutputToCashScriptOutput(o);
     const hasTokens = Boolean(cashscriptOutput.token);
-    const address = lockingBytecodeToCashAddress(hexToBin(scriptHex), prefix, { tokenSupport: hasTokens }) as string;
+    const result = lockingBytecodeToCashAddress({ bytecode: hexToBin(scriptHex), prefix, tokenSupport: hasTokens });
+    if (typeof result === 'string') throw new Error(result);
 
     return {
-      to: address,
+      to: result.address,
       amount: o.valueSatoshis,
       token: cashscriptOutput.token,
     };

@@ -11,7 +11,7 @@
     "lint": "eslint . --ext .ts --ignore-path ../.eslintignore"
   },
   "dependencies": {
-    "@bitauth/libauth": "^2.0.0-alpha.8",
+    "@bitauth/libauth": "^3.0.0",
     "@types/node": "^12.7.8",
     "bip39": "^3.0.4",
     "cashc": "^0.10.0-next.6",

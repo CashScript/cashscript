@@ -496,8 +496,7 @@ describe('Debugging tests', () => {
     });
 
     // test_fail_checkmultisig
-    // TODO: Add test for checkmultisig (requires ECDSA signatures) after refactoring Libauth Template generation
-    it.skip('should fail with correct error message when checkMultiSig fails', async () => {
+    it('should fail with correct error message when checkMultiSig fails', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());
 
@@ -509,7 +508,8 @@ describe('Debugging tests', () => {
           alicePub,
         )
         .to(contract.address, 1000n);
-      await expect(checkmultiSigTransaction).toFailRequireWith(/Multi Signatures do not match1/);
+      await expect(checkmultiSigTransaction).toFailRequireWith('Test.cash:90 Require statement failed at input 0 in contract Test.cash at line 90 with the following message: Multi Signatures do not match.');
+      await expect(checkmultiSigTransaction).toFailRequireWith('Failing statement: require(checkMultiSig([s1, s2], [pk1, pk2]), "Multi Signatures do not match")');
     });
 
     // test_fail_large_cleanup

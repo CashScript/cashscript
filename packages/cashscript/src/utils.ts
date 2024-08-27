@@ -211,10 +211,13 @@ export function toRegExp(reasons: string[]): RegExp {
 export function scriptToAddress(
   script: Script, network: string, addressType: AddressType, tokenSupport: boolean,
 ): string {
-  const lockingBytecode = scriptToLockingBytecode(script, addressType);
+  const bytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
-  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix, { tokenSupport }) as string;
-  return address;
+
+  const result = lockingBytecodeToCashAddress({ bytecode, prefix, tokenSupport });
+  if (typeof result === 'string') throw new Error(result);
+
+  return result.address;
 }
 
 export function scriptToLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
@@ -255,7 +258,6 @@ export function utxoTokenComparator(a: Utxo, b: Utxo): number {
 */
 export function addressToLockScript(address: string): Uint8Array {
   const result = cashAddressToLockingBytecode(address);
-
   if (typeof result === 'string') throw new Error(result);
 
   return result.bytecode;

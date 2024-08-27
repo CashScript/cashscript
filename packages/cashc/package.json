@@ -49,7 +49,7 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
   },
   "dependencies": {
-    "@bitauth/libauth": "^2.0.0",
+    "@bitauth/libauth": "^3.0.0",
     "@cashscript/utils": "^0.10.0-next.6",
     "antlr4": "^4.13.1-patch-1",
     "commander": "^7.1.0",
