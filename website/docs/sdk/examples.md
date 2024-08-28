@@ -56,7 +56,7 @@ This contract expects a hardcoded transaction fee of 1000 satoshis. This is nece
 To ensure that this leftover money does not get lost in the contract, the contract performs an extra check, and adds the remainder to the transaction fee if it's too low.
 
 ```solidity title="Announcement.cash"
-pragma cashscript ^0.9.0;
+pragma cashscript ^0.10.0;
 
 // This contract enforces making an announcement on Memo.cash and sending the
 // remaining balance back to the contract.
