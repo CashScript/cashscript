@@ -1,43 +1,34 @@
 ---
-title: What is Bitcoin Cash?
+title: Intro to Bitcoin Cash
 sidebar_label: About Bitcoin Cash
 ---
 
-:::warning
-This is a work in progress page, it will be added to the site structure at a later date. If you still somehow arrived at this page, feel free to read it, but note that it is a work in progress.
+Bitcoin Cash (ticker BCH) is one of the biggest cryptocurrencies. Bitcoin Cash is a fork of Bitcoin started in 2017 because of differences in vision for the future of the Bitcoin project.
+
+Bitcoin Cash shares many of the same fundamentals as Bitcoin (BTC) like the *Proof-of-Work* consensus alrgorithm and the *UTXO data-model*. However regarding smart contract programmability, Bitcoin Cash has significantly diverged from Bitcoin (BTC). We will first cover the UTXO data model and then delve into the smart contract capabilities of Bitcoin Cash.
+
+:::info
+To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'](https://github.com/bitcoinbook/bitcoinbook). There is also a modified version for BCH specifically called ['Mastering Bitcoin Cash'](https://github.com/Bitcoin-com/mastering-bitcoin-cash).
 :::
 
-Bitcoin Cash (or BCH) is a peer-to-peer electronic cash system. It uses a *blockchain* to distribute its ledger over a network of independent nodes so that there is no single point of failure, and no central control that might be compromised. It uses a consensus algorithm called *Proof-of-Work* that allows these independent nodes to approve correct transactions and reject malicious ones.
+## UTXO model
+Bitcoin Cash transactions work with in- and outputs. All current balances are so called *Unspent Transaction Outputs (UTXOs)*, which simply means they can be used as inputs for future spending transactions.
 
-## Basics
-The *blockchain* is a data structure that is distributed over a number of independent nodes. It derives its name from the chain of *blocks* that it uses to store its data. All blocks include a *block header* with some metadata and the root of a *Merkle tree* - a special kind of tree that allows quick validation of data. This Merkle tree is then used to store the actual data inside these blocks. To make the chain resistant to
-manipulation, block headers also include a timestamp and a hash of the previous block.
-
-### Proof-of-Work
-Bitcoin Cash and many other public blockchains use a consensus algorithm called *Proof-of-Work (PoW)*. This algorithm works by attaching a nonce to every block header and changing this nonce until the hash of the block header matches a certain prefix. This process is called mining, and is attempted by many nodes at the same time, until one of them has found a correct solution. One of the attributes of this algorithm is that mining is very expensive, but other nodes can verify the solution very quickly.
-
-Mining is also the process by which new coins are introduced to the total monetary supply. Miners validate transactions and secure the network, for which they are paid new coins - called the *block reward* - in a special transaction called a *coinbase* transaction. The high cost of the mining process attaches a financial risk to incorrectly validating transactions. At the same time the block reward attaches a financial reward to correctly validating transactions. This process ensures that the mutually distrusting nodes can collaborate to validate transactions.
-
-### Transactions
-Bitcoin Cash transactions are created using chunks of BCH called transaction outputs. When these outputs are available, they are called *Unspent Transaction Outputs (UTXOs)*. UTXOs are locked using a locking script (or `scriptPubKey`) that specifies the conditions to spend the UTXO. When attempting to spend a UTXO, an unlocking script (or `scriptSig`) is provided. These scripts are then executed together and the transaction is only valid if the scripts execute without errors and the resulting value is `TRUE`.
+When UTXOs are used as inputs to a Bitcoin Cash transaction, they produce new UTXOs as outputs. UTXOs need to be spent in their entirety within a transaction. So whenever the user wishes to use a 10 BCH UTXO to send someone 1 BCH, they need to send 9 BCH back to themselves. Realistically, part of the funds would be reserved for transaction fees as well.
 
 The most used locking/unlocking script pattern is called *Pay-to-Public-Key-Hash (P2PKH)*, where the locking script contains the hash of a public key and expects the unlocking script to contain a public key and transaction signature. The locking script then checks that the provided public key matches the stored hash, and that the transaction signature is valid. This pattern is used in regular Bitcoin Cash wallets. And the user's balance is simply the sum of all UTXOs that can be spent by the user's public keys.
 
-UTXOs are used as inputs to Bitcoin Cash transactions and produce new UTXOs as outputs. UTXOs need to be spent in their entirety within a transaction. So whenever the user wishes to use a 10 BCH UTXO to send someone 1 BCH, they need to send 9 BCH back to themselves. Realistically, part of the funds would be
-reserved for transaction fees as well.
+## Smart Contracts on BCH
+Bitcoin Cash has had many script upgrades, including transaction introspection and CashTokens. Because of these upgrades, DeFi is very much possible on Bitcoin Cash. However, compared to EVM, smart contracts work very differently due to BCH's UTXO architecture.
 
-## Smart Contracts
-Peer-to-peer electronic cash was the first real use case of blockchain technology. But in recent years, smart contracts have grown in popularity. These smart contracts allow people to use the security that blockchains such as Bitcoin, Bitcoin Cash and Ethereum offer and apply it to use cases other than cash. Especially Decentralised Finance (DeFi) applications such as [Maker](https://makerdao.com/), [Uniswap](https://uniswap.org/) and [Aave](https://aave.com/) have skyrocketed.
-
-Most smart contract innovation has happened on Ethereum, but other platforms like Bitcoin and Bitcoin Cash have some support for smart contracts as well. Smart contracts on every platform work differently, and the main differences between smart contracts on Ethereum and Bitcoin Cash is that smart contracts on Ethereum are stateful, while those on Bitcoin Cash are stateless.
-
-This means that Ethereum contracts can record and update variables, while the variables in Bitcoin Cash contracts are immutable. To understand the implications of these differences, refer to the blog post [*Smart Contracts on Ethereum, Bitcoin and Bitcoin Cash*](https://kalis.me/smart-contracts-eth-btc-bch/).
+Smart contracts on Bitcoin Cash only have access to the current transaction context, which enables 'local state'. This model allows transactions to be verified independently and efficiently. Because there is no global state that can impact the execution of these smart contracts, the results are deterministic and predictable.
 
 ### Bitcoin Cash Script
-The locking and unlocking scripts of regular transactions and smart contracts on Bitcoin Cash are written using Bitcoin Cash' transaction scripting language, creatively named Script. To avoid ambiguity, it can also be referred to as Bitcoin Script or Bitcoin Cash Script. Script is a stack based assembly-like language that is intentionally not turing complete as its main use is the validation of programmable money, not general purpose computing.
+UTXOs are locked using a locking script (or `scriptPubKey`) that specifies the conditions to spend the UTXO. When attempting to spend a UTXO, an unlocking script (or `scriptSig`) is provided. These scripts are then executed together and the transaction is only valid if the scripts execute without errors and the resulting value is `TRUE`.
 
-Script is stateless, meaning it only uses the information contained within the locking and unlocking scripts themselves. This statelessness means that a Script can be deterministically validated on any machine. This gives increased performance and predictability, although it does limit the usefulness of the scripting language.
+The locking and unlocking scripts of regular transactions and smart contracts on Bitcoin Cash are written using Bitcoin Cash' transaction scripting language, creatively named Script. To avoid ambiguity, it can also be referred to as Bitcoin Cash Script or BCH Script. Script is a stack based assembly-like language, because it is a low-level language and requires stack management it is hard to write complex smart contract in Script directly.
 
-### Bitcoin Cash Contracts
 
-TODO
+### CashScript
+
+CashScript is a high-level programming language for smart contracts on Bitcoin Cash that offers a strong abstraction for a smoother development experience. The CashScript syntax is based on Ethereum's smart contract language Solidity, but its functionality is very different since smart contracts on Bitcoin Cash differ greatly from smart contracts on Ethereum.

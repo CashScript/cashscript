@@ -5,7 +5,7 @@ module.exports = {
       label: 'Basics',
       items: [
         'basics/about',
-        // 'basics/about-bch',
+        'basics/about-bch',
         'basics/getting-started',
       ],
     },
