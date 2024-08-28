@@ -7,7 +7,6 @@ module.exports = {
         'basics/about',
         // 'basics/about-bch',
         'basics/getting-started',
-        'basics/compiler',
       ],
     },
     {
@@ -18,9 +17,16 @@ module.exports = {
         'language/types',
         'language/functions',
         'language/globals',
-        'language/artifacts',
-        'language/grammar',
         'language/examples',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Compiler',
+      items: [
+        'compiler/compiler',
+        'compiler/artifacts',
+        'compiler/grammar',
       ],
     },
     {

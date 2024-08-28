@@ -25,7 +25,7 @@ new Contract(
 
 A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `addressType`.
 
-An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/basics/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/basics/compiler#javascript-compilation)).
+An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/language/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler/compiler#javascript-compilation)).
 
 The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but the network providers can be configured. See the docs on [NetworkProvider](/docs/sdk/network-provider).
 
