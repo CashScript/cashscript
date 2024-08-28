@@ -8,45 +8,40 @@ import styles from './index.module.css';
 
 const features = [
   {
-    title: 'Efficient and Reliable Verification',
+    title: 'TypeScript SDK',
     description: (
       <>
-        Smart contracts on Bitcoin Cash are UTXO-based with local state. This
-        model allows transactions to be verified independently and efficiently.
-        Because there is no global state that can impact the execution of these smart
-        contracts, the results are deterministic and predictable.
+        The CashScript TypeScript SDK makes it easy to build smart contract transactions, both in browser or on the server.
+        By offering full type-safety, developers can be confident in the quality and reliability of their applications. 
       </>
     ),
   },
   {
-    title: 'Strong Abstraction',
+    title: 'Familiar Syntax',
     description: (
       <>
-        Bitcoin Cash transactions run on a virtual machine called 'BCH Script'.
-        Writing bytecode for this virtual machine is difficult and error-prone.
-        CashScript offers a strong abstraction for writing Bitcoin Cash smart
-        contracts, improving developer experience and reliability of contracts.
+        The CashScript syntax is based on Ethereum's smart contract language Solidity, 
+        which in turn is influenced by C++, Python, and JavaScript. This should make writing 
+        CashScript contracts feel familar even to new developers.
       </>
     ),
   },
   {
-    title: 'DeFi on Bitcoin Cash',
+    title: 'Integrated Network APIs',
     description: (
       <>
-        Bitcoin Cash has had many script upgrades, such as CashTokens and transaction introspection.
-        Because of this, DeFi is very much possible on Bitcoin Cash.
-        However, compared to EVM, smart contracts work very differently due to BCH's UTXO
-        architecture.
+        To make it easy to get blockchain information, the CashScript SDK exports a standardized network provider to query network APIs.
+        The primary class of network providers are the electrum servers but other network providers are also supported. 
       </>
     ),
   },
   {
-    title: 'Integrated Tooling',
+    title: 'Advanced Debug Tooling',
     description: (
       <>
-        CashScript offers integrated tooling through the JavaScript SDK.
-        The SDK has utilities for easy transaction building and other network functionality.
-        CashScript has built-in debug tooling compatible with the Bitauth-IDE to offer the best developer experience.  
+        To offer the best developer experience for debugging and automated testing easy for developers,
+        CashScript has extensive debug tooling built-in.
+        This makes it possible to develop robust contract testing suites, and to debug your contracts with the Bitauth-IDE.  
       </>
     ),
   },
