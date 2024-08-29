@@ -31,7 +31,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'JavaScript SDK',
+      label: 'TypeScript SDK',
       items: [
         'sdk/instantiation',
         'sdk/network-provider',

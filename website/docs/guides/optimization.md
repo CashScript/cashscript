@@ -87,7 +87,7 @@ cashc ./contract.cash --opcount --size
 The size output of the `cashc` compiler will always be an underestimate, as the contract hasn't been initialized with contract arguments.
 :::
 
-The `cashc` compiler only knows the opcount and bytesize of a contract before it is initialised with function arguments. Because of this, to get an accurate view of a contracts size, initialise the contract instance first, then get the size from there. This means you will have to re-compile the artifact before checking the contract size through the JavaScript SDK.
+The `cashc` compiler only knows the opcount and bytesize of a contract before it is initialised with function arguments. Because of this, to get an accurate view of a contracts size, initialise the contract instance first, then get the size from there. This means you will have to re-compile the artifact before checking the contract size through the TypeScript SDK.
 
 ```javascript
 import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';

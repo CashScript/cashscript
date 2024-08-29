@@ -62,7 +62,7 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 ```
 
 :::tip
-There are some other examples available on the [Examples page](/docs/language/examples) that can be used to take inspiration from. Further examples of the JavaScript integration can be found on [GitHub](https://github.com/CashScript/cashscript/tree/master/examples).
+There are some other examples available on the [Examples page](/docs/language/examples) that can be used to take inspiration from. Further examples of the TypeScript and JavaScript integration can be found on [GitHub](https://github.com/CashScript/cashscript/tree/master/examples).
 :::
 
 ### Compiling your smart contract
@@ -81,10 +81,15 @@ OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_ROT OP_CHECKSIG OP_NIP OP_NI
 
 ## Creating a CashScript Transaction
 
-After creating a contract artifact, we can now use the JavaScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated in the previous steps.
+After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated in the previous steps.
 
-### Installing the JavaScript SDK
-The JavaScript SDK can be installed into your project with NPM. Note that CashScript is a [pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
+:::info
+The CashScript SDK is written in TypeScript meaning that you can either use TypeScript or vanilla JavaScript to use the SDK.
+It's recommended to use TypeScript for full type-safety of all you contract logic.
+:::
+
+### Installing the TypeScript SDK
+The TypeScript SDK can be installed into your project with NPM. Note that CashScript is a [pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
 
 ```bash
 npm install cashscript

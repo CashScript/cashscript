@@ -89,7 +89,7 @@ bool checkMultiSig(sig[] sigs, pubkey[] pks)
 Performs a multi-signature check using a list of transaction signatures and public keys.
 
 :::note
-While this function can be used inside your smart contracts, it is not supported by the JavaScript SDK, so it is recommended not to use it. Instead a `checkMultiSig()` call can be simulated using multiple `checkSig()` calls.
+While this function can be used inside your smart contracts, it is not supported by the TypeScript SDK, so it is recommended not to use it. Instead a `checkMultiSig()` call can be simulated using multiple `checkSig()` calls.
 :::
 
 ### checkDataSig()

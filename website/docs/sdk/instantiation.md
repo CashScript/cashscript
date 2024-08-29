@@ -4,8 +4,9 @@ title: Contract Instantiation
 
 Before interacting with a smart contract on the BCH network, the CashScript SDK needs to instantiate a `Contract` object. This is done by providing the contract's information and constructor arguments. After this instantiation, the CashScript SDK can interact with the BCH contract.
 
-:::note
-CashScript only offers a JavaScript SDK, but CashScript contracts can be integrated into other languages as well. Because there are no ready-to-use SDKs available for them, this is considered advanced usage.
+:::info
+CashScript offers a TypeScript SDK, which can also be used easily in vanilla JavaScript codebases. 
+Because of the separation of the compiler and the SDK, CashScript contracts can be integrated into other languages in the future.
 :::
 
 ## Contract class
