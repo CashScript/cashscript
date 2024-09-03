@@ -264,7 +264,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   // This algorithm can be optimised for hardcoded depths
   // See thesis for explanation
   emitReplace(index: number, node: Node): void {
-    const locationData = { location: node.location };
+    const locationData = { location: node.location, positionHint: PositionHint.END };
 
     this.emit(encodeInt(BigInt(index)), locationData);
     this.emit(Op.OP_ROLL, locationData);
@@ -387,7 +387,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // Special case for sized bytes cast, since it has another node to traverse
     if (node.size) {
       node.size = this.visit(node.size);
-      this.emit(Op.OP_NUM2BIN, { location: node.location });
+      this.emit(Op.OP_NUM2BIN, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack();
     }
 
@@ -431,51 +431,53 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitInstantiation(node: InstantiationNode): Node {
-    const nodeLocationData = { location: node.location };
 
     if (node.identifier.name === Class.LOCKING_BYTECODE_P2PKH) {
       // OP_DUP OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('76a914'), nodeLocationData);
+      this.emit(hexToBin('76a914'), { location: node.location });
       this.pushToStack('(value)');
       // <pkh>
       this.visit(node.parameters[0]);
-      this.emit(Op.OP_CAT, nodeLocationData);
+      this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       // OP_EQUAL OP_CHECKSIG
-      this.emit(hexToBin('88ac'), nodeLocationData);
-      this.emit(Op.OP_CAT, nodeLocationData);
+      this.emit(hexToBin('88ac'), { location: node.location, positionHint: PositionHint.END });
+      this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH20) {
       // OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('a914'), nodeLocationData);
+      this.emit(hexToBin('a914'), { location: node.location });
       this.pushToStack('(value)');
       // <script hash>
       this.visit(node.parameters[0]);
-      this.emit(Op.OP_CAT, nodeLocationData);
+      this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       // OP_EQUAL
-      this.emit(hexToBin('87'), nodeLocationData);
-      this.emit(Op.OP_CAT, nodeLocationData);
+      this.emit(hexToBin('87'), { location: node.location, positionHint: PositionHint.END });
+      this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH32) {
       // OP_HASH256 OP_PUSH<32>
-      this.emit(hexToBin('aa20'), nodeLocationData);
+      this.emit(hexToBin('aa20'), { location: node.location });
       this.pushToStack('(value)');
       // <script hash>
       this.visit(node.parameters[0]);
-      this.emit(Op.OP_CAT, nodeLocationData);
+      this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       // OP_EQUAL
-      this.emit(hexToBin('87'), nodeLocationData);
-      this.emit(Op.OP_CAT, nodeLocationData);
+      this.emit(hexToBin('87'), { location: node.location, positionHint: PositionHint.END });
+      this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
       // Total script = OP_RETURN (<VarInt> <chunk>)+
       // OP_RETURN
-      this.emit(hexToBin('6a'), nodeLocationData);
+      this.emit(hexToBin('6a'), { location: node.location });
       this.pushToStack('(value)');
       const { elements } = node.parameters[0] as ArrayNode;
       // <VarInt data chunk size (dynamic)>
       elements.forEach((element) => {
-        const elementLocationData = { location: element.location };
         this.visit(element);
+
+        // The element comes first, then all other opcodes have PositionHint.END because they come after the element
+        const elementLocationData = { location: element.location, positionHint: PositionHint.END };
+
         // Push the element's size (and calculate VarInt)
         this.emit(Op.OP_SIZE, elementLocationData);
         if (element instanceof HexLiteralNode) {
@@ -541,7 +543,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitUnaryOp(node: UnaryOpNode): Node {
     node.expression = this.visit(node.expression);
-    this.emit(compileUnaryOp(node.operator), { location: node.location });
+    this.emit(compileUnaryOp(node.operator), { location: node.location, positionHint: PositionHint.END });
     this.popFromStack();
     this.pushToStack('(value)');
     return node;

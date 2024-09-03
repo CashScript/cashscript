@@ -39,14 +39,14 @@ export class FailedTransactionEvaluationError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage: string,
   ) {
-    let baseMessage = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.`;
+    let message = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.\nReason: ${libauthErrorMessage}`;
 
     if (artifact.debug) {
       const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
-      baseMessage = `${artifact.contractName}.cash:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nFailing statement: ${statement}`;
+      message = `${artifact.contractName}.cash:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
     }
 
-    super(`${baseMessage}\nReason: ${libauthErrorMessage}`, bitauthUri);
+    super(message, bitauthUri);
   }
 }
 
@@ -65,6 +65,9 @@ export class FailedRequireError extends FailedTransactionError {
       statement = requireStatement.message
         ? `require(${statement}, "${requireStatement.message}")`
         : `require(${statement})`;
+
+      // Sometimes in reconstructed multiline require statements, we get double commas
+      statement = statement.replace(/,,/g, ',');
     }
 
     const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
@@ -88,9 +91,14 @@ const getLocationDataForInstructionPointer = (
 
   const { location } = locationData[modifiedInstructionPointer];
 
-  const lineString = artifact.source.split('\n')[location.start.line - 1];
-  const statement = lineString.slice(location.start.column, location.end.column);
+  const failingLines = artifact.source.split('\n').slice(location.start.line - 1, location.end.line);
 
+  // Slice off the start and end of the statement's start and end lines to only return the failing part
+  // Note that we first slice off the end, to avoid shifting the end column index
+  failingLines[failingLines.length - 1] = failingLines[failingLines.length - 1].slice(0, location.end.column);
+  failingLines[0] = failingLines[0].slice(location.start.column);
+
+  const statement = failingLines.join('\n');
   const lineNumber = location.start.line;
 
   return { statement, lineNumber };
