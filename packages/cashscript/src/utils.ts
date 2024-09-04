@@ -243,7 +243,7 @@ export function meep(tx: any, utxos: Utxo[], script: Script): string {
 export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32', tokenSupport: boolean): string {
   const lockingBytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
-  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix, { tokenSupport }) as string;
+  const address = lockingBytecodeToCashAddress({ bytecode: lockingBytecode, prefix, tokenSupport }) as string;
   return address;
 }
 
