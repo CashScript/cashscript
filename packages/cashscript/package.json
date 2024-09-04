@@ -43,7 +43,7 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
   },
   "dependencies": {
-    "@bitauth/libauth": "^2.0.0-alpha.8",
+    "@bitauth/libauth": "^3.0.0",
     "@cashscript/utils": "^0.9.3",
     "bip68": "^1.0.4",
     "bitcoin-rpc-promise-retry": "^1.3.0",
