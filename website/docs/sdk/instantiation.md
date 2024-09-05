@@ -5,7 +5,7 @@ title: Contract Instantiation
 Before interacting with a smart contract on the BCH network, the CashScript SDK needs to instantiate a `Contract` object. This is done by providing the contract's information and constructor arguments. After this instantiation, the CashScript SDK can interact with the BCH contract.
 
 :::info
-CashScript offers a TypeScript SDK, which can also be used easily in vanilla JavaScript codebases. 
+CashScript offers a TypeScript SDK, which can also be used easily in vanilla JavaScript codebases.
 Because of the separation of the compiler and the SDK, CashScript contracts can be integrated into other languages in the future.
 :::
 
@@ -16,7 +16,7 @@ The `Contract` class is used to represent a CashScript contract in a JavaScript 
 ```ts
 new Contract(
   artifact: Artifact,
-  constructorArgs: Argument[],
+  constructorArgs: ConstructorArgument[],
   options? : {
     provider: NetworkProvider,
     addressType: 'p2sh20' | 'p2sh32',
@@ -153,7 +153,7 @@ const utxos = await contract.getUtxos()
 
 ### Contract functions
 ```ts
-contract.functions.<functionName>(...args: Argument[]): Transaction
+contract.functions.<functionName>(...args: FunctionArgument[]): Transaction
 ```
 
 Once a smart contract has been instantiated, you can invoke a contract function to spend from the contract with the '[Simple transaction-builder](/docs/sdk/transactions)' by calling the function name under the `functions` member field of a contract object.
@@ -174,7 +174,7 @@ const tx = await contract.functions
 ### Contract unlockers
 
 ```ts
-contract.unlock.<functionName>(...args: Argument[]): Unlocker
+contract.unlock.<functionName>(...args: FunctionArgument[]): Unlocker
 ```
 
 Once a smart contract has been instantiated, you can invoke a contract function on a smart contract UTXO to use the '[Advanced transaction-builder](/docs/sdk/transactions-advanced)' by calling the function name under the `unlock` member field of a contract object.

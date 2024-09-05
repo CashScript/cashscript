@@ -12,13 +12,15 @@ import {
 import { TypeError } from './Errors.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
-// TODO: Separate ConstructorArgument (no SignatureTemplate) and FunctionArgument (with SignatureTemplate)
-export type Argument = bigint | boolean | string | Uint8Array | SignatureTemplate;
-export type EncodedArgument = Uint8Array | SignatureTemplate;
+export type ConstructorArgument = bigint | boolean | string | Uint8Array;
+export type FunctionArgument = ConstructorArgument | SignatureTemplate;
 
-export type EncodeFunction = (arg: Argument, typeStr: string) => EncodedArgument;
+export type EncodedConstructorArgument = Uint8Array;
+export type EncodedFunctionArgument = Uint8Array | SignatureTemplate;
 
-export function encodeArgument(argument: Argument, typeStr: string): EncodedArgument {
+export type EncodeFunction = (arg: FunctionArgument, typeStr: string) => EncodedFunctionArgument;
+
+export function encodeFunctionArgument(argument: FunctionArgument, typeStr: string): EncodedFunctionArgument {
   let type = parseType(typeStr);
 
   if (type === PrimitiveType.BOOL) {
@@ -79,8 +81,8 @@ export function encodeArgument(argument: Argument, typeStr: string): EncodedArgu
 
 export const encodeConstructorArguments = (
   artifact: Artifact,
-  constructorArgs: Argument[],
-  encodeFunction: EncodeFunction = encodeArgument,
+  constructorArgs: ConstructorArgument[],
+  encodeFunction: EncodeFunction = encodeFunctionArgument,
 ): Uint8Array[] => {
   // Check there's no signature templates in the constructor
   if (constructorArgs.some((arg) => arg instanceof SignatureTemplate)) {
@@ -95,9 +97,9 @@ export const encodeConstructorArguments = (
 
 export const encodeFunctionArguments = (
   abiFunction: AbiFunction,
-  functionArgs: Argument[],
-  encodeFunction: EncodeFunction = encodeArgument,
-): EncodedArgument[] => {
+  functionArgs: FunctionArgument[],
+  encodeFunction: EncodeFunction = encodeFunctionArgument,
+): EncodedFunctionArgument[] => {
   const encodedArgs = functionArgs.map((arg, i) => encodeFunction(arg, abiFunction.inputs[i].type));
 
   return encodedArgs;

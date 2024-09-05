@@ -40,7 +40,7 @@ import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
 import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
 import { debugTemplate, DebugResult } from './debugging.js';
-import { EncodedArgument } from './Argument.js';
+import { EncodedFunctionArgument } from './Argument.js';
 import { FailedTransactionError } from './Errors.js';
 
 export class Transaction {
@@ -58,7 +58,7 @@ export class Transaction {
     public contract: Contract,
     private unlocker: Unlocker,
     public abiFunction: AbiFunction,
-    public encodedFunctionArgs: EncodedArgument[],
+    public encodedFunctionArgs: EncodedFunctionArgument[],
     private selector?: number,
   ) {}
 

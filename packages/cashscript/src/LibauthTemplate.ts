@@ -37,7 +37,7 @@ import {
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
-import { EncodedArgument } from './Argument.js';
+import { EncodedConstructorArgument, EncodedFunctionArgument } from './Argument.js';
 import { addressToLockScript, extendedStringify, snakeCase, zip } from './utils.js';
 import { Contract } from './Contract.js';
 
@@ -181,8 +181,8 @@ const generateTemplateScripts = (
   artifact: Artifact,
   addressType: AddressType,
   abiFunction: AbiFunction,
-  encodedFunctionArgs: EncodedArgument[],
-  encodedConstructorArgs: EncodedArgument[],
+  encodedFunctionArgs: EncodedFunctionArgument[],
+  encodedConstructorArgs: EncodedConstructorArgument[],
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
   return {
@@ -194,7 +194,7 @@ const generateTemplateScripts = (
 const generateTemplateLockScript = (
   artifact: Artifact,
   addressType: AddressType,
-  constructorArguments: EncodedArgument[],
+  constructorArguments: EncodedFunctionArgument[],
 ): WalletTemplateScriptLocking => {
   return {
     lockingType: addressType,
@@ -212,7 +212,7 @@ const generateTemplateLockScript = (
 const generateTemplateUnlockScript = (
   artifact: Artifact,
   abiFunction: AbiFunction,
-  encodedFunctionArgs: EncodedArgument[],
+  encodedFunctionArgs: EncodedFunctionArgument[],
 ): WalletTemplateScriptUnlocking => {
   const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
@@ -240,8 +240,8 @@ const generateTemplateScenarios = (
   transactionHex: string,
   artifact: Artifact,
   abiFunction: AbiFunction,
-  encodedFunctionArgs: EncodedArgument[],
-  encodedConstructorArgs: EncodedArgument[],
+  encodedFunctionArgs: EncodedFunctionArgument[],
+  encodedConstructorArgs: EncodedConstructorArgument[],
 ): WalletTemplate['scenarios'] => {
   const libauthTransaction = decodeTransaction(hexToBin(transactionHex));
   if (typeof libauthTransaction === 'string') throw Error(libauthTransaction);
@@ -358,7 +358,7 @@ const generateTemplateScenarioBytecode = (
 
 const generateTemplateScenarioParametersValues = (
   types: AbiInput[],
-  encodedArgs: EncodedArgument[],
+  encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
   const typesAndArguments = zip(types, encodedArgs);
 
@@ -376,7 +376,7 @@ const generateTemplateScenarioParametersValues = (
 
 const generateTemplateScenarioKeys = (
   types: AbiInput[],
-  encodedArgs: EncodedArgument[],
+  encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
   const typesAndArguments = zip(types, encodedArgs);
 
@@ -387,7 +387,7 @@ const generateTemplateScenarioKeys = (
   return Object.fromEntries(entries);
 };
 
-const formatParametersForDebugging = (types: AbiInput[], args: EncodedArgument[]): string => {
+const formatParametersForDebugging = (types: AbiInput[], args: EncodedFunctionArgument[]): string => {
   if (types.length === 0) return '// none';
 
   // We reverse the arguments because the order of the arguments in the bytecode is reversed

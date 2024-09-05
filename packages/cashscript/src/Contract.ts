@@ -11,7 +11,7 @@ import {
   scriptToBytecode,
 } from '@cashscript/utils';
 import { Transaction } from './Transaction.js';
-import { Argument, encodeArgument, encodeConstructorArguments, encodeFunctionArguments } from './Argument.js';
+import { ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument } from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
   AddressType,
@@ -41,7 +41,7 @@ export class Contract {
 
   constructor(
     public artifact: Artifact,
-    constructorArgs: Argument[],
+    constructorArgs: ConstructorArgument[],
     private options?: ContractOptions,
   ) {
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
@@ -103,7 +103,7 @@ export class Contract {
   }
 
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
-    return (...args: Argument[]) => {
+    return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map(input => input.type)}) but got ${args.length}`);
       }
@@ -124,7 +124,7 @@ export class Contract {
   }
 
   private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
-    return (...args: Argument[]) => {
+    return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map(input => input.type)}) but got ${args.length}`);
       }
@@ -132,7 +132,7 @@ export class Contract {
       const bytecode = scriptToBytecode(this.redeemScript);
 
       const encodedArgs = args
-        .map((arg, i) => encodeArgument(arg, abiFunction.inputs[i].type));
+        .map((arg, i) => encodeFunctionArgument(arg, abiFunction.inputs[i].type));
 
       const generateUnlockingBytecode = (
         { transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions,
@@ -169,5 +169,5 @@ export class Contract {
   }
 }
 
-export type ContractFunction = (...args: Argument[]) => Transaction;
-export type ContractUnlocker = (...args: Argument[]) => Unlocker;
+export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
+export type ContractUnlocker = (...args: FunctionArgument[]) => Unlocker;
