@@ -29,7 +29,7 @@ Operators:
 
 Note the lack of the `**` (exponentiation) operator as well as any bitwise operators.
 
-### Over- & Underflows
+#### Over- & Underflows
 
 The maximum range for 64-bit integers is `-9223372036854775807` to `9223372036854775807`, operations exceeding these limits will fail the transaction. So operations like summation, subtraction and multiplication should take into account these boundary cases with over- or underflows.
 
@@ -37,7 +37,7 @@ The maximum range for 64-bit integers is `-9223372036854775807` to `922337203685
 Contract authors should always consider whether `+`, `-` and `*` operations can cause under- or overflows and how this would impact contract security.
 :::
 
-### Division by Zero
+#### Division by Zero
 
 The script will fail when the right hand side of division or modulo operations is zero.
 
@@ -45,7 +45,7 @@ The script will fail when the right hand side of division or modulo operations i
 Contract authors should always consider whether `/` and `%` operations have division-by-zero edge cases and how this would impact contract security.
 :::
 
-### Date Parsing
+#### Date Parsing
 Dates and times are always represented as integers. To get the UTC timestamp of a date use the built-in parser to avoid any potential errors. This will take a date in the format `date("YYYY-MM-DDThh:mm:ss")` and convert it to an integer timestamp.
 
 #### Example

@@ -136,6 +136,24 @@ The `console.log` statement can be used to log values during debug evaluation of
 Logging is only available in debug evaluation of a transaction, but has no impact on the compiled bytecode or regular (non-debug) execution.
 :::
 
+#### Example
+```solidity
+pragma cashscript ^0.10.0;
+
+contract P2PKH(bytes20 pkh) {
+    function spend(pubkey pk, sig s) {
+        bytes20 hashedPk = hash160(pk);
+
+        // console.log can access any variable in the function scope
+        console.log("passed public key: ", pk, ", hashed: ", hashedPk);
+        console.log("expected pkh: ", pkh);
+
+        require(hashedPk == pkh);
+        require(checkSig(s, pk));
+    }
+}
+```
+
 ## Comments
 Comments can be added anywhere in the contract file. Comment semantics are similar to languages like JavaScript or C. This means that single-line comments can be added with `// ...`, while multiline comments can be added with `/* ... */`.
 
