@@ -19,12 +19,10 @@ export function scriptToAsm(script: Script): string {
   return bytecodeToAsm(scriptToBytecode(script));
 }
 
-// TODO: See note at bytecodeToAsm
 export function scriptToBitAuthAsm(script: Script): string {
   return bytecodeToBitAuthAsm(scriptToBytecode(script));
 }
 
-// TODO: Figure out why OP_0 is decoded to an empty Uint8Array (while e.g. OP_3 is just OP_3)
 export function asmToScript(asm: string): Script {
   return bytecodeToScript(asmToBytecode(asm));
 }
@@ -94,8 +92,7 @@ export function bytecodeToAsm(bytecode: Uint8Array): string {
   return asm;
 }
 
-// TODO: If we decide to change the ASM / artifact format, we can remove this function and merge it
-// with bytecodeToAsm
+// TODO: If we decide to change the ASM / artifact format, we can remove this function and merge it with bytecodeToAsm
 export function bytecodeToBitAuthAsm(bytecode: Uint8Array): string {
   // Convert the bytecode to libauth's ASM format
   let asm = disassembleBytecodeBCH(bytecode);

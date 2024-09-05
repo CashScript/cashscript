@@ -25,7 +25,6 @@ export class NoDebugInformationInArtifactError extends Error {
 }
 
 export class FailedTransactionError extends Error {
-  // TODO: Make bitauthUri required once the advanced transaction builder supports debugging
   constructor(public reason: string, public bitauthUri?: string) {
     super(`${reason}${bitauthUri ? `\n\nBitauth URI: ${bitauthUri}` : ''}`);
   }
@@ -78,7 +77,6 @@ export class FailedRequireError extends FailedTransactionError {
   }
 }
 
-// TODO: Add tests and make sure it works for multiline statements
 const getLocationDataForInstructionPointer = (
   artifact: Artifact,
   instructionPointer: number,

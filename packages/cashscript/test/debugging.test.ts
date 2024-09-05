@@ -450,7 +450,6 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_require_no_failure().to(contract.address, 1000n);
-      // TODO: add `toFailRequire` without any arguments to JestExtensions
       await expect(transaction).not.toFailRequireWith(/.*/);
     });
 
@@ -784,7 +783,6 @@ describe('Debugging tests', () => {
       ).rejects.toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
 
-    // TODO: Fix this
     it('should fail the JestExtensions test if a require error message is expected where no error is thrown', async () => {
       const contract = new Contract(artifact, [], { provider });
       provider.addUtxo(contract.address, randomUtxo());

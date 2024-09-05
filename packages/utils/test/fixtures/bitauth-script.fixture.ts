@@ -88,7 +88,6 @@ OP_ENDIF                                                /* }                    
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {
-    // TODO: These fixtures were copied from the current output of the compiler, but there are some small inaccuracies that we should fix later
     name: 'Mecenas',
     sourceCode: `
 pragma cashscript >=0.8.0;

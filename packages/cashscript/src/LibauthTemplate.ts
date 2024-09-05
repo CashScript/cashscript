@@ -260,7 +260,6 @@ const generateTemplateScenarios = (
           ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
           ...generateTemplateScenarioParametersValues(artifact.constructorInputs, encodedConstructorArgs),
         },
-        // TODO: Don't hardcode these values
         currentBlockHeight: 2,
         currentBlockTime: Math.round(+new Date() / 1000),
         keys: {
@@ -288,7 +287,7 @@ const generateTemplateScenarioTransaction = (
   const slotIndex = csTransaction.inputs.findIndex((input) => !isUtxoP2PKH(input));
 
   const inputs = libauthTransaction.inputs.map((input, index) => {
-    const csInput = csTransaction.inputs[index] as Utxo; // TODO: Improve code quality here (see zip in other places)
+    const csInput = csTransaction.inputs[index] as Utxo;
 
     return {
       outpointIndex: input.outpointIndex,
@@ -301,7 +300,7 @@ const generateTemplateScenarioTransaction = (
   const locktime = libauthTransaction.locktime;
 
   const outputs = libauthTransaction.outputs.map((output, index) => {
-    const csOutput = csTransaction.outputs[index]; // TODO: Improve code quality here (see zip in other places)
+    const csOutput = csTransaction.outputs[index];
 
     return {
       lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput, contract),
@@ -440,7 +439,6 @@ const getHashTypeName = (hashType: HashType): string => {
 
 const formatBytecodeForDebugging = (artifact: Artifact): string => {
   if (!artifact.debug) {
-    // TODO: See if we can merge this with code from @cashscript/utils -> script.ts
     return artifact.bytecode
       .split(' ')
       .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
@@ -454,7 +452,6 @@ const formatBytecodeForDebugging = (artifact: Artifact): string => {
   );
 };
 
-// TODO: Maybe move / refactor
 const serialiseTokenDetails = (token?: TokenDetails | LibauthTokenDetails): LibauthTemplateTokenDetails | undefined => {
   if (!token) return undefined;
 
