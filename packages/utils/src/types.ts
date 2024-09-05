@@ -199,7 +199,7 @@ export interface LocationI {
 
 export type SingleLocationData = {
   location: LocationI;
-  positionHint?: PositionHint;
+  positionHint: PositionHint;
 };
 
 export type FullLocationData = Array<SingleLocationData>;

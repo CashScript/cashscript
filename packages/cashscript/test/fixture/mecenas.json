@@ -37,7 +37,7 @@
   "source": "pragma cashscript >=0.8.0;\n\n/* This is an unofficial CashScript port of Licho's Mecenas contract. It is\n * not compatible with Licho's EC plugin, but rather meant as a demonstration\n * of covenants in CashScript.\n * The time checking has been removed so it can be tested without time requirements.\n */\ncontract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */) {\n    function receive() {\n        // require(tx.age >= period);\n\n        // Check that the first output sends to the recipient\n        require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));\n\n        int minerFee = 1000;\n        int currentValue = tx.inputs[this.activeInputIndex].value;\n        int changeValue = currentValue - pledge - minerFee;\n\n        // If there is not enough left for *another* pledge after this one, we send the remainder to the recipient\n        // Otherwise we send the remainder to the recipient and the change back to the contract\n        if (changeValue <= pledge + minerFee) {\n            require(tx.outputs[0].value == currentValue - minerFee);\n        } else {\n            require(tx.outputs[0].value == pledge);\n            require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);\n            require(tx.outputs[1].value == changeValue);\n        }\n    }\n\n    function reclaim(pubkey pk, sig s) {\n        require(hash160(pk) == funder);\n        require(checkSig(s, pk));\n    }\n}\n",
   "debug": {
     "bytecode": "5379009c6300cd0376a914527a7e0288ac7e876902e803c0c6007954799452799400795579547993a16300cc52795479949c696700cc55799c6951cdc0c7876951cc51799c69685177777777777767537a519c695379a9527a8769537a537aac777768",
-    "sourceMap": "9:4:28:5;;;;;13:27:13:28;:16::45;:49::84;:74::83;;:49::84;;;:16:::1;:8::86;15:23:15:27:0;16:37:16:58;:27::65;17:26:17:38;;:41::47;;:26:::1;:50::58:0;;:26:::1;21:12:21:23:0;;:27::33;;:36::44;;:27:::1;:12;:46:23:9:0;22:31:22:32;:20::39;:43::55;;:58::66;;:43:::1;:20;:12::68;23:15:27:9:0;24:31:24:32;:20::39;:43::49;;:20:::1;:12::51;25:31:25:32:0;:20::49;:63::84;:53::101;:20:::1;:12::103;26:31:26:32:0;:20::39;:43::54;;:20:::1;:12::56;23:15:27:9;9:4:28:5;;;;;;;;30::33::0;;;;;31:24:31:26;;:16::27:1;:31::37:0;;:16:::1;:8::39;32:25:32:26:0;;:28::30;;:16::31:1;30:4:33:5;;8:0:34:1",
+    "sourceMap": "9:4:28:5;;;;;13:27:13:28;:16::45:1;:49::84:0;:74::83;;:49::84:1;;;:16;:8::86;15:23:15:27:0;16:37:16:58;:27::65:1;17:26:17:38:0;;:41::47;;:26:::1;:50::58:0;;:26:::1;21:12:21:23:0;;:27::33;;:36::44;;:27:::1;:12;:46:23:9:0;22:31:22:32;:20::39:1;:43::55:0;;:58::66;;:43:::1;:20;:12::68;23:15:27:9:0;24:31:24:32;:20::39:1;:43::49:0;;:20:::1;:12::51;25:31:25:32:0;:20::49:1;:63::84:0;:53::101:1;:20;:12::103;26:31:26:32:0;:20::39:1;:43::54:0;;:20:::1;:12::56;23:15:27:9;9:4:28:5;;;;;;;;30::33::0;;;;;31:24:31:26;;:16::27:1;:31::37:0;;:16:::1;:8::39;32:25:32:26:0;;:28::30;;:16::31:1;30:4:33:5;;8:0:34:1",
     "logs": [],
     "requires": [
       {
@@ -72,7 +72,7 @@
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.10.0-next.5"
+    "version": "0.10.0-next.6"
   },
-  "updatedAt": "2024-06-25T09:01:12.107Z"
+  "updatedAt": "2024-09-05T13:25:24.222Z"
 }

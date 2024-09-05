@@ -11,7 +11,7 @@
   "source": "contract Test() {\n    function send() {\n        require(tx.inputs[1].tokenCategory == 0x);\n    }\n}\n",
   "debug": {
     "bytecode": "51ce0087",
-    "sourceMap": "3:26:3:27;:16::42;:46::48;:16:::1",
+    "sourceMap": "3:26:3:27;:16::42:1;:46::48:0;:16:::1",
     "logs": [],
     "requires": [
       {
@@ -22,7 +22,7 @@
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.10.0-next.5"
+    "version": "0.10.0-next.6"
   },
-  "updatedAt": "2024-06-25T09:01:11.613Z"
+  "updatedAt": "2024-09-05T13:25:23.764Z"
 }

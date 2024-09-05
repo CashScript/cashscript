@@ -141,7 +141,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     } else {
       this.pushToStack('$$', true);
       node.functions = node.functions.map((f, i) => {
-        const locationData = { location: f.location };
+        const locationData = { location: f.location, positionHint: PositionHint.START };
 
         const stackCopy = [...this.stack];
         const selectorIndex = this.getStackIndex('$$');
@@ -154,10 +154,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
           this.emit(Op.OP_PICK, locationData);
         }
 
-        // All functions are if-else statements, except the final one which is
-        // enforced with NUMEQUALVERIFY
+        // All functions are if-else statements, except the final one which is enforced with NUMEQUALVERIFY
         this.emit(encodeInt(BigInt(i)), locationData);
         this.emit(Op.OP_NUMEQUAL, locationData);
+
         if (i < node.functions.length - 1) {
           this.emit(Op.OP_IF, locationData);
         } else {
@@ -173,6 +173,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
         this.stack = [...stackCopy];
         return f;
       });
+
       for (let i = 0; i < node.functions.length - 1; i += 1) {
         this.emit(Op.OP_ENDIF, { location: node.location, positionHint: PositionHint.END });
       }
@@ -349,14 +350,14 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.popFromStack();
 
     this.scopeDepth += 1;
-    this.emit(Op.OP_IF, { location: node.ifBlock.location });
+    this.emit(Op.OP_IF, { location: node.ifBlock.location, positionHint: PositionHint.START });
 
     let stackDepth = this.stack.length;
     node.ifBlock = this.visit(node.ifBlock);
     this.removeScopedVariables(stackDepth, node.ifBlock);
 
     if (node.elseBlock) {
-      this.emit(Op.OP_ELSE, { location: node.elseBlock.location });
+      this.emit(Op.OP_ELSE, { location: node.elseBlock.location, positionHint: PositionHint.START });
       stackDepth = this.stack.length;
       node.elseBlock = this.visit(node.elseBlock);
       this.removeScopedVariables(stackDepth, node.elseBlock);
@@ -418,7 +419,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitMultiSig(node: FunctionCallNode): Node {
-    this.emit(encodeBool(false), { location: node.location });
+    this.emit(encodeBool(false), { location: node.location, positionHint: PositionHint.START });
     this.pushToStack('(value)');
     node.parameters = this.visitList(node.parameters);
     this.emit(Op.OP_CHECKMULTISIG, { location: node.location, positionHint: PositionHint.END });
@@ -434,7 +435,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     if (node.identifier.name === Class.LOCKING_BYTECODE_P2PKH) {
       // OP_DUP OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('76a914'), { location: node.location });
+      this.emit(hexToBin('76a914'), { location: node.location, positionHint: PositionHint.START });
       this.pushToStack('(value)');
       // <pkh>
       this.visit(node.parameters[0]);
@@ -445,7 +446,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH20) {
       // OP_HASH160 OP_PUSH<20>
-      this.emit(hexToBin('a914'), { location: node.location });
+      this.emit(hexToBin('a914'), { location: node.location, positionHint: PositionHint.START });
       this.pushToStack('(value)');
       // <script hash>
       this.visit(node.parameters[0]);
@@ -456,7 +457,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_P2SH32) {
       // OP_HASH256 OP_PUSH<32>
-      this.emit(hexToBin('aa20'), { location: node.location });
+      this.emit(hexToBin('aa20'), { location: node.location, positionHint: PositionHint.START });
       this.pushToStack('(value)');
       // <script hash>
       this.visit(node.parameters[0]);
@@ -468,7 +469,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
       // Total script = OP_RETURN (<VarInt> <chunk>)+
       // OP_RETURN
-      this.emit(hexToBin('6a'), { location: node.location });
+      this.emit(hexToBin('6a'), { location: node.location, positionHint: PositionHint.START });
       this.pushToStack('(value)');
       const { elements } = node.parameters[0] as ArrayNode;
       // <VarInt data chunk size (dynamic)>
@@ -550,7 +551,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitNullaryOp(node: NullaryOpNode): Node {
-    this.emit(compileNullaryOp(node.operator), { location: node.location });
+    this.emit(compileNullaryOp(node.operator), { location: node.location, positionHint: PositionHint.START });
     this.pushToStack('(value)');
     return node;
   }
@@ -564,7 +565,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitIdentifier(node: IdentifierNode): Node {
     const stackIndex = this.getStackIndex(node.name);
-    this.emit(encodeInt(BigInt(stackIndex)), { location: node.location });
+    this.emit(encodeInt(BigInt(stackIndex)), { location: node.location, positionHint: PositionHint.START });
 
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
@@ -576,10 +577,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
         ip: this.getMostRecentInstructionPointer(),
       };
 
-      this.emit(Op.OP_ROLL, { location: node.location });
+      this.emit(Op.OP_ROLL, { location: node.location, positionHint: PositionHint.START });
       this.removeFromStack(stackIndex);
     } else {
-      this.emit(Op.OP_PICK, { location: node.location });
+      this.emit(Op.OP_PICK, { location: node.location, positionHint: PositionHint.START });
     }
 
     this.pushToStack('(value)');
@@ -591,25 +592,25 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitBoolLiteral(node: BoolLiteralNode): Node {
-    this.emit(encodeBool(node.value), { location: node.location });
+    this.emit(encodeBool(node.value), { location: node.location, positionHint: PositionHint.START });
     this.pushToStack('(value)');
     return node;
   }
 
   visitIntLiteral(node: IntLiteralNode): Node {
-    this.emit(encodeInt(node.value), { location: node.location });
+    this.emit(encodeInt(node.value), { location: node.location, positionHint: PositionHint.START });
     this.pushToStack('(value)');
     return node;
   }
 
   visitStringLiteral(node: StringLiteralNode): Node {
-    this.emit(encodeString(node.value), { location: node.location });
+    this.emit(encodeString(node.value), { location: node.location, positionHint: PositionHint.START });
     this.pushToStack('(value)');
     return node;
   }
 
   visitHexLiteral(node: HexLiteralNode): Node {
-    this.emit(node.value, { location: node.location });
+    this.emit(node.value, { location: node.location, positionHint: PositionHint.START });
     this.pushToStack('(value)');
     return node;
   }
