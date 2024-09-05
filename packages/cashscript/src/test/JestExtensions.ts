@@ -10,6 +10,7 @@ declare global {
     interface Matchers<R> {
       toLog(value?: RegExp | string): Promise<void>;
       toFailRequireWith(value: RegExp | string): Promise<void>;
+      toFailRequire(): Promise<void>;
     }
   }
 }
@@ -57,7 +58,7 @@ expect.extend({
       await transaction.debug();
 
       const matcherHint = this.utils.matcherHint('.toFailRequireWith', undefined, match.toString(), { isNot: this.isNot });
-      const message = (): string => `${matcherHint}\n\nContract function did not fail a require statement`;
+      const message = (): string => `${matcherHint}\n\nContract function did not fail a require statement.`;
       return { message, pass: false };
     } catch (transactionError: any) {
       const matcherHint = this.utils.matcherHint('toFailRequireWith', 'received', 'expected', { isNot: this.isNot });
@@ -71,6 +72,20 @@ expect.extend({
       } catch {
         return { message, pass: false };
       }
+    }
+  },
+  async toFailRequire(
+    this: MatcherContext,
+    transaction: Transaction,
+  ): Promise<SyncExpectationResult> {
+    try {
+      await transaction.debug();
+      const message = (): string => 'Contract function did not fail a require statement.';
+      return { message, pass: false };
+    } catch (transactionError: any) {
+      const receivedText = `Received string: ${this.utils.printReceived(transactionError?.message ?? '')}`;
+      const message = (): string => `Contract function failed a require statement.\n${receivedText}`;
+      return { message, pass: true };
     }
   },
 });

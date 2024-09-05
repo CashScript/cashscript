@@ -450,7 +450,7 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_require_no_failure().to(contract.address, 1000n);
-      await expect(transaction).not.toFailRequireWith(/.*/);
+      await expect(transaction).not.toFailRequire();
     });
 
     // test_multiple_require_statements_no_message_final
@@ -721,7 +721,7 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions.test_zero_handling(0n).to(contract.address, 1000n);
-      await expect(transaction).not.toFailRequireWith(/.*/);
+      await expect(transaction).not.toFailRequire();
     });
   });
 
@@ -807,8 +807,8 @@ describe('Debugging tests', () => {
       ).rejects.toThrow(/Expected pattern: not .*1 should equal 2.*\nReceived string: (.|\n)*?1 should equal 2/);
 
       await expect(
-        expect(transaction).not.toFailRequireWith(/.*/),
-      ).rejects.toThrow(/Expected pattern: not .*\nReceived string: (.|\n)*?1 should equal 2/);
+        expect(transaction).not.toFailRequire(),
+      ).rejects.toThrow(/Contract function failed a require statement\.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
   });
 });
