@@ -51,7 +51,6 @@ contract Test() {
     if (switch == 1) {
       int a = 2;
       require(1 == a, "1 should equal 2");
-    // TODO: Check if it's better test with or without this else
     } else if (switch == 2) {
       int b = 3;
       require(1 == b, "1 should equal 3");
@@ -486,18 +485,24 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transactionIfBranch = contract.functions
-        .test_final_require_in_if_statement(1n).to(contract.address, 1000n);
+        .test_final_require_in_if_statement(1n)
+        .to(contract.address, 1000n);
+
       await expect(transactionIfBranch).toFailRequireWith('Test.cash:43 Require statement failed at input 0 in contract Test.cash at line 43 with the following message: 1 should equal 2.');
       await expect(transactionIfBranch).toFailRequireWith('Failing statement: require(1 == a, "1 should equal 2")');
 
       const transactionElseIfBranch = contract.functions
-        .test_final_require_in_if_statement(2n).to(contract.address, 1000n);
-      await expect(transactionElseIfBranch).toFailRequireWith('Test.cash:47 Require statement failed at input 0 in contract Test.cash at line 47 with the following message: 1 should equal 3.');
+        .test_final_require_in_if_statement(2n)
+        .to(contract.address, 1000n);
+
+      await expect(transactionElseIfBranch).toFailRequireWith('Test.cash:46 Require statement failed at input 0 in contract Test.cash at line 46 with the following message: 1 should equal 3.');
       await expect(transactionElseIfBranch).toFailRequireWith('Failing statement: require(1 == b, "1 should equal 3")');
 
       const transactionElseBranch = contract.functions
-        .test_final_require_in_if_statement(3n).to(contract.address, 1000n);
-      await expect(transactionElseBranch).toFailRequireWith('Test.cash:50 Require statement failed at input 0 in contract Test.cash at line 50 with the following message: switch should equal 4.');
+        .test_final_require_in_if_statement(3n)
+        .to(contract.address, 1000n);
+
+      await expect(transactionElseBranch).toFailRequireWith('Test.cash:49 Require statement failed at input 0 in contract Test.cash at line 49 with the following message: switch should equal 4.');
       await expect(transactionElseBranch).toFailRequireWith('Failing statement: require(switch == c, "switch should equal 4")');
     });
 
@@ -507,8 +512,10 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = contract.functions
-        .test_final_require_in_if_statement_with_deep_reassignment().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:63 Require statement failed at input 0 in contract Test.cash at line 63 with the following message: sum should equal 10.');
+        .test_final_require_in_if_statement_with_deep_reassignment()
+        .to(contract.address, 1000n);
+
+      await expect(transaction).toFailRequireWith('Test.cash:62 Require statement failed at input 0 in contract Test.cash at line 62 with the following message: sum should equal 10.');
       await expect(transaction).toFailRequireWith('Failing statement: require(a + b + c + d + e == 10, "sum should equal 10")');
     });
 
@@ -518,14 +525,18 @@ describe('Debugging tests', () => {
       provider.addUtxo(contract.address, randomUtxo());
 
       const checkSigTransaction = contract.functions
-        .test_fail_checksig(new SignatureTemplate(alicePriv), bobPub).to(contract.address, 1000n);
-      await expect(checkSigTransaction).toFailRequireWith('Test.cash:78 Require statement failed at input 0 in contract Test.cash at line 78 with the following message: Signatures do not match.');
+        .test_fail_checksig(new SignatureTemplate(alicePriv), bobPub)
+        .to(contract.address, 1000n);
+
+      await expect(checkSigTransaction).toFailRequireWith('Test.cash:77 Require statement failed at input 0 in contract Test.cash at line 77 with the following message: Signatures do not match.');
       await expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
 
-      // TODO: Add test for checksig with a NULL Signature (after we refactor Libauth Template generation)
-      // const checkSigTransactionNullSignature = contract.functions
-      //   .test_fail_checksig('', bobPub).to(contract.address, 1000n);
-      // await expect(checkSigTransactionNullSignature).toFailRequireWith(/Signatures do not match/);
+      const checkSigTransactionNullSignature = contract.functions
+        .test_fail_checksig(hexToBin(''), bobPub)
+        .to(contract.address, 1000n);
+
+      await expect(checkSigTransactionNullSignature).toFailRequireWith('Test.cash:77 Require statement failed at input 0 in contract Test.cash at line 77 with the following message: Signatures do not match.');
+      await expect(checkSigTransactionNullSignature).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
     });
 
     // test_fail_checksig_final_verify
@@ -535,7 +546,7 @@ describe('Debugging tests', () => {
 
       const checkSigTransaction = contract.functions
         .test_fail_checksig_final_verify(new SignatureTemplate(alicePriv), bobPub).to(contract.address, 1000n);
-      await expect(checkSigTransaction).toFailRequireWith('Test.cash:83 Require statement failed at input 0 in contract Test.cash at line 83 with the following message: Signatures do not match.');
+      await expect(checkSigTransaction).toFailRequireWith('Test.cash:82 Require statement failed at input 0 in contract Test.cash at line 82 with the following message: Signatures do not match.');
       await expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
     });
 
@@ -547,13 +558,13 @@ describe('Debugging tests', () => {
       const checkDataSigTransaction = contract.functions
         .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xbeef')).slice(0, -1), '0xbeef', bobPub)
         .to(contract.address, 1000n);
-      await expect(checkDataSigTransaction).toFailRequireWith('Test.cash:87 Require statement failed at input 0 in contract Test.cash at line 87 with the following message: Data Signatures do not match.');
+      await expect(checkDataSigTransaction).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
       await expect(checkDataSigTransaction).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
 
       const checkDataSigTransactionWrongMessage = contract.functions
         .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xc0ffee')).slice(0, -1), '0xbeef', alicePub)
         .to(contract.address, 1000n);
-      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Test.cash:87 Require statement failed at input 0 in contract Test.cash at line 87 with the following message: Data Signatures do not match.');
+      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
       await expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
     });
 
@@ -570,7 +581,7 @@ describe('Debugging tests', () => {
           alicePub,
         )
         .to(contract.address, 1000n);
-      await expect(checkmultiSigTransaction).toFailRequireWith('Test.cash:91 Require statement failed at input 0 in contract Test.cash at line 91 with the following message: Multi Signatures do not match.');
+      await expect(checkmultiSigTransaction).toFailRequireWith('Test.cash:90 Require statement failed at input 0 in contract Test.cash at line 90 with the following message: Multi Signatures do not match.');
       await expect(checkmultiSigTransaction).toFailRequireWith('Failing statement: require(checkMultiSig([s1, s2], [pk1, pk2]), "Multi Signatures do not match")');
     });
 
@@ -664,7 +675,7 @@ describe('Debugging tests', () => {
         .to(contract.address, 1000n)
         .debug();
 
-      await expect(transactionPromise).rejects.toThrow('Test.cash:69 Error in transaction at input 0 in contract Test.cash at line 69.');
+      await expect(transactionPromise).rejects.toThrow('Test.cash:68 Error in transaction at input 0 in contract Test.cash at line 68.');
       await expect(transactionPromise).rejects.toThrow('Failing statement: test.split(4)');
       await expect(transactionPromise).rejects.toThrow(`Reason: ${AuthenticationErrorCommon.invalidSplitIndex}`);
     });
@@ -678,7 +689,7 @@ describe('Debugging tests', () => {
         .to(contract.address, 1000n)
         .debug();
 
-      await expect(transactionPromise).rejects.toThrow('Test.cash:74 Error in transaction at input 0 in contract Test.cash at line 74.');
+      await expect(transactionPromise).rejects.toThrow('Test.cash:73 Error in transaction at input 0 in contract Test.cash at line 73.');
       await expect(transactionPromise).rejects.toThrow('Failing statement: tx.inputs[5].value');
       await expect(transactionPromise).rejects.toThrow(`Reason: ${AuthenticationErrorCommon.invalidTransactionUtxoIndex}`);
     });

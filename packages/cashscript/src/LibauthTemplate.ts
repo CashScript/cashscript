@@ -2,7 +2,6 @@ import {
   AbiFunction,
   AbiInput,
   Artifact,
-  PrimitiveType,
   bytecodeToScript,
   formatBitAuthScript,
 } from '@cashscript/utils';
@@ -59,7 +58,7 @@ export const buildTemplate = async ({
     name: contract.artifact.contractName,
     supported: ['BCH_2023_05'],
     version: 0,
-    entities: generateTemplateEntities(contract.artifact, transaction.abiFunction),
+    entities: generateTemplateEntities(contract.artifact, transaction.abiFunction, transaction.encodedFunctionArgs),
     scripts: generateTemplateScripts(
       contract.artifact,
       contract.addressType,
@@ -127,14 +126,18 @@ export const getBitauthUri = (template: WalletTemplate): string => {
 };
 
 
-const generateTemplateEntities = (artifact: Artifact, abiFunction: AbiFunction): WalletTemplate['entities'] => {
+const generateTemplateEntities = (
+  artifact: Artifact,
+  abiFunction: AbiFunction,
+  encodedFunctionArgs: EncodedFunctionArgument[],
+): WalletTemplate['entities'] => {
   const functionParameters = Object.fromEntries<WalletTemplateVariable>(
-    abiFunction.inputs.map((input) => ([
+    abiFunction.inputs.map((input, index) => ([
       snakeCase(input.name),
       {
         description: `"${input.name}" parameter of function "${abiFunction.name}"`,
         name: input.name,
-        type: input.type === PrimitiveType.SIG ? 'Key' : 'WalletData',
+        type: encodedFunctionArgs[index] instanceof SignatureTemplate ? 'Key' : 'WalletData',
       },
     ])),
   );
@@ -268,7 +271,6 @@ const generateTemplateScenarios = (
       sourceOutputs: generateTemplateScenarioSourceOutputs(transaction),
     },
   };
-
 
   if (artifact.abi.length > 1) {
     const functionIndex = artifact.abi.findIndex((func) => func.name === transaction.abiFunction.name);
