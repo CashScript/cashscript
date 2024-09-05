@@ -263,7 +263,7 @@ TODO: Update this section with the new debugging experience
 
 ## Transaction errors
 
-When sending a transaction, the CashScript SDK will throw an error if the transaction fails. If you are using an artifact compiled with `cashc@0.10.0` or later, the error will be of the type `FailedRequireError` or `FailedTransactionError`. In case of a `FailedRequireError`, the error will refer to the corresponding `require` statement in the contract code so you know where your contract failed. If you want more information about the underlying error, you can check the `libauthErrorMessage` property of the error.
+When sending a transaction, the CashScript SDK will throw an error if the transaction fails. If you are using an artifact compiled with `cashc@0.10.0` or later, the error will be of the type `FailedRequireError` or `FailedTransactionEvaluationError`. In case of a `FailedRequireError`, the error will refer to the corresponding `require` statement in the contract code so you know where your contract failed. If you want more information about the underlying error, you can check the `libauthErrorMessage` property of the error.
 
 ```ts
 interface FailedRequireError {
@@ -276,58 +276,7 @@ interface FailedRequireError {
 }
 ```
 
-If you are using an artifact compiled with an older version of `cashc`, the error will always be of the type `FailedTransactionError`. In this case, you can use the `reason` property of the error to determine the reason for the failure. A list of possible reasons can be found in the `NodeErrorReason` enum below.
-
-```ts
-enum NodeErrorReason {
-  EVAL_FALSE = 'Script evaluated without error but finished with a false/empty top stack element',
-  VERIFY = 'Script failed an OP_VERIFY operation',
-  EQUALVERIFY = 'Script failed an OP_EQUALVERIFY operation',
-  CHECKMULTISIGVERIFY = 'Script failed an OP_CHECKMULTISIGVERIFY operation',
-  CHECKSIGVERIFY = 'Script failed an OP_CHECKSIGVERIFY operation',
-  CHECKDATASIGVERIFY = 'Script failed an OP_CHECKDATASIGVERIFY operation',
-  NUMEQUALVERIFY = 'Script failed an OP_NUMEQUALVERIFY operation',
-  SCRIPT_SIZE = 'Script is too big',
-  PUSH_SIZE = 'Push value size limit exceeded',
-  OP_COUNT = 'Operation limit exceeded',
-  STACK_SIZE = 'Stack size limit exceeded',
-  SIG_COUNT = 'Signature count negative or greater than pubkey count',
-  PUBKEY_COUNT = 'Pubkey count negative or limit exceeded',
-  INVALID_OPERAND_SIZE = 'Invalid operand size',
-  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range',
-  IMPOSSIBLE_ENCODING = 'The requested encoding is impossible to satisfy',
-  INVALID_SPLIT_RANGE = 'Invalid OP_SPLIT range',
-  INVALID_BIT_COUNT = 'Invalid number of bit set in OP_CHECKMULTISIG',
-  BAD_OPCODE = 'Opcode missing or not understood',
-  DISABLED_OPCODE = 'Attempted to use a disabled opcode',
-  INVALID_STACK_OPERATION = 'Operation not valid with the current stack size',
-  INVALID_ALTSTACK_OPERATION = 'Operation not valid with the current altstack size',
-  OP_RETURN = 'OP_RETURN was encountered',
-  UNBALANCED_CONDITIONAL = 'Invalid OP_IF construction',
-  DIV_BY_ZERO = 'Division by zero error',
-  MOD_BY_ZERO = 'Modulo by zero error',
-  INVALID_BITFIELD_SIZE = 'Bitfield of unexpected size error',
-  INVALID_BIT_RANGE = 'Bitfield\'s bit out of the expected range',
-  NEGATIVE_LOCKTIME = 'Negative locktime',
-  UNSATISFIED_LOCKTIME = 'Locktime requirement not satisfied',
-  SIG_HASHTYPE = 'Signature hash type missing or not understood',
-  SIG_DER = 'Non-canonical DER signature',
-  MINIMALDATA = 'Data push larger than necessary',
-  SIG_PUSHONLY = 'Only push operators allowed in signature scripts',
-  SIG_HIGH_S = 'Non-canonical signature: S value is unnecessarily high',
-  MINIMALIF = 'OP_IF/NOTIF argument must be minimal',
-  SIG_NULLFAIL = 'Signature must be zero for failed CHECK(MULTI)SIG operation',
-  SIG_BADLENGTH = 'Signature cannot be 65 bytes in CHECKMULTISIG',
-  SIG_NONSCHNORR = 'Only Schnorr signatures allowed in this operation',
-  DISCOURAGE_UPGRADABLE_NOPS = 'NOPx reserved for soft-fork upgrades',
-  PUBKEYTYPE = 'Public key is neither compressed or uncompressed',
-  CLEANSTACK = 'Script did not clean its stack',
-  NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
-  ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
-  MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
-  UNKNOWN = 'unknown error',
-}
-```
+If you are using an artifact compiled with an older version of `cashc`, the error will always be of the type `FailedTransactionError`. In this case, you can use the `reason` property of the error to determine the reason for the failure.
 
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki

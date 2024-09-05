@@ -14,7 +14,7 @@ import {
   alicePriv,
 } from '../../fixture/vars.js';
 import { getTxOutputs } from '../../test-util.js';
-import { FailedTransactionError, NodeErrorReason } from '../../../src/Errors.js';
+import { FailedTransactionError } from '../../../src/Errors.js';
 import artifact from '../../fixture/old/mecenas.json' assert { type: 'json' };
 
 if (!process.env.TESTS_USE_MOCKNET) {
@@ -46,7 +46,7 @@ if (!process.env.TESTS_USE_MOCKNET) {
 
         // then
         await expect(txPromise).rejects.toThrow(FailedTransactionError);
-        await expect(txPromise).rejects.toThrow(NodeErrorReason.EQUALVERIFY);
+        await expect(txPromise).rejects.toThrow('Script failed an OP_EQUALVERIFY operation');
       });
 
       it('should fail when trying to send to wrong person', async () => {
@@ -63,7 +63,7 @@ if (!process.env.TESTS_USE_MOCKNET) {
 
         // then
         await expect(txPromise).rejects.toThrow(FailedTransactionError);
-        await expect(txPromise).rejects.toThrow(NodeErrorReason.EQUALVERIFY);
+        await expect(txPromise).rejects.toThrow('Script failed an OP_EQUALVERIFY operation');
       });
 
       it('should fail when trying to send to multiple people', async () => {
@@ -81,7 +81,7 @@ if (!process.env.TESTS_USE_MOCKNET) {
 
         // then
         await expect(txPromise).rejects.toThrow(FailedTransactionError);
-        await expect(txPromise).rejects.toThrow(NodeErrorReason.EQUALVERIFY);
+        await expect(txPromise).rejects.toThrow('Script failed an OP_EQUALVERIFY operation');
       });
 
       it('should succeed when sending pledge to receiver', async () => {
