@@ -78,10 +78,6 @@ transaction.fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
 
 The `fromP2PKH()` function allows you to provide a list of P2PKH UTXOs to be used in the transaction. The passed `SignatureTemplate` is used to sign these UTXOs. This function can be called any number of times, and the provided UTXOs will be added to the list of earlier added UTXOs.
 
-:::note
-If you are using [meep](https://github.com/gcash/meep) to debug a `fromP2PKH()` transaction, meep will always use the first input for the debugging. So if you want to debug the smart contract bytecode, make sure that the first input is not a P2PKH input.
-:::
-
 #### Example
 ```ts
 import { bobAddress, bobPrivateKey } from './somewhere';
