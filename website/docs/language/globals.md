@@ -2,27 +2,6 @@
 title: Global Variables
 ---
 
-## Globally available units
-An integer literal can take a suffix of either monetary or temporary units to add semantic value to these integers and to simplify arithmetic. When these units are used, the underlying integer is automatically multiplied by the value of the unit. The units `sats`, `finney`, `bits` and `bitcoin` are used to denote monetary value, while the units `seconds`, `minutes`, `hours`, `days` and `weeks` are used to denote time.
-
-:::caution
-Be careful when using these units in precise calendar calculations though, because not every year equals 365 days and not even every minute has 60 seconds because of [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
-:::
-
-### Example
-```solidity
-require(1 sats == 1);
-require(1 finney == 10);
-require(1 bit == 100);
-require(1 bitcoin == 1e8);
-
-require(1 seconds == 1);
-require(1 minutes == 60 seconds);
-require(1 hours == 60 minutes);
-require(1 days == 24 hours);
-require(1 weeks == 7 days);
-```
-
 ## Global time lock variables
 Bitcoin Cash has support for different kinds of time locks, which can be used to specify time-based conditions inside Bitcoin Cash contracts. These time locks can be separated by **three main attributes**: location, targeting and metric. The *location* can be the *transaction level* or the *contract level*, but *contract level* locks also require you to use a corresponding *transaction level* lock. The targeting can be *relative* (e.g. at least 4 hours have passed) or *absolute* (e.g. the block number is at least 600,000). The metric can be blocks or seconds.
 
@@ -263,6 +242,39 @@ new LockingBytecodeNullData(bytes[] chunks): bytes
 ```
 
 Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
+
+## Globally available units
+
+An integer literal can take a suffix of either monetary or temporary units to add semantic value to these integers and to simplify arithmetic. When these units are used, the underlying integer is automatically multiplied by the value of the unit.
+
+### BCH Units
+
+The units `sats`, `finney`, `bits` and `bitcoin` are used to Bitcoin Cash amounts.
+
+#### Example
+```solidity
+require(1 sats == 1);
+require(1 finney == 10);
+require(1 bit == 100);
+require(1 bitcoin == 1e8);
+```
+
+### Time Units
+
+The units `seconds`, `minutes`, `hours`, `days` and `weeks` are used to denote time.
+
+:::caution
+Be careful when using these units in precise calendar calculations though, because not every year equals 365 days and not even every minute has 60 seconds because of [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
+:::
+
+#### Example
+```solidity
+require(1 seconds == 1);
+require(1 minutes == 60 seconds);
+require(1 hours == 60 minutes);
+require(1 days == 24 hours);
+require(1 weeks == 7 days);
+```
 
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [withAge()]: /docs/sdk/transactions#withage
