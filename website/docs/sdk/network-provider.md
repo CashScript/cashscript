@@ -88,6 +88,16 @@ Broadcast a raw hex transaction to the network.
 const txId = await provider.sendRawTransaction(txHex)
 ```
 
+### performRequest
+
+Perform an arbitrary electrum request, refer to the docs at [electrum-cash-protocol](https://electrum-cash-protocol.readthedocs.io/en/latest/).
+
+#### Example
+```ts
+const verbose = true // get parsed transaction as json result
+const txId = await provider.performRequest('blockchain.transaction.get', txid, verbose)
+```
+
 ## Advanced Options
 
 All network functionality that the CashScript SDK needs is encapsulated in a network provider. This allows different network providers to be used and makes it easy to swap out dependencies.
