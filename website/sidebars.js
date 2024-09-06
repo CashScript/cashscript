@@ -38,6 +38,7 @@ module.exports = {
         'sdk/transactions',
         'sdk/transactions-advanced',
         'sdk/testing-setup',
+        'sdk/examples',
       ],
     },
     {

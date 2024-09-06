@@ -249,7 +249,7 @@ An integer literal can take a suffix of either monetary or temporary units to ad
 
 ### BCH Units
 
-The units `sats`, `finney`, `bits` and `bitcoin` are used to Bitcoin Cash amounts.
+The units `sats`, `finney`, `bits` and `bitcoin` can be used to denominate Bitcoin Cash amounts.
 
 #### Example
 ```solidity
@@ -261,7 +261,7 @@ require(1 bitcoin == 1e8);
 
 ### Time Units
 
-The units `seconds`, `minutes`, `hours`, `days` and `weeks` are used to denote time.
+The units `seconds`, `minutes`, `hours`, `days` and `weeks` can be used to denote time.
 
 :::caution
 Be careful when using these units in precise calendar calculations though, because not every year equals 365 days and not even every minute has 60 seconds because of [leap seconds](https://en.wikipedia.org/wiki/Leap_second).
