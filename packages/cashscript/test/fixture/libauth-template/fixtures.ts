@@ -565,7 +565,7 @@ export const fixtures: Fixture[] = [
             's': {
               'description': '"s" parameter of function "spend"',
               'name': 's',
-              'type': 'Key',
+              'type': 'WalletData',
             },
             'pk': {
               'description': '"pk" parameter of function "spend"',
