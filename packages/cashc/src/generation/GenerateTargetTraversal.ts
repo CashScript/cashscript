@@ -322,9 +322,9 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     const data = node.parameters.map((parameter: ConsoleParameterNode) => {
       if (parameter instanceof IdentifierNode) {
         const symbol = parameter.definition!;
-        const stackIndex = this.getStackIndex(parameter.name, true);
 
         // If the variable is not on the stack, then we add the final stack usage to the console log
+        const stackIndex = this.getStackIndex(parameter.name, true);
         if (stackIndex === -1) {
           if (!this.finalStackUsage[parameter.name]) {
             throw new Error(`Expected variable '${parameter.name}' does not exist on the stack or in final stack usage`);

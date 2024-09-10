@@ -26,9 +26,9 @@ export interface TransactionBuilderOptions {
 const DEFAULT_SEQUENCE = 0xfffffffe;
 
 export class TransactionBuilder {
-  private provider: NetworkProvider;
-  private inputs: UnlockableUtxo[] = [];
-  private outputs: Output[] = [];
+  public provider: NetworkProvider;
+  public inputs: UnlockableUtxo[] = [];
+  public outputs: Output[] = [];
 
   private locktime: number;
   private maxFee?: bigint;
