@@ -199,6 +199,8 @@ You may notice the `SignatureTemplate` object in the [example](#example-8) above
 
 So in the place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
 
+The default `hashtype` is `HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases.
+
 ```ts
 export enum HashType {
   SIGHASH_ALL = 0x01,
