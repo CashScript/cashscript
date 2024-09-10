@@ -7,20 +7,15 @@ The CashScript SDK needs to connect to the BCH network to perform certain operat
 ## ElectrumNetworkProvider
 
 The ElectrumNetworkProvider uses [electrum-cash][electrum-cash] to connect to the BCH network. Both `network` and `electrum` parameters are optional, and they default to mainnet and a 2-of-3 ElectrumCluster with a number of reliable electrum servers.
+
 ```ts
 new ElectrumNetworkProvider(network?: Network, electrum?: ElectrumCluster)
-```
-
-#### Example
-```ts
-const provider = new ElectrumProvider('chipnet');
 ```
 
 :::note
 In some cases it might be desirable to overwrite the 2-of-3 ElectrumCluster default to use only a 1-of-1 cluster because of network latency.
 :::
 
-## Interface NetworkProvider
 
 ### Network
 ```ts
@@ -119,8 +114,8 @@ provider.addUtxo(contractAddress, newUtxo);
 ### Other NetworkProviders
 
 There are two alternative network providers implemented:
-- `FullStackNetworkProvider`: uses [FullStack.cash][fullstack]' infrastructure to connect to the BCH network. 
-- `BitcoinRpcNetworkProvider`: uses a direct connection to a Bitcoin Cash node. 
+- `FullStackNetworkProvider`: uses [FullStack.cash][fullstack]' infrastructure to connect to the BCH network.
+- `BitcoinRpcNetworkProvider`: uses a direct connection to a Bitcoin Cash node.
 
 Currently neither supports CashTokens, so it is recommended to use the `ElectrumNetworkProvider`.
 
