@@ -5,9 +5,8 @@ module.exports = {
       label: 'Basics',
       items: [
         'basics/about',
-        // 'basics/about-bch',
+        'basics/about-bch',
         'basics/getting-started',
-        'basics/cli',
       ],
     },
     {
@@ -18,18 +17,27 @@ module.exports = {
         'language/types',
         'language/functions',
         'language/globals',
-        'language/artifacts',
-        'language/grammar',
         'language/examples',
       ],
     },
     {
       type: 'category',
-      label: 'JavaScript SDK',
+      label: 'Compiler',
+      items: [
+        'compiler/compiler',
+        'compiler/artifacts',
+        'compiler/grammar',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'TypeScript SDK',
       items: [
         'sdk/instantiation',
+        'sdk/network-provider',
         'sdk/transactions',
         'sdk/transactions-advanced',
+        'sdk/testing-setup',
         'sdk/examples',
       ],
     },
@@ -39,6 +47,7 @@ module.exports = {
       items: [
         'guides/syntax-highlighting',
         'guides/covenants',
+        'guides/debugging',
         'guides/optimization'
       ],
     },

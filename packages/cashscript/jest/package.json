@@ -1,0 +1,5 @@
+{
+  "type": "module",
+  "types": "../dist/test/JestExtensions.d.ts",
+  "main": "../dist/test/JestExtensions.js"
+}

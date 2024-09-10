@@ -1,5 +1,7 @@
 import { hexToBin } from '@bitauth/libauth';
 import {
+  AbiFunction,
+  Artifact,
   BytesType,
   encodeBool,
   encodeInt,
@@ -10,12 +12,15 @@ import {
 import { TypeError } from './Errors.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
-export type Argument = bigint | boolean | string | Uint8Array | SignatureTemplate;
+export type ConstructorArgument = bigint | boolean | string | Uint8Array;
+export type FunctionArgument = ConstructorArgument | SignatureTemplate;
 
-export function encodeArgument(
-  argument: Argument,
-  typeStr: string,
-): Uint8Array | SignatureTemplate {
+export type EncodedConstructorArgument = Uint8Array;
+export type EncodedFunctionArgument = Uint8Array | SignatureTemplate;
+
+export type EncodeFunction = (arg: FunctionArgument, typeStr: string) => EncodedFunctionArgument;
+
+export function encodeFunctionArgument(argument: FunctionArgument, typeStr: string): EncodedFunctionArgument {
   let type = parseType(typeStr);
 
   if (type === PrimitiveType.BOOL) {
@@ -60,7 +65,7 @@ export function encodeArgument(
     type = new BytesType(65);
   }
 
-  // Redefine SIG as a bytes64 so it is included in the size checks below
+  // Redefine DATASIG as a bytes64 so it is included in the size checks below
   // Note that ONLY Schnorr signatures are accepted
   if (type === PrimitiveType.DATASIG && argument.byteLength !== 0) {
     type = new BytesType(64);
@@ -73,3 +78,29 @@ export function encodeArgument(
 
   return argument;
 }
+
+export const encodeConstructorArguments = (
+  artifact: Artifact,
+  constructorArgs: ConstructorArgument[],
+  encodeFunction: EncodeFunction = encodeFunctionArgument,
+): Uint8Array[] => {
+  // Check there's no signature templates in the constructor
+  if (constructorArgs.some((arg) => arg instanceof SignatureTemplate)) {
+    throw new Error('Cannot use signatures in constructor');
+  }
+
+  const encodedArgs = constructorArgs
+    .map((arg, i) => encodeFunction(arg, artifact.constructorInputs[i].type));
+
+  return encodedArgs as Uint8Array[];
+};
+
+export const encodeFunctionArguments = (
+  abiFunction: AbiFunction,
+  functionArgs: FunctionArgument[],
+  encodeFunction: EncodeFunction = encodeFunctionArgument,
+): EncodedFunctionArgument[] => {
+  const encodedArgs = functionArgs.map((arg, i) => encodeFunction(arg, abiFunction.inputs[i].type));
+
+  return encodedArgs;
+};

@@ -1,18 +1,25 @@
-import { Contract, ElectrumNetworkProvider, Network } from '../../src/index.js';
+import {
+  Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
+} from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
-import { FailedRequireError, Reason } from '../../src/Errors.js';
-import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
+import { FailedRequireError } from '../../src/Errors.js';
+import {
+  createOpReturnOutput, randomUtxo, utxoComparator,
+} from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
-import artifact from '../fixture/announcement.json' assert { type: "json" };
+import artifact from '../fixture/announcement.json' assert { type: 'json' };
 
 describe('Announcement', () => {
   let announcement: Contract;
   const minerFee = 1000n;
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     announcement = new Contract(artifact, [], { provider });
     console.log(announcement.address);
+    (provider as any).addUtxo?.(announcement.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -37,7 +44,7 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
+      await expect(txPromise).rejects.toThrow();
     });
 
     it('should fail when trying to announce incorrect announcement', async () => {
@@ -59,7 +66,8 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow('Announcement.cash:17 Require statement failed at input 0 in contract Announcement.cash at line 17.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[0].lockingBytecode == announcement)');
     });
 
     it('should fail when sending incorrect amount of change', async () => {
@@ -81,17 +89,18 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.NUMEQUALVERIFY);
+      await expect(txPromise).rejects.toThrow('Announcement.cash:25 Require statement failed at input 0 in contract Announcement.cash at line 25.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[1].value == changeAmount)');
     });
 
     it('should fail when sending the correct change amount to an incorrect address', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const largestUtxo = (await announcement.getUtxos())
+      const [largestUtxo] = (await announcement.getUtxos())
         .sort(utxoComparator)
         .reverse()
         .slice(0, 1);
-      const changeAmount = largestUtxo[0]?.satoshis - minerFee;
+      const changeAmount = largestUtxo?.satoshis - minerFee;
 
       // when
       const txPromise = announcement.functions
@@ -105,7 +114,8 @@ describe('Announcement', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.EQUALVERIFY);
+      await expect(txPromise).rejects.toThrow('Announcement.cash:24 Require statement failed at input 0 in contract Announcement.cash at line 24.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode)');
     });
 
     it('should succeed when announcing correct announcement', async () => {

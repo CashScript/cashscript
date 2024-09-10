@@ -2,133 +2,165 @@
 title: Examples
 ---
 
-An extensive collection of examples is available in the [GitHub repository][github-examples]. Below we discuss a few of these examples in more details. These examples focus mainly on the use of the SDK, while the [Examples page](/docs/language/examples) in the language section focuses more on the CashScript syntax.
+An extensive collection of examples is available in the [GitHub repository][github-examples]. Below we discuss the HodlVault example from the repository in full detail. The focus of this page is on the use of the SDK, while the [Examples page](/docs/language/examples) in the language section focuses on the CashScript syntax.
 
-## Transfer With Timeout
-The idea of this smart contract is explained on the [Language Examples page](/docs/language/examples#transfer-with-timeout). The gist is that it allows you to send an amount of BCH to someone, but if they don't claim the sent amount, it can be recovered by the sender.
+## HodlVault
 
+We will break up the development of the smart contract application in 4 manageable steps:
+1. Creating the keypairs
+2. Generating a Contract
+3. Building the Oracle
+4. Sending a Transaction
 
-```solidity title="TransferWithTimeout.cash"
-contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
-    function transfer(sig recipientSig) {
-        require(checkSig(recipientSig, recipient));
-    }
+### Creating the keypairs
 
-    function timeout(sig senderSig) {
-        require(checkSig(senderSig, sender));
-        require(tx.time >= timeout);
-    }
-}
+To put the `HodlVault.cash` contract to use in a TypeScript application, we have to use the CashScript SDK in combination with a BCH library such as [Libauth][libauth], [Mainnetjs][mainnetjs] or [BCHJS][bchjs]. These libraries are used to generate public/private keys for the contract participants. 
+In this example we'll use [Libauth][libauth] to generate the keys `alicePriv`, `alicePub`, `oracle` & `oraclePub`. Then we can use these keys to create the smart contract.
+
+:::caution
+These 'private keys' are public just for testing, in other contexts you want to very carefully treat private keys as `environment variables`. You would also make sure to use a secure seed phrase and not 'CashScript Examples'... 
+:::
+
+```ts title="common.ts"
+import { hash160 } from '@cashscript/utils';
+import {
+  deriveHdPrivateNodeFromSeed,
+  deriveHdPath,
+  secp256k1,
+  encodeCashAddress,
+} from '@bitauth/libauth';
+import bip39 from 'bip39';
+import { PriceOracle } from './PriceOracle.js';
+
+// Generate entropy from BIP39 mnemonic phrase and initialise a root HD-wallet node
+const seed = await bip39.mnemonicToSeed('CashScript Examples');
+const rootNode = deriveHdPrivateNodeFromSeed(seed, true);
+const baseDerivationPath = "m/44'/145'/0'/0";
+
+// Derive Alice's private key, public key, public key hash and address
+const aliceNode = deriveHdPath(rootNode, `${baseDerivationPath}/0`);
+if (typeof aliceNode === 'string') throw new Error();
+export const alicePub = secp256k1.derivePublicKeyCompressed(aliceNode.privateKey) as Uint8Array;
+export const alicePriv = aliceNode.privateKey;
+export const alicePkh = hash160(alicePub);
+export const aliceAddress = encodeCashAddress('bchtest', 'p2pkhWithTokens', alicePkh);
+
+// Initialise a price oracle with a private key
+const oracleNode = deriveHdPath(rootNode, `${baseDerivationPath}/2`);
+if (typeof oracleNode === 'string') throw new Error();
+export const oraclePub = secp256k1.derivePublicKeyCompressed(oracleNode.privateKey) as Uint8Array;
+export const oraclePriv = oracleNode.privateKey;
+export const oracle = new PriceOracle(oracleNode.privateKey);
+export const oraclePkh = hash160(oraclePub);
+export const oracleAddress = encodeCashAddress('bchtest', 'p2pkhWithTokens', oraclePkh);
 ```
 
-Now to put this smart contract in use in a JavaScript application we have to use the CashScript SDK in combination with a BCH library such as [BCHJS][bchjs], [bitcore-lib-cash][bitcore] or [Libauth][libauth]. These libraries are used to generate public/private keys for the contract participants. Then these keys can be used in the CashScript SDK. The key generation code is left out of this example, since this works differently for every library.
+### Generating a Contract
 
-```ts title="TransferWithTimeout.js"
-import { Contract, SignatureTemplate } from 'cashscript';
-import { alicePriv, alicePub, bobPriv, bobPub } from './somewhere.js';
-import artifact from './transfer_with_timeout.json';
+For the networkprovider, we'll use the `ElectrumNetworkProvider` from the SDK and for `Simple Transaction Builder` for this example. Once you have a smart contract address you can send funds to it. To spend the Bitcoin cash locked in the contract you will have to satisfy the spending conditions on the contract.
 
-// Instantiate a new contract using the artifact and constructor arguments:
-// { sender: alicePub, recipient: bobPub, timeout: 1000000 }
-// No network provider is provided, so the default ElectrumNetworkProvider is used
-const contract = new Contract(artifact, [alicePub, bobPub, 1000000n], options:{addressType: 'p2sh20'});
+```ts title="hodl_vault.ts"
+import { stringify } from '@bitauth/libauth';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { compileFile } from 'cashc';
+import { URL } from 'url';
 
-// Display contract address and balance
-console.log('contract address:', contract.address);
-console.log('contract balance:', await contract.getBalance());
+// Import keys and price oracle from common.ts
+import {
+  alicePub,
+  oraclePub,
+} from './common.ts';
 
-// Call the transfer function with Bob's signature
-// i.e. Bob claims the money that Alice has sent him
-const txDetails = await contract.functions
-  .transfer(new SignatureTemplate(bobPriv))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
-  .send();
-console.log(txDetails);
-```
+// Compile the HodlVault contract to an artifact object
+const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
 
-## Memo.cash Announcement
-[Memo.cash](https://memo.cash) is a Twitter-like social network based on Bitcoin Cash. It uses `OP_RETURN` outputs to post messages on-chain. By using a covenant we can create an example contract whose only job is to post Isaac Asimov's first law of smart contracts to Memo.cash. Just to remind its fellow smart contracts.
-
-This contract expects a hardcoded transaction fee of 1000 satoshis. This is necessary due to the nature of covenants (See the [Licho's Mecenas example](/docs/language/examples#lichos-mecenas) for more information on this). The remaining balance after this transaction fee might end up being lower than 1000 satoshis, which means that the contract does not have enough leftover to make another announcement.
-
-To ensure that this leftover money does not get lost in the contract, the contract performs an extra check, and adds the remainder to the transaction fee if it's too low.
-
-```solidity title="Announcement.cash"
-pragma cashscript ^0.9.0;
-
-// This contract enforces making an announcement on Memo.cash and sending the
-// remaining balance back to the contract.
-contract Announcement() {
-    function announce() {
-        // Create the memo.cash announcement output
-        bytes announcement = new LockingBytecodeNullData([
-            0x6d02,
-            bytes('A contract may not injure a human being or, '
-             + 'through inaction, allow a human being to come to harm.')
-        ]);
-
-        // Check that the first tx output matches the announcement
-        require(tx.outputs[0].value == 0);
-        require(tx.outputs[0].lockingBytecode == announcement);
-
-        // Calculate leftover money after fee (1000 sats)
-        // Check that the second tx output sends the change back if there's
-        // enough leftover for another announcement
-        int minerFee = 1000;
-        int changeAmount = tx.inputs[this.activeInputIndex].value - minerFee;
-        if (changeAmount >= minerFee) {
-            bytes changeLock = tx.inputs[this.activeInputIndex].lockingBytecode;
-            require(tx.outputs[1].lockingBytecode == changeLock);
-            require(tx.outputs[1].value == changeAmount);
-        }
-    }
-}
-```
-
-The CashScript code above ensures that the smart contract **can only** be used in the way specified in the code. But the transaction needs to be created by the SDK, and to ensure that it complies with the rules of the smart contract, we need to use some of the more advanced options of the SDK.
-
-```ts title="Announcement.js"
-import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
-import { alicePriv, alicePub } from './somewhere.js';
-import artifact from './announcement.json';
-
-// Initialise a network provider for network operations on MAINNET
-const provider = new ElectrumNetworkProvider('mainnet');
-const addressType = 'p2sh20';
+// Initialise a network provider for network operations on CHIPNET
+const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new contract using the compiled artifact and network provider
-// AND providing the constructor parameters (none)
-const contract = new Contract(artifact, [], , options:{ provider, addressType});
+// AND providing the constructor parameters
+const parameters = [alicePub, oraclePub, 100000n, 30000n];
+const contract = new Contract(artifact, parameters, { provider });
 
-// Display contract address, balance, opcount, and bytesize
+// Get contract balance & output address + balance
 console.log('contract address:', contract.address);
 console.log('contract balance:', await contract.getBalance());
-console.log('contract opcount:', contract.opcount);
-console.log('contract bytesize:', contract.bytesize);
-
-// Create the announcement string. Any other announcement will fail because
-// it does not comply with the smart contract.
-const str = 'A contract may not injure a human being or, '
-  + 'through inaction, allow a human being to come to harm.';
-
-// Send the announcement transaction
-const txDetails = await contract.functions
-  .announce(alicePub, new SignatureTemplate(alicePriv))
-  // Add the announcement string as an OP_RETURN output
-  .withOpReturn(['0x6d02', str])
-  // Hardcodes the transaction fee (like the contract expects)
-  .withHardcodedFee(1000n)
-  // Only add a "change" output if the remainder is higher than 1000
-  .withMinChange(1000n)
-  .send();
-
-console.log(txDetails);
 ```
 
-[bitbox]: https://developer.bitcoin.com/bitbox/
-[electrum-cash]: https://www.npmjs.com/package/electrum-cash
-[fullstack]: https://fullstack.cash/
+### Building the Oracle
+
+We need the create the functionality for generating and signing the oracle message to use in the HodlVault contract:
+
+```ts title="PriceOracle.ts"
+import { padMinimallyEncodedVmNumber, flattenBinArray, secp256k1 } from '@bitauth/libauth';
+import { encodeInt, sha256 } from '@cashscript/utils';
+
+export class PriceOracle {
+  constructor(public privateKey: Uint8Array) {}
+
+  // Encode a blockHeight and bchUsdPrice into a byte sequence of 8 bytes (4 bytes per value)
+  createMessage(blockHeight: bigint, bchUsdPrice: bigint): Uint8Array {
+    const encodedBlockHeight = padMinimallyEncodedVmNumber(encodeInt(blockHeight), 4);
+    const encodedBchUsdPrice = padMinimallyEncodedVmNumber(encodeInt(bchUsdPrice), 4);
+
+    return flattenBinArray([encodedBlockHeight, encodedBchUsdPrice]);
+  }
+
+  signMessage(message: Uint8Array): Uint8Array {
+    const signature = secp256k1.signMessageHashSchnorr(this.privateKey, sha256(message));
+    if (typeof signature === 'string') throw new Error();
+    return signature;
+  }
+}
+```
+
+### Sending a Transaction
+
+Finnally, we can put all of this together to create a working smart contract application. We use the generated keys as a contract arguments directly or in a `SignatureTemplate` to create a transaction signature.
+
+```ts title="hodl_vault.ts"
+import { stringify } from '@bitauth/libauth';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { compileFile } from 'cashc';
+import { URL } from 'url';
+
+// Import keys and price oracle from common.ts
+import {
+  alicePriv,
+  alicePub,
+  oracle,
+  oraclePub,
+} from './common.ts';
+
+// Compile the HodlVault contract to an artifact object
+const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
+
+// Initialise a network provider for network operations on CHIPNET
+const provider = new ElectrumNetworkProvider('chipnet');
+
+// Instantiate a new contract using the compiled artifact and network provider
+// AND providing the constructor parameters
+const parameters = [alicePub, oraclePub, 100000n, 30000n];
+const contract = new Contract(artifact, parameters, { provider });
+
+// Get contract balance & output address + balance
+console.log('contract address:', contract.address);
+console.log('contract balance:', await contract.getBalance());
+
+// Produce new oracle message and signature
+const oracleMessage = oracle.createMessage(100000n, 30000n);
+const oracleSignature = oracle.signMessage(oracleMessage);
+
+// Spend from the vault
+const tx = await contract.functions
+  .spend(new SignatureTemplate(alicePriv), oracleSignature, oracleMessage)
+  .to(contract.address, 1000n)
+  .send();
+
+console.log(stringify(tx));
+```
+
 [bchjs]: https://bchjs.fullstack.cash/
-[bitcore]: https://github.com/bitpay/bitcore/tree/master/packages/bitcore-lib-cash
+[mainnetjs]: https://mainnet.cash/
 [libauth]: https://libauth.org/
-[github-examples]: https://github.com/Bitcoin-com/cashscript/tree/master/examples
+[github-examples]: https://github.com/CashScript/cashscript/tree/master/examples

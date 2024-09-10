@@ -1,0 +1,5 @@
+contract DebugMessages() {
+  function spend(int value) {
+    console.log(value + 2);
+  }
+}

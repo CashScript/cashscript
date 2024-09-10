@@ -26,7 +26,7 @@ module.exports = {
           position: 'right',
         },
         {
-          href: 'https://github.com/Bitcoin-com/cashscript',
+          href: 'https://github.com/CashScript/cashscript',
           label: 'GitHub',
           position: 'right',
         },
@@ -101,13 +101,11 @@ module.exports = {
     [
       '@docusaurus/preset-classic',
       {
-        docs: {
-          sidebarPath: require.resolve('./sidebars.js'),
-          editUrl:
-            'https://github.com/Bitcoin-com/cashscript/edit/master/website/',
-        },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        docs: {
+          sidebarPath: './sidebars.js',
         },
       },
     ],

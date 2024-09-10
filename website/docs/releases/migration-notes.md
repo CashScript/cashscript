@@ -2,6 +2,16 @@
 title: Migration Notes
 ---
 
+## v0.9 to 0.10
+
+### CashScript SDK
+
+The `Reason` enum + `FailedTimeCheckError` and `FailedSigCheckError` errors have been removed. If you were using these to check your transaction errors, you should now use the new error classes `FailedRequireError`, `FailedTransactionEvaluationError` and `FailedTransactionError`.
+
+If you were using `transaction.meep()` or using the `meep` string in errors, you should now use `transaction.bitauthUri()` to get a BitAuth URI for debugging or use the `bitauthUri` string in errors.
+
+The `Argument` type has been split into `FunctionArgument` and `ConstructorArgument` and the `encodeArgument` function has been renamed to `encodeFunctionArgument`. If you were using these types in your code, you should update your code to use the new types, depending on whether you were using them as function arguments or constructor arguments.
+
 ## v0.7 to v0.8
 
 ### cashc compiler

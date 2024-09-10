@@ -9,14 +9,12 @@ import {
 import {
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
-import p2pkhArtifact from './fixture/p2pkh.json' assert { type: "json" };
-import twtArtifact from './fixture/transfer_with_timeout.json' assert { type: "json" };
-import hodlVaultArtifact from './fixture/hodl_vault.json' assert { type: "json" };
-import mecenasArtifact from './fixture/mecenas.json' assert { type: "json" };
-import boundedBytesArtifact from './fixture/bounded_bytes.json' assert { type: "json" };
+import p2pkhArtifact from './fixture/p2pkh.json' assert { type: 'json' };
+import twtArtifact from './fixture/transfer_with_timeout.json' assert { type: 'json' };
+import hodlVaultArtifact from './fixture/hodl_vault.json' assert { type: 'json' };
+import mecenasArtifact from './fixture/mecenas.json' assert { type: 'json' };
+import boundedBytesArtifact from './fixture/bounded_bytes.json' assert { type: 'json' };
 
-// This is failing due to limitations between Jest and bigint (https://github.com/facebook/jest/issues/11617)
-// TODO: Fix this somehow by changing the test, or move away from Jest
 describe('Contract', () => {
   describe('new', () => {
     it('should fail with incorrect constructor args', () => {

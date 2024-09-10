@@ -12,12 +12,15 @@ import {
   LockingBytecodeType,
   encodeTransactionOutput,
   isHex,
-  bigIntToCompactSize,
+  bigIntToCompactUint,
+  NonFungibleTokenCapability,
+  bigIntToVmNumber,
 } from '@bitauth/libauth';
 import {
   encodeInt,
   hash160,
   hash256,
+  sha256,
   Op,
   Script,
   scriptToBytecode,
@@ -27,16 +30,13 @@ import {
   Output,
   Network,
   LibauthOutput,
+  TokenDetails,
+  AddressType,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
   TokensToNonTokenAddressError,
-  Reason,
-  FailedTransactionError,
-  FailedRequireError,
-  FailedTimeCheckError,
-  FailedSigCheckError,
 } from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
@@ -150,7 +150,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
   let size = VERSION_SIZE + LOCKTIME_SIZE;
   size += outputs.reduce((acc, output) => acc + getOutputSize(output), 0);
   // Add tx-out count (accounting for a potential change output)
-  size += bigIntToCompactSize(BigInt(outputs.length + 1)).byteLength;
+  size += bigIntToCompactUint(BigInt(outputs.length + 1)).byteLength;
 
   return size;
 }
@@ -163,7 +163,7 @@ export function createInputScript(
   preimage?: Uint8Array,
 ): Uint8Array {
   // Create unlock script / redeemScriptSig (add potential preimage and selector)
-  const unlockScript = encodedArgs.reverse();
+  const unlockScript = [...encodedArgs].reverse();
   if (preimage !== undefined) unlockScript.push(preimage);
   if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 
@@ -204,50 +204,23 @@ export function createSighashPreimage(
   return sighashPreimage;
 }
 
-export function buildError(reason: string, meepStr?: string): FailedTransactionError {
-  const require = [
-    Reason.EVAL_FALSE, Reason.VERIFY, Reason.EQUALVERIFY, Reason.CHECKMULTISIGVERIFY,
-    Reason.CHECKSIGVERIFY, Reason.CHECKDATASIGVERIFY, Reason.NUMEQUALVERIFY,
-  ];
-  const timeCheck = [Reason.NEGATIVE_LOCKTIME, Reason.UNSATISFIED_LOCKTIME];
-  const sigCheck = [
-    Reason.SIG_COUNT, Reason.PUBKEY_COUNT, Reason.SIG_HASHTYPE, Reason.SIG_DER,
-    Reason.SIG_HIGH_S, Reason.SIG_NULLFAIL, Reason.SIG_BADLENGTH, Reason.SIG_NONSCHNORR,
-  ];
-
-  if (toRegExp(require).test(reason)) {
-    return new FailedRequireError(reason, meepStr);
-  }
-
-  if (toRegExp(timeCheck).test(reason)) {
-    return new FailedTimeCheckError(reason, meepStr);
-  }
-
-  if (toRegExp(sigCheck).test(reason)) {
-    return new FailedSigCheckError(reason, meepStr);
-  }
-
-  return new FailedTransactionError(reason, meepStr);
-}
-
-function toRegExp(reasons: string[]): RegExp {
+export function toRegExp(reasons: string[]): RegExp {
   return new RegExp(reasons.join('|').replace(/\(/g, '\\(').replace(/\)/g, '\\)'));
 }
 
-// ////////// MISC ////////////////////////////////////////////////////////////
-export function meep(tx: any, utxos: Utxo[], script: Script): string {
-  const scriptPubkey = binToHex(scriptToLockingBytecode(script, 'p2sh20'));
-  return `meep debug --tx=${tx} --idx=0 --amt=${utxos[0].satoshis} --pkscript=${scriptPubkey}`;
-}
-
-export function scriptToAddress(script: Script, network: string, addressType: 'p2sh20' | 'p2sh32', tokenSupport: boolean): string {
-  const lockingBytecode = scriptToLockingBytecode(script, addressType);
+export function scriptToAddress(
+  script: Script, network: string, addressType: AddressType, tokenSupport: boolean,
+): string {
+  const bytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
-  const address = lockingBytecodeToCashAddress(lockingBytecode, prefix, { tokenSupport }) as string;
-  return address;
+
+  const result = lockingBytecodeToCashAddress({ bytecode, prefix, tokenSupport });
+  if (typeof result === 'string') throw new Error(result);
+
+  return result.address;
 }
 
-export function scriptToLockingBytecode(script: Script, addressType: 'p2sh20' | 'p2sh32'): Uint8Array {
+export function scriptToLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
   const scriptBytecode = scriptToBytecode(script);
   const scriptHash = (addressType === 'p2sh20') ? hash160(scriptBytecode) : hash256(scriptBytecode);
   const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };
@@ -285,7 +258,6 @@ export function utxoTokenComparator(a: Utxo, b: Utxo): number {
 */
 export function addressToLockScript(address: string): Uint8Array {
   const result = cashAddressToLockingBytecode(address);
-
   if (typeof result === 'string') throw new Error(result);
 
   return result.bytecode;
@@ -327,5 +299,74 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   if (byteLength === 0) return Uint8Array.from([0x4c, 0x00]);
   if (byteLength < 76) return Uint8Array.from([byteLength]);
   if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
-  throw Error('Pushdata too large');
+  throw new Error('Pushdata too large');
 }
+
+const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
+
+export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
+  ...{
+    txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    vout: Math.floor(Math.random() * 10),
+    satoshis: 100_000n + randomInt(),
+  },
+  ...defaults,
+});
+
+export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => ({
+  ...{
+    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    amount: 100_000n + randomInt(),
+  },
+  ...defaults,
+});
+
+export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => ({
+  ...{
+    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    amount: 0n,
+    nft: {
+      commitment: binToHex(sha256(bigIntToVmNumber(randomInt()))).slice(0, 8),
+      capability: NonFungibleTokenCapability.none,
+    },
+  },
+  ...defaults,
+});
+
+// https://stackoverflow.com/questions/40929260/find-last-index-of-element-inside-array-by-certain-condition
+export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: number, obj: T[]) => boolean): number {
+  let l = array.length;
+  while (l--) {
+    if (predicate(array[l], l, array)) return l;
+  }
+  return -1;
+}
+
+export const snakeCase = (str: string): string => (
+  str
+    && str
+      .match(
+        /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
+      )!
+      .map((s) => s.toLowerCase())
+      .join('_')
+);
+
+// JSON.stringify version that can serialize otherwise unsupported types (bigint and Uint8Array)
+export const extendedStringify = (obj: any, spaces?: number): string => JSON.stringify(
+  obj,
+  (_, v) => {
+    if (typeof v === 'bigint') {
+      return `${v.toString()}`;
+    }
+    if (v instanceof Uint8Array) {
+      return `${binToHex(v)}`;
+    }
+    return v;
+  },
+  spaces,
+);
+
+export const zip = <T, U>(a: T[], b: U[]): [T, U][] => (
+  Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]])
+);

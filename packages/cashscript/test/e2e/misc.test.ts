@@ -1,14 +1,20 @@
-import { Contract, ElectrumNetworkProvider, Network } from '../../src/index.js';
+import { randomUtxo } from '../../src/utils.js';
+import {
+  Contract, MockNetworkProvider, ElectrumNetworkProvider, Network,
+} from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/simple_covenant.json' assert { type: "json" };
+import artifact from '../fixture/simple_covenant.json' assert { type: 'json' };
 
 describe('Simple Covenant', () => {
-  const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_MOCKNET
+    ? new MockNetworkProvider()
+    : new ElectrumNetworkProvider(Network.CHIPNET);
   let covenant: Contract;
 
   beforeAll(() => {
     covenant = new Contract(artifact, [], { provider });
     console.log(covenant.address);
+    (provider as any).addUtxo?.(covenant.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -27,6 +33,11 @@ describe('Simple Covenant', () => {
 
     it('should succeed with bip68 relative timelock', async () => {
       // given
+      // eslint-disable-next-line
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+      // eslint-disable-next-line
+      const covenant = new Contract(artifact, [], { provider });
+
       const to = covenant.address;
       const amount = 1000n;
 
@@ -36,7 +47,7 @@ describe('Simple Covenant', () => {
       const utxo1Info: any = await provider.performRequest('blockchain.utxo.get_info', utxos[1].txid, utxos[1].vout);
       const currentBlockHeight = await provider.getBlockHeight();
 
-      const age = Math.max(utxo0Info.confirmed_height, utxo1Info.confirmed_height) - currentBlockHeight;
+      const age = (Math.max(utxo0Info.confirmed_height, utxo1Info.confirmed_height) - currentBlockHeight) || 0;
 
       // when
       const tx = await covenant.functions.spend()

@@ -3,6 +3,7 @@ import {
   hexToBin,
   decodeTransaction,
   Transaction as LibauthTransaction,
+  WalletTemplate,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -22,13 +23,11 @@ import {
   Unlocker,
 } from './interfaces.js';
 import {
-  meep,
   createInputScript,
   getInputSize,
   createOpReturnOutput,
   getTxSizeWithoutInputs,
   getPreimageSize,
-  buildError,
   validateOutput,
   utxoComparator,
   calculateDust,
@@ -39,10 +38,14 @@ import SignatureTemplate from './SignatureTemplate.js';
 import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
+import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
+import { debugTemplate, DebugResult } from './debugging.js';
+import { EncodedFunctionArgument } from './Argument.js';
+import { FailedTransactionError } from './Errors.js';
 
 export class Transaction {
-  private inputs: Utxo[] = [];
-  private outputs: Output[] = [];
+  public inputs: Utxo[] = [];
+  public outputs: Output[] = [];
 
   private sequence = 0xfffffffe;
   private locktime: number;
@@ -52,10 +55,10 @@ export class Transaction {
   private tokenChange: boolean = true;
 
   constructor(
-    private contract: Contract,
+    public contract: Contract,
     private unlocker: Unlocker,
-    private abiFunction: AbiFunction,
-    private args: (Uint8Array | SignatureTemplate)[],
+    public abiFunction: AbiFunction,
+    public encodedFunctionArgs: EncodedFunctionArgument[],
     private selector?: number,
   ) {}
 
@@ -169,16 +172,42 @@ export class Transaction {
 
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = await this.build();
+
+    // Debug the transaction locally before sending so any errors are caught early
+    // Libauth debugging does not work with old-style covenants
+    if (!this.abiFunction.covenant) {
+      await this.debug();
+    }
+
     try {
       const txid = await this.contract.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
-    } catch (e: any) {
-      const reason = e.error ?? e.message;
-      throw buildError(reason, meep(tx, this.inputs, this.contract.redeemScript));
+    } catch (error: any) {
+      const reason = error.error ?? error.message ?? error;
+      throw new FailedTransactionError(reason, await this.bitauthUri());
     }
   }
 
-  private async getTxDetails(txid: string): Promise<TransactionDetails>
+  // method to debug the transaction with libauth VM, throws upon evaluation error
+  async debug(): Promise<DebugResult> {
+    if (!this.contract.artifact.debug) {
+      console.warn('No debug information found in artifact. Recompile with cashc version 0.10.0 or newer to get better debugging information.');
+    }
+
+    const template = await this.getLibauthTemplate();
+    return debugTemplate(template, this.contract.artifact);
+  }
+
+  async bitauthUri(): Promise<string> {
+    const template = await this.getLibauthTemplate();
+    return getBitauthUri(template);
+  }
+
+  async getLibauthTemplate(): Promise<WalletTemplate> {
+    return buildTemplate({ transaction: this });
+  }
+
+  private async getTxDetails(txid: string): Promise<TransactionDetails>;
   private async getTxDetails(txid: string, raw: true): Promise<string>;
 
   private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {
@@ -200,14 +229,9 @@ export class Transaction {
     throw new Error('Could not retrieve transaction details for over 10 minutes');
   }
 
-  async meep(): Promise<string> {
-    const tx = await this.build();
-    return meep(tx, this.inputs, this.contract.redeemScript);
-  }
-
   private async setInputsAndOutputs(): Promise<void> {
     if (this.outputs.length === 0) {
-      throw Error('Attempted to build a transaction without outputs');
+      throw new Error('Attempted to build a transaction without outputs');
     }
 
     // Fetched utxos are only used when no inputs are available, so only fetch in that case.
@@ -313,7 +337,7 @@ export class Transaction {
     }
 
     // Replace all SignatureTemplate with 65-length placeholder Uint8Arrays
-    const placeholderArgs = this.args.map((arg) => (
+    const placeholderArgs = this.encodedFunctionArgs.map((arg) => (
       arg instanceof SignatureTemplate ? placeholder(65) : arg
     ));
 

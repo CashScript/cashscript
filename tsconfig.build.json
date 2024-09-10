@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "target": "es2021",
     "module": "esnext",
     "declaration": true,
-    "lib": ["es2020", "dom"],
+    "lib": ["es2021", "dom"],
     "types": ["node", "jest"],
     "sourceMap": true,
     "strict": true,

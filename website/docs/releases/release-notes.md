@@ -2,6 +2,40 @@
 title: Release Notes
 ---
 
+## v0.10.0
+
+In this version we added proper debugging support for transactions and integration with the BitAuth IDE.
+
+Thanks [mainnet_pat](https://x.com/mainnet_pat) for the initiative and significant contributions!
+
+#### cashc compiler
+- :sparkles: Add `console.log()` statements for debugging.
+- :sparkles: Extend `require()` statements to allow custom error messages for debugging.
+- :hammer_and_wrench: Update artifact format to allow for new debugging features.
+- :hammer_and_wrench: Update dependencies to new major versions.
+
+#### CashScript SDK
+- :sparkles: Add support for transaction evaluation and debugging using libauth templates.
+  - `transaction.debug()` & `transaction.bitauthUri()`
+  - Output BitAuth IDE URI for debugging when transaction is rejected.
+- :sparkles: Add `MockNetworkProvider` to simulate network interaction for debugging and testing.
+  - Add `randomUtxo()`, `randomToken()` and `randomNft()` functions to generate dummy UTXOs for testing.
+- :sparkles: Add CashScript Jest utilities for automated testing.
+  * `expect(transaction).toLog(message)`
+  * `expect(transaction).toFailRequire()`
+  * `expect(transaction).toFailRequireWith(message)`
+- :bug: Fix bug with type exports.
+- :hammer_and_wrench: Update visibility of several classes.
+  - Make `artifact`, `networkProvider`, `addressType` and `encodedConstructorArgs` public on `Contract` class.
+  - Make `contract`, `abiFunction`, `encodedFunctionArgs`, `inputs` and `outputs` public on `Transaction` class.
+  - Make `networkProvider`, `inputs` and `outputs` public on `TransactionBuilder` class.
+  - Make `privateKey` public on `SignatureTemplate` class and add `getSignatureAlgorithm()` method.
+- :hammer_and_wrench: Improve some error messages.
+- :hammer_and_wrench: Add new `FailedRequireError`, `FailedTransactionEvaluationError` and `FailedTransactionError` classes.
+- :boom: **BREAKING**: Remove exported transaction error `Reason` enum + `FailedTimeCheckError` and `FailedSigCheckError` classes in favour of the new error classes.
+- :boom: **BREAKING**: Remove all deprecated references to `meep` including `meep` strings from errors and `transaction.meep()`.
+- :boom: **BREAKING**: Separate the `Argument` type into `FunctionArgument` and `ConstructorArgument` and rename `encodeArgument` to `encodeFunctionArgument`.
+
 ## v0.9.3
 
 #### cashc compiler
@@ -15,7 +49,7 @@ title: Release Notes
 - :bug: Fix off-by-one fee calculation error with transactions that have many outputs.
 - :bug: Fix bug where no error was thrown when invalid NFT commitment or token category were provided.
 - :hammer_and_wrench: Export all interfaces from CashScript's `interfaces.ts`.
-- :hammer_and_wrench: Merge duplicate code between Transaction.ts and TransactionBuilder.ts
+- :hammer_and_wrench: Merge duplicate code between Transaction.ts and TransactionBuilder.ts.
 
 ## v0.9.1
 
@@ -27,6 +61,10 @@ title: Release Notes
 #### CashScript SDK
 - :sparkles: Add new advanced `TransactionBuilder` class that allows combining UTXOs from multiple different smart contracts and P2PKH UTXOs in a single transaction.
 - :hammer_and_wrench: Deprecate all `meep` functionality. Meep has been unmaintained for years and does not support many new CashScript features. Meep functionality will be removed in a future release.
+
+---
+
+https://x.com/CashScriptBCH/status/1713928572677583023
 
 ## v0.8.2
 
@@ -71,6 +109,10 @@ This release also contains several breaking changes, please refer to the [migrat
 - :boom: **BREAKING**: Replace `contract.getRedeemScriptHex()` with `contract.bytecode`.
 - :boom: **BREAKING**: Remove `BitboxNetworkProvider`.
 - :boom: **BREAKING**: All signature templates use  `SIGHASH_ALL | SIGHASH_UTXOS` now, this new default can be overwritten in the constructor of the `SignatureTemplate`.
+
+---
+
+https://x.com/CashScriptBCH/status/1662092546372255744
 
 ## v0.7.5
 
@@ -120,7 +162,7 @@ This release also contains several breaking changes, please refer to the [migrat
 - :bug: Small fixes
 
 ---
-https://twitter.com/RoscoKalis/status/1529072055756414976
+https://x.com/RoscoKalis/status/1529072055756414976
 
 ## v0.6.5
 #### cashc compiler
@@ -148,7 +190,7 @@ https://twitter.com/RoscoKalis/status/1529072055756414976
 * :bug: The final statement in a contract now MUST be a require statement (in all branches)
 * :bug: Empty contracts and functions are now considered invalid
 * :bug: Fix bug where certain covenants could become unspendable due to incorrect bytesize calculation
-  * :boom: **BREAKING**: Covenants using `tx.bytecode` now include a placeholder `OP_NOP` that gets replaced when constructor arguments are provided in the CashScript SDK. If you're not using the CashScript SDK, refer to the [`replaceBytecodeNop()` function](https://github.com/Bitcoin-com/cashscript/blob/master/packages/utils/src/script.ts#L130) to see the steps required to do so manually.
+  * :boom: **BREAKING**: Covenants using `tx.bytecode` now include a placeholder `OP_NOP` that gets replaced when constructor arguments are provided in the CashScript SDK. If you're not using the CashScript SDK, refer to the [`replaceBytecodeNop()` function](https://github.com/CashScript/cashscript/blob/master/packages/utils/src/script.ts#L130) to see the steps required to do so manually.
 * :boom: **BREAKING**: Remove `--args` parameter from the CLI, since this is too error prone with the recent changes in mind
 * :boom: **BREAKING**: Restructure exports
 
@@ -157,7 +199,7 @@ https://twitter.com/RoscoKalis/status/1529072055756414976
 * :boom: **BREAKING**: Remove dependency on `cashc` and remove `CashCompiler` export
 
 ---
-https://twitter.com/RoscoKalis/status/1371896417443282956
+https://x.com/RoscoKalis/status/1371896417443282956
 
 ## v0.5.7
 #### cashc compiler
@@ -193,7 +235,7 @@ https://twitter.com/RoscoKalis/status/1371896417443282956
 - :bug: Improve reliability of the `ElectrumNetworkProvider` when sending multiple concurrent requests.
 
 ---
-https://twitter.com/RoscoKalis/status/1301521593399685121
+https://x.com/RoscoKalis/status/1301521593399685121
 
 ## v0.5.0
 #### CashScript SDK
@@ -211,7 +253,7 @@ CashScript used to be very tightly coupled with BITBOX. This proved to be proble
 - :hammer_and_wrench: Removed BITBOX as a dependency in favour of libauth for utility functions.
 
 ---
-https://twitter.com/RoscoKalis/status/1298645699559596033
+https://x.com/RoscoKalis/status/1298645699559596033
 
 ## v0.4.4
 #### cashc compiler
@@ -237,7 +279,7 @@ https://twitter.com/RoscoKalis/status/1298645699559596033
   - `Sig` still exists for backward compatibility, but is deprecated and will be removed in a later release.
 
 ---
-https://twitter.com/RoscoKalis/status/1267440143624884227
+https://x.com/RoscoKalis/status/1267440143624884227
 
 ## v0.4.0
 #### cashc compiler
@@ -264,14 +306,14 @@ https://twitter.com/RoscoKalis/status/1267440143624884227
 This update contains several breaking changes. See the [migration notes](/docs/releases/migration-notes#v03-to-v04) for a full migration guide.
 
 ---
-https://twitter.com/RoscoKalis/status/1264921879346917376
+https://x.com/RoscoKalis/status/1264921879346917376
 
 ## v0.3.3
 #### cashc compiler
 - :bug: Fix bug where variables could not reliably be used inside `OutputNullData` instantiation.
 
 ---
-https://twitter.com/RoscoKalis/status/1224389493769342979
+https://x.com/RoscoKalis/status/1224389493769342979
 
 ## v0.3.2
 #### cashc compiler
@@ -290,7 +332,7 @@ https://twitter.com/RoscoKalis/status/1224389493769342979
 - :purse: Add `minChange` to transaction options. If this `minChange` is not reached, the change will be added to the transaction fee instead.
 
 ---
-https://twitter.com/RoscoKalis/status/1223280232343515136
+https://x.com/RoscoKalis/status/1223280232343515136
 
 ## v0.3.1
 #### cashc compiler
@@ -305,7 +347,7 @@ https://twitter.com/RoscoKalis/status/1223280232343515136
 * :bug: Fix a bug where the size of a preimage was not accounted for in fee calculation for covenants.
 
 ---
-https://twitter.com/RoscoKalis/status/1217101473743544320
+https://x.com/RoscoKalis/status/1217101473743544320
 
 ## v0.3.0
 #### cashc compiler
@@ -326,14 +368,14 @@ https://twitter.com/RoscoKalis/status/1217101473743544320
 * :dizzy: Better fee estimation for transactions with many inputs.
 
 ---
-https://twitter.com/RoscoKalis/status/1204765863062188033
+https://x.com/RoscoKalis/status/1204765863062188033
 
 ## v0.2.3
 #### cashc compiler
 * :bug: Fix a bug where unequal bytes types (e.g. `bytes3` & `bytes8`) could not be concatenated together, as they were considered different types.
 
 ---
-https://twitter.com/RoscoKalis/status/1202220857566908416
+https://x.com/RoscoKalis/status/1202220857566908416
 
 ## v0.2.2
 #### CashScript SDK
@@ -348,7 +390,7 @@ https://twitter.com/RoscoKalis/status/1202220857566908416
   * If it is provided, the artifact is written to the file, if not, it is returned as an object.
 
 ---
-https://twitter.com/RoscoKalis/status/1192900277105389568
+https://x.com/RoscoKalis/status/1192900277105389568
 
 ## v0.2.1
 #### cashc compiler
@@ -361,7 +403,7 @@ https://twitter.com/RoscoKalis/status/1192900277105389568
 * :hammer:  Make the `hashtype` parameter in signature placeholders optional.
 
 ---
-https://twitter.com/RoscoKalis/status/1186554051720167424
+https://x.com/RoscoKalis/status/1186554051720167424
 
 ## v0.2.0
 #### cashc compiler
@@ -382,7 +424,7 @@ https://twitter.com/RoscoKalis/status/1186554051720167424
 * :arrow_up: Update `cashc` and other dependencies.
 
 ---
-https://twitter.com/RoscoKalis/status/1178843657069154305
+https://x.com/RoscoKalis/status/1178843657069154305
 
 ## v0.1.2
 #### CashScript SDK
@@ -394,7 +436,7 @@ https://twitter.com/RoscoKalis/status/1178843657069154305
 * :rotating_light: Improve Transaction testing
 
 ---
-https://twitter.com/RoscoKalis/status/1174910060691984385
+https://x.com/RoscoKalis/status/1174910060691984385
 
 ## v0.1.1
 #### CashScript SDK

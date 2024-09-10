@@ -11,7 +11,7 @@ import bip39 from 'bip39';
 
 // Generate entropy from BIP39 mnemonic phrase and initialise a root HD-wallet node
 const seed = await bip39.mnemonicToSeed('CashScript Examples');
-const rootNode = deriveHdPrivateNodeFromSeed(seed, true);
+const rootNode = deriveHdPrivateNodeFromSeed(seed, { assumeValidity: true, throwErrors: true });
 const baseDerivationPath = "m/44'/145'/0'/0";
 
 // Derive Alice's private key, public key, public key hash and address
@@ -20,4 +20,4 @@ if (typeof aliceNode === 'string') throw new Error();
 export const alicePub = secp256k1.derivePublicKeyCompressed(aliceNode.privateKey);
 export const alicePriv = aliceNode.privateKey;
 export const alicePkh = hash160(alicePub);
-export const aliceAddress = encodeCashAddress('bchtest', 'p2pkh', alicePkh);
+export const aliceAddress = encodeCashAddress({ prefix: 'bchtest', type: 'p2pkh', payload: alicePkh, throwErrors: true }).address;

@@ -72,19 +72,15 @@ The built-in UTXO selection is generally sufficient. But there are specific use 
 
 ### fromP2PKH()
 ```ts
-fromP2PKH(input: Utxo, template: SignatureTemplate): this;
-fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
+transaction.fromP2PKH(input: Utxo, template: SignatureTemplate): this;
+transaction.fromP2PKH(inputs: Utxo[], template: SignatureTemplate): this;
 ```
 
 The `fromP2PKH()` function allows you to provide a list of P2PKH UTXOs to be used in the transaction. The passed `SignatureTemplate` is used to sign these UTXOs. This function can be called any number of times, and the provided UTXOs will be added to the list of earlier added UTXOs.
 
-:::note
-If you are using meep to debug a `fromP2PKH()` transaction, meep will always use the first input for the debugging. So if you want to debug the smart contract bytecode, make sure that the first input is not a P2PKH input.
-:::
-
 #### Example
 ```ts
-import { bobAddress, bobPrivateKey } from 'somewhere';
+import { bobAddress, bobPrivateKey } from './somewhere';
 import { ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
 
 const provider = new ElectrumNetworkProvider();
@@ -165,12 +161,17 @@ The `withoutTokenChange()` function allows you to disable the change output for 
 Be sure to check that the remaining amount (sum of inputs - sum of outputs) is not too high. The difference will be burned and cannot be reclaimed.
 :::
 
+#### Example
+```ts
+.withoutTokenChange()
+```
+
 ### withAge()
 ```ts
 transaction.withAge(age: number): this
 ```
 
-The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to to use the `tx.age` CashScript functionality, and the `age` parameter passed into this function will be the value of `tx.age` inside the smart contract. For more information, refer to [BIP68][bip68].
+The `withAge()` function allows you to specify the minimum age of the transaction inputs. This is necessary if you want to use the `tx.age` CashScript functionality. The `age` parameter passed into this function will be the value of `tx.age` inside the smart contract. For more information, refer to [BIP68][bip68].
 
 #### Example
 ```ts
@@ -242,83 +243,34 @@ const txHex = await instance.functions
   .build()
 ```
 
+### debug() & bitauthUri()
+
+If you want to debug a transaction locally instead of sending it to the network, you can call the `debug()` function on the transaction. This will return intermediate values and the final result of the transaction. It will also show any logged values and `require` error messages.
+
+If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
+
+You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
+
+:::caution
+It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
+:::
+
 ## Transaction errors
-Transactions can fail for a number of reasons. Most of these are related to the execution of the smart contract (e.g. wrong parameters or a bug in the contract code). But errors can also occur because of other reasons (e.g. a fee that's too low or the same transaction already exists in the mempool). To facilitate error handling in your applications, the CashScript SDK provides an enum of different *reasons* for a failure.
 
-This `Reason` enum only includes errors that are related to smart contract execution, so other reasons have to be caught separately. Besides the `Reason` enum, there are also several error classes that can be caught and acted on:
-
-* **`FailedRequireError`**, signifies a failed require statement. This includes the following reasons:
-  * `Reason.EVAL_FALSE`
-  * `Reason.VERIFY`
-  * `Reason.EQUALVERIFY`
-  * `Reason.CHECKMULTISIGVERIFY`
-  * `Reason.CHECKSIGVERIFY`
-  * `Reason.CHECKDATASIGVERIFY`
-  * `Reason.NUMEQUALVERIFY`
-* **`FailedTimeCheckError`**, signifies a failed time check using `tx.time` or `tx.age`. This includes the following reasons:
-  * `Reason.NEGATIVE_LOCKTIME`
-  * `Reason.UNSATISFIED_LOCKTIME`
-* **`FailedSigCHeckError`**, signifies a failed signature check. This includes the following reasons:
-  * `Reason.SIG_COUNT`
-  * `Reason.PUBKEY_COUNT`
-  * `Reason.SIG_HASHTYPE`
-  * `Reason.SIG_DER`
-  * `Reason.SIG_HIGH_S`
-  * `Reason.SIG_NULLFAIL`
-  * `Reason.SIG_BADLENGTH`
-  * `Reason.SIG_NONSCHNORR`
-* **`FailedTransactionError`**, signifies a general fallback error. This includes all remaining reasons listed in the `Reason` enum as well as any other reasons unrelated to the smart contract execution.
+When sending a transaction, the CashScript SDK will throw an error if the transaction fails. If you are using an artifact compiled with `cashc@0.10.0` or later, the error will be of the type `FailedRequireError` or `FailedTransactionEvaluationError`. In case of a `FailedRequireError`, the error will refer to the corresponding `require` statement in the contract code so you know where your contract failed. If you want more information about the underlying error, you can check the `libauthErrorMessage` property of the error.
 
 ```ts
-enum Reason {
-  EVAL_FALSE = 'Script evaluated without error but finished with a false/empty top stack element',
-  VERIFY = 'Script failed an OP_VERIFY operation',
-  EQUALVERIFY = 'Script failed an OP_EQUALVERIFY operation',
-  CHECKMULTISIGVERIFY = 'Script failed an OP_CHECKMULTISIGVERIFY operation',
-  CHECKSIGVERIFY = 'Script failed an OP_CHECKSIGVERIFY operation',
-  CHECKDATASIGVERIFY = 'Script failed an OP_CHECKDATASIGVERIFY operation',
-  NUMEQUALVERIFY = 'Script failed an OP_NUMEQUALVERIFY operation',
-  SCRIPT_SIZE = 'Script is too big',
-  PUSH_SIZE = 'Push value size limit exceeded',
-  OP_COUNT = 'Operation limit exceeded',
-  STACK_SIZE = 'Stack size limit exceeded',
-  SIG_COUNT = 'Signature count negative or greater than pubkey count',
-  PUBKEY_COUNT = 'Pubkey count negative or limit exceeded',
-  INVALID_OPERAND_SIZE = 'Invalid operand size',
-  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range',
-  IMPOSSIBLE_ENCODING = 'The requested encoding is impossible to satisfy',
-  INVALID_SPLIT_RANGE = 'Invalid OP_SPLIT range',
-  INVALID_BIT_COUNT = 'Invalid number of bit set in OP_CHECKMULTISIG',
-  BAD_OPCODE = 'Opcode missing or not understood',
-  DISABLED_OPCODE = 'Attempted to use a disabled opcode',
-  INVALID_STACK_OPERATION = 'Operation not valid with the current stack size',
-  INVALID_ALTSTACK_OPERATION = 'Operation not valid with the current altstack size',
-  OP_RETURN = 'OP_RETURN was encountered',
-  UNBALANCED_CONDITIONAL = 'Invalid OP_IF construction',
-  DIV_BY_ZERO = 'Division by zero error',
-  MOD_BY_ZERO = 'Modulo by zero error',
-  INVALID_BITFIELD_SIZE = 'Bitfield of unexpected size error',
-  INVALID_BIT_RANGE = 'Bitfield\'s bit out of the expected range',
-  NEGATIVE_LOCKTIME = 'Negative locktime',
-  UNSATISFIED_LOCKTIME = 'Locktime requirement not satisfied',
-  SIG_HASHTYPE = 'Signature hash type missing or not understood',
-  SIG_DER = 'Non-canonical DER signature',
-  MINIMALDATA = 'Data push larger than necessary',
-  SIG_PUSHONLY = 'Only push operators allowed in signature scripts',
-  SIG_HIGH_S = 'Non-canonical signature: S value is unnecessarily high',
-  MINIMALIF = 'OP_IF/NOTIF argument must be minimal',
-  SIG_NULLFAIL = 'Signature must be zero for failed CHECK(MULTI)SIG operation',
-  SIG_BADLENGTH = 'Signature cannot be 65 bytes in CHECKMULTISIG',
-  SIG_NONSCHNORR = 'Only Schnorr signatures allowed in this operation',
-  DISCOURAGE_UPGRADABLE_NOPS = 'NOPx reserved for soft-fork upgrades',
-  PUBKEYTYPE = 'Public key is neither compressed or uncompressed',
-  CLEANSTACK = 'Script did not clean its stack',
-  NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
-  ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
-  MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
-  UNKNOWN = 'unknown error',
+interface FailedRequireError {
+  message: string;
+  contractName: string;
+  requireStatement: { ip: number, line: number, message: string };
+  inputIndex: number,
+  libauthErrorMessage?: string,
+  bitauthUri?: string;
 }
 ```
+
+If you are using an artifact compiled with an older version of `cashc`, the error will always be of the type `FailedTransactionError`. In this case, you can use the `reason` property of the error to determine the reason for the failure.
 
 [fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki

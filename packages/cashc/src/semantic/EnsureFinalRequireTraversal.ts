@@ -6,6 +6,7 @@ import {
   StatementNode,
   TimeOpNode,
   BranchNode,
+  ConsoleStatementNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } from '../Errors.js';
@@ -37,7 +38,8 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
 }
 
 function ensureFinalStatementIsRequire(statements: StatementNode[] = []): void {
-  const finalStatement = statements[statements.length - 1];
+  const statementsWithoutLogs = statements.filter((statement) => !(statement instanceof ConsoleStatementNode));
+  const finalStatement = statementsWithoutLogs[statements.length - 1];
 
   if (!finalStatement) return;
 
