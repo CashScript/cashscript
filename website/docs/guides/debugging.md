@@ -21,7 +21,13 @@ Currently the CashScript debugging tools only work with the [Simple Transaction 
 
 ### Error messages
 
-If a CashScript transaction is sent using any network provider and is rejected by the network (or the `MockNetworkProvider`), the transaction will be evaluated locally using libauth to provide failure reasons and debug information in addition to the failure reason communicated by the network.
+If a CashScript transaction is evaluated with `.debug()` or is sent to a network and rejected, then the transaction will be evaluated locally using libauth to provide the failure reason and debug information. Here is an example of what a CashScript error message looks like:
+
+```bash
+HodlVault.cash:23 Require statement failed at input 0 in contract HodlVault.cash at line 23.
+Failing statement: require(price >= priceTarget)
+Bithauth IDE: [link]
+```
 
 Read the error message to see which line in the CashScript contract causes the transaction validation to fail. Investigate whether the contract function invocation is the issue (on the TypeScript SDK side) or whether the issue is in the CashScript contract itself (so you'd need to update your contract and recompile the artifact). If it is not clear **why** the CashScript contract is failing on that line, then you can use the following two strategies: console logging & Bitauth IDE stack trace.
 
@@ -76,7 +82,14 @@ Because the advanced transaction builder does not yet support the advanced debug
 
 ### Failing Opcode
 
-When a transaction gets rejected by a full node, it will return a cryptic error message. Read the message carefully to investigate whether the issue is a failing script (failing OpCode) or whether a standardness rule like minimum-relay-fee is violated. If the cause is a failing OpCode, you can check the contract's Artifact to see how many appearances this OpCode has. Sometimes the OpCode only appears once or twice, indicating where the failing `require` statement is. Other times you might see 15 appearances of the OpCode leaving you to try the next strategies.
+When a transaction gets rejected by a full node, it will return a cryptic error message. An example error looks like this:
+
+```bash
+mandatory-script-verify-flag-failed (Script failed an OP_VERIFY operation) (code 16)
+```
+
+Read the message carefully to investigate whether the issue is a failing script (failing OpCode) or whether a standardness rule like minimum-relay-fee is violated. 
+If the cause is a failing OpCode, you can check the contract's Artifact to see how many appearances this OpCode has. Sometimes the OpCode only appears once or twice, indicating where the failing `require` statement is. Other times you might see 15 appearances of the OpCode leaving you to try the next strategies.
 
 ### Removing Contract Checks
 
