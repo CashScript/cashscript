@@ -60,13 +60,15 @@ The CashTokens Studio is an application for creating CashTokens and for their ma
 
 BadgerCoin is a fungible CashToken using a novel distibution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoke contract unlocks.
 
-## BCHouse
+## FundMe.cash
 
 <div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
-    <a href="https://bchouse.fly.dev/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/bchouse.svg" /></a>
+    <a href="https://fundme.cash/" target="_blank">
+        <img style={{maxHeight: '320px'}} src="/img/fundme.png" />
+    </a>
 </div>
 
-BCHouse is a brand new BCH social media site and the first CashTokens-based crowdfunding application on Bitcoin Cash. BCHouse uses CashScript for the crowdfunding smart contract to allow an unlimited number of contributions to a campaign and to enable any BCH wallet to pledge by using forwarding addresses.
+FundMe is a new BCH crowdfunding platform using WalletConnect. Fundme campaigns have revocable and refundable pledges through the use of CashTokens receipts. By using receipts, Fundme does not have a maximum limit on the number of participants in a campaign.
 
 ## Unspent Phi
 
