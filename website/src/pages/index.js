@@ -12,7 +12,7 @@ const features = [
     description: (
       <>
         The CashScript TypeScript SDK makes it easy to build smart contract transactions, both in browser or on the server.
-        By offering full type-safety, developers can be confident in the quality and reliability of their applications. 
+        By offering full type-safety, developers can be confident in the quality and reliability of their applications.
       </>
     ),
   },
@@ -20,9 +20,9 @@ const features = [
     title: 'Familiar Syntax',
     description: (
       <>
-        The CashScript syntax is based on Ethereum's smart contract language Solidity, 
-        which in turn is influenced by C++, Python, and JavaScript. This should make writing 
-        CashScript contracts feel familar even to new developers.
+        The CashScript syntax is based on Ethereum's smart contract language Solidity,
+        which in turn is influenced by C++, Python, and JavaScript. This should make writing
+        CashScript contracts feel familiar even to new developers.
       </>
     ),
   },
@@ -31,7 +31,7 @@ const features = [
     description: (
       <>
         To make it easy to get blockchain information, the CashScript SDK exports a standardized network provider to query network APIs.
-        The primary class of network providers are the electrum servers but other network providers are also supported. 
+        The primary class of network providers are the electrum servers but other network providers are also supported.
       </>
     ),
   },
@@ -41,7 +41,7 @@ const features = [
       <>
         To offer the best developer experience for debugging and automated testing easy for developers,
         CashScript has extensive debug tooling built-in.
-        This makes it possible to develop robust contract testing suites, and to debug your contracts with the Bitauth-IDE.  
+        This makes it possible to develop robust contract testing suites, and to debug your contracts with the Bitauth-IDE.
       </>
     ),
   },

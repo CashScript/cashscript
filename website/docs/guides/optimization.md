@@ -109,7 +109,7 @@ console.log(contract.opcount);
 console.log(contract.bytesize);
 ```
 
-With this workflow, you can make changes to the contract and the run the JavaScript program to 
+With this workflow, you can make changes to the contract and the run the JavaScript program to
 get an accurate measure of how the bytesize of your contract changes with different optimizations.
 
 ## To optimize or not to optimize?
@@ -120,5 +120,5 @@ In the context of optimizing contract bytecode, there's an important remark to c
 
 >We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%.
 
-It's worth considering whether optimizing the redeem script is necessary at all. If the contract is accepted by the network, and there is no glaring inefficiency in the bytecode, perhaps the best optimization is to not to obsess prematurely about things like blocksize.
+It's worth considering whether optimizing the redeem script is necessary at all. If the contract is accepted by the network, and there is no glaring inefficiency in the bytecode, perhaps the best optimization is to not to obsess prematurely about things like block size.
 

@@ -278,7 +278,7 @@ export class Transaction {
       // Compare nfts in- and outputs, check if inputs have nfts corresponding to outputs
       // Keep list of nfts in inputs without matching output
       // First check immutable nfts, then mutable & minting nfts together
-      // This is so an immutible input gets matched first and is removed from the list of unused nfts
+      // This is so an immutable input gets matched first and is removed from the list of unused nfts
       let unusedNfts = listNftsInputs;
       for (const nftInput of listNftsInputs) {
         if (nftInput.capability === 'none') {

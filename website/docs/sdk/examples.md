@@ -14,11 +14,11 @@ We will break up the development of the smart contract application in 4 manageab
 
 ### Creating the keypairs
 
-To put the `HodlVault.cash` contract to use in a TypeScript application, we have to use the CashScript SDK in combination with a BCH library such as [Libauth][libauth], [Mainnetjs][mainnetjs] or [BCHJS][bchjs]. These libraries are used to generate public/private keys for the contract participants. 
+To put the `HodlVault.cash` contract to use in a TypeScript application, we have to use the CashScript SDK in combination with a BCH library such as [Libauth][libauth], [Mainnetjs][mainnetjs] or [BCHJS][bchjs]. These libraries are used to generate public/private keys for the contract participants.
 In this example we'll use [Libauth][libauth] to generate the keys `alicePriv`, `alicePub`, `oracle` & `oraclePub`. Then we can use these keys to create the smart contract.
 
 :::caution
-These 'private keys' are public just for testing, in other contexts you want to very carefully treat private keys as `environment variables`. You would also make sure to use a secure seed phrase and not 'CashScript Examples'... 
+These 'private keys' are public just for testing, in other contexts you want to very carefully treat private keys as `environment variables`. You would also make sure to use a secure seed phrase and not 'CashScript Examples'...
 :::
 
 ```ts title="common.ts"
@@ -116,7 +116,7 @@ export class PriceOracle {
 
 ### Sending a Transaction
 
-Finnally, we can put all of this together to create a working smart contract application. We use the generated keys as a contract arguments directly or in a `SignatureTemplate` to create a transaction signature.
+Finally, we can put all of this together to create a working smart contract application. We use the generated keys as a contract arguments directly or in a `SignatureTemplate` to create a transaction signature.
 
 ```ts title="hodl_vault.ts"
 import { stringify } from '@bitauth/libauth';

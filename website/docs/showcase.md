@@ -58,7 +58,7 @@ The CashTokens Studio is an application for creating CashTokens and for their ma
     <a href="https://badgers.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/badgers.png" /></a>
 </div>
 
-BadgerCoin is a fungible CashToken using a novel distibution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoke contract unlocks.
+BadgerCoin is a fungible CashToken using a novel distribution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoke contract unlocks.
 
 ## FundMe.cash
 
@@ -76,4 +76,4 @@ FundMe is a new BCH crowdfunding platform using WalletConnect. Fundme campaigns 
     <a href="https://unspent.app/" target="_blank"><img src="/img/unspent_phi.png" /></a>
 </div>
 
-Unspent Phi allows users to convert Bitcoin Cash they have today into a series of periodic payments over a long period of time.  It's a set of simple contracts that rely on rolling timelocks and introspection rather than signatures; meaning as long as the correct recipients are paid, anyone may build and submit transactions. 
+Unspent Phi allows users to convert Bitcoin Cash they have today into a series of periodic payments over a long period of time.  It's a set of simple contracts that rely on rolling timelocks and introspection rather than signatures; meaning as long as the correct recipients are paid, anyone may build and submit transactions.

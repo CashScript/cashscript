@@ -20,7 +20,7 @@ With the CashScript playground there's a nice integrated editor to get started, 
 
 To write CashScript smart contracts locally you use a code editor. For the best developer experience, we recommend to use VS Code with the CashScript extension. This way it will automatically recognize `.cash` files and offer highlighting and autocompletion.
 
-:::note prerequisties
+:::note prerequisites
 - Basic familiarity with the command line
 - Node.js installed
 - A code editor (VS Code recommended)
@@ -149,4 +149,4 @@ const transferDetails = await contract.functions
 console.log(transferDetails);
 ```
 
-Congrats 🎉! You've successfully created a transaction spending from a Bitcoin Cash smart contract! 
+Congrats 🎉! You've successfully created a transaction spending from a Bitcoin Cash smart contract!

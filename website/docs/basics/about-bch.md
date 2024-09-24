@@ -5,7 +5,7 @@ sidebar_label: About Bitcoin Cash
 
 Bitcoin Cash (ticker BCH) is one of the biggest cryptocurrencies. Bitcoin Cash is a fork of Bitcoin started in 2017 because of differences in vision for the future of the Bitcoin project.
 
-Bitcoin Cash shares many of the same fundamentals as Bitcoin (BTC) like the *Proof-of-Work* consensus alrgorithm and the *UTXO data-model*. However regarding smart contract programmability, Bitcoin Cash has significantly diverged from Bitcoin (BTC). We will first cover the UTXO data model and then delve into the smart contract capabilities of Bitcoin Cash.
+Bitcoin Cash shares many of the same fundamentals as Bitcoin (BTC) like the *Proof-of-Work* consensus algorithm and the *UTXO data-model*. However regarding smart contract programmability, Bitcoin Cash has significantly diverged from Bitcoin (BTC). We will first cover the UTXO data model and then delve into the smart contract capabilities of Bitcoin Cash.
 
 :::info
 To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'](https://github.com/bitcoinbook/bitcoinbook). There is also a modified version for BCH specifically called ['Mastering Bitcoin Cash'](https://github.com/Bitcoin-com/mastering-bitcoin-cash).

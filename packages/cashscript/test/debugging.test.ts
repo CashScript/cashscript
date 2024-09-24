@@ -694,7 +694,7 @@ describe('Debugging tests', () => {
     });
 
     // test_multiline_non_require_error
-    it('should fail with correct error message and statament when a multiline non-require statement fails', async () => {
+    it('should fail with correct error message and statement when a multiline non-require statement fails', async () => {
       const contract = new Contract(artifact3, [], { provider });
 
       provider.addUtxo(contract.address, randomUtxo());

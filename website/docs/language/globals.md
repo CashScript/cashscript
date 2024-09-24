@@ -71,7 +71,7 @@ int tx.locktime
 Represents the `nLocktime` field of the transaction. This is similar to the [`tx.time`][tx.time] global variable but `tx.time` can only be used in `require` statements, not for variable declaration.
 
 :::tip
- The usecase for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/guides/covenants#keeping-local-state-in-nfts).
+ The use case for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/guides/covenants#keeping-local-state-in-nfts).
 :::
 
 ### tx.inputs

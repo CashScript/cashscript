@@ -52,7 +52,7 @@ export class TransactionBuilder {
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
     ) {
-      throw new Error('Either all UTXOs must have an individual unlocker speciifed, or no UTXOs must have an individual unlocker specified and a shared unlocker must be provided');
+      throw new Error('Either all UTXOs must have an individual unlocker specified, or no UTXOs must have an individual unlocker specified and a shared unlocker must be provided');
     }
 
     if (!unlocker) {

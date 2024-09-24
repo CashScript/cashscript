@@ -43,10 +43,10 @@ It is possible to create custom unlockers by implementing the `Unlocker` interfa
 
 #### Example
 ```ts
-import { contract, aliceTemplate, aliceAdress, transactionBuilder } from './somewhere.js';
+import { contract, aliceTemplate, aliceAddress, transactionBuilder } from './somewhere.js';
 
 const contractUtxos = await contract.getUtxos();
-const aliceUtxos = await provider.getUtxos(aliceAdress);
+const aliceUtxos = await provider.getUtxos(aliceAddress);
 
 transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
 transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
@@ -69,10 +69,10 @@ Adds a list of input UTXOs, either with a single shared unlocker or with individ
 
 #### Example
 ```ts
-import { contract, aliceTemplate, aliceAdress, transactionBuilder } from './somewhere.js';
+import { contract, aliceTemplate, aliceAddress, transactionBuilder } from './somewhere.js';
 
 const contractUtxos = await contract.getUtxos();
-const aliceUtxos = await provider.getUtxos(aliceAdress);
+const aliceUtxos = await provider.getUtxos(aliceAddress);
 
 // Use a single unlocker for all inputs you're adding at a time
 transactionBuilder.addInputs(contractUtxos, contract.unlock.spend());

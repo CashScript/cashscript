@@ -101,7 +101,7 @@ export const buildTemplate = async ({
       };
 
       // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
-      // this is needed for correct cross-referrences in the template
+      // this is needed for correct cross-references in the template
       template.scripts[unlockScriptName] = {
         name: unlockScriptName,
         script:
