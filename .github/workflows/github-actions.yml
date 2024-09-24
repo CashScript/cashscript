@@ -27,6 +27,6 @@ jobs:
         with:
           node-version: 20
       - run: yarn
-      - run: yarn test -- -- --coverage
+      - run: TESTS_USE_MOCKNET=true yarn test -- -- --coverage --coverageProvider=v8
       - run: yarn lint
       - run: yarn spellcheck
