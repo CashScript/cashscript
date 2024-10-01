@@ -293,7 +293,7 @@ const generateTemplateScenarioTransaction = (
       outpointIndex: input.outpointIndex,
       outpointTransactionHash: binToHex(input.outpointTransactionHash),
       sequenceNumber: input.sequenceNumber,
-      unlockingBytecode: generateTemplateScenarioBytecode(csInput, `p2pkh_placeholder_unlock_${index}`, index === slotIndex),
+      unlockingBytecode: generateTemplateScenarioBytecode(csInput, `p2pkh_placeholder_unlock_${index}`, `placeholder_key_${index}`, index === slotIndex),
     } as WalletTemplateScenarioInput;
   });
 
@@ -330,7 +330,7 @@ const generateTemplateScenarioSourceOutputs = (
 
   return csTransaction.inputs.map((input, index) => {
     return {
-      lockingBytecode: generateTemplateScenarioBytecode(input, `p2pkh_placeholder_lock_${index}`, index === slotIndex),
+      lockingBytecode: generateTemplateScenarioBytecode(input, `p2pkh_placeholder_lock_${index}`, `placeholder_key_${index}`, index === slotIndex),
       valueSatoshis: Number(input.satoshis),
       token: serialiseTokenDetails(input.token),
     };
@@ -339,7 +339,7 @@ const generateTemplateScenarioSourceOutputs = (
 
 // Used for generating the locking / unlocking bytecode for source outputs and inputs
 const generateTemplateScenarioBytecode = (
-  input: Utxo, p2pkhScriptName: string, insertSlot?: boolean,
+  input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
   if (isUtxoP2PKH(input)) {
     return {
@@ -347,7 +347,7 @@ const generateTemplateScenarioBytecode = (
       overrides: {
         keys: {
           privateKeys: {
-            placeholder_key: binToHex(input.template.privateKey),
+            [placeholderKeyName]: binToHex(input.template.privateKey),
           },
         },
       },

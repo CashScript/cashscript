@@ -1064,7 +1064,7 @@ export const fixtures: Fixture[] = [
                   'overrides': {
                     'keys': {
                       'privateKeys': {
-                        'placeholder_key': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                        'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
                       },
                     },
                   },
@@ -1087,7 +1087,7 @@ export const fixtures: Fixture[] = [
                   'overrides': {
                     'keys': {
                       'privateKeys': {
-                        'placeholder_key': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                        'placeholder_key_2': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
                       },
                     },
                   },
@@ -1114,7 +1114,7 @@ export const fixtures: Fixture[] = [
                 'overrides': {
                   'keys': {
                     'privateKeys': {
-                      'placeholder_key': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
                     },
                   },
                 },
@@ -1133,7 +1133,7 @@ export const fixtures: Fixture[] = [
                 'overrides': {
                   'keys': {
                     'privateKeys': {
-                      'placeholder_key': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      'placeholder_key_2': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
                     },
                   },
                 },
