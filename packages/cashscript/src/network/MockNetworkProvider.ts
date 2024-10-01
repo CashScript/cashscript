@@ -12,7 +12,7 @@ const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
 export default class MockNetworkProvider implements NetworkProvider {
   private utxoMap: Record<string, Utxo[]> = {};
   private transactionMap: Record<string, string> = {};
-  public network: Network = Network.CHIPNET;
+  public network: Network = Network.MOCKNET;
 
   constructor() {
     for (let i = 0; i < 3; i += 1) {
