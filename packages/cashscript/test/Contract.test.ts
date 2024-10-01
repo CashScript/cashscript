@@ -3,7 +3,9 @@ import { placeholder } from '@cashscript/utils';
 import {
   Contract,
   ElectrumNetworkProvider,
+  MockNetworkProvider,
   Network,
+  randomUtxo,
   SignatureTemplate,
 } from '../src/index.js';
 import {
@@ -107,6 +109,21 @@ describe('Contract', () => {
       const instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider });
 
       expect(await instance.getBalance()).toBe(0n);
+    });
+  });
+
+  describe('getUtxos', () => {
+    it('should return utxos for existing contract on mocknet', async () => {
+      const provider = new MockNetworkProvider();
+      const instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
+
+      provider.addUtxo(instance.address, randomUtxo());
+
+      const utxos = await instance.getUtxos();
+      const utxosFromProvider = await provider.getUtxos(instance.address);
+
+      expect(utxos).toHaveLength(1);
+      expect(utxos).toEqual(utxosFromProvider);
     });
   });
 
