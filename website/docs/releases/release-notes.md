@@ -2,6 +2,12 @@
 title: Release Notes
 ---
 
+## v0.10.1
+
+#### CashScript SDK
+- :bug: Fix bug with `MockNetworkProvider` returning the wrong `Network` type (now returns `Network.MOCKNET` / `"mocknet"`).
+- :bug: Fix bug in debug tooling where incorrect placeholder keys were used when evaluating transactions with P2PKH inputs.
+
 ## v0.10.0
 
 In this version we added proper debugging support for transactions and integration with the BitAuth IDE.
