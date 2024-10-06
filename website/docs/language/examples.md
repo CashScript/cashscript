@@ -107,4 +107,49 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
 }
 ```
 
+## AMM DEX
+
+AMM DEX contract based on [the Cauldron DEX contract](https://www.cauldron.quest/_files/ugd/ae85be_b1dc04d2b6b94ab5a200e3d8cd197aa3.pdf), you can read more details about the contract design there.
+
+Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes).
+
+```solidity
+contract DexContract(bytes20 poolOwnerPkh) {
+    function swap() {
+        // Verify it is the correct token category
+        bytes inputToken = tx.inputs[this.activeInputIndex].tokenCategory;
+        bytes outputToken = tx.outputs[this.activeInputIndex].tokenCategory;
+        require(inputToken == outputToken);
+
+        // Enforce version 2
+        // Enforcing version is to make sure that tools that
+        // use this contract stay compatible, when and if
+        // transaction format changes in the future.
+        require(tx.version == 2);
+
+        // Verify that this contract lives on on the output with the same input as this contract.
+        bytes inputBytecode = tx.inputs[this.activeInputIndex].lockingBytecode;
+        bytes outputBytecode = tx.outputs[this.activeInputIndex].lockingBytecode;
+        require(inputBytecode == outputBytecode);
+
+        // Calculate target K
+        int targetK = tx.inputs[this.activeInputIndex].value * tx.inputs[this.activeInputIndex].tokenAmount;
+
+        // Calculate fee for trade. Fee is ~0.3%
+        int tradeValue = abs(tx.inputs[this.activeInputIndex].value - tx.outputs[this.activeInputIndex].value);
+        int fee = (tradeValue * 3) / 1000;
+
+        // Get effective output K when including the fee.
+        int effectiveOutputK = (tx.outputs[this.activeInputIndex].value - fee) * tx.outputs[this.activeInputIndex].tokenAmount;
+
+        // Verify that effective K > target K
+        require(effectiveOutputK >= targetK);
+    }
+    function withdrawal(pubkey poolOwnerPk, sig poolOwnerSig) {
+        require(hash160(poolOwnerPk) == poolOwner);
+        require(checkSig(poolOwnerSig, poolOwnerPk));
+    }
+}
+```
+
 More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/guides/covenants).
