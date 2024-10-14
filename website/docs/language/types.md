@@ -1,5 +1,5 @@
 ---
-title: Types
+title: Types & Operators
 ---
 
 CashScript is a statically typed language, which means that the type of each variable needs to be specified. Types can also be implicitly or explicitly cast to other types. For a quick reference of the various casting possibilities, see [Type Casting](#type-casting).
@@ -186,3 +186,28 @@ VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number
 :::caution
 When casting bytes types to integer, you should be sure that the bytes value fits inside a 64-bit signed integer, or the script will fail.
 :::
+
+## Operators
+An overview of all supported operators and their precedence is included below. Notable is a lack of exponentiation, since these operations are not supported by the underlying Bitcoin Script.
+
+| Precedence | Description                         | Operator                 |
+| ---------- | ----------------------------------- | ------------------------ |
+| 1          | Parentheses                         | `(<expression>)`         |
+| 2          | Type cast                           | `<type>(<expression>)`   |
+| 3          | Object instantiation                | `new <class>(<args...>)` |
+| 4          | Function call                       | `<function>(<args...>)`  |
+| 5          | Tuple index                         | `<tuple>[<index>]`       |
+| 6          | Member access                       | `<object>.<member>`      |
+| 7          | Unary minus                         | `-`                      |
+| 7          | Logical NOT                         | `!`                      |
+| 8          | Multiplication, division and modulo | `*`, `/`, `%`            |
+| 9          | Addition and subtraction            | `+`, `-`                 |
+| 9          | String / bytes concatenation        | `+`                      |
+| 10         | Numeric comparison                  | `<`, `>`, `<=`, `>=`     |
+| 11         | Equality and inequality             | `==`, `!=`               |
+| 12         | Bitwise AND                         | `&`                      |
+| 13         | Bitwise XOR                         | `^`                      |
+| 14         | Bitwise OR                          | \|                       |
+| 15         | Logical AND                         | `&&`                     |
+| 16         | Logical OR                          | \|\|                     |
+| 17         | Assignment                          | `=`                      |
