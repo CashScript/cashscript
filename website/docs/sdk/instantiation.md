@@ -192,7 +192,11 @@ transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
 
 ## SignatureTemplate
 ```ts
-new SignatureTemplate(signer: Keypair | Uint8Array | string, hashtype?: HashType)
+new SignatureTemplate(
+  signer: Keypair | Uint8Array | string,
+  hashtype?: HashType,
+  signatureAlgorithm?: SignatureAlgorithm
+)
 ```
 
 You may notice the `SignatureTemplate` object in the [example](#example-8) above. When a contract function has a `sig` parameter, it requires a cryptographic signature over the spending transaction. But to generate this signature, the transaction needs to be built first, which is not yet the case when a contract function is first called.
@@ -213,12 +217,14 @@ export enum HashType {
 
 :::note
 If you're using "old-style" covenants (using CashScript v0.6.0 or lower), you need to configure `HashType.SIGHASH_ALL` as the `hashtype` parameter for the SignatureTemplate.
+
+The default `signatureAlgorithm` is `SignatureAlgorithm.SCHNORR` because this is the most modern option and it is slightly more compact in terms of bytes.
 :::
 
 #### Example
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
-const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS );
+const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS, SignatureAlgorithm.SCHNORR);
 ```
 
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
