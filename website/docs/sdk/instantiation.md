@@ -9,7 +9,7 @@ CashScript offers a TypeScript SDK, which can also be used easily in vanilla Jav
 Because of the separation of the compiler and the SDK, CashScript contracts can be integrated into other languages in the future.
 :::
 
-## Contract class
+## Creating a Contract
 The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance. They can also be used to interact with the contract by calling the contract's functions.
 
 ### Constructor
@@ -53,6 +53,8 @@ const contractArguments = [alicePkh]
 const options = { provider, addressType}
 const contract = new Contract(P2PKH, contractArguments, options);
 ```
+
+## Contract Properties
 
 ### address
 ```ts
@@ -117,6 +119,8 @@ Returns the contract's redeem script encoded as a hex string.
 ```ts
 console.log(contract.bytecode)
 ```
+
+## Contract Methods
 
 ### getBalance()
 ```ts
@@ -189,44 +193,3 @@ const contractUtxos = await contract.getUtxos();
 
 transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
 ```
-
-## SignatureTemplate
-```ts
-new SignatureTemplate(
-  signer: Keypair | Uint8Array | string,
-  hashtype?: HashType,
-  signatureAlgorithm?: SignatureAlgorithm
-)
-```
-
-You may notice the `SignatureTemplate` object in the [example](#example-8) above. When a contract function has a `sig` parameter, it requires a cryptographic signature over the spending transaction. But to generate this signature, the transaction needs to be built first, which is not yet the case when a contract function is first called.
-
-So in the place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
-
-The default `hashtype` is `HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases.
-
-```ts
-export enum HashType {
-  SIGHASH_ALL = 0x01,
-  SIGHASH_NONE = 0x02,
-  SIGHASH_SINGLE = 0x03,
-  SIGHASH_UTXOS = 0x20,
-  SIGHASH_ANYONECANPAY = 0x80,
-}
-```
-
-:::note
-If you're using "old-style" covenants (using CashScript v0.6.0 or lower), you need to configure `HashType.SIGHASH_ALL` as the `hashtype` parameter for the SignatureTemplate.
-
-The default `signatureAlgorithm` is `SignatureAlgorithm.SCHNORR` because this is the most modern option and it is slightly more compact in terms of bytes.
-:::
-
-#### Example
-```ts
-const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
-const sig = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS, SignatureAlgorithm.SCHNORR);
-```
-
-[wif]: https://en.bitcoin.it/wiki/Wallet_import_format
-[ecpair]: https://bchjs.fullstack.cash/#api-ECPair
-[privatekey]: https://github.com/bitpay/bitcore/blob/master/packages/bitcore-lib-cash/docs/privatekey.md
