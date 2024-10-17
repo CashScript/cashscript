@@ -2,31 +2,7 @@
 title: Examples
 ---
 
-An extensive collection of examples is available in the [GitHub repository](https://github.com/CashScript/cashscript/tree/master/examples). Below we discuss a few of these examples in more details and go through their functionality. These examples focus mainly on the CashScript syntax, while the [Examples page](/docs/sdk/examples) in the sdk section focuses more on the use of the SDK.
-
-## Transfer With Timeout
-One interesting use case of Bitcoin Cash is using it for *paper tips*. With paper tips, you send a small amount of money to an address, and print the corresponding private key on a piece of paper. Then you can hand out these pieces of paper as a tip or gift to people in person. In practice, however, people might not know what to do with these gifts or they might lose or forget about it.
-
-As an alternative, a smart contract can be used for these kinds of gifts. This smart contract allows the recipient to claim their gift at any time, but if they don't claim it in time, the sender can reclaim it.
-
-```solidity
-pragma cashscript ^0.10.0;
-
-contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
-    // Require recipient's signature to match
-    function transfer(sig recipientSig) {
-        require(checkSig(recipientSig, recipient));
-    }
-
-    // Require timeout time to be reached and sender's signature to match
-    function timeout(sig senderSig) {
-        require(checkSig(senderSig, sender));
-        require(tx.time >= timeout);
-    }
-}
-```
-
-For an example of how to put this contract to use in a JavaScript application, see the [SDK examples page](/docs/sdk/examples#transfer-with-timeout)
+An extensive collection of examples is available in the [GitHub repository](https://github.com/CashScript/cashscript/tree/master/examples). Below we discuss a few of these examples in more details and go through their functionality. This example page focuses on the CashScript syntax, while the [SDK Examples page](/docs/sdk/examples) in the SDK section focuses on use of the SDK to build an application.
 
 ## HodlVault
 For better or worse, HODLing and waiting for price increases is one of the main things people want to do with their cryptocurrency. But it can be difficult to hold on to your cryptocurrency when the price is going down. So to prevent weak hands from getting the best of you, it's better to store your stash in a smart contract that enforces HODLing for you.
@@ -66,6 +42,9 @@ contract HodlVault(pubkey ownerPk, pubkey oraclePk, int minBlock, int priceTarge
 }
 ```
 
+For how to put the HodlVault contract to use in a Typescript application, see the [SDK examples page](/docs/sdk/examples#hodlvault).
+
+
 ## Licho's Mecenas
 Donations are a great way to support the projects you love, and periodic donations can incentivise continuous improvement to the product. But platforms like Patreon generally take fees of 10%+ and don't accept cryptocurrencies. Instead you can create a peer-to-peer smart contract that allows a recipient to withdraw a specific amount every month.
 
@@ -74,6 +53,8 @@ The contract works by checking that a UTXO is at least 30 days old, after which 
 Due to the nature of covenants, we have to be very specific about the outputs (amounts and destinations) of the transaction. This also means that we have to account for the special case where the remaining contract balance is lower than the `pledge` amount, meaning no remainder should be sent back. Finally, we have to account for a small fee that has to be taken from the contract's balance to pay the miners.
 
 ```solidity
+pragma cashscript ^0.10.0;
+
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
     function receive() {
         require(tx.age >= period);
@@ -103,6 +84,53 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
     function reclaim(pubkey pk, sig s) {
         require(hash160(pk) == funder);
         require(checkSig(s, pk));
+    }
+}
+```
+
+## AMM DEX
+
+AMM DEX contract based on [the Cauldron DEX contract](https://www.cauldron.quest/_files/ugd/ae85be_b1dc04d2b6b94ab5a200e3d8cd197aa3.pdf), you can read more details about the contract design there.
+
+Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes).
+
+```solidity
+pragma cashscript ^0.10.0;
+
+contract DexContract(bytes20 poolOwnerPkh) {
+    function swap() {
+        // Verify it is the correct token category
+        bytes inputToken = tx.inputs[this.activeInputIndex].tokenCategory;
+        bytes outputToken = tx.outputs[this.activeInputIndex].tokenCategory;
+        require(inputToken == outputToken);
+
+        // Enforce version 2
+        // Enforcing version is to make sure that tools that
+        // use this contract stay compatible, when and if
+        // transaction format changes in the future.
+        require(tx.version == 2);
+
+        // Verify that this contract lives on on the output with the same input as this contract.
+        bytes inputBytecode = tx.inputs[this.activeInputIndex].lockingBytecode;
+        bytes outputBytecode = tx.outputs[this.activeInputIndex].lockingBytecode;
+        require(inputBytecode == outputBytecode);
+
+        // Calculate target K
+        int targetK = tx.inputs[this.activeInputIndex].value * tx.inputs[this.activeInputIndex].tokenAmount;
+
+        // Calculate fee for trade. Fee is ~0.3%
+        int tradeValue = abs(tx.inputs[this.activeInputIndex].value - tx.outputs[this.activeInputIndex].value);
+        int fee = (tradeValue * 3) / 1000;
+
+        // Get effective output K when including the fee.
+        int effectiveOutputK = (tx.outputs[this.activeInputIndex].value - fee) * tx.outputs[this.activeInputIndex].tokenAmount;
+
+        // Verify that effective K > target K
+        require(effectiveOutputK >= targetK);
+    }
+    function withdrawal(pubkey poolOwnerPk, sig poolOwnerSig) {
+        require(hash160(poolOwnerPk) == poolOwner);
+        require(checkSig(poolOwnerSig, poolOwnerPk));
     }
 }
 ```

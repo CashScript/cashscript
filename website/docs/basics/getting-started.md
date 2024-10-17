@@ -6,15 +6,22 @@ title: Getting Started
 
 To get started with writing CashScript smart contracts quickly, it is recommended to try out the [CashScript Playground](https://playground.cashscript.org/), a web application which lets you easily write and create contracts!
 
-Here you will learn what a CashScript contract looks like through the `TransferWithTimeout` example contract. Then you can compile the contract and provide the contract arguments to create a smart contract address. To actually create the smart contract itself, you fund the address so that it has a UTXO on the contract address. After setting up the smart contract, you can try spending from the smart contract by invoking a contract function!
+The Playground supports 'Mocknet', allowing you to create virtual UTXOs for development without having to get Testnet coins and set up a Testnet wallet.
 
 :::tip
-The [CashScript Playground](https://playground.cashscript.org/) is a great way to get started without doing any JavaScript coding to set up wallets, fetch balances and invoke contract functions. This way you can focus on learning one thing at a time!
+The [CashScript Playground](https://playground.cashscript.org/) is a great way to get started without doing any JavaScript/TypeScript coding to set up wallets, fetch balances and invoke contract functions. This way you can focus on learning just CashScript!
 :::
 
-## Creating a CashScript Smart Contract
+Here are the 5 simple steps for creating your first smart contract transaction with the Playground:
+1. Compile a contract, for example the default `TransferWithTimeout` contract.
+2. Create a new contract in the 'New Contract' tab by providing the contract arguments.
+3. Add UTXOs to the smart contract address and the wallets used for testing. 
+4. Next, go to the TansactionBuilder select the contract and the function to invoke
+5. Finally, specify the in- and outputs for the transaction and click 'Send'!
 
-With the CashScript playground there's a nice integrated editor to get started, as well as an integrated compiler to change your CashScript contract into a Contract `Artifact` behind the scenes. Now, to get started we will have to set up a CashScript editor — outside of the Playground — and learn how to work with the `cashc` compiler to create CashScript contract artifacts.
+## Creating a CashScript Contract
+
+To get started coding locally we will use a code editor and learn how to work with the `cashc` compiler to create CashScript contract artifacts.
 
 ### Prerequisites
 
@@ -37,7 +44,7 @@ The command line CashScript compiler `cashc` can be installed from NPM.
 npm install -g cashc
 ```
 
-### Writing your first smart contract
+### Writing your first contract
 
 Open your code editor to start writing your first CashScript smart contract.
 We can start from a basic `TransferWithTimeout` smart contract. Create a new file `TransferWithTimeout.cash`.
@@ -65,7 +72,7 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 There are some other examples available on the [Examples page](/docs/language/examples) that can be used to take inspiration from. Further examples of the TypeScript and JavaScript integration can be found on [GitHub](https://github.com/CashScript/cashscript/tree/master/examples).
 :::
 
-### Compiling your smart contract
+### Compiling your contract
 
 The next step after writing your smart contract is using the command line compiler to create a contract artifact, so that it can be imported into the CashScript SDK.
 
@@ -81,7 +88,7 @@ OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_ROT OP_CHECKSIG OP_NIP OP_NI
 
 ## Creating a CashScript Transaction
 
-After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated in the previous steps.
+After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated earlier.
 
 :::info
 The CashScript SDK is written in TypeScript meaning that you can either use TypeScript or vanilla JavaScript to use the SDK.

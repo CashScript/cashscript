@@ -5,10 +5,10 @@ title: Contract Structure
 Contracts in CashScript are somewhat similar to classes in object-oriented languages. A notable difference is that there is no mutable state. So once a contract is instantiated with certain parameters, these values cannot change. Instead, functions can be called on the contract that act on the contract's values to spend money from the contract. The extension of CashScript source code files is `.cash`, and the structure of these source files is explained below.
 
 ## Pragma
-A contract file may start with a pragma directive to indicate the CashScript version the contract was written for. This ensures that a contract is not compiled with an unsupported compiler version, which could cause unintended side effects.
+A contract file may start with a pragma directive to indicate the CashScript version the contract was written for. This ensures that a contract is not compiled with an unsupported compiler version. The pragma directive follows regular [semantic versioning (SemVer)](https://semver.npmjs.com/) rules.
 
-:::note
-The pragma directive follows regular [semantic versioning rules](https://semver.npmjs.com/).
+:::caution
+Contract authors should be careful when allowing a range of versions to check that no breaking changes to the compiler were introduced in these versions which would result in different bytecode and smart contract address.
 :::
 
 #### Example
@@ -82,7 +82,7 @@ contract P2PKH(bytes20 pkh) {
 ### Variable declaration
 Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on — unless specifying the `constant` keyword. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
 
-:::caution
+:::note
 CashScript disallows variable shadowing and unused variables.
 :::
 

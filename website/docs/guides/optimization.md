@@ -5,7 +5,26 @@ sidebar_label: Optimization
 
 CashScript contracts are transpiled from a solidity syntax to [BCH Script](https://reference.cash/protocol/blockchain/script) by the `cashc` compiler. BCH Script is a lower level language (a list of stack-based operations) where each available operation is mapped to a single byte.
 
-Depending on the complexity of the contract or system design, it may sometimes be useful to optimize the Bitcoin Script by tweaking the contract in CashScript before it is compiled. Below are some ideas to get started.
+Depending on the complexity of the contract or system design, it may be useful to optimize the Bitcoin Script by tweaking the contract in CashScript before it is compiled because the minimum fees on the Bitcoin Cash network are based on the bytesize of a transaction (including your contract).
+
+## Example Workflow
+
+When optimizing your contract, you will need to compare the contract size to see if the changes have a positive impact.
+With the compiler CLI, you can easily check the opcode count and bytesize directly from the generated contract artifact.
+
+```bash
+cashc ./contract.cash --opcount --size
+```
+
+The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they will always be an underestimate, as the contract hasn't been initialized with contract arguments.
+
+:::note
+The compiler opcount and bytesize outputs are still helpful to compare the effect of changes to the smart contract code on the compiled output, given that the contract constructor arguments stay the same.
+:::
+
+:::tip
+To get the exact contract opcount and bytesize including constructor parameters, initialise the contract with the TypScript SDK and check the values of `contract.opcount` and `contract.bytesize`.
+:::
 
 ## Optimization Tips & Tricks
 
@@ -73,52 +92,25 @@ The concept of having NFT functions was first introduced by the [Jedex demo](htt
 By using function NFTs you can use a modular contract design where the contract functions are offloaded to different UTXOs, each identifiable by the main contract by using the same tokenId.
 :::
 
-## Example Workflow
+## Hand-optimizing Bytecode
 
-When trying to optimize your contract, you will need to compare the contract size to see if the changes have a positive impact.
-With the compiler CLI, you can easily check the opcode count and bytesize directly from the contract (without creating a new artifact).
-It's important to know the minimum fees on the Bitcoin Cash network are based on the bytesize of a transaction (including your contract).
-
-```bash
-cashc ./contract.cash --opcount --size
-```
-
-:::caution
-The size output of the `cashc` compiler will always be an underestimate, as the contract hasn't been initialized with contract arguments.
-:::
-
-The `cashc` compiler only knows the opcount and bytesize of a contract before it is initialised with function arguments. Because of this, to get an accurate view of a contracts size, initialise the contract instance first, then get the size from there. This means you will have to re-compile the artifact before checking the contract size through the TypeScript SDK.
-
-```javascript
-import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
-import { alicePub, bobPriv, bobPub } from './keys.js';
-import { compileFile } from 'cashc';
-
-// compile contract code on the fly
-const artifact = compileFile(new URL('contract.cash', import.meta.url));
-
-// Initialise a network provider for network operations
-const provider = new ElectrumNetworkProvider('chipnet');
-
-// Instantiate a new TransferWithTimeout contract
-const contractArguments = [alicePub, bobPub, 100000n]
-const options = { provider }
-const contract = new Contract(artifact, contractArguments, options);
-
-console.log(contract.opcount);
-console.log(contract.bytesize);
-```
-
-With this workflow, you can make changes to the contract and the run the JavaScript program to
-get an accurate measure of how the bytesize of your contract changes with different optimizations.
-
-## To optimize or not to optimize?
-
-In the context of optimizing contract bytecode, there's an important remark to consider:
-
-### OP_NOP
+It's worth considering whether hand-optimizing the contract is necessary at all. If the contract works and there is no glaring inefficiency in the bytecode, perhaps the best optimization is to not to obsess prematurely about things like transaction size.
 
 >We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%.
 
-It's worth considering whether optimizing the redeem script is necessary at all. If the contract is accepted by the network, and there is no glaring inefficiency in the bytecode, perhaps the best optimization is to not to obsess prematurely about things like block size.
+### Overwriting the Artifact
 
+To manually change the contract bytecode, you need to overwrite the `bytecode` key of your contract artifact.
+
+```typescript
+interface Artifact {
+  bytecode: string // Compiled Script without constructor parameters added (in ASM format)
+}
+```
+
+This way you can still use the CashScript TypeScript SDK while using a hand-optimized contract.
+
+:::caution
+If you manually overwite the `bytecode` in the artifact, this will make the auto generated 2-way-mapping to become obsolete.
+This result of this is that the dubugging functionality will no longer work for the contract.
+:::
