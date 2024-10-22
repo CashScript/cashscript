@@ -111,6 +111,6 @@ interface Artifact {
 This way you can still use the CashScript TypeScript SDK while using a hand-optimized contract.
 
 :::caution
-If you manually overwite the `bytecode` in the artifact, this will make the auto generated 2-way-mapping to become obsolete.
-This result of this is that the dubugging functionality will no longer work for the contract.
+If you manually overwrite the `bytecode` in the artifact, this will make the auto generated 2-way-mapping to become obsolete.
+This result of this is that the debugging functionality will no longer work for the contract.
 :::

@@ -50,7 +50,7 @@ async function transactionWalletConnect(){
   decodedTransaction.inputs[1].unlockingBytecode = Uint8Array.from([]);
 
   // construct list SourceOutputs, see source code
-  const listSourceOutputs = constructSourceOuputs(decodedTransaction, utxoInfo, contract)
+  const listSourceOutputs = constructSourceOutputs(decodedTransaction, utxoInfo, contract)
 
   // wcTransactionObj to pass to signTransaction endpoint
   const wcTransactionObj = {

@@ -15,8 +15,8 @@ The [CashScript Playground](https://playground.cashscript.org/) is a great way t
 Here are the 5 simple steps for creating your first smart contract transaction with the Playground:
 1. Compile a contract, for example the default `TransferWithTimeout` contract.
 2. Create a new contract in the 'New Contract' tab by providing the contract arguments.
-3. Add UTXOs to the smart contract address and the wallets used for testing. 
-4. Next, go to the TansactionBuilder select the contract and the function to invoke
+3. Add UTXOs to the smart contract address and the wallets used for testing.
+4. Next, go to the TransactionBuilder select the contract and the function to invoke
 5. Finally, specify the in- and outputs for the transaction and click 'Send'!
 
 ## Creating a CashScript Contract
