@@ -8,7 +8,7 @@ import {
   Network,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/bigint.json' assert { type: 'json' };
+import artifact from '../fixture/bigint.json' with { type: 'json' };
 import { randomUtxo } from '../../src/utils.js';
 
 describe('BigInt', () => {

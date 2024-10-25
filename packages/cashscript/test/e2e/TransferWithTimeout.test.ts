@@ -10,7 +10,7 @@ import {
   alicePriv, alicePub, bobPriv, bobPub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/transfer_with_timeout.json' assert { type: 'json' };
+import artifact from '../fixture/transfer_with_timeout.json' with { type: 'json' };
 import { randomUtxo } from '../../src/utils.js';
 
 describe('TransferWithTimeout', () => {

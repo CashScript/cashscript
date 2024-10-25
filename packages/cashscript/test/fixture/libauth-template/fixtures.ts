@@ -1,8 +1,8 @@
 import { Contract, HashType, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, Transaction, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
-import TransferWithTimeout from '../transfer_with_timeout.json' assert { type: 'json' };
-import Mecenas from '../mecenas.json' assert { type: 'json' };
-import P2PKH from '../p2pkh.json' assert { type: 'json' };
-import HoldVault from '../hodl_vault.json' assert { type: 'json' };
+import TransferWithTimeout from '../transfer_with_timeout.json' with { type: 'json' };
+import Mecenas from '../mecenas.json' with { type: 'json' };
+import P2PKH from '../p2pkh.json' with { type: 'json' };
+import HoldVault from '../hodl_vault.json' with { type: 'json' };
 import { aliceAddress, alicePkh, alicePriv, alicePub, bobPkh, bobPriv, bobPub, oracle, oraclePub } from '../vars.js';
 import { WalletTemplate, hexToBin } from '@bitauth/libauth';
 

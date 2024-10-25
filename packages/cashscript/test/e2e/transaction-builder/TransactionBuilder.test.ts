@@ -11,8 +11,8 @@ import {
 } from '../../fixture/vars.js';
 import { Network, Utxo } from '../../../src/interfaces.js';
 import { utxoComparator, calculateDust } from '../../../src/utils.js';
-import p2pkhArtifact from '../../fixture/p2pkh.json' assert { type: 'json' };
-import twtArtifact from '../../fixture/transfer_with_timeout.json' assert { type: 'json' };
+import p2pkhArtifact from '../../fixture/p2pkh.json' with { type: 'json' };
+import twtArtifact from '../../fixture/transfer_with_timeout.json' with { type: 'json' };
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
 import { getTxOutputs } from '../../test-util.js';
 

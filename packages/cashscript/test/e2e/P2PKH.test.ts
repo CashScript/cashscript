@@ -16,7 +16,7 @@ import { Network, Utxo } from '../../src/interfaces.js';
 import {
   createOpReturnOutput, randomUtxo, utxoComparator,
 } from '../../src/utils.js';
-import artifact from '../fixture/p2pkh.json' assert { type: 'json' };
+import artifact from '../fixture/p2pkh.json' with { type: 'json' };
 
 describe('P2PKH-no-tokens', () => {
   let p2pkhInstance: Contract;
