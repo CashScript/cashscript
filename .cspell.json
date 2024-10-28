@@ -261,6 +261,5 @@
         "**/grammar/**",
         // Do not spellcheck vendor code
         "**/node_modules/**",
-        "**/bitcoin-rpc-promise-retry.d.ts"
     ]
 }
