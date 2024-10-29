@@ -200,12 +200,15 @@
         "bitcoincashjs",
         "branchup",
         "bchguru",
+        "bchn",
         "cashcompiler",
         "cashninjas",
         "cherian",
         "CSCriptNum",
         "docu",
         "fundme",
+        "getblockcount",
+        "getrawtransaction",
         "hardhat",
         "hodlvault",
         "infima",
@@ -219,6 +222,7 @@
         "pako",
         "popd",
         "pushd",
+        "sendrawtransaction",
         "setfiletype",
         "tada",
         "tapswap",
@@ -235,7 +239,8 @@
         "withminchange",
         "withopreturn",
         "withtime",
-        "XBVJRKV"
+        "XBVJRKV",
+        "zwets"
     ],
     "ignorePaths": [
         // Do not spellcheck NPM files
