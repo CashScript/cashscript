@@ -31,7 +31,7 @@ Using the CashScript SDK, you can import contract artifact files, create new ins
 ```ts
 ...
   // Import the P2PKH artifact
-  import P2PKH from './p2pkh-artifact.json' assert { type: 'json' };
+  import P2PKH from './p2pkh-artifact.json' with { type: 'json' };
 
   // Instantiate a network provider for CashScript's network operations
   const provider = new ElectrumNetworkProvider('mainnet');

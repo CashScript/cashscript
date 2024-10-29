@@ -3,7 +3,7 @@ import {
   Contract, ElectrumNetworkProvider, FailedRequireError, MockNetworkProvider,
 } from '../../src/index.js';
 import { Network, Utxo } from '../../src/interfaces.js';
-import artifact from '../fixture/token_category_comparison.json' assert { type: 'json' };
+import artifact from '../fixture/token_category_comparison.json' with { type: 'json' };
 
 describe('TokenCategoryCheck', () => {
   let tokenCategoryCheckInstance: Contract;

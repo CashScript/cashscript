@@ -11,11 +11,11 @@ import {
 import {
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
-import p2pkhArtifact from './fixture/p2pkh.json' assert { type: 'json' };
-import twtArtifact from './fixture/transfer_with_timeout.json' assert { type: 'json' };
-import hodlVaultArtifact from './fixture/hodl_vault.json' assert { type: 'json' };
-import mecenasArtifact from './fixture/mecenas.json' assert { type: 'json' };
-import boundedBytesArtifact from './fixture/bounded_bytes.json' assert { type: 'json' };
+import p2pkhArtifact from './fixture/p2pkh.json' with { type: 'json' };
+import twtArtifact from './fixture/transfer_with_timeout.json' with { type: 'json' };
+import hodlVaultArtifact from './fixture/hodl_vault.json' with { type: 'json' };
+import mecenasArtifact from './fixture/mecenas.json' with { type: 'json' };
+import boundedBytesArtifact from './fixture/bounded_bytes.json' with { type: 'json' };
 
 describe('Contract', () => {
   describe('new', () => {
