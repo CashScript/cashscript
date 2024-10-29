@@ -46,7 +46,6 @@
     "@bitauth/libauth": "^3.0.0",
     "@cashscript/utils": "^0.10.1",
     "@mr-zwets/bchn-api-wrapper": "^1.0.1",
-    "bip68": "^1.0.4",
     "delay": "^5.0.0",
     "electrum-cash": "^2.0.10",
     "fast-deep-equal": "^3.1.3",

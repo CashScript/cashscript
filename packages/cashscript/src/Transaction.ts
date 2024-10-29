@@ -1,4 +1,3 @@
-import bip68 from 'bip68';
 import {
   hexToBin,
   decodeTransaction,
@@ -8,6 +7,7 @@ import {
 import delay from 'delay';
 import {
   AbiFunction,
+  encodeBip68,
   placeholder,
   scriptToBytecode,
 } from '@cashscript/utils';
@@ -114,7 +114,7 @@ export class Transaction {
   }
 
   withAge(age: number): this {
-    this.sequence = bip68.encode({ blocks: age });
+    this.sequence = encodeBip68({ blocks: age });
     return this;
   }
 

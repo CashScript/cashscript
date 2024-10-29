@@ -137,7 +137,7 @@ This contract applies similar techniques as the previous two examples to verify 
 
 ## Local State
 
-Smart contracts which persist for multiple transactions might want to keep data for later use. This is called local state. With the CashTokens upgrade, local state can be kept in the commitment field of the NFT of the smart contract UTXO. Because the state is not kept in the script of the smart contract itself, the address can remain the same. 
+Smart contracts which persist for multiple transactions might want to keep data for later use. This is called local state. With the CashTokens upgrade, local state can be kept in the commitment field of the NFT of the smart contract UTXO. Because the state is not kept in the script of the smart contract itself, the address can remain the same.
 
 :::info
 Covenants can also use 'simulated state', where state is kept in the contract script and the contract enforces a new P2SH locking bytecode of the contract with a different state update. This method causes the contract address to change with each state update.
@@ -211,7 +211,7 @@ We use `tx.locktime` to introspect the value of the timelock, and to write the v
 
 ### Issuing NFTs as receipts
 
-A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. It would be incredibly hard continuously updating a data structure to keep track of which address contributed how much in the local state of the contract. A much better solution is to issue receipts each time funds are added to the pool! This way the contract does not have a 'global view' of who owns what at any time, but it can validate the receipts when invoking a withdrawal. 
+A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. It would be incredibly hard continuously updating a data structure to keep track of which address contributed how much in the local state of the contract. A much better solution is to issue receipts each time funds are added to the pool! This way the contract does not have a 'global view' of who owns what at any time, but it can validate the receipts when invoking a withdrawal.
 
 Technically this happens by minting a new NFT, with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool, and sending this to the address of the contributor.
 
@@ -320,4 +320,3 @@ We have discussed the main uses for covenants as they exist on Bitcoin Cash toda
 Keeping local state in NFTs and issuing NFTs as receipts are two strategies which can be used to create much more sophisticated decentralized applications such as the AMM-style DEX named [Jedex](https://blog.bitjson.com/jedex-decentralized-exchanges-on-bitcoin-cash/).
 
 [bitcoin-covenants]: https://fc16.ifca.ai/bitcoin/papers/MES16.pdf
-[bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
