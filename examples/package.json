@@ -13,7 +13,6 @@
   "dependencies": {
     "@bitauth/libauth": "^3.0.0",
     "@types/node": "^12.7.8",
-    "bip39": "^3.0.4",
     "cashc": "^0.10.1",
     "cashscript": "^0.10.1",
     "eslint": "^8.56.0",

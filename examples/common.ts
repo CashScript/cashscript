@@ -4,12 +4,12 @@ import {
   deriveHdPath,
   secp256k1,
   encodeCashAddress,
+  deriveSeedFromBip39Mnemonic,
 } from '@bitauth/libauth';
-import bip39 from 'bip39';
 import { PriceOracle } from './PriceOracle.js';
 
 // Generate entropy from BIP39 mnemonic phrase and initialise a root HD-wallet node
-const seed = await bip39.mnemonicToSeed('CashScript Examples');
+const seed = deriveSeedFromBip39Mnemonic('CashScript Examples');
 const rootNode = deriveHdPrivateNodeFromSeed(seed, { assumeValidity: true, throwErrors: true });
 const baseDerivationPath = "m/44'/145'/0'/0";
 

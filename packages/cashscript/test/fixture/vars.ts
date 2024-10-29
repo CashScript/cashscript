@@ -1,18 +1,17 @@
 import {
   deriveHdPath,
   deriveHdPrivateNodeFromSeed,
+  deriveSeedFromBip39Mnemonic,
   encodeCashAddress,
   secp256k1,
 } from '@bitauth/libauth';
 import { hash160 } from '@cashscript/utils';
-import bip39 from 'bip39';
 import { PriceOracle } from './PriceOracle.js';
 import { Network } from '../../src/interfaces.js';
 
 export const network = Network.CHIPNET;
 
-const seed = await bip39.mnemonicToSeed('CashScript Tests');
-
+const seed = deriveSeedFromBip39Mnemonic('CashScript Tests');
 const rootNode = deriveHdPrivateNodeFromSeed(seed, { assumeValidity: true, throwErrors: true });
 const baseDerivationPath = "m/44'/145'/0'/0";
 
