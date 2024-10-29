@@ -89,8 +89,7 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000n;
-      const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort(utxoComparator).reverse();
+      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
       const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, 0n) + 1n;
 
@@ -109,8 +108,7 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000n;
-      const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort(utxoComparator).reverse();
+      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
 
       // when
@@ -191,7 +189,7 @@ describe('P2PKH-no-tokens', () => {
       const to = bobAddress;
       const amount = 10000n;
 
-      const contractUtxos = await p2pkhInstance.getUtxos();
+      const contractUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const bobUtxos = await provider.getUtxos(bobAddress);
 
       // when

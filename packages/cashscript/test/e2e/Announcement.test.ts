@@ -1,11 +1,9 @@
 import {
   Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
 } from '../../src/index.js';
-import { getTxOutputs } from '../test-util.js';
+import { getLargestUtxo, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
-import {
-  createOpReturnOutput, randomUtxo, utxoComparator,
-} from '../../src/utils.js';
+import { createOpReturnOutput, randomUtxo } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
 import artifact from '../fixture/announcement.json' with { type: 'json' };
 
@@ -28,10 +26,7 @@ describe('Announcement', () => {
       const to = announcement.address;
       const amount = 1000n;
 
-      const largestUtxo = (await announcement.getUtxos())
-        .sort(utxoComparator)
-        .reverse()
-        .slice(0, 1);
+      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
 
       // when
       const txPromise = announcement.functions
@@ -50,10 +45,7 @@ describe('Announcement', () => {
     it('should fail when trying to announce incorrect announcement', async () => {
       // given
       const str = 'A contract may injure a human being and, through inaction, allow a human being to come to harm.';
-      const largestUtxo = (await announcement.getUtxos())
-        .sort(utxoComparator)
-        .reverse()
-        .slice(0, 1);
+      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
 
       // when
       const txPromise = announcement.functions
@@ -73,10 +65,7 @@ describe('Announcement', () => {
     it('should fail when sending incorrect amount of change', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const largestUtxo = (await announcement.getUtxos())
-        .sort(utxoComparator)
-        .reverse()
-        .slice(0, 1);
+      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
 
       // when
       const txPromise = announcement.functions
@@ -96,10 +85,7 @@ describe('Announcement', () => {
     it('should fail when sending the correct change amount to an incorrect address', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const [largestUtxo] = (await announcement.getUtxos())
-        .sort(utxoComparator)
-        .reverse()
-        .slice(0, 1);
+      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
       const changeAmount = largestUtxo?.satoshis - minerFee;
 
       // when
@@ -121,10 +107,7 @@ describe('Announcement', () => {
     it('should succeed when announcing correct announcement', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const largestUtxo = (await announcement.getUtxos())
-        .sort(utxoComparator)
-        .reverse()
-        .slice(0, 1);
+      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
 
       // when
       const tx = await announcement.functions
