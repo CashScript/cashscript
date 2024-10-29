@@ -21,6 +21,7 @@ import {
   isUtxoP2PKH,
   TransactionDetails,
   Unlocker,
+  SignatureAlgorithm,
 } from './interfaces.js';
 import {
   createInputScript,
@@ -336,10 +337,18 @@ export class Transaction {
       }
     }
 
-    // Replace all SignatureTemplate with 65-length placeholder Uint8Arrays
-    const placeholderArgs = this.encodedFunctionArgs.map((arg) => (
-      arg instanceof SignatureTemplate ? placeholder(65) : arg
-    ));
+    // Replace all SignatureTemplate with placeholder Uint8Arrays
+    const placeholderArgs = this.encodedFunctionArgs.map((arg) => {
+      if (!(arg instanceof SignatureTemplate)) return arg;
+
+      // Schnorr signatures are *always* 65 bytes: 64 for signature + 1 byte for hashtype.
+      if (arg.getSignatureAlgorithm() === SignatureAlgorithm.SCHNORR) return placeholder(65);
+
+      // ECDSA signatures are at least 71 bytes: 64 bytes for signature + 1 byte for hashtype + 6 bytes for encoding
+      // overhead. But it may have up to 2 extra bytes for padding, so we overestimate by 2 bytes.
+      // (see https://transactionfee.info/charts/bitcoin-script-ecdsa-length/)
+      return placeholder(73);
+    });
 
     // Create a placeholder preimage of the correct size
     const placeholderPreimage = this.abiFunction.covenant

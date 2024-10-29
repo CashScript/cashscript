@@ -1,5 +1,5 @@
 // Code taken and adapted from https://github.com/bitcoinjs/bip68
-// If we make signficant changes to this code, we should also take and adapt the tests from that repository.
+// If we make significant changes to this code, we should also take and adapt the tests from that repository.
 
 // see https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki#compatibility
 
