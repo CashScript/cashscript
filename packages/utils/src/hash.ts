@@ -1,16 +1,15 @@
-// TODO: Replace with libauth
-import hash from 'hash.js';
+import { sha256 as sha256Lib, ripemd160 as ripemd160Lib, sha512 as sha512Lib } from '@bitauth/libauth';
 
 export function sha512(payload: Uint8Array): Uint8Array {
-  return Uint8Array.from(hash.sha512().update(payload).digest());
+  return sha512Lib.hash(payload);
 }
 
 export function sha256(payload: Uint8Array): Uint8Array {
-  return Uint8Array.from(hash.sha256().update(payload).digest());
+  return sha256Lib.hash(payload);
 }
 
 export function ripemd160(payload: Uint8Array): Uint8Array {
-  return Uint8Array.from(hash.ripemd160().update(payload).digest());
+  return ripemd160Lib.hash(payload);
 }
 
 export function hash160(payload: Uint8Array): Uint8Array {

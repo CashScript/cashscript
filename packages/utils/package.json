@@ -40,8 +40,7 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
   },
   "dependencies": {
-    "@bitauth/libauth": "^3.0.0",
-    "hash.js": "^1.1.7"
+    "@bitauth/libauth": "^3.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.4.1",
