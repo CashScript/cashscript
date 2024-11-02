@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^29.4.1",
-    "@psf/bch-js": "^4.15.0",
+    "@psf/bch-js": "^6.8.0",
     "@types/pako": "^2.0.3",
     "eslint": "^8.54.0",
     "jest": "^29.4.1",
