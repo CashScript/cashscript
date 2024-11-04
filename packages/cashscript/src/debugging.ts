@@ -121,11 +121,21 @@ const createProgram = (template: WalletTemplate): CreateProgramResult => {
   const vm = createVirtualMachineBCH2023();
   const compiler = createCompiler(configuration);
 
+  const unlockScriptId = Object.keys(template.scripts).find(key => key.includes('unlock'));
+  if (!unlockScriptId) {
+    throw new Error('No unlock script found in template');
+  }
+
+  const evaluateScenarioId = Object.keys(template?.scenarios ?? {}).find(key => key.includes('evaluate_function'));
+  if (!evaluateScenarioId) {
+    throw new Error('No evaluate function scenario found in template');
+  }
+
   const scenarioGeneration = compiler.generateScenario({
     debug: true,
     lockingScriptId: undefined,
-    unlockingScriptId: 'unlock_lock',
-    scenarioId: 'evaluate_function',
+    unlockingScriptId: unlockScriptId,
+    scenarioId: evaluateScenarioId,
   });
 
   if (typeof scenarioGeneration === 'string') {

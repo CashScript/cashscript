@@ -52,10 +52,12 @@ export const buildTemplate = async ({
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
+  // 1. entities should be an array and consuming all the contracts.
+
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
-    name: contract.artifact.contractName,
+    name: 'Advanced Debugging',
     supported: ['BCH_2023_05'],
     version: 0,
     entities: generateTemplateEntities(contract.artifact, transaction.abiFunction, transaction.encodedFunctionArgs),
@@ -90,9 +92,9 @@ export const buildTemplate = async ({
       const hashtypeName = getHashTypeName(input.template.getHashType(false));
       const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
 
-      template.entities.parameters.scripts!.push(lockScriptName, unlockScriptName);
-      template.entities.parameters.variables = {
-        ...template.entities.parameters.variables,
+      template.entities[snakeCase(contract.name) + 'Parameters'].scripts!.push(lockScriptName, unlockScriptName);
+      template.entities[snakeCase(contract.name) + 'Parameters'].variables = {
+        ...template.entities[snakeCase(contract.name) + 'Parameters'].variables,
         [placeholderKeyName]: {
           description: placeholderKeyName,
           name: placeholderKeyName,
@@ -154,12 +156,12 @@ const generateTemplateEntities = (
   );
 
   const entities = {
-    parameters: {
+    [snakeCase(artifact.contractName + 'Parameters')]: {
       description: 'Contract creation and function parameters',
-      name: 'parameters',
+      name: snakeCase(artifact.contractName + 'Parameters'),
       scripts: [
-        'lock',
-        'unlock_lock',
+        snakeCase(artifact.contractName + '_lock'),
+        snakeCase(artifact.contractName + '_unlock'),
       ],
       variables: {
         ...functionParameters,
@@ -170,7 +172,7 @@ const generateTemplateEntities = (
 
   // function_index is a special variable that indicates the function to execute
   if (artifact.abi.length > 1) {
-    entities.parameters.variables.function_index = {
+    entities[snakeCase(artifact.contractName + 'Parameters')].variables.function_index = {
       description: 'Script function index to execute',
       name: 'function_index',
       type: 'WalletData',
@@ -189,8 +191,8 @@ const generateTemplateScripts = (
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
   return {
-    unlock_lock: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
-    lock: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
+    [snakeCase(artifact.contractName + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
+    [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
 
@@ -201,7 +203,7 @@ const generateTemplateLockScript = (
 ): WalletTemplateScriptLocking => {
   return {
     lockingType: addressType,
-    name: 'lock',
+    name: snakeCase(artifact.contractName + '_lock'),
     script: [
       `// "${artifact.contractName}" contract constructor parameters`,
       formatParametersForDebugging(artifact.constructorInputs, constructorArguments),
@@ -225,15 +227,15 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: ['evaluate_function'],
-    name: 'unlock',
+    passes: [snakeCase(artifact.contractName + 'EvaluateFunction')],
+    name: snakeCase(artifact.contractName + '_unlock'),
     script: [
       `// "${abiFunction.name}" function parameters`,
       formatParametersForDebugging(abiFunction.inputs, encodedFunctionArgs),
       '',
       ...functionIndexString,
     ].join('\n'),
-    unlocks: 'lock',
+    unlocks: snakeCase(artifact.contractName + '_lock'),
   };
 };
 
@@ -251,8 +253,8 @@ const generateTemplateScenarios = (
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
-    evaluate_function: {
-      name: 'Evaluate',
+    [snakeCase(artifact.contractName + 'EvaluateFunction')]: {
+      name: snakeCase(artifact.contractName + 'Evaluate'),
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
@@ -273,7 +275,7 @@ const generateTemplateScenarios = (
 
   if (artifact.abi.length > 1) {
     const functionIndex = artifact.abi.findIndex((func) => func.name === transaction.abiFunction.name);
-    scenarios!.evaluate_function!.data!.bytecode!.function_index = functionIndex.toString();
+    scenarios![snakeCase(artifact.contractName + 'EvaluateFunction')].data!.bytecode!.function_index = functionIndex.toString();
   }
 
   return scenarios;

@@ -1,6 +1,7 @@
 import { type Transaction } from '@bitauth/libauth';
 import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
+import type { Contract } from './Contract.js';
 
 export interface Utxo {
   txid: string;
@@ -20,6 +21,9 @@ export function isUnlockableUtxo(utxo: Utxo): utxo is UnlockableUtxo {
 
 export interface InputOptions {
   sequence?: number;
+  contract?: Contract;
+  params?: any[];
+  selector?: number;
 }
 
 export interface GenerateUnlockingBytecodeOptions {

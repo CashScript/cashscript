@@ -1,0 +1,19 @@
+pragma cashscript ^0.10.2;
+
+contract Bar(bytes20 pkh) {
+    function funcA() {
+        // int d = 0;
+        require(2==2);
+    }
+
+    function funcB() {
+        require(2==2);
+    }
+
+    function execute(pubkey pk, sig s) {
+        // int m = 1;
+        console.log("ContractB 'bar' function called.");
+        require(hash160(pk) == pkh);
+        require(checkSig(s, pk));
+    }
+}
