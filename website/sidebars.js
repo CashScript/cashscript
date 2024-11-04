@@ -25,6 +25,7 @@ module.exports = {
       label: 'Compiler',
       items: [
         'compiler/compiler',
+        'compiler/vmlimits',
         'compiler/artifacts',
         'compiler/grammar',
       ],

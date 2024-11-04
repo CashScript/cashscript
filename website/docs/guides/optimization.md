@@ -13,7 +13,7 @@ When optimizing your contract, you will need to compare the contract size to see
 With the compiler CLI, you can easily check the opcode count and bytesize directly from the generated contract artifact.
 
 ```bash
-cashc ./contract.cash --opcount --size
+cashc ./contract.cash --size --opcount
 ```
 
 The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they will always be an underestimate, as the contract hasn't been initialized with contract arguments.
@@ -23,7 +23,7 @@ The compiler opcount and bytesize outputs are still helpful to compare the effec
 :::
 
 :::tip
-To get the exact contract opcount and bytesize including constructor parameters, initialise the contract with the TypScript SDK and check the values of `contract.opcount` and `contract.bytesize`.
+To get the exact contract bytesize including constructor parameters, initialise the contract with the TypScript SDK and check the value of `contract.bytesize`.
 :::
 
 ## Optimization Tips & Tricks
