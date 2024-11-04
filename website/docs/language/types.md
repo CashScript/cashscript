@@ -29,6 +29,10 @@ Operators:
 
 Note the lack of the `**` (exponentiation) operator as well as any bitwise operators.
 
+#### Number Formatting
+
+Underscores can be used to separate the digits of a numeric literal to aid readability, e.g. `1_000_000`. Numbers can also be formatted in scientific notation, e.g. `1e6` or `1E6`. These can also be combined, e.g. `1_000e6`.
+
 #### Over- & Underflows
 
 The maximum range for 64-bit integers is `-9223372036854775807` to `9223372036854775807`, operations exceeding these limits will fail the transaction. So operations like summation, subtraction and multiplication should take into account these boundary cases with over- or underflows.

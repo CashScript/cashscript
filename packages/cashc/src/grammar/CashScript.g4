@@ -165,7 +165,15 @@ NumberUnit
     ;
 
 NumberLiteral
-    : [-]?[0-9]+ ([eE] [0-9]+)?
+    : '-'? NumberPart ExponentPart?
+    ;
+
+NumberPart
+    : [0-9]+ ('_' [0-9]+)*
+    ;
+
+ExponentPart
+    : [eE] NumberPart
     ;
 
 Bytes

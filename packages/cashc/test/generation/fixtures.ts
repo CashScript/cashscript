@@ -745,12 +745,12 @@ export const fixtures: Fixture[] = [
       abi: [
         { name: 'test', inputs: [] },
       ],
-      bytecode: '00ca9a3b 00ca9a3b 00ca9a3b OP_ROT OP_OVER OP_NUMEQUALVERIFY OP_NUMEQUAL',
+      bytecode: '0010a5d4e800 0010a5d4e800 0010a5d4e800 0010a5d4e800 0010a5d4e800 OP_4 OP_ROLL OP_OVER OP_NUMEQUALVERIFY OP_3 OP_ROLL OP_OVER OP_NUMEQUALVERIFY OP_ROT OP_OVER OP_NUMEQUALVERIFY OP_NUMEQUAL',
       debug: {
-        bytecode: '0400ca9a3b0400ca9a3b0400ca9a3b527a51799c69517a517a9c',
+        bytecode: '060010a5d4e800060010a5d4e800060010a5d4e800060010a5d4e800060010a5d4e800547a51799c69537a51799c69527a51799c69517a517a9c',
         logs: [],
-        requires: [{ ip: 8, line: 8 }, { ip: 14, line: 9 }],
-        sourceMap: '3:26:3:29;4::4;6:22:6:32;8:16:8:27;;:31::38;;:16:::1;:8::40;9:16:9:27:0;;:31::38;;:16:::1',
+        requires: [{ ip: 10, line: 10 }, { ip: 16, line: 11 }, { ip: 22, line: 12 }, { ip: 28, line: 13 }],
+        sourceMap: '3:26:3:30;4::4;5::5:43;6:23:6:30;8:22:8:35;10:16:10:27;;:31::38;;:16:::1;:8::40;11:16:11:27:0;;:31::38;;:16:::1;:8::40;12:16:12:27:0;;:31::38;;:16:::1;:8::40;13:16:13:24:0;;:28::35;;:16:::1',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/integer_formatting.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {

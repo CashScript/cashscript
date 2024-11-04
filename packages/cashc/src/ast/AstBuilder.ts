@@ -413,9 +413,11 @@ export default class AstBuilder
 }
 
 const parseNumberString = (numberString: string): bigint => {
-  const isScientificNotation = /[eE]/.test(numberString);
-  if (!isScientificNotation) return BigInt(numberString);
+  const cleanedNumberString = numberString.replace(/_/g, '');
 
-  const [coefficient, exponent] = numberString.split(/[eE]/);
+  const isScientificNotation = /[eE]/.test(cleanedNumberString);
+  if (!isScientificNotation) return BigInt(cleanedNumberString);
+
+  const [coefficient, exponent] = cleanedNumberString.split(/[eE]/);
   return BigInt(coefficient) * BigInt(10) ** BigInt(exponent);
 };
