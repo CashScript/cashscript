@@ -1,0 +1,12 @@
+contract IntegerFormatting() {
+    function test() {
+        int scientific1 = 1e9;
+        int scientific2 = 1E9;
+        // int underscores = 1_000_000_000;
+        int regular = 1000000000;
+
+        require(scientific1 == regular);
+        require(scientific2 == regular);
+        // require()
+    }
+}

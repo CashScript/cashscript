@@ -737,4 +737,27 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'integer_formatting.cash',
+    artifact: {
+      contractName: 'IntegerFormatting',
+      constructorInputs: [],
+      abi: [
+        { name: 'test', inputs: [] },
+      ],
+      bytecode: '00ca9a3b 00ca9a3b 00ca9a3b OP_ROT OP_OVER OP_NUMEQUALVERIFY OP_NUMEQUAL',
+      debug: {
+        bytecode: '0400ca9a3b0400ca9a3b0400ca9a3b527a51799c69517a517a9c',
+        logs: [],
+        requires: [{ ip: 8, line: 8 }, { ip: 14, line: 9 }],
+        sourceMap: '3:26:3:29;4::4;6:22:6:32;8:16:8:27;;:31::38;;:16:::1;:8::40;9:16:9:27:0;;:31::38;;:16:::1',
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/integer_formatting.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];

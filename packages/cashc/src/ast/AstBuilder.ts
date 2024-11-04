@@ -347,7 +347,7 @@ export default class AstBuilder
     const numberCtx = ctx.numberLiteral();
     const numberString = numberCtx.NumberLiteral().getText();
     const numberUnit = numberCtx.NumberUnit()?.getText();
-    const numberValue = BigInt(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit.toUpperCase()] : 1);
+    const numberValue = parseNumberString(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit.toUpperCase()] : 1);
     const intLiteral = new IntLiteralNode(numberValue);
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
@@ -411,3 +411,11 @@ export default class AstBuilder
     throw new Error('Safety Warning: Unhandled node in AST builder');
   }
 }
+
+const parseNumberString = (numberString: string): bigint => {
+  const isScientificNotation = /[eE]/.test(numberString);
+  if (!isScientificNotation) return BigInt(numberString);
+
+  const [coefficient, exponent] = numberString.split(/[eE]/);
+  return BigInt(coefficient) * BigInt(10) ** BigInt(exponent);
+};
