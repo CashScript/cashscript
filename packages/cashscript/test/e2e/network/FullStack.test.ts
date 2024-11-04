@@ -73,4 +73,6 @@ if (!process.env.TESTS_USE_MOCKNET) {
       });
     });
   });
+} else {
+  test.skip('skip', () => {});
 }
