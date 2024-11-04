@@ -4,7 +4,7 @@ import { MockNetworkProvider, Contract, SignatureTemplate, TransactionBuilder, r
 import { stringify } from '@bitauth/libauth';
 
 // Import Alice's keys from common-js.js
-import { alicePkh, alicePriv, alicePub } from './common-js.js';
+import { alicePkh, alicePriv, alicePub, aliceAddress } from './common-js.js';
 const provider = new MockNetworkProvider();
 
 const artifactFoo = compileFile(new URL('Foo.cash', import.meta.url));
@@ -19,6 +19,15 @@ provider.addUtxo(fooContract.address, randomUtxo());
 const barContract = new Contract(artifactBar, [alicePkh], { provider });
 provider.addUtxo(barContract.address, randomUtxo());
 provider.addUtxo(barContract.address, randomUtxo());
+
+provider.addUtxo(aliceAddress, randomUtxo());
+provider.addUtxo(aliceAddress, randomUtxo());
+provider.addUtxo(aliceAddress, randomUtxo());
+
+const aliceTemplate = new SignatureTemplate(alicePriv);
+const utxos = await provider.getUtxos(aliceAddress);
+console.log('User utxos:', utxos);
+
 // Get contract balance & output address + balance
 // console.log('contract address:', fooContract.address);
 // console.log('contract balance:', await fooContract.getBalance());
@@ -29,8 +38,9 @@ provider.addUtxo(barContract.address, randomUtxo());
 // Call the spend function with alice's signature + pk
 // And use it to send 0. 000 100 00 BCH back to the contract's address
 // const tx = await fooContract.functions
-//   .foo(alicePub, new SignatureTemplate(alicePriv))
-//   .to(fooContract.address, 10000n)
+//   .execute(alicePub, new SignatureTemplate(alicePriv))
+//   .fromP2PKH(utxos[0], new SignatureTemplate(alicePriv))
+//   .to(aliceAddress, 10000n)
 //   .withoutChange()
 //   .bitauthUri();
 
@@ -38,6 +48,7 @@ provider.addUtxo(barContract.address, randomUtxo());
 
 
 const contractUtxos = await fooContract.getUtxos();
+
 const advancedTransaction = await new TransactionBuilder({ provider })
   .addInput(
     contractUtxos[0],

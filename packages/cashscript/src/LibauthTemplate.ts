@@ -92,9 +92,9 @@ export const buildTemplate = async ({
       const hashtypeName = getHashTypeName(input.template.getHashType(false));
       const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
 
-      template.entities[snakeCase(contract.name) + 'Parameters'].scripts!.push(lockScriptName, unlockScriptName);
-      template.entities[snakeCase(contract.name) + 'Parameters'].variables = {
-        ...template.entities[snakeCase(contract.name) + 'Parameters'].variables,
+      template.entities[snakeCase(contract.name + 'Parameters')].scripts!.push(lockScriptName, unlockScriptName);
+      template.entities[snakeCase(contract.name + 'Parameters')].variables = {
+        ...template.entities[snakeCase(contract.name + 'Parameters')].variables,
         [placeholderKeyName]: {
           description: placeholderKeyName,
           name: placeholderKeyName,
