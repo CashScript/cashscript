@@ -2,6 +2,16 @@
 title: Release Notes
 ---
 
+## v0.10.2
+
+#### cashc compiler
+- :sparkles: Add support for using underscores in numeric literals to improve readability, e.g. `1_000_000`.
+- :sparkles: Add support for using scientific notation in numeric literals, e.g. `1e6` or `1E6`.
+
+#### CashScript SDK
+- :bug: Fix fee calculation when using `SignatureAlgorithm.ECDSA`.
+- :hammer_and_wrench: Clean up dependencies.
+
 ## v0.10.1
 
 #### CashScript SDK
