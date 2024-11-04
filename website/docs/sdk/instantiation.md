@@ -91,11 +91,11 @@ console.log(contract.tokenAddress)
 contract.opcount: number
 ```
 
-The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can contain a maximum of 201 opcodes.
+The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field.
 
 #### Example
 ```ts
-assert(contract.opcount <= 201)
+console.log(contract.opcount)
 ```
 
 ### bytesize
@@ -103,11 +103,15 @@ assert(contract.opcount <= 201)
 contract.bytesize: number
 ```
 
-The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 520 bytes at most.
+The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 1,650 bytes at most.
+
+:::info
+The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they will always be an underestimate, as the contract hasn't been initialized with contract arguments.
+:::
 
 #### Example
 ```ts
-console.log(contract.bytesize)
+assert(contract.bytesize <= 1650)
 ```
 
 ### bytecode
