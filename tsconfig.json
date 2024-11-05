@@ -8,5 +8,6 @@
       "cashscript": ["cashscript/src"],
       "@cashscript/utils": ["utils/src"],
     },
+    "types": ["vitest/globals"],
   },
 }
