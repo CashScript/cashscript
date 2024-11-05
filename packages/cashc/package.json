@@ -52,8 +52,7 @@
     "@cashscript/utils": "^0.10.2",
     "antlr4": "^4.13.1-patch-1",
     "commander": "^7.1.0",
-    "semver": "^7.5.4",
-    "vitest": "^2.1.4"
+    "semver": "^7.5.4"
   },
   "devDependencies": {
     "@types/node": "^18.11.18",
