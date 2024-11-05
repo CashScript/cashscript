@@ -31,7 +31,7 @@
   },
   "scripts": {
     "build": "yarn clean && yarn compile",
-    "build:test": "yarn clean:test && yarn compile:test",
+    "build:test": "vitest",
     "clean": "rm -rf ./dist",
     "clean:test": "rm -rf ./dist-test",
     "compile": "tsc -p tsconfig.build.json",
@@ -40,7 +40,7 @@
     "prepare": "yarn build",
     "prepublishOnly": "yarn test && yarn lint",
     "pretest": "yarn build:test",
-    "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
+    "test": "vitest"
   },
   "dependencies": {
     "@bitauth/libauth": "^3.0.0",
@@ -52,12 +52,10 @@
     "pako": "^2.1.0"
   },
   "devDependencies": {
-    "@jest/globals": "^29.4.1",
     "@psf/bch-js": "^6.8.0",
     "@types/pako": "^2.0.3",
     "eslint": "^8.54.0",
-    "jest": "^29.4.1",
-    "typescript": "^5.5.4"
+    "vitest": "^2.1.4"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
 }
