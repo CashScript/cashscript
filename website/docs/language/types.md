@@ -178,10 +178,15 @@ When casting integer types to bytes of a certain size, the integer value is padd
 VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
 :::
 
+### Semantic Byte Casting
 
-:::caution
-When casting bytes types to integer, you should be sure that the bytes value fits inside a 64-bit signed integer, or the script will fail.
-:::
+Bytes to bytes casting is just semantic and can be helpful for working with `LockingBytecode` global functions which expect a specific length input. To utilize byte-padding, convert to `int` and utilize the integer padding.
+
+#### Example
+```solidity
+bytes pkh = nftcommitment.split(20)[0];
+bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20(pkh)):
+```
 
 ## Operators
 An overview of all supported operators and their precedence is included below. Notable is a lack of exponentiation, since these operations are not supported by the underlying Bitcoin Script.
