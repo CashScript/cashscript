@@ -15,6 +15,7 @@ import { NetworkProvider } from '../network/index.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
+  snakeCase,
   validateOutput,
 } from '../utils.js';
 import { FailedTransactionError } from '../Errors.js';
@@ -277,10 +278,20 @@ export class Builder {
         throw new Error('Could not find matching unlock function');
       }
 
-      console.log('matchingUnlockerIndex', matchingUnlockerIndex);
+      let scenarioIdentifier = contract.artifact.contractName + '_' + contract.artifact.abi[matchingUnlockerIndex].name + 'EvaluateFunction';
+      let scenarioIdentifierCounter = 0;
+
+      while (true) {
+        scenarioIdentifier = snakeCase(scenarioIdentifier + scenarioIdentifierCounter.toString());
+        if (!scenarios[scenarioIdentifier]) {
+          break;
+        }
+        scenarioIdentifierCounter++;
+      }
 
       Object.assign(scenarios,
         generateTemplateScenarios(
+          scenarioIdentifier,
           contract,
           libauthTransaction,
           csTransaction,
@@ -302,6 +313,7 @@ export class Builder {
         contract.artifact.abi[matchingUnlockerIndex],
         encodedArgs,
         contract.encodedConstructorArgs,
+        scenarioIdentifier,
       );
       Object.assign(entities, entity);
       Object.assign(scripts, script);
@@ -315,9 +327,6 @@ export class Builder {
     Object.assign(scripts, p2pkhScripts);
 
     finalTemplate = { ...finalTemplate, entities, scripts, scenarios };
-
-    console.log(entities);
-    console.log(scripts);
 
     // for (const input of this.inputs) {
     //   const contract = input.options?.contract;

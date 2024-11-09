@@ -16,6 +16,7 @@ const fooContract = new Contract(artifactFoo, [alicePkh], { provider });
 provider.addUtxo(fooContract.address, randomUtxo());
 provider.addUtxo(fooContract.address, randomUtxo());
 provider.addUtxo(fooContract.address, randomUtxo());
+provider.addUtxo(fooContract.address, randomUtxo());
 
 const barContract = new Contract(artifactBar, [alicePkh], { provider });
 provider.addUtxo(barContract.address, randomUtxo());
@@ -91,6 +92,11 @@ const newBuilderTransaction = await new Builder({ provider })
   )
   .addInput(
     contractUtxos[2],
+    barContract.unlock.execute,
+    { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+  )
+  .addInput(
+    contractUtxos[3],
     barContract.unlock.execute,
     { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
   )

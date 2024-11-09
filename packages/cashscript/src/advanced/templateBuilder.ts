@@ -160,11 +160,12 @@ export const generateTemplateScripts = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   encodedConstructorArgs: EncodedConstructorArgument[],
+  scenarioIdentifier: string,
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
 
   return {
-    [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
+    [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, scenarioIdentifier),
     [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
@@ -190,7 +191,8 @@ const generateTemplateLockScript = (
 const generateTemplateUnlockScript = (
   artifact: Artifact,
   abiFunction: AbiFunction,
-  encodedFunctionArgs: EncodedFunctionArgument[]
+  encodedFunctionArgs: EncodedFunctionArgument[],
+  scenarioIdentifier: string,
 ): WalletTemplateScriptUnlocking => {
   const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
@@ -200,7 +202,7 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: [snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')],
+    passes: [scenarioIdentifier],
     name: abiFunction.name,
     script: [
       `// "${abiFunction.name}" function parameters`,
@@ -213,6 +215,7 @@ const generateTemplateUnlockScript = (
 };
 
 export const generateTemplateScenarios = (
+  scenarioIdentifier: string,
   contract: Contract,
   libauthTransaction: TransactionBCH,
   csTransaction: Transaction,
@@ -226,7 +229,7 @@ export const generateTemplateScenarios = (
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
-    [snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')]: {
+    [scenarioIdentifier]: {
       name: snakeCase(artifact.contractName + '_' + abiFunction.name + 'Evaluate'),
       description: 'An example evaluation where this script execution passes.',
       data: {
@@ -248,7 +251,7 @@ export const generateTemplateScenarios = (
 
   if (artifact.abi.length > 1) {
     const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
-    scenarios![snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')].data!.bytecode!.function_index = functionIndex.toString();
+    scenarios![scenarioIdentifier].data!.bytecode!.function_index = functionIndex.toString();
   }
 
   return scenarios;
