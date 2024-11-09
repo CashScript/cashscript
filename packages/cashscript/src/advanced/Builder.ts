@@ -17,6 +17,7 @@ import {
   createOpReturnOutput,
   snakeCase,
   validateOutput,
+  addressToLockScript,
 } from '../utils.js';
 import { FailedTransactionError } from '../Errors.js';
 import { DebugResult, debugTemplate } from '../debugging.js';
@@ -29,6 +30,7 @@ import { generateTemplateEntities,
 import { encodeFunctionArguments } from '../Argument.js';
 import { ContractUnlocker } from '../Contract.js';
 import { encodeBip68 } from '@cashscript/utils';
+
 
 export interface BuilderOptions {
   provider: NetworkProvider;
@@ -260,6 +262,9 @@ export class Builder {
     const p2pkhEntities: any = {};
     const p2pkhScripts: any = {};
 
+    const unlockingBytecodes: Record<string, string> = {};
+    const lockingBytecodes: Record<string, string> = {};
+    
     for (const [idx, input] of this.inputs.entries()) {
       if (input.options?.template) {
         // @ts-ignore
@@ -272,6 +277,7 @@ export class Builder {
 
       const contract = input.options?.contract;
       if (!contract) throw new Error('Contract is required');
+
       // Find matching function and index from contract.unlock array
       const matchingUnlockerIndex = Object.values(contract.unlock).findIndex(fn => fn === input.unlocker);
       if (matchingUnlockerIndex === -1) {
@@ -315,6 +321,14 @@ export class Builder {
         contract.encodedConstructorArgs,
         scenarioIdentifier,
       );
+
+      const lockScriptName = Object.keys(script).find(scriptName => scriptName.includes('_lock'));
+      if (lockScriptName) {
+        const unlockingBytecode = binToHex(libauthTransaction.inputs[idx].unlockingBytecode);
+        unlockingBytecodes[unlockingBytecode] = lockScriptName;
+        lockingBytecodes[binToHex(addressToLockScript(contract.address))] = lockScriptName;
+      }
+
       Object.assign(entities, entity);
       Object.assign(scripts, script);
     }
@@ -327,13 +341,43 @@ export class Builder {
     Object.assign(scripts, p2pkhScripts);
 
     finalTemplate = { ...finalTemplate, entities, scripts, scenarios };
+ 
+    for (const scenario of Object.values(scenarios)) {
+      for (const [idx, input] of libauthTransaction.inputs.entries()) {
+        const unlockingBytecode = binToHex(input.unlockingBytecode);
+        if (unlockingBytecodes[unlockingBytecode]) {
 
-    // for (const input of this.inputs) {
-    //   const contract = input.options?.contract;
-    //   if (!contract) continue;
-    //   const debugResult = debugTemplate(finalTemplate, contract.artifact);
-    //   finalDebugResult.push(debugResult);
-    // }
+          // @ts-ignore
+          if (Array.isArray(scenario.sourceOutputs[idx].lockingBytecode)) continue;
+
+          // @ts-ignore
+          scenario.sourceOutputs[idx].lockingBytecode = {
+            script: unlockingBytecodes[unlockingBytecode],
+          };
+        }
+      }
+
+      for (const [idx, output] of libauthTransaction.outputs.entries()) {
+        const lockingBytecode = binToHex(output.lockingBytecode);
+        if (lockingBytecodes[lockingBytecode]) {
+
+          // @ts-ignore
+          if (Array.isArray(scenario.transaction.outputs[idx].lockingBytecode)) continue;
+          // @ts-ignore
+          scenario.transaction.outputs[idx].lockingBytecode = {
+            script: lockingBytecodes[lockingBytecode],
+          };
+        }
+      }
+
+    }
+
+    for (const input of this.inputs) {
+      const contract = input.options?.contract;
+      if (!contract) continue;
+      const debugResult = debugTemplate(finalTemplate, contract.artifact);
+      finalDebugResult.push(debugResult);
+    }
 
     // @ts-ignore
     return { template: finalTemplate, debugResult: finalDebugResult };
