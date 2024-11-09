@@ -110,8 +110,6 @@ export const generateTemplateEntities = (
     },
   };
 
-  console.log('entities', entities, functionParameters, constructorParameters);
-
   // function_index is a special variable that indicates the function to execute
   if (artifact.abi.length > 1) {
     entities[snakeCase(artifact.contractName + 'Parameters')].variables.function_index = {
@@ -316,8 +314,6 @@ const generateTemplateScenarioSourceOutputs = (
 const generateTemplateScenarioBytecode = (
   input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
-
-  console.log('input', input);
   if (isUtxoP2PKH(input)) {
     return {
       script: p2pkhScriptName,

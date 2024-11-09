@@ -54,7 +54,6 @@ export const buildTemplate = async ({
   transaction,
   transactionHex = undefined, // set this argument to prevent unnecessary call `transaction.build()`
 }: BuildTemplateOptions): Promise<WalletTemplate> => {
-  console.log(transaction.abiFunction, transaction.encodedFunctionArgs);
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
@@ -395,7 +394,6 @@ const generateTemplateScenarioSourceOutputs = (
 const generateTemplateScenarioBytecode = (
   input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
-  console.log('input', input);
   if (isUtxoP2PKH(input)) {
     return {
       script: p2pkhScriptName,

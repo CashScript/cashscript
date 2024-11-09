@@ -319,6 +319,15 @@ export class Builder {
     Object.assign(scripts, p2pkhScripts);
 
     finalTemplate = { ...finalTemplate, entities, scripts, scenarios };
+
+
+    for (const input of this.inputs) {
+      const contract = input.options?.contract;
+      if (!contract) continue;
+      const debugResult = debugTemplate(finalTemplate, contract.artifact);
+      finalDebugResult = debugResult;
+    }
+
     // @ts-ignore
     return { template: finalTemplate, debugResult: finalDebugResult };
   }
