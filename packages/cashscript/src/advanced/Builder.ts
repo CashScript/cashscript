@@ -24,9 +24,7 @@ import { generateTemplateEntities,
   generateTemplateScripts,
   generateTemplateScriptsP2PKH,
   getBitauthUri,
-  // buildTemplate,
   generateTemplateScenarios } from './templateBuilder.js';
-import { Transaction } from '../Transaction.js';
 import { encodeFunctionArguments } from '../Argument.js';
 import { ContractUnlocker } from '../Contract.js';
 import { encodeBip68 } from '@cashscript/utils';
@@ -57,21 +55,18 @@ export class Builder {
     this.provider = options.provider;
   }
 
-  addInput({ utxo, unlocker, options }
-  : { utxo: Utxo, unlocker: ContractUnlocker | Unlocker, options?: InputOptions }): this {
+  addInput(utxo: Utxo, unlocker: ContractUnlocker | Unlocker, options?: InputOptions): this {
     this.inputs.push({ ...utxo, unlocker, options: { ...options, sequence: options?.sequence ?? this.sequence } });
     return this;
   }
 
-  addInputs({ utxos, unlocker, options }
-  : { utxos: Utxo[], unlocker: ContractUnlocker | Unlocker, options?: InputOptions }): this;
-  addInputs({ utxos }: { utxos: UnlockableUtxo[] }): this;
-  addInputs({ utxos, unlocker, options }
-  : {
+  addInputs( utxos: Utxo[], unlocker: ContractUnlocker | Unlocker, options?: InputOptions): this;
+  addInputs(utxos: UnlockableUtxo[] ): this;
+  addInputs(
     utxos: Utxo[] | UnlockableUtxo[],
     unlocker?: ContractUnlocker | Unlocker,
-    options?: InputOptions
-  }): this {
+    options?: InputOptions,
+  ): this {
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
@@ -219,7 +214,7 @@ export class Builder {
   }
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
-  async debug(): Promise<DebugResult> {
+  async debug(): Promise<DebugResult[]> {
     const { debugResult } = await this.getLibauthTemplates();
     return debugResult;
   }
@@ -240,7 +235,7 @@ export class Builder {
     return csTransaction;
   }
 
-  async getLibauthTemplates(): Promise<{ template: WalletTemplate, debugResult: DebugResult }> {
+  async getLibauthTemplates(): Promise<{ template: WalletTemplate, debugResult: DebugResult[] }> {
     const libauthTransaction = await this.buildTransaction();
     const csTransaction = this.createCSTransaction();
 
@@ -255,7 +250,7 @@ export class Builder {
       scenarios: {},
     };
 
-    let finalDebugResult: DebugResult;
+    const finalDebugResult: DebugResult[] = [];
 
     const entities: any = {};
     const scripts: any = {};
@@ -267,7 +262,7 @@ export class Builder {
     for (const [idx, input] of this.inputs.entries()) {
       if (input.options?.template) {
         // @ts-ignore
-        input.template = '';
+        input.template = input.options?.template;
         const index = Object.keys(p2pkhEntities).length;
         Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(index));
         Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(input.options.template, index));
@@ -325,7 +320,7 @@ export class Builder {
       const contract = input.options?.contract;
       if (!contract) continue;
       const debugResult = debugTemplate(finalTemplate, contract.artifact);
-      finalDebugResult = debugResult;
+      finalDebugResult.push(debugResult);
     }
 
     // @ts-ignore

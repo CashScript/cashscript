@@ -78,29 +78,30 @@ console.log('Contract utxos:', contractUtxos);
 
 
 const newBuilderTransaction = await new Builder({ provider })
-  .addInput({
-    utxo: utxos[0],
-    unlocker: aliceTemplate.unlockP2PKH(),
-    options: { template: new SignatureTemplate(alicePriv) },
-  })
-  .addInput({
-    utxo: utxos[1],
-    unlocker: aliceTemplate.unlockP2PKH(),
-    options: { template: new SignatureTemplate(alicePriv) },
-  })
-  .addInput({
-    utxo: contractUtxos[1],
-    unlocker: barContract.unlock.execute,
-    options: { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
-  })
-  .addInput({
-    utxo: contractUtxos[0],
-    unlocker: fooContract.unlock.execute,
-    options: { contract: fooContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
-  })
+  .addInput(
+    utxos[0],
+    aliceTemplate.unlockP2PKH(),
+    { template: new SignatureTemplate(alicePriv) },
+  )
+  .addInput(
+    utxos[1], 
+    aliceTemplate.unlockP2PKH(),
+    { template: new SignatureTemplate(alicePriv) },
+  )
+  .addInput(
+    contractUtxos[1],
+    barContract.unlock.execute,
+    { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+  )
+  .addInput(
+    contractUtxos[0],
+    fooContract.unlock.execute,
+    { contract: fooContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+  )
   .addOutput({ to: fooContract.address, amount: 8000n })
   // .addOpReturnOutput(['hello', 'world'])
   // .build();
+  // .debug();
   .bitauthUri();
 
 console.log('transaction details:', stringify(newBuilderTransaction));
