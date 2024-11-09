@@ -56,11 +56,11 @@ export const generateTemplateEntitiesP2PKH = (
     [`signer_${index}`]: {
       scripts: [lockScriptName, unlockScriptName],
       description: `placeholder_key_${index}`,
-      name: `signer_${index}`,
+      name: `Signer ${index}`,
       variables: {
         [`placeholder_key_${index}`]: {
           description: '',
-          name: `placeholder_key_${index}`,
+          name: `Placeholder key ${index}`,
           type: 'HdKey',
         },
       },
@@ -98,10 +98,10 @@ export const generateTemplateEntities = (
   const entities = {
     [snakeCase(artifact.contractName + 'Parameters')]: {
       description: 'Contract creation and function parameters',
-      name: snakeCase(artifact.contractName + 'Parameters'),
+      name: artifact.contractName,
       scripts: [
         snakeCase(artifact.contractName + '_lock'),
-        snakeCase(artifact.contractName + '_unlock'),
+        snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock'),
       ],
       variables: {
         ...functionParameters,
@@ -160,10 +160,12 @@ export const generateTemplateScripts = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   encodedConstructorArgs: EncodedConstructorArgument[],
+  slotIndex: number,
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
+
   return {
-    [snakeCase(artifact.contractName + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
+    [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, slotIndex),
     [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
@@ -175,7 +177,7 @@ const generateTemplateLockScript = (
 ): WalletTemplateScriptLocking => {
   return {
     lockingType: addressType,
-    name: snakeCase(artifact.contractName + '_lock'),
+    name: artifact.contractName,
     script: [
       `// "${artifact.contractName}" contract constructor parameters`,
       formatParametersForDebugging(artifact.constructorInputs, constructorArguments),
@@ -190,17 +192,18 @@ const generateTemplateUnlockScript = (
   artifact: Artifact,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
+  slotIndex: number,
 ): WalletTemplateScriptUnlocking => {
-  const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
+  // const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
   const functionIndexString = artifact.abi.length > 1
-    ? ['// function index in contract', `<function_index> // int = <${functionIndex}>`, '']
+    ? ['// function index in contract', `<function_index> // int = <${slotIndex}>`, '']
     : [];
 
   return {
     // this unlocking script must pass our only scenario
-    passes: [snakeCase(artifact.contractName + 'EvaluateFunction')],
-    name: snakeCase(artifact.contractName + '_unlock'),
+    passes: [snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')],
+    name: abiFunction.name,
     script: [
       `// "${abiFunction.name}" function parameters`,
       formatParametersForDebugging(abiFunction.inputs, encodedFunctionArgs),
@@ -225,8 +228,8 @@ export const generateTemplateScenarios = (
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
-    [snakeCase(artifact.contractName + 'EvaluateFunction')]: {
-      name: snakeCase(artifact.contractName + 'Evaluate'),
+    [snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')]: {
+      name: snakeCase(artifact.contractName + '_' + abiFunction.name + 'Evaluate'),
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
@@ -245,10 +248,9 @@ export const generateTemplateScenarios = (
     },
   };
 
-  if (artifact.abi.length > 1) {
-    const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
-    scenarios![snakeCase(artifact.contractName + 'EvaluateFunction')].data!.bytecode!.function_index = functionIndex.toString();
-  }
+  // if (artifact.abi.length > 1) {
+  scenarios![snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')].data!.bytecode!.function_index = slotIndex.toString();
+  // }
 
   return scenarios;
 };
@@ -320,8 +322,7 @@ const generateTemplateScenarioBytecode = (
       overrides: {
         keys: {
           privateKeys: {
-            // @ts-ignore
-            [placeholderKeyName]: binToHex(input.options?.template?.privateKey),
+            [placeholderKeyName]: binToHex(input.template?.privateKey),
           },
         },
       },

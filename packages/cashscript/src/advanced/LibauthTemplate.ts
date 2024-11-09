@@ -54,6 +54,7 @@ export const buildTemplate = async ({
   transaction,
   transactionHex = undefined, // set this argument to prevent unnecessary call `transaction.build()`
 }: BuildTemplateOptions): Promise<WalletTemplate> => {
+
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 

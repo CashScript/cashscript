@@ -301,6 +301,7 @@ export class Builder {
         contract.artifact.abi[matchingUnlockerIndex],
         encodedArgs,
         contract.encodedConstructorArgs,
+        matchingUnlockerIndex,
       );
       Object.assign(entities, entity);
       Object.assign(scripts, script);
@@ -315,6 +316,8 @@ export class Builder {
 
     finalTemplate = { ...finalTemplate, entities, scripts, scenarios };
 
+    console.log(entities);
+    console.log(scripts);
 
     for (const input of this.inputs) {
       const contract = input.options?.contract;
