@@ -160,12 +160,11 @@ export const generateTemplateScripts = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   encodedConstructorArgs: EncodedConstructorArgument[],
-  slotIndex: number,
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
 
   return {
-    [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, slotIndex),
+    [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
     [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
@@ -191,13 +190,12 @@ const generateTemplateLockScript = (
 const generateTemplateUnlockScript = (
   artifact: Artifact,
   abiFunction: AbiFunction,
-  encodedFunctionArgs: EncodedFunctionArgument[],
-  slotIndex: number,
+  encodedFunctionArgs: EncodedFunctionArgument[]
 ): WalletTemplateScriptUnlocking => {
-  // const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
+  const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
   const functionIndexString = artifact.abi.length > 1
-    ? ['// function index in contract', `<function_index> // int = <${slotIndex}>`, '']
+    ? ['// function index in contract', `<function_index> // int = <${functionIndex}>`, '']
     : [];
 
   return {
@@ -248,9 +246,10 @@ export const generateTemplateScenarios = (
     },
   };
 
-  // if (artifact.abi.length > 1) {
-  scenarios![snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')].data!.bytecode!.function_index = slotIndex.toString();
-  // }
+  if (artifact.abi.length > 1) {
+    const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
+    scenarios![snakeCase(artifact.contractName + '_' + abiFunction.name + 'EvaluateFunction')].data!.bytecode!.function_index = functionIndex.toString();
+  }
 
   return scenarios;
 };

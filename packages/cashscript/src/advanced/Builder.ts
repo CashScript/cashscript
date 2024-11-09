@@ -277,13 +277,14 @@ export class Builder {
         throw new Error('Could not find matching unlock function');
       }
 
+      console.log('matchingUnlockerIndex', matchingUnlockerIndex);
+
       Object.assign(scenarios,
         generateTemplateScenarios(
-          //@ts-ignore
-          input.options?.contract,
+          contract,
           libauthTransaction,
           csTransaction,
-          input.options?.contract?.artifact.abi[matchingUnlockerIndex],
+          contract?.artifact.abi[matchingUnlockerIndex],
           input.options?.params ?? [],
           idx,
         ),
@@ -301,7 +302,6 @@ export class Builder {
         contract.artifact.abi[matchingUnlockerIndex],
         encodedArgs,
         contract.encodedConstructorArgs,
-        matchingUnlockerIndex,
       );
       Object.assign(entities, entity);
       Object.assign(scripts, script);
@@ -319,12 +319,12 @@ export class Builder {
     console.log(entities);
     console.log(scripts);
 
-    for (const input of this.inputs) {
-      const contract = input.options?.contract;
-      if (!contract) continue;
-      const debugResult = debugTemplate(finalTemplate, contract.artifact);
-      finalDebugResult.push(debugResult);
-    }
+    // for (const input of this.inputs) {
+    //   const contract = input.options?.contract;
+    //   if (!contract) continue;
+    //   const debugResult = debugTemplate(finalTemplate, contract.artifact);
+    //   finalDebugResult.push(debugResult);
+    // }
 
     // @ts-ignore
     return { template: finalTemplate, debugResult: finalDebugResult };
