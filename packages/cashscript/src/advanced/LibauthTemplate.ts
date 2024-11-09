@@ -33,22 +33,28 @@ import {
   AddressType,
   SignatureAlgorithm,
   HashType,
-} from './interfaces.js';
-import SignatureTemplate from './SignatureTemplate.js';
-import { Transaction } from './Transaction.js';
-import { EncodedConstructorArgument, EncodedFunctionArgument } from './Argument.js';
-import { addressToLockScript, extendedStringify, snakeCase, zip } from './utils.js';
-import { Contract } from './Contract.js';
+} from '../interfaces.js';
+import SignatureTemplate from '../SignatureTemplate.js';
+import { Transaction } from '../Transaction.js';
+import { EncodedConstructorArgument, EncodedFunctionArgument } from '../Argument.js';
+import { addressToLockScript, extendedStringify, snakeCase, zip } from '../utils.js';
+import { Contract } from '../Contract.js';
 
 interface BuildTemplateOptions {
   transaction: Transaction;
   transactionHex?: string;
 }
 
+export const buildTransactionTemplate = async (transaction: Transaction): Promise<WalletTemplate> => {
+  return buildTemplate({ transaction });
+};
+
+
 export const buildTemplate = async ({
   transaction,
   transactionHex = undefined, // set this argument to prevent unnecessary call `transaction.build()`
 }: BuildTemplateOptions): Promise<WalletTemplate> => {
+  console.log(transaction.abiFunction, transaction.encodedFunctionArgs);
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
@@ -79,9 +85,9 @@ export const buildTemplate = async ({
     ),
   } as WalletTemplate;
 
+
   transaction.inputs
     .forEach((input, index) => {
-      console.log('input', input);
       if (!isUtxoP2PKH(input)) return;
 
       const lockScriptName = `p2pkh_placeholder_lock_${index}`;
@@ -127,8 +133,22 @@ export const getBitauthUri = (template: WalletTemplate): string => {
   return `https://ide.bitauth.com/import-template/${payload}`;
 };
 
+export const generateTemplateEntitiesP2PKH = (
+  index: number,
+): any => {
+  const lockScriptName = `p2pkh_placeholder_lock_${index}`;
+  const unlockScriptName = `p2pkh_placeholder_unlock_${index}`;
 
-const generateTemplateEntities = (
+  return {
+    [`signer_${index}`]: {
+      scripts: [lockScriptName, unlockScriptName],
+      description: `Signer ${index}`,
+      name: `signer_${index}`,
+    },
+  };
+};
+
+export const generateTemplateEntities = (
   artifact: Artifact,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
@@ -182,7 +202,39 @@ const generateTemplateEntities = (
   return entities;
 };
 
-const generateTemplateScripts = (
+export const generateTemplateScriptsP2PKH = (
+  template: SignatureTemplate,
+  index: number,
+): any => {
+
+  const scripts: any = {};
+
+  const lockScriptName = `p2pkh_placeholder_lock_${index}`;
+  const unlockScriptName = `p2pkh_placeholder_unlock_${index}`;
+  const placeholderKeyName = `placeholder_key_${index}`;
+
+  const signatureAlgorithmName = getSignatureAlgorithmName(template.getSignatureAlgorithm());
+  const hashtypeName = getHashTypeName(template.getHashType(false));
+  const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
+  // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
+  // this is needed for correct cross-references in the template
+  scripts[unlockScriptName] = {
+    name: unlockScriptName,
+    script:
+        `<${signatureString}>\n<${placeholderKeyName}.public_key>`,
+    unlocks: lockScriptName,
+  };
+  scripts[lockScriptName] = {
+    lockingType: 'standard',
+    name: lockScriptName,
+    script:
+      `OP_DUP\nOP_HASH160 <$(<${placeholderKeyName}.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
+  };
+
+  return scripts;
+};
+
+export const generateTemplateScripts = (
   artifact: Artifact,
   addressType: AddressType,
   abiFunction: AbiFunction,
@@ -325,20 +377,6 @@ const generateTemplateScenarioTransactionOutputLockingBytecode = (
   return binToHex(addressToLockScript(csOutput.to));
 };
 
-/**
- * Generates source outputs for a BitAuth template scenario
- * 
- * @param csTransaction - The CashScript transaction to generate source outputs for
- * @returns An array of BitAuth template scenario outputs with locking scripts and values
- * 
- * For each input in the transaction:
- * - Generates appropriate locking bytecode (P2PKH or contract)
- * - Includes the input value in satoshis
- * - Includes any token details if present
- * 
- * The slotIndex tracks which input is the contract input vs P2PKH inputs
- * to properly generate the locking scripts.
- */
 const generateTemplateScenarioSourceOutputs = (
   csTransaction: Transaction,
 ): Array<WalletTemplateScenarioOutput<true>> => {
@@ -357,6 +395,7 @@ const generateTemplateScenarioSourceOutputs = (
 const generateTemplateScenarioBytecode = (
   input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
+  console.log('input', input);
   if (isUtxoP2PKH(input)) {
     return {
       script: p2pkhScriptName,
