@@ -1,9 +1,7 @@
-import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
   MockNetworkProvider,
   FailedRequireError,
-  FailedTransactionError,
   ElectrumNetworkProvider,
   Network,
 } from '../../src/index.js';
@@ -26,7 +24,7 @@ describe('BigInt', () => {
   });
 
   describe('proofOfBigInt', () => {
-    it('should fail when providing a number that fits within 32 bits', async () => {
+    it('should fail require statement when providing a number that fits within 32 bits', async () => {
       // given
       const to = bigintContract.address;
       const amount = 1000n;
@@ -43,7 +41,7 @@ describe('BigInt', () => {
       await expect(txPromise).rejects.toThrow('Failing statement: require(x >= maxInt32PlusOne)');
     });
 
-    it('should fail when providing numbers that overflow 64 bits when multiplied', async () => {
+    it('should succeed when providing numbers that are larger than 64 bits when multiplied', async () => {
       // given
       const to = bigintContract.address;
       const amount = 1000n;
@@ -55,11 +53,10 @@ describe('BigInt', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedTransactionError);
-      await expect(txPromise).rejects.toThrow(AuthenticationErrorCommon.overflowsVmNumberRange);
+      await expect(txPromise).resolves.not.toThrow();
     });
 
-    it('should fail when providing a number that does not fit within 64 bits', async () => {
+    it('should succeed when providing a number that does not fit within 64 bits', async () => {
       // given
       const to = bigintContract.address;
       const amount = 1000n;
@@ -71,8 +68,7 @@ describe('BigInt', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedTransactionError);
-      await expect(txPromise).rejects.toThrow(AuthenticationErrorCommon.invalidVmNumber);
+      await expect(txPromise).resolves.not.toThrow();
     });
 
     it('should succeed when providing a number within 32b < x < 64b', async () => {
