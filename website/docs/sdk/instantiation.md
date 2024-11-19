@@ -42,7 +42,7 @@ import { Contract, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
 
 // Import the artifact JSON
-import P2PKH from './p2pkh.json';
+import P2PKH from './p2pkh.json' with { type: 'json' };
 
 // Or compile a contract file
 const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
