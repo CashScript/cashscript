@@ -1,4 +1,4 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateBCH, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBCH2023, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBch2025, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
@@ -53,7 +53,7 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     // preceding OP_CHECKSIG opcode. The error message is registered in the next instruction, so we need to increment
     // the instruction pointer to get the correct error message from the require messages in the artifact.
     // Note that we do NOT use this adjusted IP when passing the failing IP into the FailedRequireError
-    const isNullFail = lastExecutedDebugStep.error === AuthenticationErrorCommon.nonNullSignatureFailure;
+    const isNullFail = lastExecutedDebugStep.error.includes(AuthenticationErrorCommon.nonNullSignatureFailure);
     const requireStatementIp = failingIp + (isNullFail ? 1 : 0);
 
     const requireStatement = (artifact.debug?.requires ?? [])
@@ -110,7 +110,7 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
 type VM = AuthenticationVirtualMachine<
 ResolvedTransactionCommon,
 AuthenticationProgramCommon,
-AuthenticationProgramStateBCH
+AuthenticationProgramStateCommon
 >;
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
@@ -118,7 +118,7 @@ type CreateProgramResult = { vm: VM, program: Program };
 // internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: WalletTemplate): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachineBCH2023();
+  const vm = createVirtualMachineBch2025();
   const compiler = createCompiler(configuration);
 
   const scenarioGeneration = compiler.generateScenario({
@@ -176,8 +176,9 @@ const failedFinalVerify = (evaluationResult: string | true): evaluationResult is
   // If any of the following errors occurred, then the final verify failed - any other messages
   // indicate other kinds of failures
   return toRegExp([
-    AuthenticationErrorCommon.requiresCleanStack,
-    AuthenticationErrorCommon.nonEmptyControlStack,
+    // TODO: Ask Jason to put these back into an enum and replace with the enum value
+    'The CashAssembly internal evaluation completed with an unexpected number of items on the stack (must be exactly 1).', // AuthenticationErrorCommon.requiresCleanStack,
+    'The CashAssembly internal evaluation completed with a non-empty control stack.', // AuthenticationErrorCommon.nonEmptyControlStack,
     AuthenticationErrorCommon.unsuccessfulEvaluation,
   ]).test(evaluationResult);
 };

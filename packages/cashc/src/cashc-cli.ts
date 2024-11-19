@@ -13,6 +13,7 @@ import { program, Option } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import { compileFile, version } from './index.js';
+import { MAX_INPUT_BYTESIZE } from './constants.js';
 
 program
   .storeOptionsAsProperties(false)
@@ -54,11 +55,8 @@ function run(): void {
     const opcount = countOpcodes(script);
     const bytesize = calculateBytesize(script);
 
-    if (opcount > 201) {
-      console.warn('Warning: Your contract\'s opcount is over the limit of 201 and will not be accepted by the BCH network');
-    }
-    if (bytesize > 520) {
-      console.warn('Warning: Your contract\'s bytesize is over the limit of 520 and will not be accepted by the BCH network');
+    if (bytesize > MAX_INPUT_BYTESIZE) {
+      console.warn(`Warning: Your contract is ${bytesize} bytes, which is over the limit of ${MAX_INPUT_BYTESIZE} bytes and will not be accepted by the BCH network`);
     }
 
     if (opts.asm) {
