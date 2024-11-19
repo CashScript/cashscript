@@ -15,7 +15,7 @@ If your contract includes multiple functions, consider a modular design. Separat
 
 ## Operation Cost Limit
 
-Bitcoin Cash also enforces an **operation cost limit** (op-cost) on each transaction input. The op-cost limit controls the computational budget available for operations in a contract and is calculated based on the input length, with each byte allowing for a higher maximum opereraction cost.
+Bitcoin Cash also enforces an **operation cost limit** (op-cost) on each transaction input. The op-cost limit controls the computational budget available for operations in a contract and is calculated based on the input length, with each byte allowing for a higher maximum operation cost.
 
 ```ts
 function maxOperationCost(unlockingBytecodeLength) {
@@ -33,7 +33,7 @@ To increase your contract's compute budget for resource-intensive operations (e.
 
 For completeness, here are additional Bitcoin Cash VM limits relevant to CashScript development:
 
-- **Signature Operation Count** (SigChecks) Limits the number of signature verifications (e.g. `OP_CHECKSIG`, `OP_CHECKDATASIG`) per transaction to ensure efficient validation. 
+- **Signature Operation Count** (SigChecks) Limits the number of signature verifications (e.g. `OP_CHECKSIG`, `OP_CHECKDATASIG`) per transaction to ensure efficient validation.
 
 - **Hashing Limit**: Limits the number of hashing operations (e.g. `OP_SHA256`, `OP_HASH160`) allowed per transaction to prevent excessive resource usage.
 

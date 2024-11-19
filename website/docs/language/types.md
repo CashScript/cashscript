@@ -180,12 +180,22 @@ VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number
 
 ### Semantic Byte Casting
 
-Bytes to bytes casting is just semantic and can be helpful for working with `LockingBytecode` global functions which expect a specific length input. To utilize byte-padding, convert to `int` and utilize the integer padding.
+When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20` or `bytes32`), this is a purely semantic cast. The bytes are not padded with zeros, and no checks are performed to ensure the cast bytes are of the correct length. This can be helpful in certain cases, such as `LockingBytecode`, which expects a specific length input.
 
 #### Example
 ```solidity
-bytes pkh = nftcommitment.split(20)[0];
-bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20(pkh)):
+bytes pkh = nftCommitment.split(20)[0]; // (type = bytes, content = 20 bytes)
+bytes20 bytes20Pkh = bytes20(pkh); // (type = bytes20, content = 20 bytes)
+bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20Pkh);
+```
+
+If you do need to pad bytes to a specific length, you can convert the bytes to `int` first, and then cast to the bounded `bytes` type. This will pad the bytes with zeros to the specified length, like specified in the *Int to Byte Casting* section above.
+
+#### Example
+```solidity
+bytes data = nftCommitment.split(10)[0]; // (type = bytes, content = 10 bytes)
+bytes20 paddedData = bytes20(int(data)); // (type = bytes20, content = 20 bytes)
+require(storedContractState == paddedData);
 ```
 
 ## Operators
