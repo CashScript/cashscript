@@ -8,13 +8,13 @@ export interface AbiInput {
 export interface AbiFunction {
   name: string;
   covenant?: boolean;
-  inputs: AbiInput[];
+  inputs: readonly AbiInput[];
 }
 
 export interface Artifact {
   contractName: string;
-  constructorInputs: AbiInput[];
-  abi: AbiFunction[];
+  constructorInputs: readonly AbiInput[];
+  abi: readonly AbiFunction[];
   bytecode: string;
   source: string;
   compiler: {

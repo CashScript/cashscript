@@ -42,22 +42,29 @@ type TypeMap = {
   datasig: Uint8Array | string;
 };
 
-type TypeMapValue = TypeMap[keyof TypeMap];
+// Helper type to process a single parameter by mapping its `type` to a value in `TypeMap`.
+// Example: { type: "pubkey" } -> Uint8Array
+// Branches:
+// - If `Param` is a known type, it maps the `type` to `TypeMap[Type]`.
+// - If `Param` has an unknown `type`, it defaults to `any`.
+// - If `Param` is not an object with `type`, it defaults to `any`.
+type ProcessParam<Param> = Param extends { type: infer Type }
+  ? Type extends keyof TypeMap
+    ? TypeMap[Type]
+    : any
+  : any;
 
-/**
- * Artifact format to tuple
- * T = {name: string, type: keyof TypeMap}[]
- * output = [ValueOfTypeMap, ...]
- */
-type GetTypeAsTuple<T> = T extends readonly [infer A, ...infer O]
-  ? A extends { type: infer Type }
-    ? Type extends keyof TypeMap
-      ? [TypeMap[Type], ...GetTypeAsTuple<O>]
-      : [any, ...GetTypeAsTuple<O>]
-    : [any, ...GetTypeAsTuple<O>]
-  : T extends []
-  ? []
-  : any[];
+// Main type to recursively convert an array of parameter definitions into a tuple.
+// Example: [{ type: "pubkey" }, { type: "int" }] -> [Uint8Array, bigint]
+// Branches:
+// - If `Params` is a tuple with a `Head` that matches `ProcessParam`, it processes the head and recurses on the `Tail`.
+// - If `Params` is an empty tuple, it returns [].
+// - If `Params` is not an array or tuple, it defaults to any[].
+type ParamsToTuple<Params> = Params extends readonly [infer Head, ...infer Tail]
+  ? [ProcessParam<Head>, ...ParamsToTuple<Tail>]
+  : Params extends readonly []
+    ? []
+    : any[];
 
 /**
  * Iterate to each function in artifact.abi
@@ -72,7 +79,7 @@ type _InferContractFunction<T> = T extends { length: infer L }
     ? T extends readonly [infer A, ...infer O]
       ? A extends { name: string; inputs: readonly any[] }
         ? {
-            [k in A['name']]: GetTypeAsTuple<A['inputs']>;
+            [k in A['name']]: ParamsToTuple<A['inputs']>;
           } & _InferContractFunction<O>
         : {} & _InferContractFunction<O>
       : T extends []
@@ -86,10 +93,18 @@ type KeyArgsToFunction<T extends Record<string, any[]>, ReturnVal> = {
   [K in keyof T]: (...p: T[K]) => ReturnVal
 }
 
+// TODO: Update type inference for function calls
+
 export class Contract<
-  const TArtifact extends Artifact = Artifact,
-  TContractType extends { constructorArgs: (TypeMap[keyof TypeMap])[], functions: Record<string, any> }
-    = { constructorArgs: GetTypeAsTuple<TArtifact["constructorInputs"]>, functions: InferContractFunction<TArtifact["abi"]> },
+  TArtifact extends Artifact = Artifact,
+  TResolved extends {
+    constructorInputs: any[];
+    functions: Record<string, any>;
+  }
+  = {
+    constructorInputs: ParamsToTuple<TArtifact["constructorInputs"]>;
+    functions: InferContractFunction<TArtifact["abi"]>;
+  }
   > {
   name: string;
   address: string;
@@ -98,8 +113,8 @@ export class Contract<
   bytesize: number;
   opcount: number;
 
-  functions: KeyArgsToFunction<TContractType["functions"], Transaction>;
-  unlock: KeyArgsToFunction<TContractType["functions"], Unlocker>;
+  functions: KeyArgsToFunction<TResolved["functions"], Transaction>;
+  unlock: KeyArgsToFunction<TResolved["functions"], Unlocker>;
 
   redeemScript: Script;
   provider: NetworkProvider;
@@ -107,7 +122,7 @@ export class Contract<
 
   constructor(
     private artifact: TArtifact,
-    constructorArgs: TContractType["constructorArgs"],
+    constructorArgs: TResolved["constructorInputs"],
     private options?: ContractOptions,
   ) {
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
