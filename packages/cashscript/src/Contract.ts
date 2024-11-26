@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { binToHex } from '@bitauth/libauth';
 import {
   AbiFunction,
@@ -29,19 +30,19 @@ import { ElectrumNetworkProvider } from './network/index.js';
 type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
 type TypeMap = {
+  [k: `bytes${number}`]: Uint8Array | string; // Matches any "bytes<number>" pattern
+} & {
+  byte: Uint8Array | string;
+  bytes: Uint8Array | string;
   bool: boolean;
   int: bigint;
   string: string;
-  bytes: Uint8Array;
-  bytes4: Uint8Array;
-  bytes32: Uint8Array;
-  bytes64: Uint8Array;
-  bytes1: Uint8Array;
-  // TODO: use proper value for types below
-  pubkey: Uint8Array;
-  sig: Uint8Array;
-  datasig: Uint8Array;
+  pubkey: Uint8Array | string;
+  sig: SignatureTemplate | Uint8Array | string;
+  datasig: Uint8Array | string;
 };
+
+type TypeMapValue = TypeMap[keyof TypeMap];
 
 /**
  * Artifact format to tuple
@@ -61,10 +62,10 @@ type GetTypeAsTuple<T> = T extends readonly [infer A, ...infer O]
 /**
  * Iterate to each function in artifact.abi
  * then use GetTypeAsTuple passing the artifact.abi[number].inputs
- * 
+ *
  * T = {name: string, inputs: {name: string, type: keyof TypeMap}[] }[]
  * Output = {[NameOfTheFunction]: GetTypeAsTuple}
- * 
+ *
  */
 type _InferContractFunction<T> = T extends { length: infer L }
   ? L extends number
