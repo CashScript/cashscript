@@ -101,8 +101,6 @@ type Prettify<T> = { [K in keyof T]: T[K] } & {};
 
 type AbiToFunctionMap<T, ReturnType> = Prettify<_AbiToFunctionMap<T, ReturnType>>;
 
-// TODO: Update type inference for function calls
-
 export class Contract<
   TArtifact extends Artifact = Artifact,
   TResolved extends {
