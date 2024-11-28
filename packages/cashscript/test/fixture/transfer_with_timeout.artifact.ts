@@ -41,4 +41,4 @@ export default {
     version: '0.8.0-next.0',
   },
   updatedAt: '2023-02-10T15:22:51.144Z',
-};
+} as const;

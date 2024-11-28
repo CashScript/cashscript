@@ -23,12 +23,6 @@ import {
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
 
-/**
- * Merge intersection type
- * {foo: "foo"} & {bar: "bar"} will become {foo: "foo", bar: "bar"}
- */
-type Prettify<T> = { [K in keyof T]: T[K] } & {};
-
 type TypeMap = {
   [k: `bytes${number}`]: Uint8Array | string; // Matches any "bytes<number>" pattern
 } & {
@@ -66,32 +60,46 @@ type ParamsToTuple<Params> = Params extends readonly [infer Head, ...infer Tail]
     ? []
     : any[];
 
-/**
- * Iterate to each function in artifact.abi
- * then use GetTypeAsTuple passing the artifact.abi[number].inputs
- *
- * T = {name: string, inputs: {name: string, type: keyof TypeMap}[] }[]
- * Output = {[NameOfTheFunction]: GetTypeAsTuple}
- *
- */
-type _InferContractFunction<T> = T extends { length: infer L }
-  ? L extends number
-    ? T extends readonly [infer A, ...infer O]
-      ? A extends { name: string; inputs: readonly any[] }
-        ? {
-            [k in A['name']]: ParamsToTuple<A['inputs']>;
-          } & _InferContractFunction<O>
-        : {} & _InferContractFunction<O>
-      : T extends []
-      ? {}
-      : { [k: string]: any[] }
-    : { [k: string]: any[] }
-  : never;
-type InferContractFunction<T> = Prettify<_InferContractFunction<T>>;
+// Processes a single function definition into a function mapping with parameters and return type.
+// Example: { name: "transfer", inputs: [{ type: "int" }] } -> { transfer: (arg0: bigint) => ReturnType }
+// Branches:
+// - Branch 1: If `Function` is an object with `name` and `inputs`, it creates a function mapping.
+// - Branch 2: If `Function` does not match the expected shape, it returns an empty object.
+type ProcessFunction<Function, ReturnType> = Function extends { name: string; inputs: readonly any[] }
+  ? {
+    [functionName in Function["name"]]: (...functionParameters: ParamsToTuple<Function["inputs"]>) => ReturnType;
+  }
+  : {};
 
-type KeyArgsToFunction<T extends Record<string, any[]>, ReturnVal> = {
-  [K in keyof T]: (...p: T[K]) => ReturnVal
-}
+// Recursively converts an ABI into a function map with parameter typings and return type.
+// Example:
+// [
+//   { name: "transfer", inputs: [{ type: "int" }] },
+//   { name: "approve", inputs: [{ type: "address" }, { type: "int" }] }
+// ] ->
+// { transfer: (arg0: bigint) => ReturnType; approve: (arg0: string, arg1: bigint) => ReturnType }
+// Branches:
+// - Branch 1: If `Abi` is `unknown` or `any`, return a default function map with generic parameters and return type.
+// - Branch 2: If `Abi` is a tuple with a `Head`, process `Head` using `ProcessFunction` and recurse on the `Tail`.
+// - Branch 3: If `Abi` is an empty tuple, return an empty object.
+// - Branch 4: If `Abi` is not an array or tuple, return a generic function map.
+type _AbiToFunctionMap<Abi, ReturnType> =
+  // Check if Abi is typed as `any`, in which case we return a default function map
+  unknown extends Abi
+    ? GenericFunctionMap<ReturnType>
+    : Abi extends readonly [infer Head, ...infer Tail]
+      ? ProcessFunction<Head, ReturnType> & _AbiToFunctionMap<Tail, ReturnType>
+      : Abi extends readonly []
+        ? {}
+        : GenericFunctionMap<ReturnType>;
+
+type GenericFunctionMap<ReturnType> = { [functionName: string]: (...functionParameters: any[]) => ReturnType };
+
+// Merge intersection type
+// Example: {foo: "foo"} & {bar: "bar"} -> {foo: "foo", bar: "bar"}
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
+
+type AbiToFunctionMap<T, ReturnType> = Prettify<_AbiToFunctionMap<T, ReturnType>>;
 
 // TODO: Update type inference for function calls
 
@@ -100,10 +108,12 @@ export class Contract<
   TResolved extends {
     constructorInputs: any[];
     functions: Record<string, any>;
+    unlock: Record<string, any>;
   }
   = {
     constructorInputs: ParamsToTuple<TArtifact["constructorInputs"]>;
-    functions: InferContractFunction<TArtifact["abi"]>;
+    functions: AbiToFunctionMap<TArtifact["abi"], Transaction>;
+    unlock: AbiToFunctionMap<TArtifact["abi"], Unlocker>;
   }
   > {
   name: string;
@@ -113,8 +123,8 @@ export class Contract<
   bytesize: number;
   opcount: number;
 
-  functions: KeyArgsToFunction<TResolved["functions"], Transaction>;
-  unlock: KeyArgsToFunction<TResolved["functions"], Unlocker>;
+  functions: TResolved["functions"];
+  unlock: TResolved["unlock"];
 
   redeemScript: Script;
   provider: NetworkProvider;

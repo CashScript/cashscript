@@ -56,6 +56,19 @@ import { binToHex } from '@bitauth/libauth';
     contract.functions.spend(alicePub, new SignatureTemplate(alicePriv), 100n);
     // @ts-expect-error
     contract.functions.spend(alicePub);
+
+    // it('should not perform type checking when cast to any')
+    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n]);
+    contractAsAny.functions.notAFunction();
+    contractAsAny.functions.spend();
+    contractAsAny.functions.spend(1000n, true);
+
+    // it('should not perform type checking when cannot infer type')
+    // Note: would be very nice if it *could* infer the type from static json
+    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n]);
+    contractFromUnknown.functions.notAFunction();
+    contractFromUnknown.functions.spend();
+    contractFromUnknown.functions.spend(1000n, true);
   }
 }
 
@@ -137,7 +150,7 @@ import { binToHex } from '@bitauth/libauth';
     // @ts-expect-error
     contract.functions.transfer(1000n);
     // @ts-expect-error
-    contract.functions.timeout('hello');
+    contract.functions.timeout(true);
 
     // it('should give type errors when using incorrect function input length')
     // @ts-expect-error
