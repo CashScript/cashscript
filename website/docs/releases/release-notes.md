@@ -2,6 +2,14 @@
 title: Release Notes
 ---
 
+## v0.10.3
+
+#### cashc compiler
+- :sparkles: Add `--format ts` option to `cashc` CLI to generate TypeScript typings for the artifact.
+
+#### CashScript SDK
+- :sparkles: Add automatic TypeScript typings for `Contract` class when artifact is generated using the `cashc` CLI with the `--format ts` option.
+
 ## v0.10.2
 
 #### cashc compiler

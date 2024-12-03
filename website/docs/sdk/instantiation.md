@@ -26,7 +26,7 @@ new Contract(
 
 A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `addressType`.
 
-An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/compiler/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)).
+An `Artifact` object is the result of compiling a CashScript contract. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)). If compilation is done using the `cashc` CLI with the <span style={{ display: 'inline-block' }}>`--format ts`</span> option, you will get explicit types and type checking for the constructor arguments and function arguments.
 
 The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but the network providers can be configured. See the docs on [NetworkProvider](/docs/sdk/network-provider).
 
@@ -53,6 +53,8 @@ const contractArguments = [alicePkh]
 const options = { provider, addressType}
 const contract = new Contract(P2PKH, contractArguments, options);
 ```
+
+### TypeScript Typings
 
 ## Contract Properties
 
@@ -174,6 +176,10 @@ const tx = await contract.functions
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
   .send()
 ```
+
+:::tip
+If the contract artifact is generated using the `cashc` CLI with the `--format ts` option, you will get explicit types and type checking for the function name and arguments.
+:::
 
 ### Contract unlockers
 
