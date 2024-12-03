@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { Artifact, Contract, SignatureTemplate, Transaction, Unlocker } from 'cashscript';
 import p2pkhArtifact from '../fixture/p2pkh.artifact';
-import p2pkhArtifactJsonNotConst from '../fixture/p2pkh.json';
+import p2pkhArtifactJsonNotConst from '../fixture/p2pkh.json' with { type: 'json' };
 import announcementArtifact from '../fixture/announcement.artifact';
 import hodlVaultArtifact from '../fixture/hodl_vault.artifact';
 import transferWithTimeoutArtifact from '../fixture/transfer_with_timeout.artifact';
