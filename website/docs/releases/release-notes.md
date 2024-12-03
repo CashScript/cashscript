@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.10.5
+
+#### cashc compiler
+- :bug: Fix bug in new TypeScript typings for artifact.
+
 ## v0.10.4
 
 #### cashc compiler
