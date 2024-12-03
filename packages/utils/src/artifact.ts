@@ -63,7 +63,9 @@ export function exportArtifact(artifact: Artifact, targetFile: string, format: '
 
 export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): string {
   if (format === 'ts') {
-    return `export default ${stringifyAsTs(artifact)} as const;\n`;
+    // We remove any undefined values to make the artifact serializable using stringifyAsTs
+    const normalisedArtifact = JSON.parse(JSON.stringify(artifact));
+    return `export default ${stringifyAsTs(normalisedArtifact)} as const;\n`;
   }
 
   return JSON.stringify(artifact, null, 2);
