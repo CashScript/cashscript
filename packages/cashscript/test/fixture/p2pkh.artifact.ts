@@ -1,0 +1,31 @@
+export default {
+  contractName: 'P2PKH',
+  constructorInputs: [
+    {
+      name: 'pkh',
+      type: 'bytes20',
+    },
+  ],
+  abi: [
+    {
+      name: 'spend',
+      inputs: [
+        {
+          name: 'pk',
+          type: 'pubkey',
+        },
+        {
+          name: 's',
+          type: 'sig',
+        },
+      ],
+    },
+  ],
+  bytecode: 'OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG',
+  source: 'contract P2PKH(bytes20 pkh) {\n    // Require pk to match stored pkh and signature to match\n    function spend(pubkey pk, sig s) {\n        require(hash160(pk) == pkh);\n        require(checkSig(s, pk));\n    }\n}\n',
+  compiler: {
+    name: 'cashc',
+    version: '0.8.0-next.0',
+  },
+  updatedAt: '2023-02-10T15:22:51.429Z',
+} as const;

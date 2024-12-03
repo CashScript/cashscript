@@ -14,7 +14,7 @@ See the [GitHub repository](https://github.com/CashScript/cashscript) and the [C
 CashScript is a high-level language that allows you to write Bitcoin Cash smart contracts in a straightforward and familiar way. Its syntax is inspired by Ethereum's Solidity language, but its functionality is different since the underlying systems have very different fundamentals. See the [language documentation](https://cashscript.org/docs/language/) for a full reference of the language.
 
 ## The CashScript SDK
-The main way to interact with CashScript contracts and integrate them into applications is using the CashScript SDK. This SDK allows you to import `.json` artifact files that were compiled using the `cashc` compiler and convert them to `Contract` objects. These objects are used to create new contract instances. These instances are used to interact with the contracts using the functions that were implemented in the `.cash` file. For more information on the CashScript SDK, refer to the [SDK documentation](https://cashscript.org/docs/sdk/).
+The main way to interact with CashScript contracts and integrate them into applications is using the CashScript SDK. This SDK allows you to import `.json` (or `.ts`) artifact files that were compiled using the `cashc` compiler and convert them to `Contract` objects. These objects are used to create new contract instances. These instances are used to interact with the contracts using the functions that were implemented in the `.cash` file. For more information on the CashScript SDK, refer to the [SDK documentation](https://cashscript.org/docs/sdk/).
 
 ### Installation
 ```bash
