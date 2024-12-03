@@ -105,14 +105,14 @@ export const buildTemplate = async ({
       template.scripts[unlockScriptName] = {
         name: unlockScriptName,
         script:
-            `<${signatureString}>\n<${placeholderKeyName}.public_key>`,
+          `<${signatureString}>\n<${placeholderKeyName}.public_key>`,
         unlocks: lockScriptName,
       };
       template.scripts[lockScriptName] = {
         lockingType: 'standard',
         name: lockScriptName,
         script:
-            `OP_DUP\nOP_HASH160 <$(<${placeholderKeyName}.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
+          `OP_DUP\nOP_HASH160 <$(<${placeholderKeyName}.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
       };
     });
 
@@ -358,7 +358,7 @@ const generateTemplateScenarioBytecode = (
 };
 
 const generateTemplateScenarioParametersValues = (
-  types: AbiInput[],
+  types: readonly AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
   const typesAndArguments = zip(types, encodedArgs);
@@ -376,7 +376,7 @@ const generateTemplateScenarioParametersValues = (
 };
 
 const generateTemplateScenarioKeys = (
-  types: AbiInput[],
+  types: readonly AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
   const typesAndArguments = zip(types, encodedArgs);
@@ -388,7 +388,7 @@ const generateTemplateScenarioKeys = (
   return Object.fromEntries(entries);
 };
 
-const formatParametersForDebugging = (types: AbiInput[], args: EncodedFunctionArgument[]): string => {
+const formatParametersForDebugging = (types: readonly AbiInput[], args: EncodedFunctionArgument[]): string => {
   if (types.length === 0) return '// none';
 
   // We reverse the arguments because the order of the arguments in the bytecode is reversed

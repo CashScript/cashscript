@@ -55,7 +55,7 @@ export class Contract<
   public encodedConstructorArgs: Uint8Array[];
 
   constructor(
-    private artifact: TArtifact,
+    public artifact: TArtifact,
     constructorArgs: TResolved['constructorInputs'],
     private options?: ContractOptions,
   ) {
