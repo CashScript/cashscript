@@ -78,28 +78,28 @@ export class Contract<
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
-    this.functions = {} as any;
+    this.functions = {};
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
-      // @ts-ignore generic and can only be indexed for reading
+      // @ts-ignore TODO: see if we can use generics to make TypeScript happy
       this.functions[f.name] = this.createFunction(f);
     } else {
       artifact.abi.forEach((f, i) => {
-        // @ts-ignore generic and can only be indexed for reading
+        // @ts-ignore TODO: see if we can use generics to make TypeScript happy
         this.functions[f.name] = this.createFunction(f, i);
       });
     }
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
-    this.unlock = {} as any;
+    this.unlock = {};
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
-      // @ts-ignore generic and can only be indexed for reading
+      // @ts-ignore TODO: see if we can use generics to make TypeScript happy
       this.unlock[f.name] = this.createUnlocker(f);
     } else {
       artifact.abi.forEach((f, i) => {
-        // @ts-ignore generic and can only be indexed for reading
+        // @ts-ignore TODO: see if we can use generics to make TypeScript happy
         this.unlock[f.name] = this.createUnlocker(f, i);
       });
     }
