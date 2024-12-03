@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { Contract, SignatureTemplate, Transaction } from 'cashscript';
+import { Artifact, Contract, SignatureTemplate, Transaction, Unlocker } from 'cashscript';
 import p2pkhArtifact from '../fixture/p2pkh.artifact';
 import p2pkhArtifactJsonNotConst from '../fixture/p2pkh.json';
 import announcementArtifact from '../fixture/announcement.artifact';
@@ -7,6 +7,30 @@ import hodlVaultArtifact from '../fixture/hodl_vault.artifact';
 import transferWithTimeoutArtifact from '../fixture/transfer_with_timeout.artifact';
 import { alicePkh, alicePriv, alicePub, bobPub, oraclePub } from '../fixture/vars';
 import { binToHex } from '@bitauth/libauth';
+
+interface ManualArtifactType extends Artifact {
+  constructorInputs: [
+    {
+      name: 'pkh',
+      type: 'bytes20',
+    },
+  ],
+  abi: [
+    {
+      name: 'spend',
+      inputs: [
+        {
+          name: 'pk',
+          type: 'pubkey',
+        },
+        {
+          name: 's',
+          type: 'sig',
+        },
+      ],
+    },
+  ]
+}
 
 // describe('P2PKH contract | single constructor input | single function (2 args)')
 {
@@ -34,6 +58,10 @@ import { binToHex } from '@bitauth/libauth';
     // it('should not perform type checking when cannot infer type')
     // Note: would be very nice if it *could* infer the type from static json
     new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n]);
+
+    // it('should perform type checking when manually specifying a type
+    // @ts-expect-error
+    new Contract<ManualArtifactType>(p2pkhArtifactJsonNotConst as any, [alicePkh, 1000n]);
   }
 
   // describe('Contract functions')
