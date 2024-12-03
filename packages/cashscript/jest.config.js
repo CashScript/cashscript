@@ -7,4 +7,5 @@ export default {
   ],
   testEnvironment: 'jest-environment-node',
   setupFilesAfterEnv: ['./jest.setup.js'],
+  modulePathIgnorePatterns: ['<rootDir>/.*/types/.*'],
 };
