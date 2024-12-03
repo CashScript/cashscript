@@ -1,4 +1,4 @@
-import { Type } from '@cashscript/utils';
+import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -7,7 +7,7 @@ export class TypeError extends Error {
 }
 
 export class OutputSatoshisTooSmallError extends Error {
-  constructor(satoshis: bigint, minimumAmount:bigint) {
+  constructor(satoshis: bigint, minimumAmount: bigint) {
     super(`Tried to add an output with ${satoshis} satoshis, which is less than the required minimum for this output-type (${minimumAmount})`);
   }
 }
@@ -18,62 +18,86 @@ export class TokensToNonTokenAddressError extends Error {
   }
 }
 
-export class FailedTransactionError extends Error {
-  constructor(public reason: string, public meep?: string) {
-    super(`Transaction failed with reason: ${reason}${meep ? `\n${meep}` : ''}`);
+export class NoDebugInformationInArtifactError extends Error {
+  constructor() {
+    super('No debug information found in artifact, please recompile with cashc version 0.10.0 or newer.');
   }
 }
 
-export class FailedRequireError extends FailedTransactionError {}
-export class FailedTimeCheckError extends FailedTransactionError {}
-export class FailedSigCheckError extends FailedTransactionError {}
-
-// TODO: Expand these reasons with non-script failures (like tx-mempool-conflict)
-export enum Reason {
-  EVAL_FALSE = 'Script evaluated without error but finished with a false/empty top stack element',
-  VERIFY = 'Script failed an OP_VERIFY operation',
-  EQUALVERIFY = 'Script failed an OP_EQUALVERIFY operation',
-  CHECKMULTISIGVERIFY = 'Script failed an OP_CHECKMULTISIGVERIFY operation',
-  CHECKSIGVERIFY = 'Script failed an OP_CHECKSIGVERIFY operation',
-  CHECKDATASIGVERIFY = 'Script failed an OP_CHECKDATASIGVERIFY operation',
-  NUMEQUALVERIFY = 'Script failed an OP_NUMEQUALVERIFY operation',
-  SCRIPT_SIZE = 'Script is too big',
-  PUSH_SIZE = 'Push value size limit exceeded',
-  OP_COUNT = 'Operation limit exceeded',
-  STACK_SIZE = 'Stack size limit exceeded',
-  SIG_COUNT = 'Signature count negative or greater than pubkey count',
-  PUBKEY_COUNT = 'Pubkey count negative or limit exceeded',
-  INVALID_OPERAND_SIZE = 'Invalid operand size',
-  INVALID_NUMBER_RANGE = 'Given operand is not a number within the valid range',
-  IMPOSSIBLE_ENCODING = 'The requested encoding is impossible to satisfy',
-  INVALID_SPLIT_RANGE = 'Invalid OP_SPLIT range',
-  INVALID_BIT_COUNT = 'Invalid number of bit set in OP_CHECKMULTISIG',
-  BAD_OPCODE = 'Opcode missing or not understood',
-  DISABLED_OPCODE = 'Attempted to use a disabled opcode',
-  INVALID_STACK_OPERATION = 'Operation not valid with the current stack size',
-  INVALID_ALTSTACK_OPERATION = 'Operation not valid with the current altstack size',
-  OP_RETURN = 'OP_RETURN was encountered',
-  UNBALANCED_CONDITIONAL = 'Invalid OP_IF construction',
-  DIV_BY_ZERO = 'Division by zero error',
-  MOD_BY_ZERO = 'Modulo by zero error',
-  INVALID_BITFIELD_SIZE = 'Bitfield of unexpected size error',
-  INVALID_BIT_RANGE = 'Bitfield\'s bit out of the expected range',
-  NEGATIVE_LOCKTIME = 'Negative locktime',
-  UNSATISFIED_LOCKTIME = 'Locktime requirement not satisfied',
-  SIG_HASHTYPE = 'Signature hash type missing or not understood',
-  SIG_DER = 'Non-canonical DER signature',
-  MINIMALDATA = 'Data push larger than necessary',
-  SIG_PUSHONLY = 'Only push operators allowed in signature scripts',
-  SIG_HIGH_S = 'Non-canonical signature: S value is unnecessarily high',
-  MINIMALIF = 'OP_IF/NOTIF argument must be minimal',
-  SIG_NULLFAIL = 'Signature must be zero for failed CHECK(MULTI)SIG operation',
-  SIG_BADLENGTH = 'Signature cannot be 65 bytes in CHECKMULTISIG',
-  SIG_NONSCHNORR = 'Only Schnorr signatures allowed in this operation',
-  DISCOURAGE_UPGRADABLE_NOPS = 'NOPx reserved for soft-fork upgrades',
-  PUBKEYTYPE = 'Public key is neither compressed or uncompressed',
-  CLEANSTACK = 'Script did not clean its stack',
-  NONCOMPRESSED_PUBKEY = 'Using non-compressed public key',
-  ILLEGAL_FORKID = 'Illegal use of SIGHASH_FORKID',
-  MUST_USE_FORKID = 'Signature must use SIGHASH_FORKID',
-  UNKNOWN = 'unknown error',
+export class FailedTransactionError extends Error {
+  constructor(public reason: string, public bitauthUri?: string) {
+    super(`${reason}${bitauthUri ? `\n\nBitauth URI: ${bitauthUri}` : ''}`);
+  }
 }
+
+export class FailedTransactionEvaluationError extends FailedTransactionError {
+  constructor(
+    public artifact: Artifact,
+    public failingInstructionPointer: number,
+    public inputIndex: number,
+    public bitauthUri: string,
+    public libauthErrorMessage: string,
+  ) {
+    let message = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.\nReason: ${libauthErrorMessage}`;
+
+    if (artifact.debug) {
+      const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+      message = `${artifact.contractName}.cash:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
+    }
+
+    super(message, bitauthUri);
+  }
+}
+
+export class FailedRequireError extends FailedTransactionError {
+  constructor(
+    public artifact: Artifact,
+    public failingInstructionPointer: number,
+    public requireStatement: RequireStatement,
+    public inputIndex: number,
+    public bitauthUri: string,
+    public libauthErrorMessage?: string,
+  ) {
+    let { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+
+    if (!statement.includes('require')) {
+      statement = requireStatement.message
+        ? `require(${statement}, "${requireStatement.message}")`
+        : `require(${statement})`;
+
+      // Sometimes in reconstructed multiline require statements, we get double commas
+      statement = statement.replace(/,,/g, ',');
+    }
+
+    const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
+    const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
+    const fullMessage = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.\nFailing statement: ${statement}`;
+
+    super(fullMessage, bitauthUri);
+  }
+}
+
+const getLocationDataForInstructionPointer = (
+  artifact: Artifact,
+  instructionPointer: number,
+): { lineNumber: number, statement: string } => {
+  const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
+
+  // We subtract the constructor inputs because these are present in the evaluation (and thus the instruction pointer)
+  // but they are not present in the source code (and thus the location data)
+  const modifiedInstructionPointer = instructionPointer - artifact.constructorInputs.length;
+
+  const { location } = locationData[modifiedInstructionPointer];
+
+  const failingLines = artifact.source.split('\n').slice(location.start.line - 1, location.end.line);
+
+  // Slice off the start and end of the statement's start and end lines to only return the failing part
+  // Note that we first slice off the end, to avoid shifting the end column index
+  failingLines[failingLines.length - 1] = failingLines[failingLines.length - 1].slice(0, location.end.column);
+  failingLines[0] = failingLines[0].slice(location.start.column);
+
+  const statement = failingLines.join('\n');
+  const lineNumber = location.start.line;
+
+  return { statement, lineNumber };
+};

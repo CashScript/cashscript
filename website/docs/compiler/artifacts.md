@@ -20,6 +20,12 @@ interface Artifact {
     name: string // Compiler used to compile this contract
     version: string // Compiler version used to compile this contract
   }
+  debug?: {
+    bytecode: string // unlike `bytecode` property above, this is a hex-encoded binary string
+    sourceMap: string // see documentation for `generateSourceMap`
+    logs: LogEntry[] // log entries generated from `console.log` statements
+    requires: RequireStatement[] // messages for failing `require` statements
+  }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
 }
 
@@ -31,5 +37,17 @@ interface AbiInput {
 interface AbiFunction {
   name: string // Function name
   inputs: AbiInput[] // Function inputs / parameters
+}
+
+interface LogEntry {
+  ip: number; // instruction pointer
+  line: number; // line in the source code
+  data: Array<{ stackIndex: number, type: string } | string>; // data to be logged
+}
+
+interface RequireMessage {
+  ip: number; // instruction pointer
+  line: number; // line in the source code
+  message: string; // custom message for failing `require` statement
 }
 ```

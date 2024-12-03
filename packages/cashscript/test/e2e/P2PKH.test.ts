@@ -1,30 +1,57 @@
 import { binToHex } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from '../../src/index.js';
+import {
+  Contract, SignatureTemplate, MockNetworkProvider, ElectrumNetworkProvider,
+  FailedRequireError,
+} from '../../src/index.js';
 import {
   bobAddress,
   bobPub,
   bobPriv,
   bobPkh,
   alicePriv,
+  alicePub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { Network, Utxo } from '../../src/interfaces.js';
-import { createOpReturnOutput, utxoComparator } from '../../src/utils.js';
-import { FailedSigCheckError, Reason } from '../../src/Errors.js';
-import artifact from '../fixture/p2pkh.json' assert { type: "json" };
+import {
+  createOpReturnOutput, randomUtxo, utxoComparator,
+} from '../../src/utils.js';
+import artifact from '../fixture/p2pkh.json' with { type: 'json' };
 
 describe('P2PKH-no-tokens', () => {
   let p2pkhInstance: Contract;
 
+  const provider = process.env.TESTS_USE_MOCKNET
+    ? new MockNetworkProvider()
+    : new ElectrumNetworkProvider(Network.CHIPNET);
+
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
     // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other (P2PKH tokens) tests
     p2pkhInstance = new Contract(artifact, [bobPkh], { provider });
     console.log(p2pkhInstance.tokenAddress);
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ satoshis: 10000000n }));
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ satoshis: 10000000n }));
   });
 
   describe('send', () => {
-    it('should fail when using incorrect function arguments', async () => {
+    it('should fail when using incorrect public key', async () => {
+      // given
+      const to = p2pkhInstance.address;
+      const amount = 10000n;
+
+      // when
+      const txPromise = p2pkhInstance.functions
+        .spend(alicePub, new SignatureTemplate(bobPriv))
+        .to(to, amount)
+        .send();
+
+      // then
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('P2PKH.cash:4 Require statement failed at input 0 in contract P2PKH.cash at line 4.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(hash160(pk) == pkh)');
+    });
+
+    it('should fail when using incorrect signature', async () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 10000n;
@@ -36,8 +63,9 @@ describe('P2PKH-no-tokens', () => {
         .send();
 
       // then
-      await expect(txPromise).rejects.toThrow(FailedSigCheckError);
-      await expect(txPromise).rejects.toThrow(Reason.SIG_NULLFAIL);
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('P2PKH.cash:5 Require statement failed at input 0 in contract P2PKH.cash at line 5.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(checkSig(s, pk))');
     });
 
     it('should succeed when using correct function arguments', async () => {
@@ -61,8 +89,7 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000n;
-      const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort(utxoComparator).reverse();
+      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
       const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, 0n) + 1n;
 
@@ -81,8 +108,7 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000n;
-      const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort(utxoComparator).reverse();
+      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const { utxos: gathered } = gatherUtxos(utxos, { amount });
 
       // when
@@ -163,8 +189,8 @@ describe('P2PKH-no-tokens', () => {
       const to = bobAddress;
       const amount = 10000n;
 
-      const contractUtxos = await p2pkhInstance.getUtxos();
-      const bobUtxos = await getAddressUtxos(bobAddress);
+      const contractUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+      const bobUtxos = await provider.getUtxos(bobAddress);
 
       // when
       const tx = await p2pkhInstance.functions
@@ -183,10 +209,6 @@ describe('P2PKH-no-tokens', () => {
     });
   });
 });
-
-async function getAddressUtxos(address: string): Promise<Utxo[]> {
-  return new ElectrumNetworkProvider(Network.CHIPNET).getUtxos(address);
-}
 
 function gatherUtxos(
   utxos: Utxo[],

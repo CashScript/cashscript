@@ -31,6 +31,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
+  ConsoleStatementNode,
+  ConsoleParameterNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -60,7 +62,10 @@ import type {
   InstantiationContext,
   NullaryOpContext,
   UnaryIntrospectionOpContext,
+  ConsoleStatementContext,
+  ConsoleParameterContext,
   StatementContext,
+  RequireMessageContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -183,7 +188,8 @@ export default class AstBuilder
 
   visitTimeOpStatement(ctx: TimeOpStatementContext): TimeOpNode {
     const expression = this.visit(ctx.expression());
-    const timeOp = new TimeOpNode(ctx.TxVar().getText() as TimeOp, expression);
+    const message = ctx.requireMessage() ? this.createStringLiteral(ctx.requireMessage()).value : undefined;
+    const timeOp = new TimeOpNode(ctx.TxVar().getText() as TimeOp, expression, message);
     timeOp.location = Location.fromCtx(ctx);
 
     return timeOp;
@@ -191,7 +197,8 @@ export default class AstBuilder
 
   visitRequireStatement(ctx: RequireStatementContext): RequireNode {
     const expression = this.visit(ctx.expression());
-    const require = new RequireNode(expression);
+    const message = ctx.requireMessage() ? this.createStringLiteral(ctx.requireMessage()).value : undefined;
+    const require = new RequireNode(expression, message);
     require.location = Location.fromCtx(ctx);
     return require;
   }
@@ -340,13 +347,13 @@ export default class AstBuilder
     const numberCtx = ctx.numberLiteral();
     const numberString = numberCtx.NumberLiteral().getText();
     const numberUnit = numberCtx.NumberUnit()?.getText();
-    const numberValue = BigInt(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit.toUpperCase()] : 1);
+    const numberValue = parseNumberString(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit.toUpperCase()] : 1);
     const intLiteral = new IntLiteralNode(numberValue);
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
   }
 
-  createStringLiteral(ctx: LiteralContext): StringLiteralNode {
+  createStringLiteral(ctx: LiteralContext | RequireMessageContext): StringLiteralNode {
     const rawString = ctx.StringLiteral().getText();
     const stringValue = rawString.substring(1, rawString.length - 1);
     const quote = rawString.substring(0, 1);
@@ -382,9 +389,35 @@ export default class AstBuilder
     return hexLiteral;
   }
 
+  visitConsoleStatement(ctx: ConsoleStatementContext): ConsoleStatementNode {
+    const parameters = ctx.consoleParameterList()
+      .consoleParameter_list()
+      .map((p) => this.visit(p) as ConsoleParameterNode);
+
+    const node = new ConsoleStatementNode(parameters);
+    node.location = Location.fromCtx(ctx);
+    return node;
+  }
+
+  visitConsoleParameter(ctx: ConsoleParameterContext): ConsoleParameterNode {
+    const node = ctx.literal() ? this.createLiteral(ctx.literal()) : new IdentifierNode(ctx.Identifier().getText());
+    node.location = Location.fromCtx(ctx);
+    return node;
+  }
+
   // For safety reasons, we throw an error when the "default" visitChildren is called. *All* nodes
   // must have a custom visit method, so that we can be sure that we've covered all cases.
   visitChildren(): Node {
     throw new Error('Safety Warning: Unhandled node in AST builder');
   }
 }
+
+const parseNumberString = (numberString: string): bigint => {
+  const cleanedNumberString = numberString.replace(/_/g, '');
+
+  const isScientificNotation = /[eE]/.test(cleanedNumberString);
+  if (!isScientificNotation) return BigInt(cleanedNumberString);
+
+  const [coefficient, exponent] = cleanedNumberString.split(/[eE]/);
+  return BigInt(coefficient) * BigInt(10) ** BigInt(exponent);
+};

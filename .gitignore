@@ -105,3 +105,5 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
+manual-test.ts

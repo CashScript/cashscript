@@ -1,4 +1,4 @@
-import type { Transaction } from '@bitauth/libauth';
+import { type Transaction } from '@bitauth/libauth';
 import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
 
@@ -104,6 +104,7 @@ export const Network = {
   TESTNET3: literal('testnet3'),
   TESTNET4: literal('testnet4'),
   CHIPNET: literal('chipnet'),
+  MOCKNET: literal('mocknet'),
   REGTEST: literal('regtest'),
 };
 
@@ -116,5 +117,7 @@ export interface TransactionDetails extends Transaction {
 
 export interface ContractOptions {
   provider?: NetworkProvider,
-  addressType?: 'p2sh20' | 'p2sh32',
+  addressType?: AddressType,
 }
+
+export type AddressType = 'p2sh20' | 'p2sh32';

@@ -24,6 +24,7 @@ import {
   HexLiteralNode,
   UnaryOpNode,
   InstantiationNode,
+  ConsoleStatementNode,
 } from '../../src/ast/AST.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator.js';
 import { Class, TimeOp } from '../../src/ast/Globals.js';
@@ -884,6 +885,51 @@ export const fixtures: Fixture[] = [
             ),
           ]),
         )],
+      ),
+    ),
+  },
+  {
+    fn: 'debug_messages.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'DebugMessages',
+        [],
+        [
+          new FunctionDefinitionNode(
+            'spend',
+            [new ParameterNode(PrimitiveType.INT, 'value')],
+            new BlockNode([
+              new RequireNode(
+                new BinaryOpNode(
+                  new IdentifierNode('value'),
+                  BinaryOperator.EQ,
+                  new IntLiteralNode(1n),
+                ),
+                'Wrong value passed',
+              ),
+              new ConsoleStatementNode([
+                new IdentifierNode('value'),
+                new StringLiteralNode('test', '"'),
+              ]),
+              new ConsoleStatementNode([
+                new IdentifierNode('value'),
+                new StringLiteralNode('test2', '"'),
+              ]),
+              new RequireNode(
+                new BinaryOpNode(
+                  new BinaryOpNode(
+                    new IdentifierNode('value'),
+                    BinaryOperator.PLUS,
+                    new IntLiteralNode(1n),
+                  ),
+                  BinaryOperator.EQ,
+                  new IntLiteralNode(2n),
+                ),
+                'Sum doesn\'t work',
+              ),
+            ]),
+          ),
+        ],
       ),
     ),
   },

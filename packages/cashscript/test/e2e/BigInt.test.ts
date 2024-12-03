@@ -1,13 +1,15 @@
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import {
   Contract,
-  ElectrumNetworkProvider,
+  MockNetworkProvider,
   FailedRequireError,
   FailedTransactionError,
+  ElectrumNetworkProvider,
   Network,
-  Reason,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/bigint.json' assert { type: "json" };
+import artifact from '../fixture/bigint.json' with { type: 'json' };
+import { randomUtxo } from '../../src/utils.js';
 
 describe('BigInt', () => {
   let bigintContract: Contract;
@@ -15,9 +17,12 @@ describe('BigInt', () => {
   const MAX_INT64 = BigInt('9223372036854775807');
 
   beforeAll(() => {
-    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_MOCKNET
+      ? new MockNetworkProvider()
+      : new ElectrumNetworkProvider(Network.CHIPNET);
     bigintContract = new Contract(artifact, [], { provider });
     console.log(bigintContract.address);
+    (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
   });
 
   describe('proofOfBigInt', () => {
@@ -34,7 +39,8 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow(Reason.VERIFY);
+      await expect(txPromise).rejects.toThrow('BigInt.cash:4 Require statement failed at input 0 in contract BigInt.cash at line 4');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(x >= maxInt32PlusOne)');
     });
 
     it('should fail when providing numbers that overflow 64 bits when multiplied', async () => {
@@ -50,7 +56,7 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedTransactionError);
-      await expect(txPromise).rejects.toThrow(Reason.INVALID_NUMBER_RANGE);
+      await expect(txPromise).rejects.toThrow(AuthenticationErrorCommon.overflowsVmNumberRange);
     });
 
     it('should fail when providing a number that does not fit within 64 bits', async () => {
@@ -66,7 +72,7 @@ describe('BigInt', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedTransactionError);
-      await expect(txPromise).rejects.toThrow(Reason.INVALID_NUMBER_RANGE);
+      await expect(txPromise).rejects.toThrow(AuthenticationErrorCommon.invalidVmNumber);
     });
 
     it('should succeed when providing a number within 32b < x < 64b', async () => {

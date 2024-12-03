@@ -3,20 +3,20 @@ import { placeholder } from '@cashscript/utils';
 import {
   Contract,
   ElectrumNetworkProvider,
+  MockNetworkProvider,
   Network,
+  randomUtxo,
   SignatureTemplate,
 } from '../src/index.js';
 import {
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
-import p2pkhArtifact from './fixture/p2pkh.json' assert { type: "json" };
-import twtArtifact from './fixture/transfer_with_timeout.json' assert { type: "json" };
-import hodlVaultArtifact from './fixture/hodl_vault.json' assert { type: "json" };
-import mecenasArtifact from './fixture/mecenas.json' assert { type: "json" };
-import boundedBytesArtifact from './fixture/bounded_bytes.json' assert { type: "json" };
+import p2pkhArtifact from './fixture/p2pkh.json' with { type: 'json' };
+import twtArtifact from './fixture/transfer_with_timeout.json' with { type: 'json' };
+import hodlVaultArtifact from './fixture/hodl_vault.json' with { type: 'json' };
+import mecenasArtifact from './fixture/mecenas.json' with { type: 'json' };
+import boundedBytesArtifact from './fixture/bounded_bytes.json' with { type: 'json' };
 
-// This is failing due to limitations between Jest and bigint (https://github.com/facebook/jest/issues/11617)
-// TODO: Fix this somehow by changing the test, or move away from Jest
 describe('Contract', () => {
   describe('new', () => {
     it('should fail with incorrect constructor args', () => {
@@ -109,6 +109,21 @@ describe('Contract', () => {
       const instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider });
 
       expect(await instance.getBalance()).toBe(0n);
+    });
+  });
+
+  describe('getUtxos', () => {
+    it('should return utxos for existing contract on mocknet', async () => {
+      const provider = new MockNetworkProvider();
+      const instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
+
+      provider.addUtxo(instance.address, randomUtxo());
+
+      const utxos = await instance.getUtxos();
+      const utxosFromProvider = await provider.getUtxos(instance.address);
+
+      expect(utxos).toHaveLength(1);
+      expect(utxos).toEqual(utxosFromProvider);
     });
   });
 

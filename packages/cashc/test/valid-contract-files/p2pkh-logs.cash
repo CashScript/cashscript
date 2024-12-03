@@ -1,0 +1,7 @@
+contract P2PKH(bytes20 pkh) {
+    function spend(pubkey pk, sig s) {
+        require(hash160(pk) == pkh);
+        console.log(pk, pkh, s);
+        require(checkSig(s, pk));
+    }
+}

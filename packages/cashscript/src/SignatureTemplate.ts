@@ -9,7 +9,7 @@ import {
 import { createSighashPreimage, publicKeyToP2PKHLockingBytecode } from './utils.js';
 
 export default class SignatureTemplate {
-  private privateKey: Uint8Array;
+  public privateKey: Uint8Array;
 
   constructor(
     signer: Keypair | Uint8Array | string,
@@ -26,6 +26,7 @@ export default class SignatureTemplate {
     }
   }
 
+  // TODO: Allow signing of non-transaction messages (i.e. don't add the hashtype)
   generateSignature(payload: Uint8Array, bchForkId?: boolean): Uint8Array {
     const signature = this.signatureAlgorithm === SignatureAlgorithm.SCHNORR
       ? secp256k1.signMessageHashSchnorr(this.privateKey, payload) as Uint8Array
@@ -36,6 +37,10 @@ export default class SignatureTemplate {
 
   getHashType(bchForkId: boolean = true): number {
     return bchForkId ? (this.hashtype | SigningSerializationFlag.forkId) : this.hashtype;
+  }
+
+  getSignatureAlgorithm(): SignatureAlgorithm {
+    return this.signatureAlgorithm;
   }
 
   getPublicKey(): Uint8Array {

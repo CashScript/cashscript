@@ -1,0 +1,8 @@
+contract DebugMessages() {
+  function spend(int value) {
+    require(value == 1, "Wrong value passed");
+    console.log(value, "test");
+    console.log(value, "test2");
+    require(value + 1 == 2, "Sum doesn't work");
+  }
+}

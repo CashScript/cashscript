@@ -4,9 +4,10 @@ import {
   Transaction,
   binToHex,
 } from '@bitauth/libauth';
-import { Output, Network } from '../src/interfaces.js';
+import { Output, Network, Utxo } from '../src/interfaces.js';
 import { network as defaultNetwork } from './fixture/vars.js';
 import { getNetworkPrefix, libauthOutputToCashScriptOutput } from '../src/utils.js';
+import { utxoComparator } from '../src/utils.js';
 
 export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork): Output[] {
   return tx.outputs.map((o) => {
@@ -20,12 +21,17 @@ export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork)
     const prefix = getNetworkPrefix(network);
     const cashscriptOutput = libauthOutputToCashScriptOutput(o);
     const hasTokens = Boolean(cashscriptOutput.token);
-    const address = lockingBytecodeToCashAddress(hexToBin(scriptHex), prefix, { tokenSupport: hasTokens }) as string;
+    const result = lockingBytecodeToCashAddress({ bytecode: hexToBin(scriptHex), prefix, tokenSupport: hasTokens });
+    if (typeof result === 'string') throw new Error(result);
 
     return {
-      to: address,
+      to: result.address,
       amount: o.valueSatoshis,
       token: cashscriptOutput.token,
     };
   });
+}
+
+export function getLargestUtxo(utxos: Utxo[]): Utxo {
+  return [...utxos].sort(utxoComparator).reverse()[0];
 }

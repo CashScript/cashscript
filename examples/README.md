@@ -12,11 +12,11 @@ cd cashscript/examples
 yarn
 ```
 
-All `.ts` files can then be executed with `ts-node-esm`.
+All `.ts` files can then be executed with `tsx`.
 
 ```bash
-npm install -g ts-node
-ts-node-esm p2pkh.ts
+npm install -g tsx
+tsx p2pkh.ts
 ```
 
 All `.js` files can be executed with `node`.

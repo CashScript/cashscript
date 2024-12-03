@@ -8,46 +8,40 @@ import styles from './index.module.css';
 
 const features = [
   {
-    title: 'Efficient and Reliable Verification',
+    title: 'TypeScript SDK',
     description: (
       <>
-        Smart contracts on Bitcoin Cash are stateless and UTXO-based. This
-        model allows transactions to be verified independently and efficiently.
-        Because there is no state that can impact the execution of these smart
-        contracts, the results are deterministic and predictable.
+        The CashScript TypeScript SDK makes it easy to build smart contract transactions, both in browser or on the server.
+        By offering full type-safety, developers can be confident in the quality and reliability of their applications.
       </>
     ),
   },
   {
-    title: 'Private and Isolated Contracts',
+    title: 'Familiar Syntax',
     description: (
       <>
-        Because of Bitcoin Cash' UTXO-based model, each contract is fully
-        independent and isolated from each other. This limits systemic risk
-        and makes contract upgrades much simpler. Furthermore, Bitcoin Cash
-        contracts use P2SH, preserving the privacy of participants.
+        The CashScript syntax is based on Ethereum's smart contract language Solidity,
+        which in turn is influenced by C++, Python, and JavaScript. This should make writing
+        CashScript contracts feel familiar even to new developers.
       </>
     ),
   },
   {
-    title: 'Strong Abstraction',
+    title: 'Integrated Network APIs',
     description: (
       <>
-        Bitcoin Cash transactions run on a virtual machine called Bitcoin Script.
-        Writing bytecode for this virtual machine is difficult and error-prone.
-        CashScript offers a strong abstraction for writing Bitcoin Cash smart
-        contracts, improving developer experience and reliability of contracts.
+        To make it easy to get blockchain information, the CashScript SDK exports a standardized network provider to query network APIs.
+        The primary class of network providers are the electrum servers but other network providers are also supported.
       </>
     ),
   },
   {
-    title: 'DeFi on Bitcoin Cash',
+    title: 'Advanced Debug Tooling',
     description: (
       <>
-        Most DeFi applications are currently built on top of the EVM. Bitcoin
-        Cash contracts use a different paradigm than EVM chains due to its UTXO
-        architecture. But with CashTokens, transaction introspection and local
-        state, DeFi is very much possible on Bitcoin Cash.
+        To offer the best developer experience for debugging and automated testing easy for developers,
+        CashScript has extensive debug tooling built-in.
+        This makes it possible to develop robust contract testing suites, and to debug your contracts with the Bitauth-IDE.
       </>
     ),
   },

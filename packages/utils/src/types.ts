@@ -47,7 +47,7 @@ export enum PrimitiveType {
   ANY = 'any',
 }
 
-const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[]} = {
+const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[] } = {
   [PrimitiveType.INT]: [PrimitiveType.INT, PrimitiveType.BOOL],
   [PrimitiveType.BOOL]: [PrimitiveType.BOOL, PrimitiveType.INT],
   [PrimitiveType.STRING]: [PrimitiveType.STRING],
@@ -184,4 +184,33 @@ export function parseType(str: string): Type {
 
 export function isPrimitive(type: Type): type is PrimitiveType {
   return !!PrimitiveType[type.toString().toUpperCase() as keyof typeof PrimitiveType];
+}
+
+export interface LocationI {
+  start: {
+    line: number,
+    column: number
+  };
+  end: {
+    line: number,
+    column: number
+  };
+}
+
+export type SingleLocationData = {
+  location: LocationI;
+  positionHint: PositionHint;
+};
+
+export type FullLocationData = Array<SingleLocationData>;
+
+// Denotes whether an opcode belongs to the "start" or "end" of the statement it's in (defaults to "start")
+// Examples:
+// require(true); --> the OP_VERIFY comes after the condition (OP_TRUE), so it should get a PositionHint.END
+// !true --> the OP_NOT comes after the condition (OP_TRUE), so it should get a PositionHint.END
+// if (true) { ... } --> the OP_IF comes before the body, so it should get a PositionHint.START,
+//                       the OP_ENDIF comes after the body, so it should get a PositionHint.END
+export enum PositionHint {
+  START = 0,
+  END = 1,
 }

@@ -12,6 +12,8 @@ import {
   InstantiationNode,
   AssignNode,
   TupleAssignmentNode,
+  ConsoleStatementNode,
+  ConsoleParameterNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable.js';
@@ -29,6 +31,7 @@ export default class SymbolTableTraversal extends AstTraversal {
   private functionNames: Map<string, boolean> = new Map<string, boolean>();
   private currentFunction: FunctionDefinitionNode;
   private expectedSymbolType: SymbolType = SymbolType.VARIABLE;
+  private insideConsoleStatement: boolean = false;
 
   visitContract(node: ContractNode): Node {
     node.symbolTable = new SymbolTable(this.symbolTables[0]);
@@ -150,6 +153,15 @@ export default class SymbolTableTraversal extends AstTraversal {
     return node;
   }
 
+  // When we enter a console statement,
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    this.insideConsoleStatement = true;
+    node.parameters = this.visitList(node.parameters) as ConsoleParameterNode[];
+    this.insideConsoleStatement = false;
+
+    return node;
+  }
+
   visitIdentifier(node: IdentifierNode): Node {
     const definition = this.symbolTables[0].get(node.name);
     if (!definition) {
@@ -163,8 +175,10 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.definition = definition;
     node.definition.references.push(node);
 
-    // Keep track of final use of variables for code generation
-    this.currentFunction.opRolls.set(node.name, node);
+    // Keep track of final use of variables for code generation (excluding console statements)
+    if (!this.insideConsoleStatement) {
+      this.currentFunction.opRolls.set(node.name, node);
+    }
 
     return node;
   }

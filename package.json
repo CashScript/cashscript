@@ -4,39 +4,34 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "examples"
+    "examples",
+    "examples/testing-suite"
   ],
   "devDependencies": {
     "@jest/reporters": "^26.6.2",
     "@types/jest": "^29.4.0",
     "@types/node": "^14.14.28",
-    "@typescript-eslint/eslint-plugin": "^4.15.1",
-    "@typescript-eslint/parser": "^4.15.1",
-    "cashproof": "https://github.com/eyeofpython/cashproof",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
     "chalk": "^4.1.0",
     "codecov": "^3.8.1",
     "cspell": "^5.2.4",
-    "eslint": "^7.20.0",
-    "eslint-config-airbnb-typescript": "^12.3.1",
-    "eslint-plugin-import": "^2.22.1",
+    "eslint": "^8.54.0",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-plugin-import": "^2.29.1",
     "lerna": "^3.22.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.9.5"
+    "tsx": "^4.7.2",
+    "typescript": "^5.5.4"
   },
   "scripts": {
-    "test": "lerna run test --ignore cashscript-examples",
-    "lint": "lerna run lint --ignore cashscript-examples",
-    "preproof:opt": "cp packages/utils/src/cashproof-optimisations.ts opt.equiv && sed -i '' '/`/d' opt.equiv",
-    "proof:opt": "yarn cashproof opt.equiv",
-    "postproof:opt": "rm opt.equiv",
-    "proof:0.2.0": "yarn cashproof packages/cashc/test/cashproof/0.1.2=0.2.0.equiv",
-    "proof": "yarn proof:opt && yarn proof:0.2.0",
-    "cashproof": "python3 node_modules/cashproof/run.py",
-    "examples": "ts-node-esm examples/p2pkh.ts && ts-node-esm examples/transfer_with_timeout.ts && ts-node-esm examples/hodl_vault.ts",
+    "test": "lerna run test --ignore cashscript-examples --ignore testing-suite",
+    "lint": "lerna run lint --ignore cashscript-examples --ignore testing-suite",
+    "examples": "tsx examples/p2pkh.ts && tsx examples/transfer_with_timeout.ts && tsx examples/hodl_vault.ts",
     "coverage": "codecov",
-    "postinstall": "lerna bootstrap && lerna run build --ignore cashscript-examples",
+    "postinstall": "lerna bootstrap && yarn build",
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
-    "update-version": "ts-node-esm update-version.ts",
-    "publish-all": "lerna publish from-package"
+    "update-version": "tsx update-version.ts",
+    "publish-all": "lerna publish from-package",
+    "build": "lerna run build --ignore cashscript-examples --ignore testing-suite"
   }
 }

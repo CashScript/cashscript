@@ -1,0 +1,5 @@
+contract Test() {
+    function hello() {
+        require(1000 == 1000_);
+    }
+}

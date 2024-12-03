@@ -26,6 +26,8 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
+  ConsoleStatementNode,
+  ConsoleParameterNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 
@@ -134,7 +136,13 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitRequire(node: RequireNode): Node {
     this.addOutput('require(', true);
     node.expression = this.visit(node.expression);
+
+    if (node.message) {
+      this.addOutput(`, "${node.message}"`);
+    }
+
     this.addOutput(');\n');
+
     return node;
   }
 
@@ -151,6 +159,13 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
     this.addOutput('\n');
 
+    return node;
+  }
+
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    this.addOutput('console.log(', true);
+    node.parameters = this.visitCommaList(node.parameters) as ConsoleParameterNode[];
+    this.addOutput(');\n');
     return node;
   }
 

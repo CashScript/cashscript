@@ -11,8 +11,8 @@ import {
 } from '../../fixture/vars.js';
 import { Network, Utxo } from '../../../src/interfaces.js';
 import { utxoComparator, calculateDust } from '../../../src/utils.js';
-import p2pkhArtifact from '../../fixture/p2pkh.json' assert { type: "json" };
-import twtArtifact from '../../fixture/transfer_with_timeout.json' assert { type: "json" };
+import p2pkhArtifact from '../../fixture/p2pkh.json' with { type: 'json' };
+import twtArtifact from '../../fixture/transfer_with_timeout.json' with { type: 'json' };
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
 import { getTxOutputs } from '../../test-util.js';
 
@@ -36,8 +36,7 @@ describe('Transaction Builder', () => {
       const amount = 1000n;
       const fee = 1000n;
 
-      const utxos = await p2pkhInstance.getUtxos();
-      utxos.sort(utxoComparator).reverse();
+      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const { utxos: gathered, total } = gatherUtxos(utxos, { amount });
 
       const change = total - amount - fee;
@@ -76,7 +75,7 @@ describe('Transaction Builder', () => {
       const amount = 10000n;
       const fee = 1000n;
 
-      const contractUtxos = await p2pkhInstance.getUtxos();
+      const contractUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const bobUtxos = await getAddressUtxos(bobAddress);
       const bobTemplate = new SignatureTemplate(bobPriv);
 
@@ -125,9 +124,9 @@ describe('Transaction Builder', () => {
   it('should build a transaction that can spend from 2 different contracts and P2PKH + OP_RETURN', async () => {
     const fee = 1000n;
 
-    const carolUtxos = await provider.getUtxos(carolAddress);
-    const p2pkhUtxos = await p2pkhInstance.getUtxos();
-    const twtUtxos = await twtInstance.getUtxos();
+    const carolUtxos = (await provider.getUtxos(carolAddress)).sort(utxoComparator).reverse();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+    const twtUtxos = (await twtInstance.getUtxos()).sort(utxoComparator).reverse();
 
     const change = carolUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: carolAddress, amount: change });
@@ -157,7 +156,7 @@ describe('Transaction Builder', () => {
   it('should fail when fee is higher than maxFee', async () => {
     const fee = 2000n;
     const maxFee = 1000n;
-    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
 
     const amount = p2pkhUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
@@ -178,7 +177,7 @@ describe('Transaction Builder', () => {
   it('should succeed when fee is lower than maxFee', async () => {
     const fee = 1000n;
     const maxFee = 2000n;
-    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
 
     const amount = p2pkhUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
@@ -199,7 +198,7 @@ describe('Transaction Builder', () => {
 
   it('should fail when locktime is higher than current block height', async () => {
     const fee = 1000n;
-    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
 
     const amount = p2pkhUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
@@ -221,7 +220,7 @@ describe('Transaction Builder', () => {
 
   it('should succeed when locktime is lower than current block height', async () => {
     const fee = 1000n;
-    const p2pkhUtxos = await p2pkhInstance.getUtxos();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
 
     const amount = p2pkhUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });

@@ -11,12 +11,40 @@ export interface AbiFunction {
   inputs: readonly AbiInput[];
 }
 
+export interface DebugInformation {
+  bytecode: string; // unlike `bytecode` property above, this is a hex-encoded binary string
+  sourceMap: string; // see documentation for `generateSourceMap`
+  logs: LogEntry[]; // log entries generated from `console.log` statements
+  requires: RequireStatement[]; // messages for failing `require` statements
+}
+
+export interface LogEntry {
+  ip: number; // instruction pointer
+  line: number; // line in the source code
+  data: Array<LogData>; // data to be logged
+}
+
+export interface StackItem {
+  type: string;
+  stackIndex: number;
+  ip: number;
+}
+
+export type LogData = StackItem | string;
+
+export interface RequireStatement {
+  ip: number; // instruction pointer
+  line: number; // line in the source code
+  message?: string; // custom message for failing `require` statement
+}
+
 export interface Artifact {
   contractName: string;
   constructorInputs: readonly AbiInput[];
   abi: readonly AbiFunction[];
   bytecode: string;
   source: string;
+  debug?: DebugInformation;
   compiler: {
     name: string;
     version: string;

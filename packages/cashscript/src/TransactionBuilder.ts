@@ -13,11 +13,11 @@ import {
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
-  buildError,
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
   validateOutput,
 } from './utils.js';
+import { FailedTransactionError } from './Errors.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -26,9 +26,9 @@ export interface TransactionBuilderOptions {
 const DEFAULT_SEQUENCE = 0xfffffffe;
 
 export class TransactionBuilder {
-  private provider: NetworkProvider;
-  private inputs: UnlockableUtxo[] = [];
-  private outputs: Output[] = [];
+  public provider: NetworkProvider;
+  public inputs: UnlockableUtxo[] = [];
+  public outputs: Output[] = [];
 
   private locktime: number;
   private maxFee?: bigint;
@@ -52,7 +52,7 @@ export class TransactionBuilder {
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
     ) {
-      throw new Error('Either all UTXOs must have an individual unlocker speciifed, or no UTXOs must have an individual unlocker specified and a shared unlocker must be provided');
+      throw new Error('Either all UTXOs must have an individual unlocker specified, or no UTXOs must have an individual unlocker specified and a shared unlocker must be provided');
     }
 
     if (!unlocker) {
@@ -153,12 +153,12 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw buildError(reason);
+      throw new FailedTransactionError(reason);
     }
   }
 
   // TODO: see if we can merge with Transaction.ts
-  private async getTxDetails(txid: string): Promise<TransactionDetails>
+  private async getTxDetails(txid: string): Promise<TransactionDetails>;
   private async getTxDetails(txid: string, raw: true): Promise<string>;
   private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {
     for (let retries = 0; retries < 1200; retries += 1) {

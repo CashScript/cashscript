@@ -58,10 +58,11 @@ statement
     | timeOpStatement
     | requireStatement
     | ifStatement
+    | consoleStatement
     ;
 
 variableDefinition
-    : typeName modifier? Identifier '=' expression ';'
+    : typeName modifier* Identifier '=' expression ';'
     ;
 
 tupleAssignment
@@ -73,15 +74,31 @@ assignStatement
     ;
 
 timeOpStatement
-    : 'require' '(' TxVar '>=' expression ')' ';'
+    : 'require' '(' TxVar '>=' expression (',' StringLiteral)? ')' ';'
     ;
 
 requireStatement
-    : 'require' '(' expression ')' ';'
+    : 'require' '(' expression (',' StringLiteral)? ')' ';'
     ;
 
 ifStatement
     : 'if' '(' expression ')' ifBlock=block ('else' elseBlock=block)?
+    ;
+
+consoleStatement
+    : 'console.log' consoleParameterList ';'
+    ;
+
+consoleParameter
+    : Identifier
+    | StringLiteral
+    | NumberLiteral
+    | HexLiteral
+    | BooleanLiteral
+    ;
+
+consoleParameterList
+    : '(' (consoleParameter (',' consoleParameter)* ','?)? ')'
     ;
 
 functionCall
@@ -98,8 +115,8 @@ expression
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantiation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
-    | scope='tx.outputs' '[' expression ']' op=('.value' | '.lockingBytecode') # UnaryIntrospectionOp
-    | scope='tx.inputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.outpointTransactionHash' | '.outpointIndex' | '.unlockingBytecode' | '.sequenceNumber') # UnaryIntrospectionOp
+    | scope='tx.outputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.tokenCategory' | '.nftCommitment' | '.tokenAmount') # UnaryIntrospectionOp
+    | scope='tx.inputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.outpointTransactionHash' | '.outpointIndex' | '.unlockingBytecode' | '.sequenceNumber' | '.tokenCategory' | '.nftCommitment' | '.tokenAmount') # UnaryIntrospectionOp
     | expression op=('.reverse()' | '.length') # UnaryOp
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
     | op=('!' | '-') expression # UnaryOp

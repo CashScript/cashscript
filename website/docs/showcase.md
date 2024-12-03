@@ -26,7 +26,7 @@ Tapswap is the first non-custodial marketplace to trade CashTokens, both fungibl
     <a href="https://bitcatsheroes.club/" target="_blank"><img src="/img/bitcats.png" /></a>
 </div>
 
-Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project uses CashScript for its non-custodial minting contract. This way the NFT minting guarantees fair access and a transparent NFT launch. The minting page uses a web3 wallet connect feature to allow minting directly from the user's smart contract wallet.
+Bitcats Heroes is the first collectible NFT series on Bitcoin Cash. The project uses CashScript for its non-custodial minting contract. This way the NFT minting guarantees fair access and a transparent NFT launch. The minting page uses a web3 wallet connect feature to allow minting directly from the user's smart contract wallet.
 
 ## Cash-Ninjas
 
@@ -34,7 +34,7 @@ Bitcats Heroes is the first collectibele NFT series on Bitcoin Cash. The project
     <a href="https://ninjas.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/cashninjas.jpg" /></a>
 </div>
 
-Cash-Ninjas is a collectibele NFT project on Bitcoin Cash which focuses on building open-source tooling! The Cash-Ninjas project uses CashScript for its non-custodial, multi-threaded minting contract. The contract is open source for others to inspect and use the contract code. The Cash-Ninjas minting page uses wallet connect to allow minting directly from the user's smart contract wallet.
+Cash-Ninjas is a collectible NFT project on Bitcoin Cash which focuses on building open-source tooling! The Cash-Ninjas project uses CashScript for its non-custodial, multi-threaded minting contract. The contract is open source for others to inspect and use the contract code. The Cash-Ninjas minting page uses wallet connect to allow minting directly from the user's smart contract wallet.
 
 ## BCH Guru
 
@@ -52,13 +52,23 @@ BCH Guru is a non-custodial price-prediction platform and a collectible NFT proj
 
 The CashTokens Studio is an application for creating CashTokens and for their managing metadata updates and reserved supply. The CashTokens Studio uses CashScript to lock the AuthUTXO in an AuthGuard contract to prevent accidentally spending the authority to be able to update the token's metadata or release reserved supply.
 
-## BCHouse
+## Badgers.cash
 
 <div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
-    <a href="https://bchouse.fly.dev/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/bchouse.svg" /></a>
+    <a href="https://badgers.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/badgers.png" /></a>
 </div>
 
-BCHouse is a brand new BCH social media site and the first CashTokens-based crowdfunding application on Bitcoin Cash. BCHouse uses CashScript for the crowdfunding smart contract to allow an unlimited number of contributions to a campaign and to enable any BCH wallet to pledge by using forwarding addresses.
+BadgerCoin is a fungible CashToken using a novel distribution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoke contract unlocks.
+
+## FundMe.cash
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://fundme.cash/" target="_blank">
+        <img style={{maxHeight: '320px'}} src="/img/fundme.png" />
+    </a>
+</div>
+
+FundMe is a new BCH crowdfunding platform using WalletConnect. Fundme campaigns have revocable and refundable pledges through the use of CashTokens receipts. By using receipts, Fundme does not have a maximum limit on the number of participants in a campaign.
 
 ## Unspent Phi
 
@@ -66,4 +76,4 @@ BCHouse is a brand new BCH social media site and the first CashTokens-based crow
     <a href="https://unspent.app/" target="_blank"><img src="/img/unspent_phi.png" /></a>
 </div>
 
-Unspent Phi allows users to convert Bitcoin Cash they have today into a series of periodic payments over a long period of time.  It's a set of simple contracts that rely on rolling timelocks and introspection rather than signatures; meaning as long as the correct recipients are paid, anyone may build and submit transactions. 
+Unspent Phi allows users to convert Bitcoin Cash they have today into a series of periodic payments over a long period of time.  It's a set of simple contracts that rely on rolling timelocks and introspection rather than signatures; meaning as long as the correct recipients are paid, anyone may build and submit transactions.

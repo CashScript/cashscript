@@ -11,9 +11,12 @@ import {
   scriptToBytecode,
 } from '@cashscript/utils';
 import { Transaction } from './Transaction.js';
-import { Argument, encodeArgument } from './Argument.js';
+import {
+  ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument,
+} from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
+  AddressType,
 } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
@@ -26,7 +29,7 @@ import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
 export class Contract<
   TArtifact extends Artifact = Artifact,
   TResolved extends {
-    constructorInputs: any[];
+    constructorInputs: ConstructorArgument[];
     functions: Record<string, any>;
     unlock: Record<string, any>;
   }
@@ -47,8 +50,9 @@ export class Contract<
   unlock: TResolved['unlock'];
 
   redeemScript: Script;
-  provider: NetworkProvider;
-  private addressType: 'p2sh20' | 'p2sh32';
+  public provider: NetworkProvider;
+  public addressType: AddressType;
+  public encodedConstructorArgs: Uint8Array[];
 
   constructor(
     private artifact: TArtifact,
@@ -64,23 +68,13 @@ export class Contract<
     }
 
     if (artifact.constructorInputs.length !== constructorArgs.length) {
-      throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor`);
+      throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor. Expected ${artifact.constructorInputs.length} arguments (${artifact.constructorInputs.map((input) => input.type)}) but got ${constructorArgs.length}`);
     }
 
     // Encode arguments (this also performs type checking)
-    const encodedArgs = constructorArgs
-      .map((arg, i) => encodeArgument(arg, artifact.constructorInputs[i].type))
-      .reverse();
+    this.encodedConstructorArgs = encodeConstructorArguments(artifact, constructorArgs);
 
-    // Check there's no signature templates in the constructor
-    if (encodedArgs.some((arg) => arg instanceof SignatureTemplate)) {
-      throw new Error('Cannot use signatures in constructor');
-    }
-
-    this.redeemScript = generateRedeemScript(
-      asmToScript(this.artifact.bytecode),
-      encodedArgs as Uint8Array[],
-    );
+    this.redeemScript = generateRedeemScript(asmToScript(this.artifact.bytecode), this.encodedConstructorArgs);
 
     // Populate the functions object with the contract's functions
     // (with a special case for single function, which has no "function selector")
@@ -128,14 +122,13 @@ export class Contract<
   }
 
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
-    return (...args: Argument[]) => {
+    return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
-        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}`);
+        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
       }
 
       // Encode passed args (this also performs type checking)
-      const encodedArgs = args
-        .map((arg, i) => encodeArgument(arg, abiFunction.inputs[i].type));
+      const encodedArgs = encodeFunctionArguments(abiFunction, args);
 
       const unlocker = this.createUnlocker(abiFunction, selector)(...args);
 
@@ -150,11 +143,15 @@ export class Contract<
   }
 
   private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
-    return (...args: Argument[]) => {
+    return (...args: FunctionArgument[]) => {
+      if (abiFunction.inputs.length !== args.length) {
+        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
+      }
+
       const bytecode = scriptToBytecode(this.redeemScript);
 
       const encodedArgs = args
-        .map((arg, i) => encodeArgument(arg, abiFunction.inputs[i].type));
+        .map((arg, i) => encodeFunctionArgument(arg, abiFunction.inputs[i].type));
 
       const generateUnlockingBytecode = (
         { transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions,
@@ -191,5 +188,5 @@ export class Contract<
   }
 }
 
-export type ContractFunction = (...args: Argument[]) => Transaction;
-export type ContractUnlocker = (...args: Argument[]) => Unlocker;
+export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
+export type ContractUnlocker = (...args: FunctionArgument[]) => Unlocker;

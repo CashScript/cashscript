@@ -52,6 +52,7 @@ statement
     | timeOpStatement
     | requireStatement
     | ifStatement
+    | consoleStatement
     ;
 
 variableDefinition
@@ -67,15 +68,32 @@ assignStatement
     ;
 
 timeOpStatement
-    : 'require' '(' TxVar '>=' expression ')' ';'
+    : 'require' '(' TxVar '>=' expression (',' requireMessage)? ')' ';'
     ;
 
 requireStatement
-    : 'require' '(' expression ')' ';'
+    : 'require' '(' expression (',' requireMessage)? ')' ';'
     ;
 
 ifStatement
     : 'if' '(' expression ')' ifBlock=block ('else' elseBlock=block)?
+    ;
+
+consoleStatement
+    : 'console.log' consoleParameterList ';'
+    ;
+
+requireMessage
+    : StringLiteral
+    ;
+
+consoleParameter
+    : Identifier
+    | literal
+    ;
+
+consoleParameterList
+    : '(' (consoleParameter (',' consoleParameter)* ','?)? ')'
     ;
 
 functionCall
@@ -147,7 +165,15 @@ NumberUnit
     ;
 
 NumberLiteral
-    : [-]?[0-9]+ ([eE] [0-9]+)?
+    : '-'? NumberPart ExponentPart?
+    ;
+
+NumberPart
+    : [0-9]+ ('_' [0-9]+)*
+    ;
+
+ExponentPart
+    : [eE] NumberPart
     ;
 
 Bytes

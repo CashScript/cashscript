@@ -1,8 +1,8 @@
 ---
-title: Global Functions & Operators
+title: Global Functions
 ---
 
-CashScript has several builtin functions for things like cryptographic and arithmetic applications, and it includes many common arithmetic and other operators that you would expect in a programming language.
+CashScript has several built-in functions for things like cryptographic and arithmetic applications, and it includes many common arithmetic and other operators that you would expect in a programming language.
 
 ## Arithmetic functions
 ### abs()
@@ -89,7 +89,7 @@ bool checkMultiSig(sig[] sigs, pubkey[] pks)
 Performs a multi-signature check using a list of transaction signatures and public keys.
 
 :::note
-While this function can be used inside your smart contracts, it is not supported by the JavaScript SDK, so it is recommended not to use it. Instead a `checkMultiSig()` call can be simulated using multiple `checkSig()` calls.
+While this function can be used inside your smart contracts, it is not supported by the TypeScript SDK, so it is recommended not to use it. Instead a `checkMultiSig()` call can be simulated using multiple `checkSig()` calls.
 :::
 
 ### checkDataSig()
@@ -98,30 +98,5 @@ bool checkDataSig(datasig s, bytes msg, pubkey pk)
 ```
 
 Checks that sig `s` is a valid signature for message `msg` and matches with public key `pk`.
-
-## Operators
-An overview of all supported operators and their precedence is included below. Notable is a lack of exponentiation, since these operations are not supported by the underlying Bitcoin Script.
-
-| Precedence | Description                         | Operator                 |
-| ---------- | ----------------------------------- | ------------------------ |
-| 1          | Parentheses                         | `(<expression>)`         |
-| 2          | Type cast                           | `<type>(<expression>)`   |
-| 3          | Object instantiation                | `new <class>(<args...>)` |
-| 4          | Function call                       | `<function>(<args...>)`  |
-| 5          | Tuple index                         | `<tuple>[<index>]`       |
-| 6          | Member access                       | `<object>.<member>`      |
-| 7          | Unary minus                         | `-`                      |
-| 7          | Logical NOT                         | `!`                      |
-| 8          | Multiplication, division and modulo | `*`, `/`, `%`            |
-| 9          | Addition and subtraction            | `+`, `-`                 |
-| 9          | String / bytes concatenation        | `+`                      |
-| 10         | Numeric comparison                  | `<`, `>`, `<=`, `>=`     |
-| 11         | Equality and inequality             | `==`, `!=`               |
-| 12         | Bitwise AND                         | `&`                      |
-| 13         | Bitwise XOR                         | `^`                      |
-| 14         | Bitwise OR                          | \|                       |
-| 15         | Logical AND                         | `&&`                     |
-| 16         | Logical OR                          | \|\|                     |
-| 17         | Assignment                          | `=`                      |
 
 [bip146]: https://github.com/bitcoin/bips/blob/master/bip-0146.mediawiki

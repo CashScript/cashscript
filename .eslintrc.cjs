@@ -3,11 +3,11 @@ const path = require('path');
 module.exports = {
   root: true,
   parser: '@typescript-eslint/parser',
-  plugins: ['@typescript-eslint'],
+  plugins: ['@typescript-eslint', 'import'],
   extends: ['airbnb-typescript/base'],
   parserOptions: {
     project: path.join(__dirname, 'tsconfig.json'),
-    ecmaVersion: 2018,  // Allows for the parsing of modern ECMAScript features
+    ecmaVersion: 2021,  // Allows for the parsing of modern ECMAScript features
     sourceType: 'module',  // Allows for the use of imports
     extraFileExtensions: ['.cjs'],
   },
@@ -15,7 +15,7 @@ module.exports = {
     'jest': true,
   },
   rules: {
-    'max-len': ['error', { code: 120, ignoreStrings: true, ignoreTemplateLiterals: true }],
+    'max-len': ['error', { code: 125, ignoreStrings: true, ignoreTemplateLiterals: true }],
     'import/no-cycle': 0, // Needed for AST -> AstVisitor -> AST
     'class-methods-use-this': 0, // I don't like this rule
     'no-underscore-dangle': 0, // antlr automatically uses this
@@ -46,6 +46,7 @@ module.exports = {
     'max-classes-per-file': 0, // Multiple classes in one file are allowed (e.g. Errors)
     '@typescript-eslint/no-redeclare': 0, // I sometimes name variables an types the same
     'linebreak-style': 0, // Ignore linebreak lints https://stackoverflow.com/a/43008668/1129108
-    'import/extensions': ['error', 'always'], // ESM requires file extensions
+    'import/extensions': ['error', 'ignorePackages'], // ESM requires file extensions
+    '@typescript-eslint/only-throw-error': 'error', // We should only throw Error objects
   },
 }
