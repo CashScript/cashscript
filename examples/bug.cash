@@ -1,0 +1,49 @@
+pragma cashscript ^0.10.0;
+
+contract PriceContract(
+  bytes tokenIdOracleContract
+  ) {
+    // function updatePrice
+    // Trigger oracle sequence update to avoid letting borrowers spawn coins using old price data
+    //
+    // Inputs: 00-pricecontract, 01-oraclecontract, ?02-feeBCH
+    // Outputs: 00-pricecontract, ?01-changeBCH
+
+  function updatePrice() {
+    require(this.activeInputIndex == 0, "Parity contract must always be at input index 0");
+
+    require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode, "Recreate contract at output0 - invalid lockingBytecode");
+    require(tx.outputs[0].tokenCategory == tx.inputs[0].tokenCategory, "Recreate contract at output0 - invalid tokenCategory");
+    require(tx.outputs[0].value == 1000, "Recreate contract at output0 - needs to hold exactly 1000 sats");
+    require(tx.outputs[0].tokenAmount == tx.inputs[0].tokenAmount, "Invalid tokenAmount, needs to maintain atleast current tokenAmount");
+
+    bytes contractSeq = tx.inputs[0].nftCommitment.split(1)[1].split(6)[0];
+
+    require(tokenIdOracleContract == tx.inputs[1].tokenCategory);
+
+    // Parse oracle data (Oracle price is denominated in USD cents/BCH)
+    bytes oracleSeqBytes = tx.inputs[1].nftCommitment.split(6)[0];
+    int oracleSeq = int(oracleSeqBytes);
+
+    // Verify oracle sequence
+    require(oracleSeq > int(contractSeq), "Invalid oracle sequence, should be more recent than current contract sequence");
+
+    require(tx.outputs[0].nftCommitment == 0x00 + tx.inputs[1].nftCommitment, "Invalid nftCommitment, commitment should be the oracle sequence");
+  }
+
+    // function sharePrice
+    // Provides latest oracle price to various other contracts
+    //
+    // Inputs: 00-parity, ...
+    // Outputs: 00-parity, ...
+
+  function sharePrice() {
+    require(tx.outputs[this.activeInputIndex].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode, "Recreate contract at output0 - invalid lockingBytecode");
+    require(tx.outputs[this.activeInputIndex].tokenCategory == tx.inputs[this.activeInputIndex].tokenCategory, "Recreate contract at output0 - invalid tokenCategory");
+    require(tx.outputs[this.activeInputIndex].value == 1000, "Recreate contract at output0 - needs to hold exactly 1000 sats");
+    // Allow giving the contract more tokens
+    require(tx.outputs[this.activeInputIndex].tokenAmount >= tx.inputs[this.activeInputIndex].tokenAmount, "Invalid tokenAmount, needs to maintain atleast current tokenAmount");
+    // keep same contract state
+    require(tx.outputs[this.activeInputIndex].nftCommitment == tx.inputs[this.activeInputIndex].nftCommitment, "Invalid nftCommitment, commitment should be replicated");
+  }
+}

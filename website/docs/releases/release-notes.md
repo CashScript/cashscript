@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.10.4
+
+#### cashc compiler
+- :bug: Fix bug in new `--format ts` option.
+
 ## v0.10.3
 
 #### cashc compiler
