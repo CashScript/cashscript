@@ -105,7 +105,7 @@ export class Contract<
       this.unlock[f.name] = this.createUnlocker(f);
     } else {
       artifact.abi.forEach((f, i) => {
-      // @ts-ignore generic and can only be indexed for reading
+        // @ts-ignore generic and can only be indexed for reading
         this.unlock[f.name] = this.createUnlocker(f, i);
       });
     }
