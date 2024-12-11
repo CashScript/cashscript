@@ -36,13 +36,14 @@ au BufRead,BufNewFile *.cash setfiletype solidity
 
 This associates `.cash` files with Solidity, and enables syntax highlighting for your CashScript files.
 
-## GitHub & GitLab
-GitHub and GitLab have syntax highlighting for Solidity built in. To associate `.cash` files with Solidity highlighting, add a `.gitattributes` file to your repository with the following contents:
+## GitHub
+GitHub has highlighting for Solidity built in. To associate `.cash` files with Solidity highlighting, add a `.gitattributes` file to your repository with the following contents:
 
 ```python title=".gitattributes"
 *.cash linguist-language=Solidity # GitHub
-*.cash gitlab-language=solidity # GitLab
 ```
+
+Unfortunately Gitlab does not have properly working Soldidity highlighting through the `gitattributes` for now...
 
 ## Others
 If your editor is not mentioned above, the steps are likely very similar. Try to find a Solidity syntax highlighting plugin for your editor of choice and find a method to associate `.cash` files with this Solidity highlighting.

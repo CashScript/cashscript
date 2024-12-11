@@ -255,7 +255,7 @@ The units `sats`, `finney`, `bits` and `bitcoin` can be used to denominate Bitco
 ```solidity
 require(1 sats == 1);
 require(1 finney == 10);
-require(1 bit == 100);
+require(1 bits == 100);
 require(1 bitcoin == 1e8);
 ```
 

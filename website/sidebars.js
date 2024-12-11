@@ -48,6 +48,7 @@ module.exports = {
       items: [
         'guides/syntax-highlighting',
         'guides/covenants',
+        'guides/infrastructure',
         'guides/walletconnect',
         'guides/debugging',
         'guides/optimization'
