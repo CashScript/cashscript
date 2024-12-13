@@ -3,17 +3,26 @@ title: Contract Infrastructure
 ---
 
 When creating a smart contract application on Bitcoin Cash you'll need to investigate whether you need surrounding contract infrastructure.
-Below we'll discuss the 2 main types of contract infrastructure you might run into: the need for store contract details and the need for a transaction server. 
+Below we'll discuss the 2 main types of contract infrastructure you might run into: the need to store contract details and the need for a transaction server. 
 
 ## Storing Contract Details
 
-Because of the `pay-to-scripthash` (`P2SH`) standard for smart contracts on BCH, the details of the script are hidden after creating a contract UTXO. This means that you need to store the contract details properly off-chain or you might risk not being able to spend from your smart contract!
+Because of the `pay-to-scripthash` (`P2SH`) standard for smart contracts on BCH, the details of the script are hidden after creating a contract UTXO. This means you need to store the full contract script to ensure you can spend from your smart contract later.
 
-When users are allowed to provide their own `constructor` arguments when creating a BCH smart contract, each contract creation will have a unique smart contract address. Users expect the service to keep track of the contract details somehow, as user-wallets are currently not smart enough to do this automatically.
+:::caution
+It is the responsibility of smart contract services/apps to keep track of the contract details making up the `P2SH` contract, as user-wallets are currently not smart enough to do this automatically.
+:::
+
+When users are allowed to provide their own `constructor` arguments when creating a BCH smart contract, each contract creation will have a unique smart contract address. Only the constructor arguments in the contract bytecode are variable, the rest of the bytecode for a contract is static. This static part is derived from the CashScript source file, so storing the contract source file or artifact both has the same effect. 
+
+:::note
+To construct the full contract script you need both the `constructor` arguments and static contract bytecode (either the contract source file or the `Artifact`) to be available.
+:::
+
 
 ### Off-chain storage
 
-To store the contract details off-chain, you will need to run a database server which stores the specific constructor arguments for each contract, this will translate into their respective smart contract addresses.
+To store the contract details off-chain, you will need to run a database server which stores the specific constructor arguments for each contract, this will translate into their respective smart contract addresses. Additionally, you should ensure that the CashScript source file or the contract artifact (which contains the static bytecode) is also stored for future reference.
 
 ### On-chain storage
 
@@ -32,6 +41,10 @@ There are 2 main types of events which might need a transaction server to trigge
 ### Time-related events
 
 Time-related events are when your smart contract uses absolute or relative locktimes, which require a waiting period before certain transactions can happen. However, if you want those transactions to 'automatically' happen when this locktime is reached, then you will need to create a transaction server to monitor the blockheight on an ongoing basis.
+
+:::tip
+Both the `Electrum` and `Chaingraph` indexers allow you to create websocket subscriptions to listen for blockheight updates.
+:::
 
 ### Oracle-related events
 
