@@ -34,7 +34,7 @@ interface ManualArtifactType extends Artifact {
 
 // describe('P2PKH contract | single constructor input | single function (2 args)')
 {
-  // describe('Contructor arguments')
+  // describe('Constructor arguments')
   {
     // it('should not give type errors when using correct constructor inputs')
     new Contract(p2pkhArtifact, [alicePkh]);

@@ -43,7 +43,7 @@ GitHub has highlighting for Solidity built in. To associate `.cash` files with S
 *.cash linguist-language=Solidity # GitHub
 ```
 
-Unfortunately Gitlab does not have properly working Soldidity highlighting through the `gitattributes` for now...
+Unfortunately Gitlab does not have properly working Solidity highlighting through the `gitattributes` for now...
 
 ## Others
 If your editor is not mentioned above, the steps are likely very similar. Try to find a Solidity syntax highlighting plugin for your editor of choice and find a method to associate `.cash` files with this Solidity highlighting.

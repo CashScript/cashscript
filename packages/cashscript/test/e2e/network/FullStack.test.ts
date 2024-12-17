@@ -35,7 +35,7 @@ if (!process.env.TESTS_USE_MOCKNET) {
 
     describe('send using FullStackNetworkProvider', () => {
       // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
-      // Using p2sh20 address becuase it is funded on mainnet
+      // Using p2sh20 address because it is funded on mainnet
       const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, addressType: 'p2sh20' });
       console.log(p2pkhInstance.address);
 
@@ -74,5 +74,5 @@ if (!process.env.TESTS_USE_MOCKNET) {
     });
   });
 } else {
-  test.skip('skip', () => {});
+  test.skip('skip', () => { });
 }

@@ -3,7 +3,7 @@ title: Contract Infrastructure
 ---
 
 When creating a smart contract application on Bitcoin Cash you'll need to investigate whether you need surrounding contract infrastructure.
-Below we'll discuss the 2 main types of contract infrastructure you might run into: the need to store contract details and the need for a transaction server. 
+Below we'll discuss the 2 main types of contract infrastructure you might run into: the need to store contract details and the need for a transaction server.
 
 ## Storing Contract Details
 
@@ -13,7 +13,7 @@ Because of the `pay-to-scripthash` (`P2SH`) standard for smart contracts on BCH,
 It is the responsibility of smart contract services/apps to keep track of the contract details making up the `P2SH` contract, as user-wallets are currently not smart enough to do this automatically.
 :::
 
-When users are allowed to provide their own `constructor` arguments when creating a BCH smart contract, each contract creation will have a unique smart contract address. Only the constructor arguments in the contract bytecode are variable, the rest of the bytecode for a contract is static. This static part is derived from the CashScript source file, so storing the contract source file or artifact both has the same effect. 
+When users are allowed to provide their own `constructor` arguments when creating a BCH smart contract, each contract creation will have a unique smart contract address. Only the constructor arguments in the contract bytecode are variable, the rest of the bytecode for a contract is static. This static part is derived from the CashScript source file, so storing the contract source file or artifact both has the same effect.
 
 :::note
 To construct the full contract script you need both the `constructor` arguments and static contract bytecode (either the contract source file or the `Artifact`) to be available.
@@ -40,10 +40,10 @@ There are 2 main types of events which might need a transaction server to trigge
 
 ### Time-related events
 
-Time-related events are when your smart contract uses absolute or relative locktimes, which require a waiting period before certain transactions can happen. However, if you want those transactions to 'automatically' happen when this locktime is reached, then you will need to create a transaction server to monitor the blockheight on an ongoing basis.
+Time-related events are when your smart contract uses absolute or relative locktimes, which require a waiting period before certain transactions can happen. However, if you want those transactions to 'automatically' happen when this locktime is reached, then you will need to create a transaction server to monitor the block height on an ongoing basis.
 
 :::tip
-Both the `Electrum` and `Chaingraph` indexers allow you to create websocket subscriptions to listen for blockheight updates.
+Both the `Electrum` and `Chaingraph` indexers allow you to create websocket subscriptions to listen for block height updates.
 :::
 
 ### Oracle-related events

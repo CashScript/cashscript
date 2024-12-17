@@ -26,7 +26,7 @@ Tapswap is the first non-custodial marketplace to trade CashTokens, both fungibl
     <a href="https://moria.money/" target="_blank"><img src="/img/moria.png" /></a>
 </div>
 
-Moria is a decentralized stablecoin and borrowing protocol on Bitcoin Cash using CashTokens. The Moria protocol works with collateralized-debt-positions (CDPs) where stablecoins are issued by creating over-collateralized loans. The Moria protocol uses multiple smart contracts, all written in CashScript.
+Moria is a decentralized stablecoin and borrowing protocol on Bitcoin Cash using CashTokens. The Moria protocol works with collateralized debt positions (CDPs) where stablecoins are issued by creating over-collateralized loans. The Moria protocol uses multiple smart contracts, all written in CashScript.
 
 ## Bitcats Heroes
 
