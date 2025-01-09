@@ -313,7 +313,7 @@ const generateTemplateScenarioTransaction = (
   return { inputs, locktime, outputs, version };
 };
 
-const generateTemplateScenarioTransactionOutputLockingBytecode = (
+export const generateTemplateScenarioTransactionOutputLockingBytecode = (
   csOutput: Output,
   contract: Contract,
 ): string | {} => {
@@ -351,7 +351,7 @@ const generateTemplateScenarioSourceOutputs = (
 };
 
 // Used for generating the locking / unlocking bytecode for source outputs and inputs
-const generateTemplateScenarioBytecode = (
+export const generateTemplateScenarioBytecode = (
   input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
   if (isUtxoP2PKH(input)) {
@@ -370,7 +370,7 @@ const generateTemplateScenarioBytecode = (
   return insertSlot ? ['slot'] : {};
 };
 
-const generateTemplateScenarioParametersValues = (
+export const generateTemplateScenarioParametersValues = (
   types: AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
@@ -388,7 +388,7 @@ const generateTemplateScenarioParametersValues = (
   return Object.fromEntries(entries);
 };
 
-const generateTemplateScenarioKeys = (
+export const generateTemplateScenarioKeys = (
   types: AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
@@ -401,7 +401,7 @@ const generateTemplateScenarioKeys = (
   return Object.fromEntries(entries);
 };
 
-const formatParametersForDebugging = (types: AbiInput[], args: EncodedFunctionArgument[]): string => {
+export const formatParametersForDebugging = (types: AbiInput[], args: EncodedFunctionArgument[]): string => {
   if (types.length === 0) return '// none';
 
   // We reverse the arguments because the order of the arguments in the bytecode is reversed
@@ -422,7 +422,7 @@ const formatParametersForDebugging = (types: AbiInput[], args: EncodedFunctionAr
   }).join('\n');
 };
 
-const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
+export const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
   const signatureAlgorithmNames = {
     [SignatureAlgorithm.SCHNORR]: 'schnorr_signature',
     [SignatureAlgorithm.ECDSA]: 'ecdsa_signature',
@@ -431,7 +431,7 @@ const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): stri
   return signatureAlgorithmNames[signatureAlgorithm];
 };
 
-const getHashTypeName = (hashType: HashType): string => {
+export const getHashTypeName = (hashType: HashType): string => {
   const hashtypeNames = {
     [HashType.SIGHASH_ALL]: 'all_outputs',
     [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
@@ -450,7 +450,7 @@ const getHashTypeName = (hashType: HashType): string => {
   return hashtypeNames[hashType];
 };
 
-const formatBytecodeForDebugging = (artifact: Artifact): string => {
+export const formatBytecodeForDebugging = (artifact: Artifact): string => {
   if (!artifact.debug) {
     return artifact.bytecode
       .split(' ')
@@ -465,7 +465,9 @@ const formatBytecodeForDebugging = (artifact: Artifact): string => {
   );
 };
 
-const serialiseTokenDetails = (token?: TokenDetails | LibauthTokenDetails): LibauthTemplateTokenDetails | undefined => {
+export const serialiseTokenDetails = (
+  token?: TokenDetails | LibauthTokenDetails,
+): LibauthTemplateTokenDetails | undefined => {
   if (!token) return undefined;
 
   return {

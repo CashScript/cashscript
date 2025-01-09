@@ -34,8 +34,10 @@ import {
   generateTemplateScenarios,
   generateTemplateScripts,
   generateTemplateScriptsP2PKH,
-  getBitauthUri,
 } from './LibauthTemplate.js';
+import {
+  getBitauthUri,
+} from '../LibauthTemplate.js';
 import {
   addressToLockScript,
   cashScriptOutputToLibauthOutput,

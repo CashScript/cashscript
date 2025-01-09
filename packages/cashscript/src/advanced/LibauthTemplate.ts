@@ -1,20 +1,12 @@
 import {
   AbiFunction,
-  AbiInput,
-  Artifact, 
-  bytecodeToScript,
-  formatBitAuthScript,
+  Artifact,
 } from '@cashscript/utils';
 import {
-  binToBase64,
   binToHex,
-  hexToBin,
-  isHex,
   TransactionBCH,
-  utf8ToBin,
   WalletTemplate,
   WalletTemplateScenario,
-  WalletTemplateScenarioBytecode,
   WalletTemplateScenarioInput,
   WalletTemplateScenarioOutput,
   WalletTemplateScenarioTransactionOutput,
@@ -22,35 +14,27 @@ import {
   WalletTemplateScriptUnlocking,
   WalletTemplateVariable,
 } from '@bitauth/libauth';
-import { deflate } from 'pako';
 import { EncodedConstructorArgument, EncodedFunctionArgument } from '../Argument.js';
 import { Contract } from '../Contract.js';
 import {
+  formatBytecodeForDebugging,
+  formatParametersForDebugging,
+  generateTemplateScenarioBytecode,
+  generateTemplateScenarioKeys,
+  generateTemplateScenarioParametersValues,
+  generateTemplateScenarioTransactionOutputLockingBytecode,
+  getHashTypeName,
+  getSignatureAlgorithmName,
+  serialiseTokenDetails,
+} from '../LibauthTemplate.js';
+import {
   AddressType,
-  HashType,
-  isUtxoP2PKH,
-  LibauthTokenDetails,
-  Output,
-  SignatureAlgorithm,
-  TokenDetails,
   Utxo,
 } from '../interfaces.js';
 import SignatureTemplate from '../SignatureTemplate.js';
 import { Transaction } from '../Transaction.js';
-import { addressToLockScript, extendedStringify, snakeCase, zip } from '../utils.js';
+import { snakeCase } from '../utils.js';
 
-
-/**
- * Generates a BitAuth IDE URL for importing a wallet template
- * 
- * @param template - The WalletTemplate object to encode in the URL
- * @returns A BitAuth IDE URL that can be used to import the template
- */
-export const getBitauthUri = (template: WalletTemplate): string => {
-  const base64toBase64Url = (base64: string): string => base64.replace(/\+/g, '-').replace(/\//g, '_');
-  const payload = base64toBase64Url(binToBase64(deflate(utf8ToBin(extendedStringify(template)))));
-  return `https://ide.bitauth.com/import-template/${payload}`;
-};
 
 export const generateTemplateEntitiesP2PKH = (
   index: number,
@@ -297,15 +281,6 @@ const generateTemplateScenarioTransaction = (
   return { inputs, locktime, outputs, version };
 };
 
-const generateTemplateScenarioTransactionOutputLockingBytecode = (
-  csOutput: Output,
-  contract: Contract,
-): string | {} => {
-  if (csOutput.to instanceof Uint8Array) return binToHex(csOutput.to);
-  if ([contract.address, contract.tokenAddress].includes(csOutput.to)) return {};
-  return binToHex(addressToLockScript(csOutput.to));
-};
-
 const generateTemplateScenarioSourceOutputs = (
   csTransaction: Transaction,
   slotIndex: number,
@@ -319,140 +294,3 @@ const generateTemplateScenarioSourceOutputs = (
     };
   });
 };
-
-// Used for generating the locking / unlocking bytecode for source outputs and inputs
-const generateTemplateScenarioBytecode = (
-  input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
-): WalletTemplateScenarioBytecode | ['slot'] => {
-  if (isUtxoP2PKH(input)) {
-    return {
-      script: p2pkhScriptName,
-      overrides: {
-        keys: {
-          privateKeys: {
-            [placeholderKeyName]: binToHex(input.template?.privateKey),
-          },
-        },
-      },
-    };
-  }
-
-  return insertSlot ? ['slot'] : {};
-};
-
-const generateTemplateScenarioParametersValues = (
-  types: AbiInput[],
-  encodedArgs: EncodedFunctionArgument[],
-): Record<string, string> => {
-  const typesAndArguments = zip(types, encodedArgs);
-
-  const entries = typesAndArguments
-    // SignatureTemplates are handled by the 'keys' object in the scenario
-    .filter(([, arg]) => !(arg instanceof SignatureTemplate))
-    .map(([input, arg]) => {
-      const encodedArgumentHex = binToHex(arg as Uint8Array);
-      const prefixedEncodedArgument = encodedArgumentHex.length > 0 ? `0x${encodedArgumentHex}` : '';
-      return [snakeCase(input.name), prefixedEncodedArgument] as const;
-    });
-
-  return Object.fromEntries(entries);
-};
-
-const generateTemplateScenarioKeys = (
-  types: AbiInput[],
-  encodedArgs: EncodedFunctionArgument[],
-): Record<string, string> => {
-  const typesAndArguments = zip(types, encodedArgs);
-
-  const entries = typesAndArguments
-    .filter(([, arg]) => arg instanceof SignatureTemplate)
-    .map(([input, arg]) => ([snakeCase(input.name), binToHex((arg as SignatureTemplate).privateKey)] as const));
-
-  return Object.fromEntries(entries);
-};
-
-const formatParametersForDebugging = (types: AbiInput[], args: EncodedFunctionArgument[]): string => {
-  if (types.length === 0) return '// none';
-
-  // We reverse the arguments because the order of the arguments in the bytecode is reversed
-  const typesAndArguments = zip(types, args).reverse();
-
-  return typesAndArguments.map(([input, arg]) => {
-    if (arg instanceof SignatureTemplate) {
-      const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
-      const hashtypeName = getHashTypeName(arg.getHashType(false));
-      return `<${snakeCase(input.name)}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
-    }
-
-    const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;
-
-    // we output these values as pushdata, comment will contain the type and the value of the variable
-    // e.g. <timeout> // int = <0xa08601>
-    return `<${snakeCase(input.name)}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
-  }).join('\n');
-};
-
-const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
-  const signatureAlgorithmNames = {
-    [SignatureAlgorithm.SCHNORR]: 'schnorr_signature',
-    [SignatureAlgorithm.ECDSA]: 'ecdsa_signature',
-  };
-
-  return signatureAlgorithmNames[signatureAlgorithm];
-};
-
-const getHashTypeName = (hashType: HashType): string => {
-  const hashtypeNames = {
-    [HashType.SIGHASH_ALL]: 'all_outputs',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_SINGLE]: 'corresponding_output',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_NONE]: 'no_outputs',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
-  };
-
-  return hashtypeNames[hashType];
-};
-
-const formatBytecodeForDebugging = (artifact: Artifact): string => {
-  if (!artifact.debug) {
-    return artifact.bytecode
-      .split(' ')
-      .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
-      .join('\n');
-  }
-
-  return formatBitAuthScript(
-    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
-    artifact.debug.sourceMap,
-    artifact.source,
-  );
-};
-
-const serialiseTokenDetails = (token?: TokenDetails | LibauthTokenDetails): LibauthTemplateTokenDetails | undefined => {
-  if (!token) return undefined;
-
-  return {
-    amount: token.amount.toString(),
-    category: token.category instanceof Uint8Array ? binToHex(token.category) : token.category,
-    nft: token.nft ? {
-      capability: token.nft.capability,
-      commitment: token.nft.commitment instanceof Uint8Array ? binToHex(token.nft.commitment) : token.nft.commitment,
-    } : undefined,
-  };
-};
-
-export interface LibauthTemplateTokenDetails {
-  amount: string;
-  category: string;
-  nft?: {
-    capability: 'none' | 'mutable' | 'minting';
-    commitment: string;
-  };
-}
