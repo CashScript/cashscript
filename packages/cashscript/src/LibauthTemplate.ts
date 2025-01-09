@@ -52,8 +52,6 @@ export const buildTemplate = async ({
   const contract = transaction.contract;
   const txHex = transactionHex ?? await transaction.build();
 
-  // 1. entities should be an array and consuming all the contracts.
-
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
@@ -81,7 +79,6 @@ export const buildTemplate = async ({
 
   transaction.inputs
     .forEach((input, index) => {
-      console.log('input', input);
       if (!isUtxoP2PKH(input)) return;
 
       const lockScriptName = `p2pkh_placeholder_lock_${index}`;

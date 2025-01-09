@@ -1,40 +1,49 @@
 import {
-  binToHex, decodeTransaction, encodeTransaction, hexToBin, Transaction as LibauthTransaction, WalletTemplate,
+  binToHex,
+  decodeTransaction,
+  encodeTransaction,
+  hexToBin,
+  Transaction as LibauthTransaction,
+  WalletTemplate,
+  WalletTemplateEntity,
+  WalletTemplateScenario,
+  WalletTemplateScript,
 } from '@bitauth/libauth';
+import { encodeBip68 } from '@cashscript/utils';
 import delay from 'delay';
+import { encodeFunctionArguments } from '../Argument.js';
+import { ContractUnlocker } from '../Contract.js';
+import { DebugResult, debugTemplate } from '../debugging.js';
+import { FailedTransactionError } from '../Errors.js';
 import {
-  Unlocker,
+  isUnlockableUtxo,
   Output,
   TransactionDetails,
-  UnlockableUtxo,
+  Unlocker,
   Utxo,
+} from '../interfaces.js';
+import {
+  BuilderOptions,
   InputOptions,
-  isUnlockableUtxo,
+  UnlockableUtxo,
 } from './interfaces.js';
 import { NetworkProvider } from '../network/index.js';
 import {
+  generateTemplateEntities,
+  generateTemplateEntitiesP2PKH,
+  generateTemplateScenarios,
+  generateTemplateScripts,
+  generateTemplateScriptsP2PKH,
+  getBitauthUri,
+} from './LibauthTemplate.js';
+import {
+  addressToLockScript,
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
   snakeCase,
   validateOutput,
-  addressToLockScript,
 } from '../utils.js';
-import { FailedTransactionError } from '../Errors.js';
-import { DebugResult, debugTemplate } from '../debugging.js';
-import { generateTemplateEntities,
-  generateTemplateEntitiesP2PKH,
-  generateTemplateScripts,
-  generateTemplateScriptsP2PKH,
-  getBitauthUri,
-  generateTemplateScenarios } from './templateBuilder.js';
-import { encodeFunctionArguments } from '../Argument.js';
-import { ContractUnlocker } from '../Contract.js';
-import { encodeBip68 } from '@cashscript/utils';
 
-
-export interface BuilderOptions {
-  provider: NetworkProvider;
-}
 
 const DEFAULT_SEQUENCE = 0xfffffffe;
 
@@ -254,16 +263,19 @@ export class Builder {
     };
 
     const finalDebugResult: DebugResult[] = [];
+    // Initialize collections for entities, scripts, and scenarios
+    const entities: Record<string, WalletTemplateEntity> = {};
+    const scripts: Record<string, WalletTemplateScript> = {};
+    const scenarios: Record<string, WalletTemplateScenario> = {};
 
-    const entities: any = {};
-    const scripts: any = {};
-    const scenarios: any = {};
+    // Initialize collections for P2PKH entities and scripts
+    const p2pkhEntities: Record<string, WalletTemplateEntity> = {};
+    const p2pkhScripts: Record<string, WalletTemplateScript> = {};
 
-    const p2pkhEntities: any = {};
-    const p2pkhScripts: any = {};
-
+    // Initialize bytecode mappings
     const unlockingBytecodes: Record<string, string> = {};
     const lockingBytecodes: Record<string, string> = {};
+
     
     for (const [idx, input] of this.inputs.entries()) {
       if (input.options?.template) {
@@ -272,65 +284,71 @@ export class Builder {
         const index = Object.keys(p2pkhEntities).length;
         Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(index));
         Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(input.options.template, index));
+
         continue;
       }
 
-      const contract = input.options?.contract;
-      if (!contract) throw new Error('Contract is required');
+      if (input.options?.contract) {
+        const contract = input.options?.contract;
 
-      // Find matching function and index from contract.unlock array
-      const matchingUnlockerIndex = Object.values(contract.unlock).findIndex(fn => fn === input.unlocker);
-      if (matchingUnlockerIndex === -1) {
-        throw new Error('Could not find matching unlock function');
-      }
-
-      let scenarioIdentifier = contract.artifact.contractName + '_' + contract.artifact.abi[matchingUnlockerIndex].name + 'EvaluateFunction';
-      let scenarioIdentifierCounter = 0;
-
-      while (true) {
-        scenarioIdentifier = snakeCase(scenarioIdentifier + scenarioIdentifierCounter.toString());
-        if (!scenarios[scenarioIdentifier]) {
-          break;
+        // Find matching function and index from contract.unlock array
+        const matchingUnlockerIndex = Object.values(contract.unlock).findIndex(fn => fn === input.unlocker);
+        if (matchingUnlockerIndex === -1) {
+          throw new Error('Could not find matching unlock function');
         }
-        scenarioIdentifierCounter++;
-      }
 
-      Object.assign(scenarios,
-        generateTemplateScenarios(
-          scenarioIdentifier,
-          contract,
-          libauthTransaction,
-          csTransaction,
-          contract?.artifact.abi[matchingUnlockerIndex],
+        let scenarioIdentifier = contract.artifact.contractName + '_' + contract.artifact.abi[matchingUnlockerIndex].name + 'EvaluateFunction';
+        let scenarioIdentifierCounter = 0;
+
+        while (true) {
+          scenarioIdentifier = snakeCase(scenarioIdentifier + scenarioIdentifierCounter.toString());
+          if (!scenarios[scenarioIdentifier]) {
+            break;
+          }
+          scenarioIdentifierCounter++;
+        }
+
+        Object.assign(scenarios,
+          generateTemplateScenarios(
+            scenarioIdentifier,
+            contract,
+            libauthTransaction,
+            csTransaction,
+            contract?.artifact.abi[matchingUnlockerIndex],
+            input.options?.params ?? [],
+            idx,
+          ),
+        );
+
+        const encodedArgs = encodeFunctionArguments(
+          contract.artifact.abi[matchingUnlockerIndex],
           input.options?.params ?? [],
-          idx,
-        ),
-      );
+        );
 
-      const encodedArgs = encodeFunctionArguments(
-        contract.artifact.abi[matchingUnlockerIndex],
-        input.options?.params ?? [],
-      );
+        const entity = generateTemplateEntities(
+          contract.artifact,
+          contract.artifact.abi[matchingUnlockerIndex],
+          encodedArgs,
+        );
+        const script = generateTemplateScripts(
+          contract.artifact,
+          contract.addressType,
+          contract.artifact.abi[matchingUnlockerIndex],
+          encodedArgs,
+          contract.encodedConstructorArgs,
+          scenarioIdentifier,
+        );
 
-      const entity = generateTemplateEntities(contract.artifact, contract.artifact.abi[matchingUnlockerIndex], encodedArgs);
-      const script = generateTemplateScripts(
-        contract.artifact,
-        contract.addressType,
-        contract.artifact.abi[matchingUnlockerIndex],
-        encodedArgs,
-        contract.encodedConstructorArgs,
-        scenarioIdentifier,
-      );
+        const lockScriptName = Object.keys(script).find(scriptName => scriptName.includes('_lock'));
+        if (lockScriptName) {
+          const unlockingBytecode = binToHex(libauthTransaction.inputs[idx].unlockingBytecode);
+          unlockingBytecodes[unlockingBytecode] = lockScriptName;
+          lockingBytecodes[binToHex(addressToLockScript(contract.address))] = lockScriptName;
+        }
 
-      const lockScriptName = Object.keys(script).find(scriptName => scriptName.includes('_lock'));
-      if (lockScriptName) {
-        const unlockingBytecode = binToHex(libauthTransaction.inputs[idx].unlockingBytecode);
-        unlockingBytecodes[unlockingBytecode] = lockScriptName;
-        lockingBytecodes[binToHex(addressToLockScript(contract.address))] = lockScriptName;
+        Object.assign(entities, entity);
+        Object.assign(scripts, script);
       }
-
-      Object.assign(entities, entity);
-      Object.assign(scripts, script);
     }
 
     for (const entity of Object.values(p2pkhEntities) as { scripts?: string[] }[]) {

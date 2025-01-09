@@ -28,12 +28,9 @@ provider.addUtxo(aliceAddress, randomUtxo());
 provider.addUtxo(aliceAddress, randomUtxo());
 
 const aliceTemplate = new SignatureTemplate(alicePriv);
-console.log('aliceTemplate', aliceTemplate);
 const utxos = await provider.getUtxos(aliceAddress);
-console.log('User utxos:', utxos);
 
 const contractUtxos = await fooContract.getUtxos();
-console.log('Contract utxos:', contractUtxos);
 // Get contract balance & output address + balance
 // console.log('contract address:', fooContract.address);
 // console.log('contract balance:', await fooContract.getBalance());
@@ -96,14 +93,14 @@ const newBuilderTransaction = await new Builder({ provider })
     { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
   )
   .addInput(
-    contractUtxos[3],
-    barContract.unlock.execute,
-    { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
-  )
-  .addInput(
     contractUtxos[0],
     fooContract.unlock.execute,
     { contract: fooContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+  )
+  .addInput(
+    contractUtxos[3],
+    barContract.unlock.execute,
+    { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
   )
   .addOutput({ to: fooContract.address, amount: 8000n })
   .addOpReturnOutput(['hello', 'world'])
@@ -111,4 +108,7 @@ const newBuilderTransaction = await new Builder({ provider })
   // .debug();
   .bitauthUri();
 
-console.log('transaction details:', stringify(newBuilderTransaction));
+  // console.log('newBuilderTransaction', newBuilderTransaction);
+
+
+  console.log('transaction details:', stringify(newBuilderTransaction));
