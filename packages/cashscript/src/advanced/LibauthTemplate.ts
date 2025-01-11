@@ -301,6 +301,12 @@ const generateTemplateScenarioSourceOutputs = (
 };
 
 
+/**
+ * Creates a transaction object from a TransactionBuilder instance
+ * 
+ * @param txn - The TransactionBuilder instance to convert
+ * @returns A transaction object containing inputs, outputs, locktime and version
+ */
 const createCSTransaction = (txn: TransactionBuilder): any => {
   const csTransaction = {
     inputs: txn.inputs,
@@ -329,7 +335,6 @@ export const getLibauthTemplates = async (
     scenarios: {},
   };
 
-  // const finalDebugResult: DebugResult[] = [];
   // Initialize collections for entities, scripts, and scenarios
   const entities: Record<string, WalletTemplateEntity> = {};
   const scripts: Record<string, WalletTemplateScript> = {};
@@ -339,15 +344,17 @@ export const getLibauthTemplates = async (
   const p2pkhEntities: Record<string, WalletTemplateEntity> = {};
   const p2pkhScripts: Record<string, WalletTemplateScript> = {};
 
-  // Initialize bytecode mappings
-  const unlockingBytecodes: Record<string, string> = {};
-  const lockingBytecodes: Record<string, string> = {};
+  // Initialize bytecode mappings, these will be used to map the locking and unlocking scripts and naming the scripts
+  const unlockingBytecodeIdentifiers: Record<string, string> = {};
+  const lockingBytecodeIdentifiers: Record<string, string> = {};
 
   
   for (const [idx, input] of txn.inputs.entries()) {    
+
+    // If template exists on the input, it indicates this is a P2PKH (Pay to Public Key Hash) input
     if (input.options?.template) {
       // @ts-ignore
-      input.template = input.options?.template;
+      input.template = input.options?.template;  // Added to support P2PKH inputs in buildTemplate
       const index = Object.keys(p2pkhEntities).length;
       Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(index));
       Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(input.options.template, index));
@@ -355,6 +362,7 @@ export const getLibauthTemplates = async (
       continue;
     }
 
+    // If contract exists on the input, it indicates this is a contract input
     if (input.options?.contract) {
       const contract = input.options?.contract;
 
@@ -379,6 +387,7 @@ export const getLibauthTemplates = async (
       
       scenarioIdentifier = snakeCase(scenarioIdentifier);
 
+      // Generate a scenario object for this contract input
       Object.assign(scenarios,
         generateTemplateScenarios(
           scenarioIdentifier,
@@ -391,16 +400,20 @@ export const getLibauthTemplates = async (
         ),
       );
 
+      // Encode the function arguments for this contract input
       const encodedArgs = encodeFunctionArguments(
         contract.artifact.abi[matchingUnlockerIndex],
         input.options?.params ?? [],
       );
 
+      // Generate entities for this contract input
       const entity = generateTemplateEntities(
         contract.artifact,
         contract.artifact.abi[matchingUnlockerIndex],
         encodedArgs,
       );
+
+      // Generate scripts for this contract input
       const script = generateTemplateScripts(
         contract.artifact,
         contract.addressType,
@@ -410,13 +423,18 @@ export const getLibauthTemplates = async (
         scenarioIdentifier,
       );
 
+      // Find the lock script name for this contract input
       const lockScriptName = Object.keys(script).find(scriptName => scriptName.includes('_lock'));
       if (lockScriptName) {
+        // Generate bytecodes for this contract input
         const unlockingBytecode = binToHex(libauthTransaction.inputs[idx].unlockingBytecode);
-        unlockingBytecodes[unlockingBytecode] = lockScriptName;
-        lockingBytecodes[binToHex(addressToLockScript(contract.address))] = lockScriptName;
+        // Assign a name to the unlocking bytecode so later it can be used to replace the bytecode/slot in scenarios
+        unlockingBytecodeIdentifiers[unlockingBytecode] = lockScriptName;
+        // Assign a name to the locking bytecode so later it can be used to replace with bytecode/slot in scenarios
+        lockingBytecodeIdentifiers[binToHex(addressToLockScript(contract.address))] = lockScriptName;
       }
 
+      // Add entities and scripts to the base template and repeat the process for the next input
       Object.assign(entities, entity);
       Object.assign(scripts, script);
     }
@@ -432,31 +450,43 @@ export const getLibauthTemplates = async (
 
   const finalTemplate = { ...baseTemplate, entities, scripts, scenarios };
 
+  // Loop through all scenarios and map the locking and unlocking scripts to the scenarios
+  // Replace the script tag with the identifiers we created earlier
+
+  // For Inputs
   for (const scenario of Object.values(scenarios)) {
     for (const [idx, input] of libauthTransaction.inputs.entries()) {
       const unlockingBytecode = binToHex(input.unlockingBytecode);
-      if (unlockingBytecodes[unlockingBytecode]) {
+      if (unlockingBytecodeIdentifiers[unlockingBytecode]) {
 
-        // @ts-ignore
-        if (Array.isArray(scenario.sourceOutputs[idx].lockingBytecode)) continue;
+        if (Array.isArray(scenario?.sourceOutputs?.[idx]?.lockingBytecode)) continue;
 
-        // @ts-ignore
-        scenario.sourceOutputs[idx].lockingBytecode = {
-          script: unlockingBytecodes[unlockingBytecode],
-        };
+        if (scenario.sourceOutputs && scenario.sourceOutputs[idx]) {
+          scenario.sourceOutputs[idx] = {
+            ...scenario.sourceOutputs[idx],
+            lockingBytecode: {
+              script: unlockingBytecodeIdentifiers[unlockingBytecode],
+            },
+          };
+        }
       }
     }
 
+    // For Inputs
     for (const [idx, output] of libauthTransaction.outputs.entries()) {
       const lockingBytecode = binToHex(output.lockingBytecode);
-      if (lockingBytecodes[lockingBytecode]) {
+      if (lockingBytecodeIdentifiers[lockingBytecode]) {
 
-        // @ts-ignore
-        if (Array.isArray(scenario.transaction.outputs[idx].lockingBytecode)) continue;
-        // @ts-ignore
-        scenario.transaction.outputs[idx].lockingBytecode = {
-          script: lockingBytecodes[lockingBytecode],
-        };
+        if (Array.isArray(scenario?.transaction?.outputs?.[idx]?.lockingBytecode)) continue;
+
+        if (scenario?.transaction && scenario?.transaction?.outputs && scenario?.transaction?.outputs[idx]) {
+          scenario.transaction.outputs[idx] = {
+            ...scenario.transaction.outputs[idx],
+            lockingBytecode: {
+              script: lockingBytecodeIdentifiers[lockingBytecode],
+            },
+          };
+        }
       }
     }
 
