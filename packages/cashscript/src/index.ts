@@ -2,7 +2,7 @@ export { default as SignatureTemplate } from './SignatureTemplate.js';
 export { Contract, type ContractFunction } from './Contract.js';
 export { Transaction } from './Transaction.js';
 export { TransactionBuilder } from './TransactionBuilder.js';
-export { Builder } from './advanced/Builder.js';
+export { TransactionBuilder as AdvancedTransactionBuilder } from './advanced/Builder.js';
 export {
   type ConstructorArgument,
   type FunctionArgument,

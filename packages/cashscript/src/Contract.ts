@@ -32,7 +32,7 @@ export class Contract {
   opcount: number;
 
   functions: Record<string, ContractFunction>;
-  unlock: Record<string, ContractUnlocker>;
+  unlock: Record<string, (...args: FunctionArgument[]) => Unlocker>;
 
   redeemScript: Script;
   public provider: NetworkProvider;
@@ -123,7 +123,7 @@ export class Contract {
     };
   }
 
-  private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
+  private createUnlocker(abiFunction: AbiFunction, selector?: number): (...args: FunctionArgument[]) => Unlocker {
     return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map(input => input.type)}) but got ${args.length}`);
@@ -170,4 +170,3 @@ export class Contract {
 }
 
 export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
-export type ContractUnlocker = (...args: FunctionArgument[]) => Unlocker;

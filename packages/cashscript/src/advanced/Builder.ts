@@ -4,16 +4,9 @@ import {
   encodeTransaction,
   hexToBin,
   Transaction as LibauthTransaction,
-  WalletTemplate,
-  WalletTemplateEntity,
-  WalletTemplateScenario,
-  WalletTemplateScript,
 } from '@bitauth/libauth';
-import { encodeBip68 } from '@cashscript/utils';
 import delay from 'delay';
-import { encodeFunctionArguments } from '../Argument.js';
-import { ContractUnlocker } from '../Contract.js';
-import { DebugResult, debugTemplate } from '../debugging.js';
+import { DebugResult } from '../debugging.js';
 import { FailedTransactionError } from '../Errors.js';
 import {
   isUnlockableUtxo,
@@ -28,40 +21,25 @@ import {
   UnlockableUtxo,
 } from './interfaces.js';
 import { NetworkProvider } from '../network/index.js';
+import { getLibauthTemplates } from './LibauthTemplate.js';
+import { getBitauthUri } from '../LibauthTemplate.js';
 import {
-  generateTemplateEntities,
-  generateTemplateEntitiesP2PKH,
-  generateTemplateScenarios,
-  generateTemplateScripts,
-  generateTemplateScriptsP2PKH,
-} from './LibauthTemplate.js';
-import {
-  getBitauthUri,
-} from '../LibauthTemplate.js';
-import {
-  addressToLockScript,
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
-  snakeCase,
   validateOutput,
 } from '../utils.js';
+import { DEFAULT_LOCKTIME, DEFAULT_SEQUENCE } from './constants.js';
 
 
-const DEFAULT_SEQUENCE = 0xfffffffe;
-
-export class Builder {
+export class TransactionBuilder {
   public provider: NetworkProvider;
 
   public inputs: UnlockableUtxo[] = [];
   public outputs: Output[] = [];
 
-  private locktime: number;
-  private maxFee?: bigint;
-  private sequence = 0xfffffffe;
-  private feePerByte: number = 1.0;
-  private hardcodedFee: bigint;
-  private minChange: bigint = 0n;
-  private tokenChange: boolean = true;
+  public maxFee?: bigint;
+  public locktime: number = DEFAULT_LOCKTIME;
+  private sequence: number = DEFAULT_SEQUENCE;
 
   constructor(
     options: BuilderOptions,
@@ -69,16 +47,16 @@ export class Builder {
     this.provider = options.provider;
   }
 
-  addInput(utxo: Utxo, unlocker: ContractUnlocker | Unlocker, options?: InputOptions): this {
+  addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
     this.inputs.push({ ...utxo, unlocker, options: { ...options, sequence: options?.sequence ?? this.sequence } });
     return this;
   }
 
-  addInputs( utxos: Utxo[], unlocker: ContractUnlocker | Unlocker, options?: InputOptions): this;
+  addInputs( utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
   addInputs(utxos: UnlockableUtxo[] ): this;
   addInputs(
     utxos: Utxo[] | UnlockableUtxo[],
-    unlocker?: ContractUnlocker | Unlocker,
+    unlocker?: Unlocker,
     options?: InputOptions,
   ): this {
     if (
@@ -117,42 +95,8 @@ export class Builder {
     return this;
   }
 
-  withOpReturn(chunks: string[]): this {
-    this.outputs.push(createOpReturnOutput(chunks));
-    return this;
-  }
-
-  withAge(age: number): this {
-    this.sequence = encodeBip68({ blocks: age });
-    return this;
-  }
-
-  withTime(time: number): this {
-    this.locktime = time;
-    return this;
-  }
-
-  withHardcodedFee(hardcodedFee: bigint): this {
-    this.hardcodedFee = hardcodedFee;
-    return this;
-  }
-
-  withFeePerByte(feePerByte: number): this {
-    this.feePerByte = feePerByte;
-    return this;
-  }
-
-  withMinChange(minChange: bigint): this {
-    this.minChange = minChange;
-    return this;
-  }
-
-  withoutChange(): this {
-    return this.withMinChange(BigInt(Number.MAX_VALUE));
-  }
-
-  withoutTokenChange(): this {
-    this.tokenChange = false;
+  setSequence(sequence: number): this {
+    this.sequence = sequence;
     return this;
   }
 
@@ -177,7 +121,7 @@ export class Builder {
       throw new Error(`Transaction fee of ${fee} is higher than max fee of ${this.maxFee}`);
     }
   }
-
+  
   async buildTransaction(): Promise<LibauthTransaction> {
     this.locktime = this.locktime ?? await this.provider.getBlockHeight();
     this.checkMaxFee();
@@ -201,6 +145,7 @@ export class Builder {
     // Generate source outputs from inputs (for signing with SIGHASH_UTXOS)
     const sourceOutputs = this.inputs.map((input) => {
       const unlocker = typeof input.unlocker === 'function' ? input.unlocker(...(input.options?.params ?? [])) : input.unlocker;
+      
       const sourceOutput = {
         amount: input.satoshis,
         to: unlocker.generateLockingBytecode(),
@@ -214,7 +159,7 @@ export class Builder {
       const unlocker = typeof input.unlocker === 'function' ? input.unlocker(...(input.options?.params ?? [])) : input.unlocker;
       return unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex });
     });
-
+    
     inputScripts.forEach((script, i) => {
       transaction.inputs[i].unlockingBytecode = script;
     });
@@ -229,178 +174,13 @@ export class Builder {
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
   async debug(): Promise<DebugResult[]> {
-    const { debugResult } = await this.getLibauthTemplates();
+    const { debugResult } = await getLibauthTemplates(this);
     return debugResult;
   }
 
   async bitauthUri(): Promise<string> {
-    const { template } = await this.getLibauthTemplates();
+    const { template } = await getLibauthTemplates(this);
     return getBitauthUri(template);
-  }
-
-  createCSTransaction(): any {
-    const csTransaction = {
-      inputs: this.inputs,
-      locktime: this.locktime,
-      outputs: this.outputs,
-      version: 2,
-    };
-
-    return csTransaction;
-  }
-
-  async getLibauthTemplates(): Promise<{ template: WalletTemplate, debugResult: DebugResult[] }> {
-    const libauthTransaction = await this.buildTransaction();
-    const csTransaction = this.createCSTransaction();
-
-    let finalTemplate: WalletTemplate = {
-      $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
-      description: 'Imported from cashscript',
-      name: 'Advanced Debugging',
-      supported: ['BCH_2023_05'],
-      version: 0,
-      entities: {},
-      scripts: {},
-      scenarios: {},
-    };
-
-    const finalDebugResult: DebugResult[] = [];
-    // Initialize collections for entities, scripts, and scenarios
-    const entities: Record<string, WalletTemplateEntity> = {};
-    const scripts: Record<string, WalletTemplateScript> = {};
-    const scenarios: Record<string, WalletTemplateScenario> = {};
-
-    // Initialize collections for P2PKH entities and scripts
-    const p2pkhEntities: Record<string, WalletTemplateEntity> = {};
-    const p2pkhScripts: Record<string, WalletTemplateScript> = {};
-
-    // Initialize bytecode mappings
-    const unlockingBytecodes: Record<string, string> = {};
-    const lockingBytecodes: Record<string, string> = {};
-
-    
-    for (const [idx, input] of this.inputs.entries()) {
-      if (input.options?.template) {
-        // @ts-ignore
-        input.template = input.options?.template;
-        const index = Object.keys(p2pkhEntities).length;
-        Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(index));
-        Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(input.options.template, index));
-
-        continue;
-      }
-
-      if (input.options?.contract) {
-        const contract = input.options?.contract;
-
-        // Find matching function and index from contract.unlock array
-        const matchingUnlockerIndex = Object.values(contract.unlock).findIndex(fn => fn === input.unlocker);
-        if (matchingUnlockerIndex === -1) {
-          throw new Error('Could not find matching unlock function');
-        }
-
-        let scenarioIdentifier = contract.artifact.contractName + '_' + contract.artifact.abi[matchingUnlockerIndex].name + 'EvaluateFunction';
-        let scenarioIdentifierCounter = 0;
-
-        while (true) {
-          scenarioIdentifier = snakeCase(scenarioIdentifier + scenarioIdentifierCounter.toString());
-          if (!scenarios[scenarioIdentifier]) {
-            break;
-          }
-          scenarioIdentifierCounter++;
-        }
-
-        Object.assign(scenarios,
-          generateTemplateScenarios(
-            scenarioIdentifier,
-            contract,
-            libauthTransaction,
-            csTransaction,
-            contract?.artifact.abi[matchingUnlockerIndex],
-            input.options?.params ?? [],
-            idx,
-          ),
-        );
-
-        const encodedArgs = encodeFunctionArguments(
-          contract.artifact.abi[matchingUnlockerIndex],
-          input.options?.params ?? [],
-        );
-
-        const entity = generateTemplateEntities(
-          contract.artifact,
-          contract.artifact.abi[matchingUnlockerIndex],
-          encodedArgs,
-        );
-        const script = generateTemplateScripts(
-          contract.artifact,
-          contract.addressType,
-          contract.artifact.abi[matchingUnlockerIndex],
-          encodedArgs,
-          contract.encodedConstructorArgs,
-          scenarioIdentifier,
-        );
-
-        const lockScriptName = Object.keys(script).find(scriptName => scriptName.includes('_lock'));
-        if (lockScriptName) {
-          const unlockingBytecode = binToHex(libauthTransaction.inputs[idx].unlockingBytecode);
-          unlockingBytecodes[unlockingBytecode] = lockScriptName;
-          lockingBytecodes[binToHex(addressToLockScript(contract.address))] = lockScriptName;
-        }
-
-        Object.assign(entities, entity);
-        Object.assign(scripts, script);
-      }
-    }
-
-    for (const entity of Object.values(p2pkhEntities) as { scripts?: string[] }[]) {
-      if (entity.scripts) {entity.scripts = [...Object.keys(scripts), ...entity.scripts]; }
-    }
-
-    Object.assign(entities, p2pkhEntities);
-    Object.assign(scripts, p2pkhScripts);
-
-    finalTemplate = { ...finalTemplate, entities, scripts, scenarios };
- 
-    for (const scenario of Object.values(scenarios)) {
-      for (const [idx, input] of libauthTransaction.inputs.entries()) {
-        const unlockingBytecode = binToHex(input.unlockingBytecode);
-        if (unlockingBytecodes[unlockingBytecode]) {
-
-          // @ts-ignore
-          if (Array.isArray(scenario.sourceOutputs[idx].lockingBytecode)) continue;
-
-          // @ts-ignore
-          scenario.sourceOutputs[idx].lockingBytecode = {
-            script: unlockingBytecodes[unlockingBytecode],
-          };
-        }
-      }
-
-      for (const [idx, output] of libauthTransaction.outputs.entries()) {
-        const lockingBytecode = binToHex(output.lockingBytecode);
-        if (lockingBytecodes[lockingBytecode]) {
-
-          // @ts-ignore
-          if (Array.isArray(scenario.transaction.outputs[idx].lockingBytecode)) continue;
-          // @ts-ignore
-          scenario.transaction.outputs[idx].lockingBytecode = {
-            script: lockingBytecodes[lockingBytecode],
-          };
-        }
-      }
-
-    }
-
-    for (const input of this.inputs) {
-      const contract = input.options?.contract;
-      if (!contract) continue;
-      const debugResult = debugTemplate(finalTemplate, contract.artifact);
-      finalDebugResult.push(debugResult);
-    }
-
-    // @ts-ignore
-    return { template: finalTemplate, debugResult: finalDebugResult };
   }
 
   // TODO: see if we can merge with Transaction.ts
@@ -437,5 +217,5 @@ export class Builder {
 
     // Should not happen
     throw new Error('Could not retrieve transaction details for over 10 minutes');
-  }
+  }  
 }

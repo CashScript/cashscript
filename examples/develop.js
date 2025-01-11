@@ -1,6 +1,6 @@
 import { URL } from 'url';
 import { compileFile } from '../packages/cashc/dist/index.js';
-import { MockNetworkProvider, Contract, SignatureTemplate, TransactionBuilder, Builder, randomUtxo } from '../packages/cashscript/dist/index.js';
+import { MockNetworkProvider, Contract, SignatureTemplate, AdvancedTransactionBuilder, randomUtxo } from '../packages/cashscript/dist/index.js';
 import { stringify } from '@bitauth/libauth';
 
 // Import Alice's keys from common-js.js
@@ -29,57 +29,12 @@ provider.addUtxo(aliceAddress, randomUtxo());
 
 const aliceTemplate = new SignatureTemplate(alicePriv);
 const utxos = await provider.getUtxos(aliceAddress);
-
 const contractUtxos = await fooContract.getUtxos();
-// Get contract balance & output address + balance
-// console.log('contract address:', fooContract.address);
-// console.log('contract balance:', await fooContract.getBalance());
 
-
-// console.log(contract.unlock)
-
-// Call the spend function with alice's signature + pk
-// And use it to send 0. 000 100 00 BCH back to the contract's address
-// const tx = await fooContract.functions
-//   .execute(alicePub, new SignatureTemplate(alicePriv))
-//   .from(contractUtxos[0])
-//   .fromP2PKH(utxos[0], new SignatureTemplate(alicePriv))
-//   .fromP2PKH(utxos[1], new SignatureTemplate(alicePriv))
-//   .to(aliceAddress, 10000n)
-//   .withoutChange()
-//   .bitauthUri();
-
-// console.log('transaction details:', stringify(tx));
-
-// console.log('--------------------------------');
-
-// const advancedTransaction = await new TransactionBuilder({ provider })
-//   .addInput(
-//     utxos[0],
-//     aliceTemplate.unlockP2PKH(),
-//     { template: new SignatureTemplate(alicePriv) },
-//   )
-//   .addInput(
-//     contractUtxos[0],
-//     fooContract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
-//     { contract: fooContract, params: [alicePub, new SignatureTemplate(alicePriv)], selector: 0 },
-//   )
-//   .addInput(
-//     contractUtxos[1],
-//     barContract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
-//     { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)], selector: 2 },
-//   )
-//   .addOutput({ to: fooContract.address, amount: 8000n })
-//   .bitauthUri();
-
-
-// console.log('transaction details:', stringify(advancedTransaction));
-
-
-const newBuilderTransaction = await new Builder({ provider })
+const newBuilderTransaction = await new AdvancedTransactionBuilder({ provider })
   .addInputs(
     [utxos[0], utxos[1]],
-    aliceTemplate.unlockP2PKH(),
+    aliceTemplate.unlockP2PKH.bind(aliceTemplate),
     { template: new SignatureTemplate(alicePriv) },
   )
   .addInput(
@@ -108,7 +63,5 @@ const newBuilderTransaction = await new Builder({ provider })
   // .debug();
   .bitauthUri();
 
-  // console.log('newBuilderTransaction', newBuilderTransaction);
-
-
   console.log('transaction details:', stringify(newBuilderTransaction));
+  

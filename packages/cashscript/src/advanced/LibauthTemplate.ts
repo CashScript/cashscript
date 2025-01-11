@@ -6,15 +6,17 @@ import {
   binToHex,
   TransactionBCH,
   WalletTemplate,
+  WalletTemplateEntity,
   WalletTemplateScenario,
   WalletTemplateScenarioInput,
   WalletTemplateScenarioOutput,
   WalletTemplateScenarioTransactionOutput,
+  WalletTemplateScript,
   WalletTemplateScriptLocking,
   WalletTemplateScriptUnlocking,
   WalletTemplateVariable,
 } from '@bitauth/libauth';
-import { EncodedConstructorArgument, EncodedFunctionArgument } from '../Argument.js';
+import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from '../Argument.js';
 import { Contract } from '../Contract.js';
 import {
   formatBytecodeForDebugging,
@@ -32,8 +34,11 @@ import {
   Utxo,
 } from '../interfaces.js';
 import SignatureTemplate from '../SignatureTemplate.js';
+import { debugTemplate } from '../debugging.js';
 import { Transaction } from '../Transaction.js';
-import { snakeCase } from '../utils.js';
+import { addressToLockScript, snakeCase } from '../utils.js';
+import { DebugResult } from '../debugging.js';
+import { TransactionBuilder } from './Builder.js';
 
 
 export const generateTemplateEntitiesP2PKH = (
@@ -293,4 +298,176 @@ const generateTemplateScenarioSourceOutputs = (
       token: serialiseTokenDetails(input.token),
     };
   });
+};
+
+
+const createCSTransaction = (txn: TransactionBuilder): any => {
+  const csTransaction = {
+    inputs: txn.inputs,
+    locktime: txn.locktime,
+    outputs: txn.outputs,
+    version: 2,
+  };
+
+  return csTransaction;
+};
+
+export const getLibauthTemplates = async (
+  txn: TransactionBuilder,
+): Promise<{ template: WalletTemplate; debugResult: DebugResult[] }> => {
+  const libauthTransaction = await txn.buildTransaction();
+  const csTransaction = createCSTransaction(txn);
+
+  const baseTemplate: WalletTemplate = {
+    $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
+    description: 'Imported from cashscript',
+    name: 'Advanced Debugging',
+    supported: ['BCH_2023_05'],
+    version: 0,
+    entities: {},
+    scripts: {},
+    scenarios: {},
+  };
+
+  // const finalDebugResult: DebugResult[] = [];
+  // Initialize collections for entities, scripts, and scenarios
+  const entities: Record<string, WalletTemplateEntity> = {};
+  const scripts: Record<string, WalletTemplateScript> = {};
+  const scenarios: Record<string, WalletTemplateScenario> = {};
+
+  // Initialize collections for P2PKH entities and scripts
+  const p2pkhEntities: Record<string, WalletTemplateEntity> = {};
+  const p2pkhScripts: Record<string, WalletTemplateScript> = {};
+
+  // Initialize bytecode mappings
+  const unlockingBytecodes: Record<string, string> = {};
+  const lockingBytecodes: Record<string, string> = {};
+
+  
+  for (const [idx, input] of txn.inputs.entries()) {    
+    if (input.options?.template) {
+      // @ts-ignore
+      input.template = input.options?.template;
+      const index = Object.keys(p2pkhEntities).length;
+      Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(index));
+      Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(input.options.template, index));
+
+      continue;
+    }
+
+    if (input.options?.contract) {
+      const contract = input.options?.contract;
+
+      // Find matching function and index from contract.unlock array
+      const matchingUnlockerIndex = Object.values(contract.unlock)
+        .findIndex(fn => fn === input.unlocker);
+
+      if (matchingUnlockerIndex === -1) {
+        throw new Error('Could not find matching unlock function');
+      }
+
+      // Generate unique scenario identifier by combining contract name, function name and counter
+      const baseIdentifier = `${contract.artifact.contractName}_${contract.artifact.abi[matchingUnlockerIndex].name}EvaluateFunction`;
+      let scenarioIdentifier = baseIdentifier;
+      let counter = 0;
+
+      // Find first available unique identifier by incrementing counter
+      while (scenarios[snakeCase(scenarioIdentifier)]) {
+        counter++;
+        scenarioIdentifier = `${baseIdentifier}${counter}`;
+      }
+      
+      scenarioIdentifier = snakeCase(scenarioIdentifier);
+
+      Object.assign(scenarios,
+        generateTemplateScenarios(
+          scenarioIdentifier,
+          contract,
+          libauthTransaction,
+          csTransaction,
+          contract?.artifact.abi[matchingUnlockerIndex],
+          input.options?.params ?? [],
+          idx,
+        ),
+      );
+
+      const encodedArgs = encodeFunctionArguments(
+        contract.artifact.abi[matchingUnlockerIndex],
+        input.options?.params ?? [],
+      );
+
+      const entity = generateTemplateEntities(
+        contract.artifact,
+        contract.artifact.abi[matchingUnlockerIndex],
+        encodedArgs,
+      );
+      const script = generateTemplateScripts(
+        contract.artifact,
+        contract.addressType,
+        contract.artifact.abi[matchingUnlockerIndex],
+        encodedArgs,
+        contract.encodedConstructorArgs,
+        scenarioIdentifier,
+      );
+
+      const lockScriptName = Object.keys(script).find(scriptName => scriptName.includes('_lock'));
+      if (lockScriptName) {
+        const unlockingBytecode = binToHex(libauthTransaction.inputs[idx].unlockingBytecode);
+        unlockingBytecodes[unlockingBytecode] = lockScriptName;
+        lockingBytecodes[binToHex(addressToLockScript(contract.address))] = lockScriptName;
+      }
+
+      Object.assign(entities, entity);
+      Object.assign(scripts, script);
+    }
+  }
+
+  // Merge P2PKH scripts
+  for (const entity of Object.values(p2pkhEntities) as { scripts?: string[] }[]) {
+    if (entity.scripts) {entity.scripts = [...Object.keys(scripts), ...entity.scripts]; }
+  }
+
+  Object.assign(entities, p2pkhEntities);
+  Object.assign(scripts, p2pkhScripts);
+
+  const finalTemplate = { ...baseTemplate, entities, scripts, scenarios };
+
+  for (const scenario of Object.values(scenarios)) {
+    for (const [idx, input] of libauthTransaction.inputs.entries()) {
+      const unlockingBytecode = binToHex(input.unlockingBytecode);
+      if (unlockingBytecodes[unlockingBytecode]) {
+
+        // @ts-ignore
+        if (Array.isArray(scenario.sourceOutputs[idx].lockingBytecode)) continue;
+
+        // @ts-ignore
+        scenario.sourceOutputs[idx].lockingBytecode = {
+          script: unlockingBytecodes[unlockingBytecode],
+        };
+      }
+    }
+
+    for (const [idx, output] of libauthTransaction.outputs.entries()) {
+      const lockingBytecode = binToHex(output.lockingBytecode);
+      if (lockingBytecodes[lockingBytecode]) {
+
+        // @ts-ignore
+        if (Array.isArray(scenario.transaction.outputs[idx].lockingBytecode)) continue;
+        // @ts-ignore
+        scenario.transaction.outputs[idx].lockingBytecode = {
+          script: lockingBytecodes[lockingBytecode],
+        };
+      }
+    }
+
+  }
+
+  // Generate debug results
+  const debugResult: DebugResult[] = txn.inputs
+    .map(input => input.options?.contract)
+    .filter((contract): contract is Contract => !!contract)
+    .map(contract => debugTemplate(finalTemplate, contract.artifact));
+
+
+  return { template: finalTemplate, debugResult };
 };
