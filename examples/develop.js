@@ -1,10 +1,10 @@
 import { URL } from 'url';
 import { compileFile } from '../packages/cashc/dist/index.js';
-import { MockNetworkProvider, Contract, SignatureTemplate, AdvancedTransactionBuilder, randomUtxo } from '../packages/cashscript/dist/index.js';
+import { MockNetworkProvider, Contract, SignatureTemplate, AdvancedTransactionBuilder, randomUtxo, randomToken, randomNFT } from '../packages/cashscript/dist/index.js';
 import { stringify } from '@bitauth/libauth';
 
 // Import Alice's keys from common-js.js
-import { alicePkh, alicePriv, alicePub, aliceAddress } from './common-js.js';
+import { alicePkh, alicePriv, alicePub, aliceAddress, aliceTokenAddress } from './common-js.js';
 const provider = new MockNetworkProvider();
 
 const artifactFoo = compileFile(new URL('Foo.cash', import.meta.url));
@@ -18,14 +18,24 @@ provider.addUtxo(fooContract.address, randomUtxo());
 provider.addUtxo(fooContract.address, randomUtxo());
 provider.addUtxo(fooContract.address, randomUtxo());
 
+const tokenA = randomToken({
+  amount: 100000000n,
+})
+const nftA = randomNFT({
+  nft: {
+    capability: 'minting',
+    commitment: '00'
+  }
+})
+
 const barContract = new Contract(artifactBar, [alicePkh], { provider });
 provider.addUtxo(barContract.address, randomUtxo());
 provider.addUtxo(barContract.address, randomUtxo());
 provider.addUtxo(barContract.address, randomUtxo());
 
 provider.addUtxo(aliceAddress, randomUtxo());
-provider.addUtxo(aliceAddress, randomUtxo());
-provider.addUtxo(aliceAddress, randomUtxo());
+provider.addUtxo(aliceAddress, randomUtxo({ token: tokenA }));
+provider.addUtxo(aliceAddress, randomUtxo({ token: nftA }));
 
 const aliceTemplate = new SignatureTemplate(alicePriv);
 const utxos = await provider.getUtxos(aliceAddress);
@@ -33,7 +43,7 @@ const contractUtxos = await fooContract.getUtxos();
 
 const newBuilderTransaction = await new AdvancedTransactionBuilder({ provider })
   .addInputs(
-    [utxos[0], utxos[1]],
+    [utxos[0], utxos[1], utxos[2]],
     aliceTemplate.unlockP2PKH.bind(aliceTemplate),
     { template: new SignatureTemplate(alicePriv) },
   )
@@ -58,10 +68,11 @@ const newBuilderTransaction = await new AdvancedTransactionBuilder({ provider })
     { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
   )
   .addOutput({ to: fooContract.address, amount: 8000n })
+  .addOutput({ to: aliceTokenAddress, amount: 800n, token: tokenA })
+  .addOutput({ to: aliceTokenAddress, amount: 1000n, token: nftA })
   .addOpReturnOutput(['hello', 'world'])
   // .build();
   // .debug();
   .bitauthUri();
 
   console.log('transaction details:', stringify(newBuilderTransaction));
-  

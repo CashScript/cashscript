@@ -472,7 +472,7 @@ export const getLibauthTemplates = async (
       }
     }
 
-    // For Inputs
+    // For Outputs
     for (const [idx, output] of libauthTransaction.outputs.entries()) {
       const lockingBytecode = binToHex(output.lockingBytecode);
       if (lockingBytecodeIdentifiers[lockingBytecode]) {

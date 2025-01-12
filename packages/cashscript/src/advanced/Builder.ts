@@ -145,7 +145,7 @@ export class TransactionBuilder {
     // Generate source outputs from inputs (for signing with SIGHASH_UTXOS)
     const sourceOutputs = this.inputs.map((input) => {
       const unlocker = typeof input.unlocker === 'function' ? input.unlocker(...(input.options?.params ?? [])) : input.unlocker;
-      
+
       const sourceOutput = {
         amount: input.satoshis,
         to: unlocker.generateLockingBytecode(),
