@@ -1,5 +1,5 @@
 import {
-  binToHex, decodeTransaction, encodeTransaction, hexToBin, Transaction as LibauthTransaction, WalletTemplate,
+  binToHex, decodeTransaction, encodeTransaction, hexToBin, Transaction as LibauthTransaction,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -18,11 +18,6 @@ import {
   validateOutput,
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
-import { DebugResult, debugTemplate } from './debugging.js';
-import { getBitauthUri } from './LibauthTemplate.js';
-import { buildTemplate } from './LibauthTemplate.js';
-import { Transaction } from './Transaction.js';
-import { encodeFunctionArguments } from './Argument.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -146,64 +141,6 @@ export class TransactionBuilder {
     });
 
     return binToHex(encodeTransaction(transaction));
-  }
-
-  // method to debug the transaction with libauth VM, throws upon evaluation error
-  async debug(): Promise<DebugResult> {
-    const { debugResult } = await this.getLibauthTemplates();
-    return debugResult;
-  }
-
-  async bitauthUri(): Promise<string> {
-    const { template } = await this.getLibauthTemplates();
-    return getBitauthUri(template);
-  }
-
-  async getLibauthTemplates(): Promise<{ template: WalletTemplate, debugResult: DebugResult }> {
-    let finalTemplate: WalletTemplate = {
-      $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
-      description: 'Imported from cashscript',
-      name: 'Advanced Debugging',
-      supported: ['BCH_2023_05'],
-      version: 0,
-      entities: {},
-      scripts: {},
-      scenarios: {},
-    };
-
-    let finalDebugResult: DebugResult;
-
-    for (const input of this.inputs) {
-      const contract = input.options?.contract;
-      if (!contract) continue;
-
-      const encodedArgs = encodeFunctionArguments(
-        contract.artifact.abi[input.options?.selector ?? 0],
-        input.options?.params ?? [],
-      );
-
-      const txn = new Transaction(
-        contract,
-        input.unlocker,
-        contract.artifact.abi[input.options?.selector ?? 0],
-        encodedArgs,
-        input.options?.selector,
-      );
-      txn.outputs = this.outputs;
-
-      const template = await buildTemplate({ transaction: txn });
-
-      // Merge template properties into finalTemplate
-      Object.assign(finalTemplate.entities, template.entities);
-      Object.assign(finalTemplate.scripts, template.scripts); 
-      Object.assign(finalTemplate?.scenarios ?? {}, template.scenarios);
-
-      const debugResult = debugTemplate(template, contract.artifact);
-      finalDebugResult = debugResult;
-    }
-
-    // @ts-ignore
-    return { template: finalTemplate, debugResult: finalDebugResult };
   }
 
   // TODO: see if we can merge with Transaction.ts

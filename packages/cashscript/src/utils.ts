@@ -353,6 +353,16 @@ export const snakeCase = (str: string): string => (
       .join('_')
 );
 
+export const titleCase = (str: string): string => {
+  if (!str) return '';
+  return str
+    .match(
+      /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
+    )!
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
+    .join(' ');
+};
+
 // JSON.stringify version that can serialize otherwise unsupported types (bigint and Uint8Array)
 export const extendedStringify = (obj: any, spaces?: number): string => JSON.stringify(
   obj,

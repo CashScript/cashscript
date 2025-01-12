@@ -8,6 +8,7 @@ import {
 import delay from 'delay';
 import { DebugResult } from '../debugging.js';
 import { FailedTransactionError } from '../Errors.js';
+import { getBitauthUri } from '../LibauthTemplate.js';
 import {
   isUnlockableUtxo,
   Output,
@@ -15,20 +16,23 @@ import {
   Unlocker,
   Utxo,
 } from '../interfaces.js';
-import {
-  BuilderOptions,
-  InputOptions,
-  UnlockableUtxo,
-} from './interfaces.js';
 import { NetworkProvider } from '../network/index.js';
-import { getLibauthTemplates } from './LibauthTemplate.js';
-import { getBitauthUri } from '../LibauthTemplate.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
   validateOutput,
 } from '../utils.js';
-import { DEFAULT_LOCKTIME, DEFAULT_SEQUENCE } from './constants.js';
+import { getLibauthTemplates } from './LibauthTemplate.js';
+import {
+  InputOptions,
+  UnlockableUtxo,
+} from './interfaces.js';
+
+export interface TransactionBuilderOptions {
+  provider: NetworkProvider;
+}
+
+const DEFAULT_SEQUENCE = 0xfffffffe;
 
 
 export class TransactionBuilder {
@@ -38,17 +42,16 @@ export class TransactionBuilder {
   public outputs: Output[] = [];
 
   public maxFee?: bigint;
-  public locktime: number = DEFAULT_LOCKTIME;
-  private sequence: number = DEFAULT_SEQUENCE;
+  public locktime: number;
 
   constructor(
-    options: BuilderOptions,
+    options: TransactionBuilderOptions,
   ) {
     this.provider = options.provider;
   }
 
   addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
-    this.inputs.push({ ...utxo, unlocker, options: { ...options, sequence: options?.sequence ?? this.sequence } });
+    this.inputs.push({ ...utxo, unlocker, options: { ...options, sequence: options?.sequence ?? DEFAULT_SEQUENCE } });
     return this;
   }
 
@@ -74,7 +77,7 @@ export class TransactionBuilder {
     this.inputs = this.inputs.concat(utxos.map((utxo) => ({
       ...utxo,
       unlocker,
-      options: { ...options, sequence: options?.sequence ?? this.sequence },
+      options: { ...options, sequence: options?.sequence ?? DEFAULT_SEQUENCE },
     })));
     return this;
   }
@@ -92,11 +95,6 @@ export class TransactionBuilder {
   // TODO: allow uint8array for chunks
   addOpReturnOutput(chunks: string[]): this {
     this.outputs.push(createOpReturnOutput(chunks));
-    return this;
-  }
-
-  setSequence(sequence: number): this {
-    this.sequence = sequence;
     return this;
   }
 

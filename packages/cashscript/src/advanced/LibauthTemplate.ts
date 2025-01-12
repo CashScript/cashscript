@@ -1,8 +1,4 @@
 import {
-  AbiFunction,
-  Artifact,
-} from '@cashscript/utils';
-import {
   binToHex,
   TransactionBCH,
   WalletTemplate,
@@ -16,8 +12,17 @@ import {
   WalletTemplateScriptUnlocking,
   WalletTemplateVariable,
 } from '@bitauth/libauth';
+import {
+  AbiFunction,
+  Artifact,
+} from '@cashscript/utils';
 import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from '../Argument.js';
 import { Contract } from '../Contract.js';
+import { DebugResult, debugTemplate } from '../debugging.js';
+import {
+  AddressType,
+  Utxo,
+} from '../interfaces.js';
 import {
   formatBytecodeForDebugging,
   formatParametersForDebugging,
@@ -29,21 +34,22 @@ import {
   getSignatureAlgorithmName,
   serialiseTokenDetails,
 } from '../LibauthTemplate.js';
-import {
-  AddressType,
-  Utxo,
-} from '../interfaces.js';
 import SignatureTemplate from '../SignatureTemplate.js';
-import { debugTemplate } from '../debugging.js';
 import { Transaction } from '../Transaction.js';
-import { addressToLockScript, snakeCase } from '../utils.js';
-import { DebugResult } from '../debugging.js';
+import { addressToLockScript, snakeCase, titleCase } from '../utils.js';
 import { TransactionBuilder } from './Builder.js';
 
 
+/**
+ * Generates template entities for P2PKH (Pay to Public Key Hash) placeholder scripts.
+ * 
+ * Follows the WalletTemplateEntity specification from:
+ * https://ide.bitauth.com/authentication-template-v0.schema.json
+ * 
+ */
 export const generateTemplateEntitiesP2PKH = (
   index: number,
-): any => {
+): WalletTemplate['entities'] => {
   const lockScriptName = `p2pkh_placeholder_lock_${index}`;
   const unlockScriptName = `p2pkh_placeholder_unlock_${index}`;
 
@@ -55,7 +61,7 @@ export const generateTemplateEntitiesP2PKH = (
       variables: {
         [`placeholder_key_${index}`]: {
           description: '',
-          name: `Placeholder key ${index}`,
+          name: `Placeholder Key ${index}`,
           type: 'HdKey',
         },
       },
@@ -63,7 +69,14 @@ export const generateTemplateEntitiesP2PKH = (
   };
 };
 
-export const generateTemplateEntities = (
+/**
+ * Generates template entities for P2SH (Pay to Script Hash) placeholder scripts.
+ * 
+ * Follows the WalletTemplateEntity specification from:
+ * https://ide.bitauth.com/authentication-template-v0.schema.json
+ * 
+ */
+export const generateTemplateEntitiesP2SH = (
   artifact: Artifact,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
@@ -73,7 +86,7 @@ export const generateTemplateEntities = (
       snakeCase(input.name),
       {
         description: `"${input.name}" parameter of function "${abiFunction.name}"`,
-        name: input.name,
+        name: titleCase(input.name),
         type: encodedFunctionArgs[index] instanceof SignatureTemplate ? 'Key' : 'WalletData',
       },
     ])),
@@ -84,7 +97,7 @@ export const generateTemplateEntities = (
       snakeCase(input.name),
       {
         description: `"${input.name}" parameter of this contract`,
-        name: input.name,
+        name: titleCase(input.name),
         type: 'WalletData',
       },
     ])),
@@ -93,7 +106,7 @@ export const generateTemplateEntities = (
   const entities = {
     [snakeCase(artifact.contractName + 'Parameters')]: {
       description: 'Contract creation and function parameters',
-      name: artifact.contractName,
+      name: titleCase(artifact.contractName),
       scripts: [
         snakeCase(artifact.contractName + '_lock'),
         snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock'),
@@ -109,7 +122,7 @@ export const generateTemplateEntities = (
   if (artifact.abi.length > 1) {
     entities[snakeCase(artifact.contractName + 'Parameters')].variables.function_index = {
       description: 'Script function index to execute',
-      name: 'function_index',
+      name: titleCase('function_index'),
       type: 'WalletData',
     };
   }
@@ -117,13 +130,18 @@ export const generateTemplateEntities = (
   return entities;
 };
 
+/**
+ * Generates template scripts for P2PKH (Pay to Public Key Hash) placeholder scripts.
+ * 
+ * Follows the WalletTemplateScript specification from:
+ * https://ide.bitauth.com/authentication-template-v0.schema.json
+ * 
+ */
 export const generateTemplateScriptsP2PKH = (
   template: SignatureTemplate,
   index: number,
-): any => {
-
-  const scripts: any = {};
-
+): WalletTemplate['scripts'] => {
+  const scripts: WalletTemplate['scripts'] = {};
   const lockScriptName = `p2pkh_placeholder_lock_${index}`;
   const unlockScriptName = `p2pkh_placeholder_unlock_${index}`;
   const placeholderKeyName = `placeholder_key_${index}`;
@@ -149,7 +167,14 @@ export const generateTemplateScriptsP2PKH = (
   return scripts;
 };
 
-export const generateTemplateScripts = (
+/**
+ * Generates template scripts for P2SH (Pay to Script Hash) placeholder scripts.
+ * 
+ * Follows the WalletTemplateScript specification from:
+ * https://ide.bitauth.com/authentication-template-v0.schema.json
+ * 
+ */
+export const generateTemplateScriptsP2SH = (
   artifact: Artifact,
   addressType: AddressType,
   abiFunction: AbiFunction,
@@ -158,13 +183,19 @@ export const generateTemplateScripts = (
   scenarioIdentifier: string,
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
-
   return {
     [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, scenarioIdentifier),
     [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
 
+/**
+ * Generates a template lock script for a P2SH (Pay to Script Hash) placeholder script.
+ * 
+ * Follows the WalletTemplateScriptLocking specification from:
+ * https://ide.bitauth.com/authentication-template-v0.schema.json
+ * 
+ */
 const generateTemplateLockScript = (
   artifact: Artifact,
   addressType: AddressType,
@@ -183,6 +214,13 @@ const generateTemplateLockScript = (
   };
 };
 
+/**
+ * Generates a template unlock script for a P2SH (Pay to Script Hash) placeholder script.
+ * 
+ * Follows the WalletTemplateScriptUnlocking specification from:
+ * https://ide.bitauth.com/authentication-template-v0.schema.json
+ * 
+ */
 const generateTemplateUnlockScript = (
   artifact: Artifact,
   abiFunction: AbiFunction,
@@ -407,14 +445,14 @@ export const getLibauthTemplates = async (
       );
 
       // Generate entities for this contract input
-      const entity = generateTemplateEntities(
+      const entity = generateTemplateEntitiesP2SH(
         contract.artifact,
         contract.artifact.abi[matchingUnlockerIndex],
         encodedArgs,
       );
 
       // Generate scripts for this contract input
-      const script = generateTemplateScripts(
+      const script = generateTemplateScriptsP2SH(
         contract.artifact,
         contract.addressType,
         contract.artifact.abi[matchingUnlockerIndex],
