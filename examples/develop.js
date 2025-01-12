@@ -76,8 +76,8 @@ const runMock = async () => {
     )
     .addInput(
       contractUtxos[3],
-      barContract.unlock.execute,
-      { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+      barContract.unlock.funcB,
+      { contract: barContract, params: [] },
     )
     .addOutput({ to: fooContract.address, amount: 8000n })
     .addOutput({ to: aliceTokenAddress, amount: 800n, token: tokenA })

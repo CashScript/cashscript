@@ -404,7 +404,7 @@ export const getLibauthTemplates = async (
     if (input.options?.contract) {
       const contract = input.options?.contract;
 
-      // Find matching function and index from contract.unlock array
+      // Find matching function and index from contract.unlock Object, this uses Function Reference Comparison.
       const matchingUnlockerIndex = Object.values(contract.unlock)
         .findIndex(fn => fn === input.unlocker);
 
@@ -495,10 +495,13 @@ export const getLibauthTemplates = async (
   for (const scenario of Object.values(scenarios)) {
     for (const [idx, input] of libauthTransaction.inputs.entries()) {
       const unlockingBytecode = binToHex(input.unlockingBytecode);
-      if (unlockingBytecodeIdentifiers[unlockingBytecode]) {
 
+      // If false then it stays lockingBytecode: {}
+      if (unlockingBytecodeIdentifiers[unlockingBytecode]) {
+        // ['slot'] this identifies the source output in which the locking script under test will be placed
         if (Array.isArray(scenario?.sourceOutputs?.[idx]?.lockingBytecode)) continue;
 
+        // If true then assign a name to the locking bytecode script.
         if (scenario.sourceOutputs && scenario.sourceOutputs[idx]) {
           scenario.sourceOutputs[idx] = {
             ...scenario.sourceOutputs[idx],
@@ -513,10 +516,14 @@ export const getLibauthTemplates = async (
     // For Outputs
     for (const [idx, output] of libauthTransaction.outputs.entries()) {
       const lockingBytecode = binToHex(output.lockingBytecode);
+
+      // If false then it stays lockingBytecode: {}
       if (lockingBytecodeIdentifiers[lockingBytecode]) {
 
+        // ['slot'] this identifies the source output in which the locking script under test will be placed
         if (Array.isArray(scenario?.transaction?.outputs?.[idx]?.lockingBytecode)) continue;
 
+        // If true then assign a name to the locking bytecode script.
         if (scenario?.transaction && scenario?.transaction?.outputs && scenario?.transaction?.outputs[idx]) {
           scenario.transaction.outputs[idx] = {
             ...scenario.transaction.outputs[idx],
