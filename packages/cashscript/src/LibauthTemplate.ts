@@ -104,14 +104,14 @@ export const buildTemplate = async ({
       template.scripts[unlockScriptName] = {
         name: unlockScriptName,
         script:
-            `<${signatureString}>\n<${placeholderKeyName}.public_key>`,
+          `<${signatureString}>\n<${placeholderKeyName}.public_key>`,
         unlocks: lockScriptName,
       };
       template.scripts[lockScriptName] = {
         lockingType: 'standard',
         name: lockScriptName,
         script:
-            `OP_DUP\nOP_HASH160 <$(<${placeholderKeyName}.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
+          `OP_DUP\nOP_HASH160 <$(<${placeholderKeyName}.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
       };
     });
 
@@ -324,15 +324,15 @@ export const generateTemplateScenarioTransactionOutputLockingBytecode = (
 
 /**
  * Generates source outputs for a BitAuth template scenario
- * 
+ *
  * @param csTransaction - The CashScript transaction to generate source outputs for
  * @returns An array of BitAuth template scenario outputs with locking scripts and values
- * 
+ *
  * For each input in the transaction:
  * - Generates appropriate locking bytecode (P2PKH or contract)
  * - Includes the input value in satoshis
  * - Includes any token details if present
- * 
+ *
  * The slotIndex tracks which input is the contract input vs P2PKH inputs
  * to properly generate the locking scripts.
  */
@@ -371,7 +371,7 @@ export const generateTemplateScenarioBytecode = (
 };
 
 export const generateTemplateScenarioParametersValues = (
-  types: AbiInput[],
+  types: readonly AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
   const typesAndArguments = zip(types, encodedArgs);
@@ -389,7 +389,7 @@ export const generateTemplateScenarioParametersValues = (
 };
 
 export const generateTemplateScenarioKeys = (
-  types: AbiInput[],
+  types: readonly AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
   const typesAndArguments = zip(types, encodedArgs);
@@ -401,7 +401,7 @@ export const generateTemplateScenarioKeys = (
   return Object.fromEntries(entries);
 };
 
-export const formatParametersForDebugging = (types: AbiInput[], args: EncodedFunctionArgument[]): string => {
+export const formatParametersForDebugging = (types: readonly AbiInput[], args: EncodedFunctionArgument[]): string => {
   if (types.length === 0) return '// none';
 
   // We reverse the arguments because the order of the arguments in the bytecode is reversed

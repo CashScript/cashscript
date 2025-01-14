@@ -26,7 +26,7 @@ new Contract(
 
 A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `addressType`.
 
-An `Artifact` object is the result of compiling a CashScript contract. See the [Language Documentation](/docs/compiler/artifacts) for more information on Artifacts. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)).
+An `Artifact` object is the result of compiling a CashScript contract. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)). If compilation is done using the `cashc` CLI with the <span style={{ display: 'inline-block' }}>`--format ts`</span> option, you will get explicit types and type checking for the constructor arguments and function arguments.
 
 The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but the network providers can be configured. See the docs on [NetworkProvider](/docs/sdk/network-provider).
 
@@ -42,7 +42,7 @@ import { Contract, ElectrumNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
 
 // Import the artifact JSON
-import P2PKH from './p2pkh.json';
+import P2PKH from './p2pkh.json' with { type: 'json' };
 
 // Or compile a contract file
 const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
@@ -53,6 +53,8 @@ const contractArguments = [alicePkh]
 const options = { provider, addressType}
 const contract = new Contract(P2PKH, contractArguments, options);
 ```
+
+### TypeScript Typings
 
 ## Contract Properties
 
@@ -89,11 +91,11 @@ console.log(contract.tokenAddress)
 contract.opcount: number
 ```
 
-The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can contain a maximum of 201 opcodes.
+The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field.
 
 #### Example
 ```ts
-assert(contract.opcount <= 201)
+console.log(contract.opcount)
 ```
 
 ### bytesize
@@ -101,11 +103,15 @@ assert(contract.opcount <= 201)
 contract.bytesize: number
 ```
 
-The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 520 bytes at most.
+The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 1,650 bytes at most.
+
+:::info
+The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they will always be an underestimate, as the contract hasn't been initialized with contract arguments.
+:::
 
 #### Example
 ```ts
-console.log(contract.bytesize)
+assert(contract.bytesize <= 1650)
 ```
 
 ### bytecode
@@ -174,6 +180,10 @@ const tx = await contract.functions
   .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
   .send()
 ```
+
+:::tip
+If the contract artifact is generated using the `cashc` CLI with the `--format ts` option, you will get explicit types and type checking for the function name and arguments.
+:::
 
 ### Contract unlockers
 

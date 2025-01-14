@@ -1,6 +1,6 @@
 # @cashscript/utils
 
-[![Build Status](https://travis-ci.org/CashScript/cashscript.svg)](https://travis-ci.org/CashScript/cashscript)
+[![Build Status](https://github.com/CashScript/cashscript/actions/workflows/github-actions.yml/badge.svg)](https://github.com/CashScript/cashscript/actions/workflows/github-actions.yml)
 [![Coverage Status](https://img.shields.io/codecov/c/github/CashScript/cashscript.svg)](https://codecov.io/gh/CashScript/cashscript)
 [![NPM Version](https://img.shields.io/npm/v/@cashscript/utils.svg)](https://www.npmjs.com/package/@cashscript/utils)
 [![NPM Monthly Downloads](https://img.shields.io/npm/dm/@cashscript/utils.svg)](hhttps://www.npmjs.com/package/@cashscript/utils)

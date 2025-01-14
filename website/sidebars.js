@@ -25,6 +25,7 @@ module.exports = {
       label: 'Compiler',
       items: [
         'compiler/compiler',
+        'compiler/vm-limits',
         'compiler/artifacts',
         'compiler/grammar',
       ],
@@ -48,6 +49,7 @@ module.exports = {
       items: [
         'guides/syntax-highlighting',
         'guides/covenants',
+        'guides/infrastructure',
         'guides/walletconnect',
         'guides/debugging',
         'guides/optimization'

@@ -345,12 +345,12 @@ export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: n
 
 export const snakeCase = (str: string): string => (
   str
-    && str
-      .match(
-        /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
-      )!
-      .map((s) => s.toLowerCase())
-      .join('_')
+  && str
+    .match(
+      /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
+    )!
+    .map((s) => s.toLowerCase())
+    .join('_')
 );
 
 export const titleCase = (str: string): string => {
@@ -378,6 +378,6 @@ export const extendedStringify = (obj: any, spaces?: number): string => JSON.str
   spaces,
 );
 
-export const zip = <T, U>(a: T[], b: U[]): [T, U][] => (
+export const zip = <T, U>(a: readonly T[], b: readonly U[]): [T, U][] => (
   Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]])
 );

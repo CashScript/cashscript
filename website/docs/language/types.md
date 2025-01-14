@@ -20,7 +20,7 @@ The operators `||` and `&&` don't apply common short-circuiting rules. This mean
 :::
 
 ## Integer
-`int`: Signed integer of 64 bit size.
+`int`: Signed integer of arbitrary size (BigInt).
 
 Operators:
 
@@ -32,14 +32,6 @@ Note the lack of the `**` (exponentiation) operator as well as any bitwise opera
 #### Number Formatting
 
 Underscores can be used to separate the digits of a numeric literal to aid readability, e.g. `1_000_000`. Numbers can also be formatted in scientific notation, e.g. `1e6` or `1E6`. These can also be combined, e.g. `1_000e6`.
-
-#### Over- & Underflows
-
-The maximum range for 64-bit integers is `-9223372036854775807` to `9223372036854775807`, operations exceeding these limits will fail the transaction. So operations like summation, subtraction and multiplication should take into account these boundary cases with over- or underflows.
-
-:::caution
-Contract authors should always consider whether `+`, `-` and `*` operations can cause under- or overflows and how this would impact contract security.
-:::
 
 #### Division by Zero
 
@@ -186,10 +178,25 @@ When casting integer types to bytes of a certain size, the integer value is padd
 VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
 :::
 
+### Semantic Byte Casting
 
-:::caution
-When casting bytes types to integer, you should be sure that the bytes value fits inside a 64-bit signed integer, or the script will fail.
-:::
+When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20` or `bytes32`), this is a purely semantic cast. The bytes are not padded with zeros, and no checks are performed to ensure the cast bytes are of the correct length. This can be helpful in certain cases, such as `LockingBytecode`, which expects a specific length input.
+
+#### Example
+```solidity
+bytes pkh = nftCommitment.split(20)[0]; // (type = bytes, content = 20 bytes)
+bytes20 bytes20Pkh = bytes20(pkh); // (type = bytes20, content = 20 bytes)
+bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20Pkh);
+```
+
+If you do need to pad bytes to a specific length, you can convert the bytes to `int` first, and then cast to the bounded `bytes` type. This will pad the bytes with zeros to the specified length, like specified in the *Int to Byte Casting* section above.
+
+#### Example
+```solidity
+bytes data = nftCommitment.split(10)[0]; // (type = bytes, content = 10 bytes)
+bytes20 paddedData = bytes20(int(data)); // (type = bytes20, content = 20 bytes)
+require(storedContractState == paddedData);
+```
 
 ## Operators
 An overview of all supported operators and their precedence is included below. Notable is a lack of exponentiation, since these operations are not supported by the underlying Bitcoin Script.

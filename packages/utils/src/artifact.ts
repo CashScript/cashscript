@@ -8,20 +8,20 @@ export interface AbiInput {
 export interface AbiFunction {
   name: string;
   covenant?: boolean;
-  inputs: AbiInput[];
+  inputs: readonly AbiInput[];
 }
 
 export interface DebugInformation {
   bytecode: string; // unlike `bytecode` property above, this is a hex-encoded binary string
   sourceMap: string; // see documentation for `generateSourceMap`
-  logs: LogEntry[]; // log entries generated from `console.log` statements
-  requires: RequireStatement[]; // messages for failing `require` statements
+  logs: readonly LogEntry[]; // log entries generated from `console.log` statements
+  requires: readonly RequireStatement[]; // messages for failing `require` statements
 }
 
 export interface LogEntry {
   ip: number; // instruction pointer
   line: number; // line in the source code
-  data: Array<LogData>; // data to be logged
+  data: readonly LogData[]; // data to be logged
 }
 
 export interface StackItem {
@@ -40,8 +40,8 @@ export interface RequireStatement {
 
 export interface Artifact {
   contractName: string;
-  constructorInputs: AbiInput[];
-  abi: AbiFunction[];
+  constructorInputs: readonly AbiInput[];
+  abi: readonly AbiFunction[];
   bytecode: string;
   source: string;
   debug?: DebugInformation;
@@ -56,7 +56,52 @@ export function importArtifact(artifactFile: PathLike): Artifact {
   return JSON.parse(fs.readFileSync(artifactFile, { encoding: 'utf-8' }));
 }
 
-export function exportArtifact(artifact: Artifact, targetFile: string): void {
-  const jsonString = JSON.stringify(artifact, null, 2);
+export function exportArtifact(artifact: Artifact, targetFile: string, format: 'json' | 'ts'): void {
+  const jsonString = formatArtifact(artifact, format);
   fs.writeFileSync(targetFile, jsonString);
+}
+
+export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): string {
+  if (format === 'ts') {
+    // We remove any undefined values to make the artifact serializable using stringifyAsTs
+    const normalisedArtifact = JSON.parse(JSON.stringify(artifact));
+    return `export default ${stringifyAsTs(normalisedArtifact)} as const;\n`;
+  }
+
+  return JSON.stringify(artifact, null, 2);
+}
+
+const indent = (level: number): string => '  '.repeat(level);
+
+function stringifyAsTs(obj: any, indentationLevel: number = 1): string {
+  // For strings, we use JSON.stringify, but we convert double quotes to single quotes
+  if (typeof obj === 'string') {
+    return JSON.stringify(obj).replace(/'/g, "\\'").replace(/"/g, "'");
+  }
+
+  // Numbers and booleans are just converted to strings
+  if (typeof obj === 'number' || typeof obj === 'boolean') {
+    return JSON.stringify(obj);
+  }
+
+  // Arrays are recursively formatted with indentation
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '[]';
+    const formattedItems = obj.map((item) => `${indent(indentationLevel)}${stringifyAsTs(item, indentationLevel + 1)}`);
+    return `[\n${formattedItems.join(',\n')},\n${indent(indentationLevel - 1)}]`;
+  }
+
+  // Objects are recursively formatted with indentation
+  if (typeof obj === 'object') {
+    const entries = Object.entries(obj);
+
+    if (entries.length === 0) return '{}';
+
+    const formattedEntries = entries.map(([key, value]) => (
+      `${indent(indentationLevel)}${key}: ${stringifyAsTs(value, indentationLevel + 1)}`
+    ));
+    return `{\n${formattedEntries.join(',\n')},\n${indent(indentationLevel - 1)}}`;
+  }
+
+  throw new Error(`Unsupported type: ${typeof obj}`);
 }

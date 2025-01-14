@@ -108,7 +108,7 @@ Now to initialise a contract we will import the `ElectrumNetworkProvider` and `C
 
 ```javascript
 import { ElectrumNetworkProvider, Contract } from 'cashscript';
-import artifact from './TransferWithTimeout.json';
+import artifact from './TransferWithTimeout.json' with { type: 'json' };
 import { alicePub, bobPub } from './keys.js';
 
 // Initialise a network provider for network operations

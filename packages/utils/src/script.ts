@@ -1,8 +1,8 @@
 import {
-  OpcodesBCH,
+  OpcodesBch2023,
   encodeDataPush,
   hexToBin,
-  disassembleBytecodeBCH,
+  disassembleBytecodeBch,
   flattenBinArray,
   encodeAuthenticationInstructions,
   decodeAuthenticationInstructions,
@@ -10,7 +10,7 @@ import {
 import { decodeInt, encodeInt } from './data.js';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
 
-export const Op = OpcodesBCH;
+export const Op = OpcodesBch2023;
 export type Op = number;
 export type OpOrData = Op | Uint8Array;
 export type Script = OpOrData[];
@@ -79,7 +79,7 @@ export function asmToBytecode(asm: string): Uint8Array {
 
 export function bytecodeToAsm(bytecode: Uint8Array): string {
   // Convert the bytecode to libauth's ASM format
-  let asm = disassembleBytecodeBCH(bytecode);
+  let asm = disassembleBytecodeBch(bytecode);
 
   // COnvert libauth's ASM format to BITBOX's
   asm = asm.replace(/OP_PUSHBYTES_[^\s]+/g, '');
@@ -95,7 +95,7 @@ export function bytecodeToAsm(bytecode: Uint8Array): string {
 // TODO: If we decide to change the ASM / artifact format, we can remove this function and merge it with bytecodeToAsm
 export function bytecodeToBitAuthAsm(bytecode: Uint8Array): string {
   // Convert the bytecode to libauth's ASM format
-  let asm = disassembleBytecodeBCH(bytecode);
+  let asm = disassembleBytecodeBch(bytecode);
 
   // COnvert libauth's ASM format to BitAuth Script ASM
   asm = asm.replace(/OP_PUSHBYTES_[^\s]+/g, '');

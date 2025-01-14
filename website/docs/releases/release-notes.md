@@ -2,6 +2,34 @@
 title: Release Notes
 ---
 
+## v0.11.0-next.0
+
+This update adds CashScript support for the new BCH 2025 network upgrade. To read more about the upgrade, see [this blog post](https://blog.bitjson.com/2025-chips/).
+
+#### cashc compiler
+- :hammer_and_wrench: Remove warning for opcount and update warning for byte size to match new limits.
+
+#### CashScript SDK
+- :hammer_and_wrench: Update debug tooling to work with the new `BCH_2025_05` instruction set.
+
+## v0.10.5
+
+#### cashc compiler
+- :bug: Fix bug in new TypeScript typings for artifact.
+
+## v0.10.4
+
+#### cashc compiler
+- :bug: Fix bug in new `--format ts` option.
+
+## v0.10.3
+
+#### cashc compiler
+- :sparkles: Add `--format ts` option to `cashc` CLI to generate TypeScript typings for the artifact.
+
+#### CashScript SDK
+- :sparkles: Add automatic TypeScript typings for `Contract` class when artifact is generated using the `cashc` CLI with the `--format ts` option.
+
 ## v0.10.2
 
 #### cashc compiler
@@ -51,6 +79,10 @@ Thanks [mainnet_pat](https://x.com/mainnet_pat) for the initiative and significa
 - :boom: **BREAKING**: Remove exported transaction error `Reason` enum + `FailedTimeCheckError` and `FailedSigCheckError` classes in favour of the new error classes.
 - :boom: **BREAKING**: Remove all deprecated references to `meep` including `meep` strings from errors and `transaction.meep()`.
 - :boom: **BREAKING**: Separate the `Argument` type into `FunctionArgument` and `ConstructorArgument` and rename `encodeArgument` to `encodeFunctionArgument`.
+
+---
+
+https://x.com/CashScriptBCH/status/1833454128426615174
 
 ## v0.9.3
 

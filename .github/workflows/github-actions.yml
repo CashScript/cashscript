@@ -22,11 +22,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Setup node
         uses: actions/setup-node@v3
         with:
           node-version: 20
-      - run: yarn
-      - run: TESTS_USE_MOCKNET=true yarn test -- -- --coverage --coverageProvider=v8
-      - run: yarn lint
-      - run: yarn spellcheck
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Run tests
+        run: TESTS_USE_MOCKNET=true yarn test -- -- --coverage --coverageProvider=v8
+
+      - name: Run linter
+        run: yarn lint
+
+      - name: Run spellchecker
+        run: yarn spellcheck
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: CashScript/cashscript

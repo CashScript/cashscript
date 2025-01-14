@@ -11,7 +11,9 @@ import {
   scriptToBytecode,
 } from '@cashscript/utils';
 import { Transaction } from './Transaction.js';
-import { ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument } from './Argument.js';
+import {
+  ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument,
+} from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
   AddressType,
@@ -22,8 +24,21 @@ import {
 } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
+import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
 
-export class Contract {
+export class Contract<
+  TArtifact extends Artifact = Artifact,
+  TResolved extends {
+    constructorInputs: ConstructorArgument[];
+    functions: Record<string, any>;
+    unlock: Record<string, any>;
+  }
+  = {
+    constructorInputs: ParamsToTuple<TArtifact['constructorInputs']>;
+    functions: AbiToFunctionMap<TArtifact['abi'], Transaction>;
+    unlock: AbiToFunctionMap<TArtifact['abi'], Unlocker>;
+  },
+> {
   name: string;
   address: string;
   tokenAddress: string;
@@ -31,8 +46,8 @@ export class Contract {
   bytesize: number;
   opcount: number;
 
-  functions: Record<string, ContractFunction>;
-  unlock: Record<string, (...args: FunctionArgument[]) => Unlocker>;
+  functions: TResolved['functions'];
+  unlock: TResolved['unlock'];
 
   redeemScript: Script;
   public provider: NetworkProvider;
@@ -40,8 +55,8 @@ export class Contract {
   public encodedConstructorArgs: Uint8Array[];
 
   constructor(
-    public artifact: Artifact,
-    constructorArgs: ConstructorArgument[],
+    public artifact: TArtifact,
+    constructorArgs: TResolved['constructorInputs'],
     private options?: ContractOptions,
   ) {
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
@@ -53,7 +68,7 @@ export class Contract {
     }
 
     if (artifact.constructorInputs.length !== constructorArgs.length) {
-      throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor. Expected ${artifact.constructorInputs.length} arguments (${artifact.constructorInputs.map(input => input.type)}) but got ${constructorArgs.length}`);
+      throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor. Expected ${artifact.constructorInputs.length} arguments (${artifact.constructorInputs.map((input) => input.type)}) but got ${constructorArgs.length}`);
     }
 
     // Encode arguments (this also performs type checking)
@@ -66,9 +81,11 @@ export class Contract {
     this.functions = {};
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
+      // @ts-ignore TODO: see if we can use generics to make TypeScript happy
       this.functions[f.name] = this.createFunction(f);
     } else {
       artifact.abi.forEach((f, i) => {
+        // @ts-ignore TODO: see if we can use generics to make TypeScript happy
         this.functions[f.name] = this.createFunction(f, i);
       });
     }
@@ -78,9 +95,11 @@ export class Contract {
     this.unlock = {};
     if (artifact.abi.length === 1) {
       const f = artifact.abi[0];
+      // @ts-ignore TODO: see if we can use generics to make TypeScript happy
       this.unlock[f.name] = this.createUnlocker(f);
     } else {
       artifact.abi.forEach((f, i) => {
+        // @ts-ignore TODO: see if we can use generics to make TypeScript happy
         this.unlock[f.name] = this.createUnlocker(f, i);
       });
     }
@@ -105,7 +124,7 @@ export class Contract {
   private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
     return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
-        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map(input => input.type)}) but got ${args.length}`);
+        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
       }
 
       // Encode passed args (this also performs type checking)
@@ -123,10 +142,10 @@ export class Contract {
     };
   }
 
-  private createUnlocker(abiFunction: AbiFunction, selector?: number): (...args: FunctionArgument[]) => Unlocker {
+  private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
     return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
-        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map(input => input.type)}) but got ${args.length}`);
+        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
       }
 
       const bytecode = scriptToBytecode(this.redeemScript);
@@ -170,3 +189,4 @@ export class Contract {
 }
 
 export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
+export type ContractUnlocker = (...args: FunctionArgument[]) => Unlocker;

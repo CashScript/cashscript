@@ -23,8 +23,7 @@ if (!process.env.TESTS_USE_MOCKNET) {
         const utxos = await p2pkhInstance.getUtxos();
         expect(Array.isArray(utxos)).toBe(true);
       });
-      // Note: does not currently support p2sh32
-      it.skip('should get the utxos for a p2sh32 contract', async () => {
+      it('should get the utxos for a p2sh32 contract', async () => {
         // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
         const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, addressType: 'p2sh32' });
         console.log(p2pkhInstance.address);
@@ -36,6 +35,7 @@ if (!process.env.TESTS_USE_MOCKNET) {
 
     describe('send using FullStackNetworkProvider', () => {
       // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
+      // Using p2sh20 address because it is funded on mainnet
       const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, addressType: 'p2sh20' });
       console.log(p2pkhInstance.address);
 
@@ -74,5 +74,5 @@ if (!process.env.TESTS_USE_MOCKNET) {
     });
   });
 } else {
-  test.skip('skip', () => {});
+  test.skip('skip', () => { });
 }

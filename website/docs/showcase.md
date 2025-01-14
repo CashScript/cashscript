@@ -18,7 +18,15 @@ AnyHedge is the first DeFi project built on top of Bitcoin Cash in the form of a
     <a href="https://tapswap.cash/" target="_blank"><img src="/img/tapswap.png" /></a>
 </div>
 
-Tapswap is the first non-custodial marketplace to trade CashTokens, both fungible token & NFTs, on Bitcoin Cash. Tapswap uses CashScript for its non-custodial token-sale offer contracts. It uses web3 wallet connect feature to allow users to list tokens for sale right from their own wallet.
+Tapswap is the first non-custodial marketplace to trade CashTokens, both fungible token & NFTs, on Bitcoin Cash. Tapswap uses CashScript for its non-custodial token-sale offer contracts. It uses BCH WalletConnect to allow users to list tokens for sale right from their own wallet.
+
+## Moria
+
+<div style={{textAlign: 'center', width: '40%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://moria.money/" target="_blank"><img src="/img/moria.png" /></a>
+</div>
+
+Moria is a decentralized stablecoin and borrowing protocol on Bitcoin Cash using CashTokens. The Moria protocol works with collateralized debt positions (CDPs) where stablecoins are issued by creating over-collateralized loans. The Moria protocol uses multiple smart contracts, all written in CashScript.
 
 ## Bitcats Heroes
 
@@ -26,7 +34,7 @@ Tapswap is the first non-custodial marketplace to trade CashTokens, both fungibl
     <a href="https://bitcatsheroes.club/" target="_blank"><img src="/img/bitcats.png" /></a>
 </div>
 
-Bitcats Heroes is the first collectible NFT series on Bitcoin Cash. The project uses CashScript for its non-custodial minting contract. This way the NFT minting guarantees fair access and a transparent NFT launch. The minting page uses a web3 wallet connect feature to allow minting directly from the user's smart contract wallet.
+Bitcats Heroes is the first collectible NFT series on Bitcoin Cash. The project uses CashScript for its non-custodial minting contract. This way the NFT minting guarantees fair access and a transparent NFT launch. The minting page uses BCH WalletConnect to allow minting directly from the user's smart contract wallet.
 
 ## Cash-Ninjas
 
