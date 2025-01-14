@@ -21,3 +21,4 @@ export const alicePub = secp256k1.derivePublicKeyCompressed(aliceNode.privateKey
 export const alicePriv = aliceNode.privateKey;
 export const alicePkh = hash160(alicePub);
 export const aliceAddress = encodeCashAddress({ prefix: 'bchtest', type: 'p2pkh', payload: alicePkh, throwErrors: true }).address;
+export const aliceTokenAddress = encodeCashAddress({ prefix: 'bchtest', type: 'p2pkhWithTokens', payload: alicePkh, throwErrors: true }).address;

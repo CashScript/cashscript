@@ -32,6 +32,7 @@
     "spellcheck": "cspell lint '**' --no-progress --must-find-files",
     "update-version": "tsx update-version.ts",
     "publish-all": "lerna publish from-package",
-    "build": "lerna run build --ignore cashscript-examples --ignore testing-suite"
+    "build": "lerna run build --ignore cashscript-examples --ignore testing-suite",
+    "develop": "yarn build && tsx examples/develop.js"
   }
 }

@@ -1,23 +1,33 @@
 import {
-  binToHex, decodeTransaction, encodeTransaction, hexToBin, Transaction as LibauthTransaction,
+  binToHex,
+  decodeTransaction,
+  encodeTransaction,
+  hexToBin,
+  Transaction as LibauthTransaction,
+  WalletTemplate,
 } from '@bitauth/libauth';
 import delay from 'delay';
+import { DebugResult } from '../debugging.js';
+import { FailedTransactionError } from '../Errors.js';
+import { getBitauthUri } from '../LibauthTemplate.js';
 import {
-  Unlocker,
+  isUnlockableUtxo,
   Output,
   TransactionDetails,
-  UnlockableUtxo,
+  Unlocker,
   Utxo,
-  InputOptions,
-  isUnlockableUtxo,
-} from './interfaces.js';
-import { NetworkProvider } from './network/index.js';
+} from '../interfaces.js';
+import { NetworkProvider } from '../network/index.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
   validateOutput,
-} from './utils.js';
-import { FailedTransactionError } from './Errors.js';
+} from '../utils.js';
+import { getLibauthTemplates } from './LibauthTemplate.js';
+import {
+  InputOptions,
+  UnlockableUtxo,
+} from './interfaces.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -25,13 +35,15 @@ export interface TransactionBuilderOptions {
 
 const DEFAULT_SEQUENCE = 0xfffffffe;
 
+
 export class TransactionBuilder {
   public provider: NetworkProvider;
+
   public inputs: UnlockableUtxo[] = [];
   public outputs: Output[] = [];
 
-  private locktime: number;
-  private maxFee?: bigint;
+  public maxFee?: bigint;
+  public locktime: number;
 
   constructor(
     options: TransactionBuilderOptions,
@@ -40,14 +52,17 @@ export class TransactionBuilder {
   }
 
   addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
-    this.inputs.push({ ...utxo, unlocker, options });
+    this.inputs.push({ ...utxo, unlocker, options: { ...options, sequence: options?.sequence ?? DEFAULT_SEQUENCE } });
     return this;
   }
 
   addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
   addInputs(utxos: UnlockableUtxo[]): this;
-
-  addInputs(utxos: Utxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
+  addInputs(
+    utxos: Utxo[] | UnlockableUtxo[],
+    unlocker?: Unlocker,
+    options?: InputOptions,
+  ): this {
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
@@ -60,7 +75,11 @@ export class TransactionBuilder {
       return this;
     }
 
-    this.inputs = this.inputs.concat(utxos.map(((utxo) => ({ ...utxo, unlocker, options }))));
+    this.inputs = this.inputs.concat(utxos.map((utxo) => ({
+      ...utxo,
+      unlocker,
+      options: { ...options, sequence: options?.sequence ?? DEFAULT_SEQUENCE },
+    })));
     return this;
   }
 
@@ -102,7 +121,8 @@ export class TransactionBuilder {
     }
   }
 
-  build(): string {
+  async buildTransaction(): Promise<LibauthTransaction> {
+    this.locktime = this.locktime ?? await this.provider.getBlockHeight();
     this.checkMaxFee();
 
     const inputs = this.inputs.map((utxo) => ({
@@ -123,31 +143,55 @@ export class TransactionBuilder {
 
     // Generate source outputs from inputs (for signing with SIGHASH_UTXOS)
     const sourceOutputs = this.inputs.map((input) => {
+      const unlocker = typeof input.unlocker === 'function' ? input.unlocker(...(input.options?.params ?? [])) : input.unlocker;
+
       const sourceOutput = {
         amount: input.satoshis,
-        to: input.unlocker.generateLockingBytecode(),
+        to: unlocker.generateLockingBytecode(),
         token: input.token,
       };
 
       return cashScriptOutputToLibauthOutput(sourceOutput);
     });
 
-    const inputScripts = this.inputs.map((input, inputIndex) => (
-      input.unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex })
-    ));
+    const inputScripts = this.inputs.map((input, inputIndex) => {
+      const unlocker = typeof input.unlocker === 'function' ? input.unlocker(...(input.options?.params ?? [])) : input.unlocker;
+      return unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex });
+    });
 
     inputScripts.forEach((script, i) => {
       transaction.inputs[i].unlockingBytecode = script;
     });
 
+    return transaction;
+  }
+
+  async build(): Promise<string> {
+    const transaction = await this.buildTransaction();
     return binToHex(encodeTransaction(transaction));
+  }
+
+  // method to debug the transaction with libauth VM, throws upon evaluation error
+  async debug(): Promise<DebugResult[]> {
+    const { debugResult } = await getLibauthTemplates(this);
+    return debugResult;
+  }
+
+  async bitauthUri(): Promise<string> {
+    const { template } = await getLibauthTemplates(this);
+    return getBitauthUri(template);
+  }
+
+  async getLibauthTemplate(): Promise<WalletTemplate> {
+    const { template } = await getLibauthTemplates(this);
+    return template;
   }
 
   // TODO: see if we can merge with Transaction.ts
   async send(): Promise<TransactionDetails>;
   async send(raw: true): Promise<string>;
   async send(raw?: true): Promise<TransactionDetails | string> {
-    const tx = this.build();
+    const tx = await this.build();
     try {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
