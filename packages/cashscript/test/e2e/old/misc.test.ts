@@ -16,57 +16,28 @@ import { getTxOutputs } from '../../test-util.js';
 import simpleCovenantArtifact from '../../fixture/old/simple_covenant.json' with { type: 'json' };
 import mecenasBorderArtifact from '../../fixture/old/mecenas_border.json' with { type: 'json' };
 
-if (!process.env.TESTS_USE_MOCKNET) {
-  describe('v0.6.0 - Simple Covenant', () => {
-    let covenant: Contract;
+const describeOrSkip = process.env.TESTS_USE_MOCKNET ? describe.skip : describe;
 
-    beforeAll(() => {
-      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const addressType = 'p2sh20';
-      covenant = new Contract(simpleCovenantArtifact, [], { provider, addressType });
-      console.log(covenant.address);
-    });
+describeOrSkip('v0.6.0 - Simple Covenant', () => {
+  let covenant: Contract;
 
-    describe('send', () => {
-      it('should succeed', async () => {
-      // given
-        const to = covenant.address;
-        const amount = 1000n;
-
-        // when
-        const tx = await covenant.functions
-          .spend(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
-          .to(to, amount)
-          .send();
-
-        // then
-        const txOutputs = getTxOutputs(tx);
-        expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
-      });
-    });
+  beforeAll(() => {
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const addressType = 'p2sh20';
+    covenant = new Contract(simpleCovenantArtifact, [], { provider, addressType });
+    console.log(covenant.address);
   });
 
-  describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
-    let mecenas: Contract;
-    const pledge = 10000n;
-
-    beforeAll(() => {
-      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const addressType = 'p2sh20';
-      mecenas = new Contract(mecenasBorderArtifact, [alicePkh, bobPkh, pledge], { provider, addressType });
-      console.log(mecenas.address);
-    });
-
-    it('should succeed when sending pledge to receiver', async () => {
-    // given
-      const to = aliceAddress;
-      const amount = pledge;
+  describe('send', () => {
+    it('should succeed', async () => {
+      // given
+      const to = covenant.address;
+      const amount = 1000n;
 
       // when
-      const tx = await mecenas.functions
-        .receive(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
+      const tx = await covenant.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
         .to(to, amount)
-        .withHardcodedFee(1000n)
         .send();
 
       // then
@@ -74,6 +45,33 @@ if (!process.env.TESTS_USE_MOCKNET) {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
   });
-} else {
-  test.skip('skip', () => {});
-}
+});
+
+describe('v0.6.0 - Bytecode VarInt Border Mecenas', () => {
+  let mecenas: Contract;
+  const pledge = 10000n;
+
+  beforeAll(() => {
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+    const addressType = 'p2sh20';
+    mecenas = new Contract(mecenasBorderArtifact, [alicePkh, bobPkh, pledge], { provider, addressType });
+    console.log(mecenas.address);
+  });
+
+  it('should succeed when sending pledge to receiver', async () => {
+    // given
+    const to = aliceAddress;
+    const amount = pledge;
+
+    // when
+    const tx = await mecenas.functions
+      .receive(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL))
+      .to(to, amount)
+      .withHardcodedFee(1000n)
+      .send();
+
+    // then
+    const txOutputs = getTxOutputs(tx);
+    expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+  });
+});
