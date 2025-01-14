@@ -4,6 +4,7 @@ import {
   encodeTransaction,
   hexToBin,
   Transaction as LibauthTransaction,
+  WalletTemplate,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import { DebugResult } from '../debugging.js';
@@ -55,8 +56,8 @@ export class TransactionBuilder {
     return this;
   }
 
-  addInputs( utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
-  addInputs(utxos: UnlockableUtxo[] ): this;
+  addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
+  addInputs(utxos: UnlockableUtxo[]): this;
   addInputs(
     utxos: Utxo[] | UnlockableUtxo[],
     unlocker?: Unlocker,
@@ -119,7 +120,7 @@ export class TransactionBuilder {
       throw new Error(`Transaction fee of ${fee} is higher than max fee of ${this.maxFee}`);
     }
   }
-  
+
   async buildTransaction(): Promise<LibauthTransaction> {
     this.locktime = this.locktime ?? await this.provider.getBlockHeight();
     this.checkMaxFee();
@@ -157,7 +158,7 @@ export class TransactionBuilder {
       const unlocker = typeof input.unlocker === 'function' ? input.unlocker(...(input.options?.params ?? [])) : input.unlocker;
       return unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex });
     });
-    
+
     inputScripts.forEach((script, i) => {
       transaction.inputs[i].unlockingBytecode = script;
     });
@@ -179,6 +180,11 @@ export class TransactionBuilder {
   async bitauthUri(): Promise<string> {
     const { template } = await getLibauthTemplates(this);
     return getBitauthUri(template);
+  }
+
+  async getLibauthTemplate(): Promise<WalletTemplate> {
+    const { template } = await getLibauthTemplates(this);
+    return template;
   }
 
   // TODO: see if we can merge with Transaction.ts
@@ -215,5 +221,5 @@ export class TransactionBuilder {
 
     // Should not happen
     throw new Error('Could not retrieve transaction details for over 10 minutes');
-  }  
+  }
 }
