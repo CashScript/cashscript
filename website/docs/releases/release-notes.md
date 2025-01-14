@@ -80,6 +80,10 @@ Thanks [mainnet_pat](https://x.com/mainnet_pat) for the initiative and significa
 - :boom: **BREAKING**: Remove all deprecated references to `meep` including `meep` strings from errors and `transaction.meep()`.
 - :boom: **BREAKING**: Separate the `Argument` type into `FunctionArgument` and `ConstructorArgument` and rename `encodeArgument` to `encodeFunctionArgument`.
 
+---
+
+https://x.com/CashScriptBCH/status/1833454128426615174
+
 ## v0.9.3
 
 #### cashc compiler
