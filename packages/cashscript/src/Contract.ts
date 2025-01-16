@@ -156,28 +156,16 @@ export class Contract<
       const generateUnlockingBytecode = (
         { transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions,
       ): Uint8Array => {
-        // TODO: Remove old-style covenant code for v1.0 release
-        let covenantHashType = -1;
         const completeArgs = encodedArgs.map((arg) => {
           if (!(arg instanceof SignatureTemplate)) return arg;
 
-          // First signature is used for sighash preimage (maybe not the best way)
-          if (covenantHashType < 0) covenantHashType = arg.getHashType();
-
+          // Generate transaction signature from SignatureTemplate
           const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, bytecode, arg.getHashType());
           const sighash = hash256(preimage);
-
           return arg.generateSignature(sighash);
         });
 
-        const preimage = abiFunction.covenant
-          ? createSighashPreimage(transaction, sourceOutputs, inputIndex, bytecode, covenantHashType)
-          : undefined;
-
-        const unlockingBytecode = createInputScript(
-          this.redeemScript, completeArgs, selector, preimage,
-        );
-
+        const unlockingBytecode = createInputScript(this.redeemScript, completeArgs, selector);
         return unlockingBytecode;
       };
 

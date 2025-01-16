@@ -11,6 +11,7 @@ This update adds CashScript support for the new BCH 2025 network upgrade. To rea
 
 #### CashScript SDK
 - :hammer_and_wrench: Update debug tooling to work with the new `BCH_2025_05` instruction set.
+- :boom: **BREAKING**: Remove support for old-style covenants from SDK (deprecated since v0.7.0)
 
 ## v0.10.5
 
