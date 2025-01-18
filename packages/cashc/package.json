@@ -61,7 +61,7 @@
     "eslint": "^8.54.0",
     "typescript": "^5.5.4",
     "url-join": "^5.0.0",
-    "vitest": "^2.1.4"
+    "vitest": "^3.0.2"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
 }
