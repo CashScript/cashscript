@@ -25,6 +25,7 @@ import {
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
 import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
+import semver from 'semver';
 
 export class Contract<
   TArtifact extends Artifact = Artifact,
@@ -62,9 +63,13 @@ export class Contract<
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
     this.addressType = this.options?.addressType ?? 'p2sh32';
 
-    const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName'];
+    const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName', 'compiler'];
     if (!expectedProperties.every((property) => property in artifact)) {
       throw new Error('Invalid or incomplete artifact provided');
+    }
+
+    if (!semver.satisfies(artifact.compiler.version, '>=0.7.0', { includePrerelease: true })) {
+      throw new Error(`Artifact compiled with unsupported compiler version: ${artifact.compiler.version}, required >=0.7.0`);
     }
 
     if (artifact.constructorInputs.length !== constructorArgs.length) {

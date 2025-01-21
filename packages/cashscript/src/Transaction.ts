@@ -59,7 +59,7 @@ export class Transaction {
     public abiFunction: AbiFunction,
     public encodedFunctionArgs: EncodedFunctionArgument[],
     private selector?: number,
-  ) {}
+  ) { }
 
   from(input: Utxo): this;
   from(inputs: Utxo[]): this;
@@ -173,6 +173,8 @@ export class Transaction {
     const tx = await this.build();
 
     // Debug the transaction locally before sending so any errors are caught early
+    await this.debug();
+
     try {
       const txid = await this.contract.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);

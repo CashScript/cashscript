@@ -98,9 +98,6 @@ describe('script utils', () => {
     });
   });
 
-  describe.skip('TODO: replaceBytecodeNop()', () => {
-  });
-
   describe.skip('TODO: generateRedeemScript()', () => {
   });
 
