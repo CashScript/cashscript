@@ -204,6 +204,7 @@
         "branchup",
         "bchguru",
         "bchn",
+        "c0ffee",
         "cashcompiler",
         "cashninjas",
         "chaingraph",
@@ -271,5 +272,10 @@
         "**/grammar/**",
         // Do not spellcheck vendor code
         "**/node_modules/**",
+    ],
+    "ignoreRegExpList": [
+        "bitcoincash:.*",
+        "bchreg:.*",
+        "bchtest:.*"
     ]
 }

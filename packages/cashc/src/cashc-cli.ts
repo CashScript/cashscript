@@ -19,7 +19,7 @@ program
   .storeOptionsAsProperties(false)
   .name('cashc')
   .version(version, '-V, --version', 'Output the version number.')
-  .usage('[options] [source_file]')
+  .argument('<source_file>', 'The source file to compile.')
   .option('-o, --output <path>', 'Specify a file to output the generated artifact.')
   .option('-h, --hex', 'Compile the contract to hex format rather than a full artifact.')
   .option('-A, --asm', 'Compile the contract to ASM format rather than a full artifact.')
