@@ -1,10 +1,12 @@
 ---
-title: Advanced Transaction Builder
+title: Transaction Builder
 ---
 
-With the introduction of newer smart contract features to BCH, such as native introspection and CashTokens, we've seen use cases for combining UTXOs of multiple different smart contracts within a single transaction — such as [Fex][fex]. The [simple transaction builder][transactions-simple] only operates on a single smart contract. To support more advanced use cases, you can use the Advanced Transaction Builder.
+The CashScript Transaction Builder generalizes transaction building to allow for complex transactions combining multiple different smart contracts within a single transaction or to create basic P2PKH transactions. The Transaction Builder works by adding inputs and outputs to fully specify the transction shape.
 
-The Advanced Transaction Builder supports adding UTXOs from any number of different smart contracts and P2PKH UTXOs. While the simplified transaction builder automatically selects UTXOs for you and adds change outputs, the advanced transaction builder requires you to provide the UTXOs yourself and manage change carefully.
+:::info
+Defining the inputs and outputs requires careful consideration because the difference in Bitcoin Cash value between in- and outputs is what's paid in transaction fees to the miners.
+:::
 
 ## Instantiating a transaction builder
 ```ts
@@ -162,7 +164,7 @@ transactionBuilder.setLocktime(((Date.now() / 1000) + 24 * 60 * 60) * 1000);
 transactionBuilder.setMaxFee(maxFee: bigint): this
 ```
 
-Sets a max fee for the transaction. Because the advanced transaction builder does not automatically add a change output, you can set a max fee as a safety measure to make sure you don't accidentally pay too much in fees. If the transaction fee exceeds the max fee, an error will be thrown when building the transaction.
+Sets a max fee for the transaction. Because the transaction builder does not automatically add a change output, you can set a max fee as a safety measure to make sure you don't accidentally pay too much in fees. If the transaction fee exceeds the max fee, an error will be thrown when building the transaction.
 
 #### Example
 ```ts
@@ -229,9 +231,8 @@ const txHex = new TransactionBuilder({ provider })
 
 ## Transaction errors
 
-Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information. Note that the advanced transaction builder does not yet support the `FailedRequireError` mentioned in the simplified transaction builder documentation so any error will be of type `FailedTransactionError` and include any of the mentioned error reasons in its message.
+Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information. Note that the transaction builder does not yet support the `FailedRequireError` mentioned in the simplified transaction builder documentation so any error will be of type `FailedTransactionError` and include any of the mentioned error reasons in its message.
 
-[fex]: https://github.com/fex-cash/fex
 [bitcoin-wiki-timelocks]: https://en.bitcoin.it/wiki/Timelock
 
 [transactions-simple]: /docs/sdk/transactions

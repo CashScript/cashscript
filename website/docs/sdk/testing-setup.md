@@ -6,10 +6,6 @@ Because of deep integration with libauth, CashScript allows for local transactio
 
 For a quick start with a CashScript testing setup, you can check out [our testing-suite example](https://github.com/CashScript/cashscript/tree/next/examples/testing-suite) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
 
-:::caution
-The CashScript debugging tools only work with the [Simple Transaction Builder](/docs/sdk/transactions). We plan to extend the debugging tools to work with the [Advanced Transaction Builder](/docs/sdk/transactions-advanced) in the future.
-:::
-
 ## MockNetworkProvider
 
 The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. By default, it generates some random mock UTXOs for the contract address, but you can also add your own UTXOs to the provider.
