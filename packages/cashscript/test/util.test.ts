@@ -9,7 +9,6 @@ import {
   scriptToAddress,
   createInputScript,
   getInputSize,
-  getPreimageSize,
 } from '../src/utils.js';
 import { Network } from '../src/interfaces.js';
 import { alicePkh, alicePub } from './fixture/vars.js';
@@ -35,28 +34,8 @@ describe('utils', () => {
     });
   });
 
-  describe('getPreimageSize', () => {
-    it('should calculate preimage size for small script', () => {
-      const inputScript = new Uint8Array(100).fill(0);
-
-      const size = getPreimageSize(inputScript);
-
-      const expectedSize = 100 + 156 + 1;
-      expect(size).toEqual(expectedSize);
-    });
-
-    it('should calculate preimage size for large script', () => {
-      const inputScript = new Uint8Array(255).fill(0);
-
-      const size = getPreimageSize(inputScript);
-
-      const expectedSize = 255 + 156 + 3;
-      expect(size).toEqual(expectedSize);
-    });
-  });
-
   describe('createInputScript', () => {
-    it('should create an input script without selector or preimage', () => {
+    it('should create an input script without selector', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = asmToScript(asm);
       const args = [alicePub, placeholder(1)];
@@ -67,16 +46,15 @@ describe('utils', () => {
       expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
     });
 
-    it('should create an input script with selector and preimage', () => {
+    it('should create an input script with selector', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
       const redeemScript = asmToScript(asm);
       const args = [alicePub, placeholder(1)];
       const selector = 1;
-      const preimage = placeholder(1);
 
-      const inputScript = createInputScript(redeemScript, args, selector, preimage);
+      const inputScript = createInputScript(redeemScript, args, selector);
 
-      const expectedInputScriptAsm = `00 ${binToHex(alicePub)} 00 OP_1 ${binToHex(asmToBytecode(asm))}`;
+      const expectedInputScriptAsm = `00 ${binToHex(alicePub)} OP_1 ${binToHex(asmToBytecode(asm))}`;
       expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
     });
   });

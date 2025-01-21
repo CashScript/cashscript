@@ -7,7 +7,6 @@ export interface AbiInput {
 
 export interface AbiFunction {
   name: string;
-  covenant?: boolean;
   inputs: readonly AbiInput[];
 }
 

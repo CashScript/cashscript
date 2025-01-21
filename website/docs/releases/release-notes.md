@@ -11,6 +11,7 @@ This update adds CashScript support for the new BCH 2025 network upgrade. To rea
 
 #### CashScript SDK
 - :hammer_and_wrench: Update debug tooling to work with the new `BCH_2025_05` instruction set.
+- :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 
 ## v0.10.5
 
@@ -238,7 +239,7 @@ https://x.com/RoscoKalis/status/1529072055756414976
 * :bug: The final statement in a contract now MUST be a require statement (in all branches)
 * :bug: Empty contracts and functions are now considered invalid
 * :bug: Fix bug where certain covenants could become unspendable due to incorrect bytesize calculation
-  * :boom: **BREAKING**: Covenants using `tx.bytecode` now include a placeholder `OP_NOP` that gets replaced when constructor arguments are provided in the CashScript SDK. If you're not using the CashScript SDK, refer to the [`replaceBytecodeNop()` function](https://github.com/CashScript/cashscript/blob/master/packages/utils/src/script.ts#L130) to see the steps required to do so manually.
+  * :boom: **BREAKING**: Covenants using `tx.bytecode` now include a placeholder `OP_NOP` that gets replaced when constructor arguments are provided in the CashScript SDK. If you're not using the CashScript SDK, refer to the [`replaceBytecodeNop()` function](https://github.com/CashScript/cashscript/blob/v0.6.0/packages/utils/src/script.ts#L130) to see the steps required to do so manually.
 * :boom: **BREAKING**: Remove `--args` parameter from the CLI, since this is too error prone with the recent changes in mind
 * :boom: **BREAKING**: Restructure exports
 
