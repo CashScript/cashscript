@@ -29,7 +29,7 @@ const selectedUtxoBob = bobUtxos[0]
 const bobSignatureTemplate = new SignatureTemplate(bobPriv)
 
 // Start building the transaction
-const transferDetails = await contract.functions
+const txDetails = await contract.functions
   .transfer(bobSignatureTemplate)
   .from(selectedContractUtxo)
   .fromP2PKH(selectedUtxoBob, bobSignatureTemplate)
@@ -57,13 +57,14 @@ const selectedUtxoBob = bobUtxos[0]
 const bobSignatureTemplate = new SignatureTemplate(bobPriv)
 
 // Start building the transaction
-const transferDetails = await new TransactionBuilder({ provider })
+const txDetails = await new TransactionBuilder({ provider })
   .addInput(selectedContractUtxo, contract.unlock.transfer(bobSignatureTemplate))
   .addInput(selectedUtxoBob, bobSignatureTemplate.unlockP2PKH())
   .addOutput({
     to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
     amount: 10000n
   })
+  .send();
 ```
 
 With the new transaction builder there is no need to rely on methods like `.withoutChange()` and `.withoutTokenChange()`.

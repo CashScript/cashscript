@@ -131,12 +131,12 @@ For a code example of how to generate key-pairs with Libauth, see the [CashScrip
 
 ### Creating a Transaction
 
-Lastly, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. In other words, we need to make sure there's at least one UTXO with the smart contract locking bytecode, so that we can spend from it!
+Lastly, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. In other words, we need to make sure there's at a UTXO with the smart contract locking bytecode, so that we can spend it! We'll do this by adding the contract UTXO as input to the `TransactionBuilder`.
 
 ```javascript
-import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
+import { ElectrumNetworkProvider, Contract, SignatureTemplate, transactionBuilder } from 'cashscript';
 import { alicePub, bobPriv, bobPub } from './keys.js';
-import artifact from './TransferWithTimeout.json';
+import artifact from './TransferWithTimeout.json' with { type: 'json' };
 
 // Initialise a network provider for network operations
 const provider = new ElectrumNetworkProvider('chipnet');
@@ -146,11 +146,20 @@ const contractArguments = [alicePub, bobPub, 100000n];
 const options = { provider };
 const contract = new Contract(artifact, contractArguments, options);
 
-// Call the transfer function with Bob's signature
-// i.e. Bob claims the money that Alice has sent him
-const transferDetails = await contract.functions
-  .transfer(new SignatureTemplate(bobPriv))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
+// Specify the contract UTXO
+const contractUtxos = await contract.getUtxos();
+const selectedContractUtxo = contractUtxos[0]
+
+// Create the signatureTemplate for bob to sign the contract input
+const bobSignatureTemplate = new SignatureTemplate(bobPriv)
+
+// Start building the transaction
+const transferDetails = await new TransactionBuilder({ provider })
+  .addInput(selectedContractUtxo, contract.unlock.transfer(bobSignatureTemplate))
+  .addOutput({
+    to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
+    amount: 10000n
+  })
   .send();
 
 console.log(transferDetails);
