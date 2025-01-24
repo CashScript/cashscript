@@ -54,8 +54,6 @@ const options = { provider, addressType}
 const contract = new Contract(P2PKH, contractArguments, options);
 ```
 
-### TypeScript Typings
-
 ## Contract Properties
 
 ### address
