@@ -35,7 +35,7 @@ When using CashScript, you can access a lot of *introspection data* that can be 
 While we know the individual data fields, it's not immediately clear how this can be used to create useful smart contracts on Bitcoin Cash. However, there are several constraints that can be created using these fields — most important of which are constraints on the recipients of funds — so that is what we discuss.
 
 ### Restricting P2PKH recipients
-One interesting technique in Bitcoin Cash is called blind escrow, meaning that funds are placed in an escrow contract. This contract can only release the funds to one of the escrow participants, and has no other control over the funds. Non-custodial local exchange [LocalCryptos](https://localcryptos.com) used `OP_CHECKDATASIG` to do this. We can achieve something similar by restricting recipients with a covenant.
+One interesting technique in Bitcoin Cash is called blind escrow, meaning that funds are placed in an escrow contract. This contract can only release the funds to one of the escrow participants, and has no other control over the funds. We can implement this blind escrow as a covenants by restricting the possible recipients (although there are other possible designs for escrows).
 
 ```solidity
 contract Escrow(bytes20 arbiter, bytes20 buyer, bytes20 seller) {

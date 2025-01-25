@@ -206,7 +206,7 @@ One of the main use cases of covenants is enforcing transaction outputs (where m
 #### Example
 ```solidity
 bytes25 lockingBytecode = new LockingBytecodeP2PKH(pkh);
-int value = 10000;
+int value = 10_000;
 require(tx.outputs[0].lockingBytecode == lockingBytecode);
 require(tx.outputs[0].value == value);
 ```
@@ -242,6 +242,10 @@ new LockingBytecodeNullData(bytes[] chunks): bytes
 ```
 
 Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
+
+:::note
+`LockingBytecodeNullData` outputs are provably unspendable, so any BCH sent there would be burned. For these outputs no dust-minimum is enforced so often `LockingBytecodeNullData` outputs have 0 BCH on them.
+:::
 
 ## Globally available units
 

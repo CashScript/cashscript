@@ -40,7 +40,7 @@ transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptio
 Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input.
 
 :::note
-It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases are covered by the `SignatureTemplate` and `Contract` classes.
+It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases however are covered by the `SignatureTemplate` and `Contract` classes.
 :::
 
 #### Example

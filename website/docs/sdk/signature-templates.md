@@ -17,7 +17,7 @@ new SignatureTemplate(
 )
 ```
 
-In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
+In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [WIF strings][wif], [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], or binary private keys represented as `Uint8Array`. This ensures that `SignatureTemplate` can be used with any BCH library.
 
 #### Example
 ```ts
