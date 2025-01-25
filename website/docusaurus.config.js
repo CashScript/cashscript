@@ -54,7 +54,7 @@ module.exports = {
           items: [
             {
               label: 'Telegram',
-              href: 'https://t.me/bch_compilers',
+              href: 'https://t.me/CashScriptBCH',
             },
             {
               label: 'Showcase',
