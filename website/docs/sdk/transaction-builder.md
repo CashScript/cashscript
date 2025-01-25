@@ -208,7 +208,7 @@ const txDetails = await new TransactionBuilder({ provider })
 
 ### build()
 ```ts
-transactionBuilder.build(): string
+async transactionBuilder.build(): Promise<string>
 ```
 
 After completing a transaction, the `build()` function can be used to build the entire transaction and return the signed transaction hex string. This can then be imported into other libraries or applications as necessary.
@@ -228,6 +228,25 @@ const txHex = new TransactionBuilder({ provider })
   .setMaxFee(2000n)
   .build()
 ```
+
+### debug()
+```ts
+async transactionBuilder.debug(): Promise<DebugResult>
+```
+
+If you want to debug a transaction locally instead of sending it to the network, you can call the `debug()` function on the transaction. This will return intermediate values and the final result of the transaction. It will also show any logged values and `require` error messages.
+
+### bitauthUri()
+```ts
+async transactionBuilder.bitauthUri(): Promise<string>
+```
+
+If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
+You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
+
+:::caution
+It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
+:::
 
 ## Transaction errors
 
