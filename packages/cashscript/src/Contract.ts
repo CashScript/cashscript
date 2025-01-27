@@ -176,7 +176,7 @@ export class Contract<
 
       const generateLockingBytecode = (): Uint8Array => addressToLockScript(this.address);
 
-      return { generateUnlockingBytecode, generateLockingBytecode };
+      return { generateUnlockingBytecode, generateLockingBytecode, contract: this, params: args, abiFunction };
     };
   }
 }

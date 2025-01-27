@@ -1,5 +1,10 @@
 import {
-  binToHex, decodeTransaction, encodeTransaction, hexToBin, Transaction as LibauthTransaction,
+  binToHex,
+  decodeTransaction,
+  encodeTransaction,
+  hexToBin,
+  Transaction as LibauthTransaction,
+  WalletTemplate,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -18,6 +23,9 @@ import {
   validateOutput,
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
+import { DebugResult } from './debugging.js';
+import { getBitauthUri } from './LibauthTemplate.js';
+import { getLibauthTemplates } from './advanced/LibauthTemplate.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -30,8 +38,8 @@ export class TransactionBuilder {
   public inputs: UnlockableUtxo[] = [];
   public outputs: Output[] = [];
 
-  private locktime: number;
-  private maxFee?: bigint;
+  public locktime: number = 0;
+  public maxFee?: bigint;
 
   constructor(
     options: TransactionBuilderOptions,
@@ -102,7 +110,7 @@ export class TransactionBuilder {
     }
   }
 
-  build(): string {
+  buildLibauthTransaction(): LibauthTransaction {
     this.checkMaxFee();
 
     const inputs = this.inputs.map((utxo) => ({
@@ -140,7 +148,28 @@ export class TransactionBuilder {
       transaction.inputs[i].unlockingBytecode = script;
     });
 
+    return transaction;
+  }
+
+  build(): string {
+    const transaction = this.buildLibauthTransaction();
     return binToHex(encodeTransaction(transaction));
+  }
+
+  // method to debug the transaction with libauth VM, throws upon evaluation error
+  async debug(): Promise<DebugResult[]> {
+    const { debugResult } = await getLibauthTemplates(this);
+    return debugResult;
+  }
+
+  async bitauthUri(): Promise<string> {
+    const { template } = await getLibauthTemplates(this);
+    return getBitauthUri(template);
+  }
+
+  async getLibauthTemplate(): Promise<WalletTemplate> {
+    const { template } = await getLibauthTemplates(this);
+    return template;
   }
 
   // TODO: see if we can merge with Transaction.ts

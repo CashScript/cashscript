@@ -1,4 +1,4 @@
-import { AdvancedTransactionBuilder, Contract, MockNetworkProvider, SignatureTemplate, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
+import { TransactionBuilder, Contract, MockNetworkProvider, SignatureTemplate, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
 import BarArtifact from '../Bar.artifact.js';
 import FooArtifact from '../Foo.artifact.js';
 import { aliceAddress, alicePkh, alicePriv, alicePub, aliceTokenAddress, bobPriv, bobPub } from '../vars.js';
@@ -8,7 +8,7 @@ const provider = new MockNetworkProvider();
 
 export interface Fixture {
   name: string;
-  transaction: Promise<AdvancedTransactionBuilder>;
+  transaction: Promise<TransactionBuilder>;
   template: WalletTemplate;
 }
 
@@ -47,36 +47,26 @@ export const fixtures: Fixture[] = [
       const utxos = await provider.getUtxos(aliceAddress);
       const contractUtxos = await fooContract.getUtxos();
 
-      return new AdvancedTransactionBuilder({ provider })
+      return new TransactionBuilder({ provider })
         .addInputs(
           [utxos[0], utxos[1], utxos[2]],
-          // @ts-ignore
-          aliceTemplate.unlockP2PKH.bind(aliceTemplate),
-          { template: new SignatureTemplate(alicePriv) },
+          aliceTemplate.unlockP2PKH(),
         )
         .addInput(
           contractUtxos[1],
-          // @ts-ignore
-          barContract.unlock.funcA,
-          { contract: barContract, params: [] },
+          barContract.unlock.funcA(),
         )
         .addInput(
           contractUtxos[2],
-          // @ts-ignore
-          barContract.unlock.execute,
-          { contract: barContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+          barContract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
         )
         .addInput(
           contractUtxos[0],
-          // @ts-ignore
-          fooContract.unlock.execute,
-          { contract: fooContract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+          fooContract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
         )
         .addInput(
           contractUtxos[3],
-          // @ts-ignore
-          barContract.unlock.funcB,
-          { contract: barContract, params: [] },
+          barContract.unlock.funcB(),
         )
         .addOutput({ to: fooContract.address, amount: 8000n })
         .addOutput({ to: aliceTokenAddress, amount: 800n, token: tokenA })
@@ -561,7 +551,7 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {},
               },
             ],
-            'locktime': 133700,
+            'locktime': 0,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -752,7 +742,7 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {},
               },
             ],
-            'locktime': 133700,
+            'locktime': 0,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -941,7 +931,7 @@ export const fixtures: Fixture[] = [
                 ],
               },
             ],
-            'locktime': 133700,
+            'locktime': 0,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -1053,12 +1043,10 @@ export const fixtures: Fixture[] = [
 
       const contractUtxos = await contract.getUtxos();
 
-      return new AdvancedTransactionBuilder({ provider })
+      return new TransactionBuilder({ provider })
         .addInput(
           contractUtxos[0],
-          // @ts-ignore
-          contract.unlock.funcA,
-          { contract: contract, params: [] },
+          contract.unlock.funcA(),
         )
         .addOutput({ to: contract.address, amount: 10_000n });
     })(),
@@ -1133,7 +1121,7 @@ export const fixtures: Fixture[] = [
                 ],
               },
             ],
-            'locktime': 133700,
+            'locktime': 0,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -1166,18 +1154,14 @@ export const fixtures: Fixture[] = [
 
       const contractUtxos = await contract.getUtxos();
 
-      return new AdvancedTransactionBuilder({ provider })
+      return new TransactionBuilder({ provider })
         .addInput(
           contractUtxos[0],
-          // @ts-ignore
-          contract.unlock.execute,
-          { contract: contract, params: [alicePub, new SignatureTemplate(alicePriv)] },
+          contract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
         )
         .addInput(
           contractUtxos[1],
-          // @ts-ignore
-          contract.unlock.execute,
-          { contract: contract, params: [bobPub, new SignatureTemplate(bobPriv)] },
+          contract.unlock.execute(bobPub, new SignatureTemplate(bobPriv)),
         )
         .addOutput({ to: contract.address, amount: 20_000n });
     })(),
@@ -1271,7 +1255,7 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {},
               },
             ],
-            'locktime': 133700,
+            'locktime': 0,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -1331,7 +1315,7 @@ export const fixtures: Fixture[] = [
                 ],
               },
             ],
-            'locktime': 133700,
+            'locktime': 0,
             'outputs': [
               {
                 'lockingBytecode': {
