@@ -15,6 +15,7 @@ import p2pkhArtifact from './fixture/p2pkh.json' with { type: 'json' };
 import twtArtifact from './fixture/transfer_with_timeout.json' with { type: 'json' };
 import hodlVaultArtifact from './fixture/hodl_vault.json' with { type: 'json' };
 import mecenasArtifact from './fixture/mecenas.json' with { type: 'json' };
+import deprecatedMecenasArtifact from './fixture/deprecated/mecenas-v0.6.0.json' with { type: 'json' };
 import boundedBytesArtifact from './fixture/bounded_bytes.json' with { type: 'json' };
 
 describe('Contract', () => {
@@ -29,6 +30,14 @@ describe('Contract', () => {
       ).toThrow();
       expect(() => new Contract(p2pkhArtifact, [placeholder(19)], { provider })).toThrow();
       expect(() => new Contract(p2pkhArtifact, [placeholder(21)], { provider })).toThrow();
+    });
+
+    it('should fail with artifact compiled with unsupported compiler version', async () => {
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+      const constructorArgs = [placeholder(20), placeholder(20), 1000000n];
+
+      expect(() => new Contract(deprecatedMecenasArtifact, constructorArgs, { provider }))
+        .toThrow(/unsupported compiler version/);
     });
 
     it('should fail with incomplete artifact', () => {

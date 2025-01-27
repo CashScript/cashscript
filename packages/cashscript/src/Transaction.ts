@@ -9,7 +9,6 @@ import {
   AbiFunction,
   encodeBip68,
   placeholder,
-  scriptToBytecode,
 } from '@cashscript/utils';
 import deepEqual from 'fast-deep-equal';
 import {
@@ -28,7 +27,6 @@ import {
   getInputSize,
   createOpReturnOutput,
   getTxSizeWithoutInputs,
-  getPreimageSize,
   validateOutput,
   utxoComparator,
   calculateDust,
@@ -61,7 +59,7 @@ export class Transaction {
     public abiFunction: AbiFunction,
     public encodedFunctionArgs: EncodedFunctionArgument[],
     private selector?: number,
-  ) {}
+  ) { }
 
   from(input: Utxo): this;
   from(inputs: Utxo[]): this;
@@ -175,10 +173,7 @@ export class Transaction {
     const tx = await this.build();
 
     // Debug the transaction locally before sending so any errors are caught early
-    // Libauth debugging does not work with old-style covenants
-    if (!this.abiFunction.covenant) {
-      await this.debug();
-    }
+    await this.debug();
 
     try {
       const txid = await this.contract.provider.sendRawTransaction(tx);
@@ -350,18 +345,11 @@ export class Transaction {
       return placeholder(73);
     });
 
-    // Create a placeholder preimage of the correct size
-    const placeholderPreimage = this.abiFunction.covenant
-      ? placeholder(getPreimageSize(scriptToBytecode(this.contract.redeemScript)))
-      : undefined;
-
-    // Create a placeholder input script for size calculation using the placeholder
-    // arguments and correctly sized placeholder preimage
+    // Create a placeholder input script for size calculation using the placeholder arguments
     const placeholderScript = createInputScript(
       this.contract.redeemScript,
       placeholderArgs,
       this.selector,
-      placeholderPreimage,
     );
 
     // Add one extra byte per input to over-estimate tx-in count

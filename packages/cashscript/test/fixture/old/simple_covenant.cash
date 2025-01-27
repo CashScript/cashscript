@@ -1,6 +1,0 @@
-contract Covenant() {
-    function spend(pubkey pk, sig s) {
-        require(checkSig(s, pk));
-        require(int(tx.version) >= 2);
-    }
-}

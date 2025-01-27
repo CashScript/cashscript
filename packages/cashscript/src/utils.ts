@@ -5,7 +5,7 @@ import {
   lockingBytecodeToCashAddress,
   binToHex,
   Transaction,
-  generateSigningSerializationBCH,
+  generateSigningSerializationBch,
   utf8ToBin,
   hexToBin,
   flattenBinArray,
@@ -125,12 +125,6 @@ export function getInputSize(inputScript: Uint8Array): number {
   return 32 + 4 + varIntSize + scriptSize + 4;
 }
 
-export function getPreimageSize(script: Uint8Array): number {
-  const scriptSize = script.byteLength;
-  const varIntSize = scriptSize > 252 ? 3 : 1;
-  return 4 + 32 + 32 + 36 + varIntSize + scriptSize + 8 + 4 + 32 + 4 + 4;
-}
-
 export function getTxSizeWithoutInputs(outputs: Output[]): number {
   // Transaction format:
   // Version (4 Bytes)
@@ -160,11 +154,9 @@ export function createInputScript(
   redeemScript: Script,
   encodedArgs: Uint8Array[],
   selector?: number,
-  preimage?: Uint8Array,
 ): Uint8Array {
-  // Create unlock script / redeemScriptSig (add potential preimage and selector)
+  // Create unlock script / redeemScriptSig (add potential selector)
   const unlockScript = [...encodedArgs].reverse();
-  if (preimage !== undefined) unlockScript.push(preimage);
   if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 
   // Create input script and compile it to bytecode
@@ -199,7 +191,7 @@ export function createSighashPreimage(
   const context = { inputIndex, sourceOutputs, transaction };
   const signingSerializationType = new Uint8Array([hashtype]);
 
-  const sighashPreimage = generateSigningSerializationBCH(context, { coveredBytecode, signingSerializationType });
+  const sighashPreimage = generateSigningSerializationBch(context, { coveredBytecode, signingSerializationType });
 
   return sighashPreimage;
 }
