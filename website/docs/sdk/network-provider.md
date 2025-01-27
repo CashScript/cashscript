@@ -19,7 +19,7 @@ In some cases it might be desirable to overwrite the 2-of-3 ElectrumCluster defa
 
 ### Network
 ```ts
-type Network = 'mainnet' | 'testnet3' | 'testnet4' | 'chipnet' | 'regtest';
+type Network = 'mainnet' | 'chipnet' | 'testnet3' | 'testnet4' | 'regtest';
 ```
 
 The network parameter can be one of 5 different options.

@@ -116,8 +116,7 @@ const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new TransferWithTimeout contract
 const contractArguments = [alicePub, bobPub, 100000n];
-const options = { provider };
-const contract = new Contract(artifact, contractArguments, options);
+const contract = new Contract(artifact, contractArguments, {provider});
 
 // Get the contract address and info about its balance
 console.log("Contract address: " + contract.address);
@@ -143,8 +142,7 @@ const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new TransferWithTimeout contract
 const contractArguments = [alicePub, bobPub, 100000n];
-const options = { provider };
-const contract = new Contract(artifact, contractArguments, options);
+const contract = new Contract(artifact, contractArguments, {provider});
 
 // Specify the contract UTXO
 const contractUtxos = await contract.getUtxos();

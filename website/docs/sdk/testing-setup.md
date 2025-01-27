@@ -14,9 +14,9 @@ The `MockNetworkProvider` is a special network provider that allows you to evalu
 import { MockNetworkProvider, randomUtxo, randomToken, randomNFT } from 'cashscript';
 
 const provider = new MockNetworkProvider();
-provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
+const contractUtxo = provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
 
-provider.addUtxo(aliceAddress, randomUtxo({
+const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
   satoshis: 1000n,
   token: { ...randomNFT(), ...randomToken() },
 }));
@@ -52,7 +52,11 @@ Logging is only available in debug evaluation of a transaction. It has no impact
 describe('Example contract', () => {
   it('should log the passed parameter', async () => {
     const contract = new Contract(artifact, [], { provider });
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toLog('passed parameter: 1000');
   });
 });
@@ -69,14 +73,19 @@ Similar to `console.log`, the error message in a `require` statement is only ava
 ```ts
 describe('Example contract', () => {
   const contract = new Contract(artifact, [], { provider });
+  const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
   it('should fail require statement when incorrect parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(999n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toFailRequireWith('passed parameter is not 1000');
   });
 
   it('should pass require statement when correct parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).not.toFailRequire();
   });
 });
@@ -99,23 +108,29 @@ import { Contract, MockNetworkProvider, randomUtxo } from 'cashscript';
 import 'cashscript/jest';
 
 describe('Example contract', () => {
-  const contract = new Contract(artifact, [], { provider });
   const provider = new MockNetworkProvider();
-  provider.addUtxo(contract.address, randomUtxo());
+  const contract = new Contract(artifact, [], { provider });
+  const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
   it('should log the passed parameter', async () => {
     const contract = new Contract(artifact, [], { provider });
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toLog('passed parameter: 1000');
   });
 
   it('should fail require statement when incorrect parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(999n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toFailRequireWith('passed parameter is not 1000');
   });
 
   it('should pass require statement when correct parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).not.toFailRequire();
   });
 });

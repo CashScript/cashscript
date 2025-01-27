@@ -47,10 +47,10 @@ import P2PKH from './p2pkh.json' with { type: 'json' };
 // Or compile a contract file
 const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 
-const provider = new ElectrumNetworkProvider('chipnet');
-const addressType = 'p2sh20';
 const contractArguments = [alicePkh]
-const options = { provider, addressType}
+
+const provider = new ElectrumNetworkProvider('chipnet');
+const options = { provider, addressType: 'p2sh20' }
 const contract = new Contract(P2PKH, contractArguments, options);
 ```
 
