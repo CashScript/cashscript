@@ -45,11 +45,15 @@ Whenever a transaction fails, there will be a link in the console to open your s
 It's also possible to export the transaction for step-by-step debugging in the BitAuth IDE without failure. To do so, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE.
 
 ```ts
-const uri = await TransactionBuilder.bitauthUri();
+const uri = await transactionBuilder.bitauthUri();
 ```
 
 :::caution
 It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
+:::
+
+:::note
+Currently the raw BCH Script you see in the Bitauth IDE is what the script looks like **before** any optimizations happen for the compiled output. This means you might spot some inefficiencies but those will likely not be present in the final compiled bytecode.
 :::
 
 The Bitauth IDE will show you the two-way mapping between the CashScript contract code generated opcodes. Here is [a Bitauth IDE link][BitauthIDE] for the basic `TransferWithTimeout` contract as an example:

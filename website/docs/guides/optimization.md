@@ -98,9 +98,14 @@ It's worth considering whether hand-optimizing the contract is necessary at all.
 
 >We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%.
 
+### Optimizing with the BitauthIDE
+
+When optimizing the bytecode of your contract you'll like want to use the [BitauthIDE] so you can see the stack changes of each OpCode. It's important to realize the `transactionBuilder.bitauthUri()` will show the two-wap mapping to the **un-optimized** bytecode, so this is not the final resulting bytecode produced by the compiler. The compiler will perform a bunch of optimitzations already, so you should look at the `Artifact bytecode` if you want to further optimize the compiled contract bytecode.
+
 ### Overwriting the Artifact
 
 To manually change the contract bytecode, you need to overwrite the `bytecode` key of your contract artifact.
+An example of this is the [Cauldron_Swap_Test](https://github.com/mr-zwets/Cauldron_Swap_Test) which uses `Artifact bytecode` not produced by `cashc` at all! Instead the `Artifact` is manually assembled for a contract hand-written in raw BCH script. By manually creating the `Artifact` it becomes possible to use the contract with the nice transaction building features of the CashScript SDK.
 
 ```typescript
 interface Artifact {
@@ -108,9 +113,11 @@ interface Artifact {
 }
 ```
 
-This way you can still use the CashScript TypeScript SDK while using a hand-optimized contract.
+This way you can still use the CashScript TypeScript SDK while using a hand-optimized or hand-written contract.
 
 :::caution
 If you manually overwrite the `bytecode` in the artifact, this will make the auto generated 2-way-mapping to become obsolete.
 This result of this is that the debugging functionality will no longer work for the contract.
 :::
+
+[BitauthIDE]: https://ide.bitauth.com
