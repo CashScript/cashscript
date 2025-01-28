@@ -30,7 +30,7 @@ const provider = new ElectrumNetworkProvider(Network.MAINNET);
 const transactionBuilder = new TransactionBuilder({ provider });
 ```
 
-## Transaction options
+## Transaction Building
 
 ### addInput()
 ```ts

@@ -35,6 +35,34 @@ const transferDetails = await new TransactionBuilder({ provider })
 
 The `hashtype` and `signatureAlgorithm` options are covered under ['Advanced Usage'](/docs/sdk/signature-templates#advanced-usage).
 
+## SignatureTemplate Methods
+
+### getPublicKey()
+```ts
+signatureTemplate.getPublicKey(): Uint8Array
+```
+
+#### Example
+```ts
+import { aliceTemplate } from './somewhere.js';
+
+const alicePublicKey = aliceTemplate.getPublicKey()
+```
+
+### unlockP2PKH()
+```ts
+signatureTemplate.unlockP2PKH(): Unlocker
+```
+
+#### Example
+```ts
+import { aliceTemplate, aliceAddress, transactionBuilder } from './somewhere.js';
+
+const aliceUtxos = await provider.getUtxos(aliceAddress);
+transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
+```
+
+
 ## Advanced Usage
 
 ### HashType
@@ -58,6 +86,8 @@ const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const signatureTemplate = new SignatureTemplate(
   wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
 );
+
+const configuredHashType = signatureTemplate.getHashType()
 ```
 
 ### SignatureAlgorithm
@@ -78,6 +108,8 @@ const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const hashType = HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
 const signatureAlgorithm = SignatureAlgorithm.SCHNORR
 const signatureTemplate = new SignatureTemplate(wif, hashType,signatureAlgorithm);
+
+const configuredSignatureAlgorithm = signatureTemplate.getSignatureAlgorithm()
 ```
 
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
