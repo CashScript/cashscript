@@ -150,6 +150,9 @@ To demonstrate the concept of 'local state' we consider the Mecenas contract aga
 Besides these wasted days it can also be inconvenient to claim at set intervals, rather than the "streaming" model that the Ethereum project [Sablier](https://www.sablier.finance/) employs. Instead of set intervals, you should be able to claim funds at any time during the "money stream". Using local state, we can approach a similar system with BCH.
 
 ```solidity
+// Mutable NFT Commitment contract state
+// bytes8 latestLockTime
+
 contract StreamingMecenas(
     bytes20 recipient,
     bytes20 funder,
@@ -223,6 +226,10 @@ Let's take a look at an example contract called `PooledFunds` which has two cont
 
 
 ```solidity
+// Immutible NFT Commitment User-Receipt
+// bytes1 actionIdentifier
+// bytes8 amountSatsAdded | amountTokensAdded
+
 contract PooledFunds(
 ) {
     function addFunds(
@@ -236,18 +243,20 @@ contract PooledFunds(
         int amountSatsAdded = tx.outputs[0].value - tx.inputs[0].value;
         int amountTokensAdded = tx.outputs[0].tokenAmount - tx.inputs[0].tokenAmount;
 
+        // Require either BCH or fungible tokens to contributed, not both at once
+        require(amountSatsAdded == 0 || amountTokensAdded == 0);
+
         // Determine whether BCH or fungible tokens were contributed to the pool
-        bytes actionIdentifier = 0x00;
+        bytes receiptCommitement = 0x;
         if (amountTokensAdded > 0) {
             // Require 1000 sats to pay for future withdrawal fee
             require(amountSatsAdded == 1000);
-            actionIdentifier = 0x01;
-            actionIdentifier = actionIdentifier + bytes8(amountTokensAdded);
+            receiptCommitement = 0x01 + bytes8(amountTokensAdded);
         } else {
             // Place a minimum on the amount of funds that can be added
             // Implicitly requires tx.outputs[0].value > tx.inputs[0].value
             require(amountSatsAdded > 10000);
-            actionIdentifier = actionIdentifier + bytes8(amountSatsAdded);
+            receiptCommitement = 0x00 + bytes8(amountSatsAdded);
         }
 
         // Require there to be at most three outputs so no additional NFTs can be minted
@@ -261,7 +270,7 @@ contract PooledFunds(
         // The receipt NFT is sent back to the same address of the first user's input
         // The NFT commitment of the receipt contains what was added to the pool
         require(tx.outputs[1].lockingBytecode == tx.inputs[1].lockingBytecode);
-        require(tx.outputs[1].nftCommitment == actionIdentifier);
+        require(tx.outputs[1].nftCommitment == receiptCommitement);
 
         // A 3rd output for change is allowed
         if (tx.outputs.length == 3) {
@@ -283,7 +292,7 @@ contract PooledFunds(
 
         // Read the amount that was contributed to the pool from the NFT commitment
         bytes ntfCommitmentData = tx.inputs[1].nftCommitment;
-        bytes actionIdentifier, bytes amountToWithdrawBytes = ntfCommitmentData.split(2);
+        bytes actionIdentifier, bytes amountToWithdrawBytes = ntfCommitmentData.split(1);
         int amountToWithdraw = int(amountToWithdrawBytes);
 
         if (actionIdentifier == 0x01) {
