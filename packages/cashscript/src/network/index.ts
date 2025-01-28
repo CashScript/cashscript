@@ -3,3 +3,4 @@ export { default as BitcoinRpcNetworkProvider } from './BitcoinRpcNetworkProvide
 export { default as ElectrumNetworkProvider } from './ElectrumNetworkProvider.js';
 export { default as FullStackNetworkProvider } from './FullStackNetworkProvider.js';
 export { default as MockNetworkProvider } from './MockNetworkProvider.js';
+export { default as ChaingraphNetworkProvider } from './ChaingraphNetworkProvider.js';
