@@ -30,14 +30,22 @@ To get the exact contract bytesize including constructor parameters, initialise 
 
 The `cashc` compiler does some optimisations automatically. By writing your CashScript code in a specific way, the compiler is better able to optimise it. Trial & error is definitely part of it, but here are some tricks that may help:
 
-### 1. Consume stack items
+### 1. Declare variables
 
-It's best to "consume" values (i.e. their final use in the contract) as soon as possible. This frees up space on the stack.
-Use/consume values as close to their declaration as possible, both for variables and for parameters. This avoids having to do deep stack operations. This [example](https://gitlab.com/GeneralProtocols/anyhedge/contracts/-/blob/development/contracts/v0.11/contract.cash#L61-72) from AnyHedge illustrates consuming values immediately.
+Declare variables instead of hardcoding the same values in multiple places:
 
-### 2. Declare variables
+```solidity title="Example CashScript code"
+    // do this
+    bytes tokenId = 0x8473d94f604de351cdee3030f6c354d36b257861ad8e95bbc0a06fbab2a2f9cf;
+    require(tx.outputs[0].tokenCategory == tokenId);
+    require(tx.outputs[1].tokenCategory == tokenId);
 
-Declare variables when re-using certain common introspection items to avoid duplicate expressions.
+    // not this
+    require(tx.outputs[0].tokenCategory == 0x8473d94f604de351cdee3030f6c354d36b257861ad8e95bbc0a06fbab2a2f9cf);
+    require(tx.inputs[1].tokenCategory == 0x8473d94f604de351cdee3030f6c354d36b257861ad8e95bbc0a06fbab2a2f9cf);
+```
+
+Also declare variables when re-using certain common introspection items to avoid duplicate expressions:
 
 ```solidity title="Example CashScript code"
     // do this
@@ -47,9 +55,13 @@ Declare variables when re-using certain common introspection items to avoid dupl
 
     // not this
     require(tx.inputs[1].tokenCategory == tx.inputs[0].tokenCategory.split(32)[0]);
-    ...
     require(tx.inputs[1].tokenCategory == tx.inputs[0].tokenCategory.split(32)[0]);
 ```
+
+### 2. Consume stack items
+
+It's best to "consume" values (i.e. their final use in the contract) as soon as possible. This frees up space on the stack.
+Use/consume values as close to their declaration as possible, both for variables and for parameters. This avoids having to do deep stack operations. This [example](https://gitlab.com/GeneralProtocols/anyhedge/contracts/-/blob/development/contracts/v0.11/contract.cash#L61-72) from AnyHedge illustrates consuming values immediately.
 
 ### 3. Parse efficiently
 When using `.split()` to use both sides of a `bytes` element, declare both parts immediately to save on opcodes parsing the byte array.
