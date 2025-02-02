@@ -1,8 +1,10 @@
 import { binToHex, hexToBin } from '@bitauth/libauth';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
-import { Utxo, Network } from '../../interfaces.js';
+import { Utxo, Network, TokenDetails } from '../../interfaces.js';
 import NetworkProvider from '../NetworkProvider.js';
 import { bchrpcClient } from './generated/bchrpc.client.js';
+
+type NFTCapabilities = NonNullable<TokenDetails["nft"]>["capability"];
 
 export default class BchdGrpcNetworkProvider implements NetworkProvider {
   client: bchrpcClient;
@@ -10,6 +12,19 @@ export default class BchdGrpcNetworkProvider implements NetworkProvider {
   constructor(public network: Network, baseUrl: string) {
     const transport = new GrpcWebFetchTransport({ baseUrl });
     this.client = new bchrpcClient(transport);
+  }
+
+  private parseNFTCapabilities(capabilities: number): NFTCapabilities {
+    switch (capabilities & 0b1111) {
+      case 0:
+        return 'none';
+      case 1:
+        return 'mutable';
+      case 2:
+        return 'minting';
+      default:
+        throw new Error(`Invalid NFT capabilities: ${capabilities}`);
+    }
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
@@ -32,8 +47,7 @@ export default class BchdGrpcNetworkProvider implements NetworkProvider {
                 amount: BigInt(utxo.cashToken.amount),
                 nft: utxo.cashToken.commitment
                   ? {
-                      // TODO: parse bitfield
-                      capability: utxo.cashToken.bitfield as any,
+                      capability: this.parseNFTCapabilities(utxo.cashToken.bitfield[0]),
                       commitment: binToHex(utxo.cashToken.commitment),
                     }
                   : undefined,
