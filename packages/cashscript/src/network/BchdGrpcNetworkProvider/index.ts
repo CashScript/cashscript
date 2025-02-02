@@ -14,8 +14,9 @@ export default class BchdGrpcNetworkProvider implements NetworkProvider {
     this.client = new bchrpcClient(transport);
   }
 
-  private parseNFTCapabilities(capabilities: number): NFTCapabilities {
-    switch (capabilities & 0b1111) {
+  private parseNFTCapabilities(bitfield: number): NFTCapabilities {
+    const nftCapabilities = bitfield & 0b1111;
+    switch (nftCapabilities) {
       case 0:
         return 'none';
       case 1:
@@ -23,7 +24,7 @@ export default class BchdGrpcNetworkProvider implements NetworkProvider {
       case 2:
         return 'minting';
       default:
-        throw new Error(`Invalid NFT capabilities: ${capabilities}`);
+        throw new Error(`Invalid NFT capabilities: ${nftCapabilities}`);
     }
   }
 
