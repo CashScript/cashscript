@@ -3,6 +3,7 @@ npm-debug.log
 **/dist/
 **/dist-test/
 **/node_modules/
+packages/cashscript/src/network/BchdGrpcNetworkProvider/generated
 
 **/.DS_Store
 /**/.project
