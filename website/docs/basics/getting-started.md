@@ -29,7 +29,7 @@ To write CashScript smart contracts locally you use a code editor. For the best 
 
 :::note prerequisites
 - Basic familiarity with the command line
-- Node.js installed
+- Node.js installed (v20 or newer)
 - A code editor (VS Code recommended)
 :::
 
