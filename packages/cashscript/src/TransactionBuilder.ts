@@ -20,6 +20,7 @@ import { NetworkProvider } from './network/index.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
+  validateInput,
   validateOutput,
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
@@ -48,14 +49,14 @@ export class TransactionBuilder {
   }
 
   addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
-    this.inputs.push({ ...utxo, unlocker, options });
-    return this;
+    return this.addInputs([utxo], unlocker, options);
   }
 
   addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
   addInputs(utxos: UnlockableUtxo[]): this;
 
   addInputs(utxos: Utxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
+    utxos.forEach(validateInput);
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))

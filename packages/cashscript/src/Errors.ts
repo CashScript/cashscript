@@ -6,9 +6,21 @@ export class TypeError extends Error {
   }
 }
 
+export class UndefinedInputError extends Error {
+  constructor() {
+    super('Input is undefined');
+  }
+}
+
 export class OutputSatoshisTooSmallError extends Error {
   constructor(satoshis: bigint, minimumAmount: bigint) {
     super(`Tried to add an output with ${satoshis} satoshis, which is less than the required minimum for this output-type (${minimumAmount})`);
+  }
+}
+
+export class OutputTokenAmountTooSmallError extends Error {
+  constructor(amount: bigint) {
+    super(`Tried to add an output with ${amount} tokens, which is invalid`);
   }
 }
 

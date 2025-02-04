@@ -36,10 +36,18 @@ import {
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
+  OutputTokenAmountTooSmallError,
   TokensToNonTokenAddressError,
+  UndefinedInputError,
 } from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
+export function validateInput(utxo: Utxo): void {
+  if (!utxo) {
+    throw new UndefinedInputError();
+  }
+}
+
 export function validateOutput(output: Output): void {
   if (typeof output.to !== 'string') return;
 
@@ -51,6 +59,10 @@ export function validateOutput(output: Output): void {
   if (output.token) {
     if (!isTokenAddress(output.to)) {
       throw new TokensToNonTokenAddressError(output.to);
+    }
+
+    if (output.token.amount < 0n) {
+      throw new OutputTokenAmountTooSmallError(output.token.amount);
     }
   }
 }

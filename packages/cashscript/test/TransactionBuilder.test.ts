@@ -8,9 +8,10 @@ import {
   carolPub,
   carolAddress,
   carolPriv,
+  bobTokenAddress,
 } from './fixture/vars.js';
 import { Network, Utxo } from '../src/interfaces.js';
-import { utxoComparator, calculateDust, randomUtxo } from '../src/utils.js';
+import { utxoComparator, calculateDust, randomUtxo, randomToken } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.json' with { type: 'json' };
 import twtArtifact from './fixture/transfer_with_timeout.json' with { type: 'json' };
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
@@ -32,6 +33,7 @@ describe('Transaction Builder', () => {
     console.log(twtInstance.tokenAddress);
     (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
     (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
+    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ token: randomToken() }));
     (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
     (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
     (provider as any).addUtxo?.(bobAddress, randomUtxo());
@@ -45,10 +47,10 @@ describe('Transaction Builder', () => {
       // given
       const to = p2pkhInstance.address;
       const amount = 1000n;
-      const fee = 1000n;
+      const fee = 2000n;
 
       const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
-      const { utxos: gathered, total } = gatherUtxos(utxos, { amount });
+      const { utxos: gathered, total } = gatherUtxos(utxos, { amount, fee });
 
       const change = total - amount - fee;
       const dustAmount = calculateDust({ to, amount: change });
@@ -64,6 +66,7 @@ describe('Transaction Builder', () => {
         .to(to, amount)
         .to(change > dustAmount ? [{ to, amount: change }] : [])
         .withoutChange()
+        .withoutTokenChange()
         .withTime(0)
         .build();
 
@@ -84,7 +87,7 @@ describe('Transaction Builder', () => {
       // given
       const to = bobAddress;
       const amount = 10000n;
-      const fee = 1000n;
+      const fee = 2000n;
 
       const contractUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
       const bobUtxos = await provider.getUtxos(bobAddress);
@@ -111,6 +114,7 @@ describe('Transaction Builder', () => {
         .to(to, amount)
         .to(change > dustAmount ? [{ to, amount: change }] : [])
         .withoutChange()
+        .withoutTokenChange()
         .withTime(0)
         .build();
 
@@ -206,24 +210,73 @@ describe('Transaction Builder', () => {
     expect(tx).toBeDefined();
   });
 
-  // TODO: Should fail when trying to send to invalid address / non-token address
-  // TODO: Should fail when sending negative amount
+  // TODO: Consider improving error messages checked below to also include the input/output index
 
-  // TODO: Should fail when adding 'undefined' input
+  it('should fail when trying to send to invalid addres', async () => {
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+
+    expect(() => {
+      new TransactionBuilder({ provider })
+        .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+        .addOutput({ to: bobAddress.slice(0, -1), amount: 1000n })
+        .build();
+    }).toThrow('CashAddress decoding error');
+  });
+
+  it('should fail when trying to send tokens to non-token address', async () => {
+    const tokenUtxo = (await p2pkhInstance.getUtxos()).find((utxo) => utxo.token)!;
+
+    expect(() => {
+      new TransactionBuilder({ provider })
+        .addInput(tokenUtxo, p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+        .addOutput({ to: bobAddress, amount: 1000n, token: tokenUtxo.token })
+        .build();
+    }).toThrow('Tried to send tokens to an address without token support');
+  });
+
+  it('should fail when trying to send negative BCH amount or token amount', async () => {
+    const tokenUtxo = (await p2pkhInstance.getUtxos()).find((utxo) => utxo.token)!;
+
+    expect(() => {
+      new TransactionBuilder({ provider })
+        .addInput(tokenUtxo, p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+        .addOutput({ to: bobTokenAddress, amount: -1000n, token: tokenUtxo.token })
+        .build();
+    }).toThrow('Tried to add an output with -1000 satoshis, which is less than the required minimum for this output-type (663)');
+
+    expect(() => {
+      new TransactionBuilder({ provider })
+        .addInput(tokenUtxo, p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+        .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: -1000n, category: tokenUtxo.token!.category } })
+        .build();
+    }).toThrow('Tried to add an output with -1000 tokens, which is invalid');
+  });
+
+  it('should fail when adding undefined input', async () => {
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+    const undefinedUtxo = p2pkhUtxos[1000];
+
+    expect(() => {
+      new TransactionBuilder({ provider })
+        .addInput(undefinedUtxo, p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+        .addOutput({ to: bobAddress, amount: 1000n })
+        .build();
+    }).toThrow('Input is undefined');
+  });
 });
 
 function gatherUtxos(
   utxos: Utxo[],
-  options?: { amount?: bigint, fees?: bigint },
+  options?: { amount?: bigint, fee?: bigint },
 ): { utxos: Utxo[], total: bigint } {
   const targetUtxos: Utxo[] = [];
   let total = 0n;
 
   // 1000 for fees
-  const { amount = 0n, fees = 1000n } = options ?? {};
+  const { amount = 0n, fee = 1000n } = options ?? {};
 
   for (const utxo of utxos) {
-    if (total - fees > amount) break;
+    if (total - fee > amount) break;
     total += utxo.satoshis;
     targetUtxos.push(utxo);
   }
