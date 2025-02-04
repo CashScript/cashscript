@@ -3,32 +3,29 @@ title: Optimizing Contracts
 sidebar_label: Optimization
 ---
 
-CashScript contracts are transpiled from a solidity syntax to [BCH Script](https://reference.cash/protocol/blockchain/script) by the `cashc` compiler. BCH Script is a lower level language (a list of stack-based operations) where each available operation is mapped to a single byte.
+CashScript contracts are transpiled from the high-level CashScript code to [BCH Script](https://reference.cash/protocol/blockchain/script) by the `cashc` compiler. BCH Script is the low-level language used for the Bitcoin Cash Virtual Machine (BCH VM) to evaluate contracts.
 
-Depending on the complexity of the contract or system design, it may be useful to optimize the Bitcoin Script by tweaking the contract in CashScript before it is compiled because the minimum fees on the Bitcoin Cash network are based on the bytesize of a transaction (including your contract).
+Because transaction fees are based on the bytesize of a transaction, it may be useful to optimize the compiled size of your smart contract by tweaking your CashScript code.
 
 ## Example Workflow
 
-When optimizing your contract, you will need to compare the contract size to see if the changes have a positive impact.
-With the compiler CLI, you can easily check the opcode count and bytesize directly from the generated contract artifact.
+When optimizing your contract, you will need to continuously compare the contract size to see if the changes have a positive impact.
+With the compiler CLI, you can easily check the bytesize and opcode count directly from the generated contract artifact.
 
 ```bash
 cashc ./contract.cash --size --opcount
 ```
 
-The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they will always be an underestimate, as the contract hasn't been initialized with contract arguments.
-
-:::note
-The compiler opcount and bytesize outputs are still helpful to compare the effect of changes to the smart contract code on the compiled output, given that the contract constructor arguments stay the same.
-:::
+The compiler calculates the size from the contract's bytecode without constructor arguments. For the `opcount` this is not a problem but the `bytesize` output will be an underestimate, as the contract hasn't been initialized with contract arguments.
+The compiler `bytesize` output is still helpful to compare the effect of changes, given that the contract constructor arguments stay the same.
 
 :::tip
 To get the exact contract bytesize including constructor parameters, initialise the contract with the TypScript SDK and check the value of `contract.bytesize`.
 :::
 
-## Optimization Tips & Tricks
+## Optimization Tips
 
-The `cashc` compiler does some optimisations automatically. By writing your CashScript code in a specific way, the compiler is better able to optimise it. Trial & error is definitely part of it, but here are some tricks that may help:
+The `cashc` compiler does some optimisations automatically. By writing your CashScript code in a specific way, the compiler is better able to optimise it.
 
 ### 1. Declare variables
 
@@ -92,11 +89,18 @@ Avoid if-statements when possible. Instead, try to "inline" them. This is becaus
     }
 ```
 
-## Modular Contract Design
+### 5. Trial & Error
 
-An alternative to optimizing your contract to shrink in size is to redesign your contract to use a composable architecture. The contract logic is separated out in to multiple components of which only some can be used in a transaction, and hence shrink your contract size.
+When the contract logic is finished, that is a great time to revisit the order of the contract's contructor argument, the different contract functions and even the contract parameters. Currently the compiler does not change/optimize the user-defined order, so in addition to the guidlines above, it can still be helpfull to trial and error different ordering for the items.
 
-### NFT contract functions
+## Avoid Many Functions
+
+When a contract has many different functions or has a lot duplicate code shared across two functions, this can be a natural indictation that contract optimization is possible. There's a different optimization strategy for each: 
+
+### Modular Contract Design
+
+Modular contract design avoids the added size of having many functions, instead the contract logic is separated out in to different components which we will call 'function contracts'.
+By only adding the function contract you are actually using in the transaction, and not all the other unused functions, you can drastically shrink the size of your contracts used in a transaction.
 
 The concept of having NFT functions was first introduced by the [Jedex demo](https://github.com/bitjson/jedex#demonstrated-concepts) and was first implemented in a CashScript contract by the [FexCash DEX](https://github.com/fex-cash/fex/blob/main/whitepaper/fex_whitepaper.md). The concept is that by authenticating NFTs, you can make each function a separate contract with the same tokenId. This way, you can offload logic from the main contract. One function NFT contract is attached to the main contract during spending, while the other contract functions exist as unused UTXOs, separate from the transaction.
 
@@ -104,9 +108,35 @@ The concept of having NFT functions was first introduced by the [Jedex demo](htt
 By using function NFTs you can use a modular contract design where the contract functions are offloaded to different UTXOs, each identifiable by the main contract by using the same tokenId.
 :::
 
+### Combining Functions
+
+Combining functions reduces the duplicate code in the compiled output and improves the overall contract bytesize so might be worth exploring. This optimization is already relatively advanced, as it steps away from the CashScript abstraction for contract stucture.
+
+In Cashscript, when defining multiple functions, a `selectorIndex` parameter is added under-the-hood to select which of the contract's functions you want to use, this wraps your functions in big `if-else` cases. However when combining multiple functions in one cases you will have to think about the function coditions yourself and `if-else` branching yourself.
+
+```solidity title="Example CashScript code"
+contract Example(){
+  function Main(){
+    // logic applying to all if/else branches
+    if(conditionFunction1){
+       // logic function1
+    } else if(conditionFunction2){
+       // logic function2
+    } else {
+     // function3
+      // logic function3
+    }
+  }
+}
+```
+
+:::note
+When a CashScript contract only has one function, the function selecting overhead (`selectorIndex` with `if-else` cases) is not present which means a smaller contracts.
+:::
+
 ## Hand-optimizing Bytecode
 
-It's worth considering whether hand-optimizing the contract is necessary at all. If the contract works and there is no glaring inefficiency in the bytecode, perhaps the best optimization is to not to obsess prematurely about things like transaction size.
+It's worth considering whether hand-optimizing the contract is necessary at all. If the contract works and there is no glaring inefficiency in the bytecode, perhaps the best optimization is to not to obsess prematurely about the transaction size with Bitcoin Cash's negligible fees.
 
 >We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%.
 
@@ -116,20 +146,28 @@ When optimizing the bytecode of your contract you'll like want to use the [Bitau
 
 ### Overwriting the Artifact
 
-To manually change the contract bytecode, you need to overwrite the `bytecode` key of your contract artifact.
-An example of this is the [Cauldron_Swap_Test](https://github.com/mr-zwets/Cauldron_Swap_Test) which uses `Artifact bytecode` not produced by `cashc` at all! Instead the `Artifact` is manually assembled for a contract hand-written in raw BCH script. By manually creating the `Artifact` it becomes possible to use the contract with the nice transaction building features of the CashScript SDK.
+To manually optimize a CashScript contract's bytecode, you need to overwrite the `bytecode` key of your contract artifact.
+
+If you manually overwrite the `bytecode` in the artifact, the auto generated 2-way-mapping generated by the compiler becomes obsolete. You are no longer compiling high-level CashScript code into BCH script, instead you are writing BCH script by hand.
+This causes the link of the BCH opcodes to your original CashScript code will be entirely lost for debugging.
+
+You can still use the CashScript TypeScript SDK while using a hand-optimized or hand-written contract.
+
 
 ```typescript
 interface Artifact {
   bytecode: string // Compiled Script without constructor parameters added (in ASM format)
+  // remove the 'debug' property as the info becomes obsoleted
 }
 ```
 
-This way you can still use the CashScript TypeScript SDK while using a hand-optimized or hand-written contract.
 
 :::caution
-If you manually overwrite the `bytecode` in the artifact, this will make the auto generated 2-way-mapping to become obsolete.
-This result of this is that the debugging functionality will no longer work for the contract.
+If you use hand-optimized `bytecode` in your Contract's artifact, the `debug` info on your artifact will become obsolete and should be removed.
+:::
+
+:::tip
+You can create an `Artifact` for a fully hand-written contract so it becomes possible to use the contract with the nice features of the CashScript SDK! An example of this is [Cauldron_Swap_Test](https://github.com/mr-zwets/Cauldron_Swap_Test) which uses `Artifact bytecode` not produced by `cashc` at all but still uses the CashScript SDK.
 :::
 
 [BitauthIDE]: https://ide.bitauth.com

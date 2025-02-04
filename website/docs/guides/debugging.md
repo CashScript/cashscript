@@ -2,7 +2,7 @@
 title: Debugging
 ---
 
-Debugging is no walk in the park. This is especially true for debugging complex smart contracts. Luckily there is a handful of strategies that can make it easier for developers to discover bugs in their contracts.
+Debugging is no walk in the park. This is especially true for debugging complex smart contracts. Luckily there are strategies that can make it easier for developers to discover bugs in their contracts.
 
 ## Categories of Bugs
 
