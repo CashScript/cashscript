@@ -11,8 +11,12 @@ This update adds CashScript support for the new BCH 2025 network upgrade. To rea
 
 #### CashScript SDK
 - :hammer_and_wrench: Update debug tooling to work with the new `BCH_2025_05` instruction set.
-- :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
+- :sparkles: Add debugging capabilities to the `TransactionBuilder`.
+  - `transaction.debug()` & `transaction.bitauthUri()`
+  - Output BitAuth IDE URI for debugging when transaction is rejected.
+  - Libauth template generation and debugging for multi-contract transactions
 - :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
+- :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 
 ## v0.10.5
 
