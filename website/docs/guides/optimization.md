@@ -110,9 +110,9 @@ By using function NFTs you can use a modular contract design where the contract 
 
 ### Combining Functions
 
-Combining functions reduces the duplicate code in the compiled output and improves the overall contract bytesize so might be worth exploring. This optimization is already relatively advanced, as it steps away from the CashScript abstraction for contract stucture.
+Combining functions reduces the duplicate code in the compiled output and improves the overall contract bytesize so might be worth exploring. This optimization is already considered advanced, as it steps away from the CashScript abstraction for contract stucture and often requires some work-arounds.
 
-In Cashscript, when defining multiple functions, a `selectorIndex` parameter is added under-the-hood to select which of the contract's functions you want to use, this wraps your functions in big `if-else` cases. However when combining multiple functions in one cases you will have to think about the function coditions yourself and `if-else` branching yourself.
+The difficulty with this approach is the CashScript functions expect a fixed number of arguments for each function. So when trying to two functions into one to share code logic it might prove very difficult due to the different arguments they each expect. There is no notion of option arguments or function overloading in CashScript currently.
 
 ```solidity title="Example CashScript code"
 contract Example(){
@@ -129,6 +129,8 @@ contract Example(){
   }
 }
 ```
+
+In Cashscript, when defining multiple functions, a `selectorIndex` parameter is added under-the-hood to select which of the contract's functions you want to use, this wraps your functions in big `if-else` cases. However when combining multiple functions in one cases you will have to think about the function coditions yourself and `if-else` branching yourself.
 
 :::note
 When a CashScript contract only has one function, the function selecting overhead (`selectorIndex` with `if-else` cases) is not present which means a smaller contracts.
