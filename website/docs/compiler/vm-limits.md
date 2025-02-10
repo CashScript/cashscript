@@ -29,6 +29,10 @@ With this formula, increasing your input length allows for a larger compute budg
 
 To increase your contract's compute budget for resource-intensive operations (e.g., cryptographic hashing or large number calculations), you can use zero-padding to extend the input length. By adding non-essential, zero-value bytes, you effectively buy more computation power for your contract without adding functional complexity. This technique could be useful for contracts requiring a higher operation budget, allowing them to meet the contract's computational demands without exceeding the op-cost limit.
 
+## NFT Commitment Length Limit
+
+Currently NFT commitments can keep no more than 40 bytes of data as local state. To work around this limit it is possible to hash state longer than 40 bytes so it fits within the length limit. Then in a later transaction the full state has to be provided and has to match the state-hash.  
+
 ## Other Limits
 
 For completeness, here are additional Bitcoin Cash VM limits relevant to CashScript development:

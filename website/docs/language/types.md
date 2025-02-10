@@ -174,6 +174,11 @@ bytes4 integer = bytes4(25);
 
 When casting integer types to bytes of a certain size, the integer value is padded with zeros, e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros by passing in a `size` parameter, which indicates the size of the output, e.g. `bytes(0, 4 - 2) == 0x0000`. The size casting can be a very important feature when keeping local state in an nftCommitment or in the simulated state.
 
+:::tip
+Using `bytes20 placeholderPkh= bytes20(0)` will generate a 20 byte zero-array programmatically, whereas 
+`bytes20 placeholderPkh= 0x0000000000000000000000000000000000000000` will actually take 20 bytes of space in your contract.
+:::
+
 :::note
 VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
 :::

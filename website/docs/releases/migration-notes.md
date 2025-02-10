@@ -2,7 +2,76 @@
 title: Migration Notes
 ---
 
-## v0.9 to 0.10
+## v0.10 to v0.11
+
+### CashScript SDK
+
+The 'Simple Transaction builder' has been marked as deprecated and the 'Advanced Transaction Builder' is now simply referred to as the CashScript `Transaction Builder`, as there is only one supported for the future.
+
+#### Example
+Since the new transaction builder is quite different from the old one, it may be useful to see an example refactored from the old way to the new way.
+
+With the deprecated 'simple transaction builder' the API looked like this:
+
+```js
+import { ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
+
+const provider = new ElectrumNetworkProvider(Network.MAINNET);
+
+// Optionally specify the contract UTXO
+const contractUtxos = await contract.getUtxos();
+const selectedContractUtxo = contractUtxos[0]
+
+// Specify Bob Utxo to add to the transaction
+const bobUtxos = await provider.getUtxos(bobAddress);
+const selectedUtxoBob = bobUtxos[0]
+
+const bobSignatureTemplate = new SignatureTemplate(bobPriv)
+
+// Start building the transaction
+const txDetails = await contract.functions
+  .transfer(bobSignatureTemplate)
+  .from(selectedContractUtxo)
+  .fromP2PKH(selectedUtxoBob, bobSignatureTemplate)
+  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
+  .withoutChange()
+  .send();
+```
+
+With the new transaction builder the API looks like this:
+
+
+```js
+import { transactionBuilder, ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
+
+const provider = new ElectrumNetworkProvider(Network.MAINNET);
+
+// Specify the contract UTXO
+const contractUtxos = await contract.getUtxos();
+const selectedContractUtxo = contractUtxos[0]
+
+// Specify Bob Utxo to add to the transaction
+const bobUtxos = await provider.getUtxos(bobAddress);
+const selectedUtxoBob = bobUtxos[0]
+
+const bobSignatureTemplate = new SignatureTemplate(bobPriv)
+
+// Start building the transaction
+const txDetails = await new TransactionBuilder({ provider })
+  .addInput(selectedContractUtxo, contract.unlock.transfer(bobSignatureTemplate))
+  .addInput(selectedUtxoBob, bobSignatureTemplate.unlockP2PKH())
+  .addOutput({
+    to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
+    amount: 10000n
+  })
+  .send();
+```
+
+With the new transaction builder there is no need to rely on methods like `.withoutChange()` and `.withoutTokenChange()`.
+
+However because inputs are always explicitly specified, there is no automatic change outputs or option to set a predetermined fee value.
+
+## v0.9 to v0.10
 
 ### CashScript SDK
 

@@ -1,10 +1,12 @@
 ---
-title: Advanced Transaction Builder
+title: Transaction Builder
 ---
 
-With the introduction of newer smart contract features to BCH, such as native introspection and CashTokens, we've seen use cases for combining UTXOs of multiple different smart contracts within a single transaction — such as [Fex][fex]. The [simple transaction builder][transactions-simple] only operates on a single smart contract. To support more advanced use cases, you can use the Advanced Transaction Builder.
+The CashScript Transaction Builder generalizes transaction building to allow for complex transactions combining multiple different smart contracts within a single transaction or to create basic P2PKH transactions. The Transaction Builder works by adding inputs and outputs to fully specify the transaction shape.
 
-The Advanced Transaction Builder supports adding UTXOs from any number of different smart contracts and P2PKH UTXOs. While the simplified transaction builder automatically selects UTXOs for you and adds change outputs, the advanced transaction builder requires you to provide the UTXOs yourself and manage change carefully.
+:::info
+Defining the inputs and outputs requires careful consideration because the difference in Bitcoin Cash value between in- and outputs is what's paid in transaction fees to the miners.
+:::
 
 ## Instantiating a transaction builder
 ```ts
@@ -28,7 +30,7 @@ const provider = new ElectrumNetworkProvider(Network.MAINNET);
 const transactionBuilder = new TransactionBuilder({ provider });
 ```
 
-## Transaction options
+## Transaction Building
 
 ### addInput()
 ```ts
@@ -38,7 +40,7 @@ transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptio
 Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input.
 
 :::note
-It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases are covered by the `SignatureTemplate` and `Contract` classes.
+It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases however are covered by the `SignatureTemplate` and `Contract` classes.
 :::
 
 #### Example
@@ -162,7 +164,7 @@ transactionBuilder.setLocktime(((Date.now() / 1000) + 24 * 60 * 60) * 1000);
 transactionBuilder.setMaxFee(maxFee: bigint): this
 ```
 
-Sets a max fee for the transaction. Because the advanced transaction builder does not automatically add a change output, you can set a max fee as a safety measure to make sure you don't accidentally pay too much in fees. If the transaction fee exceeds the max fee, an error will be thrown when building the transaction.
+Sets a max fee for the transaction. Because the transaction builder does not automatically add a change output, you can set a max fee as a safety measure to make sure you don't accidentally pay too much in fees. If the transaction fee exceeds the max fee, an error will be thrown when building the transaction.
 
 #### Example
 ```ts
@@ -206,7 +208,7 @@ const txDetails = await new TransactionBuilder({ provider })
 
 ### build()
 ```ts
-transactionBuilder.build(): string
+async transactionBuilder.build(): Promise<string>
 ```
 
 After completing a transaction, the `build()` function can be used to build the entire transaction and return the signed transaction hex string. This can then be imported into other libraries or applications as necessary.
@@ -227,11 +229,29 @@ const txHex = new TransactionBuilder({ provider })
   .build()
 ```
 
+### debug()
+```ts
+async transactionBuilder.debug(): Promise<DebugResult>
+```
+
+If you want to debug a transaction locally instead of sending it to the network, you can call the `debug()` function on the transaction. This will return intermediate values and the final result of the transaction. It will also show any logged values and `require` error messages.
+
+### bitauthUri()
+```ts
+async transactionBuilder.bitauthUri(): Promise<string>
+```
+
+If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
+You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
+
+:::caution
+It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
+:::
+
 ## Transaction errors
 
-Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information. Note that the advanced transaction builder does not yet support the `FailedRequireError` mentioned in the simplified transaction builder documentation so any error will be of type `FailedTransactionError` and include any of the mentioned error reasons in its message.
+Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information. Note that the transaction builder does not yet support the `FailedRequireError` mentioned in the simplified transaction builder documentation so any error will be of type `FailedTransactionError` and include any of the mentioned error reasons in its message.
 
-[fex]: https://github.com/fex-cash/fex
 [bitcoin-wiki-timelocks]: https://en.bitcoin.it/wiki/Timelock
 
 [transactions-simple]: /docs/sdk/transactions

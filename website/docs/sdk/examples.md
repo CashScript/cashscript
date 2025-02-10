@@ -143,21 +143,33 @@ const provider = new ElectrumNetworkProvider('chipnet');
 const parameters = [alicePub, oraclePub, 100000n, 30000n];
 const contract = new Contract(artifact, parameters, { provider });
 
-// Get contract balance & output address + balance
+// Fetch contract utxos
+const contractUtxos = await contract.getUtxos();
+
+// Log contract output address + contract utxos
 console.log('contract address:', contract.address);
-console.log('contract balance:', await contract.getBalance());
+console.log('contract utxos', contractUtxos);
 
 // Produce new oracle message and signature
 const oracleMessage = oracle.createMessage(100000n, 30000n);
 const oracleSignature = oracle.signMessage(oracleMessage);
 
+// Select a hodlvault utxo to spend from
+const selectedContractUtxo = contractUtxos[0]
+
+// Create the signatureTemplate for alice to sign the contract input
+const aliceSignatureTemplate = new SignatureTemplate(alicePriv)
+
 // Spend from the vault
-const tx = await contract.functions
-  .spend(new SignatureTemplate(alicePriv), oracleSignature, oracleMessage)
-  .to(contract.address, 1000n)
+const transferDetails = await new TransactionBuilder({ provider })
+  .addInput(selectedContractUtxo, contract.unlock.spend(aliceSignatureTemplate, oracleSignature, oracleMessage))
+  .addOutput({
+    to: contract.address,
+    amount: 1000n
+  })
   .send();
 
-console.log(stringify(tx));
+console.log(transferDetails);
 ```
 
 [bchjs]: https://bchjs.fullstack.cash/

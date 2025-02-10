@@ -64,24 +64,33 @@ Using the CashScript SDK, you can import contract artifact files, create new ins
   import P2PKH from './p2pkh-artifact.json' with { type: 'json' };
 
   // Instantiate a network provider for CashScript's network operations
-  const provider = new ElectrumNetworkProvider('mainnet');
+  const provider = new ElectrumNetworkProvider('chipnet');
 
   // Create a new P2PKH contract with constructor arguments: { pkh: pkh }
-  const contract = new Contract(P2PKH, [pkh], provider);
+  const contract = new Contract(P2PKH, [pkh], {provider});
 
-  // Get contract balance & output address + balance
+  // Fetch contract utxos
+  const contractUtxos = await contract.getUtxos();
+
+  // Log contract output address + contract utxos
   console.log('contract address:', contract.address);
-  console.log('contract balance:', await contract.getBalance());
+  console.log('contract utxos', contractUtxos);
 
+  // Specify the contract UTXO
+  const selectedContractUtxo = contractUtxos[0]
+
+  // Start building the transaction
   // Call the spend function with the owner's signature
   // And use it to send 0. 000 100 00 BCH back to the contract's address
-  const txDetails = await contract.functions
-    .spend(pk, new SignatureTemplate(keypair))
-    .to(contract.address, 10000)
+  const txDetails = await new TransactionBuilder({ provider })
+    .addInput(selectedContractUtxo, contract.unlock.transfer(new SignatureTemplate(keypair)))
+    .addOutput({
+      to: contract.address,
+      amount: 10000n
+    })
     .send();
 
   console.log(txDetails);
-...
 ```
 
 ## Examples
