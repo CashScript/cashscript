@@ -14,7 +14,7 @@ The first category of bugs is a bug in the transaction building meaning the 'inv
 
 ### 2. Bug in Contract Logic
 
-The second category of bugs is a bug in the smart contract logic which prohibits valid spending, this results in the shape of the Transaction builder not matching with the contracts simply because there is a coding error in the contract! Carfully review the logic in the failing line and if needed check the documentation so you are sure about the functionality of your CashScript contract code.
+The second category of bugs is a bug in the smart contract logic which prohibits valid spending, this results in the shape of the Transaction builder not matching with the contracts simply because there is a coding error in the contract! Carefully review the logic in the failing line and if needed check the documentation so you are sure about the functionality of your CashScript contract code.
 
 Whatever category your bug falls into, the first step of debugging is understanding what line in your CashScript contract is making your transaction get rejected. Afterwards, investigation needs to start whether it's a transaction building bug or a bug in contract logic.
 

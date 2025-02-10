@@ -91,11 +91,11 @@ Avoid if-statements when possible. Instead, try to "inline" them. This is becaus
 
 ### 5. Trial & Error
 
-When the contract logic is finished, that is a great time to revisit the order of the contract's contructor argument, the different contract functions and even the contract parameters. Currently the compiler does not change/optimize the user-defined order, so in addition to the guidlines above, it can still be helpfull to trial and error different ordering for the items.
+When the contract logic is finished, that is a great time to revisit the order of the contract's constructor argument, the different contract functions and even the contract parameters. Currently the compiler does not change/optimize the user-defined order, so in addition to the guidelines above, it can still be helpful to trial and error different ordering for the items.
 
 ## Avoid Many Functions
 
-When a contract has many different functions or has a lot duplicate code shared across two functions, this can be a natural indictation that contract optimization is possible. There's a different optimization strategy for each: 
+When a contract has many different functions or has a lot duplicate code shared across two functions, this can be a natural indication that contract optimization is possible. There's a different optimization strategy for each: 
 
 ### Modular Contract Design
 
@@ -110,7 +110,7 @@ By using function NFTs you can use a modular contract design where the contract 
 
 ### Combining Functions
 
-Combining functions reduces the duplicate code in the compiled output and improves the overall contract bytesize so might be worth exploring. This optimization is already considered advanced, as it steps away from the CashScript abstraction for contract stucture and often requires some work-arounds.
+Combining functions reduces the duplicate code in the compiled output and improves the overall contract bytesize so might be worth exploring. This optimization is already considered advanced, as it steps away from the CashScript abstraction for contract structure and often requires some workarounds.
 
 The difficulty with this approach is the CashScript functions expect a fixed number of arguments for each function. So when trying to two functions into one to share code logic it might prove very difficult due to the different arguments they each expect. There is no notion of option arguments or function overloading in CashScript currently.
 
@@ -130,7 +130,7 @@ contract Example(){
 }
 ```
 
-In Cashscript, when defining multiple functions, a `selectorIndex` parameter is added under-the-hood to select which of the contract's functions you want to use, this wraps your functions in big `if-else` cases. However when combining multiple functions in one cases you will have to think about the function coditions yourself and `if-else` branching yourself.
+In Cashscript, when defining multiple functions, a `selectorIndex` parameter is added under-the-hood to select which of the contract's functions you want to use, this wraps your functions in big `if-else` cases. However when combining multiple functions in one cases you will have to think about the function conditions yourself and `if-else` branching yourself.
 
 :::note
 When a CashScript contract only has one function, the function selecting overhead (`selectorIndex` with `if-else` cases) is not present which means a smaller contracts.
@@ -144,7 +144,7 @@ It's worth considering whether hand-optimizing the contract is necessary at all.
 
 ### Optimizing with the BitauthIDE
 
-When optimizing the bytecode of your contract you'll like want to use the [BitauthIDE] so you can see the stack changes of each OpCode. It's important to realize the `transactionBuilder.bitauthUri()` will show the two-wap mapping to the **un-optimized** bytecode, so this is not the final resulting bytecode produced by the compiler. The compiler will perform a bunch of optimitzations already, so you should look at the `Artifact bytecode` if you want to further optimize the compiled contract bytecode.
+When optimizing the bytecode of your contract you'll like want to use the [BitauthIDE] so you can see the stack changes of each OpCode. It's important to realize the `transactionBuilder.bitauthUri()` will show the two-wap mapping to the **un-optimized** bytecode, so this is not the final resulting bytecode produced by the compiler. The compiler will perform a bunch of optimizations already, so you should look at the `Artifact bytecode` if you want to further optimize the compiled contract bytecode.
 
 ### Overwriting the Artifact
 

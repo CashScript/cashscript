@@ -143,7 +143,7 @@ const provider = new ElectrumNetworkProvider('chipnet');
 const parameters = [alicePub, oraclePub, 100000n, 30000n];
 const contract = new Contract(artifact, parameters, { provider });
 
-// Fetch contract uxtos
+// Fetch contract utxos
 const contractUtxos = await contract.getUtxos();
 
 // Log contract output address + contract utxos

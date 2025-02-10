@@ -69,7 +69,7 @@ Using the CashScript SDK, you can import contract artifact files, create new ins
   // Create a new P2PKH contract with constructor arguments: { pkh: pkh }
   const contract = new Contract(P2PKH, [pkh], {provider});
 
-  // Fetch contract uxtos
+  // Fetch contract utxos
   const contractUtxos = await contract.getUtxos();
 
   // Log contract output address + contract utxos
@@ -78,9 +78,6 @@ Using the CashScript SDK, you can import contract artifact files, create new ins
 
   // Specify the contract UTXO
   const selectedContractUtxo = contractUtxos[0]
-
-  // Create the signatureTemplate for bob to sign the contract input
-  const bobSignatureTemplate = new SignatureTemplate(bobPriv)
 
   // Start building the transaction
   // Call the spend function with the owner's signature

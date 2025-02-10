@@ -6,7 +6,7 @@ title: Migration Notes
 
 ### CashScript SDK
 
-The 'Simple Transaction builder' has been marked as depracted and the 'Advanced Transaction Builder' is now simply referred to as the CashScript `Transaction Builder`, as there is only one supported for the future.
+The 'Simple Transaction builder' has been marked as deprecated and the 'Advanced Transaction Builder' is now simply referred to as the CashScript `Transaction Builder`, as there is only one supported for the future.
 
 #### Example
 Since the new transaction builder is quite different from the old one, it may be useful to see an example refactored from the old way to the new way.

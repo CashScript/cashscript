@@ -226,7 +226,7 @@ Let's take a look at an example contract called `PooledFunds` which has two cont
 
 
 ```solidity
-// Immutible NFT Commitment User-Receipt
+// Immutable NFT Commitment User-Receipt
 // bytes1 actionIdentifier
 // bytes8 amountSatsAdded | amountTokensAdded
 
@@ -247,16 +247,16 @@ contract PooledFunds(
         require(amountSatsAdded == 0 || amountTokensAdded == 0);
 
         // Determine whether BCH or fungible tokens were contributed to the pool
-        bytes receiptCommitement = 0x;
+        bytes receiptCommitment = 0x;
         if (amountTokensAdded > 0) {
             // Require 1000 sats to pay for future withdrawal fee
             require(amountSatsAdded == 1000);
-            receiptCommitement = 0x01 + bytes8(amountTokensAdded);
+            receiptCommitment = 0x01 + bytes8(amountTokensAdded);
         } else {
             // Place a minimum on the amount of funds that can be added
             // Implicitly requires tx.outputs[0].value > tx.inputs[0].value
             require(amountSatsAdded > 10000);
-            receiptCommitement = 0x00 + bytes8(amountSatsAdded);
+            receiptCommitment = 0x00 + bytes8(amountSatsAdded);
         }
 
         // Require there to be at most three outputs so no additional NFTs can be minted
@@ -270,7 +270,7 @@ contract PooledFunds(
         // The receipt NFT is sent back to the same address of the first user's input
         // The NFT commitment of the receipt contains what was added to the pool
         require(tx.outputs[1].lockingBytecode == tx.inputs[1].lockingBytecode);
-        require(tx.outputs[1].nftCommitment == receiptCommitement);
+        require(tx.outputs[1].nftCommitment == receiptCommitment);
 
         // A 3rd output for change is allowed
         if (tx.outputs.length == 3) {
