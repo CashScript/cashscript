@@ -4,6 +4,8 @@ import {
   MockNetworkProvider,
   ElectrumNetworkProvider,
   Network,
+  Utxo,
+  TransactionBuilder,
 } from '../../src/index.js';
 import {
   alicePriv,
@@ -13,19 +15,20 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
-import artifact from '../fixture/hodl_vault.json' with { type: 'json' };
+import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 describe('HodlVault', () => {
-  let hodlVault: Contract;
+  const provider = process.env.TESTS_USE_MOCKNET
+    ? new MockNetworkProvider()
+    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
+  let contractUtxo: Utxo;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET
-      ? new MockNetworkProvider()
-      : new ElectrumNetworkProvider(Network.CHIPNET);
-    hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
     console.log(hodlVault.address);
-    (provider as any).addUtxo?.(hodlVault.address, randomUtxo());
+    contractUtxo = randomUtxo();
+    (provider as any).addUtxo?.(hodlVault.address, contractUtxo);
   });
 
   describe('send', () => {
@@ -38,9 +41,10 @@ describe('HodlVault', () => {
       const amount = 10000n;
 
       // when
-      const txPromise = hodlVault.functions
-        .spend(new SignatureTemplate(alicePriv), wrongSig, message)
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), wrongSig, message))
+        .addOutput({ to: to, amount: amount })
+        .setLocktime(100_000)
         .send();
 
       // then
@@ -57,9 +61,10 @@ describe('HodlVault', () => {
       const amount = 10000n;
 
       // when
-      const txPromise = hodlVault.functions
-        .spend(new SignatureTemplate(alicePriv), oracleSig, message)
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), oracleSig, message))
+        .addOutput({ to: to, amount: amount })
+        .setLocktime(100_000)
         .send();
 
       // then
@@ -76,9 +81,10 @@ describe('HodlVault', () => {
       const amount = 10000n;
 
       // when
-      const tx = await hodlVault.functions
-        .spend(new SignatureTemplate(alicePriv), oracleSig, message)
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(contractUtxo, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), oracleSig, message))
+        .addOutput({ to: to, amount: amount })
+        .setLocktime(100_000)
         .send();
 
       // then

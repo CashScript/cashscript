@@ -1,23 +1,26 @@
 import {
   Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
+  TransactionBuilder,
+  Utxo,
 } from '../../src/index.js';
-import { getLargestUtxo, getTxOutputs } from '../test-util.js';
+import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import { createOpReturnOutput, randomUtxo } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
-import artifact from '../fixture/announcement.json' with { type: 'json' };
+import artifact from '../fixture/announcement.artifact.js';
 
 describe('Announcement', () => {
-  let announcement: Contract;
+  const provider = process.env.TESTS_USE_MOCKNET
+    ? new MockNetworkProvider()
+    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const announcement = new Contract(artifact, [], { provider });
   const minerFee = 1000n;
+  let contractUtxo: Utxo;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET
-      ? new MockNetworkProvider()
-      : new ElectrumNetworkProvider(Network.CHIPNET);
-    announcement = new Contract(artifact, [], { provider });
     console.log(announcement.address);
-    (provider as any).addUtxo?.(announcement.address, randomUtxo());
+    contractUtxo = randomUtxo();
+    (provider as any).addUtxo?.(announcement.address, contractUtxo);
   });
 
   describe('send', () => {
@@ -26,15 +29,11 @@ describe('Announcement', () => {
       const to = announcement.address;
       const amount = 1000n;
 
-      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
-
       // when
-      const txPromise = announcement.functions
-        .announce()
-        .from(largestUtxo)
-        .to(to, amount)
-        .withHardcodedFee(minerFee)
-        .withMinChange(minerFee)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, announcement.unlock.announce())
+        .addOutput({ to, amount })
+        .addOutput({ to: aliceAddress, amount: contractUtxo.satoshis - amount - minerFee })
         .send();
 
       // then
@@ -45,15 +44,12 @@ describe('Announcement', () => {
     it('should fail when trying to announce incorrect announcement', async () => {
       // given
       const str = 'A contract may injure a human being and, through inaction, allow a human being to come to harm.';
-      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
 
       // when
-      const txPromise = announcement.functions
-        .announce()
-        .from(largestUtxo)
-        .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(minerFee)
-        .withMinChange(minerFee)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, announcement.unlock.announce())
+        .addOutput(createOpReturnOutput(['0x6d02', str]))
+        .addOutput({ to: aliceAddress, amount: contractUtxo.satoshis - minerFee })
         .send();
 
       // then
@@ -65,15 +61,12 @@ describe('Announcement', () => {
     it('should fail when sending incorrect amount of change', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
 
       // when
-      const txPromise = announcement.functions
-        .announce()
-        .from(largestUtxo)
-        .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(minerFee * 2n)
-        .withMinChange(minerFee)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, announcement.unlock.announce())
+        .addOutput(createOpReturnOutput(['0x6d02', str]))
+        .addOutput({ to: announcement.address, amount: contractUtxo.satoshis - minerFee * 2n })
         .send();
 
       // then
@@ -85,17 +78,12 @@ describe('Announcement', () => {
     it('should fail when sending the correct change amount to an incorrect address', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
-      const changeAmount = largestUtxo?.satoshis - minerFee;
 
       // when
-      const txPromise = announcement.functions
-        .announce()
-        .from(largestUtxo)
-        .withOpReturn(['0x6d02', str])
-        .to(aliceAddress, changeAmount)
-        .withHardcodedFee(minerFee)
-        .withoutChange()
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, announcement.unlock.announce())
+        .addOutput(createOpReturnOutput(['0x6d02', str]))
+        .addOutput({ to: aliceAddress, amount: contractUtxo.satoshis - minerFee })
         .send();
 
       // then
@@ -107,15 +95,12 @@ describe('Announcement', () => {
     it('should succeed when announcing correct announcement', async () => {
       // given
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-      const largestUtxo = getLargestUtxo(await announcement.getUtxos());
 
       // when
-      const tx = await announcement.functions
-        .announce()
-        .from(largestUtxo)
-        .withOpReturn(['0x6d02', str])
-        .withHardcodedFee(minerFee)
-        .withMinChange(minerFee)
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(contractUtxo, announcement.unlock.announce())
+        .addOutput(createOpReturnOutput(['0x6d02', str]))
+        .addOutput({ to: announcement.address, amount: contractUtxo.satoshis - minerFee })
         .send();
 
       // then

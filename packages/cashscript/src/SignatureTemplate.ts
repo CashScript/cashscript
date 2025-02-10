@@ -61,6 +61,7 @@ export default class SignatureTemplate {
         const unlockingBytecode = scriptToBytecode([signature, publicKey]);
         return unlockingBytecode;
       },
+      template: this,
     };
   }
 }

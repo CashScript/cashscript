@@ -1,51 +1,44 @@
 import { randomUtxo, randomToken } from '../../src/utils.js';
 import {
   Contract, ElectrumNetworkProvider, FailedRequireError, MockNetworkProvider,
+  TransactionBuilder,
 } from '../../src/index.js';
 import { Network, Utxo } from '../../src/interfaces.js';
 import artifact from '../fixture/token_category_comparison.json' with { type: 'json' };
 
 describe('TokenCategoryCheck', () => {
-  let tokenCategoryCheckInstance: Contract;
+  const provider = process.env.TESTS_USE_MOCKNET
+    ? new MockNetworkProvider()
+    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const checkTokenCategoryContract = new Contract(artifact, [], { provider });
+  let contractTokenUtxo: Utxo;
+  let contractBchUtxo0: Utxo;
+  let contractBchUtxo1: Utxo;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET
-      ? new MockNetworkProvider()
-      : new ElectrumNetworkProvider(Network.CHIPNET);
-    tokenCategoryCheckInstance = new Contract(artifact, [], { provider });
-    console.log(tokenCategoryCheckInstance.tokenAddress);
-
-    (provider as any).addUtxo?.(tokenCategoryCheckInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(tokenCategoryCheckInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(tokenCategoryCheckInstance.address, randomUtxo({
+    console.log(checkTokenCategoryContract.tokenAddress);
+    contractTokenUtxo = randomUtxo({
       satoshis: 1000n,
       token: randomToken(),
-    }));
+    });
+    contractBchUtxo0 = randomUtxo();
+    contractBchUtxo1 = randomUtxo();
+
+    (provider as any).addUtxo?.(checkTokenCategoryContract.address, contractTokenUtxo);
+    (provider as any).addUtxo?.(checkTokenCategoryContract.address, contractBchUtxo0);
+    (provider as any).addUtxo?.(checkTokenCategoryContract.address, contractBchUtxo1);
   });
 
   describe('send', () => {
     it('cannot send if the input at index 1 contains tokens', async () => {
-      const contractUtxos = await tokenCategoryCheckInstance.getUtxos();
-      const tokenUtxo = contractUtxos.find(isFungibleTokenUtxo);
-      const nonTokenUtxo = contractUtxos.find(isNonTokenUtxo);
-
-      if (!tokenUtxo) {
-        throw new Error('No token UTXO found with fungible tokens');
-      }
-
-      if (!nonTokenUtxo) {
-        throw new Error('No non-token UTXOs found');
-      }
-
-      const to = tokenCategoryCheckInstance.tokenAddress;
+      const to = checkTokenCategoryContract.tokenAddress;
       const amount = 1000n;
-      const { token } = tokenUtxo;
+      const { token } = contractTokenUtxo;
 
-      const txPromise = tokenCategoryCheckInstance.functions
-        .send()
-        .from(nonTokenUtxo)
-        .from(tokenUtxo)
-        .to(to, amount, token)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractBchUtxo0, checkTokenCategoryContract.unlock.send())
+        .addInput(contractTokenUtxo, checkTokenCategoryContract.unlock.send())
+        .addOutput({ to, amount, token })
         .send();
 
       await expect(txPromise).rejects.toThrow(FailedRequireError);
@@ -54,21 +47,13 @@ describe('TokenCategoryCheck', () => {
     });
 
     it('can send if the input at index 1 does not contain tokens', async () => {
-      const contractUtxos = await tokenCategoryCheckInstance.getUtxos();
-      const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
-
-      if (nonTokenUtxos.length < 2) {
-        throw new Error('Less than two non-token UTXOs found');
-      }
-
-      const to = tokenCategoryCheckInstance.tokenAddress;
+      const to = checkTokenCategoryContract.tokenAddress;
       const amount = 1000n;
 
-      const txPromise = tokenCategoryCheckInstance.functions
-        .send()
-        .from(nonTokenUtxos[0])
-        .from(nonTokenUtxos[1])
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractBchUtxo0, checkTokenCategoryContract.unlock.send())
+        .addInput(contractBchUtxo1, checkTokenCategoryContract.unlock.send())
+        .addOutput({ to, amount })
         .send();
 
       await expect(txPromise).resolves.toBeTruthy();
@@ -76,9 +61,3 @@ describe('TokenCategoryCheck', () => {
   });
 });
 
-// We don't include UTXOs that contain BOTH fungible and non-fungible tokens
-const isFungibleTokenUtxo = (utxo: Utxo): boolean => (
-  utxo.token !== undefined && utxo.token.amount > 0n && utxo.token.nft === undefined
-);
-
-const isNonTokenUtxo = (utxo: Utxo): boolean => utxo.token === undefined;

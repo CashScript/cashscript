@@ -16,11 +16,11 @@
       ]
     }
   ],
-  "bytecode": "0000008000 OP_2DUP OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_ROT OP_MUL OP_LESSTHANOREQUAL",
-  "source": "contract BigInt() {\n    function proofOfBigInt(int x, int y) {\n        int maxInt32PlusOne = 2147483648;\n        require(x >= maxInt32PlusOne);\n        require(x * y >= maxInt32PlusOne);\n    }\n}\n",
+  "bytecode": "000000000000008000 OP_2DUP OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_ROT OP_MUL OP_LESSTHANOREQUAL",
+  "source": "contract BigInt() {\r\n    function proofOfBigInt(int x, int y) {\r\n        int maxInt64PlusOne = 9223372036854775808;\r\n        require(x >= maxInt64PlusOne);\r\n        require(x * y >= maxInt64PlusOne);\r\n    }\r\n}\r\n",
   "debug": {
-    "bytecode": "05000000800051795179a269517a527a95517aa2",
-    "sourceMap": "3:30:3:40;4:16:4:17;;:21::36;;:16:::1;:8::38;5:16:5:17:0;;:20::21;;:16:::1;:25::40:0;;:16:::1",
+    "bytecode": "0900000000000000800051795179a269517a527a95517aa2",
+    "sourceMap": "3:30:3:49;4:16:4:17;;:21::36;;:16:::1;:8::38;5:16:5:17:0;;:20::21;;:16:::1;:25::40:0;;:16:::1",
     "logs": [],
     "requires": [
       {
@@ -35,7 +35,7 @@
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.10.4"
+    "version": "0.10.5"
   },
-  "updatedAt": "2024-12-03T13:57:06.999Z"
+  "updatedAt": "2025-02-10T07:11:56.680Z"
 }
