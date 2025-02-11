@@ -5,29 +5,33 @@ import {
   Network,
   MockNetworkProvider,
   FailedRequireError,
+  Utxo,
+  TransactionBuilder,
 } from '../../src/index.js';
 import {
   alicePriv, alicePub, bobPriv, bobPub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/transfer_with_timeout.json' with { type: 'json' };
+import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 describe('TransferWithTimeout', () => {
-  let twtInstancePast: Contract;
-  let twtInstanceFuture: Contract;
+  const provider = process.env.TESTS_USE_MOCKNET
+    ? new MockNetworkProvider()
+    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const twtInstancePast = new Contract(twtArtifact, [alicePub, bobPub, 100000n], { provider });
+  const twtInstanceFuture = new Contract(twtArtifact, [alicePub, bobPub, 2000000n], { provider });
+  let twtPastUtxo: Utxo;
+  let twtFutureUtxo: Utxo;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET
-      ? new MockNetworkProvider()
-      : new ElectrumNetworkProvider(Network.CHIPNET);
-    twtInstancePast = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
-    twtInstanceFuture = new Contract(artifact, [alicePub, bobPub, 2000000n], { provider });
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);
 
-    (provider as any).addUtxo?.(twtInstancePast.address, randomUtxo());
-    (provider as any).addUtxo?.(twtInstanceFuture.address, randomUtxo());
+    twtPastUtxo = randomUtxo();
+    twtFutureUtxo = randomUtxo();
+    (provider as any).addUtxo?.(twtInstancePast.address, twtPastUtxo);
+    (provider as any).addUtxo?.(twtInstanceFuture.address, twtFutureUtxo);
   });
 
   describe('send', () => {
@@ -37,9 +41,9 @@ describe('TransferWithTimeout', () => {
       const amount = 10000n;
 
       // when
-      const txPromise = twtInstancePast.functions
-        .transfer(new SignatureTemplate(alicePriv))
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(twtPastUtxo, twtInstancePast.unlock.transfer(new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount })
         .send();
 
       // then
@@ -54,9 +58,9 @@ describe('TransferWithTimeout', () => {
       const amount = 10000n;
 
       // when
-      const txPromise = twtInstancePast.functions
-        .timeout(new SignatureTemplate(bobPriv))
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(twtPastUtxo, twtInstancePast.unlock.timeout(new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
         .send();
 
       // then
@@ -71,9 +75,9 @@ describe('TransferWithTimeout', () => {
       const amount = 10000n;
 
       // when
-      const txPromise = twtInstanceFuture.functions
-        .timeout(new SignatureTemplate(alicePriv))
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(twtFutureUtxo, twtInstanceFuture.unlock.timeout(new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount })
         .send();
 
       // then
@@ -88,9 +92,9 @@ describe('TransferWithTimeout', () => {
       const amount = 10000n;
 
       // when
-      const tx = await twtInstancePast.functions
-        .transfer(new SignatureTemplate(bobPriv))
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(twtPastUtxo, twtInstancePast.unlock.transfer(new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
         .send();
 
       // then
@@ -104,9 +108,9 @@ describe('TransferWithTimeout', () => {
       const amount = 10000n;
 
       // when
-      const tx = await twtInstanceFuture.functions
-        .transfer(new SignatureTemplate(bobPriv))
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(twtFutureUtxo, twtInstanceFuture.unlock.transfer(new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
         .send();
 
       // then
@@ -120,9 +124,10 @@ describe('TransferWithTimeout', () => {
       const amount = 10000n;
 
       // when
-      const tx = await twtInstancePast.functions
-        .timeout(new SignatureTemplate(alicePriv))
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(twtPastUtxo, twtInstancePast.unlock.timeout(new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount })
+        .setLocktime(1_000_000)
         .send();
 
       // then
