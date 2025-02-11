@@ -4,6 +4,8 @@ import {
   FailedRequireError,
   ElectrumNetworkProvider,
   Network,
+  Utxo,
+  TransactionBuilder,
 } from '../../src/index.js';
 import artifact from '../fixture/bigint.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
@@ -14,10 +16,12 @@ describe('BigInt', () => {
     : new ElectrumNetworkProvider(Network.CHIPNET);
   const bigintContract = new Contract(artifact, [], { provider });
   const MAX_INT64 = BigInt('9223372036854775807');
+  let contractUtxo: Utxo;
 
   beforeAll(() => {
     console.log(bigintContract.address);
-    (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
+    contractUtxo = randomUtxo();
+    (provider as any).addUtxo?.(bigintContract.address, contractUtxo);
   });
 
   describe('proofOfBigInt', () => {
@@ -27,9 +31,9 @@ describe('BigInt', () => {
       const amount = 1000n;
 
       // when
-      const txPromise = bigintContract.functions
-        .proofOfBigInt(MAX_INT64, 10n)
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, bigintContract.unlock.proofOfBigInt(MAX_INT64, 10n))
+        .addOutput({ to, amount })
         .send();
 
       // then
@@ -44,9 +48,9 @@ describe('BigInt', () => {
       const amount = 1000n;
 
       // when
-      const txPromise = bigintContract.functions
-        .proofOfBigInt(MAX_INT64 * 2n, MAX_INT64 + 2n)
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, bigintContract.unlock.proofOfBigInt(MAX_INT64 * 2n, MAX_INT64 + 2n))
+        .addOutput({ to, amount })
         .send();
 
       // then

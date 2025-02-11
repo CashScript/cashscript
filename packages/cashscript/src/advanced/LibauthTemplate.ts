@@ -423,6 +423,12 @@ export const getLibauthTemplates = async (
 
       scenarioIdentifier = snakeCase(scenarioIdentifier);
 
+      // Encode the function arguments for this contract input
+      const encodedArgs = encodeFunctionArguments(
+        abiFunction,
+        input.unlocker.params ?? [],
+      );
+
       // Generate a scenario object for this contract input
       Object.assign(scenarios,
         generateTemplateScenarios(
@@ -431,15 +437,9 @@ export const getLibauthTemplates = async (
           libauthTransaction,
           csTransaction,
           abiFunction,
-          input.unlocker.params ?? [],
+          encodedArgs,
           idx,
         ),
-      );
-
-      // Encode the function arguments for this contract input
-      const encodedArgs = encodeFunctionArguments(
-        abiFunction,
-        input.unlocker.params ?? [],
       );
 
       // Generate entities for this contract input

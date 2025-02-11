@@ -3,6 +3,7 @@ import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
 import { Contract } from './Contract.js';
 import { AbiFunction } from '@cashscript/utils';
+import { FunctionArgument } from './Argument.js';
 
 export interface Utxo {
   txid: string;
@@ -35,7 +36,7 @@ export interface Unlocker {
   generateLockingBytecode: () => Uint8Array;
   generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
   contract?: Contract;
-  params?: any[];
+  params?: FunctionArgument[];
   abiFunction?: AbiFunction;
   template?: SignatureTemplate;
 }
