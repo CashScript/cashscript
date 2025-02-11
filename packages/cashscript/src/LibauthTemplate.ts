@@ -55,7 +55,7 @@ export const buildTemplate = async ({
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
-    name: 'Advanced Debugging',
+    name: 'CashScript Generated Debugging Template',
     supported: ['BCH_2023_05'],
     version: 0,
     entities: generateTemplateEntities(contract.artifact, transaction.abiFunction, transaction.encodedFunctionArgs),
@@ -224,7 +224,7 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: [snakeCase(artifact.contractName + 'EvaluateFunction')],
+    passes: [snakeCase(artifact.contractName + 'Evaluate')],
     name: snakeCase(artifact.contractName + '_unlock'),
     script: [
       `// "${abiFunction.name}" function parameters`,
@@ -250,7 +250,7 @@ const generateTemplateScenarios = (
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
-    [snakeCase(artifact.contractName + 'EvaluateFunction')]: {
+    [snakeCase(artifact.contractName + 'Evaluate')]: {
       name: snakeCase(artifact.contractName + 'Evaluate'),
       description: 'An example evaluation where this script execution passes.',
       data: {
@@ -272,7 +272,7 @@ const generateTemplateScenarios = (
 
   if (artifact.abi.length > 1) {
     const functionIndex = artifact.abi.findIndex((func) => func.name === transaction.abiFunction.name);
-    scenarios![snakeCase(artifact.contractName + 'EvaluateFunction')].data!.bytecode!.function_index = functionIndex.toString();
+    scenarios![snakeCase(artifact.contractName + 'Evaluate')].data!.bytecode!.function_index = functionIndex.toString();
   }
 
   return scenarios;

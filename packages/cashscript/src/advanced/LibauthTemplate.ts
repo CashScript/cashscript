@@ -365,7 +365,7 @@ export const getLibauthTemplates = async (
   const baseTemplate: WalletTemplate = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
-    name: 'Advanced Debugging',
+    name: 'CashScript Generated Debugging Template',
     supported: ['BCH_2023_05'],
     version: 0,
     entities: {},
@@ -411,7 +411,7 @@ export const getLibauthTemplates = async (
 
       // Find matching function and index from contract.unlock Object, this uses Function Reference Comparison.
       // Generate unique scenario identifier by combining contract name, function name and counter
-      const baseIdentifier = `${contract.artifact.contractName}_${abiFunction.name}EvaluateFunction`;
+      const baseIdentifier = `${contract.artifact.contractName}_${abiFunction.name}Evaluate`;
       let scenarioIdentifier = baseIdentifier;
       let counter = 0;
 

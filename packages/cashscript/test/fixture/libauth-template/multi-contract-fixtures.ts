@@ -81,7 +81,7 @@ export const fixtures: Fixture[] = [
     template: {
       '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
       'description': 'Imported from cashscript',
-      'name': 'Advanced Debugging',
+      'name': 'CashScript Generated Debugging Template',
       'supported': [
         'BCH_2023_05',
       ],
@@ -199,7 +199,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'bar_func_a_unlock': {
           'passes': [
-            'bar_func_a_evaluate_function',
+            'bar_func_a_evaluate',
           ],
           'name': 'funcA',
           'script': '// "funcA" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -212,7 +212,7 @@ export const fixtures: Fixture[] = [
         },
         'bar_execute_unlock': {
           'passes': [
-            'bar_execute_evaluate_function',
+            'bar_execute_evaluate',
           ],
           'name': 'execute',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// function index in contract\n<function_index> // int = <2>\n',
@@ -220,7 +220,7 @@ export const fixtures: Fixture[] = [
         },
         'foo_execute_unlock': {
           'passes': [
-            'foo_execute_evaluate_function',
+            'foo_execute_evaluate',
           ],
           'name': 'execute',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
@@ -233,7 +233,7 @@ export const fixtures: Fixture[] = [
         },
         'bar_func_b_unlock': {
           'passes': [
-            'bar_func_b_evaluate_function',
+            'bar_func_b_evaluate',
           ],
           'name': 'funcB',
           'script': '// "funcB" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <1>\n',
@@ -271,7 +271,7 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'bar_func_a_evaluate_function': {
+        'bar_func_a_evaluate': {
           'name': 'bar_func_a_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
@@ -460,7 +460,7 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'bar_execute_evaluate_function': {
+        'bar_execute_evaluate': {
           'name': 'bar_execute_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
@@ -652,7 +652,7 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'foo_execute_evaluate_function': {
+        'foo_execute_evaluate': {
           'name': 'foo_execute_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
@@ -843,7 +843,7 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'bar_func_b_evaluate_function': {
+        'bar_func_b_evaluate': {
           'name': 'bar_func_b_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
@@ -1053,7 +1053,7 @@ export const fixtures: Fixture[] = [
     template: {
       '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
       'description': 'Imported from cashscript',
-      'name': 'Advanced Debugging',
+      'name': 'CashScript Generated Debugging Template',
       'supported': [
         'BCH_2023_05',
       ],
@@ -1083,7 +1083,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'bar_func_a_unlock': {
           'passes': [
-            'bar_func_a_evaluate_function',
+            'bar_func_a_evaluate',
           ],
           'name': 'funcA',
           'script': '// "funcA" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -1096,7 +1096,7 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'bar_func_a_evaluate_function': {
+        'bar_func_a_evaluate': {
           'name': 'bar_func_a_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
@@ -1168,7 +1168,7 @@ export const fixtures: Fixture[] = [
     template: {
       '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
       'description': 'Imported from cashscript',
-      'name': 'Advanced Debugging',
+      'name': 'CashScript Generated Debugging Template',
       'supported': [
         'BCH_2023_05',
       ],
@@ -1208,7 +1208,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'bar_execute_unlock': {
           'passes': [
-            'bar_execute_evaluate_function1',
+            'bar_execute_evaluate1',
           ],
           'name': 'execute',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n\n// function index in contract\n<function_index> // int = <2>\n',
@@ -1221,7 +1221,7 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'bar_execute_evaluate_function': {
+        'bar_execute_evaluate': {
           'name': 'bar_execute_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
@@ -1281,7 +1281,7 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'bar_execute_evaluate_function1': {
+        'bar_execute_evaluate1': {
           'name': 'bar_execute_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {

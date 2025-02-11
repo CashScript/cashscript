@@ -108,9 +108,9 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
 };
 
 type VM = AuthenticationVirtualMachine<
-ResolvedTransactionCommon,
-AuthenticationProgramCommon,
-AuthenticationProgramStateCommon
+  ResolvedTransactionCommon,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon
 >;
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
@@ -126,7 +126,7 @@ const createProgram = (template: WalletTemplate): CreateProgramResult => {
     throw new Error('No unlock script found in template');
   }
 
-  const evaluateScenarioId = Object.keys(template?.scenarios ?? {}).find(key => key.includes('evaluate_function'));
+  const evaluateScenarioId = Object.keys(template?.scenarios ?? {}).find(key => key.endsWith('_evaluate'));
   if (!evaluateScenarioId) {
     throw new Error('No evaluate function scenario found in template');
   }
