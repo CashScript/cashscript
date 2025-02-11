@@ -178,6 +178,10 @@ export class TransactionBuilder {
   async send(raw: true): Promise<string>;
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = this.build();
+
+    // Debug the transaction locally before sending so any errors are caught early
+    await this.debug();
+    
     try {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
