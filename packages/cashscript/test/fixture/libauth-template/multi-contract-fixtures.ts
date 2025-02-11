@@ -16,18 +16,12 @@ export const fixtures: Fixture[] = [
   {
     name: 'Foo + Bar + P2PKH UTXOs',
     transaction: (async () => {
-      // Instantiate a new contract using the compiled artifact and network provider
-      // AND providing the constructor parameters (pkh: alicePkh)
+      // TODO: Foo contract is just P2PKH contract with extra log, see if we can use P2PKH contract instead
       const fooContract = new Contract(FooArtifact, [alicePkh], { provider });
       provider.addUtxo(fooContract.address, randomUtxo());
-      provider.addUtxo(fooContract.address, randomUtxo());
-      provider.addUtxo(fooContract.address, randomUtxo());
-      provider.addUtxo(fooContract.address, randomUtxo());
 
-      const tokenA = randomToken({
-        amount: 100000000n,
-      });
-      const nftA = randomNFT({
+      const tokenA = randomToken({ amount: 100000000n });
+      const nftB = randomNFT({
         nft: {
           capability: 'minting',
           commitment: '00',
@@ -39,44 +33,26 @@ export const fixtures: Fixture[] = [
       provider.addUtxo(barContract.address, randomUtxo());
       provider.addUtxo(barContract.address, randomUtxo());
 
+      const aliceTemplate = new SignatureTemplate(alicePriv);
       provider.addUtxo(aliceAddress, randomUtxo());
       provider.addUtxo(aliceAddress, randomUtxo({ token: tokenA }));
-      provider.addUtxo(aliceAddress, randomUtxo({ token: nftA }));
+      provider.addUtxo(aliceAddress, randomUtxo({ token: nftB }));
 
-      const aliceTemplate = new SignatureTemplate(alicePriv);
       const utxos = await provider.getUtxos(aliceAddress);
-      const contractUtxos = await fooContract.getUtxos();
+      const fooContractUtxos = await fooContract.getUtxos();
+      const barContractUtxos = await barContract.getUtxos();
 
       return new TransactionBuilder({ provider })
-        .addInputs(
-          [utxos[0], utxos[1], utxos[2]],
-          aliceTemplate.unlockP2PKH(),
-        )
-        .addInput(
-          contractUtxos[1],
-          barContract.unlock.funcA(),
-        )
-        .addInput(
-          contractUtxos[2],
-          barContract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
-        )
-        .addInput(
-          contractUtxos[0],
-          fooContract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
-        )
-        .addInput(
-          contractUtxos[3],
-          barContract.unlock.funcB(),
-        )
+        .addInputs([utxos[0], utxos[1], utxos[2]], aliceTemplate.unlockP2PKH())
+        .addInput(barContractUtxos[0], barContract.unlock.funcA())
+        .addInput(barContractUtxos[1], barContract.unlock.execute(alicePub, aliceTemplate))
+        .addInput(fooContractUtxos[0], fooContract.unlock.execute(alicePub, aliceTemplate))
+        .addInput(barContractUtxos[2], barContract.unlock.funcB())
         .addOutput({ to: fooContract.address, amount: 8000n })
         .addOutput({ to: aliceTokenAddress, amount: 800n, token: tokenA })
-        .addOutput({ to: aliceTokenAddress, amount: 1000n, token: nftA })
+        .addOutput({ to: aliceTokenAddress, amount: 1000n, token: nftB })
         .addOpReturnOutput(['hello', 'world']);
-      // .build();
-      // .debug();
-      // .bitauthUri();
 
-      // console.log('transaction details:', stringify(transaction));
     })(),
     template: {
       '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
@@ -1148,22 +1124,19 @@ export const fixtures: Fixture[] = [
     // TODO: Duplicate input scenarios with the same function call have the same name
     name: 'Duplicate function calls',
     transaction: (async () => {
-      const contract = new Contract(BarArtifact, [alicePkh], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
-      provider.addUtxo(contract.address, randomUtxo());
+      const barContract = new Contract(BarArtifact, [alicePkh], { provider });
+      provider.addUtxo(barContract.address, randomUtxo());
+      provider.addUtxo(barContract.address, randomUtxo());
 
-      const contractUtxos = await contract.getUtxos();
+      const barContractUtxos = await barContract.getUtxos();
+
+      const aliceTemplate = new SignatureTemplate(alicePriv);
+      const bobTemplate = new SignatureTemplate(bobPriv);
 
       return new TransactionBuilder({ provider })
-        .addInput(
-          contractUtxos[0],
-          contract.unlock.execute(alicePub, new SignatureTemplate(alicePriv)),
-        )
-        .addInput(
-          contractUtxos[1],
-          contract.unlock.execute(bobPub, new SignatureTemplate(bobPriv)),
-        )
-        .addOutput({ to: contract.address, amount: 20_000n });
+        .addInput(barContractUtxos[0], barContract.unlock.execute(alicePub, aliceTemplate))
+        .addInput(barContractUtxos[1], barContract.unlock.execute(bobPub, bobTemplate))
+        .addOutput({ to: barContract.address, amount: 20_000n });
     })(),
     template: {
       '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',

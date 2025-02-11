@@ -257,10 +257,14 @@ const CONTRACT_TEST_MULTPLE_LOGS = `
 contract Test(pubkey owner) {
   function transfer(sig ownerSig, int num) {
     require(checkSig(ownerSig, owner));
+    
     console.log(ownerSig, owner, num);
+
     bytes2 beef = 0xbeef;
     require(beef != 0xfeed);
+
     console.log(beef, 1, "test", true);
+
     require(num == 1000);
   }
 }
