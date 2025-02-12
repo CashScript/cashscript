@@ -88,7 +88,7 @@ OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_ROT OP_CHECKSIG OP_NIP OP_NI
 
 ## Creating a CashScript Transaction
 
-After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated earlier.
+After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to create a transaction spending from the smart contract UTXO. We'll continue with the `TransferWithTimeout` artifact generated earlier.
 
 :::info
 The CashScript SDK is written in TypeScript meaning that you can either use TypeScript or vanilla JavaScript to use the SDK.
@@ -105,6 +105,11 @@ npm install cashscript
 ### Initialising a Contract
 
 Now to initialise a contract we will import the `ElectrumNetworkProvider` and `Contract` classes from the CashScript SDK. We also need to import the contract artifact. Lastly, we need public keys from a generated key-pair to use as arguments for contract initialisation.
+
+:::tip
+For a code example of how to generate key-pairs with Libauth, see the [CashScript Examples' `common.ts`](https://github.com/CashScript/cashscript/blob/master/examples/common.ts) file where Alice and Bob's key-pairs are created.
+:::
+
 
 ```javascript
 import { ElectrumNetworkProvider, Contract } from 'cashscript';
@@ -124,13 +129,13 @@ console.log("Contract balance: " + await contract.getBalance());
 console.log("Contract UTXOs: " + await contract.getUtxos());
 ```
 
-:::tip
-For a code example of how to generate key-pairs with Libauth, see the [CashScript Examples' `common.ts`](https://github.com/CashScript/cashscript/blob/master/examples/common.ts) file where Alice and Bob's key-pairs are created.
-:::
+Next, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. Later you'll learn to use the `MockNetworkProvider` so you can simulate transactions in a 'mock' network enviroment.
 
 ### Creating a Transaction
 
-Lastly, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. In other words, we need to make sure there's at a UTXO with the smart contract locking bytecode, so that we can spend it! We'll do this by adding the contract UTXO as input to the `TransactionBuilder`.
+Finally to create a transaction spending from the smart contract UTXO we use the `TransactionBuilder` to add in- and outputs to the transaction. The difference between the total BCH amount in the in- and outputs is the transaction fee.
+
+To spend from an input you specify the `UTXO` together with an `Unlocker` to actually provide the 'unlock' script matching the input's locking bytecode. For the initialized smart contract the `Unlockers` are available as methods on the `Contract` instance. Below we will invoke the `transfer` function on the contract utxo through `contract.unlock.transfer(...)`.
 
 ```javascript
 import { ElectrumNetworkProvider, Contract, SignatureTemplate, transactionBuilder } from 'cashscript';
