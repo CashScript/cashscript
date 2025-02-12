@@ -49,7 +49,7 @@ npm install cashc
 compileFile(sourceFile: PathLike): Artifact
 ```
 
-Compiles a CashScript contract from a source file. This compile method is handy when using Node.js with the contract source file available but you are doing quick compilations (for example for contract size comparisions) and you don't need the contract artifact file to be generated.
+Compiles a CashScript contract from a source file. This compile method is handy when using Node.js with the contract source file available but you are doing quick compilations (for example for contract size comparisons) and you don't need the contract artifact file to be generated.
 
 :::note
 `compileFile()` only works from a Node.js context because it uses the file-system so it's not available in browser setting.

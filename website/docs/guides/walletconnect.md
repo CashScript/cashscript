@@ -4,7 +4,7 @@ title: WalletConnect
 
 The BCH WalletConnect specification was created in July of 2023 and has become popular since, being supported in multiple wallets and a wide range of dapps. You can find a full list of Bitcoin Cash dapps supporting WalletConnect on [Tokenaut.cash](https://tokenaut.cash/dapps?filter=walletconnect).
 
-BCH WalletConnect uses the generic 'WallletConnect' transport layer to communicate between the wallet and the dapp. The contents being communicated is what is BCH-specific. The BCH WalletConnect standard was designed with CashScript contract usage in mind.
+BCH WalletConnect uses the generic 'WalletConnect' transport layer to communicate between the wallet and the dapp. The contents being communicated is what is BCH-specific. The BCH WalletConnect standard was designed with CashScript contract usage in mind.
 
 
 :::tip

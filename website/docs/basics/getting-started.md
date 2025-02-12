@@ -129,7 +129,7 @@ console.log("Contract balance: " + await contract.getBalance());
 console.log("Contract UTXOs: " + await contract.getUtxos());
 ```
 
-Next, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. Later you'll learn to use the `MockNetworkProvider` so you can simulate transactions in a 'mock' network enviroment.
+Next, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. Later you'll learn to use the `MockNetworkProvider` so you can simulate transactions in a 'mock' network environment.
 
 ### Creating a Transaction
 
