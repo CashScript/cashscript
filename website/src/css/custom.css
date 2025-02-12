@@ -9,6 +9,7 @@
   --ifm-color-primary: #1D64F2;
   --ifm-color-secondary: #04FF84;
   --ifm-color-light: #f4f4f4;
+  --ifm-color-secondary-dark: #0ed482;
 
   /* Dark theme colour in three different intensities */
   --ifm-color-dark: #012335;
@@ -53,7 +54,9 @@
 html[data-theme="dark"] {
   /* Theme colours inverted in dark mode */
   --ifm-color-primary: #04FF84;
+  --ifm-color-primary-dark: #0ed482;
   --ifm-color-secondary: #1D64F2;
+  --ifm-color-secondary-dark: #306CCE;
 
   /* Extend navbar in dark mode */
   --ifm-background-surface-color: var(--ifm-color-dark);
@@ -76,11 +79,6 @@ html[data-theme="dark"] {
   --ifm-heading-color: #ffffff;
 }
 
-/* NOTE admonitions should be light grey (instead of secondary colour) */
-.alert--secondary {
-  --ifm-alert-background-color: #ebedf0;
-  --ifm-alert-border-color: #ebedf0;
-}
 
 /* Light/dark toggle colour should change depending on theme */
 .react-toggle--focus .react-toggle-thumb {

@@ -76,10 +76,18 @@ function Home() {
             <div className={classnames('col col--6 col--offset-3')}>
               <h1>{siteConfig.title}</h1>
               <h2>{siteConfig.tagline}</h2>
-              <div className={styles.buttons}>
+              <div className={styles.buttons} style={{ gap: '1rem' }}>
                 <Link
                   className={classnames(
                     'button button--primary button--lg',
+                    styles.getStarted,
+                  )}
+                  to={useBaseUrl('docs/basics/about')}>
+                  Learn More
+                </Link>
+                <Link
+                  className={classnames(
+                    'button button--secondary button--lg',
                     styles.getStarted,
                   )}
                   to={useBaseUrl('docs/basics/getting-started')}>
