@@ -1,8 +1,8 @@
 import { MatcherContext } from '@jest/expect';
 import { SyncExpectationResult } from 'expect';
-import { Transaction } from '../index.js';
+import { DebugResult } from '../debugging.js';
 
-export {};
+export { };
 
 declare global {
   namespace jest {
@@ -15,17 +15,21 @@ declare global {
   }
 }
 
+interface Debuggable {
+  debug(): Promise<DebugResult[]>;
+}
+
 expect.extend({
   async toLog(
     this: MatcherContext,
-    transaction: Transaction,
+    transaction: Debuggable,
     match?: RegExp | string,
   ): Promise<SyncExpectationResult> {
     const loggerSpy = jest.spyOn(console, 'log');
 
     // silence actual stdout output
-    loggerSpy.mockImplementation(() => {});
-    try { await transaction.debug(); } catch {}
+    loggerSpy.mockImplementation(() => { });
+    try { await transaction.debug(); } catch { }
 
     // We concatenate all the logs into a single string - if no logs are present, we set received to undefined
     const receivedBase = loggerSpy.mock.calls.reduce((acc, [log]) => `${acc}\n${log}`, '').trim();
@@ -51,7 +55,7 @@ expect.extend({
 expect.extend({
   async toFailRequireWith(
     this: MatcherContext,
-    transaction: Transaction,
+    transaction: Debuggable,
     match: RegExp | string,
   ): Promise<SyncExpectationResult> {
     try {
@@ -76,7 +80,7 @@ expect.extend({
   },
   async toFailRequire(
     this: MatcherContext,
-    transaction: Transaction,
+    transaction: Debuggable,
   ): Promise<SyncExpectationResult> {
     try {
       await transaction.debug();
