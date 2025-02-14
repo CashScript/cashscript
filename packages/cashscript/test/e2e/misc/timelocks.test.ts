@@ -8,7 +8,7 @@ import {
   carolPriv,
 } from '../../fixture/vars.js';
 import { Network } from '../../../src/interfaces.js';
-import { utxoComparator, calculateDust, randomUtxo } from '../../../src/utils.js';
+import { utxoComparator, calculateDust, randomUtxo, isNonTokenUtxo } from '../../../src/utils.js';
 import p2pkhArtifact from '../../fixture/p2pkh.json' with { type: 'json' };
 import twtArtifact from '../../fixture/transfer_with_timeout.json' with { type: 'json' };
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
@@ -43,7 +43,7 @@ describe('Timelocks', () => {
   describeOrSkip('Locktime', () => {
     it('should fail when locktime is higher than current block height', async () => {
       const fee = 1000n;
-      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
       const amount = p2pkhUtxos[0].satoshis - fee;
       const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
@@ -65,7 +65,7 @@ describe('Timelocks', () => {
 
     it('should succeed when locktime is lower than current block height', async () => {
       const fee = 1000n;
-      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
       const amount = p2pkhUtxos[0].satoshis - fee;
       const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });

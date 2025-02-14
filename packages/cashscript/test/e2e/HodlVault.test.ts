@@ -4,7 +4,6 @@ import {
   MockNetworkProvider,
   ElectrumNetworkProvider,
   Network,
-  Utxo,
   TransactionBuilder,
 } from '../../src/index.js';
 import {
@@ -13,7 +12,7 @@ import {
   oracle,
   oraclePub,
 } from '../fixture/vars.js';
-import { getTxOutputs } from '../test-util.js';
+import { gatherUtxos, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
@@ -23,12 +22,10 @@ describe('HodlVault', () => {
     ? new MockNetworkProvider()
     : new ElectrumNetworkProvider(Network.CHIPNET);
   const hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
-  let contractUtxo: Utxo;
 
   beforeAll(() => {
     console.log(hodlVault.address);
-    contractUtxo = randomUtxo();
-    (provider as any).addUtxo?.(hodlVault.address, contractUtxo);
+    (provider as any).addUtxo?.(hodlVault.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -39,11 +36,13 @@ describe('HodlVault', () => {
       const wrongSig = oracle.signMessage(wrongMessage);
       const to = hodlVault.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await hodlVault.getUtxos(), { amount, fee: 2000n });
 
       // when
       const txPromise = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), wrongSig, message))
+        .addInputs(utxos, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), wrongSig, message))
         .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
         .send();
 
@@ -59,11 +58,13 @@ describe('HodlVault', () => {
       const oracleSig = oracle.signMessage(message);
       const to = hodlVault.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await hodlVault.getUtxos(), { amount, fee: 2000n });
 
       // when
       const txPromise = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), oracleSig, message))
+        .addInputs(utxos, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), oracleSig, message))
         .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
         .send();
 
@@ -79,11 +80,13 @@ describe('HodlVault', () => {
       const oracleSig = oracle.signMessage(message);
       const to = hodlVault.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await hodlVault.getUtxos(), { amount, fee: 2000n });
 
       // when
       const tx = await new TransactionBuilder({ provider })
-        .addInput(contractUtxo, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), oracleSig, message))
+        .addInputs(utxos, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), oracleSig, message))
         .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
         .send();
 

@@ -4,11 +4,11 @@ import {
   FailedRequireError,
   ElectrumNetworkProvider,
   Network,
-  Utxo,
   TransactionBuilder,
 } from '../../src/index.js';
 import artifact from '../fixture/bigint.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
+import { gatherUtxos } from '../test-util.js';
 
 describe('BigInt', () => {
   const provider = process.env.TESTS_USE_MOCKNET
@@ -16,12 +16,10 @@ describe('BigInt', () => {
     : new ElectrumNetworkProvider(Network.CHIPNET);
   const bigintContract = new Contract(artifact, [], { provider });
   const MAX_INT64 = BigInt('9223372036854775807');
-  let contractUtxo: Utxo;
 
   beforeAll(() => {
     console.log(bigintContract.address);
-    contractUtxo = randomUtxo();
-    (provider as any).addUtxo?.(bigintContract.address, contractUtxo);
+    (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
   });
 
   describe('proofOfBigInt', () => {
@@ -29,11 +27,13 @@ describe('BigInt', () => {
       // given
       const to = bigintContract.address;
       const amount = 1000n;
+      const { utxos, changeAmount } = gatherUtxos(await bigintContract.getUtxos(), { amount });
 
       // when
       const txPromise = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, bigintContract.unlock.proofOfBigInt(MAX_INT64, 10n))
+        .addInputs(utxos, bigintContract.unlock.proofOfBigInt(MAX_INT64, 10n))
         .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -46,11 +46,13 @@ describe('BigInt', () => {
       // given
       const to = bigintContract.address;
       const amount = 1000n;
+      const { utxos, changeAmount } = gatherUtxos(await bigintContract.getUtxos(), { amount });
 
       // when
       const txPromise = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, bigintContract.unlock.proofOfBigInt(MAX_INT64 * 2n, MAX_INT64 + 2n))
+        .addInputs(utxos, bigintContract.unlock.proofOfBigInt(MAX_INT64 * 2n, MAX_INT64 + 2n))
         .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then

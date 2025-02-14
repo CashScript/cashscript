@@ -11,9 +11,10 @@ import {
   bobPkh,
   alicePriv,
   alicePub,
+  aliceAddress,
 } from '../fixture/vars.js';
-import { getTxOutputs } from '../test-util.js';
-import { Network, Utxo } from '../../src/interfaces.js';
+import { gatherUtxos, getTxOutputs } from '../test-util.js';
+import { Network } from '../../src/interfaces.js';
 import {
   createOpReturnOutput, randomUtxo,
 } from '../../src/utils.js';
@@ -26,14 +27,14 @@ describe('P2PKH-no-tokens', () => {
 
   // define contract in the describe block so artifact typings aren't lost
   const p2pkhContract = new Contract(artifact, [bobPkh], { provider });
-  let contractUtxos: Utxo[];
 
   beforeAll(() => {
     // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other (P2PKH tokens) tests
     console.log(p2pkhContract.tokenAddress);
-    contractUtxos = [randomUtxo({ satoshis: 10000000n }), randomUtxo({ satoshis: 10000000n })];
-    (provider as any).addUtxo?.(p2pkhContract.address, contractUtxos[0]);
-    (provider as any).addUtxo?.(p2pkhContract.address, contractUtxos[1]);
+    (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo({ satoshis: 10000000n }));
+    (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo({ satoshis: 10000000n }));
+    (provider as any).addUtxo?.(bobAddress, randomUtxo());
+    (provider as any).addUtxo?.(bobAddress, randomUtxo());
   });
 
   describe('send', () => {
@@ -41,11 +42,13 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
       const txPromise = new TransactionBuilder({ provider })
-        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(alicePub, new SignatureTemplate(bobPriv)))
+        .addInputs(utxos, p2pkhContract.unlock.spend(alicePub, new SignatureTemplate(bobPriv)))
         .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -58,11 +61,13 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
       const txPromise = new TransactionBuilder({ provider })
-        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(alicePriv)))
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(alicePriv)))
         .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -75,11 +80,13 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
       const tx = await new TransactionBuilder({ provider })
-        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
         .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -92,14 +99,19 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhContract.address;
       const amount = 1000n;
+      const { utxos, total, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
+      const failureAmount = total + 1n;
 
       // when
       const txPromise = new TransactionBuilder({ provider })
-        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
-        .addOutput({ to, amount: contractUtxos[0].satoshis + amount })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount: failureAmount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
+      // TODO: this fails on mocknet, because mocknet doesn't check inputs vs outputs,
+      // we should add a sanity check in our own code
       await expect(txPromise).rejects.toThrow();
     });
 
@@ -107,17 +119,19 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = p2pkhContract.address;
       const amount = 1000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
       const tx = await new TransactionBuilder({ provider })
-        .addInputs(contractUtxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
-        .addOutput({ to, amount: contractUtxos[0].satoshis + amount })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
       expect.hasAssertions();
       tx.inputs.forEach((input) => {
-        expect(contractUtxos.find((utxo) => (
+        expect(utxos.find((utxo) => (
           utxo.txid === binToHex(input.outpointTransactionHash)
           && utxo.vout === input.outpointIndex
         ))).toBeTruthy();
@@ -127,15 +141,17 @@ describe('P2PKH-no-tokens', () => {
     it('can call addOutput() multiple times', async () => {
       // given
       const outputs = [
-        { to: p2pkhContract.address, amount: 10000n },
-        { to: p2pkhContract.address, amount: 20000n },
+        { to: p2pkhContract.address, amount: 10_000n },
+        { to: p2pkhContract.address, amount: 20_000n },
       ];
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount: 30_000n, fee: 2000n });
 
       // when
       const tx = await new TransactionBuilder({ provider })
-        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
         .addOutput({ to: outputs[0].to, amount: outputs[0].amount })
         .addOutput({ to: outputs[1].to, amount: outputs[1].amount })
+        .addOutput({ to: aliceAddress, amount: changeAmount })
         .send();
 
       // then
@@ -146,14 +162,16 @@ describe('P2PKH-no-tokens', () => {
     it('can send to list of recipients', async () => {
       // given
       const outputs = [
-        { to: p2pkhContract.address, amount: 10000n },
-        { to: p2pkhContract.address, amount: 20000n },
+        { to: p2pkhContract.address, amount: 10_000n },
+        { to: p2pkhContract.address, amount: 20_000n },
       ];
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount: 30_000n, fee: 2000n });
 
       // when
       const tx = await new TransactionBuilder({ provider })
-        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
         .addOutputs(outputs)
+        .addOutput({ to: aliceAddress, amount: changeAmount })
         .send();
 
       // then
@@ -166,12 +184,14 @@ describe('P2PKH-no-tokens', () => {
       const opReturnData = ['0x6d02', 'Hello, World!', '0x01'];
       const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
       const tx = await new TransactionBuilder({ provider })
-        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
         .addOutput({ to, amount })
         .addOutput(createOpReturnOutput(opReturnData))
+        .addOutput({ to: aliceAddress, amount: changeAmount })
         .send();
 
       // then
@@ -186,15 +206,14 @@ describe('P2PKH-no-tokens', () => {
       const amount = 10000n;
       const bobSignatureTemplate = new SignatureTemplate(bobPriv);
 
-      const bobUtxos = [randomUtxo(), randomUtxo()];
-      (provider as any).addUtxo?.(p2pkhContract.address, bobUtxos[0]);
-      (provider as any).addUtxo?.(p2pkhContract.address, bobUtxos[1]);
+      const contractUtxos = await p2pkhContract.getUtxos();
+      const bobUtxos = await provider.getUtxos(bobAddress);
 
       // when
       const tx = await new TransactionBuilder({ provider })
         .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
-        .addInput(contractUtxos[1], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
         .addInput(bobUtxos[0], bobSignatureTemplate.unlockP2PKH())
+        .addInput(contractUtxos[1], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
         .addInput(bobUtxos[1], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount })
         .addOutput({ to, amount })

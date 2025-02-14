@@ -1,15 +1,11 @@
-import {
-  Contract, ElectrumNetworkProvider, MockNetworkProvider, Network,
-  TransactionBuilder,
-  Utxo,
-} from '../../src/index.js';
+import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network, TransactionBuilder } from '../../src/index.js';
 import {
   alicePkh,
   bobPkh,
   aliceAddress,
   bobAddress,
 } from '../fixture/vars.js';
-import { getTxOutputs } from '../test-util.js';
+import { getLargestUtxo, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/mecenas.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
@@ -22,12 +18,10 @@ describe('Mecenas', () => {
   const pledge = 10000n;
   const mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider });
   const minerFee = 1000n;
-  let contractUtxo: Utxo;
 
   beforeAll(() => {
     console.log(mecenas.address);
-    contractUtxo = randomUtxo();
-    (provider as any).addUtxo?.(mecenas.address, contractUtxo);
+    (provider as any).addUtxo?.(mecenas.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -35,12 +29,14 @@ describe('Mecenas', () => {
       // given
       const recipient = aliceAddress;
       const pledgeAmount = pledge + 10n;
+      const contractUtxo = getLargestUtxo(await mecenas.getUtxos());
+      const changeAmount = contractUtxo.satoshis - pledgeAmount - minerFee;
 
       // when
       const txPromise = new TransactionBuilder({ provider })
         .addInput(contractUtxo, mecenas.unlock.receive())
         .addOutput({ to: recipient, amount: pledgeAmount })
-        .addOutput({ to: mecenas.address, amount: contractUtxo.satoshis - pledgeAmount - minerFee })
+        .addOutput({ to: mecenas.address, amount: changeAmount })
         .send();
 
       // then
@@ -53,12 +49,14 @@ describe('Mecenas', () => {
       // given
       const recipient = bobAddress;
       const pledgeAmount = pledge;
+      const contractUtxo = getLargestUtxo(await mecenas.getUtxos());
+      const changeAmount = contractUtxo.satoshis - pledgeAmount - minerFee;
 
       // when
       const txPromise = new TransactionBuilder({ provider })
         .addInput(contractUtxo, mecenas.unlock.receive())
         .addOutput({ to: recipient, amount: pledgeAmount })
-        .addOutput({ to: mecenas.address, amount: contractUtxo.satoshis - pledgeAmount - minerFee })
+        .addOutput({ to: mecenas.address, amount: changeAmount })
         .send();
 
       // then
@@ -71,13 +69,15 @@ describe('Mecenas', () => {
       // given
       const recipient = aliceAddress;
       const pledgeAmount = pledge;
+      const contractUtxo = getLargestUtxo(await mecenas.getUtxos());
+      const changeAmount = contractUtxo.satoshis - pledgeAmount - minerFee;
 
       // when
       const txPromise = new TransactionBuilder({ provider })
         .addInput(contractUtxo, mecenas.unlock.receive())
         .addOutput({ to: recipient, amount: pledgeAmount })
         .addOutput({ to: recipient, amount: pledgeAmount })
-        .addOutput({ to: mecenas.address, amount: contractUtxo.satoshis - pledgeAmount - minerFee })
+        .addOutput({ to: mecenas.address, amount: changeAmount })
         .send();
 
       // then
@@ -90,12 +90,15 @@ describe('Mecenas', () => {
       // given
       const recipient = aliceAddress;
       const pledgeAmount = pledge;
+      const contractUtxo = getLargestUtxo(await mecenas.getUtxos());
+      const changeAmount = contractUtxo.satoshis - pledgeAmount - minerFee;
+      const incorrectChangeAmount = changeAmount * 2n;
 
       // when
       const txPromise = new TransactionBuilder({ provider })
         .addInput(contractUtxo, mecenas.unlock.receive())
         .addOutput({ to: recipient, amount: pledgeAmount })
-        .addOutput({ to: mecenas.address, amount: contractUtxo.satoshis - pledgeAmount - minerFee * 2n })
+        .addOutput({ to: mecenas.address, amount: incorrectChangeAmount })
         .send();
 
       // then
@@ -108,13 +111,16 @@ describe('Mecenas', () => {
       // given
       const recipient = aliceAddress;
       const pledgeAmount = pledge;
+      const contractUtxo = getLargestUtxo(await mecenas.getUtxos());
+      const changeAmount = contractUtxo.satoshis - pledgeAmount - minerFee;
 
       // when
       const tx = await new TransactionBuilder({ provider })
         .addInput(contractUtxo, mecenas.unlock.receive())
         .addOutput({ to: recipient, amount: pledgeAmount })
-        .addOutput({ to: mecenas.address, amount: contractUtxo.satoshis - pledgeAmount - minerFee })
+        .addOutput({ to: mecenas.address, amount: changeAmount })
         .send();
+
       // then
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to: recipient, amount: pledgeAmount }]));

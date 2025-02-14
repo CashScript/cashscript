@@ -10,12 +10,12 @@ import {
   carolPriv,
   bobTokenAddress,
 } from './fixture/vars.js';
-import { Network, Utxo } from '../src/interfaces.js';
-import { utxoComparator, calculateDust, randomUtxo, randomToken } from '../src/utils.js';
+import { Network } from '../src/interfaces.js';
+import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo, isFungibleTokenUtxo } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.json' with { type: 'json' };
 import twtArtifact from './fixture/transfer_with_timeout.json' with { type: 'json' };
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
-import { getTxOutputs } from './test-util.js';
+import { gatherUtxos, getTxOutputs } from './test-util.js';
 
 describe('Transaction Builder', () => {
   const provider = process.env.TESTS_USE_MOCKNET
@@ -49,7 +49,7 @@ describe('Transaction Builder', () => {
       const amount = 1000n;
       const fee = 2000n;
 
-      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+      const utxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
       const { utxos: gathered, total } = gatherUtxos(utxos, { amount, fee });
 
       const change = total - amount - fee;
@@ -89,7 +89,7 @@ describe('Transaction Builder', () => {
       const amount = 10000n;
       const fee = 2000n;
 
-      const contractUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+      const contractUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
       const bobUtxos = await provider.getUtxos(bobAddress);
       const bobTemplate = new SignatureTemplate(bobPriv);
 
@@ -118,7 +118,7 @@ describe('Transaction Builder', () => {
         .withTime(0)
         .build();
 
-      const advancedTransaction = await new TransactionBuilder({ provider })
+      const advancedTransaction = new TransactionBuilder({ provider })
         .addInput(bobUtxos[0], bobTemplate.unlockP2PKH())
         .addInput(contractUtxos[0], p2pkhInstance.unlock.spend(bobPub, bobTemplate))
         .addInput(bobUtxos[1], bobTemplate.unlockP2PKH())
@@ -139,9 +139,9 @@ describe('Transaction Builder', () => {
   it('should build a transaction that can spend from 2 different contracts and P2PKH + OP_RETURN', async () => {
     const fee = 1000n;
 
-    const carolUtxos = (await provider.getUtxos(carolAddress)).sort(utxoComparator).reverse();
-    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
-    const twtUtxos = (await twtInstance.getUtxos()).sort(utxoComparator).reverse();
+    const carolUtxos = (await provider.getUtxos(carolAddress)).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
+    const twtUtxos = (await twtInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
     const change = carolUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: carolAddress, amount: change });
@@ -171,7 +171,7 @@ describe('Transaction Builder', () => {
   it('should fail when fee is higher than maxFee', async () => {
     const fee = 2000n;
     const maxFee = 1000n;
-    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
     const amount = p2pkhUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
@@ -192,7 +192,7 @@ describe('Transaction Builder', () => {
   it('should succeed when fee is lower than maxFee', async () => {
     const fee = 1000n;
     const maxFee = 2000n;
-    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
     const amount = p2pkhUtxos[0].satoshis - fee;
     const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
@@ -213,7 +213,7 @@ describe('Transaction Builder', () => {
   // TODO: Consider improving error messages checked below to also include the input/output index
 
   it('should fail when trying to send to invalid addres', async () => {
-    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
     expect(() => {
       new TransactionBuilder({ provider })
@@ -224,7 +224,7 @@ describe('Transaction Builder', () => {
   });
 
   it('should fail when trying to send tokens to non-token address', async () => {
-    const tokenUtxo = (await p2pkhInstance.getUtxos()).find((utxo) => utxo.token)!;
+    const tokenUtxo = (await p2pkhInstance.getUtxos()).find(isFungibleTokenUtxo)!;
 
     expect(() => {
       new TransactionBuilder({ provider })
@@ -235,14 +235,14 @@ describe('Transaction Builder', () => {
   });
 
   it('should fail when trying to send negative BCH amount or token amount', async () => {
-    const tokenUtxo = (await p2pkhInstance.getUtxos()).find((utxo) => utxo.token)!;
+    const tokenUtxo = (await p2pkhInstance.getUtxos()).find(isFungibleTokenUtxo)!;
 
     expect(() => {
       new TransactionBuilder({ provider })
         .addInput(tokenUtxo, p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
         .addOutput({ to: bobTokenAddress, amount: -1000n, token: tokenUtxo.token })
         .build();
-    }).toThrow('Tried to add an output with -1000 satoshis, which is less than the required minimum for this output-type (663)');
+    }).toThrow('Tried to add an output with -1000 satoshis, which is less than the required minimum for this output-type');
 
     expect(() => {
       new TransactionBuilder({ provider })
@@ -253,7 +253,7 @@ describe('Transaction Builder', () => {
   });
 
   it('should fail when adding undefined input', async () => {
-    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
     const undefinedUtxo = p2pkhUtxos[1000];
 
     expect(() => {
@@ -264,25 +264,3 @@ describe('Transaction Builder', () => {
     }).toThrow('Input is undefined');
   });
 });
-
-function gatherUtxos(
-  utxos: Utxo[],
-  options?: { amount?: bigint, fee?: bigint },
-): { utxos: Utxo[], total: bigint } {
-  const targetUtxos: Utxo[] = [];
-  let total = 0n;
-
-  // 1000 for fees
-  const { amount = 0n, fee = 1000n } = options ?? {};
-
-  for (const utxo of utxos) {
-    if (total - fee > amount) break;
-    total += utxo.satoshis;
-    targetUtxos.push(utxo);
-  }
-
-  return {
-    utxos: targetUtxos,
-    total,
-  };
-}

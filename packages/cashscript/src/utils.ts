@@ -388,3 +388,9 @@ export const extendedStringify = (obj: any, spaces?: number): string => JSON.str
 export const zip = <T, U>(a: readonly T[], b: readonly U[]): [T, U][] => (
   Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]])
 );
+
+export const isFungibleTokenUtxo = (utxo: Utxo): boolean => (
+  utxo.token !== undefined && utxo.token.amount > 0n && utxo.token.nft === undefined
+);
+
+export const isNonTokenUtxo = (utxo: Utxo): boolean => utxo.token === undefined;
