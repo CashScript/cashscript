@@ -158,18 +158,18 @@ export class TransactionBuilder {
   }
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
-  async debug(): Promise<DebugResult[]> {
-    const { debugResult } = await getLibauthTemplates(this);
+  debug(): DebugResult[] {
+    const { debugResult } = getLibauthTemplates(this);
     return debugResult;
   }
 
-  async bitauthUri(): Promise<string> {
-    const { template } = await getLibauthTemplates(this);
+  bitauthUri(): string {
+    const { template } = getLibauthTemplates(this);
     return getBitauthUri(template);
   }
 
-  async getLibauthTemplate(): Promise<WalletTemplate> {
-    const { template } = await getLibauthTemplates(this);
+  getLibauthTemplate(): WalletTemplate {
+    const { template } = getLibauthTemplates(this);
     return template;
   }
 
@@ -180,8 +180,8 @@ export class TransactionBuilder {
     const tx = this.build();
 
     // Debug the transaction locally before sending so any errors are caught early
-    await this.debug();
-    
+    this.debug();
+
     try {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
