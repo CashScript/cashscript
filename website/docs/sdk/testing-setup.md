@@ -2,13 +2,17 @@
 title: Testing Setup
 ---
 
-Because of deep integration with libauth, CashScript allows for local transaction evaluation without actual interaction with any Bitcoin Cash test network. With a MockNetwork environment you can create virtual UTXOs without doing additional preparations. This has the advantages of not needing any testnet balances, not having to set up smart contract UTXOs and not having network latency. This setup allows for using a testing framework to run repeated automated tests for increased smart contract security.
+For the ease of development, CashScript has a `MockNetwork` environment where you can create virtual UTXOs. This has the advantages of not needing any testnet balances, not having to set up smart contract UTXOs and not having network latency. Because of this the MockNetwork environment is the ideal setup to run repeated automated tests with a testing framework for increased smart contract security.
 
-For a quick start with a CashScript testing setup, you can check out [our testing-suite example](https://github.com/CashScript/cashscript/tree/next/examples/testing-suite) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
+:::tip
+For a quick start with a CashScript testing setup, check out the [example testing-suite](https://github.com/CashScript/cashscript/tree/next/examples/testing-suite) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
+:::
 
 ## MockNetworkProvider
 
-The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. By default, it generates some random mock UTXOs for the contract address, but you can also add your own UTXOs to the provider.
+The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. To create a new virtual UTXO use `provider.addUtxo()`.
+
+#### Example
 
 ```ts
 import { MockNetworkProvider, randomUtxo, randomToken, randomNFT } from 'cashscript';
