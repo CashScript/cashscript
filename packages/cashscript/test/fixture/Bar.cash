@@ -1,6 +1,6 @@
-pragma cashscript ^0.10.2;
+pragma cashscript >=0.10.2;
 
-contract Bar(bytes20 pkh) {
+contract Bar(bytes20 pkh_bar) {
     function funcA() {
         require(2==2);
     }
@@ -11,7 +11,7 @@ contract Bar(bytes20 pkh) {
 
     function execute(pubkey pk, sig s) {
         console.log("Bar 'execute' function called.");
-        require(hash160(pk) == pkh);
+        require(hash160(pk) == pkh_bar);
         require(checkSig(s, pk));
     }
 }
