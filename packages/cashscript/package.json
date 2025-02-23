@@ -30,7 +30,7 @@
     "test": "test"
   },
   "scripts": {
-    "generate:bchd-grpc": "mkdir -p ./src/network/BchdGrpcNetworkProvider/generated && protoc --ts_out ./src/network/BchdGrpcNetworkProvider/generated --proto_path src/network/BchdGrpcNetworkProvider bchrpc.proto",
+    "generate:bchd-grpc": "cd ./src/network/BchdGrpcNetworkProvider && mkdir -p generated && protoc --ts_out ./generated --proto_path . bchrpc.proto && sed -i 's/bchrpc\";/bchrpc.js\";/' ./generated/bchrpc.client.ts",
     "build": "yarn clean && yarn compile",
     "build:test": "yarn clean:test && yarn compile:test",
     "clean": "rm -rf ./dist",
