@@ -1,4 +1,4 @@
-import fs, { PathLike } from 'fs';
+import fs, { PathLike } from 'node:fs';
 
 export interface AbiInput {
   name: string;

@@ -19,5 +19,6 @@ export {
   ElectrumNetworkProvider,
   FullStackNetworkProvider,
   MockNetworkProvider,
+  BchdGrpcNetworkProvider,
 } from './network/index.js';
 export { randomUtxo, randomToken, randomNFT } from './utils.js';
