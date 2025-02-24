@@ -8,7 +8,7 @@ import {
 } from '../../fixture/vars.js';
 import { getTxOutputs } from '../../test-util.js';
 import { FailedRequireError } from '../../../src/Errors.js';
-import artifact from '../../fixture/p2pkh.json' with { type: 'json' };
+import artifact from '../../fixture/p2pkh.artifact.js';
 
 const describeOrSkip = process.env.TESTS_USE_MOCKNET ? describe.skip : describe;
 

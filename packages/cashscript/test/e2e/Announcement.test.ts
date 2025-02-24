@@ -5,10 +5,10 @@ import { getLargestUtxo, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import { createOpReturnOutput, randomUtxo } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
-import artifact from '../fixture/announcement.json' with { type: 'json' };
+import artifact from '../fixture/announcement.artifact.js';
 
 describe('Announcement', () => {
-  let announcement: Contract;
+  let announcement: Contract<typeof artifact>;
   const minerFee = 1000n;
 
   beforeAll(() => {

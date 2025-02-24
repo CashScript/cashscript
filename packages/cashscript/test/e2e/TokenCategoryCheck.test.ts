@@ -3,10 +3,10 @@ import {
   Contract, ElectrumNetworkProvider, FailedRequireError, MockNetworkProvider,
 } from '../../src/index.js';
 import { Network, Utxo } from '../../src/interfaces.js';
-import artifact from '../fixture/token_category_comparison.json' with { type: 'json' };
+import artifact from '../fixture/token_category_comparison.artifact.js';
 
 describe('TokenCategoryCheck', () => {
-  let tokenCategoryCheckInstance: Contract;
+  let tokenCategoryCheckInstance: Contract<typeof artifact>;
 
   beforeAll(() => {
     const provider = process.env.TESTS_USE_MOCKNET
