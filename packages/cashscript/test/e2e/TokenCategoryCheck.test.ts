@@ -4,7 +4,7 @@ import {
   TransactionBuilder,
 } from '../../src/index.js';
 import { Network } from '../../src/interfaces.js';
-import artifact from '../fixture/token_category_comparison.json' with { type: 'json' };
+import artifact from '../fixture/token_category_comparison.artifact.js';
 
 describe('TokenCategoryCheck', () => {
   const provider = process.env.TESTS_USE_MOCKNET

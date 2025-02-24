@@ -8,7 +8,7 @@ import {
 } from '../../fixture/vars.js';
 import { describeOrSkip, getTxOutputs } from '../../test-util.js';
 import { FailedRequireError } from '../../../src/Errors.js';
-import artifact from '../../fixture/p2pkh.json' with { type: 'json' };
+import artifact from '../../fixture/p2pkh.artifact.js';
 
 describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'test FullStackNetworkProvider', () => {
   const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://api.fullstack.cash/v5/' }));
