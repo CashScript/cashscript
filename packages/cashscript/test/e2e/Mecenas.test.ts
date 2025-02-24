@@ -9,12 +9,12 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
-import artifact from '../fixture/mecenas.json' with { type: 'json' };
+import artifact from '../fixture/mecenas.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 // Mecenas has tx.age check omitted for testing
 describe('Mecenas', () => {
-  let mecenas: Contract;
+  let mecenas: Contract<typeof artifact>;
   const pledge = 10000n;
   const minerFee = 1000n;
 

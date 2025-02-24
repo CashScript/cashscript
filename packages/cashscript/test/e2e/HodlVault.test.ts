@@ -13,11 +13,11 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
-import artifact from '../fixture/hodl_vault.json' with { type: 'json' };
+import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 describe('HodlVault', () => {
-  let hodlVault: Contract;
+  let hodlVault: Contract<typeof artifact>;
 
   beforeAll(() => {
     const provider = process.env.TESTS_USE_MOCKNET

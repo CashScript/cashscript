@@ -3,13 +3,13 @@ import {
   Contract, MockNetworkProvider, ElectrumNetworkProvider, Network,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/simple_covenant.json' with { type: 'json' };
+import artifact from '../fixture/simple_covenant.artifact.js';
 
 describe('Simple Covenant', () => {
   const provider = process.env.TESTS_USE_MOCKNET
     ? new MockNetworkProvider()
     : new ElectrumNetworkProvider(Network.CHIPNET);
-  let covenant: Contract;
+  let covenant: Contract<typeof artifact>;
 
   beforeAll(() => {
     covenant = new Contract(artifact, [], { provider });

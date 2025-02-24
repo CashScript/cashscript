@@ -10,12 +10,12 @@ import {
   alicePriv, alicePub, bobPriv, bobPub,
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/transfer_with_timeout.json' with { type: 'json' };
+import artifact from '../fixture/transfer_with_timeout.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 describe('TransferWithTimeout', () => {
-  let twtInstancePast: Contract;
-  let twtInstanceFuture: Contract;
+  let twtInstancePast: Contract<typeof artifact>;
+  let twtInstanceFuture: Contract<typeof artifact>;
 
   beforeAll(() => {
     const provider = process.env.TESTS_USE_MOCKNET

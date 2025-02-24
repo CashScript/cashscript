@@ -6,11 +6,11 @@ import {
   Network,
 } from '../../src/index.js';
 import { getTxOutputs } from '../test-util.js';
-import artifact from '../fixture/bigint.json' with { type: 'json' };
+import artifact from '../fixture/bigint.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 describe('BigInt', () => {
-  let bigintContract: Contract;
+  let bigintContract: Contract<typeof artifact>;
   const MAX_INT32 = BigInt('2147483647');
   const MAX_INT64 = BigInt('9223372036854775807');
 
