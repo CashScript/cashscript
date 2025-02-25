@@ -71,9 +71,9 @@ export const fixtures: Fixture[] = [
             'bar_func_b_unlock',
           ],
           'variables': {
-            'pkh': {
-              'description': '"pkh" parameter of this contract',
-              'name': 'Pkh',
+            'pkh_bar': {
+              'description': '"pkh_bar" parameter of this contract',
+              'name': 'Pkh Bar',
               'type': 'WalletData',
             },
             'function_index': {
@@ -101,9 +101,9 @@ export const fixtures: Fixture[] = [
               'name': 'S',
               'type': 'Key',
             },
-            'pkh': {
-              'description': '"pkh" parameter of this contract',
-              'name': 'Pkh',
+            'pkh_foo': {
+              'description': '"pkh_foo" parameter of this contract',
+              'name': 'Pkh Foo',
               'type': 'WalletData',
             },
           },
@@ -184,7 +184,7 @@ export const fixtures: Fixture[] = [
         'bar_lock': {
           'lockingType': 'p2sh32',
           'name': 'Bar',
-          'script': "// \"Bar\" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript ^0.10.2;                             */\n                                                        /*                                                        */\n                                                        /* contract Bar(bytes20 pkh) {                            */\nOP_1 OP_PICK OP_0 OP_NUMEQUAL OP_IF                     /*     function funcA() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_PICK OP_1 OP_NUMEQUAL OP_IF                     /*     function funcB() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_ROLL OP_2 OP_NUMEQUAL OP_VERIFY                 /*     function execute(pubkey pk, sig s) {               */\n                                                        /*         console.log('Bar 'execute' function called.'); */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                   */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                      */\n                                                        /*     }                                                  */\nOP_ENDIF OP_ENDIF                                       /* }                                                      */",
+          'script': "// \"Bar\" contract constructor parameters\n<pkh_bar> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript >=0.10.2;                            */\n                                                        /*                                                        */\n                                                        /* contract Bar(bytes20 pkh_bar) {                        */\nOP_1 OP_PICK OP_0 OP_NUMEQUAL OP_IF                     /*     function funcA() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_PICK OP_1 OP_NUMEQUAL OP_IF                     /*     function funcB() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_ROLL OP_2 OP_NUMEQUAL OP_VERIFY                 /*     function execute(pubkey pk, sig s) {               */\n                                                        /*         console.log('Bar 'execute' function called.'); */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh_bar);               */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                      */\n                                                        /*     }                                                  */\nOP_ENDIF OP_ENDIF                                       /* }                                                      */\n                                                        /*                                                        */",
         },
         'bar_execute_unlock': {
           'passes': [
@@ -205,7 +205,7 @@ export const fixtures: Fixture[] = [
         'foo_lock': {
           'lockingType': 'p2sh32',
           'name': 'Foo',
-          'script': "// \"Foo\" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript ^0.10.2;                                   */\n                                                        /*                                                              */\n                                                        /* contract Foo(bytes20 pkh) {                                  */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function execute(pubkey pk, sig s) {                     */\n                                                        /*         console.log('Foo 'execute' function called.');       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */",
+          'script': "// \"Foo\" contract constructor parameters\n<pkh_foo> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript >=0.10.2;                                  */\n                                                        /*                                                              */\n                                                        /* contract Foo(bytes20 pkh_foo) {                              */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function execute(pubkey pk, sig s) {                     */\n                                                        /*         console.log('Foo 'execute' function called.');       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh_foo);                     */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */",
         },
         'bar_func_b_unlock': {
           'passes': [
@@ -252,7 +252,7 @@ export const fixtures: Fixture[] = [
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '0',
             },
             'currentBlockHeight': expect.any(Number),
@@ -340,6 +340,11 @@ export const fixtures: Fixture[] = [
               {
                 'lockingBytecode': {
                   'script': 'foo_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                  },
                 },
                 'valueSatoshis': 8000,
               },
@@ -419,18 +424,33 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
             {
               'lockingBytecode': {
                 'script': 'foo_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -442,7 +462,7 @@ export const fixtures: Fixture[] = [
           'data': {
             'bytecode': {
               'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '2',
             },
             'currentBlockHeight': expect.any(Number),
@@ -532,6 +552,11 @@ export const fixtures: Fixture[] = [
               {
                 'lockingBytecode': {
                   'script': 'foo_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                  },
                 },
                 'valueSatoshis': 8000,
               },
@@ -605,6 +630,11 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -617,12 +647,22 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'foo_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -634,7 +674,7 @@ export const fixtures: Fixture[] = [
           'data': {
             'bytecode': {
               'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
             },
             'currentBlockHeight': expect.any(Number),
             'currentBlockTime': expect.any(Number),
@@ -723,6 +763,11 @@ export const fixtures: Fixture[] = [
               {
                 'lockingBytecode': {
                   'script': 'foo_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                  },
                 },
                 'valueSatoshis': 8000,
               },
@@ -796,12 +841,22 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -814,6 +869,11 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -824,7 +884,7 @@ export const fixtures: Fixture[] = [
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '1',
             },
             'currentBlockHeight': expect.any(Number),
@@ -912,6 +972,11 @@ export const fixtures: Fixture[] = [
               {
                 'lockingBytecode': {
                   'script': 'foo_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                  },
                 },
                 'valueSatoshis': 8000,
               },
@@ -985,18 +1050,33 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
             {
               'lockingBytecode': {
                 'script': 'foo_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -1043,9 +1123,9 @@ export const fixtures: Fixture[] = [
             'bar_func_a_unlock',
           ],
           'variables': {
-            'pkh': {
-              'description': '"pkh" parameter of this contract',
-              'name': 'Pkh',
+            'pkh_bar': {
+              'description': '"pkh_bar" parameter of this contract',
+              'name': 'Pkh Bar',
               'type': 'WalletData',
             },
             'function_index': {
@@ -1068,7 +1148,7 @@ export const fixtures: Fixture[] = [
         'bar_lock': {
           'lockingType': 'p2sh32',
           'name': 'Bar',
-          'script': "// \"Bar\" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript ^0.10.2;                             */\n                                                        /*                                                        */\n                                                        /* contract Bar(bytes20 pkh) {                            */\nOP_1 OP_PICK OP_0 OP_NUMEQUAL OP_IF                     /*     function funcA() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_PICK OP_1 OP_NUMEQUAL OP_IF                     /*     function funcB() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_ROLL OP_2 OP_NUMEQUAL OP_VERIFY                 /*     function execute(pubkey pk, sig s) {               */\n                                                        /*         console.log('Bar 'execute' function called.'); */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                   */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                      */\n                                                        /*     }                                                  */\nOP_ENDIF OP_ENDIF                                       /* }                                                      */",
+          'script': "// \"Bar\" contract constructor parameters\n<pkh_bar> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript >=0.10.2;                            */\n                                                        /*                                                        */\n                                                        /* contract Bar(bytes20 pkh_bar) {                        */\nOP_1 OP_PICK OP_0 OP_NUMEQUAL OP_IF                     /*     function funcA() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_PICK OP_1 OP_NUMEQUAL OP_IF                     /*     function funcB() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_ROLL OP_2 OP_NUMEQUAL OP_VERIFY                 /*     function execute(pubkey pk, sig s) {               */\n                                                        /*         console.log('Bar 'execute' function called.'); */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh_bar);               */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                      */\n                                                        /*     }                                                  */\nOP_ENDIF OP_ENDIF                                       /* }                                                      */\n                                                        /*                                                        */",
         },
       },
       'scenarios': {
@@ -1077,7 +1157,7 @@ export const fixtures: Fixture[] = [
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '0',
             },
             'currentBlockHeight': expect.any(Number),
@@ -1102,6 +1182,11 @@ export const fixtures: Fixture[] = [
               {
                 'lockingBytecode': {
                   'script': 'bar_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                  },
                 },
                 'valueSatoshis': 10000,
               },
@@ -1165,9 +1250,9 @@ export const fixtures: Fixture[] = [
               'name': 'S',
               'type': 'Key',
             },
-            'pkh': {
-              'description': '"pkh" parameter of this contract',
-              'name': 'Pkh',
+            'pkh_bar': {
+              'description': '"pkh_bar" parameter of this contract',
+              'name': 'Pkh Bar',
               'type': 'WalletData',
             },
             'function_index': {
@@ -1181,6 +1266,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'bar_execute_unlock': {
           'passes': [
+            'bar_execute_evaluate',
             'bar_execute_evaluate1',
           ],
           'name': 'execute',
@@ -1190,7 +1276,7 @@ export const fixtures: Fixture[] = [
         'bar_lock': {
           'lockingType': 'p2sh32',
           'name': 'Bar',
-          'script': "// \"Bar\" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript ^0.10.2;                             */\n                                                        /*                                                        */\n                                                        /* contract Bar(bytes20 pkh) {                            */\nOP_1 OP_PICK OP_0 OP_NUMEQUAL OP_IF                     /*     function funcA() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_PICK OP_1 OP_NUMEQUAL OP_IF                     /*     function funcB() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_ROLL OP_2 OP_NUMEQUAL OP_VERIFY                 /*     function execute(pubkey pk, sig s) {               */\n                                                        /*         console.log('Bar 'execute' function called.'); */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                   */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                      */\n                                                        /*     }                                                  */\nOP_ENDIF OP_ENDIF                                       /* }                                                      */",
+          'script': "// \"Bar\" contract constructor parameters\n<pkh_bar> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript >=0.10.2;                            */\n                                                        /*                                                        */\n                                                        /* contract Bar(bytes20 pkh_bar) {                        */\nOP_1 OP_PICK OP_0 OP_NUMEQUAL OP_IF                     /*     function funcA() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_PICK OP_1 OP_NUMEQUAL OP_IF                     /*     function funcB() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_ROLL OP_2 OP_NUMEQUAL OP_VERIFY                 /*     function execute(pubkey pk, sig s) {               */\n                                                        /*         console.log('Bar 'execute' function called.'); */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh_bar);               */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                      */\n                                                        /*     }                                                  */\nOP_ENDIF OP_ENDIF                                       /* }                                                      */\n                                                        /*                                                        */",
         },
       },
       'scenarios': {
@@ -1200,7 +1286,7 @@ export const fixtures: Fixture[] = [
           'data': {
             'bytecode': {
               'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '2',
             },
             'currentBlockHeight': expect.any(Number),
@@ -1233,6 +1319,11 @@ export const fixtures: Fixture[] = [
               {
                 'lockingBytecode': {
                   'script': 'bar_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                  },
                 },
                 'valueSatoshis': 20000,
               },
@@ -1249,6 +1340,11 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -1260,7 +1356,7 @@ export const fixtures: Fixture[] = [
           'data': {
             'bytecode': {
               'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '2',
             },
             'currentBlockHeight': expect.any(Number),
@@ -1293,6 +1389,11 @@ export const fixtures: Fixture[] = [
               {
                 'lockingBytecode': {
                   'script': 'bar_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                  },
                 },
                 'valueSatoshis': 20000,
               },
@@ -1303,6 +1404,11 @@ export const fixtures: Fixture[] = [
             {
               'lockingBytecode': {
                 'script': 'bar_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
               },
               'valueSatoshis': expect.any(Number),
             },

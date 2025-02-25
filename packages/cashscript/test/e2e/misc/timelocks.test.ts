@@ -12,9 +12,8 @@ import { utxoComparator, calculateDust, randomUtxo, isNonTokenUtxo } from '../..
 import p2pkhArtifact from '../../fixture/p2pkh.json' with { type: 'json' };
 import twtArtifact from '../../fixture/transfer_with_timeout.json' with { type: 'json' };
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
-import { getTxOutputs } from '../../test-util.js';
+import { describeOrSkip, getTxOutputs } from '../../test-util.js';
 
-const describeOrSkip = process.env.TESTS_USE_MOCKNET ? describe.skip : describe;
 
 describe('Timelocks', () => {
   const provider = process.env.TESTS_USE_MOCKNET
@@ -40,7 +39,7 @@ describe('Timelocks', () => {
     (provider as any).addUtxo?.(carolAddress, randomUtxo());
   });
 
-  describeOrSkip('Locktime', () => {
+  describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'Locktime', () => {
     it('should fail when locktime is higher than current block height', async () => {
       const fee = 1000n;
       const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();

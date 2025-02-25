@@ -66,3 +66,11 @@ export function gatherUtxos(
     changeAmount,
   };
 }
+
+export const itOrSkip = (condition: boolean, message: string, fn: () => Promise<void>): void => (
+  condition ? it(message, fn) : it.skip(message, fn)
+);
+
+export const describeOrSkip = (condition: boolean, message: string, fn: () => void): void => (
+  condition ? describe(message, fn) : describe.skip(message, fn)
+);
