@@ -183,11 +183,11 @@ export const generateTemplateScriptsP2SH = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   encodedConstructorArgs: EncodedConstructorArgument[],
-  scenarioIdentifier: string,
+  scenarioIds: string[],
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
   return {
-    [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, scenarioIdentifier),
+    [snakeCase(artifact.contractName + '_' + abiFunction.name + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, scenarioIds),
     [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
@@ -228,7 +228,7 @@ const generateTemplateUnlockScript = (
   artifact: Artifact,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
-  scenarioIdentifier: string,
+  scenarioIds: string[],
 ): WalletTemplateScriptUnlocking => {
   const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
@@ -238,7 +238,7 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: [scenarioIdentifier],
+    passes: scenarioIds,
     name: abiFunction.name,
     script: [
       `// "${abiFunction.name}" function parameters`,
@@ -416,10 +416,13 @@ export const getLibauthTemplates = (
       let scenarioIdentifier = baseIdentifier;
       let counter = 0;
 
+      const scenarioIds = [snakeCase(scenarioIdentifier)];
+
       // Find first available unique identifier by incrementing counter
       while (scenarios[snakeCase(scenarioIdentifier)]) {
         counter++;
         scenarioIdentifier = `${baseIdentifier}${counter}`;
+        scenarioIds.push(snakeCase(scenarioIdentifier));
       }
 
       scenarioIdentifier = snakeCase(scenarioIdentifier);
@@ -457,7 +460,7 @@ export const getLibauthTemplates = (
         abiFunction,
         encodedArgs,
         contract.encodedConstructorArgs,
-        scenarioIdentifier,
+        scenarioIds,
       );
 
       // Find the lock script name for this contract input

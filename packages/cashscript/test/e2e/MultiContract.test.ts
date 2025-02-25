@@ -88,7 +88,7 @@ describe('Multi Contract', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('P2PKH.cash:4 Require statement failed at input 0 in contract P2PKH.cash at line 4.');
+      await expect(txPromise).rejects.toThrow('P2PKH.cash:4 Require statement failed at input 1 in contract P2PKH.cash at line 4.');
       await expect(txPromise).rejects.toThrow('Failing statement: require(hash160(pk) == pkh)');
     });
 
