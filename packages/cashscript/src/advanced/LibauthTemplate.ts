@@ -26,6 +26,7 @@ import {
   Utxo,
 } from '../interfaces.js';
 import {
+  addHexPrefixExceptEmpty,
   formatBytecodeForDebugging,
   formatParametersForDebugging,
   generateTemplateScenarioBytecode,
@@ -553,7 +554,10 @@ const generateLockingScriptParams = (
   };
 
   const constructorParamsEntries = contract.artifact.constructorInputs
-    .map(({ name }, index) => [name, `0x${binToHex(csInput.unlocker!.contract!.encodedConstructorArgs[index])}`]);
+    .map(({ name }, index) => [
+      name,
+      addHexPrefixExceptEmpty(binToHex(csInput.unlocker!.contract!.encodedConstructorArgs[index])),
+    ]);
 
   const constructorParams = Object.fromEntries(constructorParamsEntries);
 

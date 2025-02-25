@@ -381,11 +381,15 @@ export const generateTemplateScenarioParametersValues = (
     .filter(([, arg]) => !(arg instanceof SignatureTemplate))
     .map(([input, arg]) => {
       const encodedArgumentHex = binToHex(arg as Uint8Array);
-      const prefixedEncodedArgument = encodedArgumentHex.length > 0 ? `0x${encodedArgumentHex}` : '';
+      const prefixedEncodedArgument = addHexPrefixExceptEmpty(encodedArgumentHex);
       return [snakeCase(input.name), prefixedEncodedArgument] as const;
     });
 
   return Object.fromEntries(entries);
+};
+
+export const addHexPrefixExceptEmpty = (value: string): string => {
+  return value.length > 0 ? `0x${value}` : '';
 };
 
 export const generateTemplateScenarioKeys = (

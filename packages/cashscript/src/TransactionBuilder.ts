@@ -158,7 +158,8 @@ export class TransactionBuilder {
   }
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
-  debug(): DebugResult[] {
+  // TODO: Remove the async in the future (this currently breaks our debugging tests)
+  async debug(): Promise<DebugResult[]> {
     const { debugResult } = getLibauthTemplates(this);
     return debugResult;
   }
@@ -180,7 +181,7 @@ export class TransactionBuilder {
     const tx = this.build();
 
     // Debug the transaction locally before sending so any errors are caught early
-    this.debug();
+    await this.debug();
 
     try {
       const txid = await this.provider.sendRawTransaction(tx);
