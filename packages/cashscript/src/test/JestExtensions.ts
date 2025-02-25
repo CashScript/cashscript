@@ -1,6 +1,6 @@
 import { MatcherContext } from '@jest/expect';
 import { SyncExpectationResult } from 'expect';
-import { DebugResult } from '../debugging.js';
+import { DebugResults } from '../debugging.js';
 
 export { };
 
@@ -16,7 +16,7 @@ declare global {
 }
 
 interface Debuggable {
-  debug(): Promise<DebugResult[]>;
+  debug(): Promise<DebugResults>;
 }
 
 expect.extend({

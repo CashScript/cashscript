@@ -38,7 +38,7 @@ import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
 import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
-import { debugTemplate, DebugResult } from './debugging.js';
+import { debugTemplate, DebugResults } from './debugging.js';
 import { EncodedFunctionArgument } from './Argument.js';
 import { FailedTransactionError } from './Errors.js';
 
@@ -185,13 +185,13 @@ export class Transaction {
   }
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
-  async debug(): Promise<DebugResult> {
+  async debug(): Promise<DebugResults> {
     if (!this.contract.artifact.debug) {
       console.warn('No debug information found in artifact. Recompile with cashc version 0.10.0 or newer to get better debugging information.');
     }
 
     const template = await this.getLibauthTemplate();
-    return debugTemplate(template, this.contract.artifact);
+    return debugTemplate(template, [this.contract.artifact]);
   }
 
   async bitauthUri(): Promise<string> {

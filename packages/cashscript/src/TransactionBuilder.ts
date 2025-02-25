@@ -24,9 +24,9 @@ import {
   validateOutput,
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
-import { DebugResult } from './debugging.js';
+import { DebugResults } from './debugging.js';
 import { getBitauthUri } from './LibauthTemplate.js';
-import { getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -159,19 +159,16 @@ export class TransactionBuilder {
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
   // TODO: Remove the async in the future (this currently breaks our debugging tests)
-  async debug(): Promise<DebugResult[]> {
-    const { debugResult } = getLibauthTemplates(this);
-    return debugResult;
+  async debug(): Promise<DebugResults> {
+    return debugLibauthTemplate(this.getLibauthTemplate(), this);
   }
 
   bitauthUri(): string {
-    const { template } = getLibauthTemplates(this);
-    return getBitauthUri(template);
+    return getBitauthUri(this.getLibauthTemplate());
   }
 
   getLibauthTemplate(): WalletTemplate {
-    const { template } = getLibauthTemplates(this);
-    return template;
+    return getLibauthTemplates(this);
   }
 
   // TODO: see if we can merge with Transaction.ts

@@ -1,26 +1,40 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBch2025, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2025, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
-import { findLastIndex, toRegExp } from './utils.js';
+import { findLastIndex, snakeCase, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './LibauthTemplate.js';
 
-// evaluates the fully defined template, throws upon error
-export const evaluateTemplate = (template: WalletTemplate): boolean => {
-  const { vm, program } = createProgram(template);
-
-  const verifyResult = vm.verify(program);
-  if (typeof verifyResult === 'string') {
-    throw new FailedTransactionError(verifyResult, getBitauthUri(template));
-  }
-
-  return verifyResult;
-};
-
 export type DebugResult = AuthenticationProgramStateCommon[];
+export type DebugResults = Record<string, DebugResult>;
 
 // debugs the template, optionally logging the execution data
-export const debugTemplate = (template: WalletTemplate, artifact: Artifact): DebugResult => {
-  const { vm, program } = createProgram(template);
+export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
+  const results: DebugResults = {};
+  const unlockingScriptIds = Object.keys(template.scripts).filter((key) => 'unlocks' in template.scripts[key]);
+
+  for (const unlockingScriptId of unlockingScriptIds) {
+    const scenarioIds = (template.scripts[unlockingScriptId] as WalletTemplateScriptUnlocking).passes ?? [];
+    // There are no scenarios defined for P2PKH placeholder scripts, so we skip them
+    if (scenarioIds.length === 0) continue;
+
+    const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(snakeCase(artifact.contractName)));
+
+    if (!matchingArtifact) {
+      throw new Error(`No artifact found for unlocking script ${unlockingScriptId}`);
+    }
+
+    for (const scenarioId of scenarioIds) {
+      results[`${unlockingScriptId}.${scenarioId}`] = debugSingleScenario(template, matchingArtifact, unlockingScriptId, scenarioId);
+    }
+  }
+
+  return results;
+};
+
+const debugSingleScenario = (
+  template: WalletTemplate, artifact: Artifact, unlockingScriptId: string, scenarioId: string,
+): DebugResult => {
+  const { vm, program } = createProgram(template, unlockingScriptId, scenarioId);
 
   const fullDebugSteps = vm.debug(program);
 
@@ -107,35 +121,35 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
   return fullDebugSteps;
 };
 
+/* eslint-disable @typescript-eslint/indent */
 type VM = AuthenticationVirtualMachine<
   ResolvedTransactionCommon,
   AuthenticationProgramCommon,
   AuthenticationProgramStateCommon
 >;
+/* eslint-enable @typescript-eslint/indent */
+
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
 
 // internal util. instantiates the virtual machine and compiles the template into a program
-const createProgram = (template: WalletTemplate): CreateProgramResult => {
+const createProgram = (template: WalletTemplate, unlockingScriptId: string, scenarioId: string): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
   const vm = createVirtualMachineBch2025();
   const compiler = createCompiler(configuration);
 
-  const unlockScriptId = Object.keys(template.scripts).find(key => key.includes('unlock'));
-  if (!unlockScriptId) {
-    throw new Error('No unlock script found in template');
+  if (!template.scripts[unlockingScriptId]) {
+    throw new Error(`No unlock script found in template for ID ${unlockingScriptId}`);
   }
 
-  const evaluateScenarioId = Object.keys(template?.scenarios ?? {}).find(key => key.endsWith('_evaluate'));
-  if (!evaluateScenarioId) {
-    throw new Error('No evaluate function scenario found in template');
+  if (!template.scenarios?.[scenarioId]) {
+    throw new Error(`No scenario found in template for ID ${scenarioId}`);
   }
 
   const scenarioGeneration = compiler.generateScenario({
     debug: true,
-    lockingScriptId: undefined,
-    unlockingScriptId: unlockScriptId,
-    scenarioId: evaluateScenarioId,
+    unlockingScriptId,
+    scenarioId,
   });
 
   if (typeof scenarioGeneration === 'string') {

@@ -19,7 +19,7 @@ import {
 } from '@cashscript/utils';
 import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from '../Argument.js';
 import { Contract } from '../Contract.js';
-import { DebugResult, debugTemplate } from '../debugging.js';
+import { DebugResults, debugTemplate } from '../debugging.js';
 import {
   AddressType,
   UnlockableUtxo,
@@ -362,7 +362,7 @@ const createCSTransaction = (txn: TransactionBuilder) => {
 
 export const getLibauthTemplates = (
   txn: TransactionBuilder,
-): { template: WalletTemplate; debugResult: DebugResult[] } => {
+): WalletTemplate => {
   const libauthTransaction = txn.buildLibauthTransaction();
   const csTransaction = createCSTransaction(txn);
 
@@ -535,13 +535,16 @@ export const getLibauthTemplates = (
 
   }
 
-  // Generate debug results
-  const debugResult: DebugResult[] = txn.inputs
+  return finalTemplate;
+};
+
+export const debugLibauthTemplate = (template: WalletTemplate, transaction: TransactionBuilder): DebugResults => {
+  const allArtifacts = transaction.inputs
     .map(input => input.unlocker?.contract)
     .filter((contract): contract is Contract => !!contract)
-    .map(contract => debugTemplate(finalTemplate, contract.artifact));
+    .map(contract => contract.artifact);
 
-  return { template: finalTemplate, debugResult };
+  return debugTemplate(template, allArtifacts);
 };
 
 const generateLockingScriptParams = (

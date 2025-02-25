@@ -164,7 +164,7 @@ describe('Multi Contract', () => {
       // when
       const transaction = new TransactionBuilder({ provider })
         .addInput(p2pkhContractUtxos[0], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
-        .addInput(twtContractUtxos[0], twtContract.unlock.transfer(carolSignatureTemplate))
+        .addInput(twtContractUtxos[0], twtContract.unlock.transfer(bobSignatureTemplate))
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
