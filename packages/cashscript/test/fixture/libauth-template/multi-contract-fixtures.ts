@@ -125,7 +125,7 @@ export const fixtures: Fixture[] = [
             'placeholder_key_0': {
               'description': '',
               'name': 'Placeholder Key 0',
-              'type': 'HdKey',
+              'type': 'Key',
             },
           },
         },
@@ -146,7 +146,7 @@ export const fixtures: Fixture[] = [
             'placeholder_key_1': {
               'description': '',
               'name': 'Placeholder Key 1',
-              'type': 'HdKey',
+              'type': 'Key',
             },
           },
         },
@@ -167,7 +167,7 @@ export const fixtures: Fixture[] = [
             'placeholder_key_2': {
               'description': '',
               'name': 'Placeholder Key 2',
-              'type': 'HdKey',
+              'type': 'Key',
             },
           },
         },

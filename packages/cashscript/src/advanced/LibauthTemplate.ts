@@ -1,6 +1,6 @@
 import {
   binToHex,
-  TransactionBCH,
+  TransactionBch,
   WalletTemplate,
   WalletTemplateEntity,
   WalletTemplateScenario,
@@ -65,7 +65,7 @@ export const generateTemplateEntitiesP2PKH = (
         [`placeholder_key_${index}`]: {
           description: '',
           name: `Placeholder Key ${index}`,
-          type: 'HdKey',
+          type: 'Key',
         },
       },
     },
@@ -253,13 +253,12 @@ const generateTemplateUnlockScript = (
 export const generateTemplateScenarios = (
   scenarioIdentifier: string,
   contract: Contract,
-  libauthTransaction: TransactionBCH,
+  libauthTransaction: TransactionBch,
   csTransaction: Transaction,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   slotIndex: number,
 ): WalletTemplate['scenarios'] => {
-
   const artifact = contract.artifact;
   const encodedConstructorArgs = contract.encodedConstructorArgs;
 
@@ -295,7 +294,7 @@ export const generateTemplateScenarios = (
 
 const generateTemplateScenarioTransaction = (
   contract: Contract,
-  libauthTransaction: TransactionBCH,
+  libauthTransaction: TransactionBch,
   csTransaction: Transaction,
   slotIndex: number,
 ): WalletTemplateScenario['transaction'] => {
