@@ -78,14 +78,11 @@ html[data-theme="dark"] {
   --ifm-alert-color:#000000;
   --ifm-heading-color: #ffffff;
 
-  .alert--secondary {
-    --ifm-alert-background-color: #474748;
-  }
+  --ifm-alert-background-color: #474748;
 }
 
 /* NOTE admonitions should be light grey (instead of secondary colour) */
 .alert--secondary {
-  --ifm-alert-background-color: #ebedf0;
   --ifm-alert-border-color: #d4d5d8;
 }
 
