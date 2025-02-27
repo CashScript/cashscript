@@ -33,7 +33,7 @@ require(tx.age >= <expression>);
 ```
 
 :::note
-To access the value of the `nSequence` field for assignment, use the `tx.inputs[i].sequenceNumber` introspection variable.
+To access the value of the `nSequence` field for variable assignment, use the [`sequenceNumber` introspection variable](#txinputsisequencenumber).
 :::
 
 Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done in the CashScript SDK using the [`withAge()`][withAge()] function. However, the value passed into this function will always be treated as a number of blocks, so **it is currently not supported to use `tx.age` as a number of second chunks**.
@@ -124,7 +124,7 @@ Represents the outpoint index where a specific input was initially locked.
 int tx.inputs[i].sequenceNumber
 ```
 
-Represents the `nSequence` number of a specific input.
+Represents the `nSequence` number of a specific input. This value of the input's `sequenceNumber` is only consensus-enforced as a relative timelock when using transaction version 2.
 
 #### tx.inputs[i].tokenCategory
 ```solidity
@@ -133,8 +133,8 @@ bytes tx.inputs[i].tokenCategory
 
 Represents the `tokenCategory` of a specific input. Returns 0 when that specific input contains no tokens. When the input contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
-:::note
-The `tokenCategory` is returned in the original unreversed order. Explorers and wallets change the byte order by default but for CashScript you need to be careful to use the unreversed order.
+:::caution
+The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
 :::
 
 #### tx.inputs[i].nftCommitment
@@ -182,8 +182,8 @@ bytes tx.output[i].tokenCategory
 
 Represents the `tokenCategory` of a specific output. Returns 0 when that specific output contains no tokens. When the output contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
-:::note
-The `tokenCategory` is returned in the original unreversed order. Explorers and wallets change the byte order by default but for CashScript you need to be careful to use the unreversed order.
+:::caution
+The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
 :::
 
 #### tx.output[i].nftCommitment
@@ -206,7 +206,7 @@ One of the main use cases of covenants is enforcing transaction outputs (where m
 #### Example
 ```solidity
 bytes25 lockingBytecode = new LockingBytecodeP2PKH(pkh);
-int value = 10000;
+int value = 10_000;
 require(tx.outputs[0].lockingBytecode == lockingBytecode);
 require(tx.outputs[0].value == value);
 ```
@@ -242,6 +242,10 @@ new LockingBytecodeNullData(bytes[] chunks): bytes
 ```
 
 Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
+
+:::note
+`LockingBytecodeNullData` outputs are provably unspendable, so any BCH sent there would be burned. For these outputs no dust-minimum is enforced so often `LockingBytecodeNullData` outputs have 0 BCH on them.
+:::
 
 ## Globally available units
 

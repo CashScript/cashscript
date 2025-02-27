@@ -78,6 +78,16 @@ BadgerCoin is a fungible CashToken using a novel distribution mechanism. BadgerC
 
 FundMe is a new BCH crowdfunding platform using WalletConnect. Fundme campaigns have revocable and refundable pledges through the use of CashTokens receipts. By using receipts, Fundme does not have a maximum limit on the number of participants in a campaign.
 
+## Zapit P2P Exchange
+
+<div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://zapit.io/" target="_blank">
+        <img src="/img/zapit_logo.svg" style={{width: '100%', margin: "50px 0"}} />
+    </a>
+</div>
+
+The Zapit wallet has a built-in P2P Exchange which allows user to buy or sell Bitcoin Cash directly without a custodial middleman. The P2P exchange works with an escrow smart contract which is written in CashScript. The P2P exchange contract has already processed hundreds of BCH in volume.
+
 ## Unspent Phi
 
 <div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>

@@ -49,7 +49,11 @@ npm install cashc
 compileFile(sourceFile: PathLike): Artifact
 ```
 
-Compiles a CashScript contract from a source file. This is the recommended compile method if you're using Node.js and you have a source file available.
+Compiles a CashScript contract from a source file. This compile method is handy when using Node.js with the contract source file available but you are doing quick compilations (for example for contract size comparisons) and you don't need the contract artifact file to be generated.
+
+:::note
+`compileFile()` only works from a Node.js context because it uses the file-system so it's not available in browser setting.
+:::
 
 #### Example
 ```ts
@@ -61,7 +65,7 @@ const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 compileString(sourceCode: string): Artifact
 ```
 
-Compiles a CashScript contract from a source code string. This is the recommended compile method if you're building a webapp, because `compileFile()` only works from a Node.js context. This is also the recommended method if no source file is locally available (e.g. the source code is retrieved with a REST API).
+Compiles a CashScript contract from a source code string. This compile method is handy in a browser compilation setting like the [CashScript Playground](https://playground.cashscript.org/) where testing contracts can be quickly compiled and discarded. The method is also useful if no source file is locally available (e.g. the source code is retrieved with a REST API).
 
 ```ts
 const baseUrl = 'https://raw.githubusercontent.com/CashScript/cashscript'

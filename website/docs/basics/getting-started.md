@@ -29,7 +29,7 @@ To write CashScript smart contracts locally you use a code editor. For the best 
 
 :::note prerequisites
 - Basic familiarity with the command line
-- Node.js installed
+- Node.js installed (v20 or newer)
 - A code editor (VS Code recommended)
 :::
 
@@ -88,7 +88,7 @@ OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_ROT OP_CHECKSIG OP_NIP OP_NI
 
 ## Creating a CashScript Transaction
 
-After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated earlier.
+After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to create a transaction spending from the smart contract UTXO. We'll continue with the `TransferWithTimeout` artifact generated earlier.
 
 :::info
 The CashScript SDK is written in TypeScript meaning that you can either use TypeScript or vanilla JavaScript to use the SDK.
@@ -106,6 +106,11 @@ npm install cashscript
 
 Now to initialise a contract we will import the `ElectrumNetworkProvider` and `Contract` classes from the CashScript SDK. We also need to import the contract artifact. Lastly, we need public keys from a generated key-pair to use as arguments for contract initialisation.
 
+:::tip
+For a code example of how to generate key-pairs with Libauth, see the [CashScript Examples' `common.ts`](https://github.com/CashScript/cashscript/blob/master/examples/common.ts) file where Alice and Bob's key-pairs are created.
+:::
+
+
 ```javascript
 import { ElectrumNetworkProvider, Contract } from 'cashscript';
 import artifact from './TransferWithTimeout.json' with { type: 'json' };
@@ -116,8 +121,7 @@ const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new TransferWithTimeout contract
 const contractArguments = [alicePub, bobPub, 100000n];
-const options = { provider };
-const contract = new Contract(artifact, contractArguments, options);
+const contract = new Contract(artifact, contractArguments, {provider});
 
 // Get the contract address and info about its balance
 console.log("Contract address: " + contract.address);
@@ -125,32 +129,40 @@ console.log("Contract balance: " + await contract.getBalance());
 console.log("Contract UTXOs: " + await contract.getUtxos());
 ```
 
-:::tip
-For a code example of how to generate key-pairs with Libauth, see the [CashScript Examples' `common.ts`](https://github.com/CashScript/cashscript/blob/master/examples/common.ts) file where Alice and Bob's key-pairs are created.
-:::
+Next, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. Later you'll learn to use the `MockNetworkProvider` so you can simulate transactions in a 'mock' network environment.
 
 ### Creating a Transaction
 
-Lastly, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. In other words, we need to make sure there's at least one UTXO with the smart contract locking bytecode, so that we can spend from it!
+Finally to create a transaction spending from the smart contract UTXO we use the `TransactionBuilder` to add in- and outputs to the transaction. The difference between the total BCH amount in the in- and outputs is the transaction fee.
+
+To spend from an input you specify the `UTXO` together with an `Unlocker` to actually provide the 'unlock' script matching the input's locking bytecode. For the initialized smart contract the `Unlockers` are available as methods on the `Contract` instance. Below we will invoke the `transfer` function on the contract utxo through `contract.unlock.transfer(...)`.
 
 ```javascript
-import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
+import { ElectrumNetworkProvider, Contract, SignatureTemplate, TransactionBuilder } from 'cashscript';
 import { alicePub, bobPriv, bobPub } from './keys.js';
-import artifact from './TransferWithTimeout.json';
+import artifact from './TransferWithTimeout.json' with { type: 'json' };
 
 // Initialise a network provider for network operations
 const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new TransferWithTimeout contract
 const contractArguments = [alicePub, bobPub, 100000n];
-const options = { provider };
-const contract = new Contract(artifact, contractArguments, options);
+const contract = new Contract(artifact, contractArguments, {provider});
 
-// Call the transfer function with Bob's signature
-// i.e. Bob claims the money that Alice has sent him
-const transferDetails = await contract.functions
-  .transfer(new SignatureTemplate(bobPriv))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
+// Specify the contract UTXO
+const contractUtxos = await contract.getUtxos();
+const selectedContractUtxo = contractUtxos[0]
+
+// Create the signatureTemplate for bob to sign the contract input
+const bobSignatureTemplate = new SignatureTemplate(bobPriv)
+
+// Start building the transaction
+const transferDetails = await new TransactionBuilder({ provider })
+  .addInput(selectedContractUtxo, contract.unlock.transfer(bobSignatureTemplate))
+  .addOutput({
+    to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
+    amount: 10000n
+  })
   .send();
 
 console.log(transferDetails);

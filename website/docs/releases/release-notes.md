@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.11.0-next.0
+## v0.11.0-next.1
 
 This update adds CashScript support for the new BCH 2025 network upgrade. To read more about the upgrade, see [this blog post](https://blog.bitjson.com/2025-chips/).
 
@@ -11,6 +11,11 @@ This update adds CashScript support for the new BCH 2025 network upgrade. To rea
 
 #### CashScript SDK
 - :hammer_and_wrench: Update debug tooling to work with the new `BCH_2025_05` instruction set.
+- :sparkles: Add debugging capabilities to the `TransactionBuilder`.
+  - `transaction.debug()` & `transaction.bitauthUri()`
+  - Output BitAuth IDE URI for debugging when transaction is rejected.
+  - Libauth template generation and debugging for multi-contract transactions
+- :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 
 ## v0.10.5
@@ -108,7 +113,7 @@ https://x.com/CashScriptBCH/status/1833454128426615174
 ## v0.9.0
 
 #### CashScript SDK
-- :sparkles: Add new advanced `TransactionBuilder` class that allows combining UTXOs from multiple different smart contracts and P2PKH UTXOs in a single transaction.
+- :sparkles: Add new `TransactionBuilder` class that allows combining UTXOs from multiple different smart contracts and P2PKH UTXOs in a single transaction.
 - :hammer_and_wrench: Deprecate all `meep` functionality. Meep has been unmaintained for years and does not support many new CashScript features. Meep functionality will be removed in a future release.
 
 ---

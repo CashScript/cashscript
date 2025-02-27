@@ -35,10 +35,9 @@ module.exports = {
       label: 'TypeScript SDK',
       items: [
         'sdk/instantiation',
+        'sdk/transaction-builder',
         'sdk/signature-templates',
         'sdk/network-provider',
-        'sdk/transactions',
-        'sdk/transactions-advanced',
         'sdk/testing-setup',
         'sdk/examples',
       ],

@@ -1,8 +1,13 @@
 ---
-title: Simple Transaction Builder
+title: Old Transaction Builder
 ---
 
-When calling a contract function on a Contract object, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
+:::caution
+This is the documentation for the old and now deprecated 'Simple Transaction Builder' by calling a function on the contract object directly.
+It is strongly recommended to migrate over to the new default transaction builder [using the migration notes](/docs/releases/migration-notes).
+:::
+
+When calling a contract function of a Contract object's `functions`, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
 
 Most of the available transaction options are only useful in very specific use cases, but the functions [`to()`][to()], [`withOpReturn()`][withOpReturn()] and [`send()`][send()] are commonly used. [`withHardcodedFee()`][withHardcodedFee()] is also commonly used with covenant contracts.
 

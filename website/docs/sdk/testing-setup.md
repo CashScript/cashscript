@@ -2,25 +2,25 @@
 title: Testing Setup
 ---
 
-Because of deep integration with libauth, CashScript allows for local transaction evaluation without actual interaction with any Bitcoin Cash test network. With a MockNetwork environment you can create virtual UTXOs without doing additional preparations. This has the advantages of not needing any testnet balances, not having to set up smart contract UTXOs and not having network latency. This setup allows for using a testing framework to run repeated automated tests for increased smart contract security.
+For the ease of development, CashScript has a `MockNetwork` environment where you can create virtual UTXOs. This has the advantages of not needing any testnet balances, not having to set up smart contract UTXOs and not having network latency. Because of this the MockNetwork environment is the ideal setup to run repeated automated tests with a testing framework for increased smart contract security.
 
-For a quick start with a CashScript testing setup, you can check out [our testing-suite example](https://github.com/CashScript/cashscript/tree/next/examples/testing-suite) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
-
-:::caution
-The CashScript debugging tools only work with the [Simple Transaction Builder](/docs/sdk/transactions). We plan to extend the debugging tools to work with the [Advanced Transaction Builder](/docs/sdk/transactions-advanced) in the future.
+:::tip
+For a quick start with a CashScript testing setup, check out the [example testing-suite](https://github.com/CashScript/cashscript/tree/next/examples/testing-suite) that demonstrates a full development and testing environment for CashScript contracts, similar to Hardhat on Ethereum.
 :::
 
 ## MockNetworkProvider
 
-The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. By default, it generates some random mock UTXOs for the contract address, but you can also add your own UTXOs to the provider.
+The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. To create a new virtual UTXO use `provider.addUtxo()`.
+
+#### Example
 
 ```ts
 import { MockNetworkProvider, randomUtxo, randomToken, randomNFT } from 'cashscript';
 
 const provider = new MockNetworkProvider();
-provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
+const contractUtxo = provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
 
-provider.addUtxo(aliceAddress, randomUtxo({
+const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
   satoshis: 1000n,
   token: { ...randomNFT(), ...randomToken() },
 }));
@@ -56,7 +56,11 @@ Logging is only available in debug evaluation of a transaction. It has no impact
 describe('Example contract', () => {
   it('should log the passed parameter', async () => {
     const contract = new Contract(artifact, [], { provider });
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toLog('passed parameter: 1000');
   });
 });
@@ -73,14 +77,19 @@ Similar to `console.log`, the error message in a `require` statement is only ava
 ```ts
 describe('Example contract', () => {
   const contract = new Contract(artifact, [], { provider });
+  const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
   it('should fail require statement when incorrect parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(999n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toFailRequireWith('passed parameter is not 1000');
   });
 
   it('should pass require statement when correct parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).not.toFailRequire();
   });
 });
@@ -103,23 +112,29 @@ import { Contract, MockNetworkProvider, randomUtxo } from 'cashscript';
 import 'cashscript/jest';
 
 describe('Example contract', () => {
-  const contract = new Contract(artifact, [], { provider });
   const provider = new MockNetworkProvider();
-  provider.addUtxo(contract.address, randomUtxo());
+  const contract = new Contract(artifact, [], { provider });
+  const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
   it('should log the passed parameter', async () => {
     const contract = new Contract(artifact, [], { provider });
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toLog('passed parameter: 1000');
   });
 
   it('should fail require statement when incorrect parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(999n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).toFailRequireWith('passed parameter is not 1000');
   });
 
   it('should pass require statement when correct parameter is passed', async () => {
-    const transaction = contract.functions.exampleFunction(1000n).to(contract.address, 10000n);
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
+      .addOutput({ to: contract.address, amount: 10000n })
     await expect(transaction).not.toFailRequire();
   });
 });

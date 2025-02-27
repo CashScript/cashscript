@@ -19,7 +19,7 @@ In some cases it might be desirable to overwrite the 2-of-3 ElectrumCluster defa
 
 ### Network
 ```ts
-type Network = 'mainnet' | 'testnet3' | 'testnet4' | 'chipnet' | 'regtest';
+type Network = 'mainnet' | 'chipnet' | 'testnet3' | 'testnet4' | 'regtest';
 ```
 
 The network parameter can be one of 5 different options.
@@ -120,7 +120,7 @@ There are two alternative network providers implemented:
 Currently neither supports CashTokens, so it is recommended to use the `ElectrumNetworkProvider`.
 
 ### Custom NetworkProviders
-A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if new BCH libraries are created in the future, it is simple to use them with CashScript. Custom NetworkProviders also potentially enables the CashScript SDK to be used with other (partially) compatible networks, such as BTC or BSV.
+A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if you want to use a new or different BCH indexers for network information, it is simple to use it with CashScript.
 
 :::info
 To implement a Custom NetworkProvider, refer to the [NetworkProvider interface](https://github.com/CashScript/cashscript/blob/master/packages/cashscript/src/network/NetworkProvider.ts).

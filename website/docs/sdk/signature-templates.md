@@ -17,20 +17,51 @@ new SignatureTemplate(
 )
 ```
 
-In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
+In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [WIF strings][wif], [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], or binary private keys represented as `Uint8Array`. This ensures that `SignatureTemplate` can be used with any BCH library.
 
 #### Example
 ```ts
 const aliceWif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const aliceSignatureTemplate = new SignatureTemplate(aliceWif)
 
-const tx = await contract.functions
-  .transfer(aliceSignatureTemplate)
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
-  .send()
+const transferDetails = await new TransactionBuilder({ provider })
+  .addInput(selectedContractUtxo, contract.unlock.transfer(aliceSignatureTemplate))
+  .addOutput({
+    to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
+    amount: 10000n
+  })
+  .send();
 ```
 
 The `hashtype` and `signatureAlgorithm` options are covered under ['Advanced Usage'](/docs/sdk/signature-templates#advanced-usage).
+
+## SignatureTemplate Methods
+
+### getPublicKey()
+```ts
+signatureTemplate.getPublicKey(): Uint8Array
+```
+
+#### Example
+```ts
+import { aliceTemplate } from './somewhere.js';
+
+const alicePublicKey = aliceTemplate.getPublicKey()
+```
+
+### unlockP2PKH()
+```ts
+signatureTemplate.unlockP2PKH(): Unlocker
+```
+
+#### Example
+```ts
+import { aliceTemplate, aliceAddress, transactionBuilder } from './somewhere.js';
+
+const aliceUtxos = await provider.getUtxos(aliceAddress);
+transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
+```
+
 
 ## Advanced Usage
 
@@ -55,6 +86,8 @@ const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const signatureTemplate = new SignatureTemplate(
   wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
 );
+
+const configuredHashType = signatureTemplate.getHashType()
 ```
 
 ### SignatureAlgorithm
@@ -75,6 +108,8 @@ const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const hashType = HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
 const signatureAlgorithm = SignatureAlgorithm.SCHNORR
 const signatureTemplate = new SignatureTemplate(wif, hashType,signatureAlgorithm);
+
+const configuredSignatureAlgorithm = signatureTemplate.getSignatureAlgorithm()
 ```
 
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
