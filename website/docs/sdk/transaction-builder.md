@@ -210,7 +210,7 @@ const txDetails = await new TransactionBuilder({ provider })
 
 ### build()
 ```ts
-async transactionBuilder.build(): Promise<string>
+transactionBuilder.build(): string
 ```
 
 After completing a transaction, the `build()` function can be used to build the entire transaction and return the signed transaction hex string. This can then be imported into other libraries or applications as necessary.
@@ -240,7 +240,7 @@ If you want to debug a transaction locally instead of sending it to the network,
 
 ### bitauthUri()
 ```ts
-async transactionBuilder.bitauthUri(): Promise<string>
+transactionBuilder.bitauthUri(): string
 ```
 
 If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.

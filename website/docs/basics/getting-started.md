@@ -138,7 +138,7 @@ Finally to create a transaction spending from the smart contract UTXO we use the
 To spend from an input you specify the `UTXO` together with an `Unlocker` to actually provide the 'unlock' script matching the input's locking bytecode. For the initialized smart contract the `Unlockers` are available as methods on the `Contract` instance. Below we will invoke the `transfer` function on the contract utxo through `contract.unlock.transfer(...)`.
 
 ```javascript
-import { ElectrumNetworkProvider, Contract, SignatureTemplate, transactionBuilder } from 'cashscript';
+import { ElectrumNetworkProvider, Contract, SignatureTemplate, TransactionBuilder } from 'cashscript';
 import { alicePub, bobPriv, bobPub } from './keys.js';
 import artifact from './TransferWithTimeout.json' with { type: 'json' };
 

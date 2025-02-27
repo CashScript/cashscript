@@ -124,7 +124,7 @@ Represents the outpoint index where a specific input was initially locked.
 int tx.inputs[i].sequenceNumber
 ```
 
-Represents the `nSequence` number of a specific input. This value of the input's `sequenceNumber` is only consensus-enforced as a relative timelock when using transaction verion 2.
+Represents the `nSequence` number of a specific input. This value of the input's `sequenceNumber` is only consensus-enforced as a relative timelock when using transaction version 2.
 
 #### tx.inputs[i].tokenCategory
 ```solidity

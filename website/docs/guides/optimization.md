@@ -52,7 +52,7 @@ Also declare variables when re-using certain common introspection items to avoid
 
     // not this
     require(tx.inputs[1].tokenCategory == tx.inputs[0].tokenCategory.split(32)[0]);
-    require(tx.inputs[1].tokenCategory == tx.inputs[0].tokenCategory.split(32)[0]);
+    require(tx.outputs[1].tokenCategory == tx.inputs[0].tokenCategory.split(32)[0]);
 ```
 
 ### 2. Consume stack items
@@ -69,7 +69,6 @@ When using `.split()` to use both sides of a `bytes` element, declare both parts
 
     // not this
     bytes firstPart = tx.inputs[0].nftCommitment.split(10)[0];
-    ...
     bytes secondPart = tx.inputs[0].nftCommitment.split(10)[1];
 ```
 ### 4. Avoid if-else
@@ -95,7 +94,7 @@ When the contract logic is finished, that is a great time to revisit the order o
 
 ## Avoid Many Functions
 
-When a contract has many different functions or has a lot duplicate code shared across two functions, this can be a natural indication that contract optimization is possible. There's a different optimization strategy for each: 
+When a contract has many different functions or has a lot duplicate code shared across two functions, this can be a natural indication that contract optimization is possible. There's a different optimization strategy for each:
 
 ### Modular Contract Design
 
@@ -110,9 +109,13 @@ By using function NFTs you can use a modular contract design where the contract 
 
 ### Combining Functions
 
-Combining functions reduces the duplicate code in the compiled output and improves the overall contract bytesize so might be worth exploring. This optimization is already considered advanced, as it steps away from the CashScript abstraction for contract structure and often requires some workarounds.
+If there is a lot of duplicate code across different functions in your contract, you could consider combining the functions into one, where the logic of the different functions are conditionally executed based on the function arguments, removing duplicate code.
 
-The difficulty with this approach is the CashScript functions expect a fixed number of arguments for each function. So when trying to two functions into one to share code logic it might prove very difficult due to the different arguments they each expect. There is no notion of option arguments or function overloading in CashScript currently.
+The difficulty with this approach is that CashScript functions expect a fixed number of arguments for each function. So when trying to combine two functions into one it might prove very difficult due to the different arguments they each expect. There is no notion of optional arguments or function overloading in CashScript currently.
+
+:::caution
+This optimization is considered advanced, as it steps away from the CashScript abstraction for contract structure and often requires workarounds.
+:::
 
 ```solidity title="Example CashScript code"
 contract Example(){
@@ -123,18 +126,18 @@ contract Example(){
     } else if(conditionFunction2){
        // logic function2
     } else {
-     // function3
-      // logic function3
+      // logic applying to function 3 & 4
+      if(conditionFunction3){
+        // logic function3
+      } else {
+        // logic function4
+      }
     }
   }
 }
 ```
 
-In Cashscript, when defining multiple functions, a `selectorIndex` parameter is added under-the-hood to select which of the contract's functions you want to use, this wraps your functions in big `if-else` cases. However when combining multiple functions in one cases you will have to think about the function conditions yourself and `if-else` branching yourself.
-
-:::note
-When a CashScript contract only has one function, the function selecting overhead (`selectorIndex` with `if-else` cases) is not present which means a smaller contracts.
-:::
+In Cashscript, when defining multiple functions, a `selectorIndex` parameter is added under-the-hood to select which of the contract's functions you want to use, this wraps your functions in big `if-else` cases. However when combining multiple functions in one cases you will have to think about the function conditions and `if-else` branching yourself.
 
 ## Hand-optimizing Bytecode
 
@@ -144,7 +147,7 @@ It's worth considering whether hand-optimizing the contract is necessary at all.
 
 ### Optimizing with the BitauthIDE
 
-When optimizing the bytecode of your contract you'll like want to use the [BitauthIDE] so you can see the stack changes of each OpCode. It's important to realize the `transactionBuilder.bitauthUri()` will show the two-wap mapping to the **un-optimized** bytecode, so this is not the final resulting bytecode produced by the compiler. The compiler will perform a bunch of optimizations already, so you should look at the `Artifact bytecode` if you want to further optimize the compiled contract bytecode.
+When optimizing the bytecode of your contract you'll likely want to use the [BitauthIDE](https://ide.bitauth.com) so you can see the stack changes of each OpCode. It's important to realize that `transactionBuilder.bitauthUri()` will show the two-wap mapping to the **un-optimized** bytecode, so this is not the final resulting bytecode produced by the compiler. The compiler will perform a bunch of optimizations already, so you should look at the `Artifact bytecode` if you want to further optimize the compiled contract bytecode.
 
 ### Overwriting the Artifact
 

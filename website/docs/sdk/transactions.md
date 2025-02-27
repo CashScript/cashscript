@@ -4,7 +4,7 @@ title: Old Transaction Builder
 
 :::caution
 This is the documentation for the old and now deprecated 'Simple Transaction Builder' by calling a function on the contract object directly.
-It is strongly recommended to migrate over to the new default transaction builde [using the migration notes](/docs/releases/migration-notes).
+It is strongly recommended to migrate over to the new default transaction builder [using the migration notes](/docs/releases/migration-notes).
 :::
 
 When calling a contract function of a Contract object's `functions`, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.

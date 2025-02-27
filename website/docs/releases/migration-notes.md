@@ -67,9 +67,7 @@ const txDetails = await new TransactionBuilder({ provider })
   .send();
 ```
 
-With the new transaction builder there is no need to rely on methods like `.withoutChange()` and `.withoutTokenChange()`.
-
-However because inputs are always explicitly specified, there is no automatic change outputs or option to set a predetermined fee value.
+With the new transaction builder, all inputs and outputs are explicitly specified. This means that there are no automatic change outputs added (for BCH or tokens). This means that there are also no `.withMinChange()`, `.withoutChange()`, `.withoutTokenChange()`, `withHardcodedFee()`, or `.withFeePerByte()` methods. The developer is responsible for manually adding change outputs. There is still an option to use `.setMaxFee()` as a security measure to prevent the transaction from being too expensive.
 
 ## v0.9 to v0.10
 
