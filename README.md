@@ -83,7 +83,7 @@ Using the CashScript SDK, you can import contract artifact files, create new ins
   // Call the spend function with the owner's signature
   // And use it to send 0. 000 100 00 BCH back to the contract's address
   const txDetails = await new TransactionBuilder({ provider })
-    .addInput(selectedContractUtxo, contract.unlock.transfer(new SignatureTemplate(keypair)))
+    .addInput(selectedContractUtxo, contract.unlock.spend(new SignatureTemplate(keypair)))
     .addOutput({
       to: contract.address,
       amount: 10000n

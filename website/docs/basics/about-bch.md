@@ -33,7 +33,7 @@ Bitcoin Cash has had many script upgrades, including transaction introspection a
 Smart contracts on Bitcoin Cash only have access to the current transaction context, which enables 'local state'. This model allows transactions to be verified independently and efficiently. Because there is no global state that can impact the execution of these smart contracts, the results are deterministic and predictable.
 
 :::tip
-The UTXO model where transactions only have access to the local state/context enables parallel transaction validation and is the reason why Bitcoin Cash is hugely scalable!
+The UTXO model where transactions only have access to the local transaction context enables parallel transaction validation and is the reason why Bitcoin Cash is hugely scalable!
 :::
 
 ### Bitcoin Cash Script
