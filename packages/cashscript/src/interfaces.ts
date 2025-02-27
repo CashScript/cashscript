@@ -1,6 +1,9 @@
 import { type Transaction } from '@bitauth/libauth';
 import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
+import { Contract } from './Contract.js';
+import { AbiFunction } from '@cashscript/utils';
+import { FunctionArgument } from './Argument.js';
 
 export interface Utxo {
   txid: string;
@@ -28,9 +31,14 @@ export interface GenerateUnlockingBytecodeOptions {
   inputIndex: number;
 }
 
+// TODO: Change this type when we understand the requirements better
 export interface Unlocker {
   generateLockingBytecode: () => Uint8Array;
   generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
+  contract?: Contract;
+  params?: FunctionArgument[];
+  abiFunction?: AbiFunction;
+  template?: SignatureTemplate;
 }
 
 export interface UtxoP2PKH extends Utxo {

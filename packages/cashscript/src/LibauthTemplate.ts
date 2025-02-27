@@ -55,7 +55,7 @@ export const buildTemplate = async ({
   const template = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
-    name: contract.artifact.contractName,
+    name: 'CashScript Generated Debugging Template',
     supported: ['BCH_2023_05'],
     version: 0,
     entities: generateTemplateEntities(contract.artifact, transaction.abiFunction, transaction.encodedFunctionArgs),
@@ -77,7 +77,6 @@ export const buildTemplate = async ({
     ),
   } as WalletTemplate;
 
-
   transaction.inputs
     .forEach((input, index) => {
       if (!isUtxoP2PKH(input)) return;
@@ -90,9 +89,9 @@ export const buildTemplate = async ({
       const hashtypeName = getHashTypeName(input.template.getHashType(false));
       const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
 
-      template.entities.parameters.scripts!.push(lockScriptName, unlockScriptName);
-      template.entities.parameters.variables = {
-        ...template.entities.parameters.variables,
+      template.entities[snakeCase(contract.name + 'Parameters')].scripts!.push(lockScriptName, unlockScriptName);
+      template.entities[snakeCase(contract.name + 'Parameters')].variables = {
+        ...template.entities[snakeCase(contract.name + 'Parameters')].variables,
         [placeholderKeyName]: {
           description: placeholderKeyName,
           name: placeholderKeyName,
@@ -154,12 +153,12 @@ const generateTemplateEntities = (
   );
 
   const entities = {
-    parameters: {
+    [snakeCase(artifact.contractName + 'Parameters')]: {
       description: 'Contract creation and function parameters',
-      name: 'parameters',
+      name: snakeCase(artifact.contractName + 'Parameters'),
       scripts: [
-        'lock',
-        'unlock_lock',
+        snakeCase(artifact.contractName + '_lock'),
+        snakeCase(artifact.contractName + '_unlock'),
       ],
       variables: {
         ...functionParameters,
@@ -170,7 +169,7 @@ const generateTemplateEntities = (
 
   // function_index is a special variable that indicates the function to execute
   if (artifact.abi.length > 1) {
-    entities.parameters.variables.function_index = {
+    entities[snakeCase(artifact.contractName + 'Parameters')].variables.function_index = {
       description: 'Script function index to execute',
       name: 'function_index',
       type: 'WalletData',
@@ -189,8 +188,8 @@ const generateTemplateScripts = (
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
   return {
-    unlock_lock: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
-    lock: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
+    [snakeCase(artifact.contractName + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
+    [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
 
@@ -201,7 +200,7 @@ const generateTemplateLockScript = (
 ): WalletTemplateScriptLocking => {
   return {
     lockingType: addressType,
-    name: 'lock',
+    name: snakeCase(artifact.contractName + '_lock'),
     script: [
       `// "${artifact.contractName}" contract constructor parameters`,
       formatParametersForDebugging(artifact.constructorInputs, constructorArguments),
@@ -225,15 +224,15 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: ['evaluate_function'],
-    name: 'unlock',
+    passes: [snakeCase(artifact.contractName + 'Evaluate')],
+    name: snakeCase(artifact.contractName + '_unlock'),
     script: [
       `// "${abiFunction.name}" function parameters`,
       formatParametersForDebugging(abiFunction.inputs, encodedFunctionArgs),
       '',
       ...functionIndexString,
     ].join('\n'),
-    unlocks: 'lock',
+    unlocks: snakeCase(artifact.contractName + '_lock'),
   };
 };
 
@@ -251,8 +250,8 @@ const generateTemplateScenarios = (
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
-    evaluate_function: {
-      name: 'Evaluate',
+    [snakeCase(artifact.contractName + 'Evaluate')]: {
+      name: snakeCase(artifact.contractName + 'Evaluate'),
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
@@ -273,7 +272,7 @@ const generateTemplateScenarios = (
 
   if (artifact.abi.length > 1) {
     const functionIndex = artifact.abi.findIndex((func) => func.name === transaction.abiFunction.name);
-    scenarios!.evaluate_function!.data!.bytecode!.function_index = functionIndex.toString();
+    scenarios![snakeCase(artifact.contractName + 'Evaluate')].data!.bytecode!.function_index = functionIndex.toString();
   }
 
   return scenarios;
@@ -314,7 +313,7 @@ const generateTemplateScenarioTransaction = (
   return { inputs, locktime, outputs, version };
 };
 
-const generateTemplateScenarioTransactionOutputLockingBytecode = (
+export const generateTemplateScenarioTransactionOutputLockingBytecode = (
   csOutput: Output,
   contract: Contract,
 ): string | {} => {
@@ -323,6 +322,20 @@ const generateTemplateScenarioTransactionOutputLockingBytecode = (
   return binToHex(addressToLockScript(csOutput.to));
 };
 
+/**
+ * Generates source outputs for a BitAuth template scenario
+ *
+ * @param csTransaction - The CashScript transaction to generate source outputs for
+ * @returns An array of BitAuth template scenario outputs with locking scripts and values
+ *
+ * For each input in the transaction:
+ * - Generates appropriate locking bytecode (P2PKH or contract)
+ * - Includes the input value in satoshis
+ * - Includes any token details if present
+ *
+ * The slotIndex tracks which input is the contract input vs P2PKH inputs
+ * to properly generate the locking scripts.
+ */
 const generateTemplateScenarioSourceOutputs = (
   csTransaction: Transaction,
 ): Array<WalletTemplateScenarioOutput<true>> => {
@@ -338,7 +351,7 @@ const generateTemplateScenarioSourceOutputs = (
 };
 
 // Used for generating the locking / unlocking bytecode for source outputs and inputs
-const generateTemplateScenarioBytecode = (
+export const generateTemplateScenarioBytecode = (
   input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
   if (isUtxoP2PKH(input)) {
@@ -357,7 +370,7 @@ const generateTemplateScenarioBytecode = (
   return insertSlot ? ['slot'] : {};
 };
 
-const generateTemplateScenarioParametersValues = (
+export const generateTemplateScenarioParametersValues = (
   types: readonly AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
@@ -368,14 +381,18 @@ const generateTemplateScenarioParametersValues = (
     .filter(([, arg]) => !(arg instanceof SignatureTemplate))
     .map(([input, arg]) => {
       const encodedArgumentHex = binToHex(arg as Uint8Array);
-      const prefixedEncodedArgument = encodedArgumentHex.length > 0 ? `0x${encodedArgumentHex}` : '';
+      const prefixedEncodedArgument = addHexPrefixExceptEmpty(encodedArgumentHex);
       return [snakeCase(input.name), prefixedEncodedArgument] as const;
     });
 
   return Object.fromEntries(entries);
 };
 
-const generateTemplateScenarioKeys = (
+export const addHexPrefixExceptEmpty = (value: string): string => {
+  return value.length > 0 ? `0x${value}` : '';
+};
+
+export const generateTemplateScenarioKeys = (
   types: readonly AbiInput[],
   encodedArgs: EncodedFunctionArgument[],
 ): Record<string, string> => {
@@ -388,7 +405,7 @@ const generateTemplateScenarioKeys = (
   return Object.fromEntries(entries);
 };
 
-const formatParametersForDebugging = (types: readonly AbiInput[], args: EncodedFunctionArgument[]): string => {
+export const formatParametersForDebugging = (types: readonly AbiInput[], args: EncodedFunctionArgument[]): string => {
   if (types.length === 0) return '// none';
 
   // We reverse the arguments because the order of the arguments in the bytecode is reversed
@@ -409,7 +426,7 @@ const formatParametersForDebugging = (types: readonly AbiInput[], args: EncodedF
   }).join('\n');
 };
 
-const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
+export const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
   const signatureAlgorithmNames = {
     [SignatureAlgorithm.SCHNORR]: 'schnorr_signature',
     [SignatureAlgorithm.ECDSA]: 'ecdsa_signature',
@@ -418,7 +435,7 @@ const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): stri
   return signatureAlgorithmNames[signatureAlgorithm];
 };
 
-const getHashTypeName = (hashType: HashType): string => {
+export const getHashTypeName = (hashType: HashType): string => {
   const hashtypeNames = {
     [HashType.SIGHASH_ALL]: 'all_outputs',
     [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
@@ -437,7 +454,7 @@ const getHashTypeName = (hashType: HashType): string => {
   return hashtypeNames[hashType];
 };
 
-const formatBytecodeForDebugging = (artifact: Artifact): string => {
+export const formatBytecodeForDebugging = (artifact: Artifact): string => {
   if (!artifact.debug) {
     return artifact.bytecode
       .split(' ')
@@ -452,7 +469,9 @@ const formatBytecodeForDebugging = (artifact: Artifact): string => {
   );
 };
 
-const serialiseTokenDetails = (token?: TokenDetails | LibauthTokenDetails): LibauthTemplateTokenDetails | undefined => {
+export const serialiseTokenDetails = (
+  token?: TokenDetails | LibauthTokenDetails,
+): LibauthTemplateTokenDetails | undefined => {
   if (!token) return undefined;
 
   return {

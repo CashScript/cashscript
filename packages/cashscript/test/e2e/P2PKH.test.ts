@@ -2,6 +2,7 @@ import { binToHex } from '@bitauth/libauth';
 import {
   Contract, SignatureTemplate, MockNetworkProvider, ElectrumNetworkProvider,
   FailedRequireError,
+  TransactionBuilder,
 } from '../../src/index.js';
 import {
   bobAddress,
@@ -10,39 +11,44 @@ import {
   bobPkh,
   alicePriv,
   alicePub,
+  aliceAddress,
 } from '../fixture/vars.js';
-import { getTxOutputs } from '../test-util.js';
-import { Network, Utxo } from '../../src/interfaces.js';
+import { gatherUtxos, getTxOutputs, itOrSkip } from '../test-util.js';
+import { Network } from '../../src/interfaces.js';
 import {
-  createOpReturnOutput, randomUtxo, utxoComparator,
+  createOpReturnOutput, randomUtxo,
 } from '../../src/utils.js';
-import artifact from '../fixture/p2pkh.json' with { type: 'json' };
+import artifact from '../fixture/p2pkh.artifact.js';
 
 describe('P2PKH-no-tokens', () => {
-  let p2pkhInstance: Contract;
-
   const provider = process.env.TESTS_USE_MOCKNET
     ? new MockNetworkProvider()
     : new ElectrumNetworkProvider(Network.CHIPNET);
 
+  // define contract in the describe block so artifact typings aren't lost
+  const p2pkhContract = new Contract(artifact, [bobPkh], { provider });
+
   beforeAll(() => {
     // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other (P2PKH tokens) tests
-    p2pkhInstance = new Contract(artifact, [bobPkh], { provider });
-    console.log(p2pkhInstance.tokenAddress);
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ satoshis: 10000000n }));
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ satoshis: 10000000n }));
+    console.log(p2pkhContract.tokenAddress);
+    (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo({ satoshis: 10000000n }));
+    (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo({ satoshis: 10000000n }));
+    (provider as any).addUtxo?.(bobAddress, randomUtxo());
+    (provider as any).addUtxo?.(bobAddress, randomUtxo());
   });
 
   describe('send', () => {
     it('should fail when using incorrect public key', async () => {
       // given
-      const to = p2pkhInstance.address;
+      const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
-      const txPromise = p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(bobPriv))
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(alicePub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -53,13 +59,15 @@ describe('P2PKH-no-tokens', () => {
 
     it('should fail when using incorrect signature', async () => {
       // given
-      const to = p2pkhInstance.address;
+      const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
-      const txPromise = p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(alicePriv))
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -70,13 +78,15 @@ describe('P2PKH-no-tokens', () => {
 
     it('should succeed when using correct function arguments', async () => {
       // given
-      const to = p2pkhInstance.address;
+      const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
-      const tx = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -85,61 +95,63 @@ describe('P2PKH-no-tokens', () => {
       expect(tx.txid).toBeDefined();
     });
 
-    it('should fail when not enough satoshis are provided in utxos', async () => {
+    // TODO: this fails on mocknet, because mocknet doesn't check inputs vs outputs,
+    // we should add a sanity check in our own code
+    itOrSkip(!process.env.TESTS_USE_MOCKNET, 'should fail when not enough satoshis are provided in utxos', async () => {
       // given
-      const to = p2pkhInstance.address;
+      const to = p2pkhContract.address;
       const amount = 1000n;
-      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
-      const { utxos: gathered } = gatherUtxos(utxos, { amount });
-      const failureAmount = gathered.reduce((acc, utxo) => acc + utxo.satoshis, 0n) + 1n;
+      const { utxos, total, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
+      const failureAmount = total + 1n;
 
       // when
-      const txPromise = p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .from(gathered)
-        .to(to, failureAmount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount: failureAmount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
       await expect(txPromise).rejects.toThrow();
     });
 
-    it('should succeed when providing UTXOs', async () => {
+    it('should succeed when providing UTXOs to .addInputs', async () => {
       // given
-      const to = p2pkhInstance.address;
+      const to = p2pkhContract.address;
       const amount = 1000n;
-      const utxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
-      const { utxos: gathered } = gatherUtxos(utxos, { amount });
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
-      const receipt = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .from(gathered)
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
       expect.hasAssertions();
-      receipt.inputs.forEach((input) => {
-        expect(gathered.find((utxo) => (
+      tx.inputs.forEach((input) => {
+        expect(utxos.find((utxo) => (
           utxo.txid === binToHex(input.outpointTransactionHash)
           && utxo.vout === input.outpointIndex
         ))).toBeTruthy();
       });
     });
 
-    it('can call to() multiple times', async () => {
+    it('can call addOutput() multiple times', async () => {
       // given
       const outputs = [
-        { to: p2pkhInstance.address, amount: 10000n },
-        { to: p2pkhInstance.address, amount: 20000n },
+        { to: p2pkhContract.address, amount: 10_000n },
+        { to: p2pkhContract.address, amount: 20_000n },
       ];
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount: 30_000n, fee: 2000n });
 
       // when
-      const tx = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .to(outputs[0].to, outputs[0].amount)
-        .to(outputs[1].to, outputs[1].amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to: outputs[0].to, amount: outputs[0].amount })
+        .addOutput({ to: outputs[1].to, amount: outputs[1].amount })
+        .addOutput({ to: aliceAddress, amount: changeAmount })
         .send();
 
       // then
@@ -150,14 +162,16 @@ describe('P2PKH-no-tokens', () => {
     it('can send to list of recipients', async () => {
       // given
       const outputs = [
-        { to: p2pkhInstance.address, amount: 10000n },
-        { to: p2pkhInstance.address, amount: 20000n },
+        { to: p2pkhContract.address, amount: 10_000n },
+        { to: p2pkhContract.address, amount: 20_000n },
       ];
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount: 30_000n, fee: 2000n });
 
       // when
-      const tx = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .to(outputs)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutputs(outputs)
+        .addOutput({ to: aliceAddress, amount: changeAmount })
         .send();
 
       // then
@@ -167,20 +181,22 @@ describe('P2PKH-no-tokens', () => {
 
     it('can include OP_RETURN data as an output', async () => {
       // given
-      const opReturn = ['0x6d02', 'Hello, World!', '0x01'];
-      const to = p2pkhInstance.address;
+      const opReturnData = ['0x6d02', 'Hello, World!', '0x01'];
+      const to = p2pkhContract.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhContract.getUtxos(), { amount });
 
       // when
-      const tx = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .to(to, amount)
-        .withOpReturn(opReturn)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhContract.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
+        .addOutput(createOpReturnOutput(opReturnData))
+        .addOutput({ to: aliceAddress, amount: changeAmount })
         .send();
 
       // then
       const txOutputs = getTxOutputs(tx);
-      const expectedOutputs = [{ to, amount }, createOpReturnOutput(opReturn)];
+      const expectedOutputs = [{ to, amount }, createOpReturnOutput(opReturnData)];
       expect(txOutputs).toEqual(expect.arrayContaining(expectedOutputs));
     });
 
@@ -188,19 +204,19 @@ describe('P2PKH-no-tokens', () => {
       // given
       const to = bobAddress;
       const amount = 10000n;
+      const bobSignatureTemplate = new SignatureTemplate(bobPriv);
 
-      const contractUtxos = (await p2pkhInstance.getUtxos()).sort(utxoComparator).reverse();
+      const contractUtxos = await p2pkhContract.getUtxos();
       const bobUtxos = await provider.getUtxos(bobAddress);
 
       // when
-      const tx = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .fromP2PKH(bobUtxos[0], new SignatureTemplate(bobPriv))
-        .from(contractUtxos[0])
-        .fromP2PKH(bobUtxos[1], new SignatureTemplate(bobPriv))
-        .from(contractUtxos[1])
-        .to(to, amount)
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(contractUtxos[0], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
+        .addInput(bobUtxos[0], bobSignatureTemplate.unlockP2PKH())
+        .addInput(contractUtxos[1], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
+        .addInput(bobUtxos[1], bobSignatureTemplate.unlockP2PKH())
+        .addOutput({ to, amount })
+        .addOutput({ to, amount })
         .send();
 
       // then
@@ -209,25 +225,3 @@ describe('P2PKH-no-tokens', () => {
     });
   });
 });
-
-function gatherUtxos(
-  utxos: Utxo[],
-  options?: { amount?: bigint, fees?: bigint },
-): { utxos: Utxo[], total: bigint } {
-  const targetUtxos: Utxo[] = [];
-  let total = 0n;
-
-  // 1000 for fees
-  const { amount = 0n, fees = 1000n } = options ?? {};
-
-  for (const utxo of utxos) {
-    if (total - fees > amount) break;
-    total += utxo.satoshis;
-    targetUtxos.push(utxo);
-  }
-
-  return {
-    utxos: targetUtxos,
-    total,
-  };
-}

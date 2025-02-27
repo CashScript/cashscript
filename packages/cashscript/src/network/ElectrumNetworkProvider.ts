@@ -47,7 +47,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       this.electrum.addServer('testnet4.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
     } else if (network === Network.CHIPNET) {
       this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 1, ClusterOrder.PRIORITY);
-      this.electrum.addServer('chipnet.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
+      this.electrum.addServer('chipnet.bch.ninja', 50004, ElectrumTransport.WSS.Scheme, false);
     } else {
       throw new Error(`Tried to instantiate an ElectrumNetworkProvider for unsupported network ${network}`);
     }

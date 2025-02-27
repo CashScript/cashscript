@@ -6,13 +6,11 @@ import {
   bobPriv,
   bobPub,
 } from '../../fixture/vars.js';
-import { getTxOutputs } from '../../test-util.js';
+import { describeOrSkip, getTxOutputs } from '../../test-util.js';
 import { FailedRequireError } from '../../../src/Errors.js';
 import artifact from '../../fixture/p2pkh.json' with { type: 'json' };
 
-const describeOrSkip = process.env.TESTS_USE_MOCKNET ? describe.skip : describe;
-
-describeOrSkip('test FullStackNetworkProvider', () => {
+describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'test FullStackNetworkProvider', () => {
   const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://api.fullstack.cash/v5/' }));
 
   describe('get utxos using FullStackNetworkProvider', () => {

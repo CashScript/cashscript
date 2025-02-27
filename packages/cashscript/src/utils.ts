@@ -36,10 +36,20 @@ import {
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
+  OutputTokenAmountTooSmallError,
   TokensToNonTokenAddressError,
+  UndefinedInputError,
 } from './Errors.js';
 
+export { snakeCase } from 'change-case';
+
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
+export function validateInput(utxo: Utxo): void {
+  if (!utxo) {
+    throw new UndefinedInputError();
+  }
+}
+
 export function validateOutput(output: Output): void {
   if (typeof output.to !== 'string') return;
 
@@ -51,6 +61,10 @@ export function validateOutput(output: Output): void {
   if (output.token) {
     if (!isTokenAddress(output.to)) {
       throw new TokensToNonTokenAddressError(output.to);
+    }
+
+    if (output.token.amount < 0n) {
+      throw new OutputTokenAmountTooSmallError(output.token.amount);
     }
   }
 }
@@ -335,15 +349,26 @@ export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: n
   return -1;
 }
 
-export const snakeCase = (str: string): string => (
-  str
-  && str
+// TODO: Somehow, this turns P2PKHLock into p2pkh_lock, but P2PKH_Lock into p2_pkh_lock
+// export const snakeCase = (str: string): string => (
+//   str
+//   && str
+//     .match(
+//       /([A-Z]+\d*[A-Z]*(?=[A-Z][a-z])|[A-Z]?[a-z]+\d*[a-z]+|[A-Z]?[a-z]+\d*|[A-Z]+\d*|\d+)/g,
+//     )!
+//     .map((s) => s.toLowerCase())
+//     .join('_')
+// );
+
+export const titleCase = (str: string): string => {
+  if (!str) return '';
+  return str
     .match(
       /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
     )!
-    .map((s) => s.toLowerCase())
-    .join('_')
-);
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
+    .join(' ');
+};
 
 // JSON.stringify version that can serialize otherwise unsupported types (bigint and Uint8Array)
 export const extendedStringify = (obj: any, spaces?: number): string => JSON.stringify(
@@ -363,3 +388,9 @@ export const extendedStringify = (obj: any, spaces?: number): string => JSON.str
 export const zip = <T, U>(a: readonly T[], b: readonly U[]): [T, U][] => (
   Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]])
 );
+
+export const isFungibleTokenUtxo = (utxo: Utxo): boolean => (
+  utxo.token !== undefined && utxo.token.amount > 0n && utxo.token.nft === undefined
+);
+
+export const isNonTokenUtxo = (utxo: Utxo): boolean => utxo.token === undefined;

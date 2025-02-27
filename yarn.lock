@@ -2667,6 +2667,13 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/change-case@^2.3.5":
+  version "2.3.5"
+  resolved "https://registry.yarnpkg.com/@types/change-case/-/change-case-2.3.5.tgz#7c86cefd5897738980fc3bcbe466b03b38026dbd"
+  integrity sha512-JvctDvBuY3MVSEisGbSgaAdJTcs+2JjBKO60W1Isr3GnX2YZCyJYLDY96bV4eWensEUrQLRGEL+egAkIXYrW1Q==
+  dependencies:
+    change-case "*"
+
 "@types/color-name@^1.1.1":
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.4.tgz#e002611ff627347818d440a05e81650e9a4053b8"
@@ -3849,6 +3856,11 @@ chalk@^5.2.0, chalk@^5.4.1:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-5.4.1.tgz#1b48bf0963ec158dce2aacf69c093ae2dd2092d8"
   integrity sha512-zgVZuo2WcZgfUEmsn6eO3kINexW8RAE4maiQ8QNs8CtpPCSyMiYsULR3HQYkm3w8FIA3SberyMJMSldGsW+U3w==
+
+change-case@*, change-case@^5.4.4:
+  version "5.4.4"
+  resolved "https://registry.yarnpkg.com/change-case/-/change-case-5.4.4.tgz#0d52b507d8fb8f204343432381d1a6d7bff97a02"
+  integrity sha512-HRQyTk2/YPEkt9TnUPbOpr64Uw3KOicFWPVBb+xiHvd6eBx/qPr9xqfBFDT8P2vWsvvz4jbEkfDe71W3VyNu2w==
 
 char-regex@^1.0.2:
   version "1.0.2"
