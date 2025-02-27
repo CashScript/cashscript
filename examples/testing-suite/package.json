@@ -1,6 +1,6 @@
 {
   "name": "testing-suite",
-  "version": "0.11.0-next.0",
+  "version": "0.11.0-next.1",
   "description": "Example project to develop and test CashScript contracts",
   "main": "index.js",
   "type": "module",
@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "@bitauth/libauth": "^3.1.0-next.2",
-    "cashc": "^0.11.0-next.0",
-    "cashscript": "^0.11.0-next.0",
+    "cashc": "^0.11.0-next.1",
+    "cashscript": "^0.11.0-next.1",
     "url-join": "^5.0.0"
   },
   "devDependencies": {
