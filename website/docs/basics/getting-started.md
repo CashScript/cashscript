@@ -52,7 +52,7 @@ We can start from a basic `TransferWithTimeout` smart contract. Create a new fil
 The `TransferWithTimeout` contract takes in 3 contract arguments and has 2 contract functions: `transfer` and `timeout`.
 
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     // Allow the recipient to claim their received money

@@ -42,7 +42,7 @@ With the new transaction builder the API looks like this:
 
 
 ```js
-import { transactionBuilder, ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
+import { TransactionBuilder, ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
 
 const provider = new ElectrumNetworkProvider(Network.MAINNET);
 

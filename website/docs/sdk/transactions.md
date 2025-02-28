@@ -3,7 +3,7 @@ title: Old Transaction Builder
 ---
 
 :::caution
-This is the documentation for the old and now deprecated 'Simple Transaction Builder' by calling a function on the contract object directly.
+This is the documentation for the old and now deprecated 'Simple Transaction Builder' which operated on a single contract.
 It is strongly recommended to migrate over to the new default transaction builder [using the migration notes](/docs/releases/migration-notes).
 :::
 

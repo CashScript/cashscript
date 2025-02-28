@@ -173,7 +173,7 @@ Sets a max fee for the transaction. Because the transaction builder does not aut
 transactionBuilder.setMaxFee(1000n);
 ```
 
-## Transaction building
+## Completing the Transaction
 ### send()
 ```ts
 async transactionBuilder.send(): Promise<TransactionDetails>

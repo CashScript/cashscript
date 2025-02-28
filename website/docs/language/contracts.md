@@ -13,7 +13,7 @@ Contract authors should be careful when allowing a range of versions to check th
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 pragma cashscript >= 0.7.0 < 0.9.3;
 ```
 
@@ -22,7 +22,7 @@ A CashScript constructor works slightly differently than what you might be used 
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract HTLC(pubkey sender, pubkey recipient, int expiration, bytes32 hash) {
     ...
@@ -38,7 +38,7 @@ The main construct in a CashScript contract is the function. A contract can cont
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     function transfer(sig recipientSig) {
@@ -69,7 +69,7 @@ The error message in a `require` statement is only available in debug evaluation
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
@@ -111,7 +111,7 @@ There is no implicit type conversion from non-boolean to boolean types. So `if (
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
     function spend(pubkey pk, sig s, bytes message) {
@@ -138,7 +138,7 @@ Logging is only available in debug evaluation of a transaction, but has no impac
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
