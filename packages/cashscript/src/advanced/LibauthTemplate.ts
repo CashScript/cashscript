@@ -549,6 +549,20 @@ export const getLibauthTemplates = (
     }
   }
 
+  const scenarioKeys = Object.keys(finalTemplate.scenarios);
+  const lastScenarioKey = scenarioKeys[scenarioKeys.length - 1];
+  const lastScenarioBytecode = finalTemplate.scenarios[lastScenarioKey]?.data?.bytecode;
+
+  if (lastScenarioBytecode) {
+    for (let i = 0; i < scenarioKeys.length; i++) {
+      const scenarioIdentifier = scenarioKeys[i];
+      const scenario = finalTemplate.scenarios[scenarioIdentifier];
+      if (!scenario.data) { scenario.data = {}; }
+      if (!scenario.data.bytecode) { scenario.data.bytecode = {}; }
+      scenario.data.bytecode = { ...lastScenarioBytecode, ...scenario.data.bytecode };
+    }
+  }
+
   return finalTemplate;
 };
 
