@@ -369,7 +369,7 @@ export const getLibauthTemplates = (
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
     name: 'CashScript Generated Debugging Template',
-    supported: ['BCH_2023_05'],
+    supported: ['BCH_2025_05'],
     version: 0,
     entities: {},
     scripts: {},
@@ -535,6 +535,18 @@ export const getLibauthTemplates = (
       }
     }
 
+  }
+
+  // Merge data.bytecode from previous scenarios
+  for (const [scenarioIdentifier, scenario] of Object.entries(finalTemplate.scenarios)) {
+    if (scenario.data && scenario.data.bytecode) {
+      const previousIndex = Object.keys(finalTemplate.scenarios).indexOf(scenarioIdentifier) - 1;
+      if (previousIndex >= 0) {
+        const previousScenarioIdentifier = Object.keys(finalTemplate.scenarios)[previousIndex];
+        const previousBytecode = finalTemplate.scenarios[previousScenarioIdentifier]?.data?.bytecode;
+        scenario.data.bytecode = { ...previousBytecode, ...scenario.data.bytecode };
+      }
+    }
   }
 
   return finalTemplate;
