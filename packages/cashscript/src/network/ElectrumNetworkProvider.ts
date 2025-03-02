@@ -1,55 +1,35 @@
 import { binToHex } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
 import {
-  ElectrumCluster,
-  ElectrumTransport,
-  ClusterOrder,
-  RequestResponse,
-} from 'electrum-cash';
+  ElectrumClient,
+  type RequestResponse,
+  type ElectrumClientEvents,
+} from '@electrum-cash/network';
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
 
 export default class ElectrumNetworkProvider implements NetworkProvider {
-  private electrum: ElectrumCluster;
-  private concurrentRequests: number = 0;
+  private electrum: ElectrumClient<ElectrumClientEvents>;
 
-  constructor(
-    public network: Network = Network.MAINNET,
-    electrum?: ElectrumCluster,
-    private manualConnectionManagement?: boolean,
-  ) {
-    // If a custom Electrum Cluster is passed, we use it instead of the default.
-    if (electrum) {
-      this.electrum = electrum;
-      return;
-    }
+  constructor(public network: Network = Network.MAINNET) {
+    const server = this.getServerForNetwork(network);
+    this.electrum = new ElectrumClient('CashScript Application', '1.4.1', server);
+  }
 
-    if (network === Network.MAINNET) {
-      // Initialise a 2-of-3 Electrum Cluster with 6 reliable hardcoded servers
-      // using the first three servers as "priority" servers
-      this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 2, 3, ClusterOrder.PRIORITY);
-      this.electrum.addServer('bch.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
-      this.electrum.addServer('blackie.c3-soft.com', 50004, ElectrumTransport.WSS.Scheme, false);
-      this.electrum.addServer('electroncash.de', 60002, ElectrumTransport.WSS.Scheme, false);
-      this.electrum.addServer('electroncash.dk', 50004, ElectrumTransport.WSS.Scheme, false);
-      this.electrum.addServer('bch.loping.net', 50004, ElectrumTransport.WSS.Scheme, false);
-      this.electrum.addServer('electrum.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
-    } else if (network === Network.TESTNET3) {
-      // Initialise a 1-of-2 Electrum Cluster with 2 hardcoded servers
-      this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 2, ClusterOrder.PRIORITY);
-      this.electrum.addServer('blackie.c3-soft.com', 60004, ElectrumTransport.WSS.Scheme, false);
-      this.electrum.addServer('electroncash.de', 60004, ElectrumTransport.WSS.Scheme, false);
-      // this.electrum.addServer('bch.loping.net', 60004, ElectrumTransport.WSS.Scheme, false);
-      // this.electrum.addServer('testnet.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme);
-    } else if (network === Network.TESTNET4) {
-      this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 1, ClusterOrder.PRIORITY);
-      this.electrum.addServer('testnet4.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
-    } else if (network === Network.CHIPNET) {
-      this.electrum = new ElectrumCluster('CashScript Application', '1.4.1', 1, 1, ClusterOrder.PRIORITY);
-      this.electrum.addServer('chipnet.bch.ninja', 50004, ElectrumTransport.WSS.Scheme, false);
-    } else {
-      throw new Error(`Tried to instantiate an ElectrumNetworkProvider for unsupported network ${network}`);
+  // Get Electrum server based on network
+  private getServerForNetwork(network: Network): string {
+    switch (network) {
+      case Network.MAINNET:
+        return 'bch.imaginary.cash';
+      case Network.TESTNET3:
+        return 'blackie.c3-soft.com';
+      case Network.TESTNET4:
+        return 'testnet4.imaginary.cash';
+      case Network.CHIPNET:
+        return 'chipnet.bch.ninja';
+      default:
+        throw new Error(`Unsupported network: ${network}`);
     }
   }
 
@@ -85,59 +65,19 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
   }
 
-  async connectCluster(): Promise<void[]> {
-    try {
-      return await this.electrum.startup();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  async disconnectCluster(): Promise<boolean[]> {
-    return this.electrum.shutdown();
-  }
-
+  // Perform request with auto-disconnect
   async performRequest(
     name: string,
     ...parameters: (string | number | boolean)[]
   ): Promise<RequestResponse> {
-    // Only connect the cluster when no concurrent requests are running
-    if (this.shouldConnect()) {
-      this.connectCluster();
-    }
-
-    this.concurrentRequests += 1;
-
-    await this.electrum.ready();
-
-    let result;
     try {
-      result = await this.electrum.request(name, ...parameters);
+      await this.electrum.connect();
+      const result = await this.electrum.request(name, ...parameters);
+      if (result instanceof Error) throw result;
+      return result;
     } finally {
-      // Always disconnect the cluster, also if the request fails
-      // as long as no other concurrent requests are running
-      if (this.shouldDisconnect()) {
-        await this.disconnectCluster();
-      }
+      await this.electrum.disconnect();
     }
-
-    this.concurrentRequests -= 1;
-
-    if (result instanceof Error) throw result;
-
-    return result;
-  }
-
-  private shouldConnect(): boolean {
-    if (this.manualConnectionManagement) return false;
-    if (this.concurrentRequests !== 0) return false;
-    return true;
-  }
-
-  private shouldDisconnect(): boolean {
-    if (this.manualConnectionManagement) return false;
-    if (this.concurrentRequests !== 1) return false;
-    return true;
   }
 }
 
