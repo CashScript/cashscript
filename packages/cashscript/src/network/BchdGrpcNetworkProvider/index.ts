@@ -38,7 +38,6 @@ export default class BchdGrpcNetworkProvider implements NetworkProvider {
     const utxos = response.outputs.map(
       (utxo) =>
         ({
-          // TODO: undefined?
           txid: binToHex(utxo.outpoint!.hash.reverse()),
           vout: utxo.outpoint!.index,
           satoshis: utxo.value,
