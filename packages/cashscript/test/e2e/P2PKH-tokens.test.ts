@@ -9,10 +9,10 @@ import {
 } from '../fixture/vars.js';
 import { getTxOutputs } from '../test-util.js';
 import { Network, TokenDetails, Utxo } from '../../src/interfaces.js';
-import artifact from '../fixture/p2pkh.json' with { type: 'json' };
+import artifact from '../fixture/p2pkh.artifact.js';
 
 describe('P2PKH-tokens', () => {
-  let p2pkhInstance: Contract;
+  let p2pkhInstance: Contract<typeof artifact>;
 
   beforeAll(() => {
     const provider = process.env.TESTS_USE_MOCKNET

@@ -9,8 +9,8 @@ import {
 } from '../../fixture/vars.js';
 import { Network } from '../../../src/interfaces.js';
 import { utxoComparator, calculateDust, randomUtxo, isNonTokenUtxo } from '../../../src/utils.js';
-import p2pkhArtifact from '../../fixture/p2pkh.json' with { type: 'json' };
-import twtArtifact from '../../fixture/transfer_with_timeout.json' with { type: 'json' };
+import p2pkhArtifact from '../../fixture/p2pkh.artifact.js';
+import twtArtifact from '../../fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
 import { describeOrSkip, getTxOutputs } from '../../test-util.js';
 
@@ -20,8 +20,8 @@ describe('Timelocks', () => {
     ? new MockNetworkProvider()
     : new ElectrumNetworkProvider(Network.CHIPNET);
 
-  let p2pkhInstance: Contract;
-  let twtInstance: Contract;
+  let p2pkhInstance: Contract<typeof p2pkhArtifact>;
+  let twtInstance: Contract<typeof twtArtifact>;
 
   beforeAll(() => {
     // Note: We instantiate the contract with carolPkh to avoid mempool conflicts with other (P2PKH) tests
