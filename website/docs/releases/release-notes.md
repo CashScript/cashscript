@@ -2,9 +2,11 @@
 title: Release Notes
 ---
 
-## v0.11.0-next.1
+## v0.11.0-next.2
 
 This update adds CashScript support for the new BCH 2025 network upgrade. To read more about the upgrade, see [this blog post](https://blog.bitjson.com/2025-chips/).
+
+This release also contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### cashc compiler
 - :hammer_and_wrench: Remove warning for opcount and update warning for byte size to match new limits.
@@ -16,6 +18,7 @@ This update adds CashScript support for the new BCH 2025 network upgrade. To rea
   - Libauth template generation and debugging for multi-contract transactions
 - :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
 - :hammer_and_wrench: Update debug tooling to use the new `BCH_2025_05` instruction set.
+- :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider`.
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 
 ## v0.10.5
