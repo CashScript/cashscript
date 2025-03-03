@@ -369,7 +369,7 @@ export const getLibauthTemplates = (
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
     name: 'CashScript Generated Debugging Template',
-    supported: ['BCH_2023_05'],
+    supported: ['BCH_2025_05'],
     version: 0,
     entities: {},
     scripts: {},

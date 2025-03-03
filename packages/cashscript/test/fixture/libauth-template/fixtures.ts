@@ -33,7 +33,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
@@ -157,7 +157,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
@@ -281,7 +281,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
@@ -410,7 +410,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
@@ -550,7 +550,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
@@ -673,7 +673,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
@@ -821,7 +821,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
@@ -992,7 +992,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2023_05',
+        'BCH_2025_05',
       ],
       'version': 0,
       'entities': {
