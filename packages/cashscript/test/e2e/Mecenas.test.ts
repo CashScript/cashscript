@@ -10,7 +10,7 @@ import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/mecenas.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
-// Mecenas has tx.age check omitted for testing
+// Mecenas has this.age check omitted for testing
 describe('Mecenas', () => {
   const provider = process.env.TESTS_USE_MOCKNET
     ? new MockNetworkProvider()

@@ -48,7 +48,7 @@ For how to put the HodlVault contract to use in a Typescript application, see th
 ## Licho's Mecenas
 Donations are a great way to support the projects you love, and periodic donations can incentivise continuous improvement to the product. But platforms like Patreon generally take fees of 10%+ and don't accept cryptocurrencies. Instead you can create a peer-to-peer smart contract that allows a recipient to withdraw a specific amount every month.
 
-The contract works by checking that a UTXO is at least 30 days old, after which it uses a covenant to enforce that the `pledge` amount is sent to the recipient, while the remainder is sent back to the contract itself. By sending it back, the `tx.age` counter is effectively reset, meaning this process can only be repeated when another 30 days have past.
+The contract works by checking that a UTXO is at least 30 days old, after which it uses a covenant to enforce that the `pledge` amount is sent to the recipient, while the remainder is sent back to the contract itself. By sending it back, the `this.age` counter is effectively reset, meaning this process can only be repeated when another 30 days have past.
 
 Due to the nature of covenants, we have to be very specific about the outputs (amounts and destinations) of the transaction. This also means that we have to account for the special case where the remaining contract balance is lower than the `pledge` amount, meaning no remainder should be sent back. Finally, we have to account for a small fee that has to be taken from the contract's balance to pay the miners.
 
@@ -57,7 +57,7 @@ pragma cashscript ^0.11.0;
 
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
     function receive() {
-        require(tx.age >= period);
+        require(this.age >= period);
 
         // Check that the first output sends to the recipient
         bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);

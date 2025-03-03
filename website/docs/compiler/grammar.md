@@ -195,7 +195,7 @@ HexLiteral
     ;
 
 TxVar
-    : 'tx.age'
+    : 'this.age'
     | 'tx.time'
     ;
 

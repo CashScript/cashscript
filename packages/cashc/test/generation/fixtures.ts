@@ -558,7 +558,7 @@ export const fixtures: Fixture[] = [
       bytecode:
         // function receive
         'OP_4 OP_PICK OP_0 OP_NUMEQUAL OP_IF '
-        // require(tx.age >= period)
+        // require(this.age >= period)
         + 'OP_3 OP_ROLL OP_CHECKSEQUENCEVERIFY OP_DROP '
         // require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient))
         + 'OP_0 OP_OUTPUTBYTECODE 76a914 OP_ROT OP_CAT 88ac OP_CAT OP_EQUALVERIFY '

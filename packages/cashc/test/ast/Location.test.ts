@@ -37,7 +37,7 @@ contract test() {
       'abs(-1) == 1', 'within(1,1,1) == true', 'bytes(sha256(1)) == bytes(0x01)',
       'checkSig(sig(0x00), pubkey(0x00))', 'checkMultiSig([sig(0x00), sig(0x00)], [pubkey(0x00), pubkey(0x00)])',
       'checkDataSig(datasig(0x00), 0x00, pubkey(0x00))',
-      'tx.time >= 1', 'tx.age >= 1',
+      'tx.time >= 1', 'this.age >= 1',
       'bytes(1) == 0x01', 'int(0x01) == 1',
     ];
 
