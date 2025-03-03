@@ -564,7 +564,9 @@ const generateLockingScriptParams = (
       addHexPrefixExceptEmpty(binToHex(csInput.unlocker!.contract!.encodedConstructorArgs[index])),
     ]);
 
-  const constructorParams = Object.fromEntries(constructorParamsEntries);
+  const constructorParams = Object.fromEntries(
+    constructorParamsEntries.map(([key, value]) => [snakeCase(key), value]),
+  );
 
   return {
     script: lockScriptName,
