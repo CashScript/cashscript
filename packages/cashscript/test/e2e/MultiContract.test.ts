@@ -178,6 +178,29 @@ describe('Multi Contract', () => {
       await expect(txPromise).rejects.toThrow('Failing statement: require(checkSig(recipientSig, recipient))');
     });
 
+    it('should succeed for correct unlockers (p2pkhContract + twtContract + bobAddress)', async () => {
+      // given
+      const to = p2pkhContract.address;
+      const amount = 10000n;
+      const outputs = [{ to, amount }];
+      const p2pkhContractUtxos = await p2pkhContract.getUtxos();
+      const twtContractUtxos = await twtContract.getUtxos();
+      const bobAddressUtxos = await provider.getUtxos(bobAddress);
+
+      // when
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(p2pkhContractUtxos[0], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
+        .addInput(twtContractUtxos[0], twtContract.unlock.timeout(bobSignatureTemplate))
+        .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
+        .addOutput({ to, amount })
+        .setLocktime(1000000)
+        .send();
+
+      // then
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining(outputs));
+    });
+
   });
 });
 
