@@ -6,30 +6,45 @@ The CashScript SDK needs to connect to the BCH network to perform certain operat
 
 ## ElectrumNetworkProvider
 
-The ElectrumNetworkProvider uses [electrum-cash][electrum-cash] to connect to the BCH network. Both `network` and `electrum` parameters are optional, and they default to mainnet and a 2-of-3 ElectrumCluster with a number of reliable electrum servers.
+The ElectrumNetworkProvider uses [@electrum-cash/network][electrum-cash] to connect to the BCH network. Both `network` and `options` parameters are optional, and they default to mainnet with the `bch.imaginary.cash` electrum server.
 
 ```ts
-new ElectrumNetworkProvider(network?: Network, electrum?: ElectrumCluster)
+new ElectrumNetworkProvider(network?: Network, options?: Options)
 ```
 
-:::note
-In some cases it might be desirable to overwrite the 2-of-3 ElectrumCluster default to use only a 1-of-1 cluster because of network latency.
-:::
+Using the `network` parameter, you can specify the network to connect to.
 
-
-### Network
 ```ts
 type Network = 'mainnet' | 'chipnet' | 'testnet3' | 'testnet4' | 'regtest';
+```
+
+Using the `options` parameter, you can specify a custom electrum client or hostname, and enable manual connection management.
+
+```ts
+type Options = OptionsBase | CustomHostNameOptions | CustomElectrumOptions;
+
+interface OptionsBase {
+  manualConnectionManagement?: boolean;
+}
+
+interface CustomHostNameOptions extends OptionsBase {
+  hostname: string;
+}
+
+interface CustomElectrumOptions extends OptionsBase {
+  electrum: ElectrumClient<ElectrumClientEvents>;
+}
 ```
 
 The network parameter can be one of 5 different options.
 
 #### Example
 ```ts
-const provider = new ElectrumProvider('chipnet');
+const hostname = 'chipnet.bch.ninja';
+const provider = new ElectrumNetworkProvider('chipnet', { hostname });
 ```
 
-### getUtxos
+### getUtxos()
 ```ts
 async provider.getUtxos(address: string): Promise<Utxo[]>;
 ```
@@ -49,7 +64,7 @@ interface Utxo {
 const userUtxos = await provider.getUtxos(userAddress)
 ```
 
-### getBlockHeight
+### getBlockHeight()
 ```ts
 async provider.getBlockHeight(): Promise<number>;
 ```
@@ -60,7 +75,7 @@ Get the current blockHeight.
 const currentBlockHeight = await provider.getBlockHeight()
 ```
 
-### getRawTransaction
+### getRawTransaction()
 ```ts
 async provider.getRawTransaction(txid: string): Promise<string>;
 ```
@@ -72,7 +87,7 @@ Retrieve the Hex transaction details for a given transaction ID.
 const rawTransaction = await provider.getRawTransaction(txid)
 ```
 
-### sendRawTransaction
+### sendRawTransaction()
 ```ts
 async provider.sendRawTransaction(txHex: string): Promise<string>;
 ```
@@ -83,7 +98,7 @@ Broadcast a raw hex transaction to the network.
 const txId = await provider.sendRawTransaction(txHex)
 ```
 
-### performRequest
+### performRequest()
 
 Perform an arbitrary electrum request, refer to the docs at [electrum-cash-protocol](https://electrum-cash-protocol.readthedocs.io/en/latest/).
 
@@ -92,6 +107,29 @@ Perform an arbitrary electrum request, refer to the docs at [electrum-cash-proto
 const verbose = true // get parsed transaction as json result
 const txId = await provider.performRequest('blockchain.transaction.get', txid, verbose)
 ```
+
+### Manual Connection Management
+
+By default, the ElectrumNetworkProvider will automatically connect and disconnect to the electrum client as needed. However, you can enable manual connection management by setting the `manualConnectionManagement` option to `true`. This can be useful if you are passing a custom electrum client and are using that client for other purposes, such as subscribing to events.
+
+```ts
+const provider = new ElectrumNetworkProvider('chipnet', { manualConnectionManagement: true });
+```
+
+#### connect()
+```ts
+provider.connect(): Promise<void>;
+```
+
+Connects to the electrum client.
+
+#### disconnect()
+```ts
+provider.disconnect(): Promise<boolean>;
+```
+
+Disconnects from the electrum client, returns `true` if the client was connected, `false` if it was already disconnected.
+
 
 ## Advanced Options
 
@@ -127,6 +165,6 @@ To implement a Custom NetworkProvider, refer to the [NetworkProvider interface](
 :::
 
 
-[electrum-cash]: https://www.npmjs.com/package/electrum-cash
+[electrum-cash]: https://www.npmjs.com/package/@electrum-cash/network
 [fullstack]: https://fullstack.cash/
 [bchjs]: https://bchjs.fullstack.cash/
