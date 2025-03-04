@@ -9,13 +9,35 @@ import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
 
+
+interface OptionsBase {
+  manualConnectionManagement?: boolean;
+}
+
+interface CustomHostNameOptions extends OptionsBase {
+  hostname: string;
+}
+
+interface CustomElectrumOptions extends OptionsBase {
+  electrum: ElectrumClient<ElectrumClientEvents>;
+}
+
+type Options = OptionsBase | CustomHostNameOptions | CustomElectrumOptions;
+
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumClient<ElectrumClientEvents>;
   private concurrentRequests: number = 0;
+  private manualConnectionManagement: boolean;
 
-  constructor(public network: Network = Network.MAINNET) {
-    const server = this.getServerForNetwork(network);
-    this.electrum = new ElectrumClient('CashScript Application', '1.4.1', server);
+  constructor(public network: Network = Network.MAINNET, options: Options = {}) {
+    this.electrum = this.instantiateElectrumClient(network, options);
+    this.manualConnectionManagement = options?.manualConnectionManagement ?? false;
+  }
+
+  private instantiateElectrumClient(network: Network, options: Options): ElectrumClient<ElectrumClientEvents> {
+    if ('electrum' in options) return options.electrum;
+    const server = 'hostname' in options ? options.hostname : this.getServerForNetwork(network);
+    return new ElectrumClient('CashScript Application', '1.4.1', server);
   }
 
   // Get Electrum server based on network
@@ -24,7 +46,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       case Network.MAINNET:
         return 'bch.imaginary.cash';
       case Network.TESTNET3:
-        return 'blackie.c3-soft.com';
+        return 'testnet.imaginary.cash';
       case Network.TESTNET4:
         return 'testnet4.imaginary.cash';
       case Network.CHIPNET:
@@ -66,6 +88,22 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
   }
 
+  async connect(): Promise<void> {
+    if (!this.manualConnectionManagement) {
+      throw new Error('Manual connection management is disabled');
+    }
+
+    return this.electrum.connect();
+  }
+
+  async disconnect(): Promise<boolean> {
+    if (!this.manualConnectionManagement) {
+      throw new Error('Manual connection management is disabled');
+    }
+
+    return this.electrum.disconnect();
+  }
+
   async performRequest(
     name: string,
     ...parameters: (string | number | boolean)[]
@@ -96,13 +134,13 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   private shouldConnect(): boolean {
-    // if (this.manualConnectionManagement) return false;
+    if (this.manualConnectionManagement) return false;
     if (this.concurrentRequests !== 0) return false;
     return true;
   }
 
   private shouldDisconnect(): boolean {
-    // if (this.manualConnectionManagement) return false;
+    if (this.manualConnectionManagement) return false;
     if (this.concurrentRequests !== 1) return false;
     return true;
   }
