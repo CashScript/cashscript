@@ -25,7 +25,7 @@ The network parameter can be one of 5 different options.
 const provider = new ElectrumProvider('chipnet');
 ```
 
-### getUtxos
+### getUtxos()
 ```ts
 async provider.getUtxos(address: string): Promise<Utxo[]>;
 ```
@@ -45,7 +45,7 @@ interface Utxo {
 const userUtxos = await provider.getUtxos(userAddress)
 ```
 
-### getBlockHeight
+### getBlockHeight()
 ```ts
 async provider.getBlockHeight(): Promise<number>;
 ```
@@ -56,7 +56,7 @@ Get the current blockHeight.
 const currentBlockHeight = await provider.getBlockHeight()
 ```
 
-### getRawTransaction
+### getRawTransaction()
 ```ts
 async provider.getRawTransaction(txid: string): Promise<string>;
 ```
@@ -68,7 +68,7 @@ Retrieve the Hex transaction details for a given transaction ID.
 const rawTransaction = await provider.getRawTransaction(txid)
 ```
 
-### sendRawTransaction
+### sendRawTransaction()
 ```ts
 async provider.sendRawTransaction(txHex: string): Promise<string>;
 ```
@@ -79,7 +79,7 @@ Broadcast a raw hex transaction to the network.
 const txId = await provider.sendRawTransaction(txHex)
 ```
 
-### performRequest
+### performRequest()
 
 Perform an arbitrary electrum request, refer to the docs at [electrum-cash-protocol](https://electrum-cash-protocol.readthedocs.io/en/latest/).
 
