@@ -12,7 +12,7 @@ The ElectrumNetworkProvider uses [@electrum-cash/network][electrum-cash] to conn
 new ElectrumNetworkProvider(network?: Network, options?: Options)
 ```
 
-Using the `network` parameter, you can specify the network to connect to.
+Using the `network` parameter, you can specify the network to connect to. The network parameter can be one of 5 different options:
 
 ```ts
 type Network = 'mainnet' | 'chipnet' | 'testnet3' | 'testnet4' | 'regtest';
@@ -35,8 +35,6 @@ interface CustomElectrumOptions extends OptionsBase {
   electrum: ElectrumClient<ElectrumClientEvents>;
 }
 ```
-
-The network parameter can be one of 5 different options.
 
 #### Example
 ```ts
