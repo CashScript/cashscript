@@ -11,6 +11,7 @@ import { addressToLockScript } from '../utils.js';
 
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumClient<ElectrumClientEvents>;
+  private concurrentRequests: number = 0;
 
   constructor(public network: Network = Network.MAINNET) {
     const server = this.getServerForNetwork(network);
@@ -65,19 +66,45 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
   }
 
-  // Perform request with auto-disconnect
   async performRequest(
     name: string,
     ...parameters: (string | number | boolean)[]
   ): Promise<RequestResponse> {
-    try {
+    // Only connect the electrum client when no concurrent requests are running
+    if (this.shouldConnect()) {
       await this.electrum.connect();
-      const result = await this.electrum.request(name, ...parameters);
-      if (result instanceof Error) throw result;
-      return result;
-    } finally {
-      await this.electrum.disconnect();
     }
+
+    this.concurrentRequests += 1;
+
+    let result;
+    try {
+      result = await this.electrum.request(name, ...parameters);
+    } finally {
+      // Always disconnect the electrum client, also if the request fails
+      // as long as no other concurrent requests are running
+      if (this.shouldDisconnect()) {
+        await this.electrum.disconnect();
+      }
+    }
+
+    this.concurrentRequests -= 1;
+
+    if (result instanceof Error) throw result;
+
+    return result;
+  }
+
+  private shouldConnect(): boolean {
+    // if (this.manualConnectionManagement) return false;
+    if (this.concurrentRequests !== 0) return false;
+    return true;
+  }
+
+  private shouldDisconnect(): boolean {
+    // if (this.manualConnectionManagement) return false;
+    if (this.concurrentRequests !== 1) return false;
+    return true;
   }
 }
 
