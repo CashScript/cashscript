@@ -6,23 +6,42 @@ The CashScript SDK needs to connect to the BCH network to perform certain operat
 
 ## ElectrumNetworkProvider
 
-The ElectrumNetworkProvider uses [@electrum-cash/network][electrum-cash] to connect to the BCH network. Both `network` and `electrum` parameters are optional, and they default to mainnet with the `bch.imaginary.cash` electrum server.
+The ElectrumNetworkProvider uses [@electrum-cash/network][electrum-cash] to connect to the BCH network. Both `network` and `options` parameters are optional, and they default to mainnet with the `bch.imaginary.cash` electrum server.
 
 ```ts
-new ElectrumNetworkProvider(network?: Network, electrum?: ElectrumClient)
+new ElectrumNetworkProvider(network?: Network, options?: Options)
 ```
 
+Using the `network` parameter, you can specify the network to connect to.
 
-### Network
 ```ts
 type Network = 'mainnet' | 'chipnet' | 'testnet3' | 'testnet4' | 'regtest';
+```
+
+Using the `options` parameter, you can specify a custom electrum client or hostname, and enable manual connection management.
+
+```ts
+type Options = OptionsBase | CustomHostNameOptions | CustomElectrumOptions;
+
+interface OptionsBase {
+  manualConnectionManagement?: boolean;
+}
+
+interface CustomHostNameOptions extends OptionsBase {
+  hostname: string;
+}
+
+interface CustomElectrumOptions extends OptionsBase {
+  electrum: ElectrumClient<ElectrumClientEvents>;
+}
 ```
 
 The network parameter can be one of 5 different options.
 
 #### Example
 ```ts
-const provider = new ElectrumProvider('chipnet');
+const hostname = 'chipnet.bch.ninja';
+const provider = new ElectrumNetworkProvider('chipnet', { hostname });
 ```
 
 ### getUtxos()
@@ -88,6 +107,29 @@ Perform an arbitrary electrum request, refer to the docs at [electrum-cash-proto
 const verbose = true // get parsed transaction as json result
 const txId = await provider.performRequest('blockchain.transaction.get', txid, verbose)
 ```
+
+### Manual Connection Management
+
+By default, the ElectrumNetworkProvider will automatically connect and disconnect to the electrum client as needed. However, you can enable manual connection management by setting the `manualConnectionManagement` option to `true`. This can be useful if you are passing a custom electrum client and are using that client for other purposes, such as subscribing to events.
+
+```ts
+const provider = new ElectrumNetworkProvider('chipnet', { manualConnectionManagement: true });
+```
+
+#### connect()
+```ts
+provider.connect(): Promise<void>;
+```
+
+Connects to the electrum client.
+
+#### disconnect()
+```ts
+provider.disconnect(): Promise<boolean>;
+```
+
+Disconnects from the electrum client, returns `true` if the client was connected, `false` if it was already disconnected.
+
 
 ## Advanced Options
 

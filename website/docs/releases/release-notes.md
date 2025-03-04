@@ -18,7 +18,7 @@ This release also contains several breaking changes, please refer to the [migrat
   - Libauth template generation and debugging for multi-contract transactions
 - :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
 - :hammer_and_wrench: Update debug tooling to use the new `BCH_2025_05` instruction set.
-- :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider`.
+- :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider` and added a configuration object to the constructor.
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 
 ## v0.10.5
