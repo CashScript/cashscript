@@ -1,14 +1,14 @@
 import BCHJS from '@psf/bch-js';
-import { Contract, SignatureTemplate, FullStackNetworkProvider } from '../../../src/index.js';
+import { Contract, SignatureTemplate, FullStackNetworkProvider, TransactionBuilder } from '../../../src/index.js';
 import {
   alicePriv,
   bobPkh,
   bobPriv,
   bobPub,
 } from '../../fixture/vars.js';
-import { describeOrSkip, getTxOutputs } from '../../test-util.js';
+import { describeOrSkip, gatherUtxos, getTxOutputs } from '../../test-util.js';
 import { FailedRequireError } from '../../../src/Errors.js';
-import artifact from '../../fixture/p2pkh.json' with { type: 'json' };
+import artifact from '../../fixture/p2pkh.artifact.js';
 
 describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'test FullStackNetworkProvider', () => {
   const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://api.fullstack.cash/v5/' }));
@@ -42,11 +42,13 @@ describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'test FullStackNetworkProvider', 
       // given
       const to = p2pkhInstance.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhInstance.getUtxos(), { amount });
 
       // when
-      const txPromise = p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(alicePriv))
-        .to(to, amount)
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhInstance.unlock.spend(bobPub, new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
@@ -58,11 +60,13 @@ describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'test FullStackNetworkProvider', 
       // given
       const to = p2pkhInstance.address;
       const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await p2pkhInstance.getUtxos(), { amount });
 
       // when
-      const tx = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .to(to, amount)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(utxos, p2pkhInstance.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
+        .addOutput({ to, amount })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       // then
