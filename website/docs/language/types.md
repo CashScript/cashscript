@@ -138,14 +138,14 @@ Tuples are the type that is returned when calling the `split` member function on
 
 ```solidity
 string question = "What is Bitcoin Cash?";
-string answer = question.split(15)[0].split(8)[1];
+string answer = question.split(15)[0].split(8)[1]; // Answer is "Cash"
 ```
 
 It is also possible to assign both sides of the tuple at once with a destructuring syntax:
 
 ```solidity
-string bitcoin, string cash = "BitcoinCash".split(7);
-require(bitcoin == cash);
+string hello, string world = "Hello World".split(5);
+require(hello + "world" == "Hello " + world);
 ```
 
 ## Type Casting
