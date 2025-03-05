@@ -71,8 +71,22 @@ Returns the double SHA-256 hash of argument `x`.
 
 ## Signature checking functions
 :::caution
-All signature checking functions must comply with the [NULLFAIL][bip146] rule. This means that if you want to use the output of a signature check inside the condition of an if-statement, the input signature needs to either be correct, or an empty byte array. When you use an incorrect signature as an input, the script will fail.
+All signature checking functions must comply with the [NULLFAIL][bip146] rule which only allows `0x` as an invalid signature — any other invalid signature will **immediately fail** the entire script.
 :::
+
+#### Nullfail example
+
+The `NULLFAIL` rule means passing an invalid  signature to `checkSig()` does not return `false` — it fails the script. To safely return `false` on a signature check, use an empty `0x` signature instead, as shown below:
+
+```solidity
+// this script will immediately fail
+// because userSig will be invalid for either the 'seller' or the 'refere'
+require(checkSig(userSig, seller) || checkSig(userSig, refere));
+
+// instead, use 2 different  signatures
+// set the unused signature to 0x so 'checkSig' returns false
+require(checkSig(sellerSig, seller) || checkSig(userSig, refere));
+```
 
 ### checkSig()
 ```solidity
