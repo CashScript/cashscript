@@ -36,8 +36,16 @@ module.exports = {
       items: [
         'sdk/instantiation',
         'sdk/transaction-builder',
+        {
+          type: 'category',
+          label: 'Network Providers',
+          items: [
+            'sdk/network-provider',
+            'sdk/electrum-network-provider',
+            'sdk/other-network-providers',
+          ],
+        },
         'sdk/signature-templates',
-        'sdk/network-provider',
         'sdk/testing-setup',
         'sdk/examples',
       ],
