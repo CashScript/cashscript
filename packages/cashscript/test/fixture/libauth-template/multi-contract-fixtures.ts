@@ -3,7 +3,7 @@ import BarArtifact from '../Bar.artifact.js';
 import FooArtifact from '../Foo.artifact.js';
 import twtArtifact from '../transfer_with_timeout.artifact.js';
 import hodlVaultArtifact from '../hodl_vault.artifact.js';
-import { aliceAddress, alicePkh, alicePriv, alicePub, aliceTokenAddress, bobPriv, bobPub, carolPub, oracle, oraclePub } from '../vars.js';
+import { aliceAddress, alicePkh, alicePriv, alicePub, aliceTokenAddress, bobPriv, bobPub, carolPriv, carolPub, oracle, oraclePub } from '../vars.js';
 import { WalletTemplate } from '@bitauth/libauth';
 
 const provider = new MockNetworkProvider();
@@ -1490,6 +1490,250 @@ export const fixtures: Fixture[] = [
                     'oracle_pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                     'min_block': '0xb88201',
                     'price_target': '0x3075',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+      },
+    },
+  },
+  {
+    name: 'TwtContract timeout + twtContract transfer',
+    transaction: ( async () => {
+      const twtContract = new Contract(twtArtifact, [bobPub, carolPub, 100000n], { provider });
+      provider.addUtxo(twtContract.address, randomUtxo());
+      provider.addUtxo(twtContract.address, randomUtxo());
+
+      const twtContractUtxos = await twtContract.getUtxos();
+
+      const bobTemplate = new SignatureTemplate(bobPriv);
+      const carolTemplate = new SignatureTemplate(carolPriv);
+
+      return new TransactionBuilder({ provider })
+        .addInput(twtContractUtxos[0], twtContract.unlock.timeout(bobTemplate))
+        .addInput(twtContractUtxos[1], twtContract.unlock.transfer(carolTemplate))
+        .addOutput({ to: twtContract.address, amount: 20_000n });
+    })(),
+    template: {
+      '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
+      'description': 'Imported from cashscript',
+      'name': 'CashScript Generated Debugging Template',
+      'supported': [
+        'BCH_2025_05',
+      ],
+      'version': 0,
+      'entities': {
+        'transfer_with_timeout_parameters': {
+          'description': 'Contract creation and function parameters',
+          'name': 'Transfer With Timeout',
+          'scripts': [
+            'transfer_with_timeout_lock',
+            'transfer_with_timeout_transfer_unlock',
+          ],
+          'variables': {
+            'recipient_sig': {
+              'description': '"recipientSig" parameter of function "transfer"',
+              'name': 'Recipient Sig',
+              'type': 'Key',
+            },
+            'sender_sig': {
+              'description': '"senderSig" parameter of function "timeout"',
+              'name': 'Sender Sig',
+              'type': 'Key',
+            },
+            'sender': {
+              'description': '"sender" parameter of this contract',
+              'name': 'Sender',
+              'type': 'WalletData',
+            },
+            'recipient': {
+              'description': '"recipient" parameter of this contract',
+              'name': 'Recipient',
+              'type': 'WalletData',
+            },
+            'timeout': {
+              'description': '"timeout" parameter of this contract',
+              'name': 'Timeout',
+              'type': 'WalletData',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'Function Index',
+              'type': 'WalletData',
+            },
+          },
+        },
+      },
+      'scripts': {
+        'transfer_with_timeout_timeout_unlock': {
+          'passes': [
+            'transfer_with_timeout_timeout_evaluate',
+          ],
+          'name': 'timeout',
+          'script': '// "timeout" function parameters\n<sender_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
+          'unlocks': 'transfer_with_timeout_lock',
+        },
+        'transfer_with_timeout_lock': {
+          'lockingType': 'p2sh32',
+          'name': 'TransferWithTimeout',
+          'script': "// \"TransferWithTimeout\" contract constructor parameters\n<timeout> // int = <0xa08601>\n<recipient> // pubkey = <0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90>\n<sender> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n\n// bytecode\n                                                /* contract TransferWithTimeout(                                             */\n                                                /*     pubkey sender,                                                        */\n                                                /*     pubkey recipient,                                                     */\n                                                /*     int timeout                                                           */\n                                                /* ) {                                                                       */\n                                                /*     // Require recipient's signature to match                             */\nOP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF             /*     function transfer(sig recipientSig) {                                 */\nOP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG           /*         require(checkSig(recipientSig, recipient));                       */\nOP_NIP OP_NIP OP_NIP OP_ELSE                    /*     }                                                                     */\n                                                /*                                                                           */\n                                                /*     // Require timeout time to be reached and sender's signature to match */\nOP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_VERIFY         /*     function timeout(sig senderSig) {                                     */\nOP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY /*         require(checkSig(senderSig, sender));                             */\nOP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP     /*         require(tx.time >= timeout);                                      */\nOP_1 OP_NIP                                     /*     }                                                                     */\nOP_ENDIF                                        /* }                                                                         */\n                                                /*                                                                           */",
+        },
+        'transfer_with_timeout_transfer_unlock': {
+          'passes': [
+            'transfer_with_timeout_transfer_evaluate',
+          ],
+          'name': 'transfer',
+          'script': '// "transfer" function parameters\n<recipient_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
+          'unlocks': 'transfer_with_timeout_lock',
+        },
+      },
+      'scenarios': {
+        'transfer_with_timeout_timeout_evaluate': {
+          'name': 'transfer_with_timeout_timeout_evaluate',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+              'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+              'timeout': '0xa08601',
+              'function_index': '1',
+            },
+            'currentBlockHeight': expect.any(Number),
+            'currentBlockTime': expect.any(Number),
+            'keys': {
+              'privateKeys': {
+                'sender_sig': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+              },
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+            ],
+            'locktime': 0,
+            'outputs': [
+              {
+                'lockingBytecode': {
+                  'script': 'transfer_with_timeout_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                      'timeout': '0xa08601',
+                    },
+                  },
+                },
+                'valueSatoshis': 20000,
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+        'transfer_with_timeout_transfer_evaluate': {
+          'name': 'transfer_with_timeout_transfer_evaluate',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+              'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+              'timeout': '0xa08601',
+              'function_index': '0',
+            },
+            'currentBlockHeight': expect.any(Number),
+            'currentBlockTime': expect.any(Number),
+            'keys': {
+              'privateKeys': {
+                'recipient_sig': '81597823a901865622658cbf6d50c0286aa1d70fa1af98f897e34a0623a828ff',
+              },
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+            ],
+            'locktime': 0,
+            'outputs': [
+              {
+                'lockingBytecode': {
+                  'script': 'transfer_with_timeout_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                      'timeout': '0xa08601',
+                    },
+                  },
+                },
+                'valueSatoshis': 20000,
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
                   },
                 },
               },
