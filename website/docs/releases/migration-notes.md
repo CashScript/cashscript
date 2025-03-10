@@ -73,7 +73,7 @@ With the new transaction builder, all inputs and outputs are explicitly specifie
 
 ### CashScript SDK (ElectrumNetworkProvider)
 
-The underlying `electrum-cash` library has been mgrated to the new `@electrum-cash/network` package. This drops support for electrum cluster functionality. We reworked the second parameter of the `ElectrumNetworkProvider` constructor to be an options object, which can contain a custom electrum client or a custom hostname.
+The underlying `electrum-cash` library has been migrated to the new `@electrum-cash/network` package. This drops support for electrum cluster functionality. We reworked the second parameter of the `ElectrumNetworkProvider` constructor to be an options object, which can contain a custom electrum client or a custom hostname.
 
 If you were not using custom clusters, there is no need to change anything. If you were using custom clusters, you will need to update your code to use the new `@electrum-cash/network` package and use a single client instead of a cluster.
 

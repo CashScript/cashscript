@@ -80,12 +80,12 @@ The `NULLFAIL` rule means passing an invalid  signature to `checkSig()` does not
 
 ```solidity
 // this script will immediately fail
-// because userSig will be invalid for either the 'seller' or the 'refere'
-require(checkSig(userSig, seller) || checkSig(userSig, refere));
+// because userSig will be invalid for either the 'seller' or the 'referee'
+require(checkSig(userSig, seller) || checkSig(userSig, referee));
 
 // instead, use 2 different  signatures
 // set the unused signature to 0x so 'checkSig' returns false
-require(checkSig(sellerSig, seller) || checkSig(userSig, refere));
+require(checkSig(sellerSig, seller) || checkSig(userSig, referee));
 ```
 
 ### checkSig()

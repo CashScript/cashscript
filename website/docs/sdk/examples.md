@@ -150,7 +150,7 @@ const contractUtxos = await contract.getUtxos();
 console.log('contract address:', contract.address);
 console.log('contract utxos', contractUtxos);
 
-// get current blockheight
+// get current block height
 const currentBlockHeight = await provider.getBlockHeight()
 
 // Produce new oracle message and signature

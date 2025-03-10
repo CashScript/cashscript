@@ -199,6 +199,7 @@
         "workdir"
     ],
     "ignoreWords": [
+        "addinput",
         "bitcats",
         "bitcoincashjs",
         "branchup",
@@ -230,6 +231,7 @@
         "pushd",
         "sendrawtransaction",
         "setfiletype",
+        "setlocktime",
         "tada",
         "tapswap",
         "tokenaut",
