@@ -141,6 +141,10 @@ string question = "What is Bitcoin Cash?";
 string answer = question.split(15)[0].split(8)[1]; // Answer is "Cash"
 ```
 
+:::note
+It is not supported to use a variable for the tupleIndex. Instead you can assign both sides of the tuple as shown below and use either element conditional on the value of the variable. 
+:::
+
 It is also possible to assign both sides of the tuple at once with a destructuring syntax:
 
 ```solidity
