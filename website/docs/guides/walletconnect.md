@@ -141,7 +141,7 @@ async function unlockHodlVault(){
 
 To communicate the `wcTransactionObj` with the user's Wallet we use the `@walletconnect/sign-client` library to request the connected user's wallet to sign the transaction.
 
-See the source code for how to initialize the `signClient` and for details about the `connectedChain` and `session`.
+See [the source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/store/store.ts#L60) for how to initialize the `signClient` and for details about the `connectedChain` and `session`.
 
 ```ts
 import SignClient from '@walletconnect/sign-client';
