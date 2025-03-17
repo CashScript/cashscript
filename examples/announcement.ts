@@ -1,4 +1,4 @@
-import { Contract, ElectrumNetworkProvider } from 'cashscript';
+import { Contract, ElectrumNetworkProvider, Output, TransactionBuilder } from 'cashscript';
 import { compileFile } from 'cashc';
 import { stringify } from '@bitauth/libauth';
 import { URL } from 'url';
@@ -16,20 +16,36 @@ const contract = new Contract(artifact, [], { provider, addressType });
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
+const contractUtxos = await contract.getUtxos();
+console.log('contract utxos:', contractUtxos);
 console.log('contract balance:', await contract.getBalance());
 console.log('contract opcount:', contract.opcount);
 console.log('contract bytesize:', contract.bytesize);
 
-// Send the announcement. Trying to send any other announcement will fail because
-// the contract's covenant logic. Uses a hardcoded fee and minChange so that
-// change is only sent back to the contract if there's enough leftover
-// for another announcement.
+// Select a contract UTXO to spend from
+const contractInputUtxo = contractUtxos.find(utxo => utxo.satoshis > 10_000n);
+if (!contractInputUtxo) throw new Error('No contract UTXO with enough satoshis found');
+const inputAmount = contractInputUtxo.satoshis;
+
+// Announcement string
 const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
-const tx = await contract.functions
-  .announce()
-  .withOpReturn(['0x6d02', str])
-  .withHardcodedFee(1000n)
-  .withMinChange(1000n)
-  .send();
+
+// Construct a changeOutput so the leftover BCH can be send back for another announcement
+const minerFee = 1000n;
+const changeAmount = inputAmount - minerFee;
+const contractChangeOutput: Output = {
+  amount: changeAmount,
+  to: contract.address,
+};
+
+// Send the announcement. Trying to send any other announcement or other change output
+// will fail because of the contract's covenant logic
+const transactionBuilder = new TransactionBuilder({ provider });
+
+transactionBuilder.addInput(contractInputUtxo, contract.unlock.announce());
+transactionBuilder.addOpReturnOutput(['0x6d02', str]);
+if (changeAmount > 1000n) transactionBuilder.addOutput(contractChangeOutput);
+
+const tx = await transactionBuilder.send();
 
 console.log('transaction details:', stringify(tx));
