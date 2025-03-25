@@ -3,7 +3,7 @@ import BarArtifact from '../Bar.artifact.js';
 import FooArtifact from '../Foo.artifact.js';
 import twtArtifact from '../transfer_with_timeout.artifact.js';
 import hodlVaultArtifact from '../hodl_vault.artifact.js';
-import { aliceAddress, alicePkh, alicePriv, alicePub, aliceTokenAddress, bobPriv, bobPub, carolPriv, carolPub, oracle, oraclePub } from '../vars.js';
+import { aliceAddress, alicePkh, alicePriv, alicePub, aliceTokenAddress, bobPkh, bobPriv, bobPub, carolPriv, carolPub, oracle, oraclePub } from '../vars.js';
 import { WalletTemplate } from '@bitauth/libauth';
 
 const provider = new MockNetworkProvider();
@@ -19,7 +19,7 @@ export const fixtures: Fixture[] = [
     name: 'Foo + Bar + P2PKH UTXOs',
     transaction: (async () => {
       // TODO: Foo contract is just P2PKH contract with extra log, see if we can use P2PKH contract instead
-      const fooContract = new Contract(FooArtifact, [alicePkh], { provider });
+      const fooContract = new Contract(FooArtifact, [bobPkh], { provider });
       provider.addUtxo(fooContract.address, randomUtxo());
 
       const tokenA = randomToken({ amount: 100000000n });
@@ -40,6 +40,8 @@ export const fixtures: Fixture[] = [
       provider.addUtxo(aliceAddress, randomUtxo({ token: tokenA }));
       provider.addUtxo(aliceAddress, randomUtxo({ token: nftB }));
 
+      const bobTemplate = new SignatureTemplate(bobPriv);
+
       const utxos = await provider.getUtxos(aliceAddress);
       const fooContractUtxos = await fooContract.getUtxos();
       const barContractUtxos = await barContract.getUtxos();
@@ -48,7 +50,7 @@ export const fixtures: Fixture[] = [
         .addInputs([utxos[0], utxos[1], utxos[2]], aliceTemplate.unlockP2PKH())
         .addInput(barContractUtxos[0], barContract.unlock.funcA())
         .addInput(barContractUtxos[1], barContract.unlock.execute(alicePub, aliceTemplate))
-        .addInput(fooContractUtxos[0], fooContract.unlock.execute(alicePub, aliceTemplate))
+        .addInput(fooContractUtxos[0], fooContract.unlock.execute(bobPub, bobTemplate))
         .addInput(barContractUtxos[2], barContract.unlock.funcB())
         .addOutput({ to: fooContract.address, amount: 8000n })
         .addOutput({ to: aliceTokenAddress, amount: 800n, token: tokenA })
@@ -65,12 +67,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'bar_parameters': {
+        'bar_parameters_input3': {
           'description': 'Contract creation and function parameters',
-          'name': 'Bar',
+          'name': 'Bar (input #3)',
           'scripts': [
             'bar_lock',
-            'bar_func_b_unlock',
+            'bar_func_a_input3_unlock',
           ],
           'variables': {
             'pkh_bar': {
@@ -85,12 +87,62 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'foo_parameters': {
+        'bar_parameters_input4': {
           'description': 'Contract creation and function parameters',
-          'name': 'Foo',
+          'name': 'Bar (input #4)',
+          'scripts': [
+            'bar_lock',
+            'bar_execute_input4_unlock',
+          ],
+          'variables': {
+            'pkh_bar': {
+              'description': '"pkh_bar" parameter of this contract',
+              'name': 'Pkh Bar',
+              'type': 'WalletData',
+            },
+            'pk': {
+              'description': '"pk" parameter of function "execute"',
+              'name': 'Pk',
+              'type': 'WalletData',
+            },
+            's': {
+              'description': '"s" parameter of function "execute"',
+              'name': 'S',
+              'type': 'Key',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'Function Index',
+              'type': 'WalletData',
+            },
+          },
+        },
+        'bar_parameters_input6': {
+          'description': 'Contract creation and function parameters',
+          'name': 'Bar (input #6)',
+          'scripts': [
+            'bar_lock',
+            'bar_func_b_input6_unlock',
+          ],
+          'variables': {
+            'pkh_bar': {
+              'description': '"pkh_bar" parameter of this contract',
+              'name': 'Pkh Bar',
+              'type': 'WalletData',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'Function Index',
+              'type': 'WalletData',
+            },
+          },
+        },
+        'foo_parameters_input5': {
+          'description': 'Contract creation and function parameters',
+          'name': 'Foo (input #5)',
           'scripts': [
             'foo_lock',
-            'foo_execute_unlock',
+            'foo_execute_input5_unlock',
           ],
           'variables': {
             'pk': {
@@ -112,74 +164,56 @@ export const fixtures: Fixture[] = [
         },
         'signer_0': {
           'scripts': [
-            'bar_func_a_unlock',
-            'bar_lock',
-            'bar_execute_unlock',
-            'foo_execute_unlock',
-            'foo_lock',
-            'bar_func_b_unlock',
             'p2pkh_placeholder_lock_0',
             'p2pkh_placeholder_unlock_0',
           ],
           'description': 'placeholder_key_0',
-          'name': 'Signer 0',
+          'name': 'P2PKH Signer (input #0)',
           'variables': {
             'placeholder_key_0': {
               'description': '',
-              'name': 'Placeholder Key 0',
+              'name': 'P2PKH Placeholder Key (input #0)',
               'type': 'Key',
             },
           },
         },
         'signer_1': {
           'scripts': [
-            'bar_func_a_unlock',
-            'bar_lock',
-            'bar_execute_unlock',
-            'foo_execute_unlock',
-            'foo_lock',
-            'bar_func_b_unlock',
             'p2pkh_placeholder_lock_1',
             'p2pkh_placeholder_unlock_1',
           ],
           'description': 'placeholder_key_1',
-          'name': 'Signer 1',
+          'name': 'P2PKH Signer (input #1)',
           'variables': {
             'placeholder_key_1': {
               'description': '',
-              'name': 'Placeholder Key 1',
+              'name': 'P2PKH Placeholder Key (input #1)',
               'type': 'Key',
             },
           },
         },
         'signer_2': {
           'scripts': [
-            'bar_func_a_unlock',
-            'bar_lock',
-            'bar_execute_unlock',
-            'foo_execute_unlock',
-            'foo_lock',
-            'bar_func_b_unlock',
             'p2pkh_placeholder_lock_2',
             'p2pkh_placeholder_unlock_2',
           ],
           'description': 'placeholder_key_2',
-          'name': 'Signer 2',
+          'name': 'P2PKH Signer (input #2)',
           'variables': {
             'placeholder_key_2': {
               'description': '',
-              'name': 'Placeholder Key 2',
+              'name': 'P2PKH Placeholder Key (input #2)',
               'type': 'Key',
             },
           },
         },
       },
       'scripts': {
-        'bar_func_a_unlock': {
+        'bar_func_a_input3_unlock': {
           'passes': [
             'bar_func_a_evaluate',
           ],
-          'name': 'funcA',
+          'name': 'funcA (input #3)',
           'script': '// "funcA" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
           'unlocks': 'bar_lock',
         },
@@ -188,63 +222,63 @@ export const fixtures: Fixture[] = [
           'name': 'Bar',
           'script': "// \"Bar\" contract constructor parameters\n<pkh_bar> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript >=0.10.2;                            */\n                                                        /*                                                        */\n                                                        /* contract Bar(bytes20 pkh_bar) {                        */\nOP_1 OP_PICK OP_0 OP_NUMEQUAL OP_IF                     /*     function funcA() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_PICK OP_1 OP_NUMEQUAL OP_IF                     /*     function funcB() {                                 */\nOP_2 OP_2 OP_NUMEQUAL                                   /*         require(2==2);                                 */\nOP_NIP OP_NIP OP_ELSE                                   /*     }                                                  */\n                                                        /*                                                        */\nOP_1 OP_ROLL OP_2 OP_NUMEQUAL OP_VERIFY                 /*     function execute(pubkey pk, sig s) {               */\n                                                        /*         console.log('Bar 'execute' function called.'); */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh_bar);               */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                      */\n                                                        /*     }                                                  */\nOP_ENDIF OP_ENDIF                                       /* }                                                      */\n                                                        /*                                                        */",
         },
-        'bar_execute_unlock': {
+        'bar_execute_input4_unlock': {
           'passes': [
             'bar_execute_evaluate',
           ],
-          'name': 'execute',
+          'name': 'execute (input #4)',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// function index in contract\n<function_index> // int = <2>\n',
           'unlocks': 'bar_lock',
         },
-        'foo_execute_unlock': {
+        'foo_execute_input5_unlock': {
           'passes': [
             'foo_execute_evaluate',
           ],
-          'name': 'execute',
-          'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
+          'name': 'execute (input #5)',
+          'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n',
           'unlocks': 'foo_lock',
         },
         'foo_lock': {
           'lockingType': 'p2sh32',
           'name': 'Foo',
-          'script': "// \"Foo\" contract constructor parameters\n<pkh_foo> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* pragma cashscript >=0.10.2;                                  */\n                                                        /*                                                              */\n                                                        /* contract Foo(bytes20 pkh_foo) {                              */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function execute(pubkey pk, sig s) {                     */\n                                                        /*         console.log('Foo 'execute' function called.');       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh_foo);                     */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */",
+          'script': "// \"Foo\" contract constructor parameters\n<pkh_foo> // bytes20 = <0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0>\n\n// bytecode\n                                                        /* pragma cashscript >=0.10.2;                                  */\n                                                        /*                                                              */\n                                                        /* contract Foo(bytes20 pkh_foo) {                              */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function execute(pubkey pk, sig s) {                     */\n                                                        /*         console.log('Foo 'execute' function called.');       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh_foo);                     */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */",
         },
-        'bar_func_b_unlock': {
+        'bar_func_b_input6_unlock': {
           'passes': [
             'bar_func_b_evaluate',
           ],
-          'name': 'funcB',
+          'name': 'funcB (input #6)',
           'script': '// "funcB" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <1>\n',
           'unlocks': 'bar_lock',
         },
         'p2pkh_placeholder_unlock_0': {
-          'name': 'p2pkh_placeholder_unlock_0',
+          'name': 'P2PKH Unlock (input #0)',
           'script': '<placeholder_key_0.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_0.public_key>',
           'unlocks': 'p2pkh_placeholder_lock_0',
         },
         'p2pkh_placeholder_lock_0': {
           'lockingType': 'standard',
-          'name': 'p2pkh_placeholder_lock_0',
+          'name': 'P2PKH Lock (input #0)',
           'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_0.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
         'p2pkh_placeholder_unlock_1': {
-          'name': 'p2pkh_placeholder_unlock_1',
+          'name': 'P2PKH Unlock (input #1)',
           'script': '<placeholder_key_1.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_1.public_key>',
           'unlocks': 'p2pkh_placeholder_lock_1',
         },
         'p2pkh_placeholder_lock_1': {
           'lockingType': 'standard',
-          'name': 'p2pkh_placeholder_lock_1',
+          'name': 'P2PKH Lock (input #1)',
           'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_1.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
         'p2pkh_placeholder_unlock_2': {
-          'name': 'p2pkh_placeholder_unlock_2',
+          'name': 'P2PKH Unlock (input #2)',
           'script': '<placeholder_key_2.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_2.public_key>',
           'unlocks': 'p2pkh_placeholder_lock_2',
         },
         'p2pkh_placeholder_lock_2': {
           'lockingType': 'standard',
-          'name': 'p2pkh_placeholder_lock_2',
+          'name': 'P2PKH Lock (input #2)',
           'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_2.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
       },
@@ -344,7 +378,7 @@ export const fixtures: Fixture[] = [
                   'script': 'foo_lock',
                   'overrides': {
                     'bytecode': {
-                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
                     },
                   },
                 },
@@ -439,7 +473,7 @@ export const fixtures: Fixture[] = [
                 'script': 'foo_lock',
                 'overrides': {
                   'bytecode': {
-                    'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
                   },
                 },
               },
@@ -556,7 +590,7 @@ export const fixtures: Fixture[] = [
                   'script': 'foo_lock',
                   'overrides': {
                     'bytecode': {
-                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
                     },
                   },
                 },
@@ -651,7 +685,7 @@ export const fixtures: Fixture[] = [
                 'script': 'foo_lock',
                 'overrides': {
                   'bytecode': {
-                    'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
                   },
                 },
               },
@@ -675,14 +709,14 @@ export const fixtures: Fixture[] = [
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
-              'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+              'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
             },
             'currentBlockHeight': expect.any(Number),
             'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
-                's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                's': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
               },
             },
           },
@@ -767,7 +801,7 @@ export const fixtures: Fixture[] = [
                   'script': 'foo_lock',
                   'overrides': {
                     'bytecode': {
-                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
                     },
                   },
                 },
@@ -976,7 +1010,7 @@ export const fixtures: Fixture[] = [
                   'script': 'foo_lock',
                   'overrides': {
                     'bytecode': {
-                      'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
                     },
                   },
                 },
@@ -1076,7 +1110,7 @@ export const fixtures: Fixture[] = [
                 'script': 'foo_lock',
                 'overrides': {
                   'bytecode': {
-                    'pkh_foo': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
                   },
                 },
               },
@@ -1507,9 +1541,11 @@ export const fixtures: Fixture[] = [
     },
   },
   {
-    name: 'TwtContract timeout + twtContract transfer',
-    transaction: ( async () => {
+    name: '4 twtContract inputs',
+    transaction: (async () => {
       const twtContract = new Contract(twtArtifact, [bobPub, carolPub, 100000n], { provider });
+      provider.addUtxo(twtContract.address, randomUtxo());
+      provider.addUtxo(twtContract.address, randomUtxo());
       provider.addUtxo(twtContract.address, randomUtxo());
       provider.addUtxo(twtContract.address, randomUtxo());
 
@@ -1519,9 +1555,12 @@ export const fixtures: Fixture[] = [
       const carolTemplate = new SignatureTemplate(carolPriv);
 
       return new TransactionBuilder({ provider })
-        .addInput(twtContractUtxos[0], twtContract.unlock.timeout(bobTemplate))
-        .addInput(twtContractUtxos[1], twtContract.unlock.transfer(carolTemplate))
-        .addOutput({ to: twtContract.address, amount: 20_000n });
+        .addInput(twtContractUtxos[0], twtContract.unlock.timeout(bobTemplate)) // should succeed
+        .addInput(twtContractUtxos[1], twtContract.unlock.timeout(carolTemplate)) // should fail (wrong sig)
+        .addInput(twtContractUtxos[2], twtContract.unlock.transfer(carolTemplate)) // should succeed
+        .addInput(twtContractUtxos[3], twtContract.unlock.transfer(bobTemplate)) // should fail (wrong sig)
+        .addOutput({ to: twtContract.address, amount: 20_000n })
+        .setLocktime(1000000);
     })(),
     template: {
       '$schema': 'https://ide.bitauth.com/authentication-template-v0.schema.json',
@@ -1532,19 +1571,14 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'transfer_with_timeout_parameters': {
+        'transfer_with_timeout_parameters_input0': {
           'description': 'Contract creation and function parameters',
-          'name': 'Transfer With Timeout',
+          'name': 'TransferWithTimeout (input #0)',
           'scripts': [
             'transfer_with_timeout_lock',
-            'transfer_with_timeout_transfer_unlock',
+            'transfer_with_timeout_timeout_input0_unlock',
           ],
           'variables': {
-            'recipient_sig': {
-              'description': '"recipientSig" parameter of function "transfer"',
-              'name': 'Recipient Sig',
-              'type': 'Key',
-            },
             'sender_sig': {
               'description': '"senderSig" parameter of function "timeout"',
               'name': 'Sender Sig',
@@ -1572,13 +1606,118 @@ export const fixtures: Fixture[] = [
             },
           },
         },
+        'transfer_with_timeout_parameters_input1': {
+          'description': 'Contract creation and function parameters',
+          'name': 'TransferWithTimeout (input #1)',
+          'scripts': [
+            'transfer_with_timeout_lock',
+            'transfer_with_timeout_timeout_input1_unlock',
+          ],
+          'variables': {
+            'sender_sig': {
+              'description': '"senderSig" parameter of function "timeout"',
+              'name': 'Sender Sig',
+              'type': 'Key',
+            },
+            'sender': {
+              'description': '"sender" parameter of this contract',
+              'name': 'Sender',
+              'type': 'WalletData',
+            },
+            'recipient': {
+              'description': '"recipient" parameter of this contract',
+              'name': 'Recipient',
+              'type': 'WalletData',
+            },
+            'timeout': {
+              'description': '"timeout" parameter of this contract',
+              'name': 'Timeout',
+              'type': 'WalletData',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'Function Index',
+              'type': 'WalletData',
+            },
+          },
+        },
+        'transfer_with_timeout_parameters_input2': {
+          'description': 'Contract creation and function parameters',
+          'name': 'TransferWithTimeout (input #2)',
+          'scripts': [
+            'transfer_with_timeout_lock',
+            'transfer_with_timeout_transfer_input2_unlock',
+          ],
+          'variables': {
+            'recipient_sig': {
+              'description': '"recipientSig" parameter of function "transfer"',
+              'name': 'Recipient Sig',
+              'type': 'Key',
+            },
+            'sender': {
+              'description': '"sender" parameter of this contract',
+              'name': 'Sender',
+              'type': 'WalletData',
+            },
+            'recipient': {
+              'description': '"recipient" parameter of this contract',
+              'name': 'Recipient',
+              'type': 'WalletData',
+            },
+            'timeout': {
+              'description': '"timeout" parameter of this contract',
+              'name': 'Timeout',
+              'type': 'WalletData',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'Function Index',
+              'type': 'WalletData',
+            },
+          },
+        },
+        'transfer_with_timeout_parameters_input3': {
+          'description': 'Contract creation and function parameters',
+          'name': 'TransferWithTimeout (input #3)',
+          'scripts': [
+            'transfer_with_timeout_lock',
+            'transfer_with_timeout_transfer_input3_unlock',
+          ],
+          'variables': {
+            'recipient_sig': {
+              'description': '"recipientSig" parameter of function "transfer"',
+              'name': 'Recipient Sig',
+              'type': 'Key',
+            },
+            'sender': {
+              'description': '"sender" parameter of this contract',
+              'name': 'Sender',
+              'type': 'WalletData',
+            },
+            'recipient': {
+              'description': '"recipient" parameter of this contract',
+              'name': 'Recipient',
+              'type': 'WalletData',
+            },
+            'timeout': {
+              'description': '"timeout" parameter of this contract',
+              'name': 'Timeout',
+              'type': 'WalletData',
+            },
+            'function_index': {
+              'description': 'Script function index to execute',
+              'name': 'Function Index',
+              'type': 'WalletData',
+            },
+          },
+        },
       },
       'scripts': {
-        'transfer_with_timeout_timeout_unlock': {
+        'transfer_with_timeout_timeout_input0_unlock': {
           'passes': [
             'transfer_with_timeout_timeout_evaluate',
           ],
-          'name': 'timeout',
+          'name': 'timeout (input #0)',
           'script': '// "timeout" function parameters\n<sender_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
           'unlocks': 'transfer_with_timeout_lock',
         },
@@ -1587,11 +1726,27 @@ export const fixtures: Fixture[] = [
           'name': 'TransferWithTimeout',
           'script': "// \"TransferWithTimeout\" contract constructor parameters\n<timeout> // int = <0xa08601>\n<recipient> // pubkey = <0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90>\n<sender> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n\n// bytecode\n                                                /* contract TransferWithTimeout(                                             */\n                                                /*     pubkey sender,                                                        */\n                                                /*     pubkey recipient,                                                     */\n                                                /*     int timeout                                                           */\n                                                /* ) {                                                                       */\n                                                /*     // Require recipient's signature to match                             */\nOP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF             /*     function transfer(sig recipientSig) {                                 */\nOP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG           /*         require(checkSig(recipientSig, recipient));                       */\nOP_NIP OP_NIP OP_NIP OP_ELSE                    /*     }                                                                     */\n                                                /*                                                                           */\n                                                /*     // Require timeout time to be reached and sender's signature to match */\nOP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_VERIFY         /*     function timeout(sig senderSig) {                                     */\nOP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY /*         require(checkSig(senderSig, sender));                             */\nOP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP     /*         require(tx.time >= timeout);                                      */\nOP_1 OP_NIP                                     /*     }                                                                     */\nOP_ENDIF                                        /* }                                                                         */\n                                                /*                                                                           */",
         },
-        'transfer_with_timeout_transfer_unlock': {
+        'transfer_with_timeout_timeout_input1_unlock': {
+          'passes': [
+            'transfer_with_timeout_timeout_evaluate1',
+          ],
+          'name': 'timeout (input #1)',
+          'script': '// "timeout" function parameters\n<sender_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
+          'unlocks': 'transfer_with_timeout_lock',
+        },
+        'transfer_with_timeout_transfer_input2_unlock': {
           'passes': [
             'transfer_with_timeout_transfer_evaluate',
           ],
-          'name': 'transfer',
+          'name': 'transfer (input #2)',
+          'script': '// "transfer" function parameters\n<recipient_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
+          'unlocks': 'transfer_with_timeout_lock',
+        },
+        'transfer_with_timeout_transfer_input3_unlock': {
+          'passes': [
+            'transfer_with_timeout_transfer_evaluate1',
+          ],
+          'name': 'transfer (input #3)',
           'script': '// "transfer" function parameters\n<recipient_sig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
           'unlocks': 'transfer_with_timeout_lock',
         },
@@ -1607,7 +1762,7 @@ export const fixtures: Fixture[] = [
               'timeout': '0xa08601',
               'function_index': '1',
             },
-            'currentBlockHeight': expect.any(Number),
+            'currentBlockHeight': 2,
             'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
@@ -1631,8 +1786,20 @@ export const fixtures: Fixture[] = [
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {},
               },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
             ],
-            'locktime': 0,
+            'locktime': 1000000,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -1670,23 +1837,49 @@ export const fixtures: Fixture[] = [
               },
               'valueSatoshis': expect.any(Number),
             },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
           ],
         },
-        'transfer_with_timeout_transfer_evaluate': {
-          'name': 'transfer_with_timeout_transfer_evaluate',
+        'transfer_with_timeout_timeout_evaluate1': {
+          'name': 'transfer_with_timeout_timeout_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
               'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
               'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
               'timeout': '0xa08601',
-              'function_index': '0',
+              'function_index': '1',
             },
-            'currentBlockHeight': expect.any(Number),
+            'currentBlockHeight': 2,
             'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
-                'recipient_sig': '81597823a901865622658cbf6d50c0286aa1d70fa1af98f897e34a0623a828ff',
+                'sender_sig': '81597823a901865622658cbf6d50c0286aa1d70fa1af98f897e34a0623a828ff',
               },
             },
           },
@@ -1706,8 +1899,20 @@ export const fixtures: Fixture[] = [
                   'slot',
                 ],
               },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
             ],
-            'locktime': 0,
+            'locktime': 1000000,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -1726,6 +1931,258 @@ export const fixtures: Fixture[] = [
             'version': 2,
           },
           'sourceOutputs': [
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+        'transfer_with_timeout_transfer_evaluate': {
+          'name': 'transfer_with_timeout_transfer_evaluate',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+              'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+              'timeout': '0xa08601',
+              'function_index': '0',
+            },
+            'currentBlockHeight': 2,
+            'currentBlockTime': expect.any(Number),
+            'keys': {
+              'privateKeys': {
+                'recipient_sig': '81597823a901865622658cbf6d50c0286aa1d70fa1af98f897e34a0623a828ff',
+              },
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+            ],
+            'locktime': 1000000,
+            'outputs': [
+              {
+                'lockingBytecode': {
+                  'script': 'transfer_with_timeout_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                      'timeout': '0xa08601',
+                    },
+                  },
+                },
+                'valueSatoshis': 20000,
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+        'transfer_with_timeout_transfer_evaluate1': {
+          'name': 'transfer_with_timeout_transfer_evaluate',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+              'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+              'timeout': '0xa08601',
+              'function_index': '0',
+            },
+            'currentBlockHeight': 2,
+            'currentBlockTime': expect.any(Number),
+            'keys': {
+              'privateKeys': {
+                'recipient_sig': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+              },
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {},
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+            ],
+            'locktime': 1000000,
+            'outputs': [
+              {
+                'lockingBytecode': {
+                  'script': 'transfer_with_timeout_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                      'timeout': '0xa08601',
+                    },
+                  },
+                },
+                'valueSatoshis': 20000,
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'transfer_with_timeout_lock',
+                'overrides': {
+                  'bytecode': {
+                    'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                    'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                    'timeout': '0xa08601',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
             {
               'lockingBytecode': {
                 'script': 'transfer_with_timeout_lock',
@@ -1782,7 +2239,7 @@ export const fixtures: Fixture[] = [
           'name': 'Bar',
           'scripts': [
             'bar_lock',
-            'bar_execute_unlock',
+            'bar_execute_input4_unlock',
           ],
           'variables': {
             'pk': {
@@ -1809,10 +2266,9 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'bar_execute_unlock': {
+        'bar_execute_input4_unlock': {
           'passes': [
             'bar_execute_evaluate',
-            'bar_execute_evaluate1',
           ],
           'name': 'execute',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n\n// function index in contract\n<function_index> // int = <2>\n',
