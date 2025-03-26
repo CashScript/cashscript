@@ -39,7 +39,7 @@ import {
 } from '../LibauthTemplate.js';
 import SignatureTemplate from '../SignatureTemplate.js';
 import { Transaction } from '../Transaction.js';
-import { addressToLockScript, snakeCase, titleCase } from '../utils.js';
+import { addressToLockScript } from '../utils.js';
 import { TransactionBuilder } from '../TransactionBuilder.js';
 
 
@@ -87,10 +87,10 @@ export const generateTemplateEntitiesP2SH = (
 ): WalletTemplate['entities'] => {
   const functionParameters = Object.fromEntries<WalletTemplateVariable>(
     abiFunction.inputs.map((input, index) => ([
-      snakeCase(input.name),
+      input.name,
       {
         description: `"${input.name}" parameter of function "${abiFunction.name}"`,
-        name: titleCase(input.name),
+        name: input.name,
         type: encodedFunctionArgs[index] instanceof SignatureTemplate ? 'Key' : 'WalletData',
       },
     ])),
@@ -98,22 +98,22 @@ export const generateTemplateEntitiesP2SH = (
 
   const constructorParameters = Object.fromEntries<WalletTemplateVariable>(
     artifact.constructorInputs.map((input) => ([
-      snakeCase(input.name),
+      input.name,
       {
         description: `"${input.name}" parameter of this contract`,
-        name: titleCase(input.name),
+        name: input.name,
         type: 'WalletData',
       },
     ])),
   );
 
   const entities = {
-    [snakeCase(artifact.contractName + 'Parameters' + '_input' + inputIndex)]: {
+    [artifact.contractName + '_parameters' + '_input' + inputIndex]: {
       description: 'Contract creation and function parameters',
       name: `${artifact.contractName} (input #${inputIndex})`,
       scripts: [
-        snakeCase(artifact.contractName + '_lock'),
-        snakeCase(artifact.contractName + '_' + abiFunction.name + '_input' + inputIndex + '_unlock'),
+        artifact.contractName + '_lock',
+        artifact.contractName + '_' + abiFunction.name + '_input' + inputIndex + '_unlock',
       ],
       variables: {
         ...functionParameters,
@@ -124,9 +124,9 @@ export const generateTemplateEntitiesP2SH = (
 
   // function_index is a special variable that indicates the function to execute
   if (artifact.abi.length > 1) {
-    entities[snakeCase(artifact.contractName + 'Parameters' + '_input' + inputIndex)].variables.function_index = {
+    entities[artifact.contractName + '_parameters' + '_input' + inputIndex].variables.function_index = {
       description: 'Script function index to execute',
-      name: titleCase('function_index'),
+      name: 'function_index',
       type: 'WalletData',
     };
   }
@@ -188,8 +188,8 @@ export const generateTemplateScriptsP2SH = (
   inputIndex: number,
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
-  const unlockingScriptName = snakeCase(artifact.contractName + '_' + abiFunction.name + '_input' + inputIndex + '_unlock');
-  const lockingScriptName = snakeCase(artifact.contractName + '_lock');
+  const unlockingScriptName = artifact.contractName + '_' + abiFunction.name + '_input' + inputIndex + '_unlock';
+  const lockingScriptName = artifact.contractName + '_lock';
 
   return {
     [unlockingScriptName]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, scenarioId, inputIndex),
@@ -252,7 +252,7 @@ const generateTemplateUnlockScript = (
       '',
       ...functionIndexString,
     ].join('\n'),
-    unlocks: snakeCase(artifact.contractName + '_lock'),
+    unlocks: artifact.contractName + '_lock',
   };
 };
 
@@ -271,7 +271,7 @@ export const generateTemplateScenarios = (
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
     [scenarioIdentifier]: {
-      name: snakeCase(artifact.contractName + '_' + abiFunction.name + 'Evaluate'),
+      name: artifact.contractName + '_' + abiFunction.name + '_evaluate',
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
@@ -421,16 +421,14 @@ export const getLibauthTemplates = (
       let scenarioIdentifier = baseIdentifier;
       let counter = 0;
 
-      const scenarioIds = [snakeCase(scenarioIdentifier)];
+      const scenarioIds = [scenarioIdentifier];
 
       // Find first available unique identifier by incrementing counter
-      while (scenarios[snakeCase(scenarioIdentifier)]) {
+      while (scenarios[scenarioIdentifier]) {
         counter++;
         scenarioIdentifier = `${baseIdentifier}${counter}`;
-        scenarioIds.push(snakeCase(scenarioIdentifier));
+        scenarioIds.push(scenarioIdentifier);
       }
-
-      scenarioIdentifier = snakeCase(scenarioIdentifier);
 
       // Encode the function arguments for this contract input
       const encodedArgs = encodeFunctionArguments(
@@ -567,9 +565,7 @@ const generateLockingScriptParams = (
       addHexPrefixExceptEmpty(binToHex(csInput.unlocker!.contract!.encodedConstructorArgs[index])),
     ]);
 
-  const constructorParams = Object.fromEntries(
-    constructorParamsEntries.map(([key, value]) => [snakeCase(key), value]),
-  );
+  const constructorParams = Object.fromEntries(constructorParamsEntries);
 
   return {
     script: lockScriptName,

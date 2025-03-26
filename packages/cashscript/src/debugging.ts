@@ -1,6 +1,6 @@
 import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2025, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
-import { findLastIndex, snakeCase, toRegExp } from './utils.js';
+import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './LibauthTemplate.js';
 
@@ -17,7 +17,7 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
     // There are no scenarios defined for P2PKH placeholder scripts, so we skip them
     if (scenarioIds.length === 0) continue;
 
-    const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(snakeCase(artifact.contractName)));
+    const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(artifact.contractName));
 
     if (!matchingArtifact) {
       throw new Error(`No artifact found for unlocking script ${unlockingScriptId}`);

@@ -37,7 +37,7 @@ import {
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
 import { EncodedConstructorArgument, EncodedFunctionArgument } from './Argument.js';
-import { addressToLockScript, extendedStringify, snakeCase, zip } from './utils.js';
+import { addressToLockScript, extendedStringify, zip } from './utils.js';
 import { Contract } from './Contract.js';
 
 interface BuildTemplateOptions {
@@ -89,9 +89,9 @@ export const buildTemplate = async ({
       const hashtypeName = getHashTypeName(input.template.getHashType(false));
       const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
 
-      template.entities[snakeCase(contract.name + 'Parameters')].scripts!.push(lockScriptName, unlockScriptName);
-      template.entities[snakeCase(contract.name + 'Parameters')].variables = {
-        ...template.entities[snakeCase(contract.name + 'Parameters')].variables,
+      template.entities[contract.name + '_parameters'].scripts!.push(lockScriptName, unlockScriptName);
+      template.entities[contract.name + '_parameters'].variables = {
+        ...template.entities[contract.name + '_parameters'].variables,
         [placeholderKeyName]: {
           description: placeholderKeyName,
           name: placeholderKeyName,
@@ -132,7 +132,7 @@ const generateTemplateEntities = (
 ): WalletTemplate['entities'] => {
   const functionParameters = Object.fromEntries<WalletTemplateVariable>(
     abiFunction.inputs.map((input, index) => ([
-      snakeCase(input.name),
+      input.name,
       {
         description: `"${input.name}" parameter of function "${abiFunction.name}"`,
         name: input.name,
@@ -143,7 +143,7 @@ const generateTemplateEntities = (
 
   const constructorParameters = Object.fromEntries<WalletTemplateVariable>(
     artifact.constructorInputs.map((input) => ([
-      snakeCase(input.name),
+      input.name,
       {
         description: `"${input.name}" parameter of this contract`,
         name: input.name,
@@ -153,12 +153,12 @@ const generateTemplateEntities = (
   );
 
   const entities = {
-    [snakeCase(artifact.contractName + 'Parameters')]: {
+    [artifact.contractName + '_parameters']: {
       description: 'Contract creation and function parameters',
-      name: snakeCase(artifact.contractName + 'Parameters'),
+      name: artifact.contractName + '_parameters',
       scripts: [
-        snakeCase(artifact.contractName + '_lock'),
-        snakeCase(artifact.contractName + '_unlock'),
+        artifact.contractName + '_lock',
+        artifact.contractName + '_unlock',
       ],
       variables: {
         ...functionParameters,
@@ -169,7 +169,7 @@ const generateTemplateEntities = (
 
   // function_index is a special variable that indicates the function to execute
   if (artifact.abi.length > 1) {
-    entities[snakeCase(artifact.contractName + 'Parameters')].variables.function_index = {
+    entities[artifact.contractName + '_parameters'].variables.function_index = {
       description: 'Script function index to execute',
       name: 'function_index',
       type: 'WalletData',
@@ -188,8 +188,8 @@ const generateTemplateScripts = (
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
   return {
-    [snakeCase(artifact.contractName + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
-    [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
+    [artifact.contractName + '_unlock']: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
+    [artifact.contractName + '_lock']: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
 
@@ -200,7 +200,7 @@ const generateTemplateLockScript = (
 ): WalletTemplateScriptLocking => {
   return {
     lockingType: addressType,
-    name: snakeCase(artifact.contractName + '_lock'),
+    name: artifact.contractName + '_lock',
     script: [
       `// "${artifact.contractName}" contract constructor parameters`,
       formatParametersForDebugging(artifact.constructorInputs, constructorArguments),
@@ -224,15 +224,15 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: [snakeCase(artifact.contractName + 'Evaluate')],
-    name: snakeCase(artifact.contractName + '_unlock'),
+    passes: [artifact.contractName + '_evaluate'],
+    name: artifact.contractName + '_unlock',
     script: [
       `// "${abiFunction.name}" function parameters`,
       formatParametersForDebugging(abiFunction.inputs, encodedFunctionArgs),
       '',
       ...functionIndexString,
     ].join('\n'),
-    unlocks: snakeCase(artifact.contractName + '_lock'),
+    unlocks: artifact.contractName + '_lock',
   };
 };
 
@@ -250,8 +250,8 @@ const generateTemplateScenarios = (
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
-    [snakeCase(artifact.contractName + 'Evaluate')]: {
-      name: snakeCase(artifact.contractName + 'Evaluate'),
+    [artifact.contractName + '_evaluate']: {
+      name: artifact.contractName + '_evaluate',
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
@@ -272,7 +272,7 @@ const generateTemplateScenarios = (
 
   if (artifact.abi.length > 1) {
     const functionIndex = artifact.abi.findIndex((func) => func.name === transaction.abiFunction.name);
-    scenarios![snakeCase(artifact.contractName + 'Evaluate')].data!.bytecode!.function_index = functionIndex.toString();
+    scenarios![artifact.contractName + '_evaluate'].data!.bytecode!.function_index = functionIndex.toString();
   }
 
   return scenarios;
@@ -382,7 +382,7 @@ export const generateTemplateScenarioParametersValues = (
     .map(([input, arg]) => {
       const encodedArgumentHex = binToHex(arg as Uint8Array);
       const prefixedEncodedArgument = addHexPrefixExceptEmpty(encodedArgumentHex);
-      return [snakeCase(input.name), prefixedEncodedArgument] as const;
+      return [input.name, prefixedEncodedArgument] as const;
     });
 
   return Object.fromEntries(entries);
@@ -400,7 +400,7 @@ export const generateTemplateScenarioKeys = (
 
   const entries = typesAndArguments
     .filter(([, arg]) => arg instanceof SignatureTemplate)
-    .map(([input, arg]) => ([snakeCase(input.name), binToHex((arg as SignatureTemplate).privateKey)] as const));
+    .map(([input, arg]) => ([input.name, binToHex((arg as SignatureTemplate).privateKey)] as const));
 
   return Object.fromEntries(entries);
 };
@@ -415,14 +415,14 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
     if (arg instanceof SignatureTemplate) {
       const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
       const hashtypeName = getHashTypeName(arg.getHashType(false));
-      return `<${snakeCase(input.name)}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
+      return `<${input.name}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
     }
 
     const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;
 
     // we output these values as pushdata, comment will contain the type and the value of the variable
     // e.g. <timeout> // int = <0xa08601>
-    return `<${snakeCase(input.name)}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
+    return `<${input.name}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
   }).join('\n');
 };
 

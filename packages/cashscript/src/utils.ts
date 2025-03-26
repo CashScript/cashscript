@@ -41,8 +41,6 @@ import {
   UndefinedInputError,
 } from './Errors.js';
 
-export { snakeCase } from 'change-case';
-
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
 export function validateInput(utxo: Utxo): void {
   if (!utxo) {
@@ -348,27 +346,6 @@ export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: n
   }
   return -1;
 }
-
-// TODO: Somehow, this turns P2PKHLock into p2pkh_lock, but P2PKH_Lock into p2_pkh_lock
-// export const snakeCase = (str: string): string => (
-//   str
-//   && str
-//     .match(
-//       /([A-Z]+\d*[A-Z]*(?=[A-Z][a-z])|[A-Z]?[a-z]+\d*[a-z]+|[A-Z]?[a-z]+\d*|[A-Z]+\d*|\d+)/g,
-//     )!
-//     .map((s) => s.toLowerCase())
-//     .join('_')
-// );
-
-export const titleCase = (str: string): string => {
-  if (!str) return '';
-  return str
-    .match(
-      /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
-    )!
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase())
-    .join(' ');
-};
 
 // JSON.stringify version that can serialize otherwise unsupported types (bigint and Uint8Array)
 export const extendedStringify = (obj: any, spaces?: number): string => JSON.stringify(
