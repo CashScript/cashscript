@@ -417,7 +417,7 @@ export const getLibauthTemplates = (
 
       // Find matching function and index from contract.unlock Object, this uses Function Reference Comparison.
       // Generate unique scenario identifier by combining contract name, function name and counter
-      const baseIdentifier = `${contract.artifact.contractName}_${abiFunction.name}Evaluate`;
+      const baseIdentifier = `${contract.artifact.contractName}_${abiFunction.name}_evaluate`;
       let scenarioIdentifier = baseIdentifier;
       let counter = 0;
 
