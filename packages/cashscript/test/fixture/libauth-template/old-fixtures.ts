@@ -1,4 +1,4 @@
-import { Contract, HashType, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
+import { Contract, HashType, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, type Transaction, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
 import TransferWithTimeout from '../transfer_with_timeout.artifact.js';
 import Mecenas from '../mecenas.artifact.js';
 import P2PKH from '../p2pkh.artifact.js';
@@ -10,7 +10,7 @@ const provider = new MockNetworkProvider();
 
 export interface Fixture {
   name: string;
-  transaction: TransactionBuilder;
+  transaction: Transaction;
   template: WalletTemplate;
 }
 
@@ -19,12 +19,12 @@ export const fixtures: Fixture[] = [
     name: 'TransferWithTimeout (transfer function)',
     transaction: (() => {
       const contract = new Contract(TransferWithTimeout, [alicePub, bobPub, 100000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      provider.addUtxo(contract.address, randomUtxo());
 
-      const tx = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, contract.unlock.transfer(new SignatureTemplate(bobPriv)))
-        .addOutput({ to: contract.address, amount: 10000n });
+      const tx = contract.functions
+        .transfer(new SignatureTemplate(bobPriv))
+        .to(contract.address, 10000n)
+        .withoutChange();
 
       return tx;
     })(),
@@ -37,12 +37,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'TransferWithTimeout_parameters_input0': {
+        'TransferWithTimeout_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'TransferWithTimeout (input #0)',
+          'name': 'TransferWithTimeout_parameters',
           'scripts': [
             'TransferWithTimeout_lock',
-            'TransferWithTimeout_transfer_input0_unlock',
+            'TransferWithTimeout_unlock',
           ],
           'variables': {
             'recipientSig': {
@@ -74,23 +74,23 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'TransferWithTimeout_transfer_input0_unlock': {
+        'TransferWithTimeout_unlock': {
           'passes': [
-            'TransferWithTimeout_transfer_evaluate',
+            'TransferWithTimeout_evaluate',
           ],
-          'name': 'transfer (input #0)',
+          'name': 'TransferWithTimeout_unlock',
           'script': '// "transfer" function parameters\n<recipientSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
           'unlocks': 'TransferWithTimeout_lock',
         },
         'TransferWithTimeout_lock': {
           'lockingType': 'p2sh32',
-          'name': 'TransferWithTimeout',
+          'name': 'TransferWithTimeout_lock',
           'script': "// \"TransferWithTimeout\" contract constructor parameters\n<timeout> // int = <0xa08601>\n<recipient> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n<sender> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// bytecode\n                                                /* contract TransferWithTimeout(                                             */\n                                                /*     pubkey sender,                                                        */\n                                                /*     pubkey recipient,                                                     */\n                                                /*     int timeout                                                           */\n                                                /* ) {                                                                       */\n                                                /*     // Require recipient's signature to match                             */\nOP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF             /*     function transfer(sig recipientSig) {                                 */\nOP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG           /*         require(checkSig(recipientSig, recipient));                       */\nOP_NIP OP_NIP OP_NIP OP_ELSE                    /*     }                                                                     */\n                                                /*                                                                           */\n                                                /*     // Require timeout time to be reached and sender's signature to match */\nOP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_VERIFY         /*     function timeout(sig senderSig) {                                     */\nOP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY /*         require(checkSig(senderSig, sender));                             */\nOP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP     /*         require(tx.time >= timeout);                                      */\nOP_1 OP_NIP                                     /*     }                                                                     */\nOP_ENDIF                                        /* }                                                                         */\n                                                /*                                                                           */",
         },
       },
       'scenarios': {
-        'TransferWithTimeout_transfer_evaluate': {
-          'name': 'TransferWithTimeout_transfer_evaluate',
+        'TransferWithTimeout_evaluate': {
+          'name': 'TransferWithTimeout_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -121,16 +121,7 @@ export const fixtures: Fixture[] = [
             'locktime': expect.any(Number),
             'outputs': [
               {
-                'lockingBytecode': {
-                  'script': 'TransferWithTimeout_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'sender': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-                      'recipient': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
-                      'timeout': '0xa08601',
-                    },
-                  },
-                },
+                'lockingBytecode': {},
                 'valueSatoshis': 10000,
               },
             ],
@@ -152,13 +143,12 @@ export const fixtures: Fixture[] = [
     name: 'TransferWithTimeout (timeout function)',
     transaction: (() => {
       const contract = new Contract(TransferWithTimeout, [alicePub, bobPub, 100000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      provider.addUtxo(contract.address, randomUtxo());
 
-      const tx = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, contract.unlock.timeout(new SignatureTemplate(alicePriv)))
-        .addOutput({ to: contract.address, amount: 10000n })
-        .setLocktime(133700);
+      const tx = contract.functions
+        .timeout(new SignatureTemplate(alicePriv))
+        .to(contract.address, 10000n)
+        .withoutChange();
 
       return tx;
     })(),
@@ -171,12 +161,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'TransferWithTimeout_parameters_input0': {
+        'TransferWithTimeout_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'TransferWithTimeout (input #0)',
+          'name': 'TransferWithTimeout_parameters',
           'scripts': [
             'TransferWithTimeout_lock',
-            'TransferWithTimeout_timeout_input0_unlock',
+            'TransferWithTimeout_unlock',
           ],
           'variables': {
             'senderSig': {
@@ -208,23 +198,23 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'TransferWithTimeout_timeout_input0_unlock': {
+        'TransferWithTimeout_unlock': {
           'passes': [
-            'TransferWithTimeout_timeout_evaluate',
+            'TransferWithTimeout_evaluate',
           ],
-          'name': 'timeout (input #0)',
+          'name': 'TransferWithTimeout_unlock',
           'script': '// "timeout" function parameters\n<senderSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
           'unlocks': 'TransferWithTimeout_lock',
         },
         'TransferWithTimeout_lock': {
           'lockingType': 'p2sh32',
-          'name': 'TransferWithTimeout',
+          'name': 'TransferWithTimeout_lock',
           'script': "// \"TransferWithTimeout\" contract constructor parameters\n<timeout> // int = <0xa08601>\n<recipient> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n<sender> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// bytecode\n                                                /* contract TransferWithTimeout(                                             */\n                                                /*     pubkey sender,                                                        */\n                                                /*     pubkey recipient,                                                     */\n                                                /*     int timeout                                                           */\n                                                /* ) {                                                                       */\n                                                /*     // Require recipient's signature to match                             */\nOP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF             /*     function transfer(sig recipientSig) {                                 */\nOP_4 OP_ROLL OP_2 OP_ROLL OP_CHECKSIG           /*         require(checkSig(recipientSig, recipient));                       */\nOP_NIP OP_NIP OP_NIP OP_ELSE                    /*     }                                                                     */\n                                                /*                                                                           */\n                                                /*     // Require timeout time to be reached and sender's signature to match */\nOP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_VERIFY         /*     function timeout(sig senderSig) {                                     */\nOP_3 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG OP_VERIFY /*         require(checkSig(senderSig, sender));                             */\nOP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP     /*         require(tx.time >= timeout);                                      */\nOP_1 OP_NIP                                     /*     }                                                                     */\nOP_ENDIF                                        /* }                                                                         */\n                                                /*                                                                           */",
         },
       },
       'scenarios': {
-        'TransferWithTimeout_timeout_evaluate': {
-          'name': 'TransferWithTimeout_timeout_evaluate',
+        'TransferWithTimeout_evaluate': {
+          'name': 'TransferWithTimeout_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -252,19 +242,10 @@ export const fixtures: Fixture[] = [
                 ],
               },
             ],
-            'locktime': 133700,
+            'locktime': expect.any(Number),
             'outputs': [
               {
-                'lockingBytecode': {
-                  'script': 'TransferWithTimeout_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'sender': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-                      'recipient': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
-                      'timeout': '0xa08601',
-                    },
-                  },
-                },
+                'lockingBytecode': {},
                 'valueSatoshis': 10000,
               },
             ],
@@ -286,13 +267,12 @@ export const fixtures: Fixture[] = [
     name: 'Mecenas',
     transaction: (() => {
       const contract = new Contract(Mecenas, [alicePkh, bobPkh, 10_000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      provider.addUtxo(contract.address, randomUtxo());
 
-      const tx = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, contract.unlock.receive())
-        .addOutput({ to: contract.address, amount: 10000n })
-        .setLocktime(133700);
+      const tx = contract.functions
+        .receive()
+        .to(aliceAddress, 10_000n)
+        .withHardcodedFee(1000n);
 
       return tx;
     })(),
@@ -305,12 +285,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'Mecenas_parameters_input0': {
+        'Mecenas_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'Mecenas (input #0)',
+          'name': 'Mecenas_parameters',
           'scripts': [
             'Mecenas_lock',
-            'Mecenas_receive_input0_unlock',
+            'Mecenas_unlock',
           ],
           'variables': {
             'recipient': {
@@ -337,23 +317,23 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'Mecenas_receive_input0_unlock': {
+        'Mecenas_unlock': {
           'passes': [
-            'Mecenas_receive_evaluate',
+            'Mecenas_evaluate',
           ],
-          'name': 'receive (input #0)',
+          'name': 'Mecenas_unlock',
           'script': '// "receive" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
           'unlocks': 'Mecenas_lock',
         },
         'Mecenas_lock': {
           'lockingType': 'p2sh32',
-          'name': 'Mecenas',
+          'name': 'Mecenas_lock',
           'script': "// \"Mecenas\" contract constructor parameters\n<pledge> // int = <0x1027>\n<funder> // bytes20 = <0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0>\n<recipient> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                                                         /* pragma cashscript >=0.8.0;                                                                                         */\n                                                                                         /*                                                                                                                    */\n                                                                                         /* \\/* This is an unofficial CashScript port of Licho's Mecenas contract. It is                                       */\n                                                                                         /*  * not compatible with Licho's EC plugin, but rather meant as a demonstration                                      */\n                                                                                         /*  * of covenants in CashScript.                                                                                     */\n                                                                                         /*  * The time checking has been removed so it can be tested without time requirements.                               */\n                                                                                         /*  *\\/                                                                                                               */\n                                                                                         /* contract Mecenas(bytes20 recipient, bytes20 funder, int pledge\\/*, int period *\\/) {                               */\nOP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF                                                      /*     function receive() {                                                                                           */\n                                                                                         /*         // require(this.age >= period);                                                                            */\n                                                                                         /*                                                                                                                    */\n                                                                                         /*         // Check that the first output sends to the recipient                                                      */\nOP_0 OP_OUTPUTBYTECODE <0x76a914> OP_2 OP_ROLL OP_CAT <0x88ac> OP_CAT OP_EQUAL OP_VERIFY /*         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));                             */\n                                                                                         /*                                                                                                                    */\n<0xe803>                                                                                 /*         int minerFee = 1000;                                                                                       */\nOP_INPUTINDEX OP_UTXOVALUE                                                               /*         int currentValue = tx.inputs[this.activeInputIndex].value;                                                 */\nOP_0 OP_PICK OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB                                     /*         int changeValue = currentValue - pledge - minerFee;                                                        */\n                                                                                         /*                                                                                                                    */\n                                                                                         /*         // If there is not enough left for *another* pledge after this one, we send the remainder to the recipient */\n                                                                                         /*         // Otherwise we send the remainder to the recipient and the change back to the contract                    */\nOP_0 OP_PICK OP_5 OP_PICK OP_4 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF                   /*         if (changeValue <= pledge + minerFee) {                                                                    */\nOP_0 OP_OUTPUTVALUE OP_2 OP_PICK OP_4 OP_PICK OP_SUB OP_NUMEQUAL OP_VERIFY               /*             require(tx.outputs[0].value == currentValue - minerFee);                                               */\nOP_ELSE                                                                                  /*         } else {                                                                                                   */\nOP_0 OP_OUTPUTVALUE OP_5 OP_PICK OP_NUMEQUAL OP_VERIFY                                   /*             require(tx.outputs[0].value == pledge);                                                                */\nOP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUAL OP_VERIFY                  /*             require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);            */\nOP_1 OP_OUTPUTVALUE OP_1 OP_PICK OP_NUMEQUAL OP_VERIFY                                   /*             require(tx.outputs[1].value == changeValue);                                                           */\nOP_ENDIF                                                                                 /*         }                                                                                                          */\nOP_1 OP_NIP OP_NIP OP_NIP OP_NIP OP_NIP OP_NIP OP_ELSE                                   /*     }                                                                                                              */\n                                                                                         /*                                                                                                                    */\nOP_3 OP_ROLL OP_1 OP_NUMEQUAL OP_VERIFY                                                  /*     function reclaim(pubkey pk, sig s) {                                                                           */\nOP_3 OP_PICK OP_HASH160 OP_2 OP_ROLL OP_EQUAL OP_VERIFY                                  /*         require(hash160(pk) == funder);                                                                            */\nOP_3 OP_ROLL OP_3 OP_ROLL OP_CHECKSIG                                                    /*         require(checkSig(s, pk));                                                                                  */\nOP_NIP OP_NIP                                                                            /*     }                                                                                                              */\nOP_ENDIF                                                                                 /* }                                                                                                                  */\n                                                                                         /*                                                                                                                    */",
         },
       },
       'scenarios': {
-        'Mecenas_receive_evaluate': {
-          'name': 'Mecenas_receive_evaluate',
+        'Mecenas_evaluate': {
+          'name': 'Mecenas_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -362,7 +342,7 @@ export const fixtures: Fixture[] = [
               'pledge': '0x1027',
               'function_index': '0',
             },
-            'currentBlockHeight': expect.any(Number),
+            'currentBlockHeight': 2,
             'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {},
@@ -382,17 +362,12 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {
-                  'script': 'Mecenas_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'recipient': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                      'funder': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
-                      'pledge': '0x1027',
-                    },
-                  },
-                },
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
                 'valueSatoshis': 10000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
               },
             ],
             'version': 2,
@@ -422,9 +397,11 @@ export const fixtures: Fixture[] = [
       const to = contract.tokenAddress;
       const amount = 1000n;
 
-      const tx = new TransactionBuilder({ provider })
-        .addInputs([regularUtxo, tokenUtxo], contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
-        .addOutput({ to, amount, token: tokenUtxo.token });
+      const tx = contract.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(regularUtxo)
+        .from(tokenUtxo)
+        .to(to, amount, tokenUtxo.token);
 
       return tx;
     })(),
@@ -437,37 +414,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input0': {
+        'P2PKH_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'P2PKH (input #0)',
+          'name': 'P2PKH_parameters',
           'scripts': [
             'P2PKH_lock',
-            'P2PKH_spend_input0_unlock',
-          ],
-          'variables': {
-            'pk': {
-              'description': '"pk" parameter of function "spend"',
-              'name': 'pk',
-              'type': 'WalletData',
-            },
-            's': {
-              'description': '"s" parameter of function "spend"',
-              'name': 's',
-              'type': 'Key',
-            },
-            'pkh': {
-              'description': '"pkh" parameter of this contract',
-              'name': 'pkh',
-              'type': 'WalletData',
-            },
-          },
-        },
-        'P2PKH_parameters_input1': {
-          'description': 'Contract creation and function parameters',
-          'name': 'P2PKH (input #1)',
-          'scripts': [
-            'P2PKH_lock',
-            'P2PKH_spend_input1_unlock',
+            'P2PKH_unlock',
           ],
           'variables': {
             'pk': {
@@ -489,31 +441,23 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'P2PKH_spend_input0_unlock': {
+        'P2PKH_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_evaluate',
           ],
-          'name': 'spend (input #0)',
+          'name': 'P2PKH_unlock',
           'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
           'unlocks': 'P2PKH_lock',
         },
         'P2PKH_lock': {
           'lockingType': 'p2sh32',
-          'name': 'P2PKH',
+          'name': 'P2PKH_lock',
           'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
-        },
-        'P2PKH_spend_input1_unlock': {
-          'passes': [
-            'P2PKH_spend_evaluate1',
-          ],
-          'name': 'spend (input #1)',
-          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
-          'unlocks': 'P2PKH_lock',
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_evaluate': {
+          'name': 'P2PKH_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -545,22 +489,19 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {},
               },
             ],
-            'locktime': expect.any(Number),
+            'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {
-                  'script': 'P2PKH_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                    },
-                  },
-                },
+                'lockingBytecode': {},
                 'token': {
                   'amount': expect.stringMatching(/^[0-9]+$/),
                   'category': expect.stringMatching(/^[0-9a-f]{64}$/),
                 },
                 'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
               },
             ],
             'version': 2,
@@ -573,91 +514,7 @@ export const fixtures: Fixture[] = [
               'valueSatoshis': expect.any(Number),
             },
             {
-              'lockingBytecode': {
-                'script': 'P2PKH_lock',
-                'overrides': {
-                  'bytecode': {
-                    'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                  },
-                },
-              },
-              'valueSatoshis': 1000,
-              'token': {
-                'amount': expect.stringMatching(/^[0-9]+$/),
-                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
-              },
-            },
-          ],
-        },
-        'P2PKH_spend_evaluate1': {
-          'name': 'P2PKH_spend_evaluate',
-          'description': 'An example evaluation where this script execution passes.',
-          'data': {
-            'bytecode': {
-              'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-            },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
-            'keys': {
-              'privateKeys': {
-                's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-              },
-            },
-          },
-          'transaction': {
-            'inputs': [
-              {
-                'outpointIndex': expect.any(Number),
-                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
-                'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
-              },
-              {
-                'outpointIndex': expect.any(Number),
-                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
-                'sequenceNumber': 4294967294,
-                'unlockingBytecode': [
-                  'slot',
-                ],
-              },
-            ],
-            'locktime': 0,
-            'outputs': [
-              {
-                'lockingBytecode': {
-                  'script': 'P2PKH_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                    },
-                  },
-                },
-                'token': {
-                  'amount': expect.stringMatching(/^[0-9]+$/),
-                  'category': expect.stringMatching(/^[0-9a-f]{64}$/),
-                },
-                'valueSatoshis': 1000,
-              },
-            ],
-            'version': 2,
-          },
-          'sourceOutputs': [
-            {
-              'lockingBytecode': {
-                'script': 'P2PKH_lock',
-                'overrides': {
-                  'bytecode': {
-                    'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                  },
-                },
-              },
-              'valueSatoshis': expect.any(Number),
-            },
-            {
-              'lockingBytecode': [
-                'slot',
-              ],
+              'lockingBytecode': {},
               'valueSatoshis': 1000,
               'token': {
                 'amount': expect.stringMatching(/^[0-9]+$/),
@@ -681,9 +538,10 @@ export const fixtures: Fixture[] = [
       const amount = 1000n;
 
       const hardcodedSignature = new SignatureTemplate(alicePriv).generateSignature(hexToBin('c0ffee'));
-      const tx = new TransactionBuilder({ provider })
-        .addInput(regularUtxo, contract.unlock.spend(alicePub, hardcodedSignature))
-        .addOutput({ to, amount });
+      const tx = contract.functions
+        .spend(alicePub, hardcodedSignature)
+        .from(regularUtxo)
+        .to(to, amount);
 
       return tx;
     })(),
@@ -696,12 +554,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input0': {
+        'P2PKH_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'P2PKH (input #0)',
+          'name': 'P2PKH_parameters',
           'scripts': [
             'P2PKH_lock',
-            'P2PKH_spend_input0_unlock',
+            'P2PKH_unlock',
           ],
           'variables': {
             'pk': {
@@ -723,23 +581,23 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'P2PKH_spend_input0_unlock': {
+        'P2PKH_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_evaluate',
           ],
-          'name': 'spend (input #0)',
+          'name': 'P2PKH_unlock',
           'script': '// "spend" function parameters\n<s> // sig = <0x65f72c5cce773383b45032a3f9f9255814e3d53ee260056e3232cd89e91a0a84278b35daf8938d47047e7d3bd3407fe90b07dfabf4407947af6fb09730a34c0b61>\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
           'unlocks': 'P2PKH_lock',
         },
         'P2PKH_lock': {
           'lockingType': 'p2sh32',
-          'name': 'P2PKH',
+          'name': 'P2PKH_lock',
           'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_evaluate': {
+          'name': 'P2PKH_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -747,7 +605,7 @@ export const fixtures: Fixture[] = [
               's': '0x65f72c5cce773383b45032a3f9f9255814e3d53ee260056e3232cd89e91a0a84278b35daf8938d47047e7d3bd3407fe90b07dfabf4407947af6fb09730a34c0b61',
               'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
             },
-            'currentBlockHeight': expect.any(Number),
+            'currentBlockHeight': 2,
             'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {},
@@ -764,18 +622,15 @@ export const fixtures: Fixture[] = [
                 ],
               },
             ],
-            'locktime': 0,
+            'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {
-                  'script': 'P2PKH_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                    },
-                  },
-                },
+                'lockingBytecode': {},
                 'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
               },
             ],
             'version': 2,
@@ -805,9 +660,11 @@ export const fixtures: Fixture[] = [
       const to = contract.tokenAddress;
       const amount = 1000n;
 
-      const tx = new TransactionBuilder({ provider })
-        .addInputs([regularUtxo, nftUtxo], contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
-        .addOutput({ to, amount, token: nftUtxo.token });
+      const tx = contract.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv))
+        .from(regularUtxo)
+        .from(nftUtxo)
+        .to(to, amount, nftUtxo.token);
 
       return tx;
     })(),
@@ -820,37 +677,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input0': {
+        'P2PKH_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'P2PKH (input #0)',
+          'name': 'P2PKH_parameters',
           'scripts': [
             'P2PKH_lock',
-            'P2PKH_spend_input0_unlock',
-          ],
-          'variables': {
-            'pk': {
-              'description': '"pk" parameter of function "spend"',
-              'name': 'pk',
-              'type': 'WalletData',
-            },
-            's': {
-              'description': '"s" parameter of function "spend"',
-              'name': 's',
-              'type': 'Key',
-            },
-            'pkh': {
-              'description': '"pkh" parameter of this contract',
-              'name': 'pkh',
-              'type': 'WalletData',
-            },
-          },
-        },
-        'P2PKH_parameters_input1': {
-          'description': 'Contract creation and function parameters',
-          'name': 'P2PKH (input #1)',
-          'scripts': [
-            'P2PKH_lock',
-            'P2PKH_spend_input1_unlock',
+            'P2PKH_unlock',
           ],
           'variables': {
             'pk': {
@@ -872,38 +704,30 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'P2PKH_spend_input0_unlock': {
+        'P2PKH_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_evaluate',
           ],
-          'name': 'spend (input #0)',
+          'name': 'P2PKH_unlock',
           'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
           'unlocks': 'P2PKH_lock',
         },
         'P2PKH_lock': {
           'lockingType': 'p2sh32',
-          'name': 'P2PKH',
+          'name': 'P2PKH_lock',
           'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
-        },
-        'P2PKH_spend_input1_unlock': {
-          'passes': [
-            'P2PKH_spend_evaluate1',
-          ],
-          'name': 'spend (input #1)',
-          'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
-          'unlocks': 'P2PKH_lock',
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_evaluate': {
+          'name': 'P2PKH_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
               'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
               'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
             },
-            'currentBlockHeight': expect.any(Number),
+            'currentBlockHeight': 2,
             'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
@@ -928,17 +752,10 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {},
               },
             ],
-            'locktime': 0,
+            'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {
-                  'script': 'P2PKH_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                    },
-                  },
-                },
+                'lockingBytecode': {},
                 'token': {
                   'amount': '0',
                   'category': expect.stringMatching(/^[0-9a-f]{64}$/),
@@ -948,6 +765,10 @@ export const fixtures: Fixture[] = [
                   },
                 },
                 'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
               },
             ],
             'version': 2,
@@ -960,99 +781,7 @@ export const fixtures: Fixture[] = [
               'valueSatoshis': expect.any(Number),
             },
             {
-              'lockingBytecode': {
-                'script': 'P2PKH_lock',
-                'overrides': {
-                  'bytecode': {
-                    'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                  },
-                },
-              },
-              'valueSatoshis': 1000,
-              'token': {
-                'amount': '0',
-                'category':  expect.stringMatching(/^[0-9a-f]{64}$/),
-                'nft': {
-                  'capability': 'none',
-                  'commitment': expect.stringMatching(/^[0-9a-f]{8}$/),
-                },
-              },
-            },
-          ],
-        },
-        'P2PKH_spend_evaluate1': {
-          'name': 'P2PKH_spend_evaluate',
-          'description': 'An example evaluation where this script execution passes.',
-          'data': {
-            'bytecode': {
-              'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-              'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-            },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
-            'keys': {
-              'privateKeys': {
-                's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-              },
-            },
-          },
-          'transaction': {
-            'inputs': [
-              {
-                'outpointIndex': expect.any(Number),
-                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
-                'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
-              },
-              {
-                'outpointIndex': expect.any(Number),
-                'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
-                'sequenceNumber': 4294967294,
-                'unlockingBytecode': [
-                  'slot',
-                ],
-              },
-            ],
-            'locktime': 0,
-            'outputs': [
-              {
-                'lockingBytecode': {
-                  'script': 'P2PKH_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                    },
-                  },
-                },
-                'token': {
-                  'amount': '0',
-                  'category': expect.stringMatching(/^[0-9a-f]{64}$/),
-                  'nft': {
-                    'capability': 'none',
-                    'commitment': expect.stringMatching(/^[0-9a-f]{8}$/),
-                  },
-                },
-                'valueSatoshis': 1000,
-              },
-            ],
-            'version': 2,
-          },
-          'sourceOutputs': [
-            {
-              'lockingBytecode': {
-                'script': 'P2PKH_lock',
-                'overrides': {
-                  'bytecode': {
-                    'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-                  },
-                },
-              },
-              'valueSatoshis': expect.any(Number),
-            },
-            {
-              'lockingBytecode': [
-                'slot',
-              ],
+              'lockingBytecode': {},
               'valueSatoshis': 1000,
               'token': {
                 'amount': '0',
@@ -1072,21 +801,18 @@ export const fixtures: Fixture[] = [
     name: 'HodlVault (datasig)',
     transaction: (() => {
       const contract = new Contract(HoldVault, [alicePub, oraclePub, 99000n, 30000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      provider.addUtxo(contract.address, randomUtxo());
 
       // given
       const message = oracle.createMessage(100000n, 30000n);
       const oracleSig = oracle.signMessage(message);
       const to = contract.address;
       const amount = 10000n;
-      const aliceTemplate = new SignatureTemplate(alicePriv);
 
       // when
-      const tx = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, contract.unlock.spend(aliceTemplate, oracleSig, message))
-        .addOutput({ to, amount })
-        .setLocktime(133700);
+      const tx = contract.functions
+        .spend(new SignatureTemplate(alicePriv), oracleSig, message)
+        .to(to, amount);
 
       return tx;
     })(),
@@ -1099,12 +825,12 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'HodlVault_parameters_input0': {
+        'HodlVault_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'HodlVault (input #0)',
+          'name': 'HodlVault_parameters',
           'scripts': [
             'HodlVault_lock',
-            'HodlVault_spend_input0_unlock',
+            'HodlVault_unlock',
           ],
           'variables': {
             'ownerSig': {
@@ -1146,23 +872,23 @@ export const fixtures: Fixture[] = [
         },
       },
       'scripts': {
-        'HodlVault_spend_input0_unlock': {
+        'HodlVault_unlock': {
           'passes': [
-            'HodlVault_spend_evaluate',
+            'HodlVault_evaluate',
           ],
-          'name': 'spend (input #0)',
+          'name': 'HodlVault_unlock',
           'script': '// "spend" function parameters\n<oracleMessage> // bytes8 = <0xa086010030750000>\n<oracleSig> // datasig = <0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b>\n<ownerSig.schnorr_signature.all_outputs_all_utxos> // sig\n',
           'unlocks': 'HodlVault_lock',
         },
         'HodlVault_lock': {
           'lockingType': 'p2sh32',
-          'name': 'HodlVault',
+          'name': 'HodlVault_lock',
           'script': '// "HodlVault" contract constructor parameters\n<priceTarget> // int = <0x3075>\n<minBlock> // int = <0xb88201>\n<oraclePk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n<ownerPk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// bytecode\n                                                                 /* // This contract forces HODLing until a certain price target has been reached                                          */\n                                                                 /* // A minimum block is provided to ensure that oracle price entries from before this block are disregarded              */\n                                                                 /* // i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used. */\n                                                                 /* // Instead, a message with a block number and price from after the minBlock needs to be passed.                        */\n                                                                 /* // This contract serves as a simple example for checkDataSig-based contracts.                                          */\n                                                                 /* contract HodlVault(                                                                                                    */\n                                                                 /*     pubkey ownerPk,                                                                                                    */\n                                                                 /*     pubkey oraclePk,                                                                                                   */\n                                                                 /*     int minBlock,                                                                                                      */\n                                                                 /*     int priceTarget                                                                                                    */\n                                                                 /* ) {                                                                                                                    */\n                                                                 /*     function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {                                            */\n                                                                 /*         // message: { blockHeight, price }                                                                             */\nOP_6 OP_PICK OP_4 OP_SPLIT                                       /*         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);                                               */\nOP_1 OP_ROLL OP_BIN2NUM                                          /*         int blockHeight = int(blockHeightBin);                                                                         */\nOP_1 OP_ROLL OP_BIN2NUM                                          /*         int price = int(priceBin);                                                                                     */\n                                                                 /*                                                                                                                        */\n                                                                 /*         // Check that blockHeight is after minBlock and not in the future                                              */\nOP_1 OP_PICK OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY        /*         require(blockHeight >= minBlock);                                                                              */\nOP_1 OP_ROLL OP_CHECKLOCKTIMEVERIFY OP_DROP                      /*         require(tx.time >= blockHeight);                                                                               */\n                                                                 /*                                                                                                                        */\n                                                                 /*         // Check that current price is at least priceTarget                                                            */\nOP_0 OP_ROLL OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY        /*         require(price >= priceTarget);                                                                                 */\n                                                                 /*                                                                                                                        */\n                                                                 /*         // Handle necessary signature checks                                                                           */\nOP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIG OP_VERIFY /*         require(checkDataSig(oracleSig, oracleMessage, oraclePk));                                                     */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                            /*         require(checkSig(ownerSig, ownerPk));                                                                          */\n                                                                 /*     }                                                                                                                  */\n                                                                 /* }                                                                                                                      */\n                                                                 /*                                                                                                                        */',
         },
       },
       'scenarios': {
-        'HodlVault_spend_evaluate': {
-          'name': 'HodlVault_spend_evaluate',
+        'HodlVault_evaluate': {
+          'name': 'HodlVault_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1173,7 +899,7 @@ export const fixtures: Fixture[] = [
               'minBlock': '0xb88201',
               'priceTarget': '0x3075',
             },
-            'currentBlockHeight': expect.any(Number),
+            'currentBlockHeight': 2,
             'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
@@ -1195,18 +921,12 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
-                'lockingBytecode': {
-                  'script': 'HodlVault_lock',
-                  'overrides': {
-                    'bytecode': {
-                      'ownerPk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
-                      'oraclePk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
-                      'minBlock': '0xb88201',
-                      'priceTarget': '0x3075',
-                    },
-                  },
-                },
+                'lockingBytecode': {},
                 'valueSatoshis': 10000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
               },
             ],
             'version': 2,
@@ -1248,8 +968,9 @@ export const fixtures: Fixture[] = [
     name: 'P2PKH (with P2PKH inputs & P2SH20 address type & ECDSA signature algorithm)',
     transaction: (() => {
       const contract = new Contract(P2PKH, [alicePkh], { provider, addressType: 'p2sh20' });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+
+      const regularUtxo = randomUtxo();
+      provider.addUtxo(contract.address, regularUtxo);
 
       const p2pkhUtxo = randomUtxo();
       provider.addUtxo(aliceAddress, p2pkhUtxo);
@@ -1257,14 +978,12 @@ export const fixtures: Fixture[] = [
       const to = contract.tokenAddress;
       const amount = 1000n;
 
-      const aliceCustomTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_NONE, SignatureAlgorithm.ECDSA);
-      const bobCustomTemplate = new SignatureTemplate(bobPriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
-
-      const tx = new TransactionBuilder({ provider })
-        .addInput(p2pkhUtxo, new SignatureTemplate(alicePriv).unlockP2PKH())
-        .addInput(contractUtxo, contract.unlock.spend(alicePub, aliceCustomTemplate))
-        .addInput(p2pkhUtxo, bobCustomTemplate.unlockP2PKH())
-        .addOutput({ to, amount });
+      const tx = contract.functions
+        .spend(alicePub, new SignatureTemplate(alicePriv, HashType.SIGHASH_NONE, SignatureAlgorithm.ECDSA))
+        .fromP2PKH(p2pkhUtxo, new SignatureTemplate(alicePriv))
+        .from(regularUtxo)
+        .fromP2PKH(p2pkhUtxo, new SignatureTemplate(bobPriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA))
+        .to(to, amount);
 
       return tx;
     })(),
@@ -1277,12 +996,16 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input1': {
+        'P2PKH_parameters': {
           'description': 'Contract creation and function parameters',
-          'name': 'P2PKH (input #1)',
+          'name': 'P2PKH_parameters',
           'scripts': [
             'P2PKH_lock',
-            'P2PKH_spend_input1_unlock',
+            'P2PKH_unlock',
+            'p2pkh_placeholder_lock_0',
+            'p2pkh_placeholder_unlock_0',
+            'p2pkh_placeholder_lock_2',
+            'p2pkh_placeholder_unlock_2',
           ],
           'variables': {
             'pk': {
@@ -1300,77 +1023,57 @@ export const fixtures: Fixture[] = [
               'name': 'pkh',
               'type': 'WalletData',
             },
-          },
-        },
-        'signer_0': {
-          'scripts': [
-            'p2pkh_placeholder_lock_0',
-            'p2pkh_placeholder_unlock_0',
-          ],
-          'description': 'placeholder_key_0',
-          'name': 'P2PKH Signer (input #0)',
-          'variables': {
             'placeholder_key_0': {
-              'description': '',
-              'name': 'P2PKH Placeholder Key (input #0)',
+              'description': 'placeholder_key_0',
+              'name': 'placeholder_key_0',
               'type': 'Key',
             },
-          },
-        },
-        'signer_2': {
-          'scripts': [
-            'p2pkh_placeholder_lock_2',
-            'p2pkh_placeholder_unlock_2',
-          ],
-          'description': 'placeholder_key_2',
-          'name': 'P2PKH Signer (input #2)',
-          'variables': {
             'placeholder_key_2': {
-              'description': '',
-              'name': 'P2PKH Placeholder Key (input #2)',
+              'description': 'placeholder_key_2',
+              'name': 'placeholder_key_2',
               'type': 'Key',
             },
           },
         },
       },
       'scripts': {
-        'P2PKH_spend_input1_unlock': {
+        'P2PKH_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_evaluate',
           ],
-          'name': 'spend (input #1)',
+          'name': 'P2PKH_unlock',
           'script': '// "spend" function parameters\n<s.ecdsa_signature.no_outputs> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
           'unlocks': 'P2PKH_lock',
         },
         'P2PKH_lock': {
           'lockingType': 'p2sh20',
-          'name': 'P2PKH',
+          'name': 'P2PKH_lock',
           'script': '// "P2PKH" contract constructor parameters\n<pkh> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                        /* contract P2PKH(bytes20 pkh) {                                */\n                                                        /*     // Require pk to match stored pkh and signature to match */\n                                                        /*     function spend(pubkey pk, sig s) {                       */\nOP_1 OP_PICK OP_HASH160 OP_1 OP_ROLL OP_EQUAL OP_VERIFY /*         require(hash160(pk) == pkh);                         */\nOP_1 OP_ROLL OP_1 OP_ROLL OP_CHECKSIG                   /*         require(checkSig(s, pk));                            */\n                                                        /*     }                                                        */\n                                                        /* }                                                            */\n                                                        /*                                                              */',
         },
         'p2pkh_placeholder_unlock_0': {
-          'name': 'P2PKH Unlock (input #0)',
+          'name': 'p2pkh_placeholder_unlock_0',
           'script': '<placeholder_key_0.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_0.public_key>',
           'unlocks': 'p2pkh_placeholder_lock_0',
         },
         'p2pkh_placeholder_lock_0': {
           'lockingType': 'standard',
-          'name': 'P2PKH Lock (input #0)',
+          'name': 'p2pkh_placeholder_lock_0',
           'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_0.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
         'p2pkh_placeholder_unlock_2': {
-          'name': 'P2PKH Unlock (input #2)',
+          'name': 'p2pkh_placeholder_unlock_2',
           'script': '<placeholder_key_2.ecdsa_signature.all_outputs>\n<placeholder_key_2.public_key>',
           'unlocks': 'p2pkh_placeholder_lock_2',
         },
         'p2pkh_placeholder_lock_2': {
           'lockingType': 'standard',
-          'name': 'P2PKH Lock (input #2)',
+          'name': 'p2pkh_placeholder_lock_2',
           'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_2.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_evaluate': {
+          'name': 'P2PKH_evaluate',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1414,21 +1117,27 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
-              },
-            ],
-            'locktime': 0,
-            'outputs': [
-              {
-                'lockingBytecode': {
-                  'script': 'P2PKH_lock',
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
-                    'bytecode': {
-                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    'keys': {
+                      'privateKeys': {
+                        'placeholder_key_2': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      },
                     },
                   },
                 },
+              },
+            ],
+            'locktime': 133700,
+            'outputs': [
+              {
+                'lockingBytecode': {},
                 'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': {},
+                'valueSatoshis': expect.any(Number),
               },
             ],
             'version': 2,
@@ -1454,7 +1163,16 @@ export const fixtures: Fixture[] = [
               'valueSatoshis': expect.any(Number),
             },
             {
-              'lockingBytecode': {},
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_2',
+                'overrides': {
+                  'keys': {
+                    'privateKeys': {
+                      'placeholder_key_2': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                    },
+                  },
+                },
+              },
               'valueSatoshis': expect.any(Number),
             },
           ],
