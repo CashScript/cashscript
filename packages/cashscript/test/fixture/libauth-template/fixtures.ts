@@ -37,7 +37,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'TransferWithTimeout_parameters_input0': {
+        'TransferWithTimeout_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'TransferWithTimeout (input #0)',
           'scripts': [
@@ -76,7 +76,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'TransferWithTimeout_transfer_input0_unlock': {
           'passes': [
-            'TransferWithTimeout_transfer_evaluate',
+            'TransferWithTimeout_transfer_input0_evaluate',
           ],
           'name': 'transfer (input #0)',
           'script': '// "transfer" function parameters\n<recipientSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -89,8 +89,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'TransferWithTimeout_transfer_evaluate': {
-          'name': 'TransferWithTimeout_transfer_evaluate',
+        'TransferWithTimeout_transfer_input0_evaluate': {
+          'name': 'Evaluate TransferWithTimeout transfer (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -171,7 +171,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'TransferWithTimeout_parameters_input0': {
+        'TransferWithTimeout_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'TransferWithTimeout (input #0)',
           'scripts': [
@@ -210,7 +210,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'TransferWithTimeout_timeout_input0_unlock': {
           'passes': [
-            'TransferWithTimeout_timeout_evaluate',
+            'TransferWithTimeout_timeout_input0_evaluate',
           ],
           'name': 'timeout (input #0)',
           'script': '// "timeout" function parameters\n<senderSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
@@ -223,8 +223,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'TransferWithTimeout_timeout_evaluate': {
-          'name': 'TransferWithTimeout_timeout_evaluate',
+        'TransferWithTimeout_timeout_input0_evaluate': {
+          'name': 'Evaluate TransferWithTimeout timeout (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -289,9 +289,13 @@ export const fixtures: Fixture[] = [
       const contractUtxo = randomUtxo();
       provider.addUtxo(contract.address, contractUtxo);
 
+      const hardcodedFee = 1000n;
+      const changeAmount = contractUtxo.satoshis - 10_000n - hardcodedFee;
+
       const tx = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contract.unlock.receive())
-        .addOutput({ to: contract.address, amount: 10000n })
+        .addOutput({ to: aliceAddress, amount: 10_000n })
+        .addOutput({ to: contract.address, amount: changeAmount })
         .setLocktime(133700);
 
       return tx;
@@ -305,7 +309,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'Mecenas_parameters_input0': {
+        'Mecenas_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Mecenas (input #0)',
           'scripts': [
@@ -339,7 +343,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'Mecenas_receive_input0_unlock': {
           'passes': [
-            'Mecenas_receive_evaluate',
+            'Mecenas_receive_input0_evaluate',
           ],
           'name': 'receive (input #0)',
           'script': '// "receive" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -352,8 +356,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'Mecenas_receive_evaluate': {
-          'name': 'Mecenas_receive_evaluate',
+        'Mecenas_receive_input0_evaluate': {
+          'name': 'Evaluate Mecenas receive (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -382,6 +386,10 @@ export const fixtures: Fixture[] = [
             'locktime': 133700,
             'outputs': [
               {
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
+                'valueSatoshis': 10000,
+              },
+              {
                 'lockingBytecode': {
                   'script': 'Mecenas_lock',
                   'overrides': {
@@ -392,7 +400,7 @@ export const fixtures: Fixture[] = [
                     },
                   },
                 },
-                'valueSatoshis': 10000,
+                'valueSatoshis': expect.any(Number),
               },
             ],
             'version': 2,
@@ -437,7 +445,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input0': {
+        'P2PKH_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'P2PKH (input #0)',
           'scripts': [
@@ -462,7 +470,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'P2PKH_parameters_input1': {
+        'P2PKH_input1_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'P2PKH (input #1)',
           'scripts': [
@@ -491,7 +499,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'P2PKH_spend_input0_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_spend_input0_evaluate',
           ],
           'name': 'spend (input #0)',
           'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
@@ -504,7 +512,7 @@ export const fixtures: Fixture[] = [
         },
         'P2PKH_spend_input1_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate1',
+            'P2PKH_spend_input1_evaluate',
           ],
           'name': 'spend (input #1)',
           'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
@@ -512,8 +520,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_spend_input0_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -589,8 +597,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'P2PKH_spend_evaluate1': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_spend_input1_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #1)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -696,7 +704,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input0': {
+        'P2PKH_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'P2PKH (input #0)',
           'scripts': [
@@ -725,7 +733,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'P2PKH_spend_input0_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_spend_input0_evaluate',
           ],
           'name': 'spend (input #0)',
           'script': '// "spend" function parameters\n<s> // sig = <0x65f72c5cce773383b45032a3f9f9255814e3d53ee260056e3232cd89e91a0a84278b35daf8938d47047e7d3bd3407fe90b07dfabf4407947af6fb09730a34c0b61>\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
@@ -738,8 +746,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_spend_input0_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -820,7 +828,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input0': {
+        'P2PKH_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'P2PKH (input #0)',
           'scripts': [
@@ -845,7 +853,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'P2PKH_parameters_input1': {
+        'P2PKH_input1_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'P2PKH (input #1)',
           'scripts': [
@@ -874,7 +882,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'P2PKH_spend_input0_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_spend_input0_evaluate',
           ],
           'name': 'spend (input #0)',
           'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
@@ -887,7 +895,7 @@ export const fixtures: Fixture[] = [
         },
         'P2PKH_spend_input1_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate1',
+            'P2PKH_spend_input1_evaluate',
           ],
           'name': 'spend (input #1)',
           'script': '// "spend" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
@@ -895,8 +903,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_spend_input0_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -971,7 +979,7 @@ export const fixtures: Fixture[] = [
               'valueSatoshis': 1000,
               'token': {
                 'amount': '0',
-                'category':  expect.stringMatching(/^[0-9a-f]{64}$/),
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'nft': {
                   'capability': 'none',
                   'commitment': expect.stringMatching(/^[0-9a-f]{8}$/),
@@ -980,8 +988,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'P2PKH_spend_evaluate1': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_spend_input1_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #1)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1099,7 +1107,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'HodlVault_parameters_input0': {
+        'HodlVault_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'HodlVault (input #0)',
           'scripts': [
@@ -1148,7 +1156,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'HodlVault_spend_input0_unlock': {
           'passes': [
-            'HodlVault_spend_evaluate',
+            'HodlVault_spend_input0_evaluate',
           ],
           'name': 'spend (input #0)',
           'script': '// "spend" function parameters\n<oracleMessage> // bytes8 = <0xa086010030750000>\n<oracleSig> // datasig = <0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b>\n<ownerSig.schnorr_signature.all_outputs_all_utxos> // sig\n',
@@ -1161,8 +1169,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'HodlVault_spend_evaluate': {
-          'name': 'HodlVault_spend_evaluate',
+        'HodlVault_spend_input0_evaluate': {
+          'name': 'Evaluate HodlVault spend (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1257,11 +1265,12 @@ export const fixtures: Fixture[] = [
       const to = contract.tokenAddress;
       const amount = 1000n;
 
+      const aliceDefaultTemplate = new SignatureTemplate(alicePriv);
       const aliceCustomTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_NONE, SignatureAlgorithm.ECDSA);
       const bobCustomTemplate = new SignatureTemplate(bobPriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
 
       const tx = new TransactionBuilder({ provider })
-        .addInput(p2pkhUtxo, new SignatureTemplate(alicePriv).unlockP2PKH())
+        .addInput(p2pkhUtxo, aliceDefaultTemplate.unlockP2PKH())
         .addInput(contractUtxo, contract.unlock.spend(alicePub, aliceCustomTemplate))
         .addInput(p2pkhUtxo, bobCustomTemplate.unlockP2PKH())
         .addOutput({ to, amount });
@@ -1277,7 +1286,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'P2PKH_parameters_input1': {
+        'P2PKH_input1_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'P2PKH (input #1)',
           'scripts': [
@@ -1336,7 +1345,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'P2PKH_spend_input1_unlock': {
           'passes': [
-            'P2PKH_spend_evaluate',
+            'P2PKH_spend_input1_evaluate',
           ],
           'name': 'spend (input #1)',
           'script': '// "spend" function parameters\n<s.ecdsa_signature.no_outputs> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n',
@@ -1369,8 +1378,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'P2PKH_spend_evaluate': {
-          'name': 'P2PKH_spend_evaluate',
+        'P2PKH_spend_input1_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #1)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1414,7 +1423,16 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_2',
+                  'overrides': {
+                    'keys': {
+                      'privateKeys': {
+                        'placeholder_key_2': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      },
+                    },
+                  },
+                },
               },
             ],
             'locktime': 0,
@@ -1454,7 +1472,16 @@ export const fixtures: Fixture[] = [
               'valueSatoshis': expect.any(Number),
             },
             {
-              'lockingBytecode': {},
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_2',
+                'overrides': {
+                  'keys': {
+                    'privateKeys': {
+                      'placeholder_key_2': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                    },
+                  },
+                },
+              },
               'valueSatoshis': expect.any(Number),
             },
           ],

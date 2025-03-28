@@ -108,7 +108,7 @@ export const generateTemplateEntitiesP2SH = (
   );
 
   const entities = {
-    [artifact.contractName + '_parameters' + '_input' + inputIndex]: {
+    [artifact.contractName + '_input' + inputIndex + '_parameters']: {
       description: 'Contract creation and function parameters',
       name: `${artifact.contractName} (input #${inputIndex})`,
       scripts: [
@@ -124,7 +124,7 @@ export const generateTemplateEntitiesP2SH = (
 
   // function_index is a special variable that indicates the function to execute
   if (artifact.abi.length > 1) {
-    entities[artifact.contractName + '_parameters' + '_input' + inputIndex].variables.function_index = {
+    entities[artifact.contractName + '_input' + inputIndex + '_parameters'].variables.function_index = {
       description: 'Script function index to execute',
       name: 'function_index',
       type: 'WalletData',
@@ -184,7 +184,6 @@ export const generateTemplateScriptsP2SH = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   encodedConstructorArgs: EncodedConstructorArgument[],
-  scenarioId: string,
   inputIndex: number,
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
@@ -192,7 +191,7 @@ export const generateTemplateScriptsP2SH = (
   const lockingScriptName = artifact.contractName + '_lock';
 
   return {
-    [unlockingScriptName]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, scenarioId, inputIndex),
+    [unlockingScriptName]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, inputIndex),
     [lockingScriptName]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
@@ -233,9 +232,9 @@ const generateTemplateUnlockScript = (
   artifact: Artifact,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
-  scenarioId: string,
   inputIndex: number,
 ): WalletTemplateScriptUnlocking => {
+  const scenarioIdentifier = `${artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
   const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
   const functionIndexString = artifact.abi.length > 1
@@ -244,7 +243,7 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: [scenarioId],
+    passes: [scenarioIdentifier],
     name: `${abiFunction.name} (input #${inputIndex})`,
     script: [
       `// "${abiFunction.name}" function parameters`,
@@ -257,21 +256,21 @@ const generateTemplateUnlockScript = (
 };
 
 export const generateTemplateScenarios = (
-  scenarioIdentifier: string,
   contract: Contract,
   libauthTransaction: TransactionBch,
   csTransaction: Transaction,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
-  slotIndex: number,
+  inputIndex: number,
 ): WalletTemplate['scenarios'] => {
   const artifact = contract.artifact;
   const encodedConstructorArgs = contract.encodedConstructorArgs;
+  const scenarioIdentifier = `${artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
     [scenarioIdentifier]: {
-      name: artifact.contractName + '_' + abiFunction.name + '_evaluate',
+      name: `Evaluate ${artifact.contractName} ${abiFunction.name} (input #${inputIndex})`,
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
@@ -285,8 +284,8 @@ export const generateTemplateScenarios = (
           privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
         },
       },
-      transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, csTransaction, slotIndex),
-      sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, slotIndex),
+      transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, csTransaction, inputIndex),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, inputIndex),
     },
   };
 
@@ -415,21 +414,6 @@ export const getLibauthTemplates = (
         throw new Error('No ABI function found in unlocker');
       }
 
-      // Find matching function and index from contract.unlock Object, this uses Function Reference Comparison.
-      // Generate unique scenario identifier by combining contract name, function name and counter
-      const baseIdentifier = `${contract.artifact.contractName}_${abiFunction.name}_evaluate`;
-      let scenarioIdentifier = baseIdentifier;
-      let counter = 0;
-
-      const scenarioIds = [scenarioIdentifier];
-
-      // Find first available unique identifier by incrementing counter
-      while (scenarios[scenarioIdentifier]) {
-        counter++;
-        scenarioIdentifier = `${baseIdentifier}${counter}`;
-        scenarioIds.push(scenarioIdentifier);
-      }
-
       // Encode the function arguments for this contract input
       const encodedArgs = encodeFunctionArguments(
         abiFunction,
@@ -439,7 +423,6 @@ export const getLibauthTemplates = (
       // Generate a scenario object for this contract input
       Object.assign(scenarios,
         generateTemplateScenarios(
-          scenarioIdentifier,
           contract,
           libauthTransaction,
           csTransaction as any,
@@ -464,7 +447,6 @@ export const getLibauthTemplates = (
         abiFunction,
         encodedArgs,
         contract.encodedConstructorArgs,
-        scenarioIdentifier,
         inputIndex,
       );
 

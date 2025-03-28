@@ -33,6 +33,7 @@ import {
   AddressType,
   SignatureAlgorithm,
   HashType,
+  isUnlockableUtxo,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
@@ -354,6 +355,7 @@ const generateTemplateScenarioSourceOutputs = (
 export const generateTemplateScenarioBytecode = (
   input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
+  // This is for P2PKH inputs in the old transaction builder (TODO: remove when we remove old transaction builder)
   if (isUtxoP2PKH(input)) {
     return {
       script: p2pkhScriptName,
@@ -367,6 +369,22 @@ export const generateTemplateScenarioBytecode = (
     };
   }
 
+  // This is for P2PKH inputs in the new transaction builder
+  if (isUnlockableUtxo(input) && input.unlocker.template) {
+    return {
+      script: p2pkhScriptName,
+      overrides: {
+        keys: {
+          privateKeys: {
+            [placeholderKeyName]: binToHex(input.unlocker.template.privateKey),
+          },
+        },
+      },
+    };
+  }
+
+  // 'slot' means that we are currently evaluating this specific input,
+  // {} means that it is the same script type, but not being evaluated
   return insertSlot ? ['slot'] : {};
 };
 

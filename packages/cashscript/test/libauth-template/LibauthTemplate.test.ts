@@ -1,7 +1,7 @@
 import { fixtures } from '../fixture/libauth-template/fixtures.js';
 import { fixtures as oldFixtures } from '../fixture/libauth-template/old-fixtures.js';
 
-describe('Libauth Template generation tests', () => {
+describe('Libauth Template generation tests (single-contract)', () => {
   fixtures.forEach((fixture) => {
     it(`should generate a valid libauth template for ${fixture.name}`, () => {
       const generatedTemplate = fixture.transaction.getLibauthTemplate();

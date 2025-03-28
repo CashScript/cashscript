@@ -67,7 +67,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'Bar_parameters_input3': {
+        'Bar_input3_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Bar (input #3)',
           'scripts': [
@@ -87,7 +87,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'Bar_parameters_input4': {
+        'Bar_input4_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Bar (input #4)',
           'scripts': [
@@ -117,7 +117,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'Foo_parameters_input5': {
+        'Foo_input5_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Foo (input #5)',
           'scripts': [
@@ -142,7 +142,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'Bar_parameters_input6': {
+        'Bar_input6_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Bar (input #6)',
           'scripts': [
@@ -211,7 +211,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'Bar_funcA_input3_unlock': {
           'passes': [
-            'Bar_funcA_evaluate',
+            'Bar_funcA_input3_evaluate',
           ],
           'name': 'funcA (input #3)',
           'script': '// "funcA" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -224,7 +224,7 @@ export const fixtures: Fixture[] = [
         },
         'Bar_execute_input4_unlock': {
           'passes': [
-            'Bar_execute_evaluate',
+            'Bar_execute_input4_evaluate',
           ],
           'name': 'execute (input #4)',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// function index in contract\n<function_index> // int = <2>\n',
@@ -232,7 +232,7 @@ export const fixtures: Fixture[] = [
         },
         'Foo_execute_input5_unlock': {
           'passes': [
-            'Foo_execute_evaluate',
+            'Foo_execute_input5_evaluate',
           ],
           'name': 'execute (input #5)',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n',
@@ -245,7 +245,7 @@ export const fixtures: Fixture[] = [
         },
         'Bar_funcB_input6_unlock': {
           'passes': [
-            'Bar_funcB_evaluate',
+            'Bar_funcB_input6_evaluate',
           ],
           'name': 'funcB (input #6)',
           'script': '// "funcB" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <1>\n',
@@ -283,8 +283,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'Bar_funcA_evaluate': {
-          'name': 'Bar_funcA_evaluate',
+        'Bar_funcA_input3_evaluate': {
+          'name': 'Evaluate Bar funcA (input #3)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -492,8 +492,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'Bar_execute_evaluate': {
-          'name': 'Bar_execute_evaluate',
+        'Bar_execute_input4_evaluate': {
+          'name': 'Evaluate Bar execute (input #4)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -704,8 +704,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'Foo_execute_evaluate': {
-          'name': 'Foo_execute_evaluate',
+        'Foo_execute_input5_evaluate': {
+          'name': 'Evaluate Foo execute (input #5)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -915,8 +915,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'Bar_funcB_evaluate': {
-          'name': 'Bar_funcB_evaluate',
+        'Bar_funcB_input6_evaluate': {
+          'name': 'Evaluate Bar funcB (input #6)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1151,7 +1151,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'Bar_parameters_input0': {
+        'Bar_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Bar (input #0)',
           'scripts': [
@@ -1175,7 +1175,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'Bar_funcA_input0_unlock': {
           'passes': [
-            'Bar_funcA_evaluate',
+            'Bar_funcA_input0_evaluate',
           ],
           'name': 'funcA (input #0)',
           'script': '// "funcA" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -1188,8 +1188,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'Bar_funcA_evaluate': {
-          'name': 'Bar_funcA_evaluate',
+        'Bar_funcA_input0_evaluate': {
+          'name': 'Evaluate Bar funcA (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1272,7 +1272,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'HodlVault_parameters_input0': {
+        'HodlVault_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'HodlVault (input #0)',
           'scripts': [
@@ -1317,7 +1317,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'TransferWithTimeout_parameters_input1': {
+        'TransferWithTimeout_input1_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'TransferWithTimeout (input #1)',
           'scripts': [
@@ -1356,7 +1356,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'HodlVault_spend_input0_unlock': {
           'passes': [
-            'HodlVault_spend_evaluate',
+            'HodlVault_spend_input0_evaluate',
           ],
           'name': 'spend (input #0)',
           'script': '// "spend" function parameters\n<oracleMessage> // bytes8 = <0xa086010030750000>\n<oracleSig> // datasig = <0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b>\n<ownerSig.schnorr_signature.all_outputs_all_utxos> // sig\n',
@@ -1369,7 +1369,7 @@ export const fixtures: Fixture[] = [
         },
         'TransferWithTimeout_timeout_input1_unlock': {
           'passes': [
-            'TransferWithTimeout_timeout_evaluate',
+            'TransferWithTimeout_timeout_input1_evaluate',
           ],
           'name': 'timeout (input #1)',
           'script': '// "timeout" function parameters\n<senderSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
@@ -1382,8 +1382,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'HodlVault_spend_evaluate': {
-          'name': 'HodlVault_spend_evaluate',
+        'HodlVault_spend_input0_evaluate': {
+          'name': 'Evaluate HodlVault spend (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1460,8 +1460,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'TransferWithTimeout_timeout_evaluate': {
-          'name': 'TransferWithTimeout_timeout_evaluate',
+        'TransferWithTimeout_timeout_input1_evaluate': {
+          'name': 'Evaluate TransferWithTimeout timeout (input #1)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1571,7 +1571,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'TransferWithTimeout_parameters_input0': {
+        'TransferWithTimeout_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'TransferWithTimeout (input #0)',
           'scripts': [
@@ -1606,7 +1606,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'TransferWithTimeout_parameters_input1': {
+        'TransferWithTimeout_input1_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'TransferWithTimeout (input #1)',
           'scripts': [
@@ -1641,7 +1641,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'TransferWithTimeout_parameters_input2': {
+        'TransferWithTimeout_input2_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'TransferWithTimeout (input #2)',
           'scripts': [
@@ -1676,7 +1676,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'TransferWithTimeout_parameters_input3': {
+        'TransferWithTimeout_input3_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'TransferWithTimeout (input #3)',
           'scripts': [
@@ -1715,7 +1715,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'TransferWithTimeout_timeout_input0_unlock': {
           'passes': [
-            'TransferWithTimeout_timeout_evaluate',
+            'TransferWithTimeout_timeout_input0_evaluate',
           ],
           'name': 'timeout (input #0)',
           'script': '// "timeout" function parameters\n<senderSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
@@ -1728,7 +1728,7 @@ export const fixtures: Fixture[] = [
         },
         'TransferWithTimeout_timeout_input1_unlock': {
           'passes': [
-            'TransferWithTimeout_timeout_evaluate1',
+            'TransferWithTimeout_timeout_input1_evaluate',
           ],
           'name': 'timeout (input #1)',
           'script': '// "timeout" function parameters\n<senderSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <1>\n',
@@ -1736,7 +1736,7 @@ export const fixtures: Fixture[] = [
         },
         'TransferWithTimeout_transfer_input2_unlock': {
           'passes': [
-            'TransferWithTimeout_transfer_evaluate',
+            'TransferWithTimeout_transfer_input2_evaluate',
           ],
           'name': 'transfer (input #2)',
           'script': '// "transfer" function parameters\n<recipientSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -1744,7 +1744,7 @@ export const fixtures: Fixture[] = [
         },
         'TransferWithTimeout_transfer_input3_unlock': {
           'passes': [
-            'TransferWithTimeout_transfer_evaluate1',
+            'TransferWithTimeout_transfer_input3_evaluate',
           ],
           'name': 'transfer (input #3)',
           'script': '// "transfer" function parameters\n<recipientSig.schnorr_signature.all_outputs_all_utxos> // sig\n\n// function index in contract\n<function_index> // int = <0>\n',
@@ -1752,8 +1752,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'TransferWithTimeout_timeout_evaluate': {
-          'name': 'TransferWithTimeout_timeout_evaluate',
+        'TransferWithTimeout_timeout_input0_evaluate': {
+          'name': 'Evaluate TransferWithTimeout timeout (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1865,8 +1865,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'TransferWithTimeout_timeout_evaluate1': {
-          'name': 'TransferWithTimeout_timeout_evaluate',
+        'TransferWithTimeout_timeout_input1_evaluate': {
+          'name': 'Evaluate TransferWithTimeout timeout (input #1)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -1978,8 +1978,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'TransferWithTimeout_transfer_evaluate': {
-          'name': 'TransferWithTimeout_transfer_evaluate',
+        'TransferWithTimeout_transfer_input2_evaluate': {
+          'name': 'Evaluate TransferWithTimeout transfer (input #2)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -2091,8 +2091,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'TransferWithTimeout_transfer_evaluate1': {
-          'name': 'TransferWithTimeout_transfer_evaluate',
+        'TransferWithTimeout_transfer_input3_evaluate': {
+          'name': 'Evaluate TransferWithTimeout transfer (input #3)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -2234,7 +2234,7 @@ export const fixtures: Fixture[] = [
       ],
       'version': 0,
       'entities': {
-        'Bar_parameters_input0': {
+        'Bar_input0_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Bar (input #0)',
           'scripts': [
@@ -2264,7 +2264,7 @@ export const fixtures: Fixture[] = [
             },
           },
         },
-        'Bar_parameters_input1': {
+        'Bar_input1_parameters': {
           'description': 'Contract creation and function parameters',
           'name': 'Bar (input #1)',
           'scripts': [
@@ -2298,7 +2298,7 @@ export const fixtures: Fixture[] = [
       'scripts': {
         'Bar_execute_input0_unlock': {
           'passes': [
-            'Bar_execute_evaluate',
+            'Bar_execute_input0_evaluate',
           ],
           'name': 'execute (input #0)',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// function index in contract\n<function_index> // int = <2>\n',
@@ -2311,7 +2311,7 @@ export const fixtures: Fixture[] = [
         },
         'Bar_execute_input1_unlock': {
           'passes': [
-            'Bar_execute_evaluate1',
+            'Bar_execute_input1_evaluate',
           ],
           'name': 'execute (input #1)',
           'script': '// "execute" function parameters\n<s.schnorr_signature.all_outputs_all_utxos> // sig\n<pk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n\n// function index in contract\n<function_index> // int = <2>\n',
@@ -2319,8 +2319,8 @@ export const fixtures: Fixture[] = [
         },
       },
       'scenarios': {
-        'Bar_execute_evaluate': {
-          'name': 'Bar_execute_evaluate',
+        'Bar_execute_input0_evaluate': {
+          'name': 'Evaluate Bar execute (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
@@ -2389,8 +2389,8 @@ export const fixtures: Fixture[] = [
             },
           ],
         },
-        'Bar_execute_evaluate1': {
-          'name': 'Bar_execute_evaluate',
+        'Bar_execute_input1_evaluate': {
+          'name': 'Evaluate Bar execute (input #1)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
