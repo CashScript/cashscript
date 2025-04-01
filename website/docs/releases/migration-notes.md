@@ -4,7 +4,11 @@ title: Migration Notes
 
 ## v0.10 to v0.11
 
-There are several breaking changes to the SDK in this release. They are listed below in their own sections.
+There are several breaking changes to the compiler and SDK in this release. They are listed below in their own sections.
+
+### cashc compiler
+
+`tx.age` was renamed to `this.age` to better reflect that it enforces a UTXO-level locktime check (*not* transaction-level). To migrate, replace all occurrences of `tx.age` with `this.age`.
 
 ### CashScript SDK (Transaction Builder)
 
