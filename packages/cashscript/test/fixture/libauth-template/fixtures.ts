@@ -550,7 +550,20 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
+                'unlockingBytecode': {
+                  'overrides': {
+                    'bytecode': {
+                      'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                  'script': 'P2PKH_spend_input1_unlock',
+                },
               },
             ],
             'locktime': expect.any(Number),
@@ -619,7 +632,20 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
+                'unlockingBytecode': {
+                  'overrides': {
+                    'bytecode': {
+                      'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                  'script': 'P2PKH_spend_input0_unlock',
+                },
               },
               {
                 'outpointIndex': expect.any(Number),
@@ -933,7 +959,20 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
+                'unlockingBytecode': {
+                  'overrides': {
+                    'bytecode': {
+                      'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                  'script': 'P2PKH_spend_input1_unlock',
+                },
               },
             ],
             'locktime': 0,
@@ -1010,7 +1049,20 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.stringMatching(/^[0-9a-f]{64}$/),
                 'sequenceNumber': 4294967294,
-                'unlockingBytecode': {},
+                'unlockingBytecode': {
+                  'overrides': {
+                    'bytecode': {
+                      'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'pkh': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                  'script': 'P2PKH_spend_input0_unlock',
+                },
               },
               {
                 'outpointIndex': expect.any(Number),
