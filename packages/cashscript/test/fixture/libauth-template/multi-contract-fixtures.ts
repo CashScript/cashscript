@@ -1416,7 +1416,23 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': expect.any(Number),
-                'unlockingBytecode': {},
+                // TODO: this needs to be added *everywhere*
+                'unlockingBytecode': {
+                  'script': 'TransferWithTimeout_timeout_input1_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'sender': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'recipient': '0x0260e6133d3432b4555a387e5ed82c448019f0c0d39b5a6324c3a586c4c3590c90',
+                      'timeout': '0xa08601',
+                      'function_index': '1',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        'senderSig': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      },
+                    },
+                  },
+                },
               },
             ],
             'locktime': 1000000,
@@ -1484,7 +1500,24 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': expect.any(Number),
-                'unlockingBytecode': {},
+                'unlockingBytecode': {
+                  'script': 'HodlVault_spend_input0_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'oracleSig': '0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b',
+                      'oracleMessage': '0xa086010030750000',
+                      'ownerPk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'oraclePk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'minBlock': '0xb88201',
+                      'priceTarget': '0x3075',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        'ownerSig': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                },
               },
               {
                 'outpointIndex': expect.any(Number),

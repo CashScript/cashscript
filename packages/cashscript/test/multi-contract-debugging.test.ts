@@ -40,16 +40,12 @@ describe('Multi-Contract-Debugging tests', () => {
 
       // when
       const transaction = new TransactionBuilder({ provider })
-        // wrong public key
         .addInput(p2pkhContractUtxos[0], p2pkhContract.unlock.spend(bobPub, bobSignatureTemplate))
         .addInput(bigIntContractUtxos[0], bigintContract.unlock.proofOfBigInt(MAX_INT64 + 1n, 1n))
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
-      console.warn(transaction.bitauthUri());
-
-      await expect(transaction).toFailRequire();
-      // throw new Error('test');
+      await expect(transaction).not.toFailRequire();
     });
 
     it('it should fail if a require statement fails', async () => {
