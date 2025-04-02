@@ -74,8 +74,7 @@ describe('Multi-Contract-Debugging tests', () => {
 
       console.warn(transaction.bitauthUri());
 
-      await expect(transaction).toFailRequire();
-      // throw new Error('test');
+      await expect(transaction).toFailRequireWith('P2PKH.cash:4 Require statement failed at input 0 in contract P2PKH.cash at line 4.');
     });
 
     it('it should only fail with correct error message when a final verify fails', async () => {
@@ -103,7 +102,7 @@ describe('Multi-Contract-Debugging tests', () => {
 
       console.warn(transaction.bitauthUri());
 
-      await expect(transaction).toFailRequire();
+      await expect(transaction).toFailRequireWith('BigInt.cash');
     });
   });
 });
