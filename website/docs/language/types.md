@@ -185,12 +185,14 @@ Using `bytes20 placeholderPkh= bytes20(0)` will generate a 20 byte zero-array pr
 `bytes20 placeholderPkh= 0x0000000000000000000000000000000000000000` will actually take 20 bytes of space in your contract.
 :::
 
-Casting an integer to a fixed-size byte-length can be a very important when storing local state in an nftCommitment. Developers need to consider what the preferable fixed-size length is for each indivual case depending on the interger range. Below we add a table with information on the maximum integer size for satoshis and fungible CashTokens:
+Casting an integer to a fixed-size byte-length can be a very important when storing local state in an nftCommitment. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each indivual case depending on the interger range. Below we add a table with info on the maximum integer size for common cases:
 
-| Integer Type    | Maximum amount         | Max Byte Size                      |
-| --------------  | ---------------------- | ---------------------------------- |
-| Satoshis        | 2.1 quadrillion        | 6 bytes (5 bytes for 1 quadrillion)|
-| CashTokens      | 9223 quadrillion       | 8 bytes for max supply token       |
+| Integer Type    | Max integer value                  | Max Byte Size in Script Number Format  |
+| --------------  | -----------------------------------| ---------------------------------------|
+| Satoshis        | 2.1 quadrillion (21,000,000 BCH)   | 7 bytes                                |
+| CashTokens      | 9.2 quintillion (`2^63 - 1`)       | 8 bytes for max supply token           |
+| Locktime        | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
+| SequenceNumber  | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
 
 :::info
 VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
