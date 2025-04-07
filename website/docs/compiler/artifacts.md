@@ -21,7 +21,6 @@ interface Artifact {
     version: string // Compiler version used to compile this contract
   }
   debug?: {
-    bytecode: string // unlike `bytecode` property above, this is a hex-encoded binary string
     sourceMap: string // see documentation for `generateSourceMap`
     logs: LogEntry[] // log entries generated from `console.log` statements
     requires: RequireStatement[] // messages for failing `require` statements

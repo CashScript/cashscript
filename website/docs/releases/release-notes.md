@@ -11,6 +11,7 @@ This release also contains several breaking changes, please refer to the [migrat
 #### cashc compiler
 - :hammer_and_wrench: Remove warning for opcount and update warning for byte size to match new limits.
 - :boom: **BREAKING**: `tx.age` was renamed to `this.age` to better reflect that it enforces a UTXO-level locktime check (*not* transaction-level).
+- :boom: **BREAKING**: The artifact compilation is updated to use the *optimized contract bytecode* resulting in a different `debug.sourceMap` and the removal of `debug.bytecode` on the Artifact
 
 #### CashScript SDK
 - :sparkles: Add debugging capabilities to the `TransactionBuilder`.

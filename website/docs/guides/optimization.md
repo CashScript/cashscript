@@ -147,7 +147,7 @@ It's worth considering whether hand-optimizing the contract is necessary at all.
 
 ### Optimizing with the BitauthIDE
 
-When optimizing the bytecode of your contract you'll likely want to use the [BitauthIDE](https://ide.bitauth.com) so you can see the stack changes of each OpCode. It's important to realize that `transactionBuilder.bitauthUri()` will show the two-wap mapping to the **un-optimized** bytecode, so this is not the final resulting bytecode produced by the compiler. The compiler will perform a bunch of optimizations already, so you should look at the `Artifact bytecode` if you want to further optimize the compiled contract bytecode.
+When optimizing the bytecode of your contract to ensure it is the smallest possible bytesize you'll likely want to use the [BitauthIDE](https://ide.bitauth.com) so you can see the stack changes for each executed OpCode. Low-level understanding can also give good intuition about the [optimization tips](#optimization-tips) for the CashScript code.
 
 ### Overwriting the Artifact
 
