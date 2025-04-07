@@ -8,6 +8,8 @@ import {
   decodeAuthenticationInstructions,
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
+import type { FullLocationData } from './types.js';
+import { generateSourceMap } from './source-map.js';
 
 export const Op = OpcodesBch2023;
 export type Op = number;
@@ -146,11 +148,14 @@ export function generateRedeemScript(baseScript: Script, encodedConstructorArgs:
 }
 
 interface OptimiseBytecodeResult {
+  sourceMap: string,
   oldToNewIpMap: number[],
   optimisedBytecode: Script
 }
 
-export function optimiseBytecode(script: Script, runs: number = 1000): OptimiseBytecodeResult {
+export function optimiseBytecode(
+  script: Script, locationData: FullLocationData, runs: number = 1000,
+): OptimiseBytecodeResult {
   const optimisations = OptimisationsEquivFile
     // Split by line and filter all line comments (#)
     .split('\n')
@@ -164,23 +169,36 @@ export function optimiseBytecode(script: Script, runs: number = 1000): OptimiseB
     .map((equiv) => equiv.split('<=>').map((part) => part.trim()))
     .filter((equiv) => equiv.length === 2);
 
+  let oldToNewIpMap = script.map((_, i) => i);
+
   for (let i = 0; i < runs; i += 1) {
     const oldScript = script;
-    script = replaceOps(script, optimisations);
+    ({ script, locationData, oldToNewIpMap } = replaceOps(script, optimisations, locationData, oldToNewIpMap));
 
     // Break on fixed point
     if (scriptToAsm(oldScript) === scriptToAsm(script)) break;
   }
 
-  // TODO: implement logic to construct oldToNewIpMap
+  const sourceMap = generateSourceMap(locationData);
+
   return {
-    oldToNewIpMap: [],
+    sourceMap,
+    oldToNewIpMap,
     optimisedBytecode: script,
   };
 }
 
-function replaceOps(script: Script, optimisations: string[][]): Script {
+interface ReplaceOpsResult {
+  script: Script,
+  locationData: FullLocationData,
+  oldToNewIpMap: number[],
+}
+function replaceOps(
+  script: Script, optimisations: string[][], oldLocationData: FullLocationData, oldToNewIpMap: number[],
+): ReplaceOpsResult {
   let asm = scriptToAsm(script);
+
+  // TODO: implement logic to update locationData & oldToNewIpMap
 
   // Apply all optimisations in the cashproof file
   optimisations.forEach(([pattern, replacement]) => {
@@ -202,5 +220,9 @@ function replaceOps(script: Script, optimisations: string[][]): Script {
   // Remove any double spaces as a result of opcode removal
   asm = asm.replace(/\s+/g, ' ').trim();
 
-  return asmToScript(asm);
+  return {
+    script: asmToScript(asm),
+    locationData: oldLocationData,
+    oldToNewIpMap,
+  };
 }

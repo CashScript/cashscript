@@ -1,5 +1,5 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
-import { Artifact, optimiseBytecode, optimiseSourceMap } from '@cashscript/utils';
+import { Artifact, optimiseBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -27,9 +27,8 @@ export function compileString(code: string): Artifact {
   ast = ast.accept(traversal) as Ast;
 
   // Bytecode optimisation
-  const unoptimizedSourceMap = traversal.sourceMap;
-  const { oldToNewIpMap, optimisedBytecode } = optimiseBytecode(traversal.output);
-  const sourceMap = optimiseSourceMap(unoptimizedSourceMap, oldToNewIpMap);
+  const unoptimizedLocationData = sourceMapToLocationData(traversal.sourceMap);
+  const { sourceMap, oldToNewIpMap, optimisedBytecode } = optimiseBytecode(traversal.output, unoptimizedLocationData);
 
   // Remap instruction pointers in debug info
   const logsInfo = remapIps(traversal.consoleLogs, oldToNewIpMap);
