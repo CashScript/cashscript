@@ -11,7 +11,6 @@ export interface AbiFunction {
 }
 
 export interface DebugInformation {
-  bytecode: string; // unlike `bytecode` property above, this is a hex-encoded binary string
   sourceMap: string; // see documentation for `generateSourceMap`
   logs: readonly LogEntry[]; // log entries generated from `console.log` statements
   requires: readonly RequireStatement[]; // messages for failing `require` statements

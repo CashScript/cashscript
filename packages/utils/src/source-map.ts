@@ -119,3 +119,8 @@ const parsePositionHint = (hint: string): PositionHint | undefined => {
   if (hint === '0') return PositionHint.START;
   return undefined;
 };
+
+export function optimiseSourceMap(unoptimizedSourceMap: string, ipMap: number[]):string {
+  // TODO: Implement the optimisation logic for the source map
+  return unoptimizedSourceMap;
+}

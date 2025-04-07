@@ -145,7 +145,12 @@ export function generateRedeemScript(baseScript: Script, encodedConstructorArgs:
   return [...encodedConstructorArgs.slice().reverse(), ...baseScript];
 }
 
-export function optimiseBytecode(script: Script, runs: number = 1000): Script {
+interface OptimiseBytecodeResult {
+  oldToNewIpMap: number[],
+  optimisedBytecode: Script
+}
+
+export function optimiseBytecode(script: Script, runs: number = 1000): OptimiseBytecodeResult {
   const optimisations = OptimisationsEquivFile
     // Split by line and filter all line comments (#)
     .split('\n')
@@ -167,7 +172,11 @@ export function optimiseBytecode(script: Script, runs: number = 1000): Script {
     if (scriptToAsm(oldScript) === scriptToAsm(script)) break;
   }
 
-  return script;
+  // TODO: implement logic to construct oldToNewIpMap
+  return {
+    oldToNewIpMap: [],
+    optimisedBytecode: script,
+  };
 }
 
 function replaceOps(script: Script, optimisations: string[][]): Script {

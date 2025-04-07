@@ -116,3 +116,7 @@ export function compileNullaryOp(op: NullaryOperator): Op[] {
 
   return mapping[op];
 }
+
+export function remapIps<T extends { ip: number }>(entries: T[], ipMap: number[]): T[] {
+  return entries.map(entry => ({ ...entry, ip: ipMap[entry.ip] }));
+}

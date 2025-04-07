@@ -1,6 +1,5 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
-import { binToHex } from '@bitauth/libauth';
-import { Artifact, optimiseBytecode, scriptToBytecode } from '@cashscript/utils';
+import { Artifact, optimiseBytecode, optimiseSourceMap } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -12,6 +11,7 @@ import CashScriptParser from './grammar/CashScriptParser.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
+import { remapIps } from './generation/utils.js';
 
 export function compileString(code: string): Artifact {
   // Lexing + parsing
@@ -27,14 +27,19 @@ export function compileString(code: string): Artifact {
   ast = ast.accept(traversal) as Ast;
 
   // Bytecode optimisation
-  const optimisedBytecode = optimiseBytecode(traversal.output);
+  const unoptimizedSourceMap = traversal.sourceMap;
+  const { oldToNewIpMap, optimisedBytecode } = optimiseBytecode(traversal.output);
+  const sourceMap = optimiseSourceMap(unoptimizedSourceMap, oldToNewIpMap);
+
+  // Remap instruction pointers in debug info
+  const logsInfo = remapIps(traversal.consoleLogs, oldToNewIpMap);
+  const requiresInfo = remapIps(traversal.requires, oldToNewIpMap);
 
   // Attach debug information
   const debug = {
-    bytecode: binToHex(scriptToBytecode(traversal.output)),
-    sourceMap: traversal.sourceMap,
-    logs: traversal.consoleLogs,
-    requires: traversal.requires,
+    sourceMap: sourceMap,
+    logs: logsInfo,
+    requires: requiresInfo,
   };
 
   return generateArtifact(ast, optimisedBytecode, code, debug);
