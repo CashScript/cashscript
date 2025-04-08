@@ -8,7 +8,8 @@ import {
   decodeAuthenticationInstructions,
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
-import type { FullLocationData } from './types.js';
+import extraOptimisations from './extra-optimizations.js';
+import type { FullLocationData, SingleLocationData } from './types.js';
 import { generateSourceMap } from './source-map.js';
 
 export const Op = OpcodesBch2023;
@@ -156,7 +157,7 @@ interface OptimiseBytecodeResult {
 export function optimiseBytecode(
   script: Script, locationData: FullLocationData, runs: number = 1000,
 ): OptimiseBytecodeResult {
-  const optimisations = OptimisationsEquivFile
+  const cashProofoptimisations = OptimisationsEquivFile
     // Split by line and filter all line comments (#)
     .split('\n')
     .map((equiv) => equiv.trim())
@@ -169,6 +170,7 @@ export function optimiseBytecode(
     .map((equiv) => equiv.split('<=>').map((part) => part.trim()))
     .filter((equiv) => equiv.length === 2);
 
+  const optimisations = [...cashProofoptimisations, ...extraOptimisations];
   let oldToNewIpMap = script.map((_, i) => i);
 
   for (let i = 0; i < runs; i += 1) {
@@ -188,6 +190,12 @@ export function optimiseBytecode(
   };
 }
 
+interface AnnotatedOp {
+  op: OpOrData;
+  oldIp: number;
+  location: SingleLocationData;
+}
+
 interface ReplaceOpsResult {
   script: Script,
   locationData: FullLocationData,
@@ -196,33 +204,65 @@ interface ReplaceOpsResult {
 function replaceOps(
   script: Script, optimisations: string[][], oldLocationData: FullLocationData, oldToNewIpMap: number[],
 ): ReplaceOpsResult {
-  let asm = scriptToAsm(script);
+  let annotatedScript: AnnotatedOp[] = script.map((op, i) => ({
+    op,
+    oldIp: oldToNewIpMap[i],
+    location: oldLocationData[i],
+  }));
 
-  // TODO: implement logic to update locationData & oldToNewIpMap
+  const tokenizedOptimisations = optimisations.map(([from, to]) => [
+    from.trim().split(/\s+/),
+    to.trim().split(/\s+/),
+  ] as [string[], string[]]);
 
-  // Apply all optimisations in the cashproof file
-  optimisations.forEach(([pattern, replacement]) => {
-    asm = asm.replace(new RegExp(pattern, 'g'), replacement);
-  });
+  const newAnnotatedScript: AnnotatedOp[] = [];
+  const updatedIpMap = new Array(oldLocationData.length).fill(undefined);
+  
+  for (let i = 0; i < annotatedScript.length;) {
+    let matched = false;
+  
+    for (const [fromPattern, toPattern] of tokenizedOptimisations) {
+      const slice = annotatedScript.slice(i, i + fromPattern.length).map(op => op.op.toString());
+  
+      const matchingExpression = slice.length === fromPattern.length && slice.every((item, j) => item === fromPattern[j]);
+      if (matchingExpression) {
+        // Match found — apply replacement
+        const replacedOps = annotatedScript.slice(i, i + fromPattern.length);
+        const fallbackLocation = replacedOps[0].location;
+  
+        toPattern.forEach((opcodeString, j) => {
+          const oldIp = replacedOps[Math.min(j, replacedOps.length - 1)].oldIp;
+          const newIp = newAnnotatedScript.length;
+          const opcode = OpcodesBch2023[opcodeString as keyof typeof OpcodesBch2023];
 
-  // Add optimisations that are not compatible with CashProof
-  // CashProof can't prove OP_IF without parameters
-  asm = asm.replace(/OP_NOT OP_IF/g, 'OP_NOTIF');
-  // CashProof can't prove OP_CHECKMULTISIG without specifying N
-  asm = asm.replace(/OP_CHECKMULTISIG OP_VERIFY/g, 'OP_CHECKMULTISIGVERIFY');
-  // CashProof can't prove bitwise operators
-  asm = asm.replace(/OP_SWAP OP_AND/g, 'OP_AND');
-  asm = asm.replace(/OP_SWAP OP_OR/g, 'OP_OR');
-  asm = asm.replace(/OP_SWAP OP_XOR/g, 'OP_XOR');
-  asm = asm.replace(/OP_DUP OP_AND/g, '');
-  asm = asm.replace(/OP_DUP OP_OR/g, '');
-
-  // Remove any double spaces as a result of opcode removal
-  asm = asm.replace(/\s+/g, ' ').trim();
+          newAnnotatedScript.push({
+            op: opcode as OpOrData,
+            oldIp,
+            location: fallbackLocation,
+          });
+  
+          updatedIpMap[oldIp] = newIp;
+        });
+  
+        i += fromPattern.length;
+        matched = true;
+        break;
+      }
+    }
+  
+    if (!matched) {
+      // No pattern matched — keep the op as-is
+      const newIp = newAnnotatedScript.length;
+      const { op, oldIp, location } = annotatedScript[i];
+      newAnnotatedScript.push({ op, oldIp, location });
+      updatedIpMap[oldIp] = newIp;
+      i += 1;
+    }
+  }
 
   return {
-    script: asmToScript(asm),
-    locationData: oldLocationData,
-    oldToNewIpMap,
+    script: newAnnotatedScript.map(({ op }) => op),
+    locationData: newAnnotatedScript.map(({ location }) => location),
+    oldToNewIpMap: updatedIpMap,
   };
 }
