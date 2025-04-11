@@ -1,13 +1,14 @@
 {
   "name": "cashc",
-  "version": "0.11.0-next.1",
+  "version": "0.11.0-next.3",
   "description": "Compile Bitcoin Cash contracts to Bitcoin Cash Script or artifacts",
   "keywords": [
     "bitcoin",
     "bitcoin cash",
     "cashscript",
     "compiler",
-    "smart contracts"
+    "smart contracts",
+    "cashtokens"
   ],
   "homepage": "https://cashscript.org",
   "bugs": {
@@ -20,6 +21,7 @@
   "license": "MIT",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
   "contributors": [
+    "Mathieu Geukens <mr-zwets@protonmail.com>",
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
   "main": "dist/index.js",
@@ -50,7 +52,7 @@
   },
   "dependencies": {
     "@bitauth/libauth": "^3.1.0-next.2",
-    "@cashscript/utils": "^0.11.0-next.1",
+    "@cashscript/utils": "^0.11.0-next.3",
     "antlr4": "^4.13.2",
     "commander": "^13.1.0",
     "semver": "^7.6.3"

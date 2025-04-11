@@ -33,12 +33,14 @@ import {
   AddressType,
   SignatureAlgorithm,
   HashType,
+  isUnlockableUtxo,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
 import { EncodedConstructorArgument, EncodedFunctionArgument } from './Argument.js';
-import { addressToLockScript, extendedStringify, snakeCase, zip } from './utils.js';
+import { addressToLockScript, extendedStringify, zip } from './utils.js';
 import { Contract } from './Contract.js';
+import { generateUnlockingScriptParams } from './advanced/LibauthTemplate.js';
 
 interface BuildTemplateOptions {
   transaction: Transaction;
@@ -56,7 +58,7 @@ export const buildTemplate = async ({
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
     name: 'CashScript Generated Debugging Template',
-    supported: ['BCH_2023_05'],
+    supported: ['BCH_2025_05'],
     version: 0,
     entities: generateTemplateEntities(contract.artifact, transaction.abiFunction, transaction.encodedFunctionArgs),
     scripts: generateTemplateScripts(
@@ -89,9 +91,9 @@ export const buildTemplate = async ({
       const hashtypeName = getHashTypeName(input.template.getHashType(false));
       const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
 
-      template.entities[snakeCase(contract.name + 'Parameters')].scripts!.push(lockScriptName, unlockScriptName);
-      template.entities[snakeCase(contract.name + 'Parameters')].variables = {
-        ...template.entities[snakeCase(contract.name + 'Parameters')].variables,
+      template.entities[contract.name + '_parameters'].scripts!.push(lockScriptName, unlockScriptName);
+      template.entities[contract.name + '_parameters'].variables = {
+        ...template.entities[contract.name + '_parameters'].variables,
         [placeholderKeyName]: {
           description: placeholderKeyName,
           name: placeholderKeyName,
@@ -132,7 +134,7 @@ const generateTemplateEntities = (
 ): WalletTemplate['entities'] => {
   const functionParameters = Object.fromEntries<WalletTemplateVariable>(
     abiFunction.inputs.map((input, index) => ([
-      snakeCase(input.name),
+      input.name,
       {
         description: `"${input.name}" parameter of function "${abiFunction.name}"`,
         name: input.name,
@@ -143,7 +145,7 @@ const generateTemplateEntities = (
 
   const constructorParameters = Object.fromEntries<WalletTemplateVariable>(
     artifact.constructorInputs.map((input) => ([
-      snakeCase(input.name),
+      input.name,
       {
         description: `"${input.name}" parameter of this contract`,
         name: input.name,
@@ -153,12 +155,12 @@ const generateTemplateEntities = (
   );
 
   const entities = {
-    [snakeCase(artifact.contractName + 'Parameters')]: {
+    [artifact.contractName + '_parameters']: {
       description: 'Contract creation and function parameters',
-      name: snakeCase(artifact.contractName + 'Parameters'),
+      name: artifact.contractName + '_parameters',
       scripts: [
-        snakeCase(artifact.contractName + '_lock'),
-        snakeCase(artifact.contractName + '_unlock'),
+        artifact.contractName + '_lock',
+        artifact.contractName + '_unlock',
       ],
       variables: {
         ...functionParameters,
@@ -169,7 +171,7 @@ const generateTemplateEntities = (
 
   // function_index is a special variable that indicates the function to execute
   if (artifact.abi.length > 1) {
-    entities[snakeCase(artifact.contractName + 'Parameters')].variables.function_index = {
+    entities[artifact.contractName + '_parameters'].variables.function_index = {
       description: 'Script function index to execute',
       name: 'function_index',
       type: 'WalletData',
@@ -188,8 +190,8 @@ const generateTemplateScripts = (
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
   return {
-    [snakeCase(artifact.contractName + '_unlock')]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
-    [snakeCase(artifact.contractName + '_lock')]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
+    [artifact.contractName + '_unlock']: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs),
+    [artifact.contractName + '_lock']: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
   };
 };
 
@@ -200,7 +202,7 @@ const generateTemplateLockScript = (
 ): WalletTemplateScriptLocking => {
   return {
     lockingType: addressType,
-    name: snakeCase(artifact.contractName + '_lock'),
+    name: artifact.contractName + '_lock',
     script: [
       `// "${artifact.contractName}" contract constructor parameters`,
       formatParametersForDebugging(artifact.constructorInputs, constructorArguments),
@@ -224,15 +226,15 @@ const generateTemplateUnlockScript = (
 
   return {
     // this unlocking script must pass our only scenario
-    passes: [snakeCase(artifact.contractName + 'Evaluate')],
-    name: snakeCase(artifact.contractName + '_unlock'),
+    passes: [artifact.contractName + '_evaluate'],
+    name: artifact.contractName + '_unlock',
     script: [
       `// "${abiFunction.name}" function parameters`,
       formatParametersForDebugging(abiFunction.inputs, encodedFunctionArgs),
       '',
       ...functionIndexString,
     ].join('\n'),
-    unlocks: snakeCase(artifact.contractName + '_lock'),
+    unlocks: artifact.contractName + '_lock',
   };
 };
 
@@ -250,12 +252,13 @@ const generateTemplateScenarios = (
 
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
-    [snakeCase(artifact.contractName + 'Evaluate')]: {
-      name: snakeCase(artifact.contractName + 'Evaluate'),
+    [artifact.contractName + '_evaluate']: {
+      name: artifact.contractName + '_evaluate',
       description: 'An example evaluation where this script execution passes.',
       data: {
         // encode values for the variables defined above in `entities` property
         bytecode: {
+          ...generateTemplateScenarioParametersFunctionIndex(abiFunction, artifact.abi),
           ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
           ...generateTemplateScenarioParametersValues(artifact.constructorInputs, encodedConstructorArgs),
         },
@@ -270,11 +273,6 @@ const generateTemplateScenarios = (
     },
   };
 
-  if (artifact.abi.length > 1) {
-    const functionIndex = artifact.abi.findIndex((func) => func.name === transaction.abiFunction.name);
-    scenarios![snakeCase(artifact.contractName + 'Evaluate')].data!.bytecode!.function_index = functionIndex.toString();
-  }
-
   return scenarios;
 };
 
@@ -285,14 +283,14 @@ const generateTemplateScenarioTransaction = (
 ): WalletTemplateScenario['transaction'] => {
   const slotIndex = csTransaction.inputs.findIndex((input) => !isUtxoP2PKH(input));
 
-  const inputs = libauthTransaction.inputs.map((input, index) => {
-    const csInput = csTransaction.inputs[index] as Utxo;
+  const inputs = libauthTransaction.inputs.map((input, inputIndex) => {
+    const csInput = csTransaction.inputs[inputIndex] as Utxo;
 
     return {
       outpointIndex: input.outpointIndex,
       outpointTransactionHash: binToHex(input.outpointTransactionHash),
       sequenceNumber: input.sequenceNumber,
-      unlockingBytecode: generateTemplateScenarioBytecode(csInput, `p2pkh_placeholder_unlock_${index}`, `placeholder_key_${index}`, index === slotIndex),
+      unlockingBytecode: generateTemplateScenarioBytecode(csInput, inputIndex, 'p2pkh_placeholder_unlock', inputIndex === slotIndex),
     } as WalletTemplateScenarioInput;
   });
 
@@ -336,14 +334,15 @@ export const generateTemplateScenarioTransactionOutputLockingBytecode = (
  * The slotIndex tracks which input is the contract input vs P2PKH inputs
  * to properly generate the locking scripts.
  */
+// TODO: This looks like it needs some refactor to work with the new stuff
 const generateTemplateScenarioSourceOutputs = (
   csTransaction: Transaction,
 ): Array<WalletTemplateScenarioOutput<true>> => {
   const slotIndex = csTransaction.inputs.findIndex((input) => !isUtxoP2PKH(input));
 
-  return csTransaction.inputs.map((input, index) => {
+  return csTransaction.inputs.map((input, inputIndex) => {
     return {
-      lockingBytecode: generateTemplateScenarioBytecode(input, `p2pkh_placeholder_lock_${index}`, `placeholder_key_${index}`, index === slotIndex),
+      lockingBytecode: generateTemplateScenarioBytecode(input, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex),
       valueSatoshis: Number(input.satoshis),
       token: serialiseTokenDetails(input.token),
     };
@@ -352,8 +351,14 @@ const generateTemplateScenarioSourceOutputs = (
 
 // Used for generating the locking / unlocking bytecode for source outputs and inputs
 export const generateTemplateScenarioBytecode = (
-  input: Utxo, p2pkhScriptName: string, placeholderKeyName: string, insertSlot?: boolean,
+  input: Utxo, inputIndex: number, p2pkhScriptNameTemplate: string, insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
+  if (insertSlot) return ['slot'];
+
+  const p2pkhScriptName = `${p2pkhScriptNameTemplate}_${inputIndex}`;
+  const placeholderKeyName = `placeholder_key_${inputIndex}`;
+
+  // This is for P2PKH inputs in the old transaction builder (TODO: remove when we remove old transaction builder)
   if (isUtxoP2PKH(input)) {
     return {
       script: p2pkhScriptName,
@@ -367,7 +372,13 @@ export const generateTemplateScenarioBytecode = (
     };
   }
 
-  return insertSlot ? ['slot'] : {};
+  if (isUnlockableUtxo(input)) {
+    return generateUnlockingScriptParams(input, p2pkhScriptNameTemplate, inputIndex);
+  }
+
+  // 'slot' means that we are currently evaluating this specific input,
+  // {} means that it is the same script type, but not being evaluated
+  return {};
 };
 
 export const generateTemplateScenarioParametersValues = (
@@ -382,10 +393,21 @@ export const generateTemplateScenarioParametersValues = (
     .map(([input, arg]) => {
       const encodedArgumentHex = binToHex(arg as Uint8Array);
       const prefixedEncodedArgument = addHexPrefixExceptEmpty(encodedArgumentHex);
-      return [snakeCase(input.name), prefixedEncodedArgument] as const;
+      return [input.name, prefixedEncodedArgument] as const;
     });
 
   return Object.fromEntries(entries);
+};
+
+export const generateTemplateScenarioParametersFunctionIndex = (
+  abiFunction: AbiFunction,
+  abi: readonly AbiFunction[],
+): Record<string, string> => {
+  const functionIndex = abi.length > 1
+    ? abi.findIndex((func) => func.name === abiFunction.name)
+    : undefined;
+
+  return functionIndex !== undefined ? { function_index: functionIndex.toString() } : {};
 };
 
 export const addHexPrefixExceptEmpty = (value: string): string => {
@@ -400,7 +422,7 @@ export const generateTemplateScenarioKeys = (
 
   const entries = typesAndArguments
     .filter(([, arg]) => arg instanceof SignatureTemplate)
-    .map(([input, arg]) => ([snakeCase(input.name), binToHex((arg as SignatureTemplate).privateKey)] as const));
+    .map(([input, arg]) => ([input.name, binToHex((arg as SignatureTemplate).privateKey)] as const));
 
   return Object.fromEntries(entries);
 };
@@ -415,14 +437,14 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
     if (arg instanceof SignatureTemplate) {
       const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
       const hashtypeName = getHashTypeName(arg.getHashType(false));
-      return `<${snakeCase(input.name)}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
+      return `<${input.name}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
     }
 
     const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;
 
     // we output these values as pushdata, comment will contain the type and the value of the variable
     // e.g. <timeout> // int = <0xa08601>
-    return `<${snakeCase(input.name)}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
+    return `<${input.name}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
   }).join('\n');
 };
 

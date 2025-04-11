@@ -138,18 +138,31 @@ Tuples are the type that is returned when calling the `split` member function on
 
 ```solidity
 string question = "What is Bitcoin Cash?";
-string answer = question.split(15)[0].split(8)[1];
+string answer = question.split(15)[0].split(8)[1]; // Answer is "Cash"
 ```
+
+:::note
+It is not supported to use a variable for the tupleIndex. Instead you can assign both sides of the tuple as shown below and use either element conditional on the value of the variable. 
+:::
 
 It is also possible to assign both sides of the tuple at once with a destructuring syntax:
 
 ```solidity
-string bitcoin, string cash = "BitcoinCash".split(7);
-require(bitcoin == cash);
+string hello, string world = "Hello World".split(5);
+require(hello + "world" == "Hello " + world);
 ```
 
 ## Type Casting
-Type casting can be done both explicitly and implicitly as illustrated below. `pubkey`, `sig` and `datasig` can be implicitly cast to `bytes`, meaning they can be used anywhere where you would normally use a `bytes` type. Explicit type casting can be done with a broader range of types, but is still limited. The syntax of this explicit type casting is illustrated below. Note that you can also cast to bounded `bytes` types.
+Type casting can be done both explicitly and implicitly depending on the type. `pubkey`, `sig` and `datasig` can be implicitly cast to `bytes`, meaning they can be used anywhere where you would normally use a `bytes` type. Explicit type casting can be done with a broader range of types, but is still limited. The syntax of this explicit type casting is illustrated below:
+
+#### Example
+```solidity
+pubkey pk = pubkey(0x0000);
+bytes editedPk = bytes(pk) + 0x1234;
+bytes4 zeroBytes = bytes4(0); // 0x00000000
+```
+
+### Casting Table
 
 See the following table for information on which types can be cast to other which other types.
 
@@ -163,25 +176,38 @@ See the following table for information on which types can be cast to other whic
 | sig     | bytes                  | bytes                              |
 | datasig | bytes                  | bytes                              |
 
-#### Example
-```solidity
-pubkey pk = pubkey(0x0000);
-bytes editedPk = bytes(pk) + 0x1234;
-bytes4 integer = bytes4(25);
-```
-
 ### Int to Byte Casting
 
-When casting integer types to bytes of a certain size, the integer value is padded with zeros, e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros by passing in a `size` parameter, which indicates the size of the output, e.g. `bytes(0, 4 - 2) == 0x0000`. The size casting can be a very important feature when keeping local state in an nftCommitment or in the simulated state.
+When casting integer types to bytes of a certain size, the integer value is padded with zeros, e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros by passing in a `size` parameter, which indicates the size of the output, e.g. `bytes(0, 4 - 2) == 0x0000`.
 
 :::tip
 Using `bytes20 placeholderPkh= bytes20(0)` will generate a 20 byte zero-array programmatically, whereas 
 `bytes20 placeholderPkh= 0x0000000000000000000000000000000000000000` will actually take 20 bytes of space in your contract.
 :::
 
-:::note
+Casting an integer to a fixed-size byte-length can be a very important when storing local state in an nftCommitment. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each indivual case depending on the interger range. Below we add a table with info on the maximum integer size for common cases:
+
+| Integer Type    | Max integer value                  | Max Byte Size in Script Number Format  |
+| --------------  | -----------------------------------| ---------------------------------------|
+| Satoshis        | 2.1 quadrillion (21,000,000 BCH)   | 7 bytes                                |
+| CashTokens      | 9.2 quintillion (`2^63 - 1`)       | 8 bytes for max supply token           |
+| Locktime        | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
+| SequenceNumber  | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
+
+:::info
 VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
 :::
+
+### Bytes to BytesX Casting
+
+If you do need to pad bytes to a specific length, you can convert the bytes to `int` first, and then cast to the bounded `bytes` type. This will pad the bytes with zeros to the specified length, like specified in the *Int to Byte Casting* section above.
+
+#### Example
+```solidity
+bytes data = nftCommitment.split(10)[0]; // (type = bytes, content = 10 bytes)
+bytes20 paddedData = bytes20(int(data)); // (type = bytes20, content = 20 bytes)
+require(storedContractState == paddedData);
+```
 
 ### Semantic Byte Casting
 
@@ -192,15 +218,6 @@ When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20`
 bytes pkh = nftCommitment.split(20)[0]; // (type = bytes, content = 20 bytes)
 bytes20 bytes20Pkh = bytes20(pkh); // (type = bytes20, content = 20 bytes)
 bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20Pkh);
-```
-
-If you do need to pad bytes to a specific length, you can convert the bytes to `int` first, and then cast to the bounded `bytes` type. This will pad the bytes with zeros to the specified length, like specified in the *Int to Byte Casting* section above.
-
-#### Example
-```solidity
-bytes data = nftCommitment.split(10)[0]; // (type = bytes, content = 10 bytes)
-bytes20 paddedData = bytes20(int(data)); // (type = bytes20, content = 20 bytes)
-require(storedContractState == paddedData);
 ```
 
 ## Operators

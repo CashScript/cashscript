@@ -68,7 +68,7 @@ This is especially effective when used together with time constraints. An exampl
 ```solidity
 contract LastWill(bytes20 inheritor, bytes20 cold, bytes20 hot) {
     function inherit(pubkey pk, sig s) {
-        require(tx.age >= 180 days);
+        require(this.age >= 180 days);
         require(hash160(pk) == inheritor);
         require(checkSig(s, pk));
     }
@@ -94,7 +94,7 @@ contract LastWill(bytes20 inheritor, bytes20 cold, bytes20 hot) {
 }
 ```
 
-This contract has three functions, but only the `refresh()` function uses a covenant. Again it performs necessary checks to verify that the transaction is signed by the owner, after which it checks that the entire contract balance is sent. It then uses `tx.inputs[this.activeInputIndex].lockingBytecode` to access its own locking bytecode, which can be used as the locking bytecode of this output. Sending the full value back to the same contract effectively resets the `tx.age` counter, so the owner of the contract needs to do this every 180 days.
+This contract has three functions, but only the `refresh()` function uses a covenant. Again it performs necessary checks to verify that the transaction is signed by the owner, after which it checks that the entire contract balance is sent. It then uses `tx.inputs[this.activeInputIndex].lockingBytecode` to access its own locking bytecode, which can be used as the locking bytecode of this output. Sending the full value back to the same contract effectively resets the `this.age` counter, so the owner of the contract needs to do this every 180 days.
 
 ### Restricting P2PKH and P2SH
 The earlier examples showed sending money to only a single output of either `P2PKH` or `P2SH`. But there's nothing preventing us from writing a contract that can send to multiple outputs, including a combination of `P2PKH` and `P2SH` outputs. A good example is the *Licho's Mecenas* contract that allows you to set up recurring payments where the recipient is able to claim the same amount every month, while the remainder has to be sent back to the contract.
@@ -102,7 +102,7 @@ The earlier examples showed sending money to only a single output of either `P2P
 ```solidity
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
     function receive() {
-        require(tx.age >= period);
+        require(this.age >= period);
 
         // Check that the first output sends to the recipient
         bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
@@ -145,7 +145,7 @@ Covenants can also use 'simulated state', where state is kept in the contract sc
 
 ### Keeping local State in NFTs
 
-To demonstrate the concept of 'local state' we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `tx.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
+To demonstrate the concept of 'local state' we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `this.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
 
 Besides these wasted days it can also be inconvenient to claim at set intervals, rather than the "streaming" model that the Ethereum project [Sablier](https://www.sablier.finance/) employs. Instead of set intervals, you should be able to claim funds at any time during the "money stream". Using local state, we can approach a similar system with BCH.
 

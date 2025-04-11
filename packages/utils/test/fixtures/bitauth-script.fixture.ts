@@ -99,7 +99,7 @@ pragma cashscript >=0.8.0;
  */
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */) {
     function receive() {
-        // require(tx.age >= period);
+        // require(this.age >= period);
 
         // Check that the first output sends to the recipient
         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));
@@ -176,7 +176,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */)
                                                                                          /*  *\\/                                                                                                               */
                                                                                          /* contract Mecenas(bytes20 recipient, bytes20 funder, int pledge\\/*, int period *\\/) {                               */
 OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF                                                      /*     function receive() {                                                                                           */
-                                                                                         /*         // require(tx.age >= period);                                                                              */
+                                                                                         /*         // require(this.age >= period);                                                                            */
                                                                                          /*                                                                                                                    */
                                                                                          /*         // Check that the first output sends to the recipient                                                      */
 OP_0 OP_OUTPUTBYTECODE <0x76a914> OP_2 OP_ROLL OP_CAT <0x88ac> OP_CAT OP_EQUAL OP_VERIFY /*         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));                             */

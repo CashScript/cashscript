@@ -32,14 +32,22 @@ export interface GenerateUnlockingBytecodeOptions {
 }
 
 // TODO: Change this type when we understand the requirements better
-export interface Unlocker {
+export interface BaseUnlocker {
   generateLockingBytecode: () => Uint8Array;
   generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
-  contract?: Contract;
-  params?: FunctionArgument[];
-  abiFunction?: AbiFunction;
-  template?: SignatureTemplate;
 }
+
+export interface ContractUnlocker extends BaseUnlocker {
+  contract: Contract;
+  params: FunctionArgument[];
+  abiFunction: AbiFunction;
+}
+
+export interface P2PKHUnlocker extends BaseUnlocker {
+  template: SignatureTemplate;
+}
+
+export type Unlocker = ContractUnlocker | P2PKHUnlocker;
 
 export interface UtxoP2PKH extends Utxo {
   template: SignatureTemplate;

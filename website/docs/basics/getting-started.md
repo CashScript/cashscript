@@ -169,3 +169,5 @@ console.log(transferDetails);
 ```
 
 Congrats 🎉! You've successfully created a transaction spending from a Bitcoin Cash smart contract!
+
+To use the `timeout` function you need to use Alice as signer for the spending condition. Secondly you also need get to use `.setLocktime()` with a valid argument during the transaction building to pass the `tx.time` check of the `timeout` function.

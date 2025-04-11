@@ -150,6 +150,9 @@ const contractUtxos = await contract.getUtxos();
 console.log('contract address:', contract.address);
 console.log('contract utxos', contractUtxos);
 
+// get current block height
+const currentBlockHeight = await provider.getBlockHeight()
+
 // Produce new oracle message and signature
 const oracleMessage = oracle.createMessage(100000n, 30000n);
 const oracleSignature = oracle.signMessage(oracleMessage);
@@ -167,6 +170,7 @@ const transferDetails = await new TransactionBuilder({ provider })
     to: contract.address,
     amount: 1000n
   })
+  .setLocktime(currentBlockHeight)
   .send();
 
 console.log(transferDetails);

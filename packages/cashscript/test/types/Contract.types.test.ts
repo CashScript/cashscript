@@ -64,6 +64,49 @@ interface ManualArtifactType extends Artifact {
     new Contract<ManualArtifactType>(p2pkhArtifactJsonNotConst as any, [alicePkh, 1000n]);
   }
 
+  // describe('Contract unlockers')
+  {
+    const contract = new Contract(p2pkhArtifact, [alicePkh]);
+
+    // it('should not give type errors when using correct function inputs')
+    contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+
+    // it('should give type errors when calling a function that does not exist')
+    // @ts-expect-error
+    contract.unlock.notAFunction();
+
+    // it('should give type errors when using incorrect function input types')
+    // @ts-expect-error
+    contract.unlock.spend(1000n, true);
+
+    // it('should give type errors when using incorrect function input length')
+    // @ts-expect-error
+    contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv), 100n);
+    // @ts-expect-error
+    contract.unlock.spend(alicePub);
+
+    // it('should not perform type checking when cast to any')
+    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n]);
+    contractAsAny.unlock.notAFunction();
+    contractAsAny.unlock.spend();
+    contractAsAny.unlock.spend(1000n, true);
+
+    // it('should not perform type checking when cannot infer type')
+    // Note: would be very nice if it *could* infer the type from static json
+    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n]);
+    contractFromUnknown.unlock.notAFunction();
+    contractFromUnknown.unlock.spend();
+    contractFromUnknown.unlock.spend(1000n, true);
+
+    // it('should give type errors when calling methods that do not exist on the returned object')
+    // @ts-expect-error
+    contract.unlock.spend().notAFunction();
+    // @ts-expect-error
+    contractAsAny.unlock.spend().notAFunction();
+    // @ts-expect-error
+    contractFromUnknown.unlock.spend().notAFunction();
+  }
+
   // describe('Contract functions')
   {
     const contract = new Contract(p2pkhArtifact, [alicePkh]);
@@ -167,6 +210,23 @@ interface ManualArtifactType extends Artifact {
     new Contract(announcementArtifact, 'hello');
   }
 
+  // describe('Contract unlockers')
+  {
+    // it('should not give type errors when using correct function inputs')
+    const contract = new Contract(announcementArtifact, []);
+
+    // it('should not give type errors when using correct function inputs')
+    contract.unlock.announce();
+
+    // it('should give type errors when calling a function that does not exist')
+    // @ts-expect-error
+    contract.unlock.notAFunction();
+
+    // it('should give type errors when using incorrect function input length')
+    // @ts-expect-error
+    contract.unlock.announce('hello world');
+  }
+
   // describe('Contract functions')
   {
     // it('should not give type errors when using correct function inputs')
@@ -211,6 +271,31 @@ interface ManualArtifactType extends Artifact {
   {
     // it('should not give type errors when using correct constructor inputs')
     new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n]);
+  }
+
+  // describe('Contract unlockers')
+  {
+    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n]);
+
+    // it('should not give type errors when using correct function inputs')
+    contract.unlock.transfer(new SignatureTemplate(alicePriv));
+    contract.unlock.timeout(new SignatureTemplate(alicePriv));
+
+    // it('should give type errors when calling a function that does not exist')
+    // @ts-expect-error
+    contract.unlock.notAFunction();
+
+    // it('should give type errors when using incorrect function input types')
+    // @ts-expect-error
+    contract.unlock.transfer(1000n);
+    // @ts-expect-error
+    contract.unlock.timeout(true);
+
+    // it('should give type errors when using incorrect function input length')
+    // @ts-expect-error
+    contract.unlock.transfer(new SignatureTemplate(alicePub), 100n);
+    // @ts-expect-error
+    contract.unlock.timeout();
   }
 
   // describe('Contract functions')

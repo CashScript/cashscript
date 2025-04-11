@@ -25,7 +25,7 @@ module.exports = {
       label: 'Compiler',
       items: [
         'compiler/compiler',
-        'compiler/vm-limits',
+        'compiler/script-limits',
         'compiler/artifacts',
         'compiler/grammar',
       ],
@@ -36,8 +36,16 @@ module.exports = {
       items: [
         'sdk/instantiation',
         'sdk/transaction-builder',
+        {
+          type: 'category',
+          label: 'Network Providers',
+          items: [
+            'sdk/network-provider',
+            'sdk/electrum-network-provider',
+            'sdk/other-network-providers',
+          ],
+        },
         'sdk/signature-templates',
-        'sdk/network-provider',
         'sdk/testing-setup',
         'sdk/examples',
       ],

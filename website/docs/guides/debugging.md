@@ -65,7 +65,7 @@ The Bitauth IDE will show you the two-way mapping between the CashScript contrac
 <sender> // pubkey = <0x0262f5c18adf3d9800c18b5e63fa6505ec8eb1d49c65855d62aea698425a39966e>
 
 // bytecode
-                                                /* pragma cashscript >= 0.10.0;                                                  */
+                                                /* pragma cashscript >= 0.11.0;                                                  */
                                                 /*                                                                              */
                                                 /* contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) { */
                                                 /*     // Require recipient's signature to match                                */
