@@ -28,6 +28,8 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
     }
   }
 
+  verifyFullTransaction(template);
+
   return results;
 };
 
@@ -88,8 +90,10 @@ const debugSingleScenario = (
     );
   }
 
-  const evaluationResult = vm.verify(program);
+  // Evaluate the final program state to see if it evaluated successfully
+  const evaluationResult = vm.stateSuccess(lastExecutedDebugStep);
 
+  // Check if the evaluation failed matches any of the possible failure cases
   if (failedFinalVerify(evaluationResult)) {
     const finalExecutedVerifyIp = getFinalExecutedVerifyIp(executedDebugSteps);
 
@@ -250,4 +254,26 @@ const getFinalExecutedVerifyIp = (executedDebugSteps: AuthenticationProgramState
   // final verify, so we need to add one to get the actual final verify instruction
   const finalExecutedVerifyIp = finalExecutedNonCleanupStep.ip + 1;
   return finalExecutedVerifyIp;
+};
+
+// After debugging, we want to verify the full transaction to ensure it is valid (this catches any errors that are not
+// necessarily script errors)
+const verifyFullTransaction = (template: WalletTemplate): void => {
+  const placeholderScriptId = Object.keys(template.scripts).find((key) => 'unlocks' in template.scripts[key]);
+  const placeholderScenarioId = (template.scripts[placeholderScriptId ?? ''] as WalletTemplateScriptUnlocking)?.passes?.[0];
+
+  if (!placeholderScenarioId || !placeholderScriptId) {
+    throw new Error('No placeholder scenario ID or script ID found');
+  }
+
+  const { vm, program } = createProgram(template, placeholderScriptId, placeholderScenarioId);
+
+  const verificationResult = vm.verify({
+    sourceOutputs: program.sourceOutputs,
+    transaction: program.transaction,
+  });
+
+  if (typeof verificationResult === 'string') {
+    throw new FailedTransactionError(verificationResult, getBitauthUri(template));
+  }
 };
