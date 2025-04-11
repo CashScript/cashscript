@@ -22,6 +22,9 @@ This release also contains several breaking changes, please refer to the [migrat
 - :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider` and added a configuration object to the constructor.
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 
+#### @cashscript/utils
+- :boom: **BREAKING**: Remove `importArtifact` and `exportArtifact` helper functions. If you want to import or export artifacts, use `'fs'` to read and write files directly.
+
 ## v0.10.5
 
 #### cashc compiler

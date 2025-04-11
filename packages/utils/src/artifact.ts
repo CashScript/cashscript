@@ -1,5 +1,3 @@
-import fs, { PathLike } from 'fs';
-
 export interface AbiInput {
   name: string;
   type: string;
@@ -49,15 +47,6 @@ export interface Artifact {
     version: string;
   }
   updatedAt: string;
-}
-
-export function importArtifact(artifactFile: PathLike): Artifact {
-  return JSON.parse(fs.readFileSync(artifactFile, { encoding: 'utf-8' }));
-}
-
-export function exportArtifact(artifact: Artifact, targetFile: string, format: 'json' | 'ts'): void {
-  const jsonString = formatArtifact(artifact, format);
-  fs.writeFileSync(targetFile, jsonString);
 }
 
 export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): string {

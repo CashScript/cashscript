@@ -4,7 +4,6 @@ import {
   asmToScript,
   calculateBytesize,
   countOpcodes,
-  exportArtifact,
   formatArtifact,
   scriptToAsm,
   scriptToBytecode,
@@ -80,16 +79,18 @@ function run(): void {
       return;
     }
 
+    const formattedArtifact = formatArtifact(artifact, opts.format);
+
     if (outputFile) {
       // Create output file and write the artifact to it
       const outputDir = path.dirname(outputFile);
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
-      exportArtifact(artifact, outputFile, opts.format);
+      fs.writeFileSync(outputFile, formattedArtifact);
     } else {
       // Output artifact to STDOUT
-      console.log(formatArtifact(artifact, opts.format));
+      console.log(formattedArtifact);
     }
   } catch (e: any) {
     abort(e.message);
