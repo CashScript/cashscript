@@ -6,7 +6,8 @@
     "bitcoin cash",
     "cashscript",
     "sdk",
-    "smart contracts"
+    "smart contracts",
+    "cashtokens"
   ],
   "homepage": "https://cashscript.org",
   "bugs": {
@@ -19,6 +20,7 @@
   "license": "MIT",
   "author": "Rosco Kalis <roscokalis@gmail.com>",
   "contributors": [
+    "Mathieu Geukens <mr-zwets@protonmail.com>",
     "Gabriel Cardona <gabriel@bitcoin.com>"
   ],
   "main": "dist/index.js",
