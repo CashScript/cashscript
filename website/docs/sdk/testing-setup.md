@@ -107,7 +107,7 @@ contract Example() {
 ```
 
 ```ts title="Example test file"
-import artifact from '../artifacts/example.json' with { type: "json" };
+import artifact from '../artifacts/example.artifact.js';
 import { Contract, MockNetworkProvider, randomUtxo } from 'cashscript';
 import 'cashscript/jest';
 

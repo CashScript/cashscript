@@ -11,21 +11,24 @@ import {
 import {
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
-import p2pkhArtifact from './fixture/p2pkh.json' with { type: 'json' };
-import twtArtifact from './fixture/transfer_with_timeout.json' with { type: 'json' };
-import hodlVaultArtifact from './fixture/hodl_vault.json' with { type: 'json' };
-import mecenasArtifact from './fixture/mecenas.json' with { type: 'json' };
+import p2pkhArtifact from './fixture/p2pkh.artifact.js';
+import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
+import hodlVaultArtifact from './fixture/hodl_vault.artifact.js';
+import mecenasArtifact from './fixture/mecenas.artifact.js';
 import deprecatedMecenasArtifact from './fixture/deprecated/mecenas-v0.6.0.json' with { type: 'json' };
-import boundedBytesArtifact from './fixture/bounded_bytes.json' with { type: 'json' };
+import boundedBytesArtifact from './fixture/bounded_bytes.artifact.js';
 
 describe('Contract', () => {
   describe('new', () => {
     it('should fail with incorrect constructor args', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
 
+      // @ts-expect-error invalid constructor type
       expect(() => new Contract(p2pkhArtifact, [], { provider })).toThrow();
+      // @ts-expect-error invalid constructor type
       expect(() => new Contract(p2pkhArtifact, [20n], { provider })).toThrow();
       expect(
+        // @ts-expect-error invalid constructor type
         () => new Contract(p2pkhArtifact, [placeholder(20), placeholder(20)], { provider }),
       ).toThrow();
       expect(() => new Contract(p2pkhArtifact, [placeholder(19)], { provider })).toThrow();
@@ -62,8 +65,7 @@ describe('Contract', () => {
 
     it('should create new TransferWithTimeout instance', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const constructorArgs = [placeholder(65), placeholder(65), 1000000n];
-      const instance = new Contract(twtArtifact, constructorArgs, { provider });
+      const instance = new Contract(twtArtifact, [placeholder(65), placeholder(65), 1000000n], { provider });
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.transfer).toBe('function');
@@ -73,8 +75,7 @@ describe('Contract', () => {
 
     it('should create new HodlVault instance', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const constructorArgs = [placeholder(65), placeholder(65), 1000000n, 10000n];
-      const instance = new Contract(hodlVaultArtifact, constructorArgs, { provider });
+      const instance = new Contract(hodlVaultArtifact, [placeholder(65), placeholder(65), 1000000n, 10000n], { provider });
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.spend).toBe('function');
@@ -83,8 +84,7 @@ describe('Contract', () => {
 
     it('should create new Mecenas instance', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const constructorArgs = [placeholder(20), placeholder(20), 1000000n];
-      const instance = new Contract(mecenasArtifact, constructorArgs, { provider });
+      const instance = new Contract(mecenasArtifact, [placeholder(20), placeholder(20), 1000000n], { provider });
 
       expect(typeof instance.address).toBe('string');
       expect(typeof instance.functions.receive).toBe('function');
