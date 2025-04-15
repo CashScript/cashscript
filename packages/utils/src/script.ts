@@ -146,6 +146,10 @@ export function generateRedeemScript(baseScript: Script, encodedConstructorArgs:
 }
 
 export function optimiseBytecode(script: Script, runs: number = 1000): Script {
+  return optimiseBytecodeOld(script, runs);
+}
+
+export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script {
   const optimisations = OptimisationsEquivFile
     // Split by line and filter all line comments (#)
     .split('\n')
