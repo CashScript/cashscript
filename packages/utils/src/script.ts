@@ -8,6 +8,7 @@ import {
   decodeAuthenticationInstructions,
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
+import { optimisationReplacements } from './optimisations.js';
 
 export const Op = OpcodesBch2023;
 export type Op = number;
@@ -146,7 +147,15 @@ export function generateRedeemScript(baseScript: Script, encodedConstructorArgs:
 }
 
 export function optimiseBytecode(script: Script, runs: number = 1000): Script {
-  return optimiseBytecodeOld(script, runs);
+  for (let i = 0; i < runs; i += 1) {
+    const oldScript = script;
+    script = replaceOps(script, optimisationReplacements);
+
+    // Break on fixed point
+    if (scriptToAsm(oldScript) === scriptToAsm(script)) break;
+  }
+
+  return script;
 }
 
 export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script {
@@ -165,7 +174,7 @@ export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script
 
   for (let i = 0; i < runs; i += 1) {
     const oldScript = script;
-    script = replaceOps(script, optimisations);
+    script = replaceOpsOld(script, optimisations);
 
     // Break on fixed point
     if (scriptToAsm(oldScript) === scriptToAsm(script)) break;
@@ -174,7 +183,7 @@ export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script
   return script;
 }
 
-function replaceOps(script: Script, optimisations: string[][]): Script {
+function replaceOpsOld(script: Script, optimisations: string[][]): Script {
   let asm = scriptToAsm(script);
 
   // Apply all optimisations in the cashproof file
@@ -195,6 +204,18 @@ function replaceOps(script: Script, optimisations: string[][]): Script {
   asm = asm.replace(/OP_DUP OP_OR/g, '');
 
   // Remove any double spaces as a result of opcode removal
+  asm = asm.replace(/\s+/g, ' ').trim();
+
+  return asmToScript(asm);
+}
+
+function replaceOps(script: Script, optimisations: string[][]): Script {
+  let asm = scriptToAsm(script);
+
+  optimisations.forEach(([pattern, replacement]) => {
+    asm = asm.replace(new RegExp(pattern, 'g'), replacement);
+  });
+
   asm = asm.replace(/\s+/g, ' ').trim();
 
   return asmToScript(asm);
