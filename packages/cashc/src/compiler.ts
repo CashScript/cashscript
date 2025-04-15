@@ -31,6 +31,8 @@ export function compileString(code: string): Artifact {
   const optimisedBytecode = optimiseBytecode(traversal.output);
 
   if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisedBytecode)) {
+    console.error(scriptToAsm(optimisedBytecodeOld));
+    console.error(scriptToAsm(optimisedBytecode));
     throw new Error('New bytecode optimisation is not backwards compatible');
   }
 
