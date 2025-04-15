@@ -1,6 +1,6 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, optimiseBytecode, scriptToBytecode } from '@cashscript/utils';
+import { Artifact, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -27,7 +27,12 @@ export function compileString(code: string): Artifact {
   ast = ast.accept(traversal) as Ast;
 
   // Bytecode optimisation
+  const optimisedBytecodeOld = optimiseBytecodeOld(traversal.output);
   const optimisedBytecode = optimiseBytecode(traversal.output);
+
+  if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisedBytecode)) {
+    throw new Error('New bytecode optimisation is not backwards compatible');
+  }
 
   // Attach debug information
   const debug = {
