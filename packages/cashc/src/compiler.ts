@@ -1,6 +1,6 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode } from '@cashscript/utils';
+import { Artifact, generateSourceMap, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -28,23 +28,24 @@ export function compileString(code: string): Artifact {
 
   // Bytecode optimisation
   const optimisedBytecodeOld = optimiseBytecodeOld(traversal.output);
-  const optimisedBytecode = optimiseBytecode(traversal.output);
+  const optimisationResult = optimiseBytecode(traversal.output, sourceMapToLocationData(traversal.sourceMap));
 
-  if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisedBytecode)) {
+  if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisationResult.script)) {
     console.error(scriptToAsm(optimisedBytecodeOld));
-    console.error(scriptToAsm(optimisedBytecode));
+    console.error(scriptToAsm(optimisationResult.script));
     throw new Error('New bytecode optimisation is not backwards compatible');
   }
 
   // Attach debug information
   const debug = {
-    bytecode: binToHex(scriptToBytecode(traversal.output)),
-    sourceMap: traversal.sourceMap,
+    bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
+    sourceMap: generateSourceMap(optimisationResult.locationData),
+    // sourceMap: traversal.sourceMap,
     logs: traversal.consoleLogs,
     requires: traversal.requires,
   };
 
-  return generateArtifact(ast, optimisedBytecode, code, debug);
+  return generateArtifact(ast, optimisationResult.script, code, debug);
 }
 
 export function compileFile(codeFile: PathLike): Artifact {
