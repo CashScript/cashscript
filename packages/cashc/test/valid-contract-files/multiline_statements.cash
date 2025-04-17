@@ -1,8 +1,8 @@
-contract Test(
+contract MultilineStatements(
     int x,
     string y
 ) {
-    function hello(
+    function spend(
         int a,
         string b
     ) {

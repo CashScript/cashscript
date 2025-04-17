@@ -9,6 +9,7 @@ import {
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
 import { optimisationReplacements } from './optimisations.js';
+import { FullLocationData, PositionHint, SingleLocationData } from './types.js';
 
 export const Op = OpcodesBch2023;
 export type Op = number;
@@ -146,16 +147,26 @@ export function generateRedeemScript(baseScript: Script, encodedConstructorArgs:
   return [...encodedConstructorArgs.slice().reverse(), ...baseScript];
 }
 
-export function optimiseBytecode(script: Script, runs: number = 1000): Script {
+interface OptimiseBytecodeResult {
+  script: Script;
+  locationData: FullLocationData;
+}
+
+export function optimiseBytecode(
+  script: Script, locationData: FullLocationData, runs: number = 1000,
+): OptimiseBytecodeResult {
   for (let i = 0; i < runs; i += 1) {
     const oldScript = script;
-    script = replaceOps(script, optimisationReplacements);
+    const { script: newScript, locationData: newLocationData } = replaceOps(script, locationData, optimisationReplacements);
 
     // Break on fixed point
-    if (scriptToAsm(oldScript) === scriptToAsm(script)) break;
+    if (scriptToAsm(oldScript) === scriptToAsm(newScript)) break;
+
+    script = newScript;
+    locationData = newLocationData;
   }
 
-  return script;
+  return { script, locationData };
 }
 
 export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script {
@@ -209,14 +220,113 @@ function replaceOpsOld(script: Script, optimisations: string[][]): Script {
   return asmToScript(asm);
 }
 
-function replaceOps(script: Script, optimisations: string[][]): Script {
+interface ReplaceOpsResult {
+  script: Script;
+  locationData: FullLocationData;
+}
+
+function replaceOps(script: Script, locationData: FullLocationData, optimisations: string[][]): ReplaceOpsResult {
   let asm = scriptToAsm(script);
+  let newLocationData = [...locationData];
 
   optimisations.forEach(([pattern, replacement]) => {
-    asm = asm.replace(new RegExp(pattern, 'g'), replacement);
+    let processedAsm = '';
+    let asmToSearch = asm;
+
+    const regex = new RegExp(pattern, 'g');
+
+    let matchIndex = asmToSearch.search(regex);
+    while (matchIndex !== -1) {
+      // We add the part before the match to the processed asm
+      processedAsm += asmToSearch.slice(0, matchIndex);
+
+      // We count the number of spaces in the processed asm + 1, which is equal to the script index
+      // We do the same thing to calculate the number of opcodes in the pattern and replacement
+      const scriptIndex = processedAsm === '' ? 0 : [...processedAsm.trim().matchAll(/\s+/g)].length + 1;
+      const patternLength = [...pattern.matchAll(/\s+/g)].length + 1;
+      const replacementLength = replacement === '' ? 0 : [...replacement.matchAll(/\s+/g)].length + 1;
+
+      // We get the locationdata entries for every opcode in the pattern
+      const patternLocations = newLocationData.slice(scriptIndex, scriptIndex + patternLength);
+
+      // We get the lowest start location and highest end location of the pattern
+      const lowestStart = getLowestStartLocation(patternLocations);
+      const highestEnd = getHighestEndLocation(patternLocations);
+
+      // If any of the pattern locations have a position hint of END, we use that as the position hint
+      const positionHint = patternLocations.some((location) => location.positionHint === PositionHint.END)
+        ? PositionHint.END
+        : PositionHint.START;
+
+      // We merge the lowest start and highest end locations into a single location data entry
+      const mergedLocation = {
+        location: {
+          start: lowestStart.location.start,
+          end: highestEnd.location.end,
+        },
+        positionHint,
+      };
+
+      // We replace the pattern locations with the merged location
+      // (note that every opcode in the replacement has the same location)
+      const replacementLocations = new Array<SingleLocationData>(replacementLength).fill(mergedLocation);
+      newLocationData.splice(scriptIndex, patternLength, ...replacementLocations);
+
+      // We add the replacement to the processed asm
+      processedAsm += replacement;
+
+      // We do not add the matched pattern anywhere since it gets replaced
+
+      // We set the asmToSearch to the part after the match
+      asmToSearch = asmToSearch.slice(matchIndex + pattern.length);
+
+      // Find the next match
+      matchIndex = asmToSearch.search(regex);
+    }
+
+    // We add the remaining asm to the processed asm
+    processedAsm += asmToSearch;
+
+    // We replace the original asm with the processed asm so that the next optimisation can use the updated asm
+    asm = processedAsm;
   });
 
   asm = asm.replace(/\s+/g, ' ').trim();
 
-  return asmToScript(asm);
+  return {
+    script: asmToScript(asm),
+    locationData: newLocationData,
+  };
 }
+
+const getHighestEndLocation = (locations: SingleLocationData[]): SingleLocationData => {
+  return locations.reduce((highest, current) => {
+    if (current.location.end.line > highest.location.end.line) {
+      return current;
+    }
+
+    if (highest.location.end.line === current.location.end.line) {
+      if (current.location.end.column > highest.location.end.column) {
+        return current;
+      }
+    }
+
+    return highest;
+  }, locations[0]);
+};
+
+const getLowestStartLocation = (locations: SingleLocationData[]): SingleLocationData => {
+  return locations.reduce((lowest, current) => {
+    if (current.location.start.line < lowest.location.start.line) {
+      return current;
+    }
+
+    if (lowest.location.start.line === current.location.start.line) {
+      if (current.location.start.column < lowest.location.start.column) {
+        return current;
+      }
+    }
+
+    return lowest;
+  }, locations[0]);
+};
