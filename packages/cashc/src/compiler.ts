@@ -26,9 +26,17 @@ export function compileString(code: string): Artifact {
   const traversal = new GenerateTargetTraversal();
   ast = ast.accept(traversal) as Ast;
 
+  const constructorParamLength = ast.contract.parameters.length;
+
   // Bytecode optimisation
   const optimisedBytecodeOld = optimiseBytecodeOld(traversal.output);
-  const optimisationResult = optimiseBytecode(traversal.output, sourceMapToLocationData(traversal.sourceMap));
+  const optimisationResult = optimiseBytecode(
+    traversal.output,
+    sourceMapToLocationData(traversal.sourceMap),
+    traversal.consoleLogs,
+    traversal.requires,
+    constructorParamLength,
+  );
 
   if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisationResult.script)) {
     console.error(scriptToAsm(optimisedBytecodeOld));
@@ -41,8 +49,8 @@ export function compileString(code: string): Artifact {
     bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
     sourceMap: generateSourceMap(optimisationResult.locationData),
     // sourceMap: traversal.sourceMap,
-    logs: traversal.consoleLogs,
-    requires: traversal.requires,
+    logs: optimisationResult.logs,
+    requires: optimisationResult.requires,
   };
 
   return generateArtifact(ast, optimisationResult.script, code, debug);

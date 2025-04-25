@@ -270,6 +270,31 @@ contract Test(pubkey owner) {
 }
 `;
 
+const CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS = `
+contract Test(pubkey owner, int num, int num2, int num3, int num4, int num5) {
+  function transfer(sig ownerSig) {
+    console.log('Hello First Function');
+    require(checkSig(ownerSig, owner));
+
+    bytes2 beef = 0xbeef;
+    require(beef != 0xfeed);
+
+    console.log(ownerSig, owner, num, num2, beef, 1, "test", true);
+
+    require(num == 1000);
+    require(num2 == 2000);
+    require(num3 == 3000);
+    require(num4 == 4000);
+    require(num5 == 5000);
+  }
+
+  function secondFunction() {
+    console.log("Hello Second Function");
+    require(1 == 1);
+  }
+}
+`;
+
 export const artifactTestRequires = compileString(CONTRACT_TEST_REQUIRES);
 export const artifactTestSingleFunction = compileString(CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION);
 export const artifactTestMultilineRequires = compileString(CONTRACT_TEST_MULTILINE_REQUIRES);
@@ -277,3 +302,4 @@ export const artifactTestZeroHandling = compileString(CONTRACT_TEST_ZERO_HANDLIN
 export const artifactTestLogs = compileString(CONTRACT_TEST_LOGS);
 export const artifactTestConsecutiveLogs = compileString(CONTRACT_TEST_CONSECUTIVE_LOGS);
 export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTPLE_LOGS);
+export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS);

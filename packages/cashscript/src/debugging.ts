@@ -50,7 +50,7 @@ const debugSingleScenario = (
     .filter((debugStep) => debugStep.controlStack.every(item => item === true));
 
   const executedLogs = (artifact.debug?.logs ?? [])
-    .filter((debugStep) => executedDebugSteps.some((log) => log.ip === debugStep.ip));
+    .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
 
   for (const log of executedLogs) {
     logConsoleLogStatement(log, executedDebugSteps, artifact);
@@ -64,13 +64,16 @@ const debugSingleScenario = (
     // caused the error (in other words the OP_VERIFY). We need to decrement the instruction pointer to get the correct
     // failing instruction.
     const failingIp = lastExecutedDebugStep.ip - 1;
+    const failingInstruction = lastExecutedDebugStep.instructions[failingIp];
 
-    // Generally speaking, an error is thrown by the OP_VERIFY opcode, but for NULLFAIL, the error is thrown in the
-    // preceding OP_CHECKSIG opcode. The error message is registered in the next instruction, so we need to increment
-    // the instruction pointer to get the correct error message from the require messages in the artifact.
-    // Note that we do NOT use this adjusted IP when passing the failing IP into the FailedRequireError
+    // With optimisations, the OP_CHECKSIG and OP_VERIFY instructions are merged into a single opcode (OP_CHECKSIGVERIFY).
+    // However, for the final verify, the OP_VERIFY is not present. In most cases, the implicit final VERIFY is checked
+    // later in the code. However, for NULLFAIL, the error is thrown in the OP_CHECKSIG opcode, rather than in the
+    // implicit final VERIFY. The error message is registered in the next instruction, so we need to increment the
+    // instruction pointer to get the correct error message from the require messages in the artifact.
+    // Note that we do NOT use this adjusted IP when passing the failing IP into the FailedRequireError.
     const isNullFail = lastExecutedDebugStep.error.includes(AuthenticationErrorCommon.nonNullSignatureFailure);
-    const requireStatementIp = failingIp + (isNullFail ? 1 : 0);
+    const requireStatementIp = failingIp + (isNullFail && isSignatureCheckWithoutVerify(failingInstruction) ? 1 : 0);
 
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((statement) => statement.ip === requireStatementIp);
@@ -212,9 +215,11 @@ const failedFinalVerify = (evaluationResult: string | true): evaluationResult is
 };
 
 const calculateCleanupSize = (instructions: Array<AuthenticationInstruction | undefined>): number => {
-  // OP_NIP is used for cleanup at the end of a function, OP_ENDIF and OP_ELSE are the end of branches
-  // We need to remove all of these to get to the actual last executed instruction of a function
-  const cleanupOpcodes = [Op.OP_ENDIF, Op.OP_NIP, Op.OP_ELSE];
+  // OP_NIP (or OP_DROP/OP_2DROP in optimised bytecode) is used for cleanup at the end of a function,
+  // OP_ENDIF and OP_ELSE are the end of branches. We need to remove all of these to get to the actual last
+  // executed instruction of a function
+  // TODO: What about OP_1??
+  const cleanupOpcodes = [Op.OP_ENDIF, Op.OP_NIP, Op.OP_ELSE, Op.OP_DROP, Op.OP_2DROP];
 
   let cleanupSize = 0;
   for (const instruction of [...instructions].reverse()) {
@@ -276,4 +281,8 @@ const verifyFullTransaction = (template: WalletTemplate): void => {
   if (typeof verificationResult === 'string') {
     throw new FailedTransactionError(verificationResult, getBitauthUri(template));
   }
+};
+
+const isSignatureCheckWithoutVerify = (instruction: AuthenticationInstruction): boolean => {
+  return [Op.OP_CHECKSIG, Op.OP_CHECKMULTISIG, Op.OP_CHECKDATASIG].includes(instruction.opcode);
 };

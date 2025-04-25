@@ -4,6 +4,7 @@ import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
 import {
+  artifactTestMultipleConstructorParameters,
   artifactTestLogs,
   artifactTestConsecutiveLogs,
   artifactTestMultipleLogs,
@@ -57,6 +58,24 @@ describe('Debugging tests', () => {
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
       await expect(transaction).toLog(new RegExp('^Test.cash:16 Hello Second Function$'));
+      await expect(transaction).not.toLog(/Hello First Function/);
+    });
+
+    it('should only log console.log statements from the called function when there are many constructor parameters', async () => {
+      const contractTestMultipleConstructorParameters = new Contract(
+        artifactTestMultipleConstructorParameters,
+        [alicePub, 1000n, 2000n, 3000n, 4000n, 5000n],
+        { provider },
+      );
+
+      const utxo = randomUtxo();
+      provider.addUtxo(contractTestMultipleConstructorParameters.address, utxo);
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, contractTestMultipleConstructorParameters.unlock.secondFunction())
+        .addOutput({ to: contractTestMultipleConstructorParameters.address, amount: 10000n });
+
+      await expect(transaction).toLog(new RegExp('^Test.cash:20 Hello Second Function$'));
       await expect(transaction).not.toLog(/Hello First Function/);
     });
 
