@@ -27,8 +27,12 @@ expect.extend({
   ): Promise<SyncExpectationResult> {
     const loggerSpy = jest.spyOn(console, 'log');
 
+    // Clear any previous calls (if spy reused accidentally)
+    loggerSpy.mockClear();
+
     // silence actual stdout output
     loggerSpy.mockImplementation(() => { });
+
     try { await transaction.debug(); } catch { }
 
     // We concatenate all the logs into a single string - if no logs are present, we set received to undefined
@@ -46,7 +50,8 @@ expect.extend({
       return { message, pass: false };
     }
 
-    loggerSpy.mockClear();
+    // Restore the original console.log implementation
+    loggerSpy.mockRestore();
 
     return { message, pass: true };
   },
