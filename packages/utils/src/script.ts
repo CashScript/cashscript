@@ -10,6 +10,7 @@ import {
 import OptimisationsEquivFile from './cashproof-optimisations.js';
 import { optimisationReplacements } from './optimisations.js';
 import { FullLocationData, PositionHint, SingleLocationData } from './types.js';
+import { LogEntry, RequireStatement } from './artifact.js';
 
 export const Op = OpcodesBch2023;
 export type Op = number;
@@ -150,23 +151,37 @@ export function generateRedeemScript(baseScript: Script, encodedConstructorArgs:
 interface OptimiseBytecodeResult {
   script: Script;
   locationData: FullLocationData;
+  logs: LogEntry[];
+  requires: RequireStatement[];
 }
 
 export function optimiseBytecode(
-  script: Script, locationData: FullLocationData, runs: number = 1000,
+  script: Script,
+  locationData: FullLocationData,
+  logs: LogEntry[],
+  requires: RequireStatement[],
+  constructorParamLength: number,
+  runs: number = 1000,
 ): OptimiseBytecodeResult {
   for (let i = 0; i < runs; i += 1) {
     const oldScript = script;
-    const { script: newScript, locationData: newLocationData } = replaceOps(script, locationData, optimisationReplacements);
+    const {
+      script: newScript,
+      locationData: newLocationData,
+      logs: newLogs,
+      requires: newRequires,
+    } = replaceOps(script, locationData, logs, requires, constructorParamLength, optimisationReplacements);
 
     // Break on fixed point
     if (scriptToAsm(oldScript) === scriptToAsm(newScript)) break;
 
     script = newScript;
     locationData = newLocationData;
+    logs = newLogs;
+    requires = newRequires;
   }
 
-  return { script, locationData };
+  return { script, locationData, logs, requires };
 }
 
 export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script {
@@ -223,11 +238,22 @@ function replaceOpsOld(script: Script, optimisations: string[][]): Script {
 interface ReplaceOpsResult {
   script: Script;
   locationData: FullLocationData;
+  logs: LogEntry[];
+  requires: RequireStatement[];
 }
 
-function replaceOps(script: Script, locationData: FullLocationData, optimisations: string[][]): ReplaceOpsResult {
+function replaceOps(
+  script: Script,
+  locationData: FullLocationData,
+  logs: LogEntry[],
+  requires: RequireStatement[],
+  constructorParamLength: number,
+  optimisations: string[][],
+): ReplaceOpsResult {
   let asm = scriptToAsm(script);
   let newLocationData = [...locationData];
+  let newLogs = [...logs];
+  let newRequires = [...requires];
 
   optimisations.forEach(([pattern, replacement]) => {
     let processedAsm = '';
@@ -272,6 +298,46 @@ function replaceOps(script: Script, locationData: FullLocationData, optimisation
       const replacementLocations = new Array<SingleLocationData>(replacementLength).fill(mergedLocation);
       newLocationData.splice(scriptIndex, patternLength, ...replacementLocations);
 
+      const lengthDiff = patternLength - replacementLength; // 2 or 1
+
+      // The IP of an opcode in the script is its index within the script + the constructor parameters, because
+      // the constructor parameters still have to get added to the front of the script when a new Contract is created.
+      const scriptIp = scriptIndex + constructorParamLength;
+
+      newRequires = newRequires.map((require) => {
+        // We calculate the new ip of the require by subtracting the length diff between the matched pattern and replacement
+        const newCalculatedRequireIp = require.ip - lengthDiff;
+
+        return {
+          ...require,
+          // If the require is within the pattern, we want to make sure that the new ip is at least the scriptIp
+          // Note that this is impossible for the current set of optimisations, but future proofs the code
+          ip: require.ip >= scriptIp ? Math.max(scriptIp, newCalculatedRequireIp) : require.ip,
+        };
+      });
+
+      newLogs = newLogs.map((log) => {
+        // We calculate the new ip of the log by subtracting the length diff between the matched pattern and replacement
+        const newCalculatedLogIp = log.ip - lengthDiff;
+
+        return {
+          // If the log is within the pattern, we want to make sure that the new ip is at least the scriptIp
+          ip: log.ip >= scriptIp ? Math.max(scriptIp, newCalculatedLogIp) : log.ip,
+          line: log.line,
+          data: log.data.map((data) => {
+            if (typeof data === 'string') return data;
+
+            const newCalculatedDataIp = data.ip - lengthDiff;
+
+            return {
+              ...data,
+              // If the log is within the pattern, we want to make sure that the new ip is at least the scriptIp
+              ip: data.ip >= scriptIp ? Math.max(scriptIp, newCalculatedDataIp) : data.ip,
+            };
+          }),
+        };
+      });
+
       // We add the replacement to the processed asm
       processedAsm += replacement;
 
@@ -296,6 +362,8 @@ function replaceOps(script: Script, locationData: FullLocationData, optimisation
   return {
     script: asmToScript(asm),
     locationData: newLocationData,
+    logs: newLogs,
+    requires: newRequires,
   };
 }
 
