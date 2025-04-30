@@ -259,16 +259,18 @@ function replaceOps(
     let processedAsm = '';
     let asmToSearch = asm;
 
-    const regex = new RegExp(pattern, 'g');
+    // We add a space or end of string to the end of the pattern to ensure that we match the whole pattern
+    // (no partial matches)
+    const regex = new RegExp(`${pattern}(\\s|$)`, 'g');
 
     let matchIndex = asmToSearch.search(regex);
     while (matchIndex !== -1) {
       // We add the part before the match to the processed asm
-      processedAsm += asmToSearch.slice(0, matchIndex);
+      processedAsm = mergeAsm(processedAsm, asmToSearch.slice(0, matchIndex));
 
       // We count the number of spaces in the processed asm + 1, which is equal to the script index
       // We do the same thing to calculate the number of opcodes in the pattern and replacement
-      const scriptIndex = processedAsm === '' ? 0 : [...processedAsm.trim().matchAll(/\s+/g)].length + 1;
+      const scriptIndex = processedAsm === '' ? 0 : [...processedAsm.matchAll(/\s+/g)].length + 1;
       const patternLength = [...pattern.matchAll(/\s+/g)].length + 1;
       const replacementLength = replacement === '' ? 0 : [...replacement.matchAll(/\s+/g)].length + 1;
 
@@ -327,37 +329,46 @@ function replaceOps(
           data: log.data.map((data) => {
             if (typeof data === 'string') return data;
 
-            const newCalculatedDataIp = data.ip - lengthDiff;
+            // If the log is completely before the pattern, we don't need to change anything
+            if (data.ip <= scriptIp) return data;
+
+            // If the log is completely after the pattern, we just need to offset the ip by the length diff
+            if (data.ip >= scriptIp + patternLength) {
+              const newCalculatedDataIp = data.ip - lengthDiff;
+              return { ...data, ip: newCalculatedDataIp };
+            }
+
+            const addedTransformationsCount = data.ip - scriptIp;
+            const addedTransformations = [...pattern.split(/\s+/g)].slice(0, addedTransformationsCount).join(' ');
+            const newTransformations = data.transformations ? `${addedTransformations} ${data.transformations}` : addedTransformations;
 
             return {
               ...data,
-              // If the log is within the pattern, we want to make sure that the new ip is at least the scriptIp
-              ip: data.ip >= scriptIp ? Math.max(scriptIp, newCalculatedDataIp) : data.ip,
+              ip: scriptIp,
+              transformations: newTransformations,
             };
           }),
         };
       });
 
       // We add the replacement to the processed asm
-      processedAsm += replacement;
+      processedAsm = mergeAsm(processedAsm, replacement);
 
       // We do not add the matched pattern anywhere since it gets replaced
 
       // We set the asmToSearch to the part after the match
-      asmToSearch = asmToSearch.slice(matchIndex + pattern.length);
+      asmToSearch = asmToSearch.slice(matchIndex + pattern.length).trim();
 
       // Find the next match
       matchIndex = asmToSearch.search(regex);
     }
 
     // We add the remaining asm to the processed asm
-    processedAsm += asmToSearch;
+    processedAsm = mergeAsm(processedAsm, asmToSearch);
 
     // We replace the original asm with the processed asm so that the next optimisation can use the updated asm
     asm = processedAsm;
   });
-
-  asm = asm.replace(/\s+/g, ' ').trim();
 
   return {
     script: asmToScript(asm),
@@ -397,4 +408,10 @@ const getLowestStartLocation = (locations: SingleLocationData[]): SingleLocation
 
     return lowest;
   }, locations[0]);
+};
+
+const mergeAsm = (asm1: string, asm2: string): string => {
+  // We merge two ASM strings by adding a space between them, and removing any duplicate spaces
+  // or trailing/leading spaces, which might have been introduced due to regex matching / replacements / empty asm strings
+  return `${asm1} ${asm2}`.replace(/\s+/g, ' ').trim();
 };

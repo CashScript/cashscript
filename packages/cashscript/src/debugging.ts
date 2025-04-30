@@ -1,5 +1,5 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2025, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
-import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2025, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { Artifact, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './LibauthTemplate.js';
@@ -180,9 +180,38 @@ const logConsoleLogStatement = (
     if (typeof element === 'string') return element;
 
     const debugStep = debugSteps.find((step) => step.ip === element.ip)!;
-    return decodeStackItem(element, debugStep.stack);
+    const transformedDebugStep = applyStackItemTransformations(element, debugStep);
+    return decodeStackItem(element, transformedDebugStep.stack);
   });
   console.log(`${line} ${decodedData.join(' ')}`);
+};
+
+const applyStackItemTransformations = (
+  element: StackItem,
+  debugStep: AuthenticationProgramStateCommon,
+): AuthenticationProgramStateCommon => {
+  if (!element.transformations) return debugStep;
+
+  const transformationsBytecode = asmToBytecode(element.transformations);
+  const transformationsAuthenticationInstructions = decodeAuthenticationInstructions(transformationsBytecode);
+
+  const transformationsStartState: AuthenticationProgramStateCommon = {
+    alternateStack: [...debugStep.alternateStack],
+    controlStack: [],
+    ip: 0,
+    lastCodeSeparator: -1,
+    metrics: {} as any,
+    stack: [...debugStep.stack],
+    operationCount: 0,
+    instructions: transformationsAuthenticationInstructions,
+    signedMessages: [],
+    program: { ...debugStep.program },
+  };
+
+  const vm = createVirtualMachineBch2025();
+  const transformationsEndState = vm.stateEvaluate(transformationsStartState);
+
+  return transformationsEndState;
 };
 
 const decodeStackItem = (element: StackItem, stack: Uint8Array[]): any => {

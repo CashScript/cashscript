@@ -760,4 +760,69 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'multiline_statements.cash',
+    artifact: {
+      contractName: 'MultilineStatements',
+      constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'string' }],
+      abi: [{ name: 'spend', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'string' }] }],
+      bytecode: 'OP_ROT OP_SWAP OP_2 OP_SUB OP_NUMEQUAL OP_2 OP_PICK OP_2 OP_PICK OP_EQUAL OP_BOOLAND OP_IF OP_0 OP_VERIFY OP_ELSE OP_OVER 48656c6c6f20 OP_2 OP_PICK OP_CAT OP_EQUAL OP_IF OP_DUP 576f726c64 OP_EQUALVERIFY OP_ELSE OP_1 OP_0 OP_NOT OP_NOT OP_NOT OP_EQUALVERIFY OP_ENDIF OP_ENDIF OP_2DROP OP_1',
+      debug: {
+        bytecode: '7b7c52949c52795279879a63006967780648656c6c6f2052797e87637605576f726c64886751009191918868686d51',
+        logs: [],
+        requires: [
+          { ip: 15, line: 11 },
+          { ip: 26, line: 14 },
+          { ip: 33, line: 18 },
+        ],
+        sourceMap: '9:12:9:13;:17::18;:21::22;:17:::1;:12;10::10:13:0;;:17::18;;:12:::1;9;10:20:12:9:0;11::11:25;:12::27:1;12:15:19:9:0;:19:12:20;:24::32;13:10:13:11;;12:24:::1;:19;13:13:17:9:0;15:16:15:17;:21::28;14:12:16:14:1;17:15:19:9:0;18:20:18:24;:31::36;:30:::1;:29;:28;:12::38;17:15:19:9;12;5:4:20:5;',
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/multiline_statements.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'log_intermediate_results.cash',
+    artifact: {
+      contractName: 'LogIntermediateResults',
+      constructorInputs: [{ name: 'owner', type: 'pubkey' }],
+      abi: [{ name: 'test_log_intermediate_result', inputs: [] }],
+      bytecode: 'OP_HASH256 OP_SIZE OP_NIP 20 OP_NUMEQUAL',
+      debug: {
+        bytecode: 'aa827701209c',
+        sourceMap: '3:29:5:47:1;6:16:6:33;;:37::39:0;:16:::1',
+        logs: [
+          {
+            ip: 1,
+            line: 4,
+            data: [
+              {
+                stackIndex: 0,
+                type: 'bytes32 singleHash',
+                ip: 1,
+                transformations: 'OP_SHA256',
+              },
+            ],
+          },
+        ],
+        requires: [
+          {
+            ip: 6,
+            line: 6,
+            message: 'doubleHash should be 32 bytes',
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/log_intermediate_results.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];
