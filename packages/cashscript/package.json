@@ -1,6 +1,6 @@
 {
   "name": "cashscript",
-  "version": "0.11.0-next.3",
+  "version": "0.11.0-next.4",
   "description": "Easily write and interact with Bitcoin Cash contracts",
   "keywords": [
     "bitcoin cash",
@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@bitauth/libauth": "^3.1.0-next.2",
-    "@cashscript/utils": "^0.11.0-next.3",
+    "@cashscript/utils": "^0.11.0-next.4",
     "@electrum-cash/network": "^4.1.1",
     "@mr-zwets/bchn-api-wrapper": "^1.0.1",
     "delay": "^6.0.0",
