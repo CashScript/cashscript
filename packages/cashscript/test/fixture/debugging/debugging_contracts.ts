@@ -234,6 +234,15 @@ contract Test(pubkey owner) {
   function noLogs() {
     require(1 == 1);
   }
+
+  function test_log_intermediate_result() {
+    bytes32 singleHash = sha256(owner);
+    console.log(singleHash);
+
+    bytes32 doubleHash = sha256(singleHash);
+
+    require(doubleHash.length == 32, "doubleHash should be 32 bytes");
+  }
 }
 `;
 
@@ -257,7 +266,7 @@ const CONTRACT_TEST_MULTPLE_LOGS = `
 contract Test(pubkey owner) {
   function transfer(sig ownerSig, int num) {
     require(checkSig(ownerSig, owner));
-    
+
     console.log(ownerSig, owner, num);
 
     bytes2 beef = 0xbeef;

@@ -49,7 +49,11 @@ const provableOptimisations = [
 
   // Remove/replace extraneous OP_SWAP
   ['OP_SWAP OP_ADD', 'OP_ADD'],
+  // This was added to keep the old behaviour while explicitly disallowing partial matches in the optimisation regex
+  ['OP_SWAP OP_EQUALVERIFY', 'OP_EQUALVERIFY'],
   ['OP_SWAP OP_EQUAL', 'OP_EQUAL'],
+  // This was added to keep the old behaviour while explicitly disallowing partial matches in the optimisation regex
+  ['OP_SWAP OP_NUMEQUALVERIFY', 'OP_NUMEQUALVERIFY'],
   ['OP_SWAP OP_NUMEQUAL', 'OP_NUMEQUAL'],
   ['OP_SWAP OP_NUMNOTEQUAL', 'OP_NUMNOTEQUAL'],
   ['OP_SWAP OP_GREATERTHANOREQUAL', 'OP_LESSTHANOREQUAL'],

@@ -22,9 +22,16 @@ export interface LogEntry {
 }
 
 export interface StackItem {
+  // Type of the variable
   type: string;
+  // Index of the variable on the stack (at the time of the specified instruction pointer)
   stackIndex: number;
+  // Instruction pointer at which we can access the logged variable
   ip: number;
+  // Operations to apply to the debug state at the specified instruction pointer to make sure that the variable is
+  // on the correct position on the stack. This is used when we're optimising bytecode where the logged variable is
+  // an intermediate result that existed in the unoptimised bytecode, but no longer exists in the optimised bytecode.
+  transformations?: string;
 }
 
 export type LogData = StackItem | string;

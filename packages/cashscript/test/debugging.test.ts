@@ -13,6 +13,7 @@ import {
   artifactTestMultilineRequires,
   artifactTestZeroHandling,
 } from './fixture/debugging/debugging_contracts.js';
+import { sha256 } from '@cashscript/utils';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
@@ -131,6 +132,15 @@ describe('Debugging tests', () => {
 
       const expectedSecondLog = new RegExp('^Test.cash:11 0xbeef 1 test true$');
       await expect(transaction).toLog(expectedSecondLog);
+    });
+
+    it('should log intermediate results that get optimised out', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.test_log_intermediate_result())
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
+
+      const expectedHash = binToHex(sha256(alicePub));
+      await expect(transaction).toLog(new RegExp(`^Test.cash:43 0x${expectedHash}$`));
     });
   });
 
