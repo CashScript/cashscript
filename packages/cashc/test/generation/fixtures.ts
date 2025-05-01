@@ -802,7 +802,7 @@ export const fixtures: Fixture[] = [
             data: [
               {
                 stackIndex: 0,
-                type: 'bytes32 singleHash',
+                type: 'bytes32',
                 ip: 1,
                 transformations: 'OP_SHA256',
               },

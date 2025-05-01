@@ -333,7 +333,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
         }
 
         // If the variable is on the stack, we add the stack index and type to the console log
-        const type = typeof symbol.type === 'string' ? symbol.type : symbol.toString();
+        const type = symbol.type.toString();
         return { stackIndex, type, ip };
       }
 
@@ -572,7 +572,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     if (this.isOpRoll(node)) {
       const symbol = node.definition!;
       this.finalStackUsage[node.name] = {
-        type:  typeof symbol.type === 'string' ? symbol.type : symbol.toString(),
+        type: symbol.type.toString(),
         stackIndex,
         ip: this.getMostRecentInstructionPointer(),
       };
