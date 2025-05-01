@@ -9,9 +9,10 @@ describe('Libauth Script formatting', () => {
       const scriptBytecode = asmToScript(fixture.asmBytecode);
 
       // Note: this also tests the compiler (but the compiler is tested much more thoroughly in its own test suite)
-      it('should generate a correct source map from freshly compiled source code', () => {
+      it('should generate a correct source map and bytecode from freshly compiled source code', () => {
         const artifact = compileString(fixture.sourceCode);
         expect(artifact.debug?.sourceMap).toEqual(fixture.sourceMap);
+        expect(artifact.bytecode).toEqual(fixture.asmBytecode);
       });
 
       it('should build a line-to-opcodes map', () => {
