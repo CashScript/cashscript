@@ -32,6 +32,10 @@ Different applications like Tapswap and Cauldron have also started posting the `
 To store contract details on-chain, start the `OP_RETURN` data with an easily recognizable identifier, this way you can find all your smart contract UTXOs by checking the transactions including that identifier in the `OP_RETURN`.
 :::
 
+:::note
+The maximum `OP_RETURN` data size is 220 bytes which might be limiting for contracts with many large `constructor` arguments. You can read more about the transaction limits [here](/docs/compiler/script-limits).
+:::
+
 ## Transaction server
 
 When your smart contracts depend on "automatic settlement" or any events where transactions are invoked without the user being involved, you will need a transaction server to create and broadcast those transactions. Smart contracts on BCH are never self-executing, someone is always needed to invoke functionality on a smart contract by creating a transaction.
