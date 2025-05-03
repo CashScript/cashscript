@@ -37,6 +37,11 @@ Options:
 To have the best TypeScript integration, we recommend generating the artifact in the `.ts` format and importing it into your TypeScript project from that `.ts` file.
 :::
 
+#### Example
+```bash
+cashc ./Contract.cash --output ./artifact.ts --format ts
+```
+
 ## JavaScript Compilation
 Generally CashScript contracts are compiled to an Artifact JSON file using the CLI compiler. As an alternative to this, CashScript contracts can be compiled from within JavaScript apps using the `cashc` package. This package exports two compilation functions.
 

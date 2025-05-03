@@ -3,16 +3,19 @@ title: BCH Script & Transaction Limits
 sidebar_label: Script & Transaction Limits
 ---
 
-Bitcoin Cash imposes various constraints on scripts and transactions to ensure efficient contract execution and network stability. We'll categorize these limits into two types:
+Bitcoin Cash imposes various constraints on scripts and transactions to ensure efficient contract execution and network stability. We'll categorize these limits into 2 types: 'Contract-related limits' and 'General transaction limits'.
 
-1. Contract-related limits
-2. General transaction limits
+:::note
+Some of the limits below are hard BCH consensus rules, others are standardness relay rules which are still present significant practical barriers. These relay rules however are only enforced on network propagation. You can read more about the [BCH standarness rules here][standard-outputs-docs].
+:::
 
 ## Contract-related limits
 
 ### Maximum contract size
 
-The Bitcoin Cash VM limits contract bytecode to **1,650 bytes**. While typical contracts stay well below this, complex contracts with extensive logic might need adjustments to fit within this constraint.
+The Bitcoin Cash limits contract bytecode to **1,650 bytes** in the standardness rules. Transactions with contract bytecode won't be relayed by most nodes.
+
+While typical contracts stay well below this, complex contracts with extensive logic might need adjustments to fit within this constraint.
 
 #### Modular contract design
 
@@ -48,15 +51,15 @@ function maxOperationCost(unlockingBytecodeLength) {
 
 ## General transaction limits
 
-In addition to contract-related limits, Bitcoin Cash also enforces general transaction limits, which are network-level policies.
+In addition to contract-related limits, Bitcoin Cash also enforces general transaction limits.
 
 ### Maximum transaction size
 
-Bitcoin Cash transactions must not exceed 100,000 bytes to be considered standard. Transactions above this size may not be relayed by most nodes.
+Bitcoin Cash transactions must not exceed 100,000 bytes (100KB) to be considered standard. Transactions above this size won't be relayed by most nodes. The consensus limit for the maximum transaction size is 1MB.
 
 ### Data output size limit
 
-Bitcoin Cash allows multiple OP_RETURN outputs, but the total size of all data outputs in a transaction must not exceed 220 bytes of data payload (223 bytes total).
+Bitcoin Cash allows multiple OP_RETURN outputs, but the total size of all data outputs in a transaction must not exceed 220 bytes of data payload (223 bytes total). Transactions with larger data outputs won't be relayed by most nodes. You can read more about the [BCH standarness rules here][standard-outputs-docs].
 
 ### Dust threshold
 
@@ -88,16 +91,17 @@ The `lockingbytecode` standardness rules can be important for smart contract dev
 
 | Limit type | Constraint |
 |------------|-------------|
-| Max contract size | 1,650 bytes |
-| NFT commitment length | 40 bytes |
-| Operation cost limit | Based on script length |
-| Max stack element size | 10,000 bytes |
-| Max transaction size | 100,000 bytes |
-| Max OP_RETURN data size | 220 bytes data payload |
-| Dust threshold | based on output size (commonly 1,000 sats is used as dust) |
+| Max contract size | 1,650 bytes (standardness) |
+| NFT commitment length | 40 bytes (consensus) |
+| Operation cost limit | Based on script length (consensus) |
+| Max stack element size | 10,000 bytes (consensus) |
+| Max transaction size | 100,000 bytes for standardness (1MB for consensus) |
+| Max OP_RETURN data size | 220 bytes data payload  (standardness) |
+| Dust threshold | based on output size (standardness) - commonly 1,000 sats is used as dust |
 | Output Standardness | `P2PKH`, `P2SH` (incl. `P2SH20` & `P2SH32`), `P2MS` and `OP_RETURN` data-outputs|
 
-For further details on transaction validation and standardness rules, see the [documentation on BCH transaction validation](https://documentation.cash/protocol/blockchain/transaction-validation.html).
+For further details on transaction validation and standardness rules, see the [documentation on BCH transaction validation][standard-outputs-docs].
 
 [op-cost-table]: https://github.com/bitjson/bch-vm-limits/blob/master/operation-costs.md
+[standardness-docs]: https://documentation.cash/protocol/blockchain/transaction-validation/network-level-validation-rules#standard-transactions.html
 [standard-outputs-docs]: https://documentation.cash/protocol/blockchain/transaction/locking-script.html

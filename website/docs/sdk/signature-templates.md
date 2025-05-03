@@ -3,7 +3,11 @@ title: Signature Templates
 ---
 
 When a contract function has a `sig` parameter, it needs a cryptographic signature from a private key for the spending transaction. 
-In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature once the transaction is built.
+In place of a signature, a `SignatureTemplate` can be passed, which will generate the correct signature when the transaction is built.
+
+:::tip
+`SignatureTemplate` can be used with a `Contract` as function argument to generate a signature automatically, or can be used in the `TransactionBuilder` to create an `Unlocker` for a P2PKH UTXO.
+:::
 
 ## SignatureTemplate
 
@@ -17,7 +21,7 @@ new SignatureTemplate(
 )
 ```
 
-In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [WIF strings][wif], [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], or binary private keys represented as `Uint8Array`. This ensures that `SignatureTemplate` can be used with any BCH library.
+In place of a signature, a `SignatureTemplate` can be passed, which will generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [WIF strings][wif], [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], or binary private keys represented as `Uint8Array`. This ensures that `SignatureTemplate` can be used with any BCH library.
 
 #### Example
 ```ts
@@ -37,19 +41,10 @@ The `hashtype` and `signatureAlgorithm` options are covered under ['Advanced Usa
 
 ## SignatureTemplate Methods
 
-### getPublicKey()
-```ts
-signatureTemplate.getPublicKey(): Uint8Array
-```
-
-#### Example
-```ts
-import { aliceTemplate } from './somewhere.js';
-
-const alicePublicKey = aliceTemplate.getPublicKey()
-```
-
 ### unlockP2PKH()
+
+Importantly the `SignatureTemplate` can also be used to generate the `Unlocker` for a P2PKH UTXO in the following way:
+
 ```ts
 signatureTemplate.unlockP2PKH(): Unlocker
 ```
@@ -62,6 +57,20 @@ const aliceUtxos = await provider.getUtxos(aliceAddress);
 transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
 ```
 
+### getPublicKey()
+
+The `SignatureTemplate` also had a helper method to get the matching PublicKey in the following way:
+
+```ts
+signatureTemplate.getPublicKey(): Uint8Array
+```
+
+#### Example
+```ts
+import { aliceTemplate } from './somewhere.js';
+
+const alicePublicKey = aliceTemplate.getPublicKey()
+```
 
 ## Advanced Usage
 

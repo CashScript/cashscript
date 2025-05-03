@@ -84,16 +84,16 @@ A contract's token-supporting address can be retrieved through the `tokenAddress
 console.log(contract.tokenAddress)
 ```
 
-### opcount
+### bytecode
 ```ts
-contract.opcount: number
+contract.bytecode: string
 ```
 
-The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field.
+Returns the contract's redeem script encoded as a hex string.
 
 #### Example
 ```ts
-console.log(contract.opcount)
+console.log(contract.bytecode)
 ```
 
 ### bytesize
@@ -109,19 +109,20 @@ The size outputs of the `cashc` compiler are based on the bytecode without const
 
 #### Example
 ```ts
+// make sure the contract bytesize is within standarness limits
 assert(contract.bytesize <= 1650)
 ```
 
-### bytecode
+### opcount
 ```ts
-contract.bytecode: string
+contract.opcount: number
 ```
 
-Returns the contract's redeem script encoded as a hex string.
+The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field.
 
 #### Example
 ```ts
-console.log(contract.bytecode)
+console.log(contract.opcount)
 ```
 
 ## Contract Methods

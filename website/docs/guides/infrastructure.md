@@ -33,7 +33,7 @@ To store contract details on-chain, start the `OP_RETURN` data with an easily re
 :::
 
 :::note
-The maximum `OP_RETURN` data size is 220 bytes which might be limiting for contracts with many large `constructor` arguments. You can read more about the transaction limits [here](/docs/compiler/script-limits).
+The `OP_RETURN` data has a maximum standardness size of 220 bytes which might be limiting for contracts with many large `constructor` arguments. You can read more about the transaction limits [here](/docs/compiler/script-limits).
 :::
 
 ## Transaction server
