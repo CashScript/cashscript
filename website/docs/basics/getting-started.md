@@ -48,11 +48,9 @@ npm install -g cashc
 
 ### Writing your first contract
 
-Open your code editor to start writing your first CashScript smart contract.
-We can start from a basic `TransferWithTimeout` smart contract. Create a new file `TransferWithTimeout.cash`.
+We can start from a basic `TransferWithTimeout` smart contract, a simple contract for tips which allows the recipient to claim their gift at any time, but if they don't claim within some time, the sender can reclaim it.
 
-The `TransferWithTimeout` contract takes in 3 contract arguments and has 2 contract functions: `transfer` and `timeout`.
-
+Open your code editor to start writing your first CashScript smart contract. Then create a new file `TransferWithTimeout.cash` and copy over the smart contracts code from below.
 ```solidity
 pragma cashscript ^0.11.0;
 
@@ -69,6 +67,11 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     }
 }
 ```
+
+Let's take some time to understand the contract structure.
+At the top, the smart contract declares the CashScript language version it's using with `pragma`.
+Then a `TransferWithTimeout` is declare which takes in 3 contract arguments and has 2 contract functions: `transfer` and `timeout`.
+These contract functions both have `require` statements necessary to be met to be able to spend BCH from the contract.
 
 :::tip
 There are some other examples available on the [Examples page](/docs/language/examples) that can be used to take inspiration from. Further examples of the TypeScript and JavaScript integration can be found on [GitHub](https://github.com/CashScript/cashscript/tree/master/examples).
