@@ -92,7 +92,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
 
 AMM DEX contract based on [the Cauldron DEX contract](https://www.cauldron.quest/_files/ugd/ae85be_b1dc04d2b6b94ab5a200e3d8cd197aa3.pdf), you can read more details about the contract design there.
 
-Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes).
+The CashScript contract code has the big advantage of abstracting away any stack management, having variable names, explicit types and a logical order of operations (compared to the 'reverse Polish notation' of raw script).
 
 ```solidity
 pragma cashscript ^0.11.0;
@@ -134,5 +134,7 @@ contract DexContract(bytes20 poolOwnerPkh) {
     }
 }
 ```
+
+Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes). Furthermore, even contracts with hand-optimized bytecode can still be used with the CashScript SDK, [find out more in the optimization guide][/docs/guides/optimization#hand-optimizing-bytecode].
 
 More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/guides/covenants).

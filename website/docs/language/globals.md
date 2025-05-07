@@ -282,6 +282,6 @@ require(1 weeks == 7 days);
 
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [addInput()]: /docs/sdk/transaction-builder#addinput
-[setLocktime()]: docs/sdk/transaction-builder#setlocktime
+[setLocktime()]: /docs/sdk/transaction-builder#setlocktime
 [covenants-guide]: /docs/guides/covenants
 [tx.time]: #txtime
