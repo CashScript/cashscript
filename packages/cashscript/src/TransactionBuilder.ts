@@ -27,6 +27,7 @@ import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
 import { getBitauthUri } from './LibauthTemplate.js';
 import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import semver from 'semver';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -157,9 +158,15 @@ export class TransactionBuilder {
     return binToHex(encodeTransaction(transaction));
   }
 
-  // method to debug the transaction with libauth VM, throws upon evaluation error
-  // TODO: Remove the async in the future (this currently breaks our debugging tests)
-  async debug(): Promise<DebugResults> {
+  debug(): DebugResults {
+    const contractVersions = this.inputs
+      .map((input) => 'contract' in input.unlocker ? input.unlocker.contract.artifact.compiler.version : null)
+      .filter((version) => version !== null);
+
+    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0-next.4', { includePrerelease: true }))) {
+      console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
+    }
+
     return debugLibauthTemplate(this.getLibauthTemplate(), this);
   }
 
@@ -178,7 +185,7 @@ export class TransactionBuilder {
     const tx = this.build();
 
     // Debug the transaction locally before sending so any errors are caught early
-    await this.debug();
+    this.debug();
 
     try {
       const txid = await this.provider.sendRawTransaction(tx);

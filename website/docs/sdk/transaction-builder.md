@@ -233,7 +233,7 @@ const txHex = new TransactionBuilder({ provider })
 
 ### debug()
 ```ts
-async transactionBuilder.debug(): Promise<DebugResult>
+transactionBuilder.debug(): DebugResult
 ```
 
 If you want to debug a transaction locally instead of sending it to the network, you can call the `debug()` function on the transaction. This will return intermediate values and the final result of the transaction. It will also show any logged values and `require` error messages.

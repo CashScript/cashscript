@@ -62,7 +62,7 @@ describe('Example contract', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
       .addOutput({ to: contract.address, amount: 10000n })
-    await expect(transaction).toLog('passed parameter: 1000');
+    expect(transaction).toLog('passed parameter: 1000');
   });
 });
 ```
@@ -85,14 +85,14 @@ describe('Example contract', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
       .addOutput({ to: contract.address, amount: 10000n })
-    await expect(transaction).toFailRequireWith('passed parameter is not 1000');
+    expect(transaction).toFailRequireWith('passed parameter is not 1000');
   });
 
   it('should pass require statement when correct parameter is passed', async () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
       .addOutput({ to: contract.address, amount: 10000n })
-    await expect(transaction).not.toFailRequire();
+    expect(transaction).not.toFailRequire();
   });
 });
 ```
@@ -122,21 +122,21 @@ describe('Example contract', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
       .addOutput({ to: contract.address, amount: 10000n })
-    await expect(transaction).toLog('passed parameter: 1000');
+    expect(transaction).toLog('passed parameter: 1000');
   });
 
   it('should fail require statement when incorrect parameter is passed', async () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
       .addOutput({ to: contract.address, amount: 10000n })
-    await expect(transaction).toFailRequireWith('passed parameter is not 1000');
+    expect(transaction).toFailRequireWith('passed parameter is not 1000');
   });
 
   it('should pass require statement when correct parameter is passed', async () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
       .addOutput({ to: contract.address, amount: 10000n })
-    await expect(transaction).not.toFailRequire();
+    expect(transaction).not.toFailRequire();
   });
 });
 

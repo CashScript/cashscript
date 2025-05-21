@@ -14,13 +14,15 @@ describe('test example contract functions', () => {
     const transactionWrongValuePassed = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.test(0n))
       .addOutput({ to: contract.address, amount: 10000n });
-    await (expect(transactionWrongValuePassed)).toLog(/0 test/);
-    await (expect(transactionWrongValuePassed)).toFailRequireWith(/Wrong value passed/);
+
+    expect(transactionWrongValuePassed).toLog(/0 test/);
+    expect(transactionWrongValuePassed).toFailRequireWith(/Wrong value passed/);
 
     const transactionRightValuePassed = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.test(1n))
       .addOutput({ to: contract.address, amount: 10000n })
       .send();
+
     await expect(transactionRightValuePassed).resolves.not.toThrow();
   });
 });

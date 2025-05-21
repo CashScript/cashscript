@@ -41,6 +41,7 @@ import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
 import { debugTemplate, DebugResults } from './debugging.js';
 import { EncodedFunctionArgument } from './Argument.js';
 import { FailedTransactionError } from './Errors.js';
+import semver from 'semver';
 
 export class Transaction {
   public inputs: Utxo[] = [];
@@ -186,8 +187,8 @@ export class Transaction {
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
   async debug(): Promise<DebugResults> {
-    if (!this.contract.artifact.debug) {
-      console.warn('No debug information found in artifact. Recompile with cashc version 0.10.0 or newer to get better debugging information.');
+    if (!semver.satisfies(this.contract.artifact.compiler.version, '>=0.11.0-next.4', { includePrerelease: true })) {
+      console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
     }
 
     const template = await this.getLibauthTemplate();
