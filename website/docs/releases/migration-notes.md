@@ -10,7 +10,7 @@ There are several breaking changes to the compiler and SDK in this release. They
 
 `tx.age` was renamed to `this.age` to better reflect that it enforces a UTXO-level locktime check (*not* transaction-level). To migrate, replace all occurrences of `tx.age` with `this.age`.
 
-### CashScript SDK (Transaction Builder)
+### SDK: Transaction Builder
 
 The 'Simple Transaction builder' has been marked as deprecated and the 'Advanced Transaction Builder' is now simply referred to as the CashScript `Transaction Builder`, as there is only one supported for the future.
 
@@ -75,7 +75,7 @@ const txDetails = await new TransactionBuilder({ provider })
 
 With the new transaction builder, all inputs and outputs are explicitly specified. This means that there are no automatic change outputs added (for BCH or tokens). This means that there are also no `.withMinChange()`, `.withoutChange()`, `.withoutTokenChange()`, `withHardcodedFee()`, or `.withFeePerByte()` methods. The developer is responsible for manually adding change outputs. There is still an option to use `.setMaxFee()` as a security measure to prevent the transaction from being too expensive.
 
-### CashScript SDK (ElectrumNetworkProvider)
+### SDK: ElectrumNetworkProvider
 
 The underlying `electrum-cash` library has been migrated to the new `@electrum-cash/network` package. This drops support for electrum cluster functionality. We reworked the second parameter of the `ElectrumNetworkProvider` constructor to be an options object, which can contain a custom electrum client or a custom hostname.
 

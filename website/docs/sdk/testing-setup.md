@@ -55,6 +55,7 @@ Logging is only available in debug evaluation of a transaction. It has no impact
 ```ts
 describe('Example contract', () => {
   it('should log the passed parameter', async () => {
+    const provider = new MockNetworkProvider();
     const contract = new Contract(artifact, [], { provider });
     const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
@@ -76,6 +77,7 @@ Similar to `console.log`, the error message in a `require` statement is only ava
 
 ```ts
 describe('Example contract', () => {
+  const provider = new MockNetworkProvider();
   const contract = new Contract(artifact, [], { provider });
   const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
@@ -117,7 +119,6 @@ describe('Example contract', () => {
   const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
   it('should log the passed parameter', async () => {
-    const contract = new Contract(artifact, [], { provider });
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
       .addOutput({ to: contract.address, amount: 10000n })
