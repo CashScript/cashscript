@@ -19,19 +19,19 @@ export default {
   bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
   source: 'contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == bytes4(i));\n    }\n}\n',
   debug: {
-    bytecode: '007a517a548087',
-    sourceMap: '3:16:3:17;;:28::29;;:21::30:1;;:16',
+    bytecode: '7c548087',
+    sourceMap: '3:28:3:29;:21::30:1;;:16',
     logs: [],
     requires: [
       {
-        ip: 7,
+        ip: 4,
         line: 3,
       },
     ],
   },
   compiler: {
     name: 'cashc',
-    version: '0.10.4',
+    version: '0.11.0-next.4',
   },
-  updatedAt: '2024-12-03T13:57:09.177Z',
+  updatedAt: '2025-05-11T10:02:27.812Z',
 } as const;
