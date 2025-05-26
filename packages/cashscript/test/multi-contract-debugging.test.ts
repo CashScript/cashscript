@@ -15,14 +15,24 @@ import {
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import bigintArtifact from './fixture/bigint.artifact.js';
 import '../src/test/JestExtensions.js';
+import { ARTIFACT_SAME_NAME_DIFFERENT_PATH } from './fixture/debugging/multicontract_debugging_contracts.js';
 
 const bobSignatureTemplate = new SignatureTemplate(bobPriv);
 
 const provider = new MockNetworkProvider();
 
 describe('Multi-Contract-Debugging tests', () => {
+  describe('console.log statements', () => {
+    it.todo('should log all executed console.log statements across all contracts');
+    it.todo('should not log statements that are not executed');
+    it.todo('should log console.log statements in the correct order (by input index)');
+    it.todo('should be able to log correct input bytecode for other contracts');
+    it.todo('should be able to log correct output bytecode for other contracts');
+    it.todo('should still work with different instances of the same contract, with different paths due to different contract parameter values');
+  });
+
   describe('require statements', () => {
-    it('it should not throw an error if no require statement fails', async () => {
+    it('should not throw an error if no require statement fails', async () => {
       const p2pkhContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
       const bigintContract = new Contract(bigintArtifact, [], { provider });
 
@@ -48,7 +58,7 @@ describe('Multi-Contract-Debugging tests', () => {
       await expect(transaction).not.toFailRequire();
     });
 
-    it('it should fail with correct error message if a require statement fails in contract 1', async () => {
+    it('should fail with correct error message if a require statement fails in contract 1', async () => {
       const p2pkhContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
       const bigintContract = new Contract(bigintArtifact, [], { provider });
 
@@ -77,7 +87,7 @@ describe('Multi-Contract-Debugging tests', () => {
       await expect(transaction).toFailRequireWith('P2PKH.cash:4 Require statement failed at input 0 in contract P2PKH.cash at line 4.');
     });
 
-    it('it should fail with correct error message if a require statement in contract 2', async () => {
+    it('should fail with correct error message if a require statement in contract 2', async () => {
       const p2pkhContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
       const bigintContract = new Contract(bigintArtifact, [], { provider });
 
@@ -103,7 +113,7 @@ describe('Multi-Contract-Debugging tests', () => {
       await expect(transaction).toFailRequireWith('BigInt.cash:4 Require statement failed at input 1 in contract BigInt.cash at line 4.');
     });
 
-    it('it should fail with correct error message when a final verify fails in contract 1', async () => {
+    it('should fail with correct error message when a final verify fails in contract 1', async () => {
       const p2pkhContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
       const bigintContract = new Contract(bigintArtifact, [], { provider });
 
@@ -131,7 +141,7 @@ describe('Multi-Contract-Debugging tests', () => {
       await expect(transaction).toFailRequireWith('P2PKH.cash:5 Require statement failed at input 0 in contract P2PKH.cash at line 5');
     });
 
-    it('it should fail with correct error message when a final verify fails in contract 2', async () => {
+    it('should fail with correct error message when a final verify fails in contract 2', async () => {
       const p2pkhContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
       const bigintContract = new Contract(bigintArtifact, [], { provider });
 
@@ -158,5 +168,40 @@ describe('Multi-Contract-Debugging tests', () => {
 
       await expect(transaction).toFailRequireWith('BigInt.cash');
     });
+
+    it.todo('should fail with correct error message when introspected output bytecode of a different contract does not match');
+    it.todo('should fail with correct error message when introspected input bytecode of a different contract does not match');
+    it.todo('should still work if contracts have the same name');
+    it.todo('should still work if contract or function parameters have the same name across contracts');
+    it.todo('should still work with duplicate custom require messages across contracts');
+
+    it('should still work with different instances of the same contract, with different paths due to different constructor parameter values', () => {
+      const p2pkhContract1 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [0n], { provider });
+      const p2pkhContract2 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [1n], { provider });
+
+      const contract1Utxo = randomUtxo();
+      const contract2Utxo = randomUtxo();
+
+      provider.addUtxo(p2pkhContract1.address, contract1Utxo);
+      provider.addUtxo(p2pkhContract2.address, contract2Utxo);
+
+      const transaction1 = new TransactionBuilder({ provider })
+        .addInput(contract1Utxo, p2pkhContract1.unlock.function_1(0n))
+        .addInput(contract2Utxo, p2pkhContract2.unlock.function_1(0n))
+        .addOutput({ to: p2pkhContract1.address, amount: 10000n });
+
+      expect(transaction1).toFailRequireWith('SameNameDifferentPath.cash:7 Require statement failed at input 1 in contract SameNameDifferentPath.cash at line 7 with the following message: b should not be 0.');
+
+      const transaction2 = new TransactionBuilder({ provider })
+        .addInput(contract1Utxo, p2pkhContract1.unlock.function_1(1n))
+        .addInput(contract2Utxo, p2pkhContract2.unlock.function_1(1n))
+        .addOutput({ to: p2pkhContract1.address, amount: 10000n });
+
+      expect(transaction2).toFailRequireWith('SameNameDifferentPath.cash:5 Require statement failed at input 0 in contract SameNameDifferentPath.cash at line 5 with the following message: b should be 0.');
+    });
+  });
+
+  describe('Non-require error messages', () => {
+    it.todo('should fail with correct error message and statement when a multiline non-require statement fails');
   });
 });

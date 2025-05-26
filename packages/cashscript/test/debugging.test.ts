@@ -142,6 +142,8 @@ describe('Debugging tests', () => {
       const expectedHash = binToHex(sha256(alicePub));
       expect(transaction).toLog(new RegExp(`^Test.cash:43 0x${expectedHash}$`));
     });
+
+    it.todo('intermediate results that is more complex than the test above');
   });
 
   describe('require statements', () => {

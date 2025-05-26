@@ -1,5 +1,6 @@
 import {
   binToHex,
+  decodeCashAddress,
   TransactionBch,
   WalletTemplate,
   WalletTemplateEntity,
@@ -21,7 +22,6 @@ import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArgu
 import { Contract } from '../Contract.js';
 import { DebugResults, debugTemplate } from '../debugging.js';
 import {
-  AddressType,
   ContractUnlocker,
   UnlockableUtxo,
   Utxo,
@@ -82,26 +82,26 @@ export const generateTemplateEntitiesP2PKH = (
  *
  */
 export const generateTemplateEntitiesP2SH = (
-  artifact: Artifact,
+  contract: Contract,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   inputIndex: number,
 ): WalletTemplate['entities'] => {
   const entities = {
-    [artifact.contractName + '_input' + inputIndex + '_parameters']: {
+    [contract.artifact.contractName + '_input' + inputIndex + '_parameters']: {
       description: 'Contract creation and function parameters',
-      name: `${artifact.contractName} (input #${inputIndex})`,
+      name: `${contract.artifact.contractName} (input #${inputIndex})`,
       scripts: [
-        artifact.contractName + '_lock',
-        artifact.contractName + '_' + abiFunction.name + '_input' + inputIndex + '_unlock',
+        getLockScriptName(contract),
+        getUnlockScriptName(contract, abiFunction, inputIndex),
       ],
-      variables: createWalletTemplateVariables(artifact, abiFunction, encodedFunctionArgs),
+      variables: createWalletTemplateVariables(contract.artifact, abiFunction, encodedFunctionArgs),
     },
   };
 
   // function_index is a special variable that indicates the function to execute
-  if (artifact.abi.length > 1) {
-    entities[artifact.contractName + '_input' + inputIndex + '_parameters'].variables.function_index = {
+  if (contract.artifact.abi.length > 1) {
+    entities[contract.artifact.contractName + '_input' + inputIndex + '_parameters'].variables.function_index = {
       description: 'Script function index to execute',
       name: 'function_index',
       type: 'WalletData',
@@ -186,20 +186,19 @@ export const generateTemplateScriptsP2PKH = (
  *
  */
 export const generateTemplateScriptsP2SH = (
-  artifact: Artifact,
-  addressType: AddressType,
+  contract: Contract,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   encodedConstructorArgs: EncodedConstructorArgument[],
   inputIndex: number,
 ): WalletTemplate['scripts'] => {
   // definition of locking scripts and unlocking scripts with their respective bytecode
-  const unlockingScriptName = artifact.contractName + '_' + abiFunction.name + '_input' + inputIndex + '_unlock';
-  const lockingScriptName = artifact.contractName + '_lock';
+  const unlockingScriptName = getUnlockScriptName(contract, abiFunction, inputIndex);
+  const lockingScriptName = getLockScriptName(contract);
 
   return {
-    [unlockingScriptName]: generateTemplateUnlockScript(artifact, abiFunction, encodedFunctionArgs, inputIndex),
-    [lockingScriptName]: generateTemplateLockScript(artifact, addressType, encodedConstructorArgs),
+    [unlockingScriptName]: generateTemplateUnlockScript(contract, abiFunction, encodedFunctionArgs, inputIndex),
+    [lockingScriptName]: generateTemplateLockScript(contract, encodedConstructorArgs),
   };
 };
 
@@ -211,19 +210,18 @@ export const generateTemplateScriptsP2SH = (
  *
  */
 const generateTemplateLockScript = (
-  artifact: Artifact,
-  addressType: AddressType,
+  contract: Contract,
   constructorArguments: EncodedFunctionArgument[],
 ): WalletTemplateScriptLocking => {
   return {
-    lockingType: addressType,
-    name: artifact.contractName,
+    lockingType: contract.addressType,
+    name: contract.artifact.contractName,
     script: [
-      `// "${artifact.contractName}" contract constructor parameters`,
-      formatParametersForDebugging(artifact.constructorInputs, constructorArguments),
+      `// "${contract.artifact.contractName}" contract constructor parameters`,
+      formatParametersForDebugging(contract.artifact.constructorInputs, constructorArguments),
       '',
       '// bytecode',
-      formatBytecodeForDebugging(artifact),
+      formatBytecodeForDebugging(contract.artifact),
     ].join('\n'),
   };
 };
@@ -236,15 +234,15 @@ const generateTemplateLockScript = (
  *
  */
 const generateTemplateUnlockScript = (
-  artifact: Artifact,
+  contract: Contract,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   inputIndex: number,
 ): WalletTemplateScriptUnlocking => {
-  const scenarioIdentifier = `${artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
-  const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
+  const scenarioIdentifier = `${contract.artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
+  const functionIndex = contract.artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
-  const functionIndexString = artifact.abi.length > 1
+  const functionIndexString = contract.artifact.abi.length > 1
     ? ['// function index in contract', `<function_index> // int = <${functionIndex}>`, '']
     : [];
 
@@ -258,7 +256,7 @@ const generateTemplateUnlockScript = (
       '',
       ...functionIndexString,
     ].join('\n'),
-    unlocks: artifact.contractName + '_lock',
+    unlocks: getLockScriptName(contract),
   };
 };
 
@@ -440,7 +438,7 @@ export const getLibauthTemplates = (
 
       // Generate entities for this contract input
       const entity = generateTemplateEntitiesP2SH(
-        contract.artifact,
+        contract,
         abiFunction,
         encodedArgs,
         inputIndex,
@@ -448,8 +446,7 @@ export const getLibauthTemplates = (
 
       // Generate scripts for this contract input
       const script = generateTemplateScriptsP2SH(
-        contract.artifact,
-        contract.addressType,
+        contract,
         abiFunction,
         encodedArgs,
         contract.encodedConstructorArgs,
@@ -590,7 +587,7 @@ export const generateUnlockingScriptParams = (
   const encodedFunctionArgs = encodeFunctionArguments(abiFunction, csInput.unlocker.params);
 
   return {
-    script: `${csInput.unlocker.contract.name}_${abiFunction.name}_input${inputIndex}_unlock`,
+    script: getUnlockScriptName(contract, abiFunction, inputIndex),
     overrides: {
       // encode values for the variables defined above in `entities` property
       bytecode: {
@@ -603,4 +600,15 @@ export const generateUnlockingScriptParams = (
       },
     },
   };
+};
+
+const getLockScriptName = (contract: Contract): string => {
+  const result = decodeCashAddress(contract.address);
+  if (typeof result === 'string') throw new Error(result);
+
+  return `${contract.artifact.contractName}_${binToHex(result.payload)}_lock`;
+};
+
+const getUnlockScriptName = (contract: Contract, abiFunction: AbiFunction, inputIndex: number): string => {
+  return `${contract.artifact.contractName}_${abiFunction.name}_input${inputIndex}_unlock`;
 };
