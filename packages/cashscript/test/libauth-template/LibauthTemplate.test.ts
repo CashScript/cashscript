@@ -5,8 +5,8 @@ describe('Libauth Template generation tests (single-contract)', () => {
   fixtures.forEach((fixture) => {
     it(`should generate a valid libauth template for ${fixture.name}`, () => {
       const generatedTemplate = fixture.transaction.getLibauthTemplate();
-      // console.log(JSON.stringify(generatedTemplate, null, 2));
-      // console.log(fixture.transaction.bitauthUri());
+      // console.warn(JSON.stringify(generatedTemplate, null, 2));
+      // console.warn(fixture.transaction.bitauthUri());
       expect(generatedTemplate).toEqual(fixture.template);
     });
   });
@@ -14,8 +14,8 @@ describe('Libauth Template generation tests (single-contract)', () => {
   oldFixtures.forEach((fixture) => {
     it(`should generate a valid libauth template for old-fixture ${fixture.name}`, async () => {
       const generatedTemplate = await fixture.transaction.getLibauthTemplate();
-      // console.log(JSON.stringify(generatedTemplate, null, 2));
-      // console.log(fixture.transaction.bitauthUri());
+      // console.warn(JSON.stringify(generatedTemplate, null, 2));
+      // console.warn(fixture.transaction.bitauthUri());
       expect(generatedTemplate).toEqual(fixture.template);
     });
   });
