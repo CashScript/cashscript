@@ -9,6 +9,17 @@ export type DebugResults = Record<string, DebugResult>;
 
 // debugs the template, optionally logging the execution data
 export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
+  // If a contract has the same name, but a different bytecode, then it is considered a name collision
+  const hasArtifactNameCollision = artifacts.some(
+    (artifact) => (
+      artifacts.some((other) => other.contractName === artifact.contractName && other.bytecode !== artifact.bytecode)
+    ),
+  );
+
+  if (hasArtifactNameCollision) {
+    throw new Error('There are multiple artifacts with the same contractName. Please make sure that all artifacts have unique names.');
+  }
+
   const results: DebugResults = {};
   const unlockingScriptIds = Object.keys(template.scripts).filter((key) => 'unlocks' in template.scripts[key]);
 

@@ -15,7 +15,7 @@ import {
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import bigintArtifact from './fixture/bigint.artifact.js';
 import '../src/test/JestExtensions.js';
-import { ARTIFACT_SAME_NAME_DIFFERENT_PATH } from './fixture/debugging/multicontract_debugging_contracts.js';
+import { ARTIFACT_FUNCTION_NAME_COLLISION, ARTIFACT_NAME_COLLISION, ARTIFACT_CONTRACT_NAME_COLLISION, ARTIFACT_SAME_NAME_DIFFERENT_PATH } from './fixture/debugging/multicontract_debugging_contracts.js';
 
 const bobSignatureTemplate = new SignatureTemplate(bobPriv);
 
@@ -171,9 +171,32 @@ describe('Multi-Contract-Debugging tests', () => {
 
     it.todo('should fail with correct error message when introspected output bytecode of a different contract does not match');
     it.todo('should fail with correct error message when introspected input bytecode of a different contract does not match');
-    it.todo('should still work if contracts have the same name');
-    it.todo('should still work if contract or function parameters have the same name across contracts');
     it.todo('should still work with duplicate custom require messages across contracts');
+
+    it('should still work if contract or function parameters have the same name across contracts', () => {
+      const nameCollision = new Contract(ARTIFACT_NAME_COLLISION, [0n], { provider });
+      const functionNameCollision = new Contract(ARTIFACT_FUNCTION_NAME_COLLISION, [1n], { provider });
+
+      const nameCollisionUtxo = randomUtxo();
+      const functionNameCollisionUtxo = randomUtxo();
+
+      provider.addUtxo(nameCollision.address, nameCollisionUtxo);
+      provider.addUtxo(functionNameCollision.address, functionNameCollisionUtxo);
+
+      const transaction1 = new TransactionBuilder({ provider })
+        .addInput(nameCollisionUtxo, nameCollision.unlock.name_collision(0n))
+        .addInput(functionNameCollisionUtxo, functionNameCollision.unlock.name_collision(0n))
+        .addOutput({ to: nameCollision.address, amount: 10000n });
+
+      expect(transaction1).toFailRequireWith('FunctionNameCollision.cash:4 Require statement failed at input 1 in contract FunctionNameCollision.cash at line 4 with the following message: b should be 1.');
+
+      const transaction2 = new TransactionBuilder({ provider })
+        .addInput(nameCollisionUtxo, nameCollision.unlock.name_collision(1n))
+        .addInput(functionNameCollisionUtxo, functionNameCollision.unlock.name_collision(1n))
+        .addOutput({ to: nameCollision.address, amount: 10000n });
+
+      expect(transaction2).toFailRequireWith('NameCollision.cash:5 Require statement failed at input 0 in contract NameCollision.cash at line 5 with the following message: b should be 0.');
+    });
 
     it('should still work with different instances of the same contract, with different paths due to different constructor parameter values', () => {
       const p2pkhContract1 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [0n], { provider });
@@ -202,6 +225,24 @@ describe('Multi-Contract-Debugging tests', () => {
   });
 
   describe('Non-require error messages', () => {
+    it('should fail with the correct error message when there are name collisions on the contractName', () => {
+      const nameCollision = new Contract(ARTIFACT_NAME_COLLISION, [0n], { provider });
+      const contractNameCollision = new Contract(ARTIFACT_CONTRACT_NAME_COLLISION, [1n], { provider });
+
+      const nameCollisionUtxo = randomUtxo();
+      const contractNameCollisionUtxo = randomUtxo();
+
+      provider.addUtxo(nameCollision.address, nameCollisionUtxo);
+      provider.addUtxo(contractNameCollision.address, contractNameCollisionUtxo);
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(nameCollisionUtxo, nameCollision.unlock.name_collision(0n))
+        .addInput(contractNameCollisionUtxo, contractNameCollision.unlock.name_collision(0n))
+        .addOutput({ to: nameCollision.address, amount: 10000n });
+
+      expect(() => transaction.debug()).toThrow('There are multiple artifacts with the same contractName. Please make sure that all artifacts have unique names.');
+    });
+
     it.todo('should fail with correct error message and statement when a multiline non-require statement fails');
   });
 });
