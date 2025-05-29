@@ -27,7 +27,7 @@ Operators:
 - Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (all evaluate to `bool`)
 - Arithmetic operators: `+`, `-`, unary `-`, `*`, `/`, `%` (modulo).
 
-Note the lack of the `**` (exponentiation) operator as well as any bitwise operators.
+Note the lack of the `**` (exponentiation) operator as well as any shifting operators.
 
 #### Number Formatting
 
@@ -82,6 +82,8 @@ Operators:
 - `&` (bitwise AND)
 - `|` (bitwise OR)
 - `^` (bitwise XOR)
+
+Note the lack of the bitshift operators (`<<` and `>>`) as well as bitwise INVERT (`~`).
 
 Members:
 

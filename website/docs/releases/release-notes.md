@@ -19,8 +19,14 @@ This release also contains several breaking changes, please refer to the [migrat
   - Output BitAuth IDE URI for debugging when transaction is rejected.
   - Libauth template generation and debugging for multi-contract transactions
 - :sparkles: Debugging now supports using the optimised contract bytecode (when compiled with `cashc@0.11.0` or later).
-- :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
+- :sparkles: Config-free usage of the CashScript SDK with Vite or Webpack
 - :hammer_and_wrench: Update debug tooling to use the new `BCH_2025_05` instruction set.
+- :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
+- :boom: **BREAKING**: the Jest utilities for automated testing are now synchronous and no longer work with the deprecated simple transaction builder
+  * `expect(transaction).toLog(message)`
+  * `expect(transaction).toFailRequire()`
+  * `expect(transaction).toFailRequireWith(message)`
+- :boom: **BREAKING**: Rework the `Unlocker` type to be a union of `ContractUnlocker | P2PKHUnlocker` 
 - :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider` and added a configuration object to the constructor.
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 - :bug: Fix bug where `JestExtensions` `expect().toLog()` would detect logs from different tests.
@@ -81,9 +87,9 @@ Thanks [mainnet_pat](https://x.com/mainnet_pat) for the initiative and significa
 - :sparkles: Add `MockNetworkProvider` to simulate network interaction for debugging and testing.
   - Add `randomUtxo()`, `randomToken()` and `randomNft()` functions to generate dummy UTXOs for testing.
 - :sparkles: Add CashScript Jest utilities for automated testing.
-  * `expect(transaction).toLog(message)`
-  * `expect(transaction).toFailRequire()`
-  * `expect(transaction).toFailRequireWith(message)`
+  * `await expect(transaction).toLog(message)`
+  * `await expect(transaction).toFailRequire()`
+  * `await expect(transaction).toFailRequireWith(message)`
 - :bug: Fix bug with type exports.
 - :hammer_and_wrench: Update visibility of several classes.
   - Make `artifact`, `networkProvider`, `addressType` and `encodedConstructorArgs` public on `Contract` class.
