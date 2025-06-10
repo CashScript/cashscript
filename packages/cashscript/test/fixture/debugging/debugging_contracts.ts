@@ -243,6 +243,15 @@ contract Test(pubkey owner) {
 
     require(doubleHash.length == 32, "doubleHash should be 32 bytes");
   }
+
+  function test_log_inside_notif_statement(bool isLastScriptHash) {
+    int inputValue = tx.inputs[this.activeInputIndex].value;
+    console.log('before:', inputValue);
+    if (!isLastScriptHash) {
+      console.log('after:', inputValue);
+      require(tx.outputs[this.activeInputIndex].value == inputValue - 1000);
+    }
+  }
 }
 `;
 

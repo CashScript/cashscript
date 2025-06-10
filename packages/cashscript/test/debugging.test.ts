@@ -134,6 +134,16 @@ describe('Debugging tests', () => {
       expect(transaction).toLog(expectedSecondLog);
     });
 
+    // This is an edge case because of optimisationn position hint merging
+    it('should log the correct variable value inside a notif statement', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.test_log_inside_notif_statement(false))
+        .addOutput({ to: contractTestLogs.address, amount: contractUtxo.satoshis - 1000n });
+
+      expect(transaction).toLog(new RegExp(`^Test.cash:52 before: ${contractUtxo.satoshis}$`));
+      expect(transaction).toLog(new RegExp(`^Test.cash:54 after: ${contractUtxo.satoshis}$`));
+    });
+
     it('should log intermediate results that get optimised out', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contractTestLogs.unlock.test_log_intermediate_result())

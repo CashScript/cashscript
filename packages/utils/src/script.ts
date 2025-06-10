@@ -281,10 +281,13 @@ function replaceOps(
       const lowestStart = getLowestStartLocation(patternLocations);
       const highestEnd = getHighestEndLocation(patternLocations);
 
-      // If any of the pattern locations have a position hint of END, we use that as the position hint
-      const positionHint = patternLocations.some((location) => location.positionHint === PositionHint.END)
-        ? PositionHint.END
-        : PositionHint.START;
+      // Initially we set the position hint to END if any of the pattern locations have a position hint of END
+      // It turned out that this was not the correct approach in the case of OP_NOT OP_IF => OP_NOTIF,
+      // because OP_IF and OP_NOTIF are START opcodes, and OP_NOT is an END opcode.
+      // After reviewing the entire list of optimisations, we set the position hint to the last location's position hint
+      // which we believe to be the correct approach, but it is hard to reason about.
+      // We've also consulted with AI (o3-max) to help us reason about this, and it seems to be the correct approach.
+      const positionHint = patternLocations.at(-1)?.positionHint ?? PositionHint.START;
 
       // We merge the lowest start and highest end locations into a single location data entry
       const mergedLocation = {

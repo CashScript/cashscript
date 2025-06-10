@@ -402,7 +402,7 @@ export const getLibauthTemplates = (
     // If template exists on the input, it indicates this is a P2PKH (Pay to Public Key Hash) input
     if ('template' in input.unlocker) {
       // @ts-ignore TODO: Remove UtxoP2PKH type and only use UnlockableUtxo in Libaith Template generation
-      input.template = input.unlocker?.template;  // Added to support P2PKH inputs in buildTemplate
+      input.template = input.unlocker?.template; // Added to support P2PKH inputs in buildTemplate
       Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(inputIndex));
       Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(input.unlocker.template, inputIndex));
 
