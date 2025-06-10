@@ -4,8 +4,10 @@ import {
   randomUtxo,
   SignatureTemplate,
   TransactionBuilder,
-} from './../src/index.js';
+} from '../src/index.js';
 import {
+  alicePkh,
+  alicePriv,
   alicePub,
   bobAddress,
   bobPkh,
@@ -16,6 +18,8 @@ import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import bigintArtifact from './fixture/bigint.artifact.js';
 import '../src/test/JestExtensions.js';
 import { ARTIFACT_FUNCTION_NAME_COLLISION, ARTIFACT_NAME_COLLISION, ARTIFACT_CONTRACT_NAME_COLLISION, ARTIFACT_SAME_NAME_DIFFERENT_PATH } from './fixture/debugging/multicontract_debugging_contracts.js';
+import { addressToLockScript } from '../src/utils.js';
+import SiblingIntrospectionArtifact from './fixture/SiblingIntrospection.artifact.js';
 
 const bobSignatureTemplate = new SignatureTemplate(bobPriv);
 
@@ -169,8 +173,58 @@ describe('Multi-Contract-Debugging tests', () => {
       await expect(transaction).toFailRequireWith('BigInt.cash');
     });
 
-    it.todo('should fail with correct error message when introspected output bytecode of a different contract does not match');
-    it.todo('should fail with correct error message when introspected input bytecode of a different contract does not match');
+    describe('Sibling introspection', () => {
+      const correctContract = new Contract(p2pkhArtifact, [alicePkh], { provider });
+      const incorrectContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
+
+      const correctLockingBytecode = addressToLockScript(correctContract.address);
+      const siblingIntrospectionContract = new Contract(
+        SiblingIntrospectionArtifact,
+        [correctLockingBytecode],
+        { provider },
+      );
+
+      const correctContractUtxo = randomUtxo();
+      const incorrectContractUtxo = randomUtxo();
+      const siblingIntrospectionUtxo = randomUtxo();
+
+      (provider as any).addUtxo?.(correctContract.address, correctContractUtxo);
+      (provider as any).addUtxo?.(incorrectContract.address, incorrectContractUtxo);
+      (provider as any).addUtxo?.(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+
+      it('should not throw fail any require statements when introspecting correct sibling UTXOs', () => {
+        const tx = new TransactionBuilder({ provider })
+          .addInput(siblingIntrospectionUtxo, siblingIntrospectionContract.unlock.spend())
+          .addInput(correctContractUtxo, correctContract.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+          .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
+          .addOutput({ to: correctContract.address, amount: correctContractUtxo.satoshis - 2000n });
+
+        expect(tx).not.toFailRequire();
+      });
+
+      it('should fail with correct error message when introspected input bytecode of a sibling UTXO does not match', () => {
+        const tx = new TransactionBuilder({ provider })
+          .addInput(siblingIntrospectionUtxo, siblingIntrospectionContract.unlock.spend())
+          .addInput(incorrectContractUtxo, incorrectContract.unlock.spend(bobPub, bobSignatureTemplate))
+          .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
+          .addOutput({ to: correctContract.address, amount: incorrectContractUtxo.satoshis - 2000n });
+
+        expect(tx).toFailRequireWith('SiblingIntrospection.cash:7 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 7 with the following message: input bytecode should match.');
+        expect(tx).toFailRequireWith('Failing statement: require(inputBytecode == expectedLockingBytecode, \'input bytecode should match\')');
+      });
+
+      it('should fail with correct error message when introspected output bytecode of a sibling UTXO does not match', () => {
+        const tx = new TransactionBuilder({ provider })
+          .addInput(siblingIntrospectionUtxo, siblingIntrospectionContract.unlock.spend())
+          .addInput(correctContractUtxo, correctContract.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+          .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
+          .addOutput({ to: incorrectContract.address, amount: correctContractUtxo.satoshis - 2000n });
+
+        expect(tx).toFailRequireWith('SiblingIntrospection.cash:11 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 11 with the following message: output bytecode should match.');
+        expect(tx).toFailRequireWith('Failing statement: require(outputBytecode == expectedLockingBytecode, "output bytecode should match")');
+      });
+    });
+
     it.todo('should still work with duplicate custom require messages across contracts');
 
     it('should still work if contract or function parameters have the same name across contracts', () => {

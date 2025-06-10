@@ -7,6 +7,9 @@ import {
   TransactionBuilder,
 } from '../../src/index.js';
 import {
+  alicePkh,
+  alicePriv,
+  alicePub,
   bobAddress,
   bobPkh,
   bobPriv,
@@ -16,16 +19,18 @@ import {
   carolPub,
 } from '../fixture/vars.js';
 import { Network } from '../../src/interfaces.js';
-import { randomUtxo } from '../../src/utils.js';
+import { addressToLockScript, randomUtxo } from '../../src/utils.js';
 import p2pkhArtifact from '../fixture/p2pkh.artifact.js';
 import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
 import { getTxOutputs } from '../test-util.js';
+import SiblingIntrospectionArtifact from '../fixture/SiblingIntrospection.artifact.js';
 
 describe('Multi Contract', () => {
   const provider = process.env.TESTS_USE_MOCKNET
     ? new MockNetworkProvider()
     : new ElectrumNetworkProvider(Network.CHIPNET);
 
+  const aliceSignatureTemplate = new SignatureTemplate(alicePriv);
   const bobSignatureTemplate = new SignatureTemplate(bobPriv);
   const carolSignatureTemplate = new SignatureTemplate(carolPriv);
 
@@ -200,8 +205,55 @@ describe('Multi Contract', () => {
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining(outputs));
     });
+  });
 
+  describe('Sibling introspection', () => {
+    const correctContract = new Contract(p2pkhArtifact, [alicePkh], { provider });
+    const incorrectContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
+
+    const correctLockingBytecode = addressToLockScript(correctContract.address);
+    const siblingIntrospectionContract = new Contract(SiblingIntrospectionArtifact, [correctLockingBytecode], { provider });
+
+    const correctContractUtxo = randomUtxo();
+    const incorrectContractUtxo = randomUtxo();
+    const siblingIntrospectionUtxo = randomUtxo();
+
+    (provider as any).addUtxo?.(correctContract.address, correctContractUtxo);
+    (provider as any).addUtxo?.(incorrectContract.address, incorrectContractUtxo);
+    (provider as any).addUtxo?.(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+
+    it('should succeed when introspecting correct sibling UTXOs', async () => {
+      // given
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(siblingIntrospectionUtxo, siblingIntrospectionContract.unlock.spend())
+        .addInput(correctContractUtxo, correctContract.unlock.spend(alicePub, aliceSignatureTemplate))
+        .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
+        .addOutput({ to: correctContract.address, amount: correctContractUtxo.satoshis - 2000n })
+        .send();
+
+      // then
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(
+        expect.arrayContaining([
+          { to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis },
+          { to: correctContract.address, amount: correctContractUtxo.satoshis - 2000n },
+        ]),
+      );
+    });
+
+    it('should fail when introspecting incorrect sibling UTXOs', async () => {
+      // given
+      const txPromise = new TransactionBuilder({ provider })
+        .addInput(siblingIntrospectionUtxo, siblingIntrospectionContract.unlock.spend())
+        .addInput(incorrectContractUtxo, incorrectContract.unlock.spend(bobPub, bobSignatureTemplate))
+        .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
+        .addOutput({ to: incorrectContract.address, amount: incorrectContractUtxo.satoshis - 2000n })
+        .send();
+
+      // then
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('SiblingIntrospection.cash:7 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 7 with the following message: input bytecode should match.');
+      await expect(txPromise).rejects.toThrow("Failing statement: require(inputBytecode == expectedLockingBytecode, 'input bytecode should match')");
+    });
   });
 });
-
-// TODO: Add test that introspects "sibling" UTXOs
