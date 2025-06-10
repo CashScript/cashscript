@@ -247,7 +247,7 @@ If you prefer a lower-level debugging experience, you can call the `bitauthUri()
 You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
 
 :::caution
-It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
+It is unsafe to debug transactions on mainnet using the BitAuth IDE as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
 
 ## Transaction errors

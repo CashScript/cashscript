@@ -19,6 +19,7 @@ This release also contains several breaking changes, please refer to the [migrat
   - Output BitAuth IDE URI for debugging when transaction is rejected.
   - Libauth template generation and debugging for multi-contract transactions
 - :sparkles: Debugging now supports using the optimised contract bytecode (when compiled with `cashc@0.11.0` or later).
+- :sparkles: Add `setBlockHeight()` method to `MockNetworkProvider`
 - :sparkles: Config-free usage of the CashScript SDK with Vite or Webpack
 - :hammer_and_wrench: Update debug tooling to use the new `BCH_2025_05` instruction set.
 - :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
