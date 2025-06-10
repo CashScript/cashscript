@@ -13,6 +13,7 @@ export default class MockNetworkProvider implements NetworkProvider {
   private utxoMap: Record<string, Utxo[]> = {};
   private transactionMap: Record<string, string> = {};
   public network: Network = Network.MOCKNET;
+  public blockHeight: number = 133700;
 
   constructor() {
     for (let i = 0; i < 3; i += 1) {
@@ -27,8 +28,12 @@ export default class MockNetworkProvider implements NetworkProvider {
     return this.utxoMap[lockingBytecode] ?? [];
   }
 
+  setBlockHeight(newBlockHeight: number): void {
+    this.blockHeight = newBlockHeight;
+  }
+
   async getBlockHeight(): Promise<number> {
-    return 133700;
+    return this.blockHeight;
   }
 
   async getRawTransaction(txid: string): Promise<string> {
