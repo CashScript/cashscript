@@ -17,6 +17,10 @@ export interface UnlockableUtxo extends Utxo {
   options?: InputOptions;
 }
 
+export interface StandardUnlockableUtxo extends UnlockableUtxo {
+  unlocker: StandardUnlocker;
+}
+
 export function isUnlockableUtxo(utxo: Utxo): utxo is UnlockableUtxo {
   return 'unlocker' in utxo;
 }
@@ -31,23 +35,26 @@ export interface GenerateUnlockingBytecodeOptions {
   inputIndex: number;
 }
 
-// TODO: Change this type when we understand the requirements better
-export interface BaseUnlocker {
+export interface Unlocker {
   generateLockingBytecode: () => Uint8Array;
   generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
 }
 
-export interface ContractUnlocker extends BaseUnlocker {
+export interface ContractUnlocker extends Unlocker {
   contract: Contract;
   params: FunctionArgument[];
   abiFunction: AbiFunction;
 }
 
-export interface P2PKHUnlocker extends BaseUnlocker {
+export interface P2PKHUnlocker extends Unlocker {
   template: SignatureTemplate;
 }
 
-export type Unlocker = ContractUnlocker | P2PKHUnlocker;
+export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
+
+export function isStandardUnlockableInput(input: UnlockableUtxo): input is StandardUnlockableUtxo {
+  return 'contract' in input.unlocker || 'template' in input.unlocker;
+}
 
 export interface UtxoP2PKH extends Utxo {
   template: SignatureTemplate;

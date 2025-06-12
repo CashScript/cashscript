@@ -15,6 +15,7 @@ import {
   Utxo,
   InputOptions,
   isUnlockableUtxo,
+  isStandardUnlockableInput,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -159,7 +160,12 @@ export class TransactionBuilder {
   }
 
   debug(): DebugResults {
-    const contractVersions = this.inputs
+    this.inputs.forEach((input) => {
+      if (!isStandardUnlockableInput(input)) throw new Error('Cannot debug a transaction with custom unlocker');
+    });
+    const standardUnlockerInputs = this.inputs.filter((input) => isStandardUnlockableInput(input));
+
+    const contractVersions = standardUnlockerInputs
       .map((input) => 'contract' in input.unlocker ? input.unlocker.contract.artifact.compiler.version : null)
       .filter((version) => version !== null);
 

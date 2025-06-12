@@ -23,6 +23,8 @@ import { Contract } from '../Contract.js';
 import { DebugResults, debugTemplate } from '../debugging.js';
 import {
   ContractUnlocker,
+  isStandardUnlockableInput,
+  P2PKHUnlocker,
   UnlockableUtxo,
   Utxo,
 } from '../interfaces.js';
@@ -398,7 +400,9 @@ export const getLibauthTemplates = (
   const unlockingBytecodeToLockingBytecodeParams: Record<string, WalletTemplateScenarioBytecode> = {};
   const lockingBytecodeToLockingBytecodeParams: Record<string, WalletTemplateScenarioBytecode> = {};
 
-  for (const [inputIndex, input] of txn.inputs.entries()) {
+  const standardUnlockerInputs = txn.inputs.filter((input) => isStandardUnlockableInput(input));
+
+  for (const [inputIndex, input] of standardUnlockerInputs.entries()) {
     // If template exists on the input, it indicates this is a P2PKH (Pay to Public Key Hash) input
     if ('template' in input.unlocker) {
       // @ts-ignore TODO: Remove UtxoP2PKH type and only use UnlockableUtxo in Libaith Template generation
@@ -570,21 +574,23 @@ export const generateUnlockingScriptParams = (
   inputIndex: number,
 ): WalletTemplateScenarioBytecode => {
   if (('template' in csInput.unlocker)) {
+    const unlocker = csInput.unlocker as P2PKHUnlocker;
     return {
       script: `${p2pkhScriptNameTemplate}_${inputIndex}`,
       overrides: {
         keys: {
           privateKeys: {
-            [`placeholder_key_${inputIndex}`]: binToHex(csInput.unlocker.template.privateKey),
+            [`placeholder_key_${inputIndex}`]: binToHex(unlocker .template.privateKey),
           },
         },
       },
     };
   }
 
-  const abiFunction = csInput.unlocker.abiFunction;
-  const contract = csInput.unlocker.contract;
-  const encodedFunctionArgs = encodeFunctionArguments(abiFunction, csInput.unlocker.params);
+  const unlocker = csInput.unlocker as ContractUnlocker;
+  const abiFunction = unlocker.abiFunction;
+  const contract = unlocker.contract;
+  const encodedFunctionArgs = encodeFunctionArguments(abiFunction, unlocker.params);
 
   return {
     script: getUnlockScriptName(contract, abiFunction, inputIndex),
