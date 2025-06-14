@@ -178,6 +178,7 @@ export class TransactionBuilder {
   }
 
   bitauthUri(): string {
+    console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
     return getBitauthUri(this.getLibauthTemplate());
   }
 

@@ -196,6 +196,7 @@ export class Transaction {
   }
 
   async bitauthUri(): Promise<string> {
+    console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
     const template = await this.getLibauthTemplate();
     return getBitauthUri(template);
   }

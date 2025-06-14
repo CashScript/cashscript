@@ -34,6 +34,7 @@ import {
   SignatureAlgorithm,
   HashType,
   isUnlockableUtxo,
+  isStandardUnlockableUtxo,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { Transaction } from './Transaction.js';
@@ -372,7 +373,7 @@ export const generateTemplateScenarioBytecode = (
     };
   }
 
-  if (isUnlockableUtxo(input)) {
+  if (isUnlockableUtxo(input) && isStandardUnlockableUtxo(input)) {
     return generateUnlockingScriptParams(input, p2pkhScriptNameTemplate, inputIndex);
   }
 
