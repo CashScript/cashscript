@@ -27,7 +27,6 @@ This release also contains several breaking changes, please refer to the [migrat
   * `expect(transaction).toLog(message)`
   * `expect(transaction).toFailRequire()`
   * `expect(transaction).toFailRequireWith(message)`
-- :boom: **BREAKING**: Rework the `Unlocker` type to be a union of `ContractUnlocker | P2PKHUnlocker` 
 - :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider` and added a configuration object to the constructor.
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 - :bug: Fix bug where `JestExtensions` `expect().toLog()` would detect logs from different tests.

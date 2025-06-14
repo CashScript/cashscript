@@ -15,6 +15,8 @@ import {
   Utxo,
   InputOptions,
   isUnlockableUtxo,
+  isStandardUnlockableUtxo,
+  StandardUnlockableUtxo,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -159,7 +161,12 @@ export class TransactionBuilder {
   }
 
   debug(): DebugResults {
-    const contractVersions = this.inputs
+    if (this.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
+      throw new Error('Cannot debug a transaction with custom unlocker');
+    }
+
+    // We can typecast this because we check that all inputs are standard unlockable in the check above
+    const contractVersions = (this.inputs as StandardUnlockableUtxo[])
       .map((input) => 'contract' in input.unlocker ? input.unlocker.contract.artifact.compiler.version : null)
       .filter((version) => version !== null);
 
@@ -184,8 +191,11 @@ export class TransactionBuilder {
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = this.build();
 
-    // Debug the transaction locally before sending so any errors are caught early
-    this.debug();
+    // If all inputs are standard unlockable, we can debug the transaction locally
+    // before sending so any errors are caught early
+    if (this.inputs.every((input) => isStandardUnlockableUtxo(input))) {
+      this.debug();
+    }
 
     try {
       const txid = await this.provider.sendRawTransaction(tx);
