@@ -22,10 +22,9 @@ import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArgu
 import { Contract } from '../Contract.js';
 import { DebugResults, debugTemplate } from '../debugging.js';
 import {
-  ContractUnlocker,
-  isStandardUnlockableInput,
-  P2PKHUnlocker,
-  UnlockableUtxo,
+  isP2PKHUnlocker,
+  isStandardUnlockableUtxo,
+  StandardUnlockableUtxo,
   Utxo,
 } from '../interfaces.js';
 import {
@@ -373,6 +372,10 @@ const createCSTransaction = (txn: TransactionBuilder) => {
 export const getLibauthTemplates = (
   txn: TransactionBuilder,
 ): WalletTemplate => {
+  if (txn.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
+    throw new Error('Cannot use debugging functionality with a transaction that contains custom unlockers');
+  }
+
   const libauthTransaction = txn.buildLibauthTransaction();
   const csTransaction = createCSTransaction(txn);
 
@@ -400,9 +403,8 @@ export const getLibauthTemplates = (
   const unlockingBytecodeToLockingBytecodeParams: Record<string, WalletTemplateScenarioBytecode> = {};
   const lockingBytecodeToLockingBytecodeParams: Record<string, WalletTemplateScenarioBytecode> = {};
 
-  const standardUnlockerInputs = txn.inputs.filter((input) => isStandardUnlockableInput(input));
-
-  for (const [inputIndex, input] of standardUnlockerInputs.entries()) {
+  // We can typecast this because we check that all inputs are standard unlockable at the top of this function
+  for (const [inputIndex, input] of (txn.inputs as StandardUnlockableUtxo[]).entries()) {
     // If template exists on the input, it indicates this is a P2PKH (Pay to Public Key Hash) input
     if ('template' in input.unlocker) {
       // @ts-ignore TODO: Remove UtxoP2PKH type and only use UnlockableUtxo in Libaith Template generation
@@ -540,10 +542,10 @@ export const debugLibauthTemplate = (template: WalletTemplate, transaction: Tran
 
 const generateLockingScriptParams = (
   contract: Contract,
-  csInput: UnlockableUtxo,
+  { unlocker }: StandardUnlockableUtxo,
   lockScriptName: string,
 ): WalletTemplateScenarioBytecode => {
-  if (('template' in csInput.unlocker)) {
+  if (isP2PKHUnlocker(unlocker)) {
     return {
       script: lockScriptName,
     };
@@ -552,9 +554,8 @@ const generateLockingScriptParams = (
   const constructorParamsEntries = contract.artifact.constructorInputs
     .map(({ name }, index) => [
       name,
-      // TODO: For some reason, typescript forgets that the unlocker is a ContractUnlocker
       addHexPrefixExceptEmpty(
-        binToHex((csInput.unlocker as ContractUnlocker).contract.encodedConstructorArgs[index]),
+        binToHex(unlocker.contract.encodedConstructorArgs[index]),
       ),
     ]);
 
@@ -569,28 +570,26 @@ const generateLockingScriptParams = (
 };
 
 export const generateUnlockingScriptParams = (
-  csInput: UnlockableUtxo,
+  csInput: StandardUnlockableUtxo,
   p2pkhScriptNameTemplate: string,
   inputIndex: number,
 ): WalletTemplateScenarioBytecode => {
-  if (('template' in csInput.unlocker)) {
-    const unlocker = csInput.unlocker as P2PKHUnlocker;
+  if (isP2PKHUnlocker(csInput.unlocker)) {
     return {
       script: `${p2pkhScriptNameTemplate}_${inputIndex}`,
       overrides: {
         keys: {
           privateKeys: {
-            [`placeholder_key_${inputIndex}`]: binToHex(unlocker .template.privateKey),
+            [`placeholder_key_${inputIndex}`]: binToHex(csInput.unlocker.template.privateKey),
           },
         },
       },
     };
   }
 
-  const unlocker = csInput.unlocker as ContractUnlocker;
-  const abiFunction = unlocker.abiFunction;
-  const contract = unlocker.contract;
-  const encodedFunctionArgs = encodeFunctionArguments(abiFunction, unlocker.params);
+  const abiFunction = csInput.unlocker.abiFunction;
+  const contract = csInput.unlocker.contract;
+  const encodedFunctionArgs = encodeFunctionArguments(abiFunction, csInput.unlocker.params);
 
   return {
     script: getUnlockScriptName(contract, abiFunction, inputIndex),

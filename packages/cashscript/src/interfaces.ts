@@ -25,6 +25,10 @@ export function isUnlockableUtxo(utxo: Utxo): utxo is UnlockableUtxo {
   return 'unlocker' in utxo;
 }
 
+export function isStandardUnlockableUtxo(utxo: UnlockableUtxo): utxo is StandardUnlockableUtxo {
+  return isStandardUnlocker(utxo.unlocker);
+}
+
 export interface InputOptions {
   sequence?: number;
 }
@@ -52,8 +56,16 @@ export interface P2PKHUnlocker extends Unlocker {
 
 export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
 
-export function isStandardUnlockableInput(input: UnlockableUtxo): input is StandardUnlockableUtxo {
-  return 'contract' in input.unlocker || 'template' in input.unlocker;
+export function isContractUnlocker(unlocker: Unlocker): unlocker is ContractUnlocker {
+  return 'contract' in unlocker;
+}
+
+export function isP2PKHUnlocker(unlocker: Unlocker): unlocker is P2PKHUnlocker {
+  return 'template' in unlocker;
+}
+
+export function isStandardUnlocker(unlocker: Unlocker): unlocker is StandardUnlocker {
+  return isContractUnlocker(unlocker) || isP2PKHUnlocker(unlocker);
 }
 
 export interface UtxoP2PKH extends Utxo {
