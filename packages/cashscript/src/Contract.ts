@@ -15,8 +15,7 @@ import {
   ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument,
 } from './Argument.js';
 import {
-  Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
-  AddressType,
+  Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo, AddressType, ContractUnlocker,
 } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
@@ -147,7 +146,7 @@ export class Contract<
     };
   }
 
-  private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
+  private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractFunctionUnlocker {
     return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
@@ -182,4 +181,4 @@ export class Contract<
 }
 
 export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
-export type ContractUnlocker = (...args: FunctionArgument[]) => Unlocker;
+type ContractFunctionUnlocker = (...args: FunctionArgument[]) => ContractUnlocker;
