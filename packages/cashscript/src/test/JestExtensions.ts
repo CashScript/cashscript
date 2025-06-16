@@ -49,13 +49,20 @@ expect.extend({
     const message = (): string => `${matcherHint}\n\n${expectedText}\n${receivedText}`;
 
     try {
-      expect(loggerSpy).toBeCalledWith(match ? expect.stringMatching(match) : expect.anything());
-    } catch (e) {
-      return { message, pass: false };
+      // We first check if the expected string is present in any of the individual console.log calls
+      expect(loggerSpy).toHaveBeenCalledWith(match ? expect.stringMatching(match) : expect.anything());
+    } catch {
+      try {
+        // We add this extra check to allow expect().toLog() to check multiple console.log calls in a single test
+        // (e.g. for log ordering), which would fail the first check because that compares the individual console.log calls
+        expect(receivedBase).toMatch(match ? match : expect.anything());
+      } catch {
+        return { message, pass: false };
+      }
+    } finally {
+      // Restore the original console.log implementation
+      loggerSpy.mockRestore();
     }
-
-    // Restore the original console.log implementation
-    loggerSpy.mockRestore();
 
     return { message, pass: true };
   },
