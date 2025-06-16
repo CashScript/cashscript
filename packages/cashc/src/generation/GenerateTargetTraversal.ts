@@ -199,7 +199,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
 
     const finalOp = this.output.pop() as Op;
-    const { location } = this.locationData.pop()!;
+    const { location, positionHint } = this.locationData.pop()!;
 
     // If the final op is OP_VERIFY and the stack size is less than 4 we remove it from the script
     // - We have the stack size check because it is more efficient to use 2DROP rather than NIP
@@ -208,6 +208,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       // Since the final value is no longer popped from the stack by OP_VERIFY,
       // we add it back to the stack
       this.pushToStack('(value)');
+
+      // Replace the location data of the final check (e.g. (x == 1)) with the location data of the
+      // full require statement including the removed OP_VERIFY (e.g. require(x == 1)), because
+      // the check opcode (e.g. OP_EQUAL) now represents the entire require statement (incl implicit OP_VERIFY)
+      this.locationData.pop();
+      this.locationData.push({ location, positionHint });
     } else {
       this.emit(finalOp, { location, positionHint: PositionHint.END });
 

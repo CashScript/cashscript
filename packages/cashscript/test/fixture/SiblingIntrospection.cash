@@ -4,10 +4,10 @@ contract SiblingIntrospection(bytes expectedLockingBytecode) {
 
         bytes inputBytecode = tx.inputs[1].lockingBytecode;
         console.log("inputBytecode:", inputBytecode);
-        require(inputBytecode == expectedLockingBytecode, "input bytecode should match");
+        require(inputBytecode == expectedLockingBytecode, 'input bytecode should match');
 
         bytes outputBytecode = tx.outputs[1].lockingBytecode;
         console.log("outputBytecode:", outputBytecode);
-        require(outputBytecode == expectedLockingBytecode, "output bytecode should match");
+        require(outputBytecode == expectedLockingBytecode, 'output bytecode should match');
     }
 }

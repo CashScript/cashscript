@@ -20,7 +20,7 @@
   "source": "contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == bytes4(i));\n    }\n}\n",
   "debug": {
     "bytecode": "7c548087",
-    "sourceMap": "3:28:3:29;:21::30:1;;:16",
+    "sourceMap": "3:28:3:29;:21::30:1;;:8::32",
     "logs": [],
     "requires": [
       {
@@ -33,5 +33,5 @@
     "name": "cashc",
     "version": "0.11.0-next.4"
   },
-  "updatedAt": "2025-05-11T10:02:27.596Z"
+  "updatedAt": "2025-06-16T15:05:56.024Z"
 }

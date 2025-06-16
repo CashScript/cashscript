@@ -41,7 +41,7 @@
   "source": "// This contract forces HODLing until a certain price target has been reached\n// A minimum block is provided to ensure that oracle price entries from before this block are disregarded\n// i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used.\n// Instead, a message with a block number and price from after the minBlock needs to be passed.\n// This contract serves as a simple example for checkDataSig-based contracts.\ncontract HodlVault(\n    pubkey ownerPk,\n    pubkey oraclePk,\n    int minBlock,\n    int priceTarget\n) {\n    function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {\n        // message: { blockHeight, price }\n        bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);\n        int blockHeight = int(blockHeightBin);\n        int price = int(priceBin);\n\n        // Check that blockHeight is after minBlock and not in the future\n        require(blockHeight >= minBlock);\n        require(tx.time >= blockHeight);\n\n        // Check that current price is at least priceTarget\n        require(price >= priceTarget);\n\n        // Handle necessary signature checks\n        require(checkDataSig(oracleSig, oracleMessage, oraclePk));\n        require(checkSig(ownerSig, ownerPk));\n    }\n}\n",
   "debug": {
     "bytecode": "5679547f7c817c8178557aa2697cb175537aa269537a547a537abbac",
-    "sourceMap": "14:49:14:62;;:69::70;:49::71:1;15:30:15:44:0;:26::45:1;16:24:16:32:0;:20::33:1;19:16:19:27:0;:31::39;;:16:::1;:8::41;20:27:20:38:0;:8::40:1;;23:25:23:36:0;;:16:::1;:8::38;26:29:26::0;;:40::53;;:55::63;;:8::66:1;27:16:27:43",
+    "sourceMap": "14:49:14:62;;:69::70;:49::71:1;15:30:15:44:0;:26::45:1;16:24:16:32:0;:20::33:1;19:16:19:27:0;:31::39;;:16:::1;:8::41;20:27:20:38:0;:8::40:1;;23:25:23:36:0;;:16:::1;:8::38;26:29:26::0;;:40::53;;:55::63;;:8::66:1;27::27:45",
     "logs": [],
     "requires": [
       {
@@ -70,5 +70,5 @@
     "name": "cashc",
     "version": "0.11.0-next.4"
   },
-  "updatedAt": "2025-05-11T10:02:26.630Z"
+  "updatedAt": "2025-06-16T15:05:54.980Z"
 }

@@ -16,7 +16,7 @@ export default {
   source: 'contract P2Palindrome() {\n    function spend(string palindrome) {\n        require(palindrome.reverse() == palindrome);\n    }\n}\n',
   debug: {
     bytecode: '76bc87',
-    sourceMap: '3:16:3:26;:::36:1;:::50',
+    sourceMap: '3:16:3:26;:::36:1;:8::52',
     logs: [],
     requires: [
       {
@@ -29,5 +29,5 @@ export default {
     name: 'cashc',
     version: '0.11.0-next.4',
   },
-  updatedAt: '2025-05-11T10:02:27.355Z',
+  updatedAt: '2025-06-16T15:05:55.718Z',
 } as const;

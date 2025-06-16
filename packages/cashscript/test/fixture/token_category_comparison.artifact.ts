@@ -11,7 +11,7 @@ export default {
   source: 'contract Test() {\n    function send() {\n        require(tx.inputs[1].tokenCategory == 0x);\n    }\n}\n',
   debug: {
     bytecode: '51ce0087',
-    sourceMap: '3:26:3:27;:16::42:1;:46::48:0;:16:::1',
+    sourceMap: '3:26:3:27;:16::42:1;:46::48:0;:8::50:1',
     logs: [],
     requires: [
       {
@@ -24,5 +24,5 @@ export default {
     name: 'cashc',
     version: '0.11.0-next.4',
   },
-  updatedAt: '2025-05-11T10:02:28.885Z',
+  updatedAt: '2025-06-16T15:05:57.354Z',
 } as const;

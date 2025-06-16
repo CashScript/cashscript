@@ -395,8 +395,11 @@ describe('Debugging tests', () => {
         )
         .addOutput({ to: contractTestMultiLineRequires.address, amount: 1000n });
 
-      expect(transaction).toFailRequireWith('Test.cash:36 Require statement failed at input 0 in contract Test.cash at line 36 with the following message: 1 should equal 2.');
-      expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
+      expect(transaction).toFailRequireWith('Test.cash:35 Require statement failed at input 0 in contract Test.cash at line 35 with the following message: 1 should equal 2.');
+      expect(transaction).toFailRequireWith(`Failing statement: require(
+      1 == 2,
+      "1 should equal 2"
+    );`);
     });
 
     // test_multiline_require_with_unary_op

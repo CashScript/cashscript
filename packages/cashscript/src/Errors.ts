@@ -71,16 +71,7 @@ export class FailedRequireError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
-    let { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
-
-    if (!statement.includes('require')) {
-      statement = requireStatement.message
-        ? `require(${statement}, "${requireStatement.message}")`
-        : `require(${statement})`;
-
-      // Sometimes in reconstructed multiline require statements, we get double commas
-      statement = statement.replace(/,,/g, ',');
-    }
+    const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
 
     const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;

@@ -20,7 +20,7 @@ export default {
   source: 'contract BigInt() {\n    function proofOfBigInt(int x, int y) {\n        int maxInt64PlusOne = 9223372036854775808;\n        require(x >= maxInt64PlusOne);\n        require(x * y >= maxInt64PlusOne);\n    }\n}\n',
   debug: {
     bytecode: '090000000000000080006ea2697c7b95a1',
-    sourceMap: '3:30:3:49;4:16:4:36;::::1;:8::38;5:16:5:17:0;:20::21;:16:::1;:::40',
+    sourceMap: '3:30:3:49;4:16:4:36;::::1;:8::38;5:16:5:17:0;:20::21;:16:::1;:8::42',
     logs: [],
     requires: [
       {
@@ -37,5 +37,5 @@ export default {
     name: 'cashc',
     version: '0.11.0-next.4',
   },
-  updatedAt: '2025-05-11T10:02:24.855Z',
+  updatedAt: '2025-06-16T15:05:52.713Z',
 } as const;

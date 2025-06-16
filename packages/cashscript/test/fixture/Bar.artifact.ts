@@ -33,7 +33,7 @@ export default {
   source: 'pragma cashscript >=0.10.2;\n\ncontract Bar(bytes20 pkh_bar) {\n    function funcA() {\n        require(2==2);\n    }\n\n    function funcB() {\n        require(2==2);\n    }\n\n    function execute(pubkey pk, sig s) {\n        console.log("Bar \'execute\' function called.");\n        require(hash160(pk) == pkh_bar);\n        require(checkSig(s, pk));\n    }\n}\n',
   debug: {
     bytecode: '78009c6352529c77776778519c6352529c7777677c529d78a988ac6868',
-    sourceMap: '4:4:6:5;;;;5:16:5:17;:19::20;:16:::1;4:4:6:5;;;8::10::0;;;;9:16:9:17;:19::20;:16:::1;8:4:10:5;;;12::16::0;;;14:24:14:26;:16::27:1;:8::40;15:16:15:31;3:0:17:1;',
+    sourceMap: '4:4:6:5;;;;5:16:5:17;:19::20;:8::22:1;4:4:6:5;;;8::10::0;;;;9:16:9:17;:19::20;:8::22:1;8:4:10:5;;;12::16::0;;;14:24:14:26;:16::27:1;:8::40;15::15:33;3:0:17:1;',
     logs: [
       {
         ip: 24,
@@ -66,5 +66,5 @@ export default {
     name: 'cashc',
     version: '0.11.0-next.4',
   },
-  updatedAt: '2025-06-16T14:40:54.432Z',
+  updatedAt: '2025-06-16T15:05:54.204Z',
 } as const;

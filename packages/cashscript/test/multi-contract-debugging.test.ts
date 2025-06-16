@@ -210,7 +210,7 @@ describe('Multi-Contract-Debugging tests', () => {
           .addOutput({ to: correctContract.address, amount: incorrectContractUtxo.satoshis - 2000n });
 
         expect(tx).toFailRequireWith('SiblingIntrospection.cash:7 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 7 with the following message: input bytecode should match.');
-        expect(tx).toFailRequireWith('Failing statement: require(inputBytecode == expectedLockingBytecode, "input bytecode should match")');
+        expect(tx).toFailRequireWith('Failing statement: require(inputBytecode == expectedLockingBytecode, \'input bytecode should match\')');
       });
 
       it('should fail with correct error message when introspected output bytecode of a sibling UTXO does not match', () => {
@@ -221,7 +221,7 @@ describe('Multi-Contract-Debugging tests', () => {
           .addOutput({ to: incorrectContract.address, amount: correctContractUtxo.satoshis - 2000n });
 
         expect(tx).toFailRequireWith('SiblingIntrospection.cash:11 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 11 with the following message: output bytecode should match.');
-        expect(tx).toFailRequireWith('Failing statement: require(outputBytecode == expectedLockingBytecode, "output bytecode should match")');
+        expect(tx).toFailRequireWith('Failing statement: require(outputBytecode == expectedLockingBytecode, \'output bytecode should match\')');
       });
     });
 

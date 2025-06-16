@@ -25,7 +25,7 @@ export default {
   source: 'contract P2PKH(bytes20 pkh) {\n    // Require pk to match stored pkh and signature to match\n    function spend(pubkey pk, sig s) {\n        require(hash160(pk) == pkh);\n        require(checkSig(s, pk));\n    }\n}\n',
   debug: {
     bytecode: '78a988ac',
-    sourceMap: '4:24:4:26;:16::27:1;:8::36;5:16:5:31',
+    sourceMap: '4:24:4:26;:16::27:1;:8::36;5::5:33',
     logs: [],
     requires: [
       {
@@ -42,5 +42,5 @@ export default {
     name: 'cashc',
     version: '0.11.0-next.4',
   },
-  updatedAt: '2025-05-11T10:02:29.364Z',
+  updatedAt: '2025-06-16T15:05:57.831Z',
 } as const;
