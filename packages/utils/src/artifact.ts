@@ -69,9 +69,10 @@ export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): strin
 const indent = (level: number): string => '  '.repeat(level);
 
 function stringifyAsTs(obj: any, indentationLevel: number = 1): string {
-  // For strings, we use JSON.stringify, but we convert double quotes to single quotes
+  // For strings we use JSON.stringify to handle escaping, but we want to use single quotes instead of double quotes
+  // around string values inside objects, to match regular TS style
   if (typeof obj === 'string') {
-    return JSON.stringify(obj).replace(/'/g, "\\'").replace(/"/g, "'");
+    return `'${JSON.stringify(obj).replace(/'/g, "\\'").replace(/\\"/g, '"').slice(1, -1)}'`;
   }
 
   // Numbers and booleans are just converted to strings

@@ -253,7 +253,7 @@ describe('Multi Contract', () => {
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
       await expect(txPromise).rejects.toThrow('SiblingIntrospection.cash:7 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 7 with the following message: input bytecode should match.');
-      await expect(txPromise).rejects.toThrow("Failing statement: require(inputBytecode == expectedLockingBytecode, 'input bytecode should match')");
+      await expect(txPromise).rejects.toThrow('Failing statement: require(inputBytecode == expectedLockingBytecode, "input bytecode should match")');
     });
   });
 });
