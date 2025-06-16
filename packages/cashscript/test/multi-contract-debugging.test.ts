@@ -27,11 +27,52 @@ const provider = new MockNetworkProvider();
 
 describe('Multi-Contract-Debugging tests', () => {
   describe('console.log statements', () => {
-    it.todo('should log all executed console.log statements across all contracts');
-    it.todo('should not log statements that are not executed');
-    it.todo('should log console.log statements in the correct order (by input index)');
-    it.todo('should be able to log correct input bytecode for other contracts');
-    it.todo('should be able to log correct output bytecode for other contracts');
+    describe('Sibling introspection', () => {
+      const sameNameDifferentPathContract = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [0n], { provider });
+
+      const expectedLockingBytecode = addressToLockScript(sameNameDifferentPathContract.address);
+      const siblingIntrospectionContract = new Contract(
+        SiblingIntrospectionArtifact,
+        [expectedLockingBytecode],
+        { provider },
+      );
+
+      const sameNameDifferentPathContractUtxo = randomUtxo();
+      const siblingIntrospectionUtxo = randomUtxo();
+
+      (provider as any).addUtxo?.(sameNameDifferentPathContract.address, sameNameDifferentPathContractUtxo);
+      (provider as any).addUtxo?.(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+
+      it('should log correct data in all executed console.log statements across all contracts in the correct order by input index', () => {
+        const tx = new TransactionBuilder({ provider })
+          .addInput(siblingIntrospectionUtxo, siblingIntrospectionContract.unlock.spend())
+          .addInput(sameNameDifferentPathContractUtxo, sameNameDifferentPathContract.unlock.function_1(0n))
+          .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
+          .addOutput({
+            to: sameNameDifferentPathContract.address,
+            amount: sameNameDifferentPathContractUtxo.satoshis - 2000n,
+          });
+
+        expect(tx).toLog('SiblingIntrospection.cash:6 outputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587\nSiblingIntrospection.cash:10 inputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587\nSameNameDifferentPath.cash:5 a is 0');
+      });
+
+      it('should log correct data for the reached console.log statements if a require statement fails, and not log unreached console.log statements', () => {
+        const tx = new TransactionBuilder({ provider })
+          .addInput(siblingIntrospectionUtxo, siblingIntrospectionContract.unlock.spend())
+          .addInput(sameNameDifferentPathContractUtxo, sameNameDifferentPathContract.unlock.function_1(1n))
+          .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
+          .addOutput({
+            to: siblingIntrospectionContract.address,
+            amount: sameNameDifferentPathContractUtxo.satoshis - 2000n,
+          });
+
+        expect(tx).toLog('SiblingIntrospection.cash:6 outputBytecode: 0xaa20d510df1721debb0d678d8e424b5f64f04f820005f017cb4731f7be94cd63755787');
+        expect(tx).not.toLog('SiblingIntrospection.cash:10 inputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587');
+        expect(tx).not.toLog('SameNameDifferentPath.cash:5 a is 0');
+      });
+    });
+
+    it.todo('should not log statements that are not executed'); // Maybe this is already included in tests above
     it.todo('should still work with different instances of the same contract, with different paths due to different contract parameter values');
   });
 
@@ -209,7 +250,7 @@ describe('Multi-Contract-Debugging tests', () => {
           .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
           .addOutput({ to: correctContract.address, amount: incorrectContractUtxo.satoshis - 2000n });
 
-        expect(tx).toFailRequireWith('SiblingIntrospection.cash:7 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 7 with the following message: input bytecode should match.');
+        expect(tx).toFailRequireWith('SiblingIntrospection.cash:11 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 11 with the following message: input bytecode should match.');
         expect(tx).toFailRequireWith('Failing statement: require(inputBytecode == expectedLockingBytecode, \'input bytecode should match\')');
       });
 
@@ -220,7 +261,7 @@ describe('Multi-Contract-Debugging tests', () => {
           .addOutput({ to: siblingIntrospectionContract.address, amount: siblingIntrospectionUtxo.satoshis })
           .addOutput({ to: incorrectContract.address, amount: correctContractUtxo.satoshis - 2000n });
 
-        expect(tx).toFailRequireWith('SiblingIntrospection.cash:11 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 11 with the following message: output bytecode should match.');
+        expect(tx).toFailRequireWith('SiblingIntrospection.cash:7 Require statement failed at input 0 in contract SiblingIntrospection.cash at line 7 with the following message: output bytecode should match.');
         expect(tx).toFailRequireWith('Failing statement: require(outputBytecode == expectedLockingBytecode, \'output bytecode should match\')');
       });
     });
@@ -267,14 +308,14 @@ describe('Multi-Contract-Debugging tests', () => {
         .addInput(contract2Utxo, p2pkhContract2.unlock.function_1(0n))
         .addOutput({ to: p2pkhContract1.address, amount: 10000n });
 
-      expect(transaction1).toFailRequireWith('SameNameDifferentPath.cash:7 Require statement failed at input 1 in contract SameNameDifferentPath.cash at line 7 with the following message: b should not be 0.');
+      expect(transaction1).toFailRequireWith('SameNameDifferentPath.cash:9 Require statement failed at input 1 in contract SameNameDifferentPath.cash at line 9 with the following message: b should not be 0.');
 
       const transaction2 = new TransactionBuilder({ provider })
         .addInput(contract1Utxo, p2pkhContract1.unlock.function_1(1n))
         .addInput(contract2Utxo, p2pkhContract2.unlock.function_1(1n))
         .addOutput({ to: p2pkhContract1.address, amount: 10000n });
 
-      expect(transaction2).toFailRequireWith('SameNameDifferentPath.cash:5 Require statement failed at input 0 in contract SameNameDifferentPath.cash at line 5 with the following message: b should be 0.');
+      expect(transaction2).toFailRequireWith('SameNameDifferentPath.cash:6 Require statement failed at input 0 in contract SameNameDifferentPath.cash at line 6 with the following message: b should be 0.');
     });
   });
 

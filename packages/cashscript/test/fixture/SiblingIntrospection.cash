@@ -2,12 +2,12 @@ contract SiblingIntrospection(bytes expectedLockingBytecode) {
     function spend() {
         require(this.activeInputIndex == 0);
 
-        bytes inputBytecode = tx.inputs[1].lockingBytecode;
-        console.log("inputBytecode:", inputBytecode);
-        require(inputBytecode == expectedLockingBytecode, 'input bytecode should match');
-
         bytes outputBytecode = tx.outputs[1].lockingBytecode;
         console.log("outputBytecode:", outputBytecode);
         require(outputBytecode == expectedLockingBytecode, 'output bytecode should match');
+
+        bytes inputBytecode = tx.inputs[1].lockingBytecode;
+        console.log("inputBytecode:", inputBytecode);
+        require(inputBytecode == expectedLockingBytecode, 'input bytecode should match');
     }
 }
