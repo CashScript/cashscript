@@ -9,6 +9,7 @@ This update adds CashScript support for the new BCH 2025 network upgrade. To rea
 This release also contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### cashc compiler
+- :bug: Fix bug where source code in `--format ts` artifacts used incorrect quotation marks.
 - :hammer_and_wrench: Remove warning for opcount and update warning for byte size to match new limits.
 - :boom: **BREAKING**: `tx.age` was renamed to `this.age` to better reflect that it enforces a UTXO-level locktime check (*not* transaction-level).
 - :boom: **BREAKING**: The entire `debug` object on the artifact is reworked to enable debugging the optimised contract bytecode.
@@ -22,7 +23,7 @@ This release also contains several breaking changes, please refer to the [migrat
 - :sparkles: Add `setBlockHeight()` method to `MockNetworkProvider`
 - :sparkles: Config-free usage of the CashScript SDK with Vite or Webpack
 - :hammer_and_wrench: Update debug tooling to use the new `BCH_2025_05` instruction set.
-- :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release.
+- :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release
 - :boom: **BREAKING**: the Jest utilities for automated testing are now synchronous and no longer work with the deprecated simple transaction builder
   * `expect(transaction).toLog(message)`
   * `expect(transaction).toFailRequire()`
@@ -30,6 +31,7 @@ This release also contains several breaking changes, please refer to the [migrat
 - :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider` and added a configuration object to the constructor.
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 - :bug: Fix bug where `JestExtensions` `expect().toLog()` would detect logs from different tests.
+- :bug: Fix bug where certain edge cases in require statements caused the `FailedRequireError` message to be slightly different from the original error message.
 
 #### @cashscript/utils
 - :boom: **BREAKING**: Remove `importArtifact` and `exportArtifact` helper functions. If you want to import or export artifacts, use `'fs'` to read and write files directly.
