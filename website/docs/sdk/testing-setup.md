@@ -12,7 +12,7 @@ For a quick start with a CashScript testing setup, check out the [example testin
 
 The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally.
 
-To create a new virtual UTXO use `provider.addUtxo(address, uxto)`. You can use the helper functions `randomUtxo()`, `randomToken()` and `randomNFT()` to generate random partial Utxo info which you can be overwritten with custom values. 
+To create a new virtual UTXO use `provider.addUtxo(address, utxo)`. You can use the helper functions `randomUtxo()`, `randomToken()` and `randomNFT()` to generate random partial Utxo info which you can be overwritten with custom values.
 
 #### Example
 

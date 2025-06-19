@@ -31,10 +31,10 @@ contract HTLC(pubkey sender, pubkey recipient, int expiration, bytes32 hash) {
 
 ### Constructor Arguments
 
-The constructor arguments are provided when initializing a specific instance of a smart contract. The provided constructor arguments are added to the start of the contract's script before the opcode logic. Because the constructor arguments are part of the full smart contract script, they are conceptually similar to hard-coded constants in your contract logic. Constructor arguments are a way to create 'global constants' accesible from different functions inside your contract.
+The constructor arguments are provided when initializing a specific instance of a smart contract. The provided constructor arguments are added to the start of the contract's script before the opcode logic. Because the constructor arguments are part of the full smart contract script, they are conceptually similar to hard-coded constants in your contract logic. Constructor arguments are a way to create 'global constants' accessible from different functions inside your contract.
 
 :::info
-The typings for the constructor arguments are only semantic and used when initilaizing the contract with the SDK. This means when not using the SDK you could still pass a different byte length item to `bytes32 hash`.
+The typings for the constructor arguments are only semantic and used when initializing the contract with the SDK. This means when not using the SDK you could still pass a different byte length item to `bytes32 hash`.
 :::
 
 :::note
@@ -61,7 +61,7 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 
 ### Function Arguments
 
-The function arguments are provided when attempting to spend from the contract. This means that these arguments can be crafted in a specific way by anyone to see if they can exploit the contract logic. Because of this it is important to realize these are 'untrusted arguments'. 
+The function arguments are provided when attempting to spend from the contract. This means that these arguments can be crafted in a specific way by anyone to see if they can exploit the contract logic. Because of this it is important to realize these are 'untrusted arguments'.
 
 In CashScript the types for the function arguments are **not** enforced automatically at the contract level. This can be especially relevant for types like `bool`, `bytesX` and other semantic bytes types. Instead this type information is only used by the SDK to check whether these arguments match the expected type during transaction building.
 

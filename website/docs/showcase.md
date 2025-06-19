@@ -104,7 +104,7 @@ The Paytaca wallet has a built-in P2P Exchange which allows user to buy or sell 
     <a href="https://bchpump.cash/" target="_blank"><img src="/img/bch-pump.jpg" /></a>
 </div>
 
-BCH Pump is a CashTokens Launchpad inspired by the 'pump.fun' mechanism to bootstrap tokens on a bonding curve. The pools are migrated to Cauldron DEX once the bonding process is completed. The BCH Pump contracts are written with CashScript and use a multi-contract and multisetp-setup in its design.
+BCH Pump is a CashTokens Launchpad inspired by the 'pump.fun' mechanism to bootstrap tokens on a bonding curve. The pools are migrated to Cauldron DEX once the bonding process is completed. The BCH Pump contracts are written with CashScript and use a multi-contract and multi-step setup in its design.
 
 ## Unspent Phi
 

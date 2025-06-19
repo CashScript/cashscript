@@ -211,7 +211,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
       // Replace the location data of the final check (e.g. (x == 1)) with the location data of the
       // full require statement including the removed OP_VERIFY (e.g. require(x == 1)), because
-      // the check opcode (e.g. OP_EQUAL) now represents the entire require statement (incl implicit OP_VERIFY)
+      // the check opcode (e.g. OP_EQUAL) now represents the entire require statement (including implicit OP_VERIFY)
       this.locationData.pop();
       this.locationData.push({ location, positionHint });
     } else {

@@ -38,8 +38,8 @@ Bitcoin Cash enforces an operation cost limit (op-cost) per transaction input. T
 Since longer input scripts allow for a larger compute budget, some contracts use zero-padding (adding non-functional bytes) to "buy" more computation power without changing logic. You can find the exact op-cost per operation in the [op-cost-table][op-cost-table].
 
 ```ts
-function maxOperationCost(unlockingBytecodeLength) {  
-  return (41n + unlockingBytecodeLength) * 800n;  
+function maxOperationCost(unlockingBytecodeLength) {
+  return (41n + unlockingBytecodeLength) * 800n;
 }
 ```
 
@@ -75,7 +75,7 @@ function calculateDust(outputSize: number): number {
 ```
 
 Before CashTokens `546` bytes was often used as good default value, however with tokenData outputs have become larger in size.
-For ease of development, it is standard practice to use 1,000 satoshis as dust to outputs. 
+For ease of development, it is standard practice to use 1,000 satoshis as dust to outputs.
 
 :::note
 The standard practice of 1,000 satoshis as dust amount for outputs is only considering `P2PH`, `P2SH` and `P2PK` output types.
@@ -84,12 +84,12 @@ For `P2MS` (raw multisig) a higher dust limits may be required, you can [find mo
 
 ### Output Standardness
 
-Bitcoin Cash only allows a few types of `lockingbytecode` scripts for outputs in the normal network relay rules. These are called 'standard outputs', contrasted to 'non-standard outputs' which cause the transaction not to relay on the network.
+Bitcoin Cash only allows a few types of `lockingBytecode` scripts for outputs in the normal network relay rules. These are called 'standard outputs', contrasted to 'non-standard outputs' which cause the transaction not to relay on the network.
 
 There's 4 types of standard output types: `P2PKH`, `P2SH` (which includes `P2SH20` & `P2SH32`), `P2MS` and `OP_RETURN` data-outputs. For more details see the [standard outputs documentation][standard-outputs-docs].
 
 :::caution
-The `lockingbytecode` standardness rules can be important for smart contract developers, and is why CashScript has helpers like `LockingBytecodeP2PKH`, `LockingBytecodeP2SH32` and `LockingBytecodeNullData`.
+The `lockingBytecode` standardness rules can be important for smart contract developers, and is why CashScript has helpers like `LockingBytecodeP2PKH`, `LockingBytecodeP2SH32` and `LockingBytecodeNullData`.
 :::
 
 ## Summary table

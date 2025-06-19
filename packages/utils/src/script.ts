@@ -274,7 +274,7 @@ function replaceOps(
       const patternLength = [...pattern.matchAll(/\s+/g)].length + 1;
       const replacementLength = replacement === '' ? 0 : [...replacement.matchAll(/\s+/g)].length + 1;
 
-      // We get the locationdata entries for every opcode in the pattern
+      // We get the locationData entries for every opcode in the pattern
       const patternLocations = newLocationData.slice(scriptIndex, scriptIndex + patternLength);
 
       // We get the lowest start location and highest end location of the pattern

@@ -134,7 +134,7 @@ describe('Debugging tests', () => {
       expect(transaction).toLog(expectedSecondLog);
     });
 
-    // This is an edge case because of optimisationn position hint merging
+    // This is an edge case because of optimisation position hint merging
     it('should log the correct variable value inside a notif statement', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contractTestLogs.unlock.test_log_inside_notif_statement(false))

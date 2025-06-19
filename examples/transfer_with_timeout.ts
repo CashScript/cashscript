@@ -58,8 +58,8 @@ const transferTx = await transactionBuilder.send();
 console.log('transfer transaction details:', stringify(transferTx));
 
 // Select a 2nd contract UTXO to spend from
-const updatecContractUtxos = await contract.getUtxos();
-const contractInputUtxo2 = updatecContractUtxos.find(utxo => utxo.satoshis > 5_000n);
+const updateContractUtxos = await contract.getUtxos();
+const contractInputUtxo2 = updateContractUtxos.find(utxo => utxo.satoshis > 5_000n);
 if (!contractInputUtxo2) throw new Error('No contract UTXO with enough satoshis found');
 const inputAmount2 = contractInputUtxo2.satoshis;
 

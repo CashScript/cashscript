@@ -144,7 +144,7 @@ string answer = question.split(15)[0].split(8)[1]; // Answer is "Cash"
 ```
 
 :::note
-It is not supported to use a variable for the tupleIndex. Instead you can assign both sides of the tuple as shown below and use either element conditional on the value of the variable. 
+It is not supported to use a variable for the tupleIndex. Instead you can assign both sides of the tuple as shown below and use either element conditional on the value of the variable.
 :::
 
 It is also possible to assign both sides of the tuple at once with a destructuring syntax:
@@ -183,11 +183,11 @@ See the following table for information on which types can be cast to other whic
 When casting integer types to bytes of a certain size, the integer value is padded with zeros, e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros by passing in a `size` parameter, which indicates the size of the output, e.g. `bytes(0, 4 - 2) == 0x0000`.
 
 :::tip
-Using `bytes20 placeholderPkh= bytes20(0)` will generate a 20 byte zero-array programmatically, whereas 
+Using `bytes20 placeholderPkh= bytes20(0)` will generate a 20 byte zero-array programmatically, whereas
 `bytes20 placeholderPkh= 0x0000000000000000000000000000000000000000` will actually take 20 bytes of space in your contract.
 :::
 
-Casting an integer to a fixed-size byte-length can be a very important when storing local state in an nftCommitment. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each indivual case depending on the interger range. Below we add a table with info on the maximum integer size for common cases:
+Casting an integer to a fixed-size byte-length can be a very important when storing local state in an nftCommitment. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each individual case depending on the integer range. Below we add a table with info on the maximum integer size for common cases:
 
 | Integer Type    | Max integer value                  | Max Byte Size in Script Number Format  |
 | --------------  | -----------------------------------| ---------------------------------------|

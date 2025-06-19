@@ -59,7 +59,7 @@ async function proposeWcTransaction(){
   // use the CashScript SDK to build a transaction
   const transactionBuilder = new TransactionBuilder({provider: store.provider})
   transactionBuilder.addInputs(userInputUtxos, placeholderUnlocker)
-  transactionBuilder.addOpReturnOutput(opreturnData)
+  transactionBuilder.addOpReturnOutput(opReturnData)
   transactionBuilder.addOutput(contractOutput)
   if(changeAmount > 550n) transactionBuilder.addOutput(changeOutput)
 
@@ -71,7 +71,7 @@ async function proposeWcTransaction(){
   // construct SourceOutputs from transaction input, see source code
   const sourceOutputs = generateSourceOutputs(transactionBuilder.inputs)
 
-  // we don't need to add the contractInfo to the wcSourceOutputs here  
+  // we don't need to add the contractInfo to the wcSourceOutputs here
   const wcSourceOutputs = sourceOutputs.map((sourceOutput, index) => {
     return { ...sourceOutput, ...decodedTransaction.inputs[index] }
   })
@@ -100,7 +100,7 @@ import { Contract } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function unlockHodlVault(){
-  // create a placeholdes for the unlocking arguments
+  // create a placeholder for the unlocking arguments
   const placeholderSig = Uint8Array.from(Array(65))
   const placeholderPubKey = Uint8Array.from(Array(33));
 

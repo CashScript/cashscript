@@ -6,7 +6,7 @@ title: Getting Started
 
 To get started with writing CashScript smart contracts quickly, it is recommended to try out the [CashScript Playground](https://playground.cashscript.org/), a web application which lets you easily write and create contracts!
 
-The Playground has a code-editor and CashScript compiler easily accesible, without any prerequisites. Further, the playground allows to easily create contracts, wallets and build transactions.
+The Playground has a code-editor and CashScript compiler easily accessible, without any prerequisites. Further, the playground allows to easily create contracts, wallets and build transactions.
 
 :::tip
 The [CashScript Playground](https://playground.cashscript.org/) is a great way to get started without doing any JavaScript/TypeScript coding, this way you can focus on learning just CashScript!
@@ -153,7 +153,7 @@ import { MockNetworkProvider, Contract, SignatureTemplate, TransactionBuilder, r
 import { alicePub, bobPriv, bobPub } from './keys.js';
 import artifact from './TransferWithTimeout.json' with { type: 'json' };
 
-// Initialise a mocknetwork provider for easy testing
+// Initialise a mock network provider for easy testing
 const provider = new MockNetworkProvider();
 
 // Instantiate a new TransferWithTimeout contract

@@ -212,7 +212,7 @@ describe('Transaction Builder', () => {
 
   // TODO: Consider improving error messages checked below to also include the input/output index
 
-  it('should fail when trying to send to invalid addres', async () => {
+  it('should fail when trying to send to invalid address', async () => {
     const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
     expect(() => {

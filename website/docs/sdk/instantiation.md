@@ -109,7 +109,7 @@ The size outputs of the `cashc` compiler are based on the bytecode without const
 
 #### Example
 ```ts
-// make sure the contract bytesize is within standarness limits
+// make sure the contract bytesize is within standardness limits
 assert(contract.bytesize <= 1650)
 ```
 

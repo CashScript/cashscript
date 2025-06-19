@@ -271,7 +271,7 @@ contract Test(pubkey owner) {
 }
 `;
 
-const CONTRACT_TEST_MULTPLE_LOGS = `
+const CONTRACT_TEST_MULTIPLE_LOGS = `
 contract Test(pubkey owner) {
   function transfer(sig ownerSig, int num) {
     require(checkSig(ownerSig, owner));
@@ -319,5 +319,5 @@ export const artifactTestMultilineRequires = compileString(CONTRACT_TEST_MULTILI
 export const artifactTestZeroHandling = compileString(CONTRACT_TEST_ZERO_HANDLING);
 export const artifactTestLogs = compileString(CONTRACT_TEST_LOGS);
 export const artifactTestConsecutiveLogs = compileString(CONTRACT_TEST_CONSECUTIVE_LOGS);
-export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTPLE_LOGS);
+export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTIPLE_LOGS);
 export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS);

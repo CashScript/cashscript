@@ -136,5 +136,5 @@ const unprovableOptimisations = [
 ] as [string, string][];
 
 // Note: we moved these optimisations into a single file, but kept the exact same order as before,
-// because the order in which oprimisations are applied can impact the output.
+// because the order in which optimisations are applied can impact the output.
 export const optimisationReplacements = [...provableOptimisations, ...unprovableOptimisations];
