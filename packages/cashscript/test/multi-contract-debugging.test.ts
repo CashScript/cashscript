@@ -72,8 +72,24 @@ describe('Multi-Contract-Debugging tests', () => {
       });
     });
 
-    it.todo('should not log statements that are not executed'); // Maybe this is already included in tests above
-    it.todo('should still work with different instances of the same contract, with different paths due to different contract parameter values');
+    it('should still work with different instances of the same contract, with different paths due to different contract parameter values', () => {
+      const sameNameDifferentPathContract1 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [0n], { provider });
+      const sameNameDifferentPathContract2 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [1n], { provider });
+
+      const sameNameDifferentPathContract1Utxo = randomUtxo();
+      const sameNameDifferentPathContract2Utxo = randomUtxo();
+
+      (provider as any)?.addUtxo(sameNameDifferentPathContract1.address, sameNameDifferentPathContract1Utxo);
+      (provider as any)?.addUtxo(sameNameDifferentPathContract2.address, sameNameDifferentPathContract2Utxo);
+
+      const tx = new TransactionBuilder({ provider })
+        .addInput(sameNameDifferentPathContract1Utxo, sameNameDifferentPathContract1.unlock.function_1(0n))
+        .addInput(sameNameDifferentPathContract2Utxo, sameNameDifferentPathContract2.unlock.function_1(1n))
+        .addOutput({ to: sameNameDifferentPathContract1.address, amount: sameNameDifferentPathContract1Utxo.satoshis })
+        .addOutput({ to: sameNameDifferentPathContract2.address, amount: sameNameDifferentPathContract2Utxo.satoshis });
+
+      expect(tx).toLog('SameNameDifferentPath.cash:5 a is 0\nSameNameDifferentPath.cash:8 a is not 0');
+    });
   });
 
   describe('require statements', () => {
