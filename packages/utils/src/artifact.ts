@@ -1,5 +1,3 @@
-import fs, { PathLike } from 'fs';
-
 export interface AbiInput {
   name: string;
   type: string;
@@ -7,7 +5,6 @@ export interface AbiInput {
 
 export interface AbiFunction {
   name: string;
-  covenant?: boolean;
   inputs: readonly AbiInput[];
 }
 
@@ -25,9 +22,16 @@ export interface LogEntry {
 }
 
 export interface StackItem {
+  // Type of the variable
   type: string;
+  // Index of the variable on the stack (at the time of the specified instruction pointer)
   stackIndex: number;
+  // Instruction pointer at which we can access the logged variable
   ip: number;
+  // Operations to apply to the debug state at the specified instruction pointer to make sure that the variable is
+  // on the correct position on the stack. This is used when we're optimising bytecode where the logged variable is
+  // an intermediate result that existed in the unoptimised bytecode, but no longer exists in the optimised bytecode.
+  transformations?: string;
 }
 
 export type LogData = StackItem | string;
@@ -52,15 +56,6 @@ export interface Artifact {
   updatedAt: string;
 }
 
-export function importArtifact(artifactFile: PathLike): Artifact {
-  return JSON.parse(fs.readFileSync(artifactFile, { encoding: 'utf-8' }));
-}
-
-export function exportArtifact(artifact: Artifact, targetFile: string, format: 'json' | 'ts'): void {
-  const jsonString = formatArtifact(artifact, format);
-  fs.writeFileSync(targetFile, jsonString);
-}
-
 export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): string {
   if (format === 'ts') {
     // We remove any undefined values to make the artifact serializable using stringifyAsTs
@@ -74,9 +69,10 @@ export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): strin
 const indent = (level: number): string => '  '.repeat(level);
 
 function stringifyAsTs(obj: any, indentationLevel: number = 1): string {
-  // For strings, we use JSON.stringify, but we convert double quotes to single quotes
+  // For strings we use JSON.stringify to handle escaping, but we want to use single quotes instead of double quotes
+  // around string values inside objects, to match regular TS style
   if (typeof obj === 'string') {
-    return JSON.stringify(obj).replace(/'/g, "\\'").replace(/"/g, "'");
+    return `'${JSON.stringify(obj).replace(/'/g, "\\'").replace(/\\"/g, '"').slice(1, -1)}'`;
   }
 
   // Numbers and booleans are just converted to strings

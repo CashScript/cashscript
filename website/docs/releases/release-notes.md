@@ -2,6 +2,40 @@
 title: Release Notes
 ---
 
+## v0.11.0
+
+This update adds CashScript support for the new BCH 2025 network upgrade. To read more about the upgrade, see [this blog post](https://blog.bitjson.com/2025-chips/).
+
+This release also contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
+
+#### cashc compiler
+- :bug: Fix bug where source code in `--format ts` artifacts used incorrect quotation marks.
+- :hammer_and_wrench: Remove warning for opcount and update warning for byte size to match new limits.
+- :boom: **BREAKING**: `tx.age` was renamed to `this.age` to better reflect that it enforces a UTXO-level locktime check (*not* transaction-level).
+- :boom: **BREAKING**: The entire `debug` object on the artifact is reworked to enable debugging the optimised contract bytecode.
+
+#### CashScript SDK
+- :sparkles: Add debugging capabilities to the `TransactionBuilder`.
+  - `transaction.debug()` & `transaction.bitauthUri()`
+  - Output BitAuth IDE URI for debugging when transaction is rejected.
+  - Libauth template generation and debugging for multi-contract transactions
+- :sparkles: Debugging now supports using the optimised contract bytecode (when compiled with `cashc@0.11.0` or later).
+- :sparkles: Add `setBlockHeight()` method to `MockNetworkProvider`
+- :sparkles: Config-free usage of the CashScript SDK with Vite or Webpack
+- :hammer_and_wrench: Update debug tooling to use the new `BCH_2025_05` instruction set.
+- :hammer_and_wrench: Deprecate the simple transaction builder. You can still use the simple transaction builder with the current SDK, but this support will be removed in a future release
+- :boom: **BREAKING**: the Jest utilities for automated testing are now synchronous and no longer work with the deprecated simple transaction builder
+  * `expect(transaction).toLog(message)`
+  * `expect(transaction).toFailRequire()`
+  * `expect(transaction).toFailRequireWith(message)`
+- :boom: **BREAKING**: Remove support for custom Clusters from `ElectrumNetworkProvider` and added a configuration object to the constructor.
+- :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
+- :bug: Fix bug where `JestExtensions` `expect().toLog()` would detect logs from different tests.
+- :bug: Fix bug where certain edge cases in require statements caused the `FailedRequireError` message to be slightly different from the original error message.
+
+#### @cashscript/utils
+- :boom: **BREAKING**: Remove `importArtifact` and `exportArtifact` helper functions. If you want to import or export artifacts, use `'fs'` to read and write files directly.
+
 ## v0.10.5
 
 #### cashc compiler
@@ -55,9 +89,9 @@ Thanks [mainnet_pat](https://x.com/mainnet_pat) for the initiative and significa
 - :sparkles: Add `MockNetworkProvider` to simulate network interaction for debugging and testing.
   - Add `randomUtxo()`, `randomToken()` and `randomNft()` functions to generate dummy UTXOs for testing.
 - :sparkles: Add CashScript Jest utilities for automated testing.
-  * `expect(transaction).toLog(message)`
-  * `expect(transaction).toFailRequire()`
-  * `expect(transaction).toFailRequireWith(message)`
+  * `await expect(transaction).toLog(message)`
+  * `await expect(transaction).toFailRequire()`
+  * `await expect(transaction).toFailRequireWith(message)`
 - :bug: Fix bug with type exports.
 - :hammer_and_wrench: Update visibility of several classes.
   - Make `artifact`, `networkProvider`, `addressType` and `encodedConstructorArgs` public on `Contract` class.
@@ -69,6 +103,10 @@ Thanks [mainnet_pat](https://x.com/mainnet_pat) for the initiative and significa
 - :boom: **BREAKING**: Remove exported transaction error `Reason` enum + `FailedTimeCheckError` and `FailedSigCheckError` classes in favour of the new error classes.
 - :boom: **BREAKING**: Remove all deprecated references to `meep` including `meep` strings from errors and `transaction.meep()`.
 - :boom: **BREAKING**: Separate the `Argument` type into `FunctionArgument` and `ConstructorArgument` and rename `encodeArgument` to `encodeFunctionArgument`.
+
+---
+
+https://x.com/CashScriptBCH/status/1833454128426615174
 
 ## v0.9.3
 
@@ -93,7 +131,7 @@ Thanks [mainnet_pat](https://x.com/mainnet_pat) for the initiative and significa
 ## v0.9.0
 
 #### CashScript SDK
-- :sparkles: Add new advanced `TransactionBuilder` class that allows combining UTXOs from multiple different smart contracts and P2PKH UTXOs in a single transaction.
+- :sparkles: Add new `TransactionBuilder` class that allows combining UTXOs from multiple different smart contracts and P2PKH UTXOs in a single transaction.
 - :hammer_and_wrench: Deprecate all `meep` functionality. Meep has been unmaintained for years and does not support many new CashScript features. Meep functionality will be removed in a future release.
 
 ---
@@ -224,7 +262,7 @@ https://x.com/RoscoKalis/status/1529072055756414976
 * :bug: The final statement in a contract now MUST be a require statement (in all branches)
 * :bug: Empty contracts and functions are now considered invalid
 * :bug: Fix bug where certain covenants could become unspendable due to incorrect bytesize calculation
-  * :boom: **BREAKING**: Covenants using `tx.bytecode` now include a placeholder `OP_NOP` that gets replaced when constructor arguments are provided in the CashScript SDK. If you're not using the CashScript SDK, refer to the [`replaceBytecodeNop()` function](https://github.com/CashScript/cashscript/blob/master/packages/utils/src/script.ts#L130) to see the steps required to do so manually.
+  * :boom: **BREAKING**: Covenants using `tx.bytecode` now include a placeholder `OP_NOP` that gets replaced when constructor arguments are provided in the CashScript SDK. If you're not using the CashScript SDK, refer to the [`replaceBytecodeNop()` function](https://github.com/CashScript/cashscript/blob/v0.6.0/packages/utils/src/script.ts#L130) to see the steps required to do so manually.
 * :boom: **BREAKING**: Remove `--args` parameter from the CLI, since this is too error prone with the recent changes in mind
 * :boom: **BREAKING**: Restructure exports
 

@@ -1,5 +1,5 @@
 import { stringify } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { Contract, SignatureTemplate, ElectrumNetworkProvider, TransactionBuilder, Output } from 'cashscript';
 import { compileFile } from 'cashc';
 import { URL } from 'url';
 
@@ -24,16 +24,44 @@ const contract = new Contract(artifact, parameters, { provider });
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
+const contractUtxos = await contract.getUtxos();
+console.log('contract utxos:', contractUtxos);
 console.log('contract balance:', await contract.getBalance());
+
+const currentBlockHeight = await provider.getBlockHeight();
+console.log('current block height:', currentBlockHeight);
+
+// Select a contract UTXO to spend from
+const contractInputUtxo = contractUtxos.find(utxo => utxo.satoshis > 10_000n);
+if (!contractInputUtxo) throw new Error('No contract UTXO with enough satoshis found');
+const inputAmount = contractInputUtxo.satoshis;
 
 // Produce new oracle message and signature
 const oracleMessage = oracle.createMessage(100000n, 30000n);
 const oracleSignature = oracle.signMessage(oracleMessage);
 
+// construct an output
+const outputAmount = 1000n;
+const output: Output = { amount: outputAmount, to: contract.address };
+
+// Construct a changeOutput
+const minerFee = 1000n;
+const changeAmount = inputAmount - outputAmount - minerFee;
+const changeOutput: Output = {
+  amount: changeAmount,
+  to: contract.address,
+};
+
+const aliceTemplate = new SignatureTemplate(alicePriv);
+
 // Spend from the vault
-const tx = await contract.functions
-  .spend(new SignatureTemplate(alicePriv), oracleSignature, oracleMessage)
-  .to(contract.address, 1000n)
-  .send();
+const transactionBuilder = new TransactionBuilder({ provider });
+
+transactionBuilder.setLocktime(currentBlockHeight);
+transactionBuilder.addInput(contractInputUtxo, contract.unlock.spend(aliceTemplate, oracleSignature, oracleMessage));
+transactionBuilder.addOutput(output);
+if (changeAmount > 1000n) transactionBuilder.addOutput(changeOutput);
+
+const tx = await transactionBuilder.send();
 
 console.log(stringify(tx));

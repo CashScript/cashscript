@@ -42,10 +42,17 @@ interface AbiFunction {
 interface LogEntry {
   ip: number; // instruction pointer
   line: number; // line in the source code
-  data: Array<{ stackIndex: number, type: string } | string>; // data to be logged
+  data: Array<StackItem | string>; // data to be logged
 }
 
-interface RequireMessage {
+interface StackItem {
+  type: string; // Type of the variable
+  stackIndex: number; // Index of the variable on the stack
+  ip: number; // Instruction pointer at which we can access the logged variable
+  transformations?: string; // Transformations needed to obtain the logged item
+}
+
+interface RequireStatement {
   ip: number; // instruction pointer
   line: number; // line in the source code
   message: string; // custom message for failing `require` statement

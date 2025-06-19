@@ -1,26 +1,53 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateBCH, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, binToHex, createCompiler, createVirtualMachineBCH2023, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
-import { Artifact, LogEntry, Op, PrimitiveType, StackItem, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2025, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { Artifact, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './LibauthTemplate.js';
 
-// evaluates the fully defined template, throws upon error
-export const evaluateTemplate = (template: WalletTemplate): boolean => {
-  const { vm, program } = createProgram(template);
-
-  const verifyResult = vm.verify(program);
-  if (typeof verifyResult === 'string') {
-    throw new FailedTransactionError(verifyResult, getBitauthUri(template));
-  }
-
-  return verifyResult;
-};
-
 export type DebugResult = AuthenticationProgramStateCommon[];
+export type DebugResults = Record<string, DebugResult>;
 
 // debugs the template, optionally logging the execution data
-export const debugTemplate = (template: WalletTemplate, artifact: Artifact): DebugResult => {
-  const { vm, program } = createProgram(template);
+export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
+  // If a contract has the same name, but a different bytecode, then it is considered a name collision
+  const hasArtifactNameCollision = artifacts.some(
+    (artifact) => (
+      artifacts.some((other) => other.contractName === artifact.contractName && other.bytecode !== artifact.bytecode)
+    ),
+  );
+
+  if (hasArtifactNameCollision) {
+    throw new Error('There are multiple artifacts with the same contractName. Please make sure that all artifacts have unique names.');
+  }
+
+  const results: DebugResults = {};
+  const unlockingScriptIds = Object.keys(template.scripts).filter((key) => 'unlocks' in template.scripts[key]);
+
+  for (const unlockingScriptId of unlockingScriptIds) {
+    const scenarioIds = (template.scripts[unlockingScriptId] as WalletTemplateScriptUnlocking).passes ?? [];
+    // There are no scenarios defined for P2PKH placeholder scripts, so we skip them
+    if (scenarioIds.length === 0) continue;
+
+    const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(artifact.contractName));
+
+    if (!matchingArtifact) {
+      throw new Error(`No artifact found for unlocking script ${unlockingScriptId}`);
+    }
+
+    for (const scenarioId of scenarioIds) {
+      results[`${unlockingScriptId}.${scenarioId}`] = debugSingleScenario(template, matchingArtifact, unlockingScriptId, scenarioId);
+    }
+  }
+
+  verifyFullTransaction(template);
+
+  return results;
+};
+
+const debugSingleScenario = (
+  template: WalletTemplate, artifact: Artifact, unlockingScriptId: string, scenarioId: string,
+): DebugResult => {
+  const { vm, program } = createProgram(template, unlockingScriptId, scenarioId);
 
   const fullDebugSteps = vm.debug(program);
 
@@ -34,7 +61,7 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     .filter((debugStep) => debugStep.controlStack.every(item => item === true));
 
   const executedLogs = (artifact.debug?.logs ?? [])
-    .filter((debugStep) => executedDebugSteps.some((log) => log.ip === debugStep.ip));
+    .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
 
   for (const log of executedLogs) {
     logConsoleLogStatement(log, executedDebugSteps, artifact);
@@ -48,13 +75,16 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     // caused the error (in other words the OP_VERIFY). We need to decrement the instruction pointer to get the correct
     // failing instruction.
     const failingIp = lastExecutedDebugStep.ip - 1;
+    const failingInstruction = lastExecutedDebugStep.instructions[failingIp];
 
-    // Generally speaking, an error is thrown by the OP_VERIFY opcode, but for NULLFAIL, the error is thrown in the
-    // preceding OP_CHECKSIG opcode. The error message is registered in the next instruction, so we need to increment
-    // the instruction pointer to get the correct error message from the require messages in the artifact.
-    // Note that we do NOT use this adjusted IP when passing the failing IP into the FailedRequireError
-    const isNullFail = lastExecutedDebugStep.error === AuthenticationErrorCommon.nonNullSignatureFailure;
-    const requireStatementIp = failingIp + (isNullFail ? 1 : 0);
+    // With optimisations, the OP_CHECKSIG and OP_VERIFY instructions are merged into a single opcode (OP_CHECKSIGVERIFY).
+    // However, for the final verify, the OP_VERIFY is not present. In most cases, the implicit final VERIFY is checked
+    // later in the code. However, for NULLFAIL, the error is thrown in the OP_CHECKSIG opcode, rather than in the
+    // implicit final VERIFY. The error message is registered in the next instruction, so we need to increment the
+    // instruction pointer to get the correct error message from the require messages in the artifact.
+    // Note that we do NOT use this adjusted IP when passing the failing IP into the FailedRequireError.
+    const isNullFail = lastExecutedDebugStep.error.includes(AuthenticationErrorCommon.nonNullSignatureFailure);
+    const requireStatementIp = failingIp + (isNullFail && isSignatureCheckWithoutVerify(failingInstruction) ? 1 : 0);
 
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((statement) => statement.ip === requireStatementIp);
@@ -74,8 +104,10 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
     );
   }
 
-  const evaluationResult = vm.verify(program);
+  // Evaluate the final program state to see if it evaluated successfully
+  const evaluationResult = vm.stateSuccess(lastExecutedDebugStep);
 
+  // Check if the evaluation failed matches any of the possible failure cases
   if (failedFinalVerify(evaluationResult)) {
     const finalExecutedVerifyIp = getFinalExecutedVerifyIp(executedDebugSteps);
 
@@ -107,25 +139,35 @@ export const debugTemplate = (template: WalletTemplate, artifact: Artifact): Deb
   return fullDebugSteps;
 };
 
+/* eslint-disable @typescript-eslint/indent */
 type VM = AuthenticationVirtualMachine<
-ResolvedTransactionCommon,
-AuthenticationProgramCommon,
-AuthenticationProgramStateBCH
+  ResolvedTransactionCommon,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon
 >;
+/* eslint-enable @typescript-eslint/indent */
+
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
 
 // internal util. instantiates the virtual machine and compiles the template into a program
-const createProgram = (template: WalletTemplate): CreateProgramResult => {
+const createProgram = (template: WalletTemplate, unlockingScriptId: string, scenarioId: string): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachineBCH2023();
+  const vm = createVirtualMachineBch2025();
   const compiler = createCompiler(configuration);
+
+  if (!template.scripts[unlockingScriptId]) {
+    throw new Error(`No unlock script found in template for ID ${unlockingScriptId}`);
+  }
+
+  if (!template.scenarios?.[scenarioId]) {
+    throw new Error(`No scenario found in template for ID ${scenarioId}`);
+  }
 
   const scenarioGeneration = compiler.generateScenario({
     debug: true,
-    lockingScriptId: undefined,
-    unlockingScriptId: 'unlock_lock',
-    scenarioId: 'evaluate_function',
+    unlockingScriptId,
+    scenarioId,
   });
 
   if (typeof scenarioGeneration === 'string') {
@@ -149,9 +191,38 @@ const logConsoleLogStatement = (
     if (typeof element === 'string') return element;
 
     const debugStep = debugSteps.find((step) => step.ip === element.ip)!;
-    return decodeStackItem(element, debugStep.stack);
+    const transformedDebugStep = applyStackItemTransformations(element, debugStep);
+    return decodeStackItem(element, transformedDebugStep.stack);
   });
   console.log(`${line} ${decodedData.join(' ')}`);
+};
+
+const applyStackItemTransformations = (
+  element: StackItem,
+  debugStep: AuthenticationProgramStateCommon,
+): AuthenticationProgramStateCommon => {
+  if (!element.transformations) return debugStep;
+
+  const transformationsBytecode = asmToBytecode(element.transformations);
+  const transformationsAuthenticationInstructions = decodeAuthenticationInstructions(transformationsBytecode);
+
+  const transformationsStartState: AuthenticationProgramStateCommon = {
+    alternateStack: [...debugStep.alternateStack],
+    controlStack: [],
+    ip: 0,
+    lastCodeSeparator: -1,
+    metrics: {} as any,
+    stack: [...debugStep.stack],
+    operationCount: 0,
+    instructions: transformationsAuthenticationInstructions,
+    signedMessages: [],
+    program: { ...debugStep.program },
+  };
+
+  const vm = createVirtualMachineBch2025();
+  const transformationsEndState = vm.stateEvaluate(transformationsStartState);
+
+  return transformationsEndState;
 };
 
 const decodeStackItem = (element: StackItem, stack: Uint8Array[]): any => {
@@ -176,16 +247,22 @@ const failedFinalVerify = (evaluationResult: string | true): evaluationResult is
   // If any of the following errors occurred, then the final verify failed - any other messages
   // indicate other kinds of failures
   return toRegExp([
-    AuthenticationErrorCommon.requiresCleanStack,
-    AuthenticationErrorCommon.nonEmptyControlStack,
+    // TODO: Ask Jason to put these back into an enum and replace with the enum value
+    'The CashAssembly internal evaluation completed with an unexpected number of items on the stack (must be exactly 1).', // AuthenticationErrorCommon.requiresCleanStack,
+    'The CashAssembly internal evaluation completed with a non-empty control stack.', // AuthenticationErrorCommon.nonEmptyControlStack,
     AuthenticationErrorCommon.unsuccessfulEvaluation,
   ]).test(evaluationResult);
 };
 
 const calculateCleanupSize = (instructions: Array<AuthenticationInstruction | undefined>): number => {
-  // OP_NIP is used for cleanup at the end of a function, OP_ENDIF and OP_ELSE are the end of branches
-  // We need to remove all of these to get to the actual last executed instruction of a function
-  const cleanupOpcodes = [Op.OP_ENDIF, Op.OP_NIP, Op.OP_ELSE];
+  // OP_NIP (or OP_DROP/OP_2DROP in optimised bytecode) is used for cleanup at the end of a function,
+  // OP_ENDIF and OP_ELSE are the end of branches. We need to remove all of these to get to the actual last
+  // executed instruction of a function
+  // Note that in the case where we re-add OP_1 because we cannot optimise the final explicit VERIFY into an implicit one
+  // (like when dealing with if-statements, or with CHECKLOCKTIMEVERIFY), it is impossible to run into an implicit final
+  // verify failure. That is why OP_1 does not need to be included in the cleanup opcodes.
+  // TODO: Perhaps we also do not need to add OP_DROP/OP_2DROP either, because they only occur together with OP_1
+  const cleanupOpcodes = [Op.OP_ENDIF, Op.OP_NIP, Op.OP_ELSE, Op.OP_DROP, Op.OP_2DROP];
 
   let cleanupSize = 0;
   for (const instruction of [...instructions].reverse()) {
@@ -225,4 +302,30 @@ const getFinalExecutedVerifyIp = (executedDebugSteps: AuthenticationProgramState
   // final verify, so we need to add one to get the actual final verify instruction
   const finalExecutedVerifyIp = finalExecutedNonCleanupStep.ip + 1;
   return finalExecutedVerifyIp;
+};
+
+// After debugging, we want to verify the full transaction to ensure it is valid (this catches any errors that are not
+// necessarily script errors)
+const verifyFullTransaction = (template: WalletTemplate): void => {
+  const placeholderScriptId = Object.keys(template.scripts).find((key) => 'unlocks' in template.scripts[key]);
+  const placeholderScenarioId = (template.scripts[placeholderScriptId ?? ''] as WalletTemplateScriptUnlocking)?.passes?.[0];
+
+  if (!placeholderScenarioId || !placeholderScriptId) {
+    throw new Error('No placeholder scenario ID or script ID found');
+  }
+
+  const { vm, program } = createProgram(template, placeholderScriptId, placeholderScenarioId);
+
+  const verificationResult = vm.verify({
+    sourceOutputs: program.sourceOutputs,
+    transaction: program.transaction,
+  });
+
+  if (typeof verificationResult === 'string') {
+    throw new FailedTransactionError(verificationResult, getBitauthUri(template));
+  }
+};
+
+const isSignatureCheckWithoutVerify = (instruction: AuthenticationInstruction): boolean => {
+  return [Op.OP_CHECKSIG, Op.OP_CHECKMULTISIG, Op.OP_CHECKDATASIG].includes(instruction.opcode);
 };

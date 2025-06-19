@@ -1,0 +1,8 @@
+contract LogIntermediateResults(pubkey owner) {
+    function test_log_intermediate_result() {
+        bytes32 singleHash = sha256(owner);
+        console.log(singleHash);
+        bytes32 doubleHash = sha256(singleHash);
+        require(doubleHash.length == 32, "doubleHash should be 32 bytes");
+    }
+}

@@ -2,9 +2,9 @@
 title: WalletConnect
 ---
 
-The BCH WalletConnect specification was created in July of 2023 and has become popular since. The standard integrates nicely with CashScript contract development as it was designed with CashScript contract usage in mind.
+The BCH WalletConnect spec lays out a BCH-specific API for how Bitcoin Cash dapps can communicate to BCH Wallets. BCH WalletConnect uses the generic 'WalletConnect' transport layer but the contents being communicated is what's BCH-specific. The standard was designed with CashScript smart contract usage in mind.
 
-You can find a full list of Bitcoin Cash dapps supporting WalletConnect on [Tokenaut.cash](https://tokenaut.cash/dapps?filter=walletconnect).
+The BCH WalletConnect standard is supported in multiple wallets and a wide range of dapps. You can find a full list of Bitcoin Cash dapps supporting WalletConnect on [Tokenaut.cash](https://tokenaut.cash/dapps?filter=walletconnect).
 
 :::tip
 The specification is called ['wc2-bch-bcr'](https://github.com/mainnet-pat/wc2-bch-bcr) and has extra discussion and info on the [BCH research forum](https://bitcoincashresearch.org/t/wallet-connect-v2-support-for-bitcoincash/).
@@ -27,62 +27,139 @@ signTransaction: (
 ) => Promise<{ signedTransaction: string, signedTransactionHash: string } | undefined>;
 ```
 
-Important to note is how the wallet knows which inputs to sign:
+You can see that the CashScript `ContractInfo` needs to be provided as part of the `sourceOutputs`. Important to note from the spec is how the wallet knows which inputs to sign:
 
 >To signal that the wallet needs to sign an input, the app sets the corresponding input's `unlockingBytecode` to empty Uint8Array.
 
-## signTransaction Example
+Also important for smart contract usage is how the wallet adds the public-key or a signature to contract inputs:
 
-### Create wcTransactionObj
+> We signal the use of pubkeys by using a 33-byte long zero-filled arrays and schnorr (the currently supported type) signatures by using a 65-byte long zero-filled arrays. Wallet detects these patterns and replaces them accordingly.
 
-Example code from the 'Cash-Ninjas' minting dapp repository, [link to source code](https://github.com/cashninjas/ninjas.cash/blob/main/js/mint.js).
+## Create wcTransactionObj
 
-```javascript
+To use the BCH WalletConnect `signTransaction` API, we need to pass an `options` object which we'll call `wcTransactionObj`.
+
+Below we'll give 2 example, the first example using spending a user-input and in the second example spending from a user-contract with the `userPubKey` and the `userSig`
+
+### Spending a user-input
+
+Below is example code from the `CreateContract` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/CreateContract.vue#L14).
+
+```ts
 import { Contract } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
-async function transactionWalletConnect(){
+async function proposeWcTransaction(){
+  // create a placeholderUnlocker for the empty signature
+  const placeholderUnlocker: Unlocker = {
+    generateLockingBytecode: () => convertPkhToLockingBytecode(userPkh),
+    generateUnlockingBytecode: () => Uint8Array.from(Array(0))
+  }
+
   // use the CashScript SDK to build a transaction
-  const rawTransactionHex = await transaction.build();
-  const decodedTransaction = decodeTransaction(hexToBin(rawTransactionHex));
+  const transactionBuilder = new TransactionBuilder({provider: store.provider})
+  transactionBuilder.addInputs(userInputUtxos, placeholderUnlocker)
+  transactionBuilder.addOpReturnOutput(opReturnData)
+  transactionBuilder.addOutput(contractOutput)
+  if(changeAmount > 550n) transactionBuilder.addOutput(changeOutput)
 
-  // set input unlockingBytecode to empty Uint8Array for wallet signing
-  decodedTransaction.inputs[1].unlockingBytecode = Uint8Array.from([]);
+  const unsignedRawTransactionHex = await transactionBuilder.build();
 
-  // construct list SourceOutputs, see source code
-  const listSourceOutputs = constructSourceOutputs(decodedTransaction, utxoInfo, contract)
+  const decodedTransaction = decodeTransaction(hexToBin(unsignedRawTransactionHex));
+  if(typeof decodedTransaction == "string") throw new Error("!decodedTransaction")
+
+  // construct SourceOutputs from transaction input, see source code
+  const sourceOutputs = generateSourceOutputs(transactionBuilder.inputs)
+
+  // we don't need to add the contractInfo to the wcSourceOutputs here
+  const wcSourceOutputs = sourceOutputs.map((sourceOutput, index) => {
+    return { ...sourceOutput, ...decodedTransaction.inputs[index] }
+  })
 
   // wcTransactionObj to pass to signTransaction endpoint
   const wcTransactionObj = {
     transaction: decodedTransaction,
     sourceOutputs: listSourceOutputs,
     broadcast: true,
-    userPrompt: "Mint Cash-Ninja NFT"
+    userPrompt: "Create HODL Contract"
   };
 
   // pass wcTransactionObj to WalletConnect client
-  const signResult = await signTransaction(wcTransactionObj);
+  const signResult = await signWcTransaction(wcTransactionObj);
 
   // Handle signResult success / failure
 }
 ```
 
-### signTransaction Client interaction
+### Spending from a user-contract
 
-Below is an implementation of `signTransaction` used earlier, this is where the communication with the client for 'signTransaction' takes place. See the source code for `signClient`, `connectedChain` and `session` details.
+Below is example code from the `unlockHodlVault` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/UserContracts.vue#L66).
 
-```javascript
+```ts
+import { Contract } from "cashscript";
+import { hexToBin, decodeTransaction } from "@bitauth/libauth";
+
+async function unlockHodlVault(){
+  // create a placeholder for the unlocking arguments
+  const placeholderSig = Uint8Array.from(Array(65))
+  const placeholderPubKey = Uint8Array.from(Array(33));
+
+  const transactionBuilder = new TransactionBuilder({provider: store.provider})
+
+  transactionBuilder.setLocktime(store.currentBlockHeight)
+  transactionBuilder.addInputs(contractUtxos, hodlContract.unlock.spend(placeholderPubKey, placeholderSig))
+  transactionBuilder.addOutput(reclaimOutput)
+
+  const unsignedRawTransactionHex = transactionBuilder.build();
+
+  const decodedTransaction = decodeTransaction(hexToBin(unsignedRawTransactionHex));
+  if(typeof decodedTransaction == "string") throw new Error("!decodedTransaction")
+
+  const sourceOutputs = generateSourceOutputs(transactionBuilder.inputs)
+
+  // Add the contractInfo to the wcSourceOutputs
+  const wcSourceOutputs: wcSourceOutputs = sourceOutputs.map((sourceOutput, index) => {
+    const contractInfoWc = createWcContractObj(hodlContract, index)
+    return { ...sourceOutput, ...contractInfoWc, ...decodedTransaction.inputs[index] }
+  })
+
+  const wcTransactionObj = {
+    transaction: decodedTransaction,
+    sourceOutputs: wcSourceOutputs,
+    broadcast: true,
+    userPrompt: "Reclaim HODL Value",
+  };
+
+  // pass wcTransactionObj to WalletConnect client
+  const signResult = await signWcTransaction(wcTransactionObj);
+
+  // Handle signResult success / failure
+}
+```
+
+## signTransaction Wallet interaction
+
+To communicate the `wcTransactionObj` with the user's Wallet we use the `@walletconnect/sign-client` library to request the connected user's wallet to sign the transaction.
+
+See [the source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/store/store.ts#L60) for how to initialize the `signClient` and for details about the `connectedChain` and `session`.
+
+```ts
 import SignClient from '@walletconnect/sign-client';
 import { stringify } from "@bitauth/libauth";
 
-async function signTransaction(options){
+interface signedTxObject {
+  signedTransaction: string;
+  signedTransactionHash: string;
+}
+
+async function signWcTransaction(wcTransactionObj): signedTxObject | undefined {
   try {
     const result = await signClient.request({
       chainId: connectedChain,
       topic: session.topic,
       request: {
         method: "bch_signTransaction",
-        params: JSON.parse(stringify(options)),
+        params: JSON.parse(stringify(wcTransactionObj)),
       },
     });
     return result;

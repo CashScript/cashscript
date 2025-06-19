@@ -7,7 +7,7 @@ pragma cashscript >=0.8.0;
  */
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */) {
     function receive() {
-        // require(tx.age >= period);
+        // require(this.age >= period);
 
         // Check that the first output sends to the recipient
         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));

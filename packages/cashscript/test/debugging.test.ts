@@ -1,607 +1,386 @@
-import { compileString } from 'cashc';
-import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate } from '../src/index.js';
-import {
-  alicePriv, alicePub, bobPriv,
-  bobPub,
-} from './fixture/vars.js';
+import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
+import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
-
-const CONTRACT_CODE = `
-contract Test() {
-  function test_logs() {
-    console.log("Hello World");
-    require(1 == 2);
-  }
-
-  function test_no_logs() {
-    require(1 == 2);
-  }
-
-  function test_require() {
-    require(1 == 2, "1 should equal 2");
-  }
-
-  function test_require_no_failure() {
-    require(1 == 1, "1 should equal 1");
-  }
-
-  function test_multiple_require_statements() {
-    require(1 == 2, "1 should equal 2");
-    require(1 == 1, "1 should equal 1");
-  }
-
-  function test_multiple_require_statements_final_fails() {
-    require(1 == 1, "1 should equal 1");
-    require(1 == 2, "1 should equal 2");
-  }
-
-  function test_multiple_require_statements_no_message_final() {
-    require(1 == 1, "1 should equal 1");
-    require(1 == 2);
-  }
-
-  function test_timeops_as_final_require() {
-    require(1 == 1, "1 should equal 1");
-    require(tx.time >= 100000000, "time should be HUGE");
-  }
-
-  function test_final_require_in_if_statement(int switch) {
-    if (switch == 1) {
-      int a = 2;
-      require(1 == a, "1 should equal 2");
-    } else if (switch == 2) {
-      int b = 3;
-      require(1 == b, "1 should equal 3");
-    } else {
-      int c = 4;
-      require(switch == c, "switch should equal 4");
-    }
-  }
-
-  function test_final_require_in_if_statement_with_deep_reassignment() {
-    int a = 0;
-    int b = 1;
-    int c = 2;
-    int d = 3;
-    int e = 4;
-    if (a == 0) {
-      a =
-        10 + 10;
-      require(a + b + c + d + e == 10, "sum should equal 10");
-    }
-  }
-
-  function test_invalid_split_range() {
-    bytes test = 0x1234;
-    bytes test2 = test.split(4)[0];
-    require(test2 == 0x1234);
-  }
-
-  function test_invalid_input_index() {
-    require(tx.inputs[5].value == 1000);
-  }
-
-  function test_fail_checksig(sig s, pubkey pk) {
-    require(checkSig(s, pk), "Signatures do not match");
-    require(1 == 2, "1 should equal 2");
-  }
-
-  function test_fail_checksig_final_verify(sig s, pubkey pk) {
-    require(checkSig(s, pk), "Signatures do not match");
-  }
-
-  function test_fail_checkdatasig(datasig s, bytes message, pubkey pk) {
-    require(checkDataSig(s, message, pk), "Data Signatures do not match");
-  }
-
-  function test_fail_checkmultisig(sig s1, pubkey pk1, sig s2, pubkey pk2) {
-    require(checkMultiSig([s1, s2], [pk1, pk2]), "Multi Signatures do not match");
-  }
-}
-`;
-
-const CONTRACT_CODE2 = `
-contract Test() {
-  function test_require_single_function() {
-    require(tx.outputs.length == 1, "should have 1 output");
-  }
-}`;
-
-const CONTRACT_CODE3 = `
-contract Test() {
-  // We test this because the cleanup looks different and the final OP_VERIFY isn't removed for these kinds of functions
-  function test_fail_large_cleanup() {
-    int a = 1;
-    int b = 2;
-    int c = 3;
-    int d = 4;
-    int e = 5;
-    int f = 6;
-    int g = 7;
-    int h = 8;
-
-    // Use all variables inside this if-statement so they do not get OP_ROLL'ed
-    if (
-    1
-      == 2
-    ) {
-      require(a + b + c + d + e + f + g + h == 1, "sum should equal 36");
-    }
-
-    require(1 == 2, "1 should equal 2");
-  }
-
-  function test_fail_multiline_require() {
-    require(
-      1 == 2,
-      "1 should equal 2"
-    );
-
-    require(1 == 1);
-  }
-
-  function test_fail_multiline_final_require() {
-    require(
-      1 == 2,
-      "1 should equal 2"
-    );
-  }
-
-  function test_multiline_non_require_error() {
-    int x =
-      tx.outputs[
-        5
-      ].value +
-      tx.inputs[5].value;
-    require(x == 1000);
-  }
-
-  function test_multiline_require_with_unary_op() {
-    require(
-      !(
-        0x000000
-        .reverse()
-        .length
-        !=
-        -(
-          30
-            +
-          15
-        )
-      )
-    );
-
-    require(1 == 1);
-  }
-
-  function test_multiline_require_with_instantiation() {
-    require(
-      new LockingBytecodeP2PKH(
-        hash160(0x000000)
-      )
-        ==
-      new LockingBytecodeNullData([
-        0x00,
-        bytes("hello world")
-      ])
-    );
-
-    require(1 == 1);
-  }
-}
-`;
-
-const CONTRACT_CODE_ZERO_HANDLING = `
-contract Test(int a) {
-  function test_zero_handling(int b) {
-    require(a == 0, "a should be 0");
-    require(b == 0, "b should be 0");
-    require(a == b, "a should equal b");
-  }
-}
-`;
+import {
+  artifactTestMultipleConstructorParameters,
+  artifactTestLogs,
+  artifactTestConsecutiveLogs,
+  artifactTestMultipleLogs,
+  artifactTestRequires,
+  artifactTestSingleFunction,
+  artifactTestMultilineRequires,
+  artifactTestZeroHandling,
+} from './fixture/debugging/debugging_contracts.js';
+import { sha256 } from '@cashscript/utils';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
-    const BASE_CONTRACT_CODE = `
-      contract Test(pubkey owner) {
-        function transfer(sig ownerSig, int num) {
-          console.log('Hello First Function');
-          require(checkSig(ownerSig, owner));
-
-          bytes2 beef = 0xbeef;
-          require(beef != 0xfeed);
-
-          console.log(ownerSig, owner, num, beef, 1, "test", true);
-
-          require(num == 1000);
-        }
-
-        function secondFunction() {
-          console.log("Hello Second Function");
-          require(1 == 1);
-        }
-
-        function functionWithIfStatement(int a) {
-          int b = 0;
-
-          if (a == 1) {
-            console.log("a is 1");
-            b = a;
-          } else {
-            console.log("a is not 1");
-            b = 2;
-          }
-
-          console.log('a equals', a);
-          console.log('b equals', b);
-
-          require(1 == 1);
-        }
-
-        function noLogs() {
-          require(1 == 1);
-        }
-      }
-    `;
-
-    const artifact = compileString(BASE_CONTRACT_CODE);
     const provider = new MockNetworkProvider();
+    const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
+    const contractUtxo = randomUtxo();
+    provider.addUtxo(contractTestLogs.address, contractUtxo);
 
     it('should log correct values', async () => {
-      const contract = new Contract(artifact, [alicePub], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
-
-      const transaction = contract.functions
-        .transfer(new SignatureTemplate(alicePriv), 1000n)
-        .to(contract.address, 10000n);
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num, beef, 1, "test", true);
       const expectedLog = new RegExp(`^Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
-      await expect(transaction).toLog(expectedLog);
+      expect(transaction).toLog(expectedLog);
     });
 
     it('should log when logging happens before a failing require statement', async () => {
-      const contract = new Contract(artifact, [alicePub], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
-
       const incorrectNum = 100n;
-      const transaction = contract.functions
-        .transfer(new SignatureTemplate(alicePriv), incorrectNum)
-        .to(contract.address, 10000n);
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), incorrectNum))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num, beef, 1, "test", true);
       const expectedLog = new RegExp(`^Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100 0xbeef 1 test true$`);
-      await expect(transaction).toLog(expectedLog);
+      expect(transaction).toLog(expectedLog);
     });
 
     it('should not log when logging happens after a failing require statement', async () => {
-      const contract = new Contract(artifact, [alicePub], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
-
       const incorrectPriv = bobPriv;
-      const transaction = contract.functions
-        .transfer(new SignatureTemplate(incorrectPriv), 1000n)
-        .to(contract.address, 10000n);
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(incorrectPriv), 1000n))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
       const expectedLog = new RegExp(`^Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
-      await expect(transaction).not.toLog(expectedLog);
+      expect(transaction).not.toLog(expectedLog);
     });
 
     it('should only log console.log statements from the called function', async () => {
-      const contract = new Contract(artifact, [alicePub], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.secondFunction())
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      const transaction = contract.functions
-        .secondFunction()
-        .to(contract.address, 10000n);
+      expect(transaction).toLog(new RegExp('^Test.cash:16 Hello Second Function$'));
+      expect(transaction).not.toLog(/Hello First Function/);
+    });
 
-      await expect(transaction).toLog(new RegExp('^Test.cash:16 Hello Second Function$'));
-      await expect(transaction).not.toLog(/Hello First Function/);
+    it('should only log console.log statements from the called function when there are many constructor parameters', async () => {
+      const contractTestMultipleConstructorParameters = new Contract(
+        artifactTestMultipleConstructorParameters,
+        [alicePub, 1000n, 2000n, 3000n, 4000n, 5000n],
+        { provider },
+      );
+
+      const utxo = randomUtxo();
+      provider.addUtxo(contractTestMultipleConstructorParameters.address, utxo);
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, contractTestMultipleConstructorParameters.unlock.secondFunction())
+        .addOutput({ to: contractTestMultipleConstructorParameters.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^Test.cash:20 Hello Second Function$'));
+      expect(transaction).not.toLog(/Hello First Function/);
     });
 
     it('should only log console.log statements from the chosen branch in if-statement', async () => {
-      const contract = new Contract(artifact, [alicePub], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction1 = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.functionWithIfStatement(1n))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      const transaction1 = contract.functions
-        .functionWithIfStatement(1n)
-        .to(contract.address, 10000n);
+      expect(transaction1).toLog(new RegExp('^Test.cash:24 a is 1$'));
+      expect(transaction1).toLog(new RegExp('^Test.cash:31 a equals 1$'));
+      expect(transaction1).toLog(new RegExp('^Test.cash:32 b equals 1$'));
+      expect(transaction1).not.toLog(/a is not 1/);
 
-      await expect(transaction1).toLog(new RegExp('^Test.cash:24 a is 1$'));
-      await expect(transaction1).toLog(new RegExp('^Test.cash:31 a equals 1$'));
-      await expect(transaction1).toLog(new RegExp('^Test.cash:32 b equals 1$'));
-      await expect(transaction1).not.toLog(/a is not 1/);
+      const transaction2 = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.functionWithIfStatement(2n))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      const transaction2 = contract.functions
-        .functionWithIfStatement(2n)
-        .to(contract.address, 10000n);
-
-      await expect(transaction2).toLog(new RegExp('^Test.cash:27 a is not 1$'));
-      await expect(transaction2).toLog(new RegExp('^Test.cash:31 a equals 2$'));
-      await expect(transaction2).toLog(new RegExp('^Test.cash:32 b equals 2$'));
-      await expect(transaction2).not.toLog(/a is 1/);
+      expect(transaction2).toLog(new RegExp('^Test.cash:27 a is not 1$'));
+      expect(transaction2).toLog(new RegExp('^Test.cash:31 a equals 2$'));
+      expect(transaction2).toLog(new RegExp('^Test.cash:32 b equals 2$'));
+      expect(transaction2).not.toLog(/a is 1/);
     });
 
     it('should log multiple consecutive console.log statements on separate lines', async () => {
-      const contractCode = `
-        contract Test(pubkey owner) {
-          function transfer(sig ownerSig, int num) {
-            require(checkSig(ownerSig, owner));
-
-            bytes2 beef = 0xbeef;
-            require(beef != 0xfeed);
-
-            console.log(ownerSig, owner, num);
-            console.log(beef, 1, "test", true);
-
-            require(num == 1000);
-          }
-        }
-      `;
-
-      const artifact2 = compileString(contractCode);
-
-      const contract = new Contract(artifact2, [alicePub], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const contractTestConsecutiveLogs = new Contract(artifactTestConsecutiveLogs, [alicePub], { provider });
+      const utxo = randomUtxo();
+      provider.addUtxo(contractTestConsecutiveLogs.address, utxo);
 
       const incorrectNum = 100n;
-      const transaction = contract.functions
-        .transfer(new SignatureTemplate(alicePriv), incorrectNum)
-        .to(contract.address, 10000n);
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, contractTestConsecutiveLogs.unlock.transfer(new SignatureTemplate(alicePriv), incorrectNum))
+        .addOutput({ to: contractTestConsecutiveLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num, beef);
-      await expect(transaction).toLog(new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`));
+      expect(transaction).toLog(new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`));
       // console.log(1, "test", true)
-      await expect(transaction).toLog(new RegExp('^Test.cash:10 0xbeef 1 test true$'));
+      expect(transaction).toLog(new RegExp('^Test.cash:10 0xbeef 1 test true$'));
     });
 
     it('should log multiple console.log statements with other statements in between', async () => {
-      const contractCode = `
-        contract Test(pubkey owner) {
-          function transfer(sig ownerSig, int num) {
-            require(checkSig(ownerSig, owner));
-
-            console.log(ownerSig, owner, num);
-
-            bytes2 beef = 0xbeef;
-            require(beef != 0xfeed);
-
-            console.log(beef, 1, "test", true);
-
-            require(num == 1000);
-          }
-        }
-      `;
-
-      const artifact2 = compileString(contractCode);
-
-      const contract = new Contract(artifact2, [alicePub], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const contractTestMultipleLogs = new Contract(artifactTestMultipleLogs, [alicePub], { provider });
+      const utxo = randomUtxo();
+      provider.addUtxo(contractTestMultipleLogs.address, utxo);
 
       const incorrectNum = 100n;
-      const transaction = contract.functions
-        .transfer(new SignatureTemplate(alicePriv), incorrectNum)
-        .to(contract.address, 10000n);
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, contractTestMultipleLogs.unlock.transfer(new SignatureTemplate(alicePriv), incorrectNum))
+        .addOutput({ to: contractTestMultipleLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num);
       const expectedFirstLog = new RegExp(`^Test.cash:6 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`);
-      await expect(transaction).toLog(expectedFirstLog);
+      expect(transaction).toLog(expectedFirstLog);
 
       const expectedSecondLog = new RegExp('^Test.cash:11 0xbeef 1 test true$');
-      await expect(transaction).toLog(expectedSecondLog);
+      expect(transaction).toLog(expectedSecondLog);
     });
+
+    // This is an edge case because of optimisation position hint merging
+    it('should log the correct variable value inside a notif statement', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.test_log_inside_notif_statement(false))
+        .addOutput({ to: contractTestLogs.address, amount: contractUtxo.satoshis - 1000n });
+
+      expect(transaction).toLog(new RegExp(`^Test.cash:52 before: ${contractUtxo.satoshis}$`));
+      expect(transaction).toLog(new RegExp(`^Test.cash:54 after: ${contractUtxo.satoshis}$`));
+    });
+
+    it('should log intermediate results that get optimised out', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.test_log_intermediate_result())
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
+
+      const expectedHash = binToHex(sha256(alicePub));
+      expect(transaction).toLog(new RegExp(`^Test.cash:43 0x${expectedHash}$`));
+    });
+
+    it.todo('intermediate results that is more complex than the test above');
   });
 
   describe('require statements', () => {
-    const artifact = compileString(CONTRACT_CODE);
-    const artifact2 = compileString(CONTRACT_CODE2);
-    const artifact3 = compileString(CONTRACT_CODE3);
     const provider = new MockNetworkProvider();
+    const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
+    const contractTestRequiresUtxo = randomUtxo();
+    provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
+
+    const contractTestMultiLineRequires = new Contract(artifactTestMultilineRequires, [], { provider });
+    const contractTestMultiLineRequiresUtxo = randomUtxo();
+    provider.addUtxo(contractTestMultiLineRequires.address, contractTestMultiLineRequiresUtxo);
 
     // test_require
     it('should fail with error message when require statement fails in a multi-function contract', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_require())
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_require().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:13 Require statement failed at input 0 in contract Test.cash at line 13 with the following message: 1 should equal 2.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
+      expect(transaction).toFailRequireWith('Test.cash:13 Require statement failed at input 0 in contract Test.cash at line 13 with the following message: 1 should equal 2.');
+      expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
     });
 
     // test_require_single_function
     it('should fail with error message when require statement fails in single function', async () => {
-      const contract = new Contract(artifact2, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const contractSingleFunction = new Contract(artifactTestSingleFunction, [], { provider });
+      const contractSingleFunctionUtxo = randomUtxo();
+      provider.addUtxo(contractSingleFunction.address, contractSingleFunctionUtxo);
 
-      const transaction = contract.functions.test_require_single_function()
-        .to(contract.address, 1000n)
-        .to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: should have 1 output.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(tx.outputs.length == 1, "should have 1 output")');
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractSingleFunctionUtxo, contractSingleFunction.unlock.test_require_single_function())
+        .addOutput({ to: contractSingleFunction.address, amount: 1000n })
+        .addOutput({ to: contractSingleFunction.address, amount: 1000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: should have 1 output.');
+      expect(transaction).toFailRequireWith('Failing statement: require(tx.outputs.length == 1, "should have 1 output")');
     });
 
     // test_multiple_require_statements
     it('it should only fail with correct error message when there are multiple require statements', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_multiple_require_statements())
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_multiple_require_statements().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:21 Require statement failed at input 0 in contract Test.cash at line 21 with the following message: 1 should equal 2.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
-      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
+      expect(transaction).toFailRequireWith('Test.cash:21 Require statement failed at input 0 in contract Test.cash at line 21 with the following message: 1 should equal 2.');
+      expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
+      expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
     // test_multiple_require_statements_final_fails
     it('it should only fail with correct error message when there are multiple require statements where the final statement fails', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_multiple_require_statements_final_fails())
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_multiple_require_statements_final_fails().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:27 Require statement failed at input 0 in contract Test.cash at line 27 with the following message: 1 should equal 2.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
-      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
+      expect(transaction).toFailRequireWith('Test.cash:27 Require statement failed at input 0 in contract Test.cash at line 27 with the following message: 1 should equal 2.');
+      expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
+      expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
     it('should not fail if no require statements fail', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_require_no_failure())
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_require_no_failure().to(contract.address, 1000n);
-      await expect(transaction).not.toFailRequire();
+      expect(transaction).not.toFailRequire();
     });
 
     // test_multiple_require_statements_no_message_final
     it('should fail without custom message if the final require statement does not have a message', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_multiple_require_statements_no_message_final())
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transaction = contract.functions
-        .test_multiple_require_statements_no_message_final().to(contract.address, 1000n);
-
-      await expect(transaction).toFailRequireWith('Test.cash:32 Require statement failed at input 0 in contract Test.cash at line 32.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2)');
-      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
+      expect(transaction).toFailRequireWith('Test.cash:32 Require statement failed at input 0 in contract Test.cash at line 32.');
+      expect(transaction).toFailRequireWith('Failing statement: require(1 == 2)');
+      expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
     // test_timeops_as_final_require
     it('should fail with correct error message for the final TimeOp require statement', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_timeops_as_final_require())
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_timeops_as_final_require().to(contract.address, 1000n);
-
-      await expect(transaction).toFailRequireWith('Test.cash:37 Require statement failed at input 0 in contract Test.cash at line 37 with the following message: time should be HUGE.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(tx.time >= 100000000, "time should be HUGE")');
-      await expect(transaction).not.toFailRequireWith(/1 should equal 1/);
+      expect(transaction).toFailRequireWith('Test.cash:37 Require statement failed at input 0 in contract Test.cash at line 37 with the following message: time should be HUGE.');
+      expect(transaction).toFailRequireWith('Failing statement: require(tx.time >= 100000000, "time should be HUGE")');
+      expect(transaction).not.toFailRequireWith(/1 should equal 1/);
     });
 
     // test_final_require_in_if_statement
     it('should fail with correct error message for the final require statement in an if statement', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transactionIfBranch = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_final_require_in_if_statement(1n))
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transactionIfBranch = contract.functions
-        .test_final_require_in_if_statement(1n)
-        .to(contract.address, 1000n);
+      expect(transactionIfBranch).toFailRequireWith('Test.cash:43 Require statement failed at input 0 in contract Test.cash at line 43 with the following message: 1 should equal 2.');
+      expect(transactionIfBranch).toFailRequireWith('Failing statement: require(1 == a, "1 should equal 2")');
 
-      await expect(transactionIfBranch).toFailRequireWith('Test.cash:43 Require statement failed at input 0 in contract Test.cash at line 43 with the following message: 1 should equal 2.');
-      await expect(transactionIfBranch).toFailRequireWith('Failing statement: require(1 == a, "1 should equal 2")');
+      const transactionElseIfBranch = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_final_require_in_if_statement(2n))
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transactionElseIfBranch = contract.functions
-        .test_final_require_in_if_statement(2n)
-        .to(contract.address, 1000n);
+      expect(transactionElseIfBranch).toFailRequireWith('Test.cash:46 Require statement failed at input 0 in contract Test.cash at line 46 with the following message: 1 should equal 3.');
+      expect(transactionElseIfBranch).toFailRequireWith('Failing statement: require(1 == b, "1 should equal 3")');
 
-      await expect(transactionElseIfBranch).toFailRequireWith('Test.cash:46 Require statement failed at input 0 in contract Test.cash at line 46 with the following message: 1 should equal 3.');
-      await expect(transactionElseIfBranch).toFailRequireWith('Failing statement: require(1 == b, "1 should equal 3")');
+      const transactionElseBranch = new TransactionBuilder({ provider })
+        .addInput(contractTestRequiresUtxo, contractTestRequires.unlock.test_final_require_in_if_statement(3n))
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transactionElseBranch = contract.functions
-        .test_final_require_in_if_statement(3n)
-        .to(contract.address, 1000n);
-
-      await expect(transactionElseBranch).toFailRequireWith('Test.cash:49 Require statement failed at input 0 in contract Test.cash at line 49 with the following message: switch should equal 4.');
-      await expect(transactionElseBranch).toFailRequireWith('Failing statement: require(switch == c, "switch should equal 4")');
+      expect(transactionElseBranch).toFailRequireWith('Test.cash:49 Require statement failed at input 0 in contract Test.cash at line 49 with the following message: switch should equal 4.');
+      expect(transactionElseBranch).toFailRequireWith('Failing statement: require(switch == c, "switch should equal 4")');
     });
 
     // test_final_require_in_if_statement_with_deep_reassignment
     it('should fail with correct error message for the final require statement in an if statement with a deep reassignment', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_final_require_in_if_statement_with_deep_reassignment(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transaction = contract.functions
-        .test_final_require_in_if_statement_with_deep_reassignment()
-        .to(contract.address, 1000n);
-
-      await expect(transaction).toFailRequireWith('Test.cash:62 Require statement failed at input 0 in contract Test.cash at line 62 with the following message: sum should equal 10.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(a + b + c + d + e == 10, "sum should equal 10")');
+      expect(transaction).toFailRequireWith('Test.cash:62 Require statement failed at input 0 in contract Test.cash at line 62 with the following message: sum should equal 10.');
+      expect(transaction).toFailRequireWith('Failing statement: require(a + b + c + d + e == 10, "sum should equal 10")');
     });
 
     // test_fail_checksig
     it('should fail with correct error message when checkSig fails', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const checkSigTransaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_fail_checksig(new SignatureTemplate(alicePriv), bobPub),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const checkSigTransaction = contract.functions
-        .test_fail_checksig(new SignatureTemplate(alicePriv), bobPub)
-        .to(contract.address, 1000n);
+      expect(checkSigTransaction).toFailRequireWith('Test.cash:77 Require statement failed at input 0 in contract Test.cash at line 77 with the following message: Signatures do not match.');
+      expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
 
-      await expect(checkSigTransaction).toFailRequireWith('Test.cash:77 Require statement failed at input 0 in contract Test.cash at line 77 with the following message: Signatures do not match.');
-      await expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
+      const checkSigTransactionNullSignature = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_fail_checksig(hexToBin(''), bobPub),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const checkSigTransactionNullSignature = contract.functions
-        .test_fail_checksig(hexToBin(''), bobPub)
-        .to(contract.address, 1000n);
-
-      await expect(checkSigTransactionNullSignature).toFailRequireWith('Test.cash:77 Require statement failed at input 0 in contract Test.cash at line 77 with the following message: Signatures do not match.');
-      await expect(checkSigTransactionNullSignature).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
+      expect(checkSigTransactionNullSignature).toFailRequireWith('Test.cash:77 Require statement failed at input 0 in contract Test.cash at line 77 with the following message: Signatures do not match.');
+      expect(checkSigTransactionNullSignature).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
     });
 
     // test_fail_checksig_final_verify
     it('should fail with correct error message when checkSig fails as the final verify', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const checkSigTransaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_fail_checksig_final_verify(new SignatureTemplate(alicePriv), bobPub),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const checkSigTransaction = contract.functions
-        .test_fail_checksig_final_verify(new SignatureTemplate(alicePriv), bobPub).to(contract.address, 1000n);
-      await expect(checkSigTransaction).toFailRequireWith('Test.cash:82 Require statement failed at input 0 in contract Test.cash at line 82 with the following message: Signatures do not match.');
-      await expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
+      expect(checkSigTransaction).toFailRequireWith('Test.cash:82 Require statement failed at input 0 in contract Test.cash at line 82 with the following message: Signatures do not match.');
+      expect(checkSigTransaction).toFailRequireWith('Failing statement: require(checkSig(s, pk), "Signatures do not match")');
     });
 
     // test_fail_checkdatasig
     it('should fail with correct error message when checkDataSig fails', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const checkDataSigTransaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xbeef')).slice(0, -1), '0xbeef', bobPub),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const checkDataSigTransaction = contract.functions
-        .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xbeef')).slice(0, -1), '0xbeef', bobPub)
-        .to(contract.address, 1000n);
-      await expect(checkDataSigTransaction).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
-      await expect(checkDataSigTransaction).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
+      expect(checkDataSigTransaction).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
+      expect(checkDataSigTransaction).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
 
-      const checkDataSigTransactionWrongMessage = contract.functions
-        .test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xc0ffee')).slice(0, -1), '0xbeef', alicePub)
-        .to(contract.address, 1000n);
-      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
-      await expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
+      const checkDataSigTransactionWrongMessage = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_fail_checkdatasig(new SignatureTemplate(alicePriv).generateSignature(hexToBin('0xc0ffee')).slice(0, -1), '0xbeef', alicePub),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
+
+      expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Test.cash:86 Require statement failed at input 0 in contract Test.cash at line 86 with the following message: Data Signatures do not match.');
+      expect(checkDataSigTransactionWrongMessage).toFailRequireWith('Failing statement: require(checkDataSig(s, message, pk), "Data Signatures do not match")');
     });
 
     // test_fail_checkmultisig
     it('should fail with correct error message when checkMultiSig fails', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
-
-      const checkmultiSigTransaction = contract.functions
-        .test_fail_checkmultisig(
-          new SignatureTemplate(alicePriv, undefined, SignatureAlgorithm.ECDSA),
-          bobPub,
-          new SignatureTemplate(bobPriv, undefined, SignatureAlgorithm.ECDSA),
-          alicePub,
+      const checkmultiSigTransaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_fail_checkmultisig(
+            new SignatureTemplate(alicePriv, undefined, SignatureAlgorithm.ECDSA),
+            bobPub,
+            new SignatureTemplate(bobPriv, undefined, SignatureAlgorithm.ECDSA),
+            alicePub,
+          ),
         )
-        .to(contract.address, 1000n);
-      await expect(checkmultiSigTransaction).toFailRequireWith('Test.cash:90 Require statement failed at input 0 in contract Test.cash at line 90 with the following message: Multi Signatures do not match.');
-      await expect(checkmultiSigTransaction).toFailRequireWith('Failing statement: require(checkMultiSig([s1, s2], [pk1, pk2]), "Multi Signatures do not match")');
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
+
+      expect(checkmultiSigTransaction).toFailRequireWith('Test.cash:90 Require statement failed at input 0 in contract Test.cash at line 90 with the following message: Multi Signatures do not match.');
+      expect(checkmultiSigTransaction).toFailRequireWith('Failing statement: require(checkMultiSig([s1, s2], [pk1, pk2]), "Multi Signatures do not match")');
     });
 
     // test_fail_large_cleanup
     it('should fail with correct error message when a require statement fails in a function with a large cleanup', async () => {
-      const contract = new Contract(artifact3, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestMultiLineRequiresUtxo,
+          contractTestMultiLineRequires.unlock.test_fail_large_cleanup(),
+        )
+        .addOutput({ to: contractTestMultiLineRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_fail_large_cleanup().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:22 Require statement failed at input 0 in contract Test.cash at line 22 with the following message: 1 should equal 2.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
+      expect(transaction).toFailRequireWith('Test.cash:22 Require statement failed at input 0 in contract Test.cash at line 22 with the following message: 1 should equal 2.');
+      expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
     });
 
     // test_fail_multiline_require
     it('should fail with correct error message and statement when a multiline require statement fails', async () => {
-      const contract = new Contract(artifact3, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestMultiLineRequiresUtxo,
+          contractTestMultiLineRequires.unlock.test_fail_multiline_require(),
+        )
+        .addOutput({ to: contractTestMultiLineRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_fail_multiline_require().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:26 Require statement failed at input 0 in contract Test.cash at line 26 with the following message: 1 should equal 2.');
-      await expect(transaction).toFailRequireWith(`Failing statement: require(
+      expect(transaction).toFailRequireWith('Test.cash:26 Require statement failed at input 0 in contract Test.cash at line 26 with the following message: 1 should equal 2.');
+      expect(transaction).toFailRequireWith(`Failing statement: require(
       1 == 2,
       "1 should equal 2"
     );`);
@@ -609,23 +388,32 @@ describe('Debugging tests', () => {
 
     // test_fail_multiline_final_require
     it('should fail with correct error message and statement when a multiline final require statement fails', async () => {
-      const contract = new Contract(artifact3, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestMultiLineRequiresUtxo,
+          contractTestMultiLineRequires.unlock.test_fail_multiline_final_require(),
+        )
+        .addOutput({ to: contractTestMultiLineRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_fail_multiline_final_require().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:36 Require statement failed at input 0 in contract Test.cash at line 36 with the following message: 1 should equal 2.');
-      await expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
+      expect(transaction).toFailRequireWith('Test.cash:35 Require statement failed at input 0 in contract Test.cash at line 35 with the following message: 1 should equal 2.');
+      expect(transaction).toFailRequireWith(`Failing statement: require(
+      1 == 2,
+      "1 should equal 2"
+    );`);
     });
 
     // test_multiline_require_with_unary_op
     // Note that we add this test, because we changed the LocationHint for all Unary Ops to "END"
     it('should fail with correct error message and statement when a multiline require statement with a unary op fails', async () => {
-      const contract = new Contract(artifact3, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestMultiLineRequiresUtxo,
+          contractTestMultiLineRequires.unlock.test_multiline_require_with_unary_op(),
+        )
+        .addOutput({ to: contractTestMultiLineRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_multiline_require_with_unary_op().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:51 Require statement failed at input 0 in contract Test.cash at line 51.');
-      await expect(transaction).toFailRequireWith(`Failing statement: require(
+      expect(transaction).toFailRequireWith('Test.cash:51 Require statement failed at input 0 in contract Test.cash at line 51.');
+      expect(transaction).toFailRequireWith(`Failing statement: require(
       !(
         0x000000
         .reverse()
@@ -642,12 +430,15 @@ describe('Debugging tests', () => {
 
     // test_multiline_require_with_instantiation
     it('should fail with correct error message and statement when a multiline require statement with an instantiation fails', async () => {
-      const contract = new Contract(artifact3, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestMultiLineRequiresUtxo,
+          contractTestMultiLineRequires.unlock.test_multiline_require_with_instantiation(),
+        )
+        .addOutput({ to: contractTestMultiLineRequires.address, amount: 1000n });
 
-      const transaction = contract.functions.test_multiline_require_with_instantiation().to(contract.address, 1000n);
-      await expect(transaction).toFailRequireWith('Test.cash:69 Require statement failed at input 0 in contract Test.cash at line 69.');
-      await expect(transaction).toFailRequireWith(`Failing statement: require(
+      expect(transaction).toFailRequireWith('Test.cash:69 Require statement failed at input 0 in contract Test.cash at line 69.');
+      expect(transaction).toFailRequireWith(`Failing statement: require(
       new LockingBytecodeP2PKH(
         hash160(0x000000)
       )
@@ -661,154 +452,187 @@ describe('Debugging tests', () => {
   });
 
   describe('Non-require error messages', () => {
-    const artifact = compileString(CONTRACT_CODE);
-    const artifact3 = compileString(CONTRACT_CODE3);
     const provider = new MockNetworkProvider();
+
+    const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
+    const contractTestRequiresUtxo = randomUtxo();
+    provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
+
+    const contractTestMultiLineRequires = new Contract(artifactTestMultilineRequires, [], { provider });
+    const contractTestMultiLineRequiresUtxo = randomUtxo();
+    provider.addUtxo(contractTestMultiLineRequires.address, contractTestMultiLineRequiresUtxo);
 
     // test_invalid_split_range
     it('should fail with correct error message when an invalid OP_SPLIT range is used', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_invalid_split_range(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transactionPromise = contract.functions.test_invalid_split_range()
-        .to(contract.address, 1000n)
-        .debug();
-
-      await expect(transactionPromise).rejects.toThrow('Test.cash:68 Error in transaction at input 0 in contract Test.cash at line 68.');
-      await expect(transactionPromise).rejects.toThrow('Failing statement: test.split(4)');
-      await expect(transactionPromise).rejects.toThrow(`Reason: ${AuthenticationErrorCommon.invalidSplitIndex}`);
+      expect(() => transaction.debug()).toThrow('Test.cash:68 Error in transaction at input 0 in contract Test.cash at line 68.');
+      expect(() => transaction.debug()).toThrow('Failing statement: test.split(4)');
+      expect(() => transaction.debug()).toThrow(`Reason: ${AuthenticationErrorCommon.invalidSplitIndex}`);
     });
 
     // test_invalid_input_index
     it('should fail with correct error message when an invalid input index is used', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_invalid_input_index(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 1000n });
 
-      const transactionPromise = contract.functions.test_invalid_input_index()
-        .to(contract.address, 1000n)
-        .debug();
-
-      await expect(transactionPromise).rejects.toThrow('Test.cash:73 Error in transaction at input 0 in contract Test.cash at line 73.');
-      await expect(transactionPromise).rejects.toThrow('Failing statement: tx.inputs[5].value');
-      await expect(transactionPromise).rejects.toThrow(`Reason: ${AuthenticationErrorCommon.invalidTransactionUtxoIndex}`);
+      expect(() => transaction.debug()).toThrow('Test.cash:73 Error in transaction at input 0 in contract Test.cash at line 73.');
+      expect(() => transaction.debug()).toThrow('Failing statement: tx.inputs[5].value');
+      expect(() => transaction.debug()).toThrow(`Reason: ${AuthenticationErrorCommon.invalidTransactionUtxoIndex}`);
     });
 
     // test_multiline_non_require_error
     it('should fail with correct error message and statement when a multiline non-require statement fails', async () => {
-      const contract = new Contract(artifact3, [], { provider });
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestMultiLineRequiresUtxo,
+          contractTestMultiLineRequires.unlock.test_multiline_non_require_error(),
+        )
+        .addOutput({ to: contractTestMultiLineRequires.address, amount: 1000n });
 
-      provider.addUtxo(contract.address, randomUtxo());
-
-      const transactionPromise = contract.functions.test_multiline_non_require_error()
-        .to(contract.address, 1000n)
-        .debug();
-
-      await expect(transactionPromise).rejects.toThrow('Test.cash:43 Error in transaction at input 0 in contract Test.cash at line 43.');
-      await expect(transactionPromise).rejects.toThrow(`Failing statement: tx.outputs[
+      expect(() => transaction.debug()).toThrow('Test.cash:43 Error in transaction at input 0 in contract Test.cash at line 43.');
+      expect(() => transaction.debug()).toThrow(`Failing statement: tx.outputs[
         5
       ].value`);
-      await expect(transactionPromise).rejects.toThrow(`Reason: ${AuthenticationErrorCommon.invalidTransactionOutputIndex}`);
+      expect(() => transaction.debug()).toThrow(`Reason: ${AuthenticationErrorCommon.invalidTransactionOutputIndex}`);
     });
   });
 
   describe('Template encoding', () => {
-    const artifact = compileString(CONTRACT_CODE_ZERO_HANDLING);
     const provider = new MockNetworkProvider();
 
     // test_zero_handling
     it('should encode a locking and unlocking parameter of value 0 correctly and evaluate the execution', async () => {
-      const contract = new Contract(artifact, [0n], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const contract = new Contract(artifactTestZeroHandling, [0n], { provider });
+      const contractUtxo = randomUtxo();
+      provider.addUtxo(contract.address, contractUtxo);
 
-      const transaction = contract.functions.test_zero_handling(0n).to(contract.address, 1000n);
-      await expect(transaction).not.toFailRequire();
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contract.unlock.test_zero_handling(0n))
+        .addOutput({ to: contract.address, amount: 1000n });
+
+      expect(transaction).not.toFailRequire();
     });
   });
 
   describe('JestExtensions', () => {
-    const artifact = compileString(CONTRACT_CODE);
     const provider = new MockNetworkProvider();
+    const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
+    const contractTestRequiresUtxo = randomUtxo();
+    provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
 
     // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use JestExtensions
 
     it('should fail the JestExtensions test if an incorrect log is expected', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_logs(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 10000n });
 
-      const transaction = contract.functions.test_logs().to(contract.address, 10000n);
-
-      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      await expect(
-        expect(transaction).toLog('^This is definitely not the log$'),
-      ).rejects.toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
+      expect(
+        () => expect(transaction).toLog('^This is definitely not the log$'),
+      ).toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
     });
 
     it('should fail the JestExtensions test if a log is logged that is NOT expected', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_logs(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 10000n });
 
-      const transaction = contract.functions.test_logs().to(contract.address, 10000n);
+      expect(
+        () => expect(transaction).not.toLog('^Test.cash:4 Hello World$'),
+      ).toThrow(/Expected: not .*Test.cash:4 Hello World.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
 
-      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      await expect(
-        expect(transaction).not.toLog('^Test.cash:4 Hello World$'),
-      ).rejects.toThrow(/Expected: not .*Test.cash:4 Hello World.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
-
-      await expect(
-        expect(transaction).not.toLog(),
-      ).rejects.toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
+      expect(
+        () => expect(transaction).not.toLog(),
+      ).toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
     });
 
     it('should fail the JestExtensions test if a log is expected where no log is logged', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_no_logs(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 10000n });
 
-      const transaction = contract.functions.test_no_logs().to(contract.address, 10000n);
-
-      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      await expect(
-        expect(transaction).toLog('Hello World'),
-      ).rejects.toThrow(/Expected: .*Hello World.*\nReceived: (.|\n)*?undefined/);
+      expect(
+        () => expect(transaction).toLog('Hello World'),
+      ).toThrow(/Expected: .*Hello World.*\nReceived: (.|\n)*?undefined/);
     });
 
     it('should fail the JestExtensions test if an incorrect require error message is expected', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_require(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 10000n });
 
-      const transaction = contract.functions.test_require().to(contract.address, 10000n);
-
-      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      await expect(
-        expect(transaction).toFailRequireWith('1 should equal 3'),
-      ).rejects.toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: (.|\n)*?1 should equal 2/);
+      expect(
+        () => expect(transaction).toFailRequireWith('1 should equal 3'),
+      ).toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
 
     it('should fail the JestExtensions test if a require error message is expected where no error is thrown', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_require_no_failure(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 10000n });
 
-      const transaction = contract.functions.test_require_no_failure().to(contract.address, 10000n);
-
-      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      await expect(
-        expect(transaction).toFailRequireWith('1 should equal 3'),
-      ).rejects.toThrow(/Contract function did not fail a require statement/);
+      expect(
+        () => expect(transaction).toFailRequireWith('1 should equal 3'),
+      ).toThrow(/Contract function did not fail a require statement/);
     });
 
     it('should fail the JestExtensions test if an error is thrown where it is NOT expected', async () => {
-      const contract = new Contract(artifact, [], { provider });
-      provider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(
+          contractTestRequiresUtxo,
+          contractTestRequires.unlock.test_require(),
+        )
+        .addOutput({ to: contractTestRequires.address, amount: 10000n });
 
-      const transaction = contract.functions.test_require().to(contract.address, 10000n);
+      expect(
+        () => expect(transaction).not.toFailRequireWith('1 should equal 2'),
+      ).toThrow(/Expected pattern: not .*1 should equal 2.*\nReceived string: (.|\n)*?1 should equal 2/);
+
+      expect(
+        () => expect(transaction).not.toFailRequire(),
+      ).toThrow(/Contract function failed a require statement\.*\nReceived string: (.|\n)*?1 should equal 2/);
+    });
+
+    it('should throw an error if the old transaction builder is used', async () => {
+      const transaction = contractTestRequires.functions.test_require().to(aliceAddress, 1000n);
 
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      await expect(
-        expect(transaction).not.toFailRequireWith('1 should equal 2'),
-      ).rejects.toThrow(/Expected pattern: not .*1 should equal 2.*\nReceived string: (.|\n)*?1 should equal 2/);
+      expect(
+        () => expect(transaction).toFailRequire(),
+      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
 
-      await expect(
-        expect(transaction).not.toFailRequire(),
-      ).rejects.toThrow(/Contract function failed a require statement\.*\nReceived string: (.|\n)*?1 should equal 2/);
+      expect(
+        () => expect(transaction).toFailRequireWith('1 should equal 2'),
+      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
+
+      expect(
+        () => expect(transaction).toLog('Hello World'),
+      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
     });
   });
 });

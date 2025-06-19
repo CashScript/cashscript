@@ -9,7 +9,6 @@ import {
   AbiFunction,
   encodeBip68,
   placeholder,
-  scriptToBytecode,
 } from '@cashscript/utils';
 import deepEqual from 'fast-deep-equal';
 import {
@@ -28,7 +27,6 @@ import {
   getInputSize,
   createOpReturnOutput,
   getTxSizeWithoutInputs,
-  getPreimageSize,
   validateOutput,
   utxoComparator,
   calculateDust,
@@ -40,9 +38,10 @@ import { P2PKH_INPUT_SIZE } from './constants.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { Contract } from './Contract.js';
 import { buildTemplate, getBitauthUri } from './LibauthTemplate.js';
-import { debugTemplate, DebugResult } from './debugging.js';
+import { debugTemplate, DebugResults } from './debugging.js';
 import { EncodedFunctionArgument } from './Argument.js';
 import { FailedTransactionError } from './Errors.js';
+import semver from 'semver';
 
 export class Transaction {
   public inputs: Utxo[] = [];
@@ -61,7 +60,7 @@ export class Transaction {
     public abiFunction: AbiFunction,
     public encodedFunctionArgs: EncodedFunctionArgument[],
     private selector?: number,
-  ) {}
+  ) { }
 
   from(input: Utxo): this;
   from(inputs: Utxo[]): this;
@@ -175,10 +174,7 @@ export class Transaction {
     const tx = await this.build();
 
     // Debug the transaction locally before sending so any errors are caught early
-    // Libauth debugging does not work with old-style covenants
-    if (!this.abiFunction.covenant) {
-      await this.debug();
-    }
+    await this.debug();
 
     try {
       const txid = await this.contract.provider.sendRawTransaction(tx);
@@ -190,16 +186,17 @@ export class Transaction {
   }
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
-  async debug(): Promise<DebugResult> {
-    if (!this.contract.artifact.debug) {
-      console.warn('No debug information found in artifact. Recompile with cashc version 0.10.0 or newer to get better debugging information.');
+  async debug(): Promise<DebugResults> {
+    if (!semver.satisfies(this.contract.artifact.compiler.version, '>=0.11.0')) {
+      console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
     }
 
     const template = await this.getLibauthTemplate();
-    return debugTemplate(template, this.contract.artifact);
+    return debugTemplate(template, [this.contract.artifact]);
   }
 
   async bitauthUri(): Promise<string> {
+    console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
     const template = await this.getLibauthTemplate();
     return getBitauthUri(template);
   }
@@ -350,18 +347,11 @@ export class Transaction {
       return placeholder(73);
     });
 
-    // Create a placeholder preimage of the correct size
-    const placeholderPreimage = this.abiFunction.covenant
-      ? placeholder(getPreimageSize(scriptToBytecode(this.contract.redeemScript)))
-      : undefined;
-
-    // Create a placeholder input script for size calculation using the placeholder
-    // arguments and correctly sized placeholder preimage
+    // Create a placeholder input script for size calculation using the placeholder arguments
     const placeholderScript = createInputScript(
       this.contract.redeemScript,
       placeholderArgs,
       this.selector,
-      placeholderPreimage,
     );
 
     // Add one extra byte per input to over-estimate tx-in count

@@ -4,7 +4,6 @@ import {
   asmToScript,
   calculateBytesize,
   countOpcodes,
-  exportArtifact,
   formatArtifact,
   scriptToAsm,
   scriptToBytecode,
@@ -13,12 +12,13 @@ import { program, Option } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import { compileFile, version } from './index.js';
+import { MAX_INPUT_BYTESIZE } from './constants.js';
 
 program
   .storeOptionsAsProperties(false)
   .name('cashc')
   .version(version, '-V, --version', 'Output the version number.')
-  .usage('[options] [source_file]')
+  .argument('<source_file>', 'The source file to compile.')
   .option('-o, --output <path>', 'Specify a file to output the generated artifact.')
   .option('-h, --hex', 'Compile the contract to hex format rather than a full artifact.')
   .option('-A, --asm', 'Compile the contract to ASM format rather than a full artifact.')
@@ -54,11 +54,8 @@ function run(): void {
     const opcount = countOpcodes(script);
     const bytesize = calculateBytesize(script);
 
-    if (opcount > 201) {
-      console.warn('Warning: Your contract\'s opcount is over the limit of 201 and will not be accepted by the BCH network');
-    }
-    if (bytesize > 520) {
-      console.warn('Warning: Your contract\'s bytesize is over the limit of 520 and will not be accepted by the BCH network');
+    if (bytesize > MAX_INPUT_BYTESIZE) {
+      console.warn(`Warning: Your contract is ${bytesize} bytes, which is over the limit of ${MAX_INPUT_BYTESIZE} bytes and will not be accepted by the BCH network`);
     }
 
     if (opts.asm) {
@@ -82,16 +79,18 @@ function run(): void {
       return;
     }
 
+    const formattedArtifact = formatArtifact(artifact, opts.format);
+
     if (outputFile) {
       // Create output file and write the artifact to it
       const outputDir = path.dirname(outputFile);
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
-      exportArtifact(artifact, outputFile, opts.format);
+      fs.writeFileSync(outputFile, formattedArtifact);
     } else {
       // Output artifact to STDOUT
-      console.log(formatArtifact(artifact, opts.format));
+      console.log(formattedArtifact);
     }
   } catch (e: any) {
     abort(e.message);

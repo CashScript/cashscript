@@ -15,8 +15,7 @@ import {
   ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument,
 } from './Argument.js';
 import {
-  Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo,
-  AddressType,
+  Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo, AddressType, ContractUnlocker,
 } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
@@ -25,6 +24,7 @@ import {
 import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
 import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
+import semver from 'semver';
 
 export class Contract<
   TArtifact extends Artifact = Artifact,
@@ -62,9 +62,13 @@ export class Contract<
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
     this.addressType = this.options?.addressType ?? 'p2sh32';
 
-    const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName'];
+    const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName', 'compiler'];
     if (!expectedProperties.every((property) => property in artifact)) {
       throw new Error('Invalid or incomplete artifact provided');
+    }
+
+    if (!semver.satisfies(artifact.compiler.version, '>=0.7.0', { includePrerelease: true })) {
+      throw new Error(`Artifact compiled with unsupported compiler version: ${artifact.compiler.version}, required >=0.7.0`);
     }
 
     if (artifact.constructorInputs.length !== constructorArgs.length) {
@@ -142,7 +146,7 @@ export class Contract<
     };
   }
 
-  private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractUnlocker {
+  private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractFunctionUnlocker {
     return (...args: FunctionArgument[]) => {
       if (abiFunction.inputs.length !== args.length) {
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
@@ -156,37 +160,25 @@ export class Contract<
       const generateUnlockingBytecode = (
         { transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions,
       ): Uint8Array => {
-        // TODO: Remove old-style covenant code for v1.0 release
-        let covenantHashType = -1;
         const completeArgs = encodedArgs.map((arg) => {
           if (!(arg instanceof SignatureTemplate)) return arg;
 
-          // First signature is used for sighash preimage (maybe not the best way)
-          if (covenantHashType < 0) covenantHashType = arg.getHashType();
-
+          // Generate transaction signature from SignatureTemplate
           const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, bytecode, arg.getHashType());
           const sighash = hash256(preimage);
-
           return arg.generateSignature(sighash);
         });
 
-        const preimage = abiFunction.covenant
-          ? createSighashPreimage(transaction, sourceOutputs, inputIndex, bytecode, covenantHashType)
-          : undefined;
-
-        const unlockingBytecode = createInputScript(
-          this.redeemScript, completeArgs, selector, preimage,
-        );
-
+        const unlockingBytecode = createInputScript(this.redeemScript, completeArgs, selector);
         return unlockingBytecode;
       };
 
       const generateLockingBytecode = (): Uint8Array => addressToLockScript(this.address);
 
-      return { generateUnlockingBytecode, generateLockingBytecode };
+      return { generateUnlockingBytecode, generateLockingBytecode, contract: this, params: args, abiFunction };
     };
   }
 }
 
 export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
-export type ContractUnlocker = (...args: FunctionArgument[]) => Unlocker;
+type ContractFunctionUnlocker = (...args: FunctionArgument[]) => ContractUnlocker;

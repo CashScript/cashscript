@@ -1,8 +1,13 @@
 ---
-title: Simple Transaction Builder
+title: Old Transaction Builder
 ---
 
-When calling a contract function on a Contract object, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
+:::caution
+This is the documentation for the old and now deprecated 'Simple Transaction Builder' which operated on a single contract.
+It is strongly recommended to migrate over to the new default transaction builder [using the migration notes](/docs/releases/migration-notes).
+:::
+
+When calling a contract function of a Contract object's `functions`, an incomplete Transaction object is returned. This transaction can be completed by providing a number of outputs using the [`to()`][to()] or [`withOpReturn()`][withOpReturn()] functions. Other chained functions are included to set other transaction parameters.
 
 Most of the available transaction options are only useful in very specific use cases, but the functions [`to()`][to()], [`withOpReturn()`][withOpReturn()] and [`send()`][send()] are commonly used. [`withHardcodedFee()`][withHardcodedFee()] is also commonly used with covenant contracts.
 
@@ -252,7 +257,7 @@ If you prefer a lower-level debugging experience, you can call the `bitauthUri()
 You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
 
 :::caution
-It is unsafe to debug transactions on mainnet as private keys will be exposed to BitAuth IDE and transmitted over the network.
+It is unsafe to debug transactions on mainnet using the BitAuth IDE as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
 
 ## Transaction errors

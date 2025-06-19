@@ -60,14 +60,6 @@ BCH Guru is a non-custodial price-prediction platform and a collectible NFT proj
 
 The CashTokens Studio is an application for creating CashTokens and for their managing metadata updates and reserved supply. The CashTokens Studio uses CashScript to lock the AuthUTXO in an AuthGuard contract to prevent accidentally spending the authority to be able to update the token's metadata or release reserved supply.
 
-## Badgers.cash
-
-<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
-    <a href="https://badgers.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/badgers.png" /></a>
-</div>
-
-BadgerCoin is a fungible CashToken using a novel distribution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoke contract unlocks.
-
 ## FundMe.cash
 
 <div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
@@ -77,6 +69,42 @@ BadgerCoin is a fungible CashToken using a novel distribution mechanism. BadgerC
 </div>
 
 FundMe is a new BCH crowdfunding platform using WalletConnect. Fundme campaigns have revocable and refundable pledges through the use of CashTokens receipts. By using receipts, Fundme does not have a maximum limit on the number of participants in a campaign.
+
+## Badgers.cash
+
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://badgers.cash/" target="_blank"><img style={{borderRadius: '100%'}} src="/img/badgers.png" /></a>
+</div>
+
+BadgerCoin is a fungible CashToken using a novel distribution mechanism. BadgerCoins are earned through staking Bitcoin Cash in the Badgers Smart Contract. The staking duration is predetermined, and depending on the stake amount and period you earn tokens. The website allows for anyone to invoke contract unlocks.
+
+## Zapit P2P Exchange
+
+<div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://zapit.io/" target="_blank">
+        <img src="/img/zapit_logo.svg" style={{width: '100%', margin: "50px 0"}} />
+    </a>
+</div>
+
+The Zapit wallet has a built-in P2P Exchange which allows user to buy or sell Bitcoin Cash directly without a custodial middleman. The P2P exchange works with an escrow smart contract written in CashScript. The P2P exchange contract has already processed hundreds of BCH in volume.
+
+## Paytaca P2P Exchange
+
+<div style={{textAlign: 'center', width: '50%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://www.paytaca.com/" target="_blank">
+        <img src="/img/paytaca.png" style={{width: '100%', margin: "50px 0"}} />
+    </a>
+</div>
+
+The Paytaca wallet has a built-in P2P Exchange which allows user to buy or sell Bitcoin Cash with fiat currency directly without a custodial middleman. The P2P exchange works with an escrow smart contract written in CashScript.
+
+## BCH PUMP
+
+<div style={{textAlign: 'center', width: '40%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://bchpump.cash/" target="_blank"><img src="/img/bch-pump.jpg" /></a>
+</div>
+
+BCH Pump is a CashTokens Launchpad inspired by the 'pump.fun' mechanism to bootstrap tokens on a bonding curve. The pools are migrated to Cauldron DEX once the bonding process is completed. The BCH Pump contracts are written with CashScript and use a multi-contract and multi-step setup in its design.
 
 ## Unspent Phi
 

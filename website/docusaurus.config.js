@@ -54,7 +54,7 @@ module.exports = {
           items: [
             {
               label: 'Telegram',
-              href: 'https://t.me/bch_compilers',
+              href: 'https://t.me/CashScriptBCH',
             },
             {
               label: 'Showcase',
@@ -119,6 +119,7 @@ module.exports = {
           { from: ['/docs', '/docs/about', '/docs/basics'], to: '/docs/basics/about'},
           { from: '/docs/language', to: '/docs/language/contracts' },
           { from: '/docs/sdk', to: '/docs/sdk/instantiation' },
+          { from: '/docs/sdk/transactions-advanced', to: '/docs/sdk/transaction-builder' },
           { from: '/docs/guides', to: '/docs/guides/covenants' },
           { from: '/docs/getting-started', to: '/docs/basics/getting-started' },
           { from: '/docs/examples', to: '/docs/language/examples' },

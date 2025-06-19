@@ -26,7 +26,7 @@ export function encodeInt(int: bigint): Uint8Array {
   return bigIntToVmNumber(int);
 }
 
-export function decodeInt(encodedInt: Uint8Array, maxLength: number = 8): bigint {
+export function decodeInt(encodedInt: Uint8Array, maxLength: number = Infinity): bigint {
   const options = { maximumVmNumberByteLength: maxLength };
   const result = vmNumberToBigInt(encodedInt, options);
 

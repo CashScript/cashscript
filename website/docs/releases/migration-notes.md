@@ -2,7 +2,116 @@
 title: Migration Notes
 ---
 
-## v0.9 to 0.10
+## v0.10 to v0.11
+
+There are several breaking changes to the compiler and SDK in this release. They are listed below in their own sections.
+
+### cashc compiler
+
+`tx.age` was renamed to `this.age` to better reflect that it enforces a UTXO-level locktime check (*not* transaction-level). To migrate, replace all occurrences of `tx.age` with `this.age`.
+
+### SDK: Transaction Builder
+
+The 'Simple Transaction builder' has been marked as deprecated and the 'Advanced Transaction Builder' is now simply referred to as the CashScript `Transaction Builder`, as there is only one supported for the future.
+
+#### Example
+Since the new transaction builder is quite different from the old one, it may be useful to see an example refactored from the old way to the new way.
+
+With the deprecated 'simple transaction builder' the API looked like this:
+
+```js
+import { ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
+
+const provider = new ElectrumNetworkProvider(Network.MAINNET);
+
+// Optionally specify the contract UTXO
+const contractUtxos = await contract.getUtxos();
+const selectedContractUtxo = contractUtxos[0]
+
+// Specify Bob Utxo to add to the transaction
+const bobUtxos = await provider.getUtxos(bobAddress);
+const selectedUtxoBob = bobUtxos[0]
+
+const bobSignatureTemplate = new SignatureTemplate(bobPriv)
+
+// Start building the transaction
+const txDetails = await contract.functions
+  .transfer(bobSignatureTemplate)
+  .from(selectedContractUtxo)
+  .fromP2PKH(selectedUtxoBob, bobSignatureTemplate)
+  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
+  .withoutChange()
+  .send();
+```
+
+With the new transaction builder the API looks like this:
+
+
+```js
+import { TransactionBuilder, ElectrumNetworkProvider, SignatureTemplate } from 'cashscript';
+
+const provider = new ElectrumNetworkProvider(Network.MAINNET);
+
+// Specify the contract UTXO
+const contractUtxos = await contract.getUtxos();
+const selectedContractUtxo = contractUtxos[0]
+
+// Specify Bob Utxo to add to the transaction
+const bobUtxos = await provider.getUtxos(bobAddress);
+const selectedUtxoBob = bobUtxos[0]
+
+const bobSignatureTemplate = new SignatureTemplate(bobPriv)
+
+// Start building the transaction
+const txDetails = await new TransactionBuilder({ provider })
+  .addInput(selectedContractUtxo, contract.unlock.transfer(bobSignatureTemplate))
+  .addInput(selectedUtxoBob, bobSignatureTemplate.unlockP2PKH())
+  .addOutput({
+    to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
+    amount: 10000n
+  })
+  .send();
+```
+
+With the new transaction builder, all inputs and outputs are explicitly specified. This means that there are no automatic change outputs added (for BCH or tokens). This means that there are also no `.withMinChange()`, `.withoutChange()`, `.withoutTokenChange()`, `withHardcodedFee()`, or `.withFeePerByte()` methods. The developer is responsible for manually adding change outputs. There is still an option to use `.setMaxFee()` as a security measure to prevent the transaction from being too expensive.
+
+### SDK: ElectrumNetworkProvider
+
+The underlying `electrum-cash` library has been migrated to the new `@electrum-cash/network` package. This drops support for electrum cluster functionality. We reworked the second parameter of the `ElectrumNetworkProvider` constructor to be an options object, which can contain a custom electrum client or a custom hostname.
+
+If you were not using custom clusters, there is no need to change anything. If you were using custom clusters, you will need to update your code to use the new `@electrum-cash/network` package and use a single client instead of a cluster.
+
+#### Example
+
+Before:
+
+```ts
+import { ElectrumCluster, ClusterOrder } from 'electrum-cash';
+import { ElectrumNetworkProvider } from 'cashscript';
+
+const customCluster = new ElectrumCluster('CashScript Application', '1.4.1', 2, 3, ClusterOrder.PRIORITY);
+customCluster.addServer('bch.imaginary.cash', 50004, ElectrumTransport.WSS.Scheme, false);
+customCluster.addServer('blackie.c3-soft.com', 50004, ElectrumTransport.WSS.Scheme, false);
+customCluster.addServer('electroncash.dk', 50004, ElectrumTransport.WSS.Scheme, false);
+
+const provider = new ElectrumNetworkProvider('mainnet', customCluster);
+```
+
+After:
+
+```ts
+import { ElectrumClient } from '@electrum-cash/network';
+import { ElectrumNetworkProvider } from 'cashscript';
+
+const customClient = new ElectrumClient('CashScript Application', '1.4.1', 'bch.imaginary.cash');
+const provider = new ElectrumNetworkProvider('mainnet', { electrum: customClient });
+
+// or
+
+const provider = new ElectrumNetworkProvider('mainnet', { hostname: 'bch.imaginary.cash' });
+```
+
+## v0.9 to v0.10
 
 ### CashScript SDK
 

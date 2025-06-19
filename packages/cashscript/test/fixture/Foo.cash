@@ -1,0 +1,10 @@
+pragma cashscript >=0.10.2;
+
+contract Foo(bytes20 pkh_foo) {
+    // Require pk to match stored pkh and signature to match
+    function execute(pubkey pk, sig s) {
+        console.log("Foo 'execute' function called.");
+        require(hash160(pk) == pkh_foo);
+        require(checkSig(s, pk));
+    }
+}

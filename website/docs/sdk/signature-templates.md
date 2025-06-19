@@ -3,7 +3,11 @@ title: Signature Templates
 ---
 
 When a contract function has a `sig` parameter, it needs a cryptographic signature from a private key for the spending transaction. 
-In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature once the transaction is built.
+In place of a signature, a `SignatureTemplate` can be passed, which will generate the correct signature when the transaction is built.
+
+:::tip
+`SignatureTemplate` can be used with a `Contract` as function argument to generate a signature automatically, or can be used in the `TransactionBuilder` to create an `Unlocker` for a P2PKH UTXO.
+:::
 
 ## SignatureTemplate
 
@@ -17,20 +21,56 @@ new SignatureTemplate(
 )
 ```
 
-In place of a signature, a `SignatureTemplate` can be passed, which will automatically generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], [WIF strings][wif], or raw private key buffers. This ensures that any BCH library can be used.
+In place of a signature, a `SignatureTemplate` can be passed, which will generate the correct signature using the `signer` parameter. This signer can be any representation of a private key, including [WIF strings][wif], [BCHJS' `ECPair`][ecpair], [bitcore-lib-cash' `PrivateKey`][privatekey], or binary private keys represented as `Uint8Array`. This ensures that `SignatureTemplate` can be used with any BCH library.
 
 #### Example
 ```ts
 const aliceWif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const aliceSignatureTemplate = new SignatureTemplate(aliceWif)
 
-const tx = await contract.functions
-  .transfer(aliceSignatureTemplate)
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
-  .send()
+const transferDetails = await new TransactionBuilder({ provider })
+  .addInput(selectedContractUtxo, contract.unlock.transfer(aliceSignatureTemplate))
+  .addOutput({
+    to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
+    amount: 10000n
+  })
+  .send();
 ```
 
 The `hashtype` and `signatureAlgorithm` options are covered under ['Advanced Usage'](/docs/sdk/signature-templates#advanced-usage).
+
+## SignatureTemplate Methods
+
+### unlockP2PKH()
+
+Importantly the `SignatureTemplate` can also be used to generate the `Unlocker` for a P2PKH UTXO in the following way:
+
+```ts
+signatureTemplate.unlockP2PKH(): Unlocker
+```
+
+#### Example
+```ts
+import { aliceTemplate, aliceAddress, transactionBuilder } from './somewhere.js';
+
+const aliceUtxos = await provider.getUtxos(aliceAddress);
+transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
+```
+
+### getPublicKey()
+
+The `SignatureTemplate` also had a helper method to get the matching PublicKey in the following way:
+
+```ts
+signatureTemplate.getPublicKey(): Uint8Array
+```
+
+#### Example
+```ts
+import { aliceTemplate } from './somewhere.js';
+
+const alicePublicKey = aliceTemplate.getPublicKey()
+```
 
 ## Advanced Usage
 
@@ -48,10 +88,6 @@ export enum HashType {
 }
 ```
 
-:::note
-If you're using "old-style" covenants (using CashScript v0.6.0 or lower), you need to configure `HashType.SIGHASH_ALL` as the `hashtype` parameter for the SignatureTemplate.
-:::
-
 #### Example
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
@@ -59,6 +95,8 @@ const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const signatureTemplate = new SignatureTemplate(
   wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
 );
+
+const configuredHashType = signatureTemplate.getHashType()
 ```
 
 ### SignatureAlgorithm
@@ -79,6 +117,8 @@ const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 const hashType = HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
 const signatureAlgorithm = SignatureAlgorithm.SCHNORR
 const signatureTemplate = new SignatureTemplate(wif, hashType,signatureAlgorithm);
+
+const configuredSignatureAlgorithm = signatureTemplate.getSignatureAlgorithm()
 ```
 
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format

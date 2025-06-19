@@ -5,7 +5,7 @@ import {
   lockingBytecodeToCashAddress,
   binToHex,
   Transaction,
-  generateSigningSerializationBCH,
+  generateSigningSerializationBch,
   utf8ToBin,
   hexToBin,
   flattenBinArray,
@@ -36,10 +36,18 @@ import {
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
+  OutputTokenAmountTooSmallError,
   TokensToNonTokenAddressError,
+  UndefinedInputError,
 } from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
+export function validateInput(utxo: Utxo): void {
+  if (!utxo) {
+    throw new UndefinedInputError();
+  }
+}
+
 export function validateOutput(output: Output): void {
   if (typeof output.to !== 'string') return;
 
@@ -51,6 +59,10 @@ export function validateOutput(output: Output): void {
   if (output.token) {
     if (!isTokenAddress(output.to)) {
       throw new TokensToNonTokenAddressError(output.to);
+    }
+
+    if (output.token.amount < 0n) {
+      throw new OutputTokenAmountTooSmallError(output.token.amount);
     }
   }
 }
@@ -125,12 +137,6 @@ export function getInputSize(inputScript: Uint8Array): number {
   return 32 + 4 + varIntSize + scriptSize + 4;
 }
 
-export function getPreimageSize(script: Uint8Array): number {
-  const scriptSize = script.byteLength;
-  const varIntSize = scriptSize > 252 ? 3 : 1;
-  return 4 + 32 + 32 + 36 + varIntSize + scriptSize + 8 + 4 + 32 + 4 + 4;
-}
-
 export function getTxSizeWithoutInputs(outputs: Output[]): number {
   // Transaction format:
   // Version (4 Bytes)
@@ -160,11 +166,9 @@ export function createInputScript(
   redeemScript: Script,
   encodedArgs: Uint8Array[],
   selector?: number,
-  preimage?: Uint8Array,
 ): Uint8Array {
-  // Create unlock script / redeemScriptSig (add potential preimage and selector)
+  // Create unlock script / redeemScriptSig (add potential selector)
   const unlockScript = [...encodedArgs].reverse();
-  if (preimage !== undefined) unlockScript.push(preimage);
   if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 
   // Create input script and compile it to bytecode
@@ -199,7 +203,7 @@ export function createSighashPreimage(
   const context = { inputIndex, sourceOutputs, transaction };
   const signingSerializationType = new Uint8Array([hashtype]);
 
-  const sighashPreimage = generateSigningSerializationBCH(context, { coveredBytecode, signingSerializationType });
+  const sighashPreimage = generateSigningSerializationBch(context, { coveredBytecode, signingSerializationType });
 
   return sighashPreimage;
 }
@@ -343,16 +347,6 @@ export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: n
   return -1;
 }
 
-export const snakeCase = (str: string): string => (
-  str
-  && str
-    .match(
-      /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g,
-    )!
-    .map((s) => s.toLowerCase())
-    .join('_')
-);
-
 // JSON.stringify version that can serialize otherwise unsupported types (bigint and Uint8Array)
 export const extendedStringify = (obj: any, spaces?: number): string => JSON.stringify(
   obj,
@@ -371,3 +365,9 @@ export const extendedStringify = (obj: any, spaces?: number): string => JSON.str
 export const zip = <T, U>(a: readonly T[], b: readonly U[]): [T, U][] => (
   Array.from(Array(Math.max(b.length, a.length)), (_, i) => [a[i], b[i]])
 );
+
+export const isFungibleTokenUtxo = (utxo: Utxo): boolean => (
+  utxo.token !== undefined && utxo.token.amount > 0n && utxo.token.nft === undefined
+);
+
+export const isNonTokenUtxo = (utxo: Utxo): boolean => utxo.token === undefined;

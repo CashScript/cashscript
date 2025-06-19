@@ -1,5 +1,10 @@
 import {
-  binToHex, decodeTransaction, encodeTransaction, hexToBin, Transaction as LibauthTransaction,
+  binToHex,
+  decodeTransaction,
+  encodeTransaction,
+  hexToBin,
+  Transaction as LibauthTransaction,
+  WalletTemplate,
 } from '@bitauth/libauth';
 import delay from 'delay';
 import {
@@ -10,14 +15,21 @@ import {
   Utxo,
   InputOptions,
   isUnlockableUtxo,
+  isStandardUnlockableUtxo,
+  StandardUnlockableUtxo,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
+  validateInput,
   validateOutput,
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
+import { DebugResults } from './debugging.js';
+import { getBitauthUri } from './LibauthTemplate.js';
+import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import semver from 'semver';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -30,8 +42,8 @@ export class TransactionBuilder {
   public inputs: UnlockableUtxo[] = [];
   public outputs: Output[] = [];
 
-  private locktime: number;
-  private maxFee?: bigint;
+  public locktime: number = 0;
+  public maxFee?: bigint;
 
   constructor(
     options: TransactionBuilderOptions,
@@ -40,14 +52,14 @@ export class TransactionBuilder {
   }
 
   addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
-    this.inputs.push({ ...utxo, unlocker, options });
-    return this;
+    return this.addInputs([utxo], unlocker, options);
   }
 
   addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
   addInputs(utxos: UnlockableUtxo[]): this;
 
   addInputs(utxos: Utxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
+    utxos.forEach(validateInput);
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
@@ -102,7 +114,7 @@ export class TransactionBuilder {
     }
   }
 
-  build(): string {
+  buildLibauthTransaction(): LibauthTransaction {
     this.checkMaxFee();
 
     const inputs = this.inputs.map((utxo) => ({
@@ -140,14 +152,51 @@ export class TransactionBuilder {
       transaction.inputs[i].unlockingBytecode = script;
     });
 
+    return transaction;
+  }
+
+  build(): string {
+    const transaction = this.buildLibauthTransaction();
     return binToHex(encodeTransaction(transaction));
   }
 
-  // TODO: see if we can merge with Transaction.ts
+  debug(): DebugResults {
+    if (this.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
+      throw new Error('Cannot debug a transaction with custom unlocker');
+    }
+
+    // We can typecast this because we check that all inputs are standard unlockable in the check above
+    const contractVersions = (this.inputs as StandardUnlockableUtxo[])
+      .map((input) => 'contract' in input.unlocker ? input.unlocker.contract.artifact.compiler.version : null)
+      .filter((version) => version !== null);
+
+    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0'))) {
+      console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
+    }
+
+    return debugLibauthTemplate(this.getLibauthTemplate(), this);
+  }
+
+  bitauthUri(): string {
+    console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
+    return getBitauthUri(this.getLibauthTemplate());
+  }
+
+  getLibauthTemplate(): WalletTemplate {
+    return getLibauthTemplates(this);
+  }
+
   async send(): Promise<TransactionDetails>;
   async send(raw: true): Promise<string>;
   async send(raw?: true): Promise<TransactionDetails | string> {
     const tx = this.build();
+
+    // If all inputs are standard unlockable, we can debug the transaction locally
+    // before sending so any errors are caught early
+    if (this.inputs.every((input) => isStandardUnlockableUtxo(input))) {
+      this.debug();
+    }
+
     try {
       const txid = await this.provider.sendRawTransaction(tx);
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
@@ -157,7 +206,6 @@ export class TransactionBuilder {
     }
   }
 
-  // TODO: see if we can merge with Transaction.ts
   private async getTxDetails(txid: string): Promise<TransactionDetails>;
   private async getTxDetails(txid: string, raw: true): Promise<string>;
   private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {

@@ -1,7 +1,7 @@
 contract BigInt() {
     function proofOfBigInt(int x, int y) {
-        int maxInt32PlusOne = 2147483648;
-        require(x >= maxInt32PlusOne);
-        require(x * y >= maxInt32PlusOne);
+        int maxInt64PlusOne = 9223372036854775808;
+        require(x >= maxInt64PlusOne);
+        require(x * y >= maxInt64PlusOne);
     }
 }

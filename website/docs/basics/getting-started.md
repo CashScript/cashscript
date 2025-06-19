@@ -6,18 +6,20 @@ title: Getting Started
 
 To get started with writing CashScript smart contracts quickly, it is recommended to try out the [CashScript Playground](https://playground.cashscript.org/), a web application which lets you easily write and create contracts!
 
-The Playground supports 'Mocknet', allowing you to create virtual UTXOs for development without having to get Testnet coins and set up a Testnet wallet.
+The Playground has a code-editor and CashScript compiler easily accessible, without any prerequisites. Further, the playground allows to easily create contracts, wallets and build transactions.
 
 :::tip
-The [CashScript Playground](https://playground.cashscript.org/) is a great way to get started without doing any JavaScript/TypeScript coding to set up wallets, fetch balances and invoke contract functions. This way you can focus on learning just CashScript!
+The [CashScript Playground](https://playground.cashscript.org/) is a great way to get started without doing any JavaScript/TypeScript coding, this way you can focus on learning just CashScript!
 :::
+
+The Playground supports 'Mocknet', this is the recommended way to get started developing. This way you can create virtual UTXOs for testing without having to get Testnet coins and set up a Testnet wallet.
 
 Here are the 5 simple steps for creating your first smart contract transaction with the Playground:
 1. Compile a contract, for example the default `TransferWithTimeout` contract.
 2. Create a new contract in the 'New Contract' tab by providing the contract arguments.
-3. Add UTXOs to the smart contract address and the wallets used for testing.
-4. Next, go to the TransactionBuilder select the contract and the function to invoke
-5. Finally, specify the in- and outputs for the transaction and click 'Send'!
+3. Add mock UTXOs to the smart contract address and the wallets used for testing.
+4. Next, go to the TransactionBuilder select the contract UTXO and the function to invoke on it
+5. Finally, specify the in- and outputs for the transaction and click 'Evaluate'!
 
 ## Creating a CashScript Contract
 
@@ -29,7 +31,7 @@ To write CashScript smart contracts locally you use a code editor. For the best 
 
 :::note prerequisites
 - Basic familiarity with the command line
-- Node.js installed
+- Node.js installed (v22 or newer)
 - A code editor (VS Code recommended)
 :::
 
@@ -46,13 +48,11 @@ npm install -g cashc
 
 ### Writing your first contract
 
-Open your code editor to start writing your first CashScript smart contract.
-We can start from a basic `TransferWithTimeout` smart contract. Create a new file `TransferWithTimeout.cash`.
+We can start from a basic `TransferWithTimeout` smart contract, a simple contract for tips which allows the recipient to claim their gift at any time, but if they don't claim within some time, the sender can reclaim it.
 
-The `TransferWithTimeout` contract takes in 3 contract arguments and has 2 contract functions: `transfer` and `timeout`.
-
+Open your code editor to start writing your first CashScript smart contract. Then create a new file `TransferWithTimeout.cash` and copy over the smart contracts code from below.
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     // Allow the recipient to claim their received money
@@ -67,6 +67,11 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     }
 }
 ```
+
+Let's take some time to understand the contract structure.
+At the top, the smart contract declares the CashScript language version it's using with `pragma`.
+Then a `TransferWithTimeout` is declare which takes in 3 contract arguments and has 2 contract functions: `transfer` and `timeout`.
+These contract functions both have `require` statements necessary to be met to be able to spend BCH from the contract.
 
 :::tip
 There are some other examples available on the [Examples page](/docs/language/examples) that can be used to take inspiration from. Further examples of the TypeScript and JavaScript integration can be found on [GitHub](https://github.com/CashScript/cashscript/tree/master/examples).
@@ -88,7 +93,7 @@ OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_4 OP_ROLL OP_ROT OP_CHECKSIG OP_NIP OP_NI
 
 ## Creating a CashScript Transaction
 
-After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to invoke spending functions on the smart contract UTXOs. We'll continue with the `TransferWithTimeout` artifact generated earlier.
+After creating a contract artifact, we can now use the TypeScript SDK to initialise the smart contract and to create a transaction spending from the smart contract UTXO. We'll continue with the `TransferWithTimeout` artifact generated earlier.
 
 :::info
 The CashScript SDK is written in TypeScript meaning that you can either use TypeScript or vanilla JavaScript to use the SDK.
@@ -104,7 +109,16 @@ npm install cashscript
 
 ### Initialising a Contract
 
-Now to initialise a contract we will import the `ElectrumNetworkProvider` and `Contract` classes from the CashScript SDK. We also need to import the contract artifact. Lastly, we need public keys from a generated key-pair to use as arguments for contract initialisation.
+To initialise a contract with the SDK we will need 3 things: the contract artifact, the contract constructor arguments and a NetworkProvider.
+
+To do this, we import the `ElectrumNetworkProvider` and `Contract` classes from the CashScript SDK. We also need to import the contract artifact. Lastly, we need public keys from a generated key-pair to use as contract constructor arguments.
+
+:::tip
+For a code example of how to generate key-pairs with Libauth, see the [CashScript Examples' `common.ts`](https://github.com/CashScript/cashscript/blob/master/examples/common.ts) file where Alice and Bob's key-pairs are created.
+:::
+
+With the instantiated contract, we can now get the contract address and get the contract balance and UTXOs in the following way:
+
 
 ```javascript
 import { ElectrumNetworkProvider, Contract } from 'cashscript';
@@ -116,8 +130,7 @@ const provider = new ElectrumNetworkProvider('chipnet');
 
 // Instantiate a new TransferWithTimeout contract
 const contractArguments = [alicePub, bobPub, 100000n];
-const options = { provider };
-const contract = new Contract(artifact, contractArguments, options);
+const contract = new Contract(artifact, contractArguments, {provider});
 
 // Get the contract address and info about its balance
 console.log("Contract address: " + contract.address);
@@ -125,35 +138,47 @@ console.log("Contract balance: " + await contract.getBalance());
 console.log("Contract UTXOs: " + await contract.getUtxos());
 ```
 
-:::tip
-For a code example of how to generate key-pairs with Libauth, see the [CashScript Examples' `common.ts`](https://github.com/CashScript/cashscript/blob/master/examples/common.ts) file where Alice and Bob's key-pairs are created.
-:::
+Next, to spend from the smart contract we've initialised, you would need to make sure there is an actual contract balance on the smart contract address.
+
+To make development easier we'll use the `MockNetworkProvider` instead so you can simulate transactions in a 'mock' network environment.
 
 ### Creating a Transaction
 
-Lastly, to spend from the smart contract we've initialised, you need to make sure there is an actual contract balance on the smart contract address. In other words, we need to make sure there's at least one UTXO with the smart contract locking bytecode, so that we can spend from it!
+Finally to create a transaction spending from the smart contract UTXO we use the `TransactionBuilder` to add in- and outputs to the transaction. The difference between the total BCH amount in the in- and outputs is the transaction fee.
+
+To spend from an input you specify the `UTXO` together with an `Unlocker` to actually provide the 'unlock' script matching the input's locking bytecode. For the initialized smart contract the `Unlockers` are available as methods on the `Contract` instance. Below we will invoke the `transfer` function on the contract utxo through `contract.unlock.transfer(...)`.
 
 ```javascript
-import { ElectrumNetworkProvider, Contract, SignatureTemplate } from 'cashscript';
+import { MockNetworkProvider, Contract, SignatureTemplate, TransactionBuilder, randomUtxo } from 'cashscript';
 import { alicePub, bobPriv, bobPub } from './keys.js';
-import artifact from './TransferWithTimeout.json';
+import artifact from './TransferWithTimeout.json' with { type: 'json' };
 
-// Initialise a network provider for network operations
-const provider = new ElectrumNetworkProvider('chipnet');
+// Initialise a mock network provider for easy testing
+const provider = new MockNetworkProvider();
 
 // Instantiate a new TransferWithTimeout contract
 const contractArguments = [alicePub, bobPub, 100000n];
-const options = { provider };
-const contract = new Contract(artifact, contractArguments, options);
+const contract = new Contract(artifact, contractArguments, {provider});
 
-// Call the transfer function with Bob's signature
-// i.e. Bob claims the money that Alice has sent him
-const transferDetails = await contract.functions
-  .transfer(new SignatureTemplate(bobPriv))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
+// Create a mocknet UTXO for testing
+const contractMockUtxo = randomUtxo()
+provider.addUtxo(contract.address, contractMockUtxo);
+
+// Create the signatureTemplate for bob to sign the contract input
+const bobSignatureTemplate = new SignatureTemplate(bobPriv)
+
+// Start building the transaction
+const transferDetails = await new TransactionBuilder({ provider })
+  .addInput(contractMockUtxo, contract.unlock.transfer(bobSignatureTemplate))
+  .addOutput({
+    to: 'bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx',
+    amount: 10000n
+  })
   .send();
 
 console.log(transferDetails);
 ```
 
 Congrats 🎉! You've successfully created a transaction spending from a Bitcoin Cash smart contract!
+
+To use the `timeout` function you need to use Alice as signer for the spending condition. Secondly you also need get to use `.setLocktime()` with a valid argument during the transaction building to pass the `tx.time` check of the `timeout` function.

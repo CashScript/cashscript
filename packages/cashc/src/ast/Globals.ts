@@ -30,7 +30,7 @@ export enum GlobalFunction {
 }
 
 export enum TimeOp {
-  CHECK_SEQUENCE = 'tx.age',
+  CHECK_SEQUENCE = 'this.age',
   CHECK_LOCKTIME = 'tx.time',
 }
 

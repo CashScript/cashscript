@@ -1,6 +1,9 @@
 import { type Transaction } from '@bitauth/libauth';
 import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
+import { Contract } from './Contract.js';
+import { AbiFunction } from '@cashscript/utils';
+import { FunctionArgument } from './Argument.js';
 
 export interface Utxo {
   txid: string;
@@ -14,8 +17,16 @@ export interface UnlockableUtxo extends Utxo {
   options?: InputOptions;
 }
 
+export interface StandardUnlockableUtxo extends UnlockableUtxo {
+  unlocker: StandardUnlocker;
+}
+
 export function isUnlockableUtxo(utxo: Utxo): utxo is UnlockableUtxo {
   return 'unlocker' in utxo;
+}
+
+export function isStandardUnlockableUtxo(utxo: UnlockableUtxo): utxo is StandardUnlockableUtxo {
+  return isStandardUnlocker(utxo.unlocker);
 }
 
 export interface InputOptions {
@@ -31,6 +42,30 @@ export interface GenerateUnlockingBytecodeOptions {
 export interface Unlocker {
   generateLockingBytecode: () => Uint8Array;
   generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
+}
+
+export interface ContractUnlocker extends Unlocker {
+  contract: Contract;
+  params: FunctionArgument[];
+  abiFunction: AbiFunction;
+}
+
+export interface P2PKHUnlocker extends Unlocker {
+  template: SignatureTemplate;
+}
+
+export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
+
+export function isContractUnlocker(unlocker: Unlocker): unlocker is ContractUnlocker {
+  return 'contract' in unlocker;
+}
+
+export function isP2PKHUnlocker(unlocker: Unlocker): unlocker is P2PKHUnlocker {
+  return 'template' in unlocker;
+}
+
+export function isStandardUnlocker(unlocker: Unlocker): unlocker is StandardUnlocker {
+  return isContractUnlocker(unlocker) || isP2PKHUnlocker(unlocker);
 }
 
 export interface UtxoP2PKH extends Utxo {

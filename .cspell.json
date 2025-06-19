@@ -23,6 +23,7 @@
         "bitcore",
         "bitfield",
         "bitfield's",
+        "bitshift",
         "blackie",
         "blockbook",
         "booland",
@@ -82,6 +83,8 @@
         "INPUTINDEX",
         "INPUTSEQUENCENUMBER",
         "ints",
+        "introspected",
+        "introspecting",
         "kalis",
         "keypair",
         "keypairs",
@@ -138,6 +141,7 @@
         "prevouts",
         "priv",
         "pubkey",
+        "pubkeys",
         "pubkeytype",
         "pushbytes",
         "pushdata",
@@ -155,6 +159,7 @@
         "scripthash",
         "sdks",
         "secp",
+        "segwit",
         "setup",
         "sig",
         "sighash",
@@ -185,6 +190,7 @@
         "unary",
         "unlocker",
         "unlockers",
+        "unreached",
         "utxo",
         "utxo's",
         "UTXOBYTECODE",
@@ -199,11 +205,13 @@
         "workdir"
     ],
     "ignoreWords": [
+        "addinput",
         "bitcats",
         "bitcoincashjs",
         "branchup",
         "bchguru",
         "bchn",
+        "c0ffee",
         "cashcompiler",
         "cashninjas",
         "chaingraph",
@@ -215,6 +223,7 @@
         "getrawtransaction",
         "hardhat",
         "hodlvault",
+        "incl",
         "infima",
         "jedex",
         "lichos",
@@ -225,10 +234,12 @@
         "outputnulldata",
         "outputp",
         "pako",
+        "paytaca",
         "popd",
         "pushd",
         "sendrawtransaction",
         "setfiletype",
+        "setlocktime",
         "tada",
         "tapswap",
         "tokenaut",
@@ -245,6 +256,7 @@
         "withopreturn",
         "withtime",
         "XBVJRKV",
+        "zapit",
         "zwets"
     ],
     "ignorePaths": [
@@ -271,5 +283,10 @@
         "**/grammar/**",
         // Do not spellcheck vendor code
         "**/node_modules/**",
+    ],
+    "ignoreRegExpList": [
+        "bitcoincash:.*",
+        "bchreg:.*",
+        "bchtest:.*"
     ]
 }

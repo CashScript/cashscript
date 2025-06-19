@@ -1,7 +1,7 @@
 {
   "name": "cashscript-examples",
   "private": true,
-  "version": "0.10.5",
+  "version": "0.11.0",
   "description": "Usage examples of the CashScript SDK",
   "main": "p2pkh.js",
   "type": "module",
@@ -11,11 +11,11 @@
     "lint": "eslint . --ext .ts --ignore-path ../.eslintignore"
   },
   "dependencies": {
-    "@bitauth/libauth": "^3.0.0",
-    "@types/node": "^12.7.8",
-    "cashc": "^0.10.5",
-    "cashscript": "^0.10.5",
+    "@bitauth/libauth": "^3.1.0-next.2",
+    "@types/node": "^22.10.7",
+    "cashc": "^0.11.0",
+    "cashscript": "^0.11.0",
     "eslint": "^8.56.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.7.3"
   }
 }

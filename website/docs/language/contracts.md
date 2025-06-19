@@ -13,7 +13,7 @@ Contract authors should be careful when allowing a range of versions to check th
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 pragma cashscript >= 0.7.0 < 0.9.3;
 ```
 
@@ -22,23 +22,31 @@ A CashScript constructor works slightly differently than what you might be used 
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract HTLC(pubkey sender, pubkey recipient, int expiration, bytes32 hash) {
     ...
 }
 ```
 
+### Constructor Arguments
+
+The constructor arguments are provided when initializing a specific instance of a smart contract. The provided constructor arguments are added to the start of the contract's script before the opcode logic. Because the constructor arguments are part of the full smart contract script, they are conceptually similar to hard-coded constants in your contract logic. Constructor arguments are a way to create 'global constants' accessible from different functions inside your contract.
+
+:::info
+The typings for the constructor arguments are only semantic and used when initializing the contract with the SDK. This means when not using the SDK you could still pass a different byte length item to `bytes32 hash`.
+:::
+
 :::note
-Upon initialization of the contract, constructor parameters are encoded and added to the contract's bytecode in the reversed order of their declaration. This can be important when manually initializing contracts for debugging purposes.
+Upon initialization of the contract, constructor parameters are encoded and added to the contract's bytecode in the reversed order of their declaration. This can be important when manually constructing the contract locking script for debugging or optimization purposes.
 :::
 
 ## Functions
-The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using a technique called covenants, it's possible to specify additional conditions — like restricting *where* money can be sent. To read more about this technique, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
+The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using 'covenants it's possible to specify additional conditions — like restricting *where* money can be sent. To learn more about covenants, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     function transfer(sig recipientSig) {
@@ -51,8 +59,18 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 }
 ```
 
+### Function Arguments
+
+The function arguments are provided when attempting to spend from the contract. This means that these arguments can be crafted in a specific way by anyone to see if they can exploit the contract logic. Because of this it is important to realize these are 'untrusted arguments'.
+
+In CashScript the types for the function arguments are **not** enforced automatically at the contract level. This can be especially relevant for types like `bool`, `bytesX` and other semantic bytes types. Instead this type information is only used by the SDK to check whether these arguments match the expected type during transaction building.
+
+:::caution
+The typings for the function arguments are only semantic, this means the length of bounded bytes types like `bytes20` are **not** contract enforced automatically. Instead add an explicit length check `require(item.length == 20)`.
+:::
+
 :::note
-Function parameters are passed in the reversed order of their declaration. This can be important when manually creating contract transactions for debugging purposes.
+Function parameters are passed in the reversed order of their declaration. This can be important when debugging, optimizing or when creating transactions manually.
 :::
 
 ## Statements
@@ -69,7 +87,7 @@ The error message in a `require` statement is only available in debug evaluation
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
@@ -111,7 +129,7 @@ There is no implicit type conversion from non-boolean to boolean types. So `if (
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
     function spend(pubkey pk, sig s, bytes message) {
@@ -138,7 +156,7 @@ Logging is only available in debug evaluation of a transaction, but has no impac
 
 #### Example
 ```solidity
-pragma cashscript ^0.10.0;
+pragma cashscript ^0.11.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {

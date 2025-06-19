@@ -10,7 +10,7 @@ Because of the separation of the compiler and the SDK, CashScript contracts can 
 :::
 
 ## Creating a Contract
-The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance. They can also be used to interact with the contract by calling the contract's functions.
+The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance. Contract objects can be used to interact with the contract by generating an `Unlocker` by calling the contract's unlocker functions.
 
 ### Constructor
 ```ts
@@ -47,14 +47,12 @@ import P2PKH from './p2pkh.json' with { type: 'json' };
 // Or compile a contract file
 const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 
-const provider = new ElectrumNetworkProvider('chipnet');
-const addressType = 'p2sh20';
 const contractArguments = [alicePkh]
-const options = { provider, addressType}
+
+const provider = new ElectrumNetworkProvider('chipnet');
+const options = { provider, addressType: 'p2sh20' }
 const contract = new Contract(P2PKH, contractArguments, options);
 ```
-
-### TypeScript Typings
 
 ## Contract Properties
 
@@ -86,30 +84,6 @@ A contract's token-supporting address can be retrieved through the `tokenAddress
 console.log(contract.tokenAddress)
 ```
 
-### opcount
-```ts
-contract.opcount: number
-```
-
-The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can contain a maximum of 201 opcodes.
-
-#### Example
-```ts
-assert(contract.opcount <= 201)
-```
-
-### bytesize
-```ts
-contract.bytesize: number
-```
-
-The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 520 bytes at most.
-
-#### Example
-```ts
-console.log(contract.bytesize)
-```
-
 ### bytecode
 ```ts
 contract.bytecode: string
@@ -120,6 +94,35 @@ Returns the contract's redeem script encoded as a hex string.
 #### Example
 ```ts
 console.log(contract.bytecode)
+```
+
+### bytesize
+```ts
+contract.bytesize: number
+```
+
+The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 1,650 bytes at most.
+
+:::info
+The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they will always be an underestimate, as the contract hasn't been initialized with contract arguments.
+:::
+
+#### Example
+```ts
+// make sure the contract bytesize is within standardness limits
+assert(contract.bytesize <= 1650)
+```
+
+### opcount
+```ts
+contract.opcount: number
+```
+
+The number of opcodes in the contract's bytecode can be retrieved through the `opcount` member field.
+
+#### Example
+```ts
+console.log(contract.opcount)
 ```
 
 ## Contract Methods
@@ -157,40 +160,16 @@ interface Utxo {
 const utxos = await contract.getUtxos()
 ```
 
-### Contract functions
-```ts
-contract.functions.<functionName>(...args: FunctionArgument[]): Transaction
-```
-
-Once a smart contract has been instantiated, you can invoke a contract function to spend from the contract with the '[Simple transaction-builder](/docs/sdk/transactions)' by calling the function name under the `functions` member field of a contract object.
-To call these functions successfully, the provided parameters must match the function signature defined in the CashScript code.
-
-These contract functions return an incomplete `Transaction` object, which needs to be completed by providing outputs of the transaction. For more information see the [Simple transaction-builder](/docs/sdk/transactions) page.
-
-#### Example
-```ts
-import { alice } from './somewhere';
-
-const tx = await contract.functions
-  .transfer(new SignatureTemplate(alice))
-  .to('bitcoincash:qrhea03074073ff3zv9whh0nggxc7k03ssh8jv9mkx', 10000n)
-  .send()
-```
-
-:::tip
-If the contract artifact is generated using the `cashc` CLI with the `--format ts` option, you will get explicit types and type checking for the function name and arguments.
-:::
-
 ### Contract unlockers
 
 ```ts
 contract.unlock.<functionName>(...args: FunctionArgument[]): Unlocker
 ```
 
-Once a smart contract has been instantiated, you can invoke a contract function on a smart contract UTXO to use the '[Advanced transaction-builder](/docs/sdk/transactions-advanced)' by calling the function name under the `unlock` member field of a contract object.
+Once a smart contract has been instantiated, you can invoke a contract function on a smart contract UTXO to use the '[Transaction Builder](/docs/sdk/transaction-builder)' by calling the function name under the `unlock` member field of a contract object.
 To call these functions successfully, the provided parameters must match the function signature defined in the CashScript code.
 
-These contract functions return an incomplete `transactionBuilder` object, which needs to be completed by providing outputs of the transaction. For more information see the [Advanced transaction-builder](/docs/sdk/transactions-advanced) page.
+These contract functions return an incomplete `transactionBuilder` object, which needs to be completed by providing outputs of the transaction. For more information see the [transaction-builder](/docs/sdk/transaction-builder) page.
 
 ```ts
 import { contract, transactionBuilder } from './somewhere.js';
@@ -199,3 +178,7 @@ const contractUtxos = await contract.getUtxos();
 
 transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
 ```
+
+:::tip
+If the contract artifact is generated using the `cashc` CLI with the `--format ts` option, you will get explicit types and type checking for the function name and arguments.
+:::

@@ -6,9 +6,21 @@ export class TypeError extends Error {
   }
 }
 
+export class UndefinedInputError extends Error {
+  constructor() {
+    super('Input is undefined');
+  }
+}
+
 export class OutputSatoshisTooSmallError extends Error {
   constructor(satoshis: bigint, minimumAmount: bigint) {
     super(`Tried to add an output with ${satoshis} satoshis, which is less than the required minimum for this output-type (${minimumAmount})`);
+  }
+}
+
+export class OutputTokenAmountTooSmallError extends Error {
+  constructor(amount: bigint) {
+    super(`Tried to add an output with ${amount} tokens, which is invalid`);
   }
 }
 
@@ -26,7 +38,8 @@ export class NoDebugInformationInArtifactError extends Error {
 
 export class FailedTransactionError extends Error {
   constructor(public reason: string, public bitauthUri?: string) {
-    super(`${reason}${bitauthUri ? `\n\nBitauth URI: ${bitauthUri}` : ''}`);
+    const warning = 'WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template';
+    super(`${reason}${bitauthUri ? `\n\n${warning}\n\nBitauth URI: ${bitauthUri}` : ''}`);
   }
 }
 
@@ -58,16 +71,7 @@ export class FailedRequireError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
-    let { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
-
-    if (!statement.includes('require')) {
-      statement = requireStatement.message
-        ? `require(${statement}, "${requireStatement.message}")`
-        : `require(${statement})`;
-
-      // Sometimes in reconstructed multiline require statements, we get double commas
-      statement = statement.replace(/,,/g, ',');
-    }
+    const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
 
     const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
