@@ -41,14 +41,13 @@ export function compileString(code: string): Artifact {
   if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisationResult.script)) {
     console.error(scriptToAsm(optimisedBytecodeOld));
     console.error(scriptToAsm(optimisationResult.script));
-    throw new Error('New bytecode optimisation is not backwards compatible');
+    throw new Error('New bytecode optimisation is not backwards compatible, please report this issue to the CashScript team');
   }
 
   // Attach debug information
   const debug = {
     bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
     sourceMap: generateSourceMap(optimisationResult.locationData),
-    // sourceMap: traversal.sourceMap,
     logs: optimisationResult.logs,
     requires: optimisationResult.requires,
   };

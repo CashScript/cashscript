@@ -258,7 +258,10 @@ const calculateCleanupSize = (instructions: Array<AuthenticationInstruction | un
   // OP_NIP (or OP_DROP/OP_2DROP in optimised bytecode) is used for cleanup at the end of a function,
   // OP_ENDIF and OP_ELSE are the end of branches. We need to remove all of these to get to the actual last
   // executed instruction of a function
-  // TODO: What about OP_1??
+  // Note that in the case where we re-add OP_1 because we cannot optimise the final explicit VERIFY into an implicit one
+  // (like when dealing with if-statements, or with CHECKLOCKTIMEVERIFY), it is impossible to run into an implicit final
+  // verify failure. That is why OP_1 does not need to be included in the cleanup opcodes.
+  // TODO: Perhaps we also do not need to add OP_DROP/OP_2DROP either, because they only occur together with OP_1
   const cleanupOpcodes = [Op.OP_ENDIF, Op.OP_NIP, Op.OP_ELSE, Op.OP_DROP, Op.OP_2DROP];
 
   let cleanupSize = 0;

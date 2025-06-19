@@ -187,7 +187,7 @@ export class Transaction {
 
   // method to debug the transaction with libauth VM, throws upon evaluation error
   async debug(): Promise<DebugResults> {
-    if (!semver.satisfies(this.contract.artifact.compiler.version, '>=0.11.0-next.4', { includePrerelease: true })) {
+    if (!semver.satisfies(this.contract.artifact.compiler.version, '>=0.11.0')) {
       console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
     }
 

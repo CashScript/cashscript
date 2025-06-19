@@ -321,21 +321,6 @@ export const generateTemplateScenarioTransactionOutputLockingBytecode = (
   return binToHex(addressToLockScript(csOutput.to));
 };
 
-/**
- * Generates source outputs for a BitAuth template scenario
- *
- * @param csTransaction - The CashScript transaction to generate source outputs for
- * @returns An array of BitAuth template scenario outputs with locking scripts and values
- *
- * For each input in the transaction:
- * - Generates appropriate locking bytecode (P2PKH or contract)
- * - Includes the input value in satoshis
- * - Includes any token details if present
- *
- * The slotIndex tracks which input is the contract input vs P2PKH inputs
- * to properly generate the locking scripts.
- */
-// TODO: This looks like it needs some refactor to work with the new stuff
 const generateTemplateScenarioSourceOutputs = (
   csTransaction: Transaction,
 ): Array<WalletTemplateScenarioOutput<true>> => {

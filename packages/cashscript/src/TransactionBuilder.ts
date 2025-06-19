@@ -170,7 +170,7 @@ export class TransactionBuilder {
       .map((input) => 'contract' in input.unlocker ? input.unlocker.contract.artifact.compiler.version : null)
       .filter((version) => version !== null);
 
-    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0-next.4', { includePrerelease: true }))) {
+    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0'))) {
       console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
     }
 
@@ -186,7 +186,6 @@ export class TransactionBuilder {
     return getLibauthTemplates(this);
   }
 
-  // TODO: see if we can merge with Transaction.ts
   async send(): Promise<TransactionDetails>;
   async send(raw: true): Promise<string>;
   async send(raw?: true): Promise<TransactionDetails | string> {
@@ -207,7 +206,6 @@ export class TransactionBuilder {
     }
   }
 
-  // TODO: see if we can merge with Transaction.ts
   private async getTxDetails(txid: string): Promise<TransactionDetails>;
   private async getTxDetails(txid: string, raw: true): Promise<string>;
   private async getTxDetails(txid: string, raw?: true): Promise<TransactionDetails | string> {

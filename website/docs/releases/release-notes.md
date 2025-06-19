@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.11.0-next.4
+## v0.11.0
 
 This update adds CashScript support for the new BCH 2025 network upgrade. To read more about the upgrade, see [this blog post](https://blog.bitjson.com/2025-chips/).
 
