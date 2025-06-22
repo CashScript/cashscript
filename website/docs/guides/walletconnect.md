@@ -27,7 +27,13 @@ signTransaction: (
 ) => Promise<{ signedTransaction: string, signedTransactionHash: string } | undefined>;
 ```
 
-You can see that the CashScript `ContractInfo` needs to be provided as part of the `sourceOutputs`. Important to note from the spec is how the wallet knows which inputs to sign:
+The `transaction` passed in this object needs to be an unsigned transaction which is using placeholder values for the field that the user-wallet needs to fill in itself.
+
+The `sourceOutputs` value can be easily generated with the CashScript `generateWcSourceOutputs` helperfunction. 
+
+## User-Wallet placeholders
+
+Important to understand is that the standard uses placeholder values which the user wallet then needs to fill in. For the user inputs to sign the placeholders is the following:
 
 >To signal that the wallet needs to sign an input, the app sets the corresponding input's `unlockingBytecode` to empty Uint8Array.
 
@@ -46,7 +52,7 @@ Below we'll give 2 example, the first example using spending a user-input and in
 Below is example code from the `CreateContract` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/CreateContract.vue#L14).
 
 ```ts
-import { Contract } from "cashscript";
+import { TransactionBuilder, generateWcSourceOutputs, type Unlocker } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function proposeWcTransaction(){
@@ -68,18 +74,13 @@ async function proposeWcTransaction(){
   const decodedTransaction = decodeTransaction(hexToBin(unsignedRawTransactionHex));
   if(typeof decodedTransaction == "string") throw new Error("!decodedTransaction")
 
-  // construct SourceOutputs from transaction input, see source code
-  const sourceOutputs = generateSourceOutputs(transactionBuilder.inputs)
-
-  // we don't need to add the contractInfo to the wcSourceOutputs here
-  const wcSourceOutputs = sourceOutputs.map((sourceOutput, index) => {
-    return { ...sourceOutput, ...decodedTransaction.inputs[index] }
-  })
+  // construct WcSourceOutputs from transaction input using a CashScript helper function
+  const wcSourceOutputs = generateWcSourceOutputs(transactionBuilder.inputs)
 
   // wcTransactionObj to pass to signTransaction endpoint
   const wcTransactionObj = {
     transaction: decodedTransaction,
-    sourceOutputs: listSourceOutputs,
+    sourceOutputs: wcSourceOutputs,
     broadcast: true,
     userPrompt: "Create HODL Contract"
   };
@@ -96,7 +97,7 @@ async function proposeWcTransaction(){
 Below is example code from the `unlockHodlVault` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/UserContracts.vue#L66).
 
 ```ts
-import { Contract } from "cashscript";
+import { TransactionBuilder, generateWcSourceOutputs } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function unlockHodlVault(){
@@ -115,13 +116,8 @@ async function unlockHodlVault(){
   const decodedTransaction = decodeTransaction(hexToBin(unsignedRawTransactionHex));
   if(typeof decodedTransaction == "string") throw new Error("!decodedTransaction")
 
-  const sourceOutputs = generateSourceOutputs(transactionBuilder.inputs)
-
-  // Add the contractInfo to the wcSourceOutputs
-  const wcSourceOutputs: wcSourceOutputs = sourceOutputs.map((sourceOutput, index) => {
-    const contractInfoWc = createWcContractObj(hodlContract, index)
-    return { ...sourceOutput, ...contractInfoWc, ...decodedTransaction.inputs[index] }
-  })
+  // construct WcSourceOutputs from transaction input using a CashScript helper function
+  const wcSourceOutputs = generateWcSourceOutputs(transactionBuilder.inputs)
 
   const wcTransactionObj = {
     transaction: decodedTransaction,
