@@ -22,6 +22,7 @@ import { NetworkProvider } from './network/index.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
+  generateLibauthSourceOutputs,
   validateInput,
   validateOutput,
 } from './utils.js';
@@ -134,15 +135,7 @@ export class TransactionBuilder {
     };
 
     // Generate source outputs from inputs (for signing with SIGHASH_UTXOS)
-    const sourceOutputs = this.inputs.map((input) => {
-      const sourceOutput = {
-        amount: input.satoshis,
-        to: input.unlocker.generateLockingBytecode(),
-        token: input.token,
-      };
-
-      return cashScriptOutputToLibauthOutput(sourceOutput);
-    });
+    const sourceOutputs = generateLibauthSourceOutputs(this.inputs);
 
     const inputScripts = this.inputs.map((input, inputIndex) => (
       input.unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex })

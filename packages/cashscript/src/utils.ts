@@ -32,6 +32,7 @@ import {
   LibauthOutput,
   TokenDetails,
   AddressType,
+  UnlockableUtxo,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -121,6 +122,19 @@ export function libauthOutputToCashScriptOutput(output: LibauthOutput): Output {
       },
     },
   };
+}
+
+export function generateLibauthSourceOutputs(inputs: UnlockableUtxo[]): LibauthOutput[] {
+  const sourceOutputs = inputs.map((input) => {
+    const sourceOutput = {
+      amount: input.satoshis,
+      to: input.unlocker.generateLockingBytecode(),
+      token: input.token,
+    };
+
+    return cashScriptOutputToLibauthOutput(sourceOutput);
+  });
+  return sourceOutputs;
 }
 
 function isTokenAddress(address: string): boolean {
