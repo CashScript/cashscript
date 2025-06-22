@@ -27,19 +27,9 @@ signTransaction: (
 ) => Promise<{ signedTransaction: string, signedTransactionHash: string } | undefined>;
 ```
 
-The `transaction` passed in this object needs to be an unsigned transaction which is using placeholder values for the field that the user-wallet needs to fill in itself.
+The `transaction` passed in this object needs to be an unsigned transaction which is using placeholder values for the field that the user-wallet needs to fill in itself. You can use the `PlaceholderTemplate` class to generate the zero-placeholder values.
 
 The `sourceOutputs` value can be easily generated with the CashScript `generateWcSourceOutputs` helperfunction. 
-
-## User-Wallet placeholders
-
-Important to understand is that the standard uses placeholder values which the user wallet then needs to fill in. For the user inputs to sign the placeholders is the following:
-
->To signal that the wallet needs to sign an input, the app sets the corresponding input's `unlockingBytecode` to empty Uint8Array.
-
-Also important for smart contract usage is how the wallet adds the public-key or a signature to contract inputs:
-
-> We signal the use of pubkeys by using a 33-byte long zero-filled arrays and schnorr (the currently supported type) signatures by using a 65-byte long zero-filled arrays. Wallet detects these patterns and replaces them accordingly.
 
 ## Create wcTransactionObj
 
@@ -52,19 +42,16 @@ Below we'll give 2 example, the first example using spending a user-input and in
 Below is example code from the `CreateContract` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/CreateContract.vue#L14).
 
 ```ts
-import { TransactionBuilder, generateWcSourceOutputs, type Unlocker } from "cashscript";
+import { TransactionBuilder, generateWcSourceOutputs, placeholderTemplate } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
-async function proposeWcTransaction(){
-  // create a placeholderUnlocker for the empty signature
-  const placeholderUnlocker: Unlocker = {
-    generateLockingBytecode: () => convertPkhToLockingBytecode(userPkh),
-    generateUnlockingBytecode: () => Uint8Array.from(Array(0))
-  }
+async function proposeWcTransaction(userAddress: string){
+  // create a placeholderTemplate to generate placeholder unlocker
+  const placeholderTemplate = new PlaceholderTemplate(userAddress)
 
   // use the CashScript SDK to build a transaction
   const transactionBuilder = new TransactionBuilder({provider: store.provider})
-  transactionBuilder.addInputs(userInputUtxos, placeholderUnlocker)
+  transactionBuilder.addInputs(userInputUtxos, placeholderTemplate.unlockP2PKH())
   transactionBuilder.addOpReturnOutput(opReturnData)
   transactionBuilder.addOutput(contractOutput)
   if(changeAmount > 550n) transactionBuilder.addOutput(changeOutput)
@@ -97,13 +84,14 @@ async function proposeWcTransaction(){
 Below is example code from the `unlockHodlVault` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/UserContracts.vue#L66).
 
 ```ts
-import { TransactionBuilder, generateWcSourceOutputs } from "cashscript";
+import { TransactionBuilder, generateWcSourceOutputs, PlaceholderTemplate } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function unlockHodlVault(){
-  // create a placeholder for the unlocking arguments
-  const placeholderSig = Uint8Array.from(Array(65))
-  const placeholderPubKey = Uint8Array.from(Array(33));
+  // use placeholderTemplate to create placeholder args for unlocker
+  const placeholderTemplate = new PlaceholderTemplate()
+  const placeholderSig = placeholderTemplate.generateSignature()
+  const placeholderPubKey = placeholderTemplate.getPublicKey()
 
   const transactionBuilder = new TransactionBuilder({provider: store.provider})
 
