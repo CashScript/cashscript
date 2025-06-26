@@ -1,4 +1,4 @@
-import { binToHex, hexToBin } from '@bitauth/libauth';
+import { binToHex, decodeTransaction, hexToBin, isHex } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
@@ -10,6 +10,7 @@ const bobAddress = 'bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc';
 const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
 
 export default class MockNetworkProvider implements NetworkProvider {
+  // we use lockingBytecode as the key for utxoMap to make cashaddresses and tokenaddresses interchangeable
   private utxoMap: Record<string, Utxo[]> = {};
   private transactionMap: Record<string, string> = {};
   public network: Network = Network.MOCKNET;
@@ -45,11 +46,54 @@ export default class MockNetworkProvider implements NetworkProvider {
 
     const txid = binToHex(sha256(sha256(transactionBin)).reverse());
     this.transactionMap[txid] = txHex;
+
+    const decoded = decodeTransaction(transactionBin);
+    if (typeof decoded === 'string') {
+      throw new Error(`${decoded}`);
+    }
+
+    // remove (spend) UTXOs from the map
+    for (const input of decoded.inputs) {
+      for (const address of Object.keys(this.utxoMap)) {
+        const utxos = this.utxoMap[address];
+        const index = utxos.findIndex(
+          (utxo) => utxo.txid === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex
+        );
+
+        if (index !== -1) {
+          // Remove the UTXO from the map
+          utxos.splice(index, 1);
+          this.utxoMap[address] = utxos;
+          break; // Exit loop after finding and removing the UTXO
+        }
+        if (utxos.length === 0) {
+          delete this.utxoMap[address]; // Clean up empty address entries
+        }
+      }
+    }
+
+    // add new UTXOs to the map
+    for (const [index, output] of decoded.outputs.entries()) {
+      this.addUtxo(binToHex(output.lockingBytecode), {
+        txid: txid,
+        vout: index,
+        satoshis: output.valueSatoshis,
+        token: output.token && {
+          ...output.token,
+          category: binToHex(output.token.category),
+          nft: output.token.nft && {
+            ...output.token.nft,
+            commitment: binToHex(output.token.nft.commitment),
+          },
+        },
+      });
+    }
+
     return txid;
   }
 
-  addUtxo(address: string, utxo: Utxo): void {
-    const lockingBytecode = binToHex(addressToLockScript(address));
+  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void {
+    const lockingBytecode = isHex(addressOrLockingBytecode) ? addressOrLockingBytecode : binToHex(addressToLockScript(addressOrLockingBytecode));
     if (!this.utxoMap[lockingBytecode]) {
       this.utxoMap[lockingBytecode] = [];
     }
