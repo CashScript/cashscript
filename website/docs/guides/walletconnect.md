@@ -29,7 +29,7 @@ signTransaction: (
 
 The `transaction` passed in this object needs to be an unsigned transaction which is using placeholder values for the field that the user-wallet needs to fill in itself. You can use the `PlaceholderTemplate` class to generate the zero-placeholder values.
 
-The `sourceOutputs` value can be easily generated with the CashScript `generateWcSourceOutputs` helperfunction. 
+The `sourceOutputs` value can be easily generated with the CashScript `generateWcSourceOutputs` helperfunction.
 
 ## Create wcTransactionObj
 
@@ -46,28 +46,22 @@ import { TransactionBuilder, generateWcSourceOutputs, placeholderTemplate } from
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function proposeWcTransaction(userAddress: string){
-  // create a placeholderTemplate to generate placeholder unlocker
-  const placeholderTemplate = new PlaceholderTemplate(userAddress)
+  // Create a placeholderTemplate
+  const unlocker = new PlaceholderTemplate(userAddress).unlockP2PKH()
+  const unlocker = getPlaceholderP2PKHUnlocker(userAddress)
 
-  // use the CashScript SDK to build a transaction
+  // Use the CashScript SDK to build a transaction
   const transactionBuilder = new TransactionBuilder({provider: store.provider})
-  transactionBuilder.addInputs(userInputUtxos, placeholderTemplate.unlockP2PKH())
+  transactionBuilder.addInputs(userInputUtxos, getPlaceholderP2PKHUnlocker(userAddress))
   transactionBuilder.addOpReturnOutput(opReturnData)
   transactionBuilder.addOutput(contractOutput)
   if(changeAmount > 550n) transactionBuilder.addOutput(changeOutput)
 
-  const unsignedRawTransactionHex = await transactionBuilder.build();
+  const rawTransactionHex = await transactionBuilder.build();
 
-  const decodedTransaction = decodeTransaction(hexToBin(unsignedRawTransactionHex));
-  if(typeof decodedTransaction == "string") throw new Error("!decodedTransaction")
-
-  // construct WcSourceOutputs from transaction input using a CashScript helper function
-  const wcSourceOutputs = generateWcSourceOutputs(transactionBuilder.inputs)
-
-  // wcTransactionObj to pass to signTransaction endpoint
+  // Combine the generated WalletConnect transaction object with custom 'broadcast' and 'userPrompt' properties
   const wcTransactionObj = {
-    transaction: decodedTransaction,
-    sourceOutputs: wcSourceOutputs,
+    ...generateWcTransactionObject(transactionBuilder.inputs, rawTransactionHex),
     broadcast: true,
     userPrompt: "Create HODL Contract"
   };
@@ -87,7 +81,7 @@ Below is example code from the `unlockHodlVault` code of the 'Hodl Vault' dapp r
 import { TransactionBuilder, generateWcSourceOutputs, PlaceholderTemplate } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
-async function unlockHodlVault(){
+async function unlockHodlVault() {
   // use placeholderTemplate to create placeholder args for unlocker
   const placeholderTemplate = new PlaceholderTemplate()
   const placeholderSig = placeholderTemplate.generateSignature()
@@ -96,20 +90,18 @@ async function unlockHodlVault(){
   const transactionBuilder = new TransactionBuilder({provider: store.provider})
 
   transactionBuilder.setLocktime(store.currentBlockHeight)
-  transactionBuilder.addInputs(contractUtxos, hodlContract.unlock.spend(placeholderPubKey, placeholderSig))
+  transactionBuilder.addInputs(contractUtxos, hodlContract.unlock.spend(getPlaceholderPubKey(), getPlaceholderTemplate()))
   transactionBuilder.addOutput(reclaimOutput)
 
-  const unsignedRawTransactionHex = transactionBuilder.build();
+  const rawTransactionHex = transactionBuilder.build();
 
-  const decodedTransaction = decodeTransaction(hexToBin(unsignedRawTransactionHex));
-  if(typeof decodedTransaction == "string") throw new Error("!decodedTransaction")
+  // Generate the WalletConnect source outputs and raw transaction object
+  const { sourceOutputs, transaction } = generateWcTransactionObject(transactionBuilder.inputs, rawTransactionHex);
 
-  // construct WcSourceOutputs from transaction input using a CashScript helper function
-  const wcSourceOutputs = generateWcSourceOutputs(transactionBuilder.inputs)
-
+  // Combine the source outputs and raw transaction object with custom 'broadcast' and 'userPrompt' properties
   const wcTransactionObj = {
-    transaction: decodedTransaction,
-    sourceOutputs: wcSourceOutputs,
+    transaction,
+    sourceOutputs,
     broadcast: true,
     userPrompt: "Reclaim HODL Value",
   };

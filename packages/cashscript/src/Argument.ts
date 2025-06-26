@@ -11,12 +11,13 @@ import {
 } from '@cashscript/utils';
 import { TypeError } from './Errors.js';
 import SignatureTemplate from './SignatureTemplate.js';
+import PlaceholderTemplate from './PlaceholderTemplate.js';
 
 export type ConstructorArgument = bigint | boolean | string | Uint8Array;
-export type FunctionArgument = ConstructorArgument | SignatureTemplate;
+export type FunctionArgument = ConstructorArgument | SignatureTemplate | PlaceholderTemplate;
 
 export type EncodedConstructorArgument = Uint8Array;
-export type EncodedFunctionArgument = Uint8Array | SignatureTemplate;
+export type EncodedFunctionArgument = Uint8Array | SignatureTemplate | PlaceholderTemplate;
 
 export type EncodeFunction = (arg: FunctionArgument, typeStr: string) => EncodedFunctionArgument;
 

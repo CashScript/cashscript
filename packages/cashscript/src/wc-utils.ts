@@ -2,10 +2,19 @@ import { isStandardUnlockableUtxo } from './index.js';
 import type { UnlockableUtxo, StandardUnlockableUtxo, LibauthOutput } from './interfaces.js';
 import { generateLibauthSourceOutputs } from './utils.js';
 import { type AbiFunction, type Artifact, scriptToBytecode } from '@cashscript/utils';
-import type { Input, TransactionCommon } from '@bitauth/libauth';
+import { decodeTransactionUnsafe, hexToBin, type Input, type TransactionCommon } from '@bitauth/libauth';
 
 // Wallet Connect interfaces according to the spec
 // see https://github.com/mainnet-pat/wc2-bch-bcr
+
+export interface WcTransactionObject {
+  transaction: TransactionCommon | string;
+  sourceOutputs: WcSourceOutput[];
+  broadcast?: boolean;
+  userPrompt?: string;
+}
+
+export type WcSourceOutput = Input & LibauthOutput & WcContractInfo;
 
 export interface WcContractInfo {
   contract?: {
@@ -14,8 +23,6 @@ export interface WcContractInfo {
     artifact: Partial<Artifact>;
   }
 }
-
-export type WcSourceOutputs = (Input & LibauthOutput & WcContractInfo)[];
 
 function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
   // If the input does not have a contract unlocker, return an empty object
@@ -26,7 +33,7 @@ function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
   if (!abiFunction) {
     throw new Error(`ABI function ${abiFunctionName} not found in contract artifact`);
   }
-  const wcContractObj:WcContractInfo = {
+  const wcContractObj: WcContractInfo = {
     contract: {
       abiFunction: abiFunction,
       redeemScript: scriptToBytecode(contract.redeemScript),
@@ -36,19 +43,40 @@ function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
   return wcContractObj;
 }
 
-export function generateWcSourceOutputs(
-  inputs: UnlockableUtxo[], decodedTransaction:TransactionCommon,
-): WcSourceOutputs {
+export function generateWcTransactionObject(
+  inputs: UnlockableUtxo[], encodedTransaction: string,
+): WcTransactionObject {
   if (!inputs.every(input => isStandardUnlockableUtxo(input))) {
     throw new Error('All inputs must be StandardUnlockableUtxos to generate the wcSourceOutputs');
   }
-  const sourceOutputs = generateLibauthSourceOutputs(inputs);
-  const wcSourceOutputs: WcSourceOutputs = sourceOutputs.map((sourceOutput, index) => {
+
+  const transaction = decodeTransactionUnsafe(hexToBin(encodedTransaction));
+  const libauthSourceOutputs = generateLibauthSourceOutputs(inputs);
+
+  const sourceOutputs: WcSourceOutput[] = libauthSourceOutputs.map((sourceOutput, index) => {
     return {
       ...sourceOutput,
-      ...decodedTransaction.inputs[index],
+      ...transaction.inputs[index],
       ...getWcContractInfo(inputs[index]),
     };
   });
-  return wcSourceOutputs;
+
+  return { transaction, sourceOutputs };
 }
+
+export const placeholderSignature = (): Uint8Array => Uint8Array.from(Array(65));
+export const placeholderPublicKey = (): Uint8Array => Uint8Array.from(Array(33));
+
+export const placeholderP2PKHUnlocker = (userAddress: string): Unlocker => {
+  const decodeAddressResult = cashAddressToLockingBytecode(userAddress);
+  if (typeof decodeAddressResult === 'string') {
+    throw new Error(`Invalid address: ${decodeAddressResult}`);
+  }
+
+  const lockingBytecode = decodeAddressResult.bytecode;
+
+  return {
+    generateLockingBytecode: () => lockingBytecode,
+    generateUnlockingBytecode: () => Uint8Array.from(Array(0)),
+  };
+};

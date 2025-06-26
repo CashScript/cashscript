@@ -1,5 +1,5 @@
 import { cashAddressToLockingBytecode } from '@bitauth/libauth';
-import { P2PKHUnlocker } from './interfaces.js';
+import { Unlocker } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 
 export default class PlaceholderTemplate {
@@ -7,18 +7,16 @@ export default class PlaceholderTemplate {
   private lockingBytecode: Uint8Array;
 
   constructor(
-    address?: string,
+    address: string,
   ) {
-    if (address) {
-      const decodeAddressResult = cashAddressToLockingBytecode(address);
-      if (typeof decodeAddressResult === 'string') {
-        throw new Error(`Invalid address: ${decodeAddressResult}`);
-      }
-      this.lockingBytecode = decodeAddressResult.bytecode;
+    const decodeAddressResult = cashAddressToLockingBytecode(address);
+    if (typeof decodeAddressResult === 'string') {
+      throw new Error(`Invalid address: ${decodeAddressResult}`);
     }
+    this.lockingBytecode = decodeAddressResult.bytecode;
   }
-  
-  // TODO: should the arguments 'generateSignature' match? 
+
+  // TODO: should the arguments 'generateSignature' match?
   // do the other methods (getHashType, getSignatureAlgorithm) need to be implemented?
 
   // Currently in the walletconnect spec, only schnorr (65-byte) signatures are supported
@@ -30,13 +28,27 @@ export default class PlaceholderTemplate {
     return Uint8Array.from(Array(33));
   }
 
-  unlockP2PKH(): P2PKHUnlocker {
-    const lockingBytecode = this.lockingBytecode ?? Uint8Array.from(Array(0));
+  unlockP2PKH(): Unlocker {
     return {
-      generateLockingBytecode: () => lockingBytecode,
+      generateLockingBytecode: () => this.lockingBytecode,
       generateUnlockingBytecode: () => Uint8Array.from(Array(0)),
-      // TODO: pass 'this' when the types allows for it
-      template: new SignatureTemplate(Uint8Array.from(Array(0))),
     };
   }
 }
+
+export const placeholderSignature = (): Uint8Array => Uint8Array.from(Array(65));
+export const placeholderPublicKey = (): Uint8Array => Uint8Array.from(Array(33));
+
+export const placeholderP2PKHUnlocker = (userAddress: string): Unlocker => {
+  const decodeAddressResult = cashAddressToLockingBytecode(userAddress);
+  if (typeof decodeAddressResult === 'string') {
+    throw new Error(`Invalid address: ${decodeAddressResult}`);
+  }
+
+  const lockingBytecode = decodeAddressResult.bytecode;
+
+  return {
+    generateLockingBytecode: () => lockingBytecode,
+    generateUnlockingBytecode: () => Uint8Array.from(Array(0)),
+  };
+};

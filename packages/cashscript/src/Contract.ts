@@ -25,6 +25,7 @@ import SignatureTemplate from './SignatureTemplate.js';
 import { ElectrumNetworkProvider } from './network/index.js';
 import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
 import semver from 'semver';
+import PlaceholderTemplate from './PlaceholderTemplate.js';
 
 export class Contract<
   TArtifact extends Artifact = Artifact,
@@ -161,6 +162,7 @@ export class Contract<
         { transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions,
       ): Uint8Array => {
         const completeArgs = encodedArgs.map((arg) => {
+          if (arg instanceof PlaceholderTemplate) return arg.generateSignature();
           if (!(arg instanceof SignatureTemplate)) return arg;
 
           // Generate transaction signature from SignatureTemplate
