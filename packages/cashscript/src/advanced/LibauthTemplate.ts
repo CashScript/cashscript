@@ -22,6 +22,7 @@ import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArgu
 import { Contract } from '../Contract.js';
 import { DebugResults, debugTemplate } from '../debugging.js';
 import {
+  ContractOptions,
   isP2PKHUnlocker,
   isStandardUnlockableUtxo,
   StandardUnlockableUtxo,
@@ -198,7 +199,7 @@ export const generateTemplateScriptsP2SH = (
   const lockingScriptName = getLockScriptName(contract);
 
   return {
-    [unlockingScriptName]: generateTemplateUnlockScript(contract, abiFunction, encodedFunctionArgs, inputIndex),
+    [unlockingScriptName]: generateTemplateUnlockScript(contract, abiFunction, encodedFunctionArgs, inputIndex, contract.options),
     [lockingScriptName]: generateTemplateLockScript(contract, encodedConstructorArgs),
   };
 };
@@ -239,11 +240,12 @@ const generateTemplateUnlockScript = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   inputIndex: number,
+  contractOptions?: ContractOptions,
 ): WalletTemplateScriptUnlocking => {
   const scenarioIdentifier = `${contract.artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
   const functionIndex = contract.artifact.abi.findIndex((func) => func.name === abiFunction.name);
 
-  const functionIndexString = contract.artifact.abi.length > 1
+  const functionIndexString = contract.artifact.abi.length > 1 && !contractOptions?.ignoreFunctionSelector
     ? ['// function index in contract', `<function_index> // int = <${functionIndex}>`, '']
     : [];
 

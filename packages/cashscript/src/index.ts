@@ -8,6 +8,7 @@ export {
   type EncodedConstructorArgument,
   type EncodedFunctionArgument,
   encodeFunctionArgument,
+  replaceArtifactPlaceholders,
 } from './Argument.js';
 export type { Artifact, AbiFunction, AbiInput } from '@cashscript/utils';
 export * as utils from '@cashscript/utils';

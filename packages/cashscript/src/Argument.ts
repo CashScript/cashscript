@@ -1,4 +1,4 @@
-import { hexToBin } from '@bitauth/libauth';
+import { binToHex, hexToBin } from '@bitauth/libauth';
 import {
   AbiFunction,
   Artifact,
@@ -104,3 +104,48 @@ export const encodeFunctionArguments = (
 
   return encodedArgs;
 };
+
+// This function replaces placeholders in the artifact bytecode with the encoded values of the provided parameters.
+// A placeholder is a string in the format `<parameterName>` which is present in `bytecode` property.
+// Signature templates are not supported in the bytecode replacement.
+export const replaceArtifactPlaceholders = <T extends Artifact>(artifact: T, parameters: Record<string, FunctionArgument>): T => {
+  // first, collect known ABI types
+  const argumentTypes = [...artifact.constructorInputs, ...Object.values(artifact.abi).map(f => f.inputs).flat()].reduce((acc, input) => {
+    acc[input.name] = input.type;
+    return acc;
+  }, {} as Record<string, string>);
+
+  // then, replace placeholders in bytecode with known ABI types with a fallback to derived type or to bytes otherwise
+  Object.entries(parameters).forEach(([key, value]) => {
+    const primitiveType = argumentTypes[key] ?? getPrimitiveType(value) ?? PrimitiveType.ANY;
+    if (primitiveType === PrimitiveType.SIG && value instanceof SignatureTemplate) {
+      throw new Error(`Cannot use signature templates in bytecode replacement for artifact ${artifact.contractName}`);
+    }
+
+    artifact.bytecode = artifact.bytecode.replaceAll(`<${key}>`, binToHex(encodeFunctionArgument(value, argumentTypes[key] ?? getPrimitiveType(value) ?? PrimitiveType.ANY) as Uint8Array));
+  });
+
+  if (artifact.bytecode.includes('<')) {
+    throw new Error(`Not all placeholders in artifact ${artifact.contractName} were replaced. Remaining placeholders: ${artifact.bytecode.match(/<[^>]+>/g)?.join(', ')}`);
+  }
+
+  return artifact;
+};
+
+const getPrimitiveType = (value: bigint | string | boolean | Uint8Array | SignatureTemplate): PrimitiveType | undefined => {
+  if (typeof value === 'boolean') return PrimitiveType.BOOL;
+  if (typeof value === 'bigint') return PrimitiveType.INT;
+  if (typeof value === 'string') {
+    if (value.startsWith('0x')) {
+      return PrimitiveType.ANY;
+    }
+    return PrimitiveType.STRING;
+  }
+  if (value instanceof Uint8Array) {
+    if (value.byteLength === 65) return PrimitiveType.SIG;
+    if (value.byteLength === 64) return PrimitiveType.DATASIG;
+    return PrimitiveType.ANY;
+  }
+  if (value instanceof SignatureTemplate) return PrimitiveType.SIG;
+  return undefined;
+}
