@@ -5,6 +5,8 @@ import {
   ElectrumNetworkProvider,
   Network,
   TransactionBuilder,
+  SignatureAlgorithm,
+  HashType,
 } from '../../src/index.js';
 import {
   alicePriv,
@@ -85,6 +87,27 @@ describe('HodlVault', () => {
       // when
       const tx = await new TransactionBuilder({ provider })
         .addInputs(utxos, hodlVault.unlock.spend(new SignatureTemplate(alicePriv), oracleSig, message))
+        .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
+        .setLocktime(100_000)
+        .send();
+
+      // then
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+    });
+
+    it('should succeed when price is high enough, ECDSA sig and datasig', async () => {
+      // given
+      const message = oracle.createMessage(100000n, 30000n);
+      const oracleSig = oracle.signMessage(message, SignatureAlgorithm.ECDSA);
+      const to = hodlVault.address;
+      const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await hodlVault.getUtxos(), { amount, fee: 2000n });
+
+      // when
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(utxos, hodlVault.unlock.spend(new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA), oracleSig, message))
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
