@@ -9,6 +9,8 @@ import {
   carolAddress,
   carolPriv,
   bobTokenAddress,
+  aliceAddress,
+  alicePriv,
 } from './fixture/vars.js';
 import { Network } from '../src/interfaces.js';
 import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo, isFungibleTokenUtxo } from '../src/utils.js';
@@ -292,5 +294,20 @@ describe('Transaction Builder', () => {
       const expectedResult = generateWcTransactionObjectFixture;
       expect(JSON.parse(stringify(wcTransactionObj))).toEqual(expectedResult);
     });
+  });
+
+  it('should not fail when spending from only P2PKH inputs', async () => {
+    const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
+    const sigTemplate = new SignatureTemplate(alicePriv);
+
+    expect(aliceUtxos.length).toBeGreaterThan(2);
+
+    const change = aliceUtxos[0].satoshis + aliceUtxos[1].satoshis - 1000n;
+
+    await expect(new TransactionBuilder({ provider })
+      .addInput(aliceUtxos[0], sigTemplate.unlockP2PKH())
+      .addInput(aliceUtxos[1], sigTemplate.unlockP2PKH())
+      .addOutput({ to: aliceAddress, amount: change })
+      .send()).resolves.not.toThrow();
   });
 });
