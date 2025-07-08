@@ -1,4 +1,4 @@
-import type { StandardUnlockableUtxo, LibauthOutput, Unlocker } from './interfaces.js';
+import { type LibauthOutput, type Unlocker, type UnlockableUtxo, isContractUnlocker } from './interfaces.js';
 import { type AbiFunction, type Artifact, scriptToBytecode } from '@cashscript/utils';
 import { cashAddressToLockingBytecode, type Input, type TransactionCommon } from '@bitauth/libauth';
 
@@ -27,9 +27,9 @@ export interface WcContractInfo {
   }
 }
 
-export function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
+export function getWcContractInfo(input: UnlockableUtxo): WcContractInfo | {} {
   // If the input does not have a contract unlocker, return an empty object
-  if (!('contract' in input.unlocker)) return {};
+  if (!(isContractUnlocker(input.unlocker))) return {};
   const contract = input.unlocker.contract;
   const abiFunctionName = input.unlocker.abiFunction?.name;
   const abiFunction = contract.artifact.abi.find(abi => abi.name === abiFunctionName);
