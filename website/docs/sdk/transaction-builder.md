@@ -250,6 +250,73 @@ You can read more about debugging transactions on the [debugging page](/docs/gui
 It is unsafe to debug transactions on mainnet using the BitAuth IDE as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
 
+### generateWcTransactionObject()
+```ts
+transactionBuilder.generateWcTransactionObject(options?: WcTransactionOptions): WcTransactionObject
+```
+
+Generates a `WcTransactionObject` that can be used to sign a transaction with a WalletConnect client. It accepts an optional `WcTransactionOptions` object to customize the transaction object with custom `broadcast` and `userPrompt` properties.
+
+```ts
+import type { TransactionCommon, Input, Output } from '@bitauth/libauth';
+import type { AbiFunction, Artifact } from 'cashscript';
+
+interface WcTransactionOptions {
+  broadcast?: boolean;
+  userPrompt?: string;
+}
+
+interface WcTransactionObject {
+  transaction: TransactionCommon | string;
+  sourceOutputs: WcSourceOutput[];
+  broadcast?: boolean;
+  userPrompt?: string;
+}
+
+type WcSourceOutput = Input & Output & WcContractInfo;
+
+interface WcContractInfo {
+  contract?: {
+    abiFunction: AbiFunction;
+    redeemScript: Uint8Array;
+    artifact: Partial<Artifact>;
+  }
+}
+```
+
+:::tip
+See the [WalletConnect guide](/docs/guides/walletconnect) for more information on how to use the `WcTransactionObject` with a WalletConnect client.
+:::
+
+#### Example
+```ts
+import { aliceAddress, contract, provider, signWcTransaction } from './somewhere.js';
+import { TransactionBuilder, placeholderP2PKHUnlocker, placeholderPublicKey, placeholderSignature } from 'cashscript';
+
+const contractUtxos = await contract.getUtxos();
+const aliceUtxos = await provider.getUtxos(aliceAddress);
+
+// Use placeholder variables which will be replaced by the user's wallet when signing the transaction with WalletConnect
+const placeholderUnlocker = placeholderP2PKHUnlocker(aliceAddress);
+const placeholderPubKey = placeholderPublicKey();
+const placeholderSig = placeholderSignature();
+
+// use the CashScript SDK to construct a transaction
+const transactionBuilder = new TransactionBuilder({ provider })
+  .addInput(contractUtxos[0], contract.unlock.spend(placeholderPubKey, placeholderSig))
+  .addInput(aliceUtxos[0], placeholderUnlocker)
+  .addOutput({ to: aliceAddress, amount: 100_000n });
+
+// Generate WalletConnect transaction object with custom 'broadcast' and 'userPrompt' options
+const wcTransactionObj = transactionBuilder.generateWcTransactionObject({
+  broadcast: true,
+  userPrompt: "Example Contract transaction",
+});
+
+// Pass wcTransactionObj to WalletConnect client (see WalletConnect guide for more details)
+const signResult = await signWcTransaction(wcTransactionObj);
+```
+
 ## Transaction errors
 
 Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information. Note that the transaction builder does not yet support the `FailedRequireError` mentioned in the simplified transaction builder documentation so any error will be of type `FailedTransactionError` and include any of the mentioned error reasons in its message.
