@@ -1,6 +1,7 @@
 import {
   binToHex,
   decodeTransaction,
+  decodeTransactionUnsafe,
   encodeTransaction,
   hexToBin,
   Transaction as LibauthTransaction,
@@ -30,7 +31,9 @@ import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
 import { getBitauthUri } from './LibauthTemplate.js';
 import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
 import semver from 'semver';
+import { WcTransactionObject } from './walletconnect-utils.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -218,5 +221,25 @@ export class TransactionBuilder {
 
     // Should not happen
     throw new Error('Could not retrieve transaction details for over 10 minutes');
+  }
+
+  generateWcTransactionObject(options?: WcTransactionOptions): WcTransactionObject {
+    const inputs = this.inputs;
+    if (!inputs.every(input => isStandardUnlockableUtxo(input))) {
+      throw new Error('All inputs must be StandardUnlockableUtxos to generate the wcSourceOutputs');
+    }
+
+    const encodedTransaction = this.build();
+    const transaction = decodeTransactionUnsafe(hexToBin(encodedTransaction));
+
+    const libauthSourceOutputs = generateLibauthSourceOutputs(inputs);
+    const sourceOutputs: WcSourceOutput[] = libauthSourceOutputs.map((sourceOutput, index) => {
+      return {
+        ...sourceOutput,
+        ...transaction.inputs[index],
+        ...getWcContractInfo(inputs[index]),
+      };
+    });
+    return { ...options, transaction, sourceOutputs };
   }
 }

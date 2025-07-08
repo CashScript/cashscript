@@ -16,19 +16,36 @@ Most relevant for smart contract usage is the BCH-WalletConnect `signTransaction
 
 > This is a most generic interface to propose a bitcoincash transaction to a wallet which reconstructs it and signs it on behalf of the wallet user.
 
-```typescript
-signTransaction: (
-  wcTransactionObj: {
-    transaction: string | TransactionBCH,
-    sourceOutputs: (Input | Output | ContractInfo)[],
-    broadcast?: boolean,
-    userPrompt?: string
+```ts
+signTransaction: (wcTransactionObj: WcTransactionObject) => Promise<SignedTxObject | undefined>;
+```
+
+```ts
+interface WcTransactionObject {
+  transaction: TransactionCommon | string;
+  sourceOutputs: WcSourceOutput[];
+  broadcast?: boolean;
+  userPrompt?: string;
+}
+
+type WcSourceOutput = Input & Output & WcContractInfo;
+
+interface WcContractInfo {
+  contract?: {
+    abiFunction: AbiFunction;
+    redeemScript: Uint8Array;
+    artifact: Partial<Artifact>;
   }
-) => Promise<{ signedTransaction: string, signedTransactionHash: string } | undefined>;
+}
+
+interface SignedTxObject {
+  signedTransaction: string;
+  signedTransactionHash: string;
+}
 ```
 
 To use the BCH WalletConnect `signTransaction` API, we need to pass a  `wcTransactionObj`.
-CashScript `TransactionBuilder` has a handy helper function `generateWcTransactionObject` for creating this object.
+CashScript `TransactionBuilder` has a `generateWcTransactionObject` method for creating this object.
 
 Below we show 2 examples, the first example using spending a user-input and in the second example spending from a user-contract with placeholders for `userPubKey` and `userSig`
 
@@ -37,12 +54,12 @@ Below we show 2 examples, the first example using spending a user-input and in t
 Below is example code from the `CreateContract` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/CreateContract.vue#L14).
 
 ```ts
-import { TransactionBuilder, generateWcTransactionObject, getPlaceholderP2PKHUnlocker } from "cashscript";
+import { TransactionBuilder, placeholderP2PKHUnlocker } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function proposeWcTransaction(userAddress: string){
   // use a placeholderUnlocker which will be replaced by the user's wallet
-  const placeholderUnlocker = getPlaceholderP2PKHUnlocker(userAddress)
+  const placeholderUnlocker = placeholderP2PKHUnlocker(userAddress)
 
   // use the CashScript SDK to construct a transaction
   const transactionBuilder = new TransactionBuilder({provider: store.provider})
@@ -51,13 +68,11 @@ async function proposeWcTransaction(userAddress: string){
   transactionBuilder.addOutput(contractOutput)
   if(changeAmount > 550n) transactionBuilder.addOutput(changeOutput)
 
-
-  // Combine the generated WalletConnect transaction object with custom 'broadcast' and 'userPrompt' properties
-  const wcTransactionObj = {
-    ...generateWcTransactionObject(transactionBuilder),
+  // Generate WalletConnect transaction object with custom 'broadcast' and 'userPrompt' options
+  const wcTransactionObj = transactionBuilder.generateWcTransactionObject({
     broadcast: true,
-    userPrompt: "Create HODL Contract"
-  };
+    userPrompt: "Create HODL Contract",
+  });
 
   // pass wcTransactionObj to WalletConnect client
   // (see signWcTransaction implementation below)
@@ -72,13 +87,13 @@ async function proposeWcTransaction(userAddress: string){
 Below is example code from the `unlockHodlVault` code of the 'Hodl Vault' dapp repository, [link to source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/views/UserContracts.vue#L66).
 
 ```ts
-import { TransactionBuilder, generateWcTransactionObject, placeholderSignature, getPlaceholderPubKey } from "cashscript";
+import { TransactionBuilder, placeholderSignature, placeholderPublicKey } from "cashscript";
 import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function unlockHodlVault(){
-  // We use a placeholder signatures and publickey so this can be filled in by the user's wallet
-  const placeholderSig = placeholderSignature()()
-  const placeholderPubKey = getPlaceholderPubKey()
+  // We use a placeholder signature and public key so this can be filled in by the user's wallet
+  const placeholderSig = placeholderSignature()
+  const placeholderPubKey = placeholderPublicKey()
 
   const transactionBuilder = new TransactionBuilder({provider: store.provider})
 
@@ -86,13 +101,11 @@ async function unlockHodlVault(){
   transactionBuilder.addInputs(contractUtxos, hodlContract.unlock.spend(placeholderPubKey, placeholderSig))
   transactionBuilder.addOutput(reclaimOutput)
 
-
-  // Combine the generated WalletConnect transaction object with custom 'broadcast' and 'userPrompt' properties
-  const wcTransactionObj = {
-    ...generateWcTransactionObject(transactionBuilder),
+  // Generate WalletConnect transaction object with custom 'broadcast' and 'userPrompt' options
+  const wcTransactionObj = transactionBuilder.generateWcTransactionObject({
     broadcast: true,
     userPrompt: "Reclaim HODL Value",
-  };
+  });
 
   // pass wcTransactionObj to WalletConnect client
   // (see signWcTransaction implementation below)
@@ -113,12 +126,12 @@ import SignClient from '@walletconnect/sign-client';
 import { stringify } from "@bitauth/libauth";
 import { type WcTransactionObject } from "cashscript";
 
-interface signedTxObject {
+interface SignedTxObject {
   signedTransaction: string;
   signedTransactionHash: string;
 }
 
-async function signWcTransaction(wcTransactionObj: WcTransactionObject): signedTxObject | undefined {
+async function signWcTransaction(wcTransactionObj: WcTransactionObject): SignedTxObject | undefined {
   try {
     const result = await signClient.request({
       chainId: connectedChain,

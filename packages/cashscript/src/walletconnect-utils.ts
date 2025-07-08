@@ -1,11 +1,14 @@
-import { isStandardUnlockableUtxo, TransactionBuilder } from './index.js';
 import type { StandardUnlockableUtxo, LibauthOutput, Unlocker } from './interfaces.js';
-import { generateLibauthSourceOutputs } from './utils.js';
 import { type AbiFunction, type Artifact, scriptToBytecode } from '@cashscript/utils';
-import { cashAddressToLockingBytecode, decodeTransactionUnsafe, hexToBin, type Input, type TransactionCommon } from '@bitauth/libauth';
+import { cashAddressToLockingBytecode, type Input, type TransactionCommon } from '@bitauth/libauth';
 
 // Wallet Connect interfaces according to the spec
 // see https://github.com/mainnet-pat/wc2-bch-bcr
+
+export interface WcTransactionOptions {
+  broadcast?: boolean;
+  userPrompt?: string;
+}
 
 export interface WcTransactionObject {
   transaction: TransactionCommon | string;
@@ -24,7 +27,7 @@ export interface WcContractInfo {
   }
 }
 
-function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
+export function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
   // If the input does not have a contract unlocker, return an empty object
   if (!('contract' in input.unlocker)) return {};
   const contract = input.unlocker.contract;
@@ -41,28 +44,6 @@ function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
     },
   };
   return wcContractObj;
-}
-
-export function generateWcTransactionObject(
-  transactionBuilder: TransactionBuilder,
-): WcTransactionObject {
-  const inputs = transactionBuilder.inputs;
-  if (!inputs.every(input => isStandardUnlockableUtxo(input))) {
-    throw new Error('All inputs must be StandardUnlockableUtxos to generate the wcSourceOutputs');
-  }
-
-  const encodedTransaction = transactionBuilder.build();
-  const transaction = decodeTransactionUnsafe(hexToBin(encodedTransaction));
-
-  const libauthSourceOutputs = generateLibauthSourceOutputs(inputs); 
-  const sourceOutputs: WcSourceOutput[] = libauthSourceOutputs.map((sourceOutput, index) => {
-    return {
-      ...sourceOutput,
-      ...transaction.inputs[index],
-      ...getWcContractInfo(inputs[index]),
-    };
-  });
-  return { transaction, sourceOutputs };
 }
 
 export const placeholderSignature = (): Uint8Array => Uint8Array.from(Array(65));

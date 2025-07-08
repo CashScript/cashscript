@@ -2,6 +2,12 @@
 title: Release Notes
 ---
 
+## v0.11.1
+
+#### CashScript SDK
+- :sparkles: Add `generateWcTransactionObject()` method to `TransactionBuilder` to generate a `WcTransactionObject` that can be used to sign a transaction with a WalletConnect client.
+- :sparkles: Add `placeholderSignature()`, `placeholderPublicKey()` and `placeholderP2PKHUnlocker()` helper functions to the SDK for WalletConnect usage.
+
 ## v0.11.0
 
 This update adds CashScript support for the new BCH 2025 network upgrade. To read more about the upgrade, see [this blog post](https://blog.bitjson.com/2025-chips/).
