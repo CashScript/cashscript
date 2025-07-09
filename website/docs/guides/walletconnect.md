@@ -22,7 +22,8 @@ signTransaction: (wcTransactionObj: WcTransactionObject) => Promise<SignedTxObje
 
 ```ts
 interface WcTransactionObject {
-  transaction: TransactionCommon | string;
+  // the spec also allows for a tx hex string but CashScript returns the libauth transaction object
+  transaction: TransactionCommon;
   sourceOutputs: WcSourceOutput[];
   broadcast?: boolean;
   userPrompt?: string;
@@ -55,7 +56,6 @@ Below is example code from the `CreateContract` code of the 'Hodl Vault' dapp re
 
 ```ts
 import { TransactionBuilder, placeholderP2PKHUnlocker } from "cashscript";
-import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function proposeWcTransaction(userAddress: string){
   // use a placeholderUnlocker which will be replaced by the user's wallet
@@ -88,7 +88,6 @@ Below is example code from the `unlockHodlVault` code of the 'Hodl Vault' dapp r
 
 ```ts
 import { TransactionBuilder, placeholderSignature, placeholderPublicKey } from "cashscript";
-import { hexToBin, decodeTransaction } from "@bitauth/libauth";
 
 async function unlockHodlVault(){
   // We use a placeholder signature and public key so this can be filled in by the user's wallet
