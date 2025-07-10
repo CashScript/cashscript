@@ -18,9 +18,10 @@ import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 describe('HodlVault', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
+
   const hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
 
   beforeAll(() => {

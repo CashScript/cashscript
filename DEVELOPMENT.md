@@ -8,7 +8,7 @@ pushd ../.. && yarn build && popd
 
 ### Publishing a release
 
-To publish a new release, we use `yarn update-version 'x.x.x'` in the root directory to bump the version before release, and then `yarn publish-all` in the root directory to publish the release. In case of a tagged release (such as `next`), we use `TESTS_USE_MOCKNET=true yarn publish-all --dist-tag <tag name>` to publish the release with the specified tag.
+To publish a new release, we use `yarn update-version 'x.x.x'` in the root directory to bump the version before release, and then `yarn publish-all` in the root directory to publish the release. In case of a tagged release (such as `next`), we use `yarn publish-all --dist-tag <tag name>` to publish the release with the specified tag.
 
 ## cashc
 
@@ -60,11 +60,11 @@ python <cashproof_path> opt.equiv
 
 ### Running tests
 
-By default, running tests in the `cashscript` package uses chipnet contracts, which requires the test accounts to have some chipnet BCH. To run the tests against a local "mock network", you can use the `TESTS_USE_MOCKNET` environment variable.
+By default, running tests in the `cashscript` package runs against a local simulated `mocknet`. To run them against the real-world chipnet, you can use the `TESTS_USE_CHIPNET` environment variable. Thisuses chipnet contracts, which requires the test accounts to have some chipnet BCH.
 
 ```bash
-# Run all tests using the mock network
-TESTS_USE_MOCKNET=true yarn test
+# Run all tests using chipnet
+TESTS_USE_CHIPNET=true yarn test
 ```
 
 To run specific tests, you can use the `-t` flag to match the name mentioned in the `it` or `describe` block:

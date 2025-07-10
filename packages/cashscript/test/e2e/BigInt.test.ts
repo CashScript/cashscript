@@ -11,9 +11,10 @@ import { randomUtxo } from '../../src/utils.js';
 import { gatherUtxos } from '../test-util.js';
 
 describe('BigInt', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
+
   const bigintContract = new Contract(artifact, [], { provider });
   const MAX_INT64 = BigInt('9223372036854775807');
 

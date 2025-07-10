@@ -19,9 +19,9 @@ import { gatherUtxos, getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
 
 describe('Transaction Builder', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
 
   let p2pkhInstance: Contract<typeof p2pkhArtifact>;
   let twtInstance: Contract<typeof twtArtifact>;

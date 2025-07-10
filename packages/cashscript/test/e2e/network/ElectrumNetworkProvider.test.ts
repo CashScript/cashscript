@@ -2,7 +2,7 @@ import { describeOrSkip } from '../../../test/test-util.js';
 import { ElectrumNetworkProvider, Network } from '../../../src/index.js';
 import { ElectrumClient } from '@electrum-cash/network';
 
-describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'ElectrumNetworkProvider', () => {
+describeOrSkip(Boolean(process.env.TESTS_USE_CHIPNET), 'ElectrumNetworkProvider', () => {
   // TODO: Test more of the API
   it('should be able to request data', async () => {
     const provider = new ElectrumNetworkProvider(Network.CHIPNET);

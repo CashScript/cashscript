@@ -12,9 +12,10 @@ import { randomUtxo } from '../../src/utils.js';
 
 // Mecenas has this.age check omitted for testing
 describe('Mecenas', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
+
   const pledge = 10000n;
   const mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider });
   const minerFee = 1000n;

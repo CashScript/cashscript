@@ -26,9 +26,9 @@ import { getTxOutputs } from '../test-util.js';
 import SiblingIntrospectionArtifact from '../fixture/SiblingIntrospection.artifact.js';
 
 describe('Multi Contract', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
 
   const aliceSignatureTemplate = new SignatureTemplate(alicePriv);
   const bobSignatureTemplate = new SignatureTemplate(bobPriv);

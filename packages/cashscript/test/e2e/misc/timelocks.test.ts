@@ -16,9 +16,9 @@ import { describeOrSkip, getTxOutputs } from '../../test-util.js';
 
 
 describe('Timelocks', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
 
   let p2pkhInstance: Contract<typeof p2pkhArtifact>;
   let twtInstance: Contract<typeof twtArtifact>;
@@ -39,7 +39,7 @@ describe('Timelocks', () => {
     (provider as any).addUtxo?.(carolAddress, randomUtxo());
   });
 
-  describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'Locktime', () => {
+  describeOrSkip(Boolean(process.env.TESTS_USE_CHIPNET), 'Locktime', () => {
     it('should fail when locktime is higher than current block height', async () => {
       const fee = 1000n;
       const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
