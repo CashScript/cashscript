@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.11.2
+
+#### CashScript SDK
+- :bug: Fix bug with new `generateWcTransactionObject()` throwing when using `placeholderP2PKHUnlocker()`
+
 ## v0.11.1
 
 #### CashScript SDK

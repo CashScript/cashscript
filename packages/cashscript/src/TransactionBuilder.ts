@@ -224,20 +224,15 @@ export class TransactionBuilder {
   }
 
   generateWcTransactionObject(options?: WcTransactionOptions): WcTransactionObject {
-    const inputs = this.inputs;
-    if (!inputs.every(input => isStandardUnlockableUtxo(input))) {
-      throw new Error('All inputs must be StandardUnlockableUtxos to generate the wcSourceOutputs');
-    }
-
     const encodedTransaction = this.build();
     const transaction = decodeTransactionUnsafe(hexToBin(encodedTransaction));
 
-    const libauthSourceOutputs = generateLibauthSourceOutputs(inputs);
+    const libauthSourceOutputs = generateLibauthSourceOutputs(this.inputs);
     const sourceOutputs: WcSourceOutput[] = libauthSourceOutputs.map((sourceOutput, index) => {
       return {
         ...sourceOutput,
         ...transaction.inputs[index],
-        ...getWcContractInfo(inputs[index]),
+        ...getWcContractInfo(this.inputs[index]),
       };
     });
     return { ...options, transaction, sourceOutputs };

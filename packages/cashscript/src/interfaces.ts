@@ -56,6 +56,9 @@ export interface P2PKHUnlocker extends Unlocker {
 
 export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
 
+export type PlaceholderP2PKHUnlocker = Unlocker & { placeholder: true };
+
+
 export function isContractUnlocker(unlocker: Unlocker): unlocker is ContractUnlocker {
   return 'contract' in unlocker;
 }
@@ -66,6 +69,10 @@ export function isP2PKHUnlocker(unlocker: Unlocker): unlocker is P2PKHUnlocker {
 
 export function isStandardUnlocker(unlocker: Unlocker): unlocker is StandardUnlocker {
   return isContractUnlocker(unlocker) || isP2PKHUnlocker(unlocker);
+}
+
+export function isPlaceholderUnlocker(unlocker: Unlocker): unlocker is PlaceholderP2PKHUnlocker {
+  return 'placeholder' in unlocker;
 }
 
 export interface UtxoP2PKH extends Utxo {

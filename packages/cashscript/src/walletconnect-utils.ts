@@ -1,4 +1,4 @@
-import type { StandardUnlockableUtxo, LibauthOutput, Unlocker } from './interfaces.js';
+import { type LibauthOutput, isContractUnlocker, type PlaceholderP2PKHUnlocker, type UnlockableUtxo } from './interfaces.js';
 import { type AbiFunction, type Artifact, scriptToBytecode } from '@cashscript/utils';
 import { cashAddressToLockingBytecode, type Input, type TransactionCommon } from '@bitauth/libauth';
 
@@ -11,7 +11,7 @@ export interface WcTransactionOptions {
 }
 
 export interface WcTransactionObject {
-  transaction: TransactionCommon | string;
+  transaction: TransactionCommon; // spec also allows for a tx hex string but we use the libauth transaction object
   sourceOutputs: WcSourceOutput[];
   broadcast?: boolean;
   userPrompt?: string;
@@ -27,9 +27,9 @@ export interface WcContractInfo {
   }
 }
 
-export function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo | {} {
+export function getWcContractInfo(input: UnlockableUtxo): WcContractInfo | {} {
   // If the input does not have a contract unlocker, return an empty object
-  if (!('contract' in input.unlocker)) return {};
+  if (!(isContractUnlocker(input.unlocker))) return {};
   const contract = input.unlocker.contract;
   const abiFunctionName = input.unlocker.abiFunction?.name;
   const abiFunction = contract.artifact.abi.find(abi => abi.name === abiFunctionName);
@@ -49,7 +49,7 @@ export function getWcContractInfo(input: StandardUnlockableUtxo): WcContractInfo
 export const placeholderSignature = (): Uint8Array => Uint8Array.from(Array(65));
 export const placeholderPublicKey = (): Uint8Array => Uint8Array.from(Array(33));
 
-export const placeholderP2PKHUnlocker = (userAddress: string): Unlocker => {
+export const placeholderP2PKHUnlocker = (userAddress: string): PlaceholderP2PKHUnlocker => {
   const decodeAddressResult = cashAddressToLockingBytecode(userAddress);
 
   if (typeof decodeAddressResult === 'string') {
@@ -60,5 +60,6 @@ export const placeholderP2PKHUnlocker = (userAddress: string): Unlocker => {
   return {
     generateLockingBytecode: () => lockingBytecode,
     generateUnlockingBytecode: () => Uint8Array.from(Array(0)),
+    placeholder: true,
   };
 };
