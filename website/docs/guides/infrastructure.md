@@ -31,7 +31,7 @@ To construct the full contract script you need both the `constructor` arguments 
 To store the contract details off-chain, you will need to run a database server which stores the specific constructor arguments for each contract, this will translate into their respective smart contract addresses. This is crucial data for users to spend from BCH locked in such a smart contract. So this approach does introduce a single point of failure.
 
 :::caution
-When using off-chain storage, it is the crucial responsibility of smart contract service to keep track of the contract details making up the `P2SH` contract, as user-wallets currently aren't capable to keep track of contract details and are fully reliant on the app server to store this crtitical info.
+When using off-chain storage, it is the crucial responsibility of smart contract service to keep track of the contract details making up the `P2SH` contract, as user-wallets currently aren't capable to keep track of contract details and are fully reliant on the app server to store this critical info.
 :::
 
 ### On-chain storage

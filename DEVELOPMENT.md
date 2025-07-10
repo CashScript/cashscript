@@ -60,7 +60,7 @@ python <cashproof_path> opt.equiv
 
 ### Running tests
 
-By default, running tests in the `cashscript` package runs against a local simulated `mocknet`. To run them against the real-world chipnet, you can use the `TESTS_USE_CHIPNET` environment variable. Thisuses chipnet contracts, which requires the test accounts to have some chipnet BCH.
+By default, running tests in the `cashscript` package runs against a local simulated `mocknet`. To run them against the real-world chipnet, you can use the `TESTS_USE_CHIPNET` environment variable. This uses chipnet contracts, which requires the test accounts to have some chipnet BCH.
 
 ```bash
 # Run all tests using chipnet
