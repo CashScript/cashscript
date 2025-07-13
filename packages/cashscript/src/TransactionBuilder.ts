@@ -18,6 +18,7 @@ import {
   isUnlockableUtxo,
   isStandardUnlockableUtxo,
   StandardUnlockableUtxo,
+  isP2PKHUnlocker,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -157,6 +158,11 @@ export class TransactionBuilder {
   }
 
   debug(): DebugResults {
+    // do not debug a pure P2PKH-spend transaction
+    if (this.inputs.every((input) => isP2PKHUnlocker(input.unlocker))) {
+      return {};
+    }
+
     if (this.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
       throw new Error('Cannot debug a transaction with custom unlocker');
     }
