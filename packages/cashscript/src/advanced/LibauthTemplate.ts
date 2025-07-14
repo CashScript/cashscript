@@ -199,7 +199,13 @@ export const generateTemplateScriptsP2SH = (
   const lockingScriptName = getLockScriptName(contract);
 
   return {
-    [unlockingScriptName]: generateTemplateUnlockScript(contract, abiFunction, encodedFunctionArgs, inputIndex, contract.options),
+    [unlockingScriptName]: generateTemplateUnlockScript(
+      contract,
+      abiFunction,
+      encodedFunctionArgs,
+      inputIndex,
+      contract.options,
+    ),
     [lockingScriptName]: generateTemplateLockScript(contract, encodedConstructorArgs),
   };
 };

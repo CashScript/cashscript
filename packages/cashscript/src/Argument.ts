@@ -108,9 +108,14 @@ export const encodeFunctionArguments = (
 // This function replaces placeholders in the artifact bytecode with the encoded values of the provided parameters.
 // A placeholder is a string in the format `<parameterName>` which is present in `bytecode` property.
 // Signature templates are not supported in the bytecode replacement.
-export const replaceArtifactPlaceholders = <T extends Artifact>(artifact: T, parameters: Record<string, FunctionArgument>): T => {
+export const replaceArtifactPlaceholders = <T extends Artifact>(
+  artifact: T,
+  parameters: Record<string, FunctionArgument>,
+): T =>{
   // first, collect known ABI types
-  const argumentTypes = [...artifact.constructorInputs, ...Object.values(artifact.abi).map(f => f.inputs).flat()].reduce((acc, input) => {
+  const argumentTypes = [
+    ...artifact.constructorInputs,
+    ...Object.values(artifact.abi).map(f => f.inputs).flat()].reduce((acc, input) => {
     acc[input.name] = input.type;
     return acc;
   }, {} as Record<string, string>);
@@ -148,4 +153,4 @@ const getPrimitiveType = (value: bigint | string | boolean | Uint8Array | Signat
   }
   if (value instanceof SignatureTemplate) return PrimitiveType.SIG;
   return undefined;
-}
+};
