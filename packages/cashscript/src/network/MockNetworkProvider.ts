@@ -10,7 +10,7 @@ const bobAddress = 'bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc';
 const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
 
 export default class MockNetworkProvider implements NetworkProvider {
-  // we use lockingBytecode as the key for utxoMap to make cashaddresses and tokenaddresses interchangeable
+  // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
   private utxoMap: Record<string, Utxo[]> = {};
   private transactionMap: Record<string, string> = {};
   public network: Network = Network.MOCKNET;
@@ -45,6 +45,11 @@ export default class MockNetworkProvider implements NetworkProvider {
     const transactionBin = hexToBin(txHex);
 
     const txid = binToHex(sha256(sha256(transactionBin)).reverse());
+
+    if (this.transactionMap[txid]) {
+      throw new Error(`Transaction with txid ${txid} was already submitted: txn-mempool-conflict`);
+    }
+
     this.transactionMap[txid] = txHex;
 
     const decoded = decodeTransaction(transactionBin);
@@ -54,20 +59,22 @@ export default class MockNetworkProvider implements NetworkProvider {
 
     // remove (spend) UTXOs from the map
     for (const input of decoded.inputs) {
-      for (const address of Object.keys(this.utxoMap)) {
-        const utxos = this.utxoMap[address];
+      for (const lockingBytecodeHex of Object.keys(this.utxoMap)) {
+        const utxos = this.utxoMap[lockingBytecodeHex];
         const index = utxos.findIndex(
-          (utxo) => utxo.txid === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex
+          (utxo) => utxo.txid === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex,
         );
 
         if (index !== -1) {
           // Remove the UTXO from the map
           utxos.splice(index, 1);
-          this.utxoMap[address] = utxos;
+          this.utxoMap[lockingBytecodeHex] = utxos;
+
+          if (utxos.length === 0) {
+            delete this.utxoMap[lockingBytecodeHex]; // Clean up empty address entries
+          }
+
           break; // Exit loop after finding and removing the UTXO
-        }
-        if (utxos.length === 0) {
-          delete this.utxoMap[address]; // Clean up empty address entries
         }
       }
     }
@@ -93,7 +100,8 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void {
-    const lockingBytecode = isHex(addressOrLockingBytecode) ? addressOrLockingBytecode : binToHex(addressToLockScript(addressOrLockingBytecode));
+    const lockingBytecode = isHex(addressOrLockingBytecode) ?
+      addressOrLockingBytecode : binToHex(addressToLockScript(addressOrLockingBytecode));
     if (!this.utxoMap[lockingBytecode]) {
       this.utxoMap[lockingBytecode] = [];
     }
