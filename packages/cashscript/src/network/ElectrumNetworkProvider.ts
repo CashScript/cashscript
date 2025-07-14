@@ -37,7 +37,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   private instantiateElectrumClient(network: Network, options: Options): ElectrumClient<ElectrumClientEvents> {
     if ('electrum' in options) return options.electrum;
     const server = 'hostname' in options ? options.hostname : this.getServerForNetwork(network);
-    return new ElectrumClient('CashScript Application', '1.4.1', server);
+    return new ElectrumClient('CashScript Application', '1.4.1', server, { disableBrowserVisibilityHandling: true });
   }
 
   // Get Electrum server based on network
