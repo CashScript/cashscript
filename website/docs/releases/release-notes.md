@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.11.3
+
+#### CashScript SDK
+- :bug: Fix bug with where `ElectrumNetworkProvider` would disconnect in browser on visibility change of the page
+
 ## v0.11.2
 
 #### CashScript SDK
