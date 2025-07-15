@@ -27,6 +27,7 @@ import {
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  SliceNode,
 } from './AST.js';
 import AstVisitor from './AstVisitor.js';
 
@@ -110,6 +111,13 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
+    return node;
+  }
+
+  visitSlice(node: SliceNode): Node {
+    node.element = this.visit(node.element);
+    node.start = this.visit(node.start);
+    node.end = this.visit(node.end);
     return node;
   }
 

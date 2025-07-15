@@ -25,6 +25,7 @@ import {
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
+  SliceNode,
 } from './AST.js';
 
 export default abstract class AstVisitor<T> {
@@ -42,6 +43,7 @@ export default abstract class AstVisitor<T> {
   abstract visitCast(node: CastNode): T;
   abstract visitFunctionCall(node: FunctionCallNode): T;
   abstract visitInstantiation(node: InstantiationNode): T;
+  abstract visitSlice(node: SliceNode): T;
   abstract visitTupleIndexOp(node: TupleIndexOpNode): T;
   abstract visitBinaryOp(node: BinaryOpNode): T;
   abstract visitUnaryOp(node: UnaryOpNode): T;
