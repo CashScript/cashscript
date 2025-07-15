@@ -33,6 +33,7 @@ import {
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  SliceNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -66,6 +67,7 @@ import type {
   ConsoleParameterContext,
   StatementContext,
   RequireMessageContext,
+  SliceContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -260,6 +262,15 @@ export default class AstBuilder
     const tupleIndexOp = new TupleIndexOpNode(tuple, index);
     tupleIndexOp.location = Location.fromCtx(ctx);
     return tupleIndexOp;
+  }
+
+  visitSlice(ctx: SliceContext): SliceNode {
+    const element = this.visit(ctx._element);
+    const start = this.visit(ctx._start);
+    const end = this.visit(ctx._end);
+    const slice = new SliceNode(element, start, end);
+    slice.location = Location.fromCtx(ctx);
+    return slice;
   }
 
   visitNullaryOp(ctx: NullaryOpContext): NullaryOpNode {

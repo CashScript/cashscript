@@ -28,6 +28,7 @@ import {
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  SliceNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 
@@ -213,6 +214,16 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
     node.tuple = this.visit(node.tuple);
     this.addOutput(`[${node.index}]`);
+    return node;
+  }
+
+  visitSlice(node: SliceNode): Node {
+    node.element = this.visit(node.element);
+    this.addOutput('.slice(');
+    node.start = this.visit(node.start);
+    this.addOutput(', ');
+    node.end = this.visit(node.end);
+    this.addOutput(')');
     return node;
   }
 
