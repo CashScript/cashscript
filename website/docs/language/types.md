@@ -65,10 +65,11 @@ Members:
 
 - `length`: Number of characters in the string.
 - `split(int)`: Splits the string at the specified index and returns a tuple with the two resulting strings.
+- `slice(int,int)`: Returns a substring from the start index up to (but excluding) the end index.
 - `reverse()`: Reverses the string.
 
 :::caution
-The script will fail if `split()` is called with an index that is out of bounds.
+The script will fail if `split()`or `slice()` is called with an index that is out of bounds.
 :::
 
 ## Bytes
@@ -89,10 +90,11 @@ Members:
 
 - `length`: Number of bytes in the sequence.
 - `split(int)`: Splits the byte sequence at the specified index and returns a tuple with the two resulting byte sequences.
+- `slice(int,int)`: Returns the part of the byte sequence from the start index up to (but excluding) the end index.
 - `reverse()`: Reverses the byte sequence.
 
 :::caution
-The script will fail if `split()` is called with an index that is out of bounds.
+The script will fail if `split()` or `slice()` is called with an index that is out of bounds.
 :::
 
 #### Example

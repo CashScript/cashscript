@@ -4,6 +4,9 @@ title: Release Notes
 
 ## v0.11.3
 
+#### cashc compiler
+- :sparkles: Add `.slice(start, end)` operator for bytes and strings.
+
 #### CashScript SDK
 - :bug: Fix bug with where `ElectrumNetworkProvider` would disconnect in browser on visibility change of the page
 
