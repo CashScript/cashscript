@@ -114,6 +114,7 @@ expression
     | scope='tx.inputs' '[' expression ']' op=('.value' | '.lockingBytecode' | '.outpointTransactionHash' | '.outpointIndex' | '.unlockingBytecode' | '.sequenceNumber' | '.tokenCategory' | '.nftCommitment' | '.tokenAmount') # UnaryIntrospectionOp
     | expression op=('.reverse()' | '.length') # UnaryOp
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
+    | element=expression '.slice' '(' start=expression ',' end=expression ')' # Slice
     | op=('!' | '-') expression # UnaryOp
     | left=expression op=('*' | '/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
