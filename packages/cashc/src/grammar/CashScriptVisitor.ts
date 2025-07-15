@@ -29,13 +29,14 @@ import { FunctionCallContext } from "./CashScriptParser.js";
 import { ExpressionListContext } from "./CashScriptParser.js";
 import { CastContext } from "./CashScriptParser.js";
 import { UnaryIntrospectionOpContext } from "./CashScriptParser.js";
-import { ArrayContext } from "./CashScriptParser.js";
 import { UnaryOpContext } from "./CashScriptParser.js";
-import { IdentifierContext } from "./CashScriptParser.js";
 import { LiteralExpressionContext } from "./CashScriptParser.js";
+import { FunctionCallExpressionContext } from "./CashScriptParser.js";
+import { ArrayContext } from "./CashScriptParser.js";
+import { IdentifierContext } from "./CashScriptParser.js";
+import { SliceContext } from "./CashScriptParser.js";
 import { TupleIndexOpContext } from "./CashScriptParser.js";
 import { InstantiationContext } from "./CashScriptParser.js";
-import { FunctionCallExpressionContext } from "./CashScriptParser.js";
 import { NullaryOpContext } from "./CashScriptParser.js";
 import { ParenthesisedContext } from "./CashScriptParser.js";
 import { BinaryOpContext } from "./CashScriptParser.js";
@@ -212,19 +213,33 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 */
 	visitUnaryIntrospectionOp?: (ctx: UnaryIntrospectionOpContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `Array`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitArray?: (ctx: ArrayContext) => Result;
-	/**
 	 * Visit a parse tree produced by the `UnaryOp`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitUnaryOp?: (ctx: UnaryOpContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `LiteralExpression`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitLiteralExpression?: (ctx: LiteralExpressionContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `FunctionCallExpression`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFunctionCallExpression?: (ctx: FunctionCallExpressionContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `Array`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitArray?: (ctx: ArrayContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `Identifier`
 	 * labeled alternative in `CashScriptParser.expression`.
@@ -233,12 +248,12 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 */
 	visitIdentifier?: (ctx: IdentifierContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `LiteralExpression`
+	 * Visit a parse tree produced by the `Slice`
 	 * labeled alternative in `CashScriptParser.expression`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitLiteralExpression?: (ctx: LiteralExpressionContext) => Result;
+	visitSlice?: (ctx: SliceContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `TupleIndexOp`
 	 * labeled alternative in `CashScriptParser.expression`.
@@ -253,13 +268,6 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitInstantiation?: (ctx: InstantiationContext) => Result;
-	/**
-	 * Visit a parse tree produced by the `FunctionCallExpression`
-	 * labeled alternative in `CashScriptParser.expression`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitFunctionCallExpression?: (ctx: FunctionCallExpressionContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `NullaryOp`
 	 * labeled alternative in `CashScriptParser.expression`.
