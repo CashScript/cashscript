@@ -1,0 +1,6 @@
+contract DoubleSplit(bytes20 pkh) {
+    function spend() {
+        bytes actualPkh = tx.inputs[this.activeInputIndex].lockingBytecode.split(23)[0].split(3)[1];
+        require(pkh == actualPkh);
+    }
+}

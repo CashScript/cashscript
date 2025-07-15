@@ -1,0 +1,6 @@
+contract Slice(bytes20 pkh) {
+    function spend() {
+        int actualPkh = 1921739821792419.slice(1, 3);
+        require(pkh == actualPkh);
+    }
+}
