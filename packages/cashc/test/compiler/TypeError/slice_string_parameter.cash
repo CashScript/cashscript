@@ -1,0 +1,6 @@
+contract Slice(bytes20 pkh) {
+    function spend() {
+        bytes actualPkh = tx.inputs[this.activeInputIndex].lockingBytecode.slice("3", 23);
+        require(pkh == actualPkh);
+    }
+}
