@@ -19,6 +19,7 @@ import {
   StatementNode,
   ContractNode,
   ExpressionNode,
+  SliceNode,
 } from './ast/AST.js';
 import { Symbol, SymbolType } from './ast/SymbolTable.js';
 import { Location, Point } from './ast/Location.js';
@@ -73,7 +74,7 @@ export class InvalidSymbolTypeError extends CashScriptError {
   }
 }
 
-export class RedefinitionError extends CashScriptError {}
+export class RedefinitionError extends CashScriptError { }
 
 export class FunctionRedefinitionError extends RedefinitionError {
   constructor(
@@ -160,7 +161,7 @@ export class UnequalTypeError extends TypeError {
 
 export class UnsupportedTypeError extends TypeError {
   constructor(
-    node: BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode,
+    node: BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode | SliceNode,
     actual?: Type,
     expected?: Type,
   ) {
@@ -170,6 +171,8 @@ export class UnsupportedTypeError extends TypeError {
       } else {
         super(node, actual, expected, `Tried to call member 'split' on unsupported type '${actual}'`);
       }
+    } else if (node instanceof SliceNode) {
+      super(node, actual, expected, `Tried to call member 'slice' on unsupported type '${actual}'`);
     } else if (node instanceof BinaryOpNode) {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode && node.operator.startsWith('.')) {

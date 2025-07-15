@@ -27,6 +27,7 @@ import {
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
+  SliceNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import {
@@ -168,6 +169,21 @@ export default class TypeCheckTraversal extends AstTraversal {
     }
 
     node.type = (node.tuple.type as TupleType).elementType;
+    return node;
+  }
+
+  visitSlice(node: SliceNode): Node {
+    node.element = this.visit(node.element);
+    node.start = this.visit(node.start);
+    node.end = this.visit(node.end);
+
+    expectAnyOfTypes(node, node.element.type, [new BytesType(), PrimitiveType.STRING]);
+    expectInt(node, node.start.type);
+    expectInt(node, node.end.type);
+
+    // TODO: Proper typing
+    node.type = node.element.type instanceof BytesType ? new BytesType() : PrimitiveType.STRING;
+
     return node;
   }
 
@@ -325,7 +341,7 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 }
 
-type ExpectedNode = BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode;
+type ExpectedNode = BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode | SliceNode;
 function expectAnyOfTypes(node: ExpectedNode, actual?: Type, expectedTypes?: Type[]): void {
   if (!expectedTypes || expectedTypes.length === 0) return;
   if (expectedTypes.find((expected) => implicitlyCastable(actual, expected))) {
