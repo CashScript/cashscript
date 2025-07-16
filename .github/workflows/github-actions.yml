@@ -17,7 +17,7 @@ on:
 jobs:
   # single job for testing, linting and spellcheck
   testing:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-lates
 
     steps:
       - name: Checkout
