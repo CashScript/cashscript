@@ -103,8 +103,9 @@ contract.bytesize: number
 
 The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 1,650 bytes at most.
 
-:::info
-The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they will always be an underestimate, as the contract hasn't been initialized with contract arguments.
+:::tip
+Using `contract.bytesize` is the best way to get the size of contract bytecode, as it includes the constructor arguments.
+The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments so are always an underestimate.
 :::
 
 #### Example

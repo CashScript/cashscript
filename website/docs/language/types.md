@@ -208,8 +208,9 @@ If you do need to pad bytes to a specific length, you can convert the bytes to `
 
 #### Example
 ```solidity
-bytes data = nftCommitment.split(10)[0]; // (type = bytes, content = 10 bytes)
-bytes20 paddedData = bytes20(int(data)); // (type = bytes20, content = 20 bytes)
+bytes10 data = nftCommitment.split(10)[0];
+// First convert 'bytes' type to 'int' to cast with padding
+bytes20 paddedData = bytes20(int(data));
 require(storedContractState == paddedData);
 ```
 
@@ -219,7 +220,8 @@ When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20`
 
 #### Example
 ```solidity
-bytes pkh = nftCommitment.split(20)[0]; // (type = bytes, content = 20 bytes)
+bytes pkh = tx.inputs[0].nftCommitment; // (type = bytes, content = 20 bytes)
+// Typecast the variable to be able to use it for 'new LockingBytecodeP2PKH()'
 bytes20 bytes20Pkh = bytes20(pkh); // (type = bytes20, content = 20 bytes)
 bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20Pkh);
 ```
