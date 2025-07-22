@@ -168,7 +168,8 @@ export default class TypeCheckTraversal extends AstTraversal {
       throw new IndexOutOfBoundsError(node);
     }
 
-    node.type = (node.tuple.type as TupleType).elementType;
+    node.type = node.index === 0 ? (node.tuple.type as TupleType).leftType : (node.tuple.type as TupleType).rightType;
+
     return node;
   }
 
@@ -242,6 +243,7 @@ export default class TypeCheckTraversal extends AstTraversal {
 
         // Result of split are two unbounded bytes types (could be improved to do type inference)
         node.type = new TupleType(
+          node.left.type instanceof BytesType ? new BytesType() : PrimitiveType.STRING,
           node.left.type instanceof BytesType ? new BytesType() : PrimitiveType.STRING,
         );
         return node;
@@ -371,7 +373,9 @@ function expectSameSizeBytes(node: BinaryOpNode, left?: Type, right?: Type): voi
 
 function expectTuple(node: ExpectedNode, actual?: Type): void {
   if (!(actual instanceof TupleType)) {
-    throw new UnsupportedTypeError(node, actual, new TupleType());
+    // We use a placeholder tuple to indicate that we're expecting *any* tuple at all
+    const placeholderTuple = new TupleType(new BytesType(), new BytesType());
+    throw new UnsupportedTypeError(node, actual, placeholderTuple);
   }
 }
 

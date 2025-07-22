@@ -4,7 +4,7 @@ export class ArrayType {
   constructor(
     public elementType: Type,
     public bound?: number,
-  ) {}
+  ) { }
 
   toString(): string {
     return `${this.elementType}[${this.bound ?? ''}]`;
@@ -14,7 +14,7 @@ export class ArrayType {
 export class BytesType {
   constructor(
     public bound?: number,
-  ) {}
+  ) { }
 
   static fromString(str: string): BytesType {
     const bound = str === 'byte' ? 1 : Number.parseInt(str.substring(5), 10) || undefined;
@@ -28,11 +28,12 @@ export class BytesType {
 
 export class TupleType {
   constructor(
-    public elementType?: Type,
-  ) {}
+    public leftType: Type,
+    public rightType: Type,
+  ) { }
 
   toString(): string {
-    return `(${this.elementType}, ${this.elementType})`;
+    return `(${this.leftType}, ${this.rightType})`;
   }
 }
 
