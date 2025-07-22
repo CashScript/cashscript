@@ -65,7 +65,7 @@ Both the `Electrum` and `Chaingraph` indexers allow you to create websocket subs
 Contract-related events are when you want to update the server state to reflect changes on-chain, for example new contracts being created or existing contracts changing their state in an important way. So contract related events often don't trigger an on-chain transaction directly, but they update the information about the contracts tracked for time/oracle events by the server.
 
 :::tip
-Only the `Chaingraph` indexer allows for subscriptions to arbitrary on-chain events, with `Electrum` you can create subscriptions for changes in the transaction history of a specific (contract) address.
+With `Electrum` you can create subscriptions to transactions for a specific (contract) address, with `Chaingraph` you can create subscriptions to arbitrary on-chain events.
 :::
 
 ### Oracle-related events

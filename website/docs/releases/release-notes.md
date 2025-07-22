@@ -6,6 +6,8 @@ title: Release Notes
 
 #### cashc compiler
 - :sparkles: Add `.slice(start, end)` operator for bytes and strings.
+- :sparkles: Add bounded bytes typing and bounds checking for `.split()`
+- :bug: Disallow incorrect bounded bytes typing when using `.split()`
 
 #### CashScript SDK
 - :bug: Fix bug with where `ElectrumNetworkProvider` would disconnect in browser on visibility change of the page

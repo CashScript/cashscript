@@ -116,6 +116,10 @@ By default, the ElectrumNetworkProvider will automatically connect and disconnec
 const provider = new ElectrumNetworkProvider('chipnet', { manualConnectionManagement: true });
 ```
 
+:::tip
+If you're providing an `ElectrumClient` and using it to subscribe to address or blockheader events, you need to enable `manualConnectionManagement` to overwrite the default of connecting and disconnecting for each separate request.
+:::
+
 #### connect()
 ```ts
 provider.connect(): Promise<void>;
