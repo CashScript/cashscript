@@ -28,6 +28,7 @@ import {
   TupleAssignmentNode,
   NullaryOpNode,
   SliceNode,
+  IntLiteralNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import {
@@ -57,17 +58,13 @@ export default class TypeCheckTraversal extends AstTraversal {
     if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
       throw new TupleAssignmentError(node.tuple);
     }
-    const tupleType = node.tuple.left.type;
-    for (const variable of [node.var1, node.var2]) {
-      if (!implicitlyCastable(tupleType, variable.type)) {
-        // Ignore if both are of type byte. problem: bytes16 can be typed to bytes32
-        if (tupleType instanceof BytesType && variable.type instanceof BytesType) {
-          return node;
-        }
-        throw new AssignTypeError(
-          new VariableDefinitionNode(variable.type, [], variable.name, node.tuple),
-        );
-      }
+
+    const assignmentType = new TupleType(node.left.type, node.right.type);
+
+    if (!implicitlyCastable(node.tuple.type, assignmentType)) {
+      throw new AssignTypeError(
+        new VariableDefinitionNode(assignmentType, [], node.left.name, node.tuple),
+      );
     }
     return node;
   }
@@ -240,12 +237,7 @@ export default class TypeCheckTraversal extends AstTraversal {
       case BinaryOperator.SPLIT:
         expectAnyOfTypes(node, node.left.type, [new BytesType(), PrimitiveType.STRING]);
         expectInt(node, node.right.type);
-
-        // Result of split are two unbounded bytes types (could be improved to do type inference)
-        node.type = new TupleType(
-          node.left.type instanceof BytesType ? new BytesType() : PrimitiveType.STRING,
-          node.left.type instanceof BytesType ? new BytesType() : PrimitiveType.STRING,
-        );
+        node.type = inferTupleType(node);
         return node;
       default:
         return node;
@@ -346,9 +338,7 @@ export default class TypeCheckTraversal extends AstTraversal {
 type ExpectedNode = BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode | SliceNode;
 function expectAnyOfTypes(node: ExpectedNode, actual?: Type, expectedTypes?: Type[]): void {
   if (!expectedTypes || expectedTypes.length === 0) return;
-  if (expectedTypes.find((expected) => implicitlyCastable(actual, expected))) {
-    return;
-  }
+  if (expectedTypes.find((expected) => implicitlyCastable(actual, expected))) return;
 
   throw new UnsupportedTypeError(node, actual, expectedTypes[0]);
 }
@@ -391,4 +381,38 @@ function expectParameters(node: NodeWithParameters, actual: Type[], expected: Ty
   if (!implicitlyCastableSignature(actual, expected)) {
     throw new InvalidParameterTypeError(node, actual, expected);
   }
+}
+
+// We only call this function for the split operator, so we assume that the node.op is SPLIT
+function inferTupleType(node: BinaryOpNode): Type {
+  // string.split() -> string, string
+  if (node.left.type === PrimitiveType.STRING) {
+    return new TupleType(PrimitiveType.STRING, PrimitiveType.STRING);
+  }
+
+  // If the expression is not a bytes type, then it must be a different compatible type (e.g. sig/pubkey)
+  // We treat this as an unbounded bytes type for the purposes of splitting
+  const expressionType = node.left.type instanceof BytesType ? node.left.type : new BytesType();
+
+  // bytes.split(variable) -> bytes, bytes
+  if (!(node.right instanceof IntLiteralNode)) {
+    return new TupleType(new BytesType(), new BytesType());
+  }
+
+  const splitIndex = Number(node.right.value);
+
+  // bytes.split(NumberLiteral) -> bytes(NumberLiteral), bytes
+  if (expressionType.bound === undefined) {
+    return new TupleType(new BytesType(splitIndex), new BytesType());
+  }
+
+  if (splitIndex > expressionType.bound) {
+    throw new IndexOutOfBoundsError(node);
+  }
+
+  // bytesX.split(NumberLiteral) -> bytes(NumberLiteral), bytes(X - NumberLiteral)
+  return new TupleType(
+    new BytesType(splitIndex),
+    new BytesType(expressionType.bound! - splitIndex),
+  );
 }

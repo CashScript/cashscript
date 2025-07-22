@@ -98,8 +98,9 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
 
 export class TupleAssignmentNode extends StatementNode {
   constructor(
-    public var1: { name: string, type: Type },
-    public var2: { name: string, type: Type },
+    // TODO: Use an IdentifierNode instead of a custom type
+    public left: { name: string, type: Type },
+    public right: { name: string, type: Type },
     public tuple: ExpressionNode,
   ) {
     super();

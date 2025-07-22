@@ -124,7 +124,7 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    [node.var1, node.var2].forEach(({ name, type }) => {
+    [node.left, node.right].forEach(({ name, type }) => {
       if (this.symbolTables[0].get(name)) {
         throw new VariableRedefinitionError(new VariableDefinitionNode(type, [], name, node.tuple));
       }
