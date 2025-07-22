@@ -20,9 +20,11 @@ import {
   ContractNode,
   ExpressionNode,
   SliceNode,
+  IntLiteralNode,
 } from './ast/AST.js';
 import { Symbol, SymbolType } from './ast/SymbolTable.js';
 import { Location, Point } from './ast/Location.js';
+import { BinaryOperator } from './ast/Operator.js';
 
 export class CashScriptError extends Error {
   node: Node;
@@ -252,9 +254,16 @@ export class ArrayElementError extends CashScriptError {
 
 export class IndexOutOfBoundsError extends CashScriptError {
   constructor(
-    node: TupleIndexOpNode,
+    node: TupleIndexOpNode | BinaryOpNode,
   ) {
-    super(node, `Index ${node.index} out of bounds`);
+    if (node instanceof TupleIndexOpNode) {
+      super(node, `Index ${node.index} out of bounds`);
+    } else if (node.operator === BinaryOperator.SPLIT && node.right instanceof IntLiteralNode) {
+      const splitIndex = Number(node.right.value);
+      super(node, `Split index ${splitIndex} out of bounds for type ${node.left.type}`);
+    } else {
+      super(node, 'Index out of bounds');
+    }
   }
 }
 

@@ -111,7 +111,13 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
 export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (!actual || !expected) return false;
 
-  // Tuples can't be cast
+  if (actual instanceof TupleType && expected instanceof TupleType) {
+    const leftIsCompatible = implicitlyCastable(actual.leftType, expected.leftType);
+    const rightIsCompatible = implicitlyCastable(actual.rightType, expected.rightType);
+    return leftIsCompatible && rightIsCompatible;
+  }
+
+  // Can't cast between Tuple and non-Tuple
   if (actual instanceof TupleType || expected instanceof TupleType) return false;
 
   // Arrays can be cast if their elements can be cast (don't think this is actually used ever)

@@ -1,0 +1,6 @@
+contract Test(bytes8 b) {
+    function spend() {
+        bytes2 x = b.split(4)[1];
+        require(x != b);
+    }
+}
