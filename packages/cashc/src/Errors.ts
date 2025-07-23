@@ -254,13 +254,19 @@ export class ArrayElementError extends CashScriptError {
 
 export class IndexOutOfBoundsError extends CashScriptError {
   constructor(
-    node: TupleIndexOpNode | BinaryOpNode,
+    node: TupleIndexOpNode | BinaryOpNode | SliceNode,
   ) {
     if (node instanceof TupleIndexOpNode) {
       super(node, `Index ${node.index} out of bounds`);
-    } else if (node.operator === BinaryOperator.SPLIT && node.right instanceof IntLiteralNode) {
+    } else if (
+      node instanceof BinaryOpNode && node.operator === BinaryOperator.SPLIT && node.right instanceof IntLiteralNode
+    ) {
       const splitIndex = Number(node.right.value);
       super(node, `Split index ${splitIndex} out of bounds for type ${node.left.type}`);
+    } else if (node instanceof SliceNode) {
+      const start = node.start instanceof IntLiteralNode ? Number(node.start.value) : 'start';
+      const end = node.end instanceof IntLiteralNode ? Number(node.end.value) : 'end';
+      super(node, `Slice indexes (${start}, ${end}) out of bounds for type ${node.element.type}`);
     } else {
       super(node, 'Index out of bounds');
     }

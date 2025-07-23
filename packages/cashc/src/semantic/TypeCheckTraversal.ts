@@ -166,7 +166,6 @@ export default class TypeCheckTraversal extends AstTraversal {
     }
 
     node.type = node.index === 0 ? (node.tuple.type as TupleType).leftType : (node.tuple.type as TupleType).rightType;
-
     return node;
   }
 
@@ -179,9 +178,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     expectInt(node, node.start.type);
     expectInt(node, node.end.type);
 
-    // TODO: Proper typing
-    node.type = node.element.type instanceof BytesType ? new BytesType() : PrimitiveType.STRING;
-
+    node.type = inferSliceType(node);
     return node;
   }
 
@@ -385,6 +382,10 @@ function expectParameters(node: NodeWithParameters, actual: Type[], expected: Ty
 
 // We only call this function for the split operator, so we assume that the node.op is SPLIT
 function inferTupleType(node: BinaryOpNode): Type {
+  if (node.right instanceof IntLiteralNode && Number(node.right.value) < 0) {
+    throw new IndexOutOfBoundsError(node);
+  }
+
   // string.split() -> string, string
   if (node.left.type === PrimitiveType.STRING) {
     return new TupleType(PrimitiveType.STRING, PrimitiveType.STRING);
@@ -406,10 +407,6 @@ function inferTupleType(node: BinaryOpNode): Type {
     return new TupleType(new BytesType(splitIndex), new BytesType());
   }
 
-  if (splitIndex < 0) {
-    throw new IndexOutOfBoundsError(node);
-  }
-
   if (splitIndex > expressionType.bound) {
     throw new IndexOutOfBoundsError(node);
   }
@@ -419,4 +416,49 @@ function inferTupleType(node: BinaryOpNode): Type {
     new BytesType(splitIndex),
     new BytesType(expressionType.bound! - splitIndex),
   );
+}
+
+function inferSliceType(node: SliceNode): Type {
+  if (node.start instanceof IntLiteralNode && Number(node.start.value) < 0) {
+    throw new IndexOutOfBoundsError(node);
+  }
+
+  if (node.end instanceof IntLiteralNode && Number(node.end.value) < 0) {
+    throw new IndexOutOfBoundsError(node);
+  }
+
+  // string.slice() -> string
+  if (node.element.type === PrimitiveType.STRING) {
+    return PrimitiveType.STRING;
+  }
+
+  // If the expression is not a bytes type, then it must be a different compatible type (e.g. sig/pubkey)
+  const expressionType = node.element.type instanceof BytesType ? node.element.type : new BytesType();
+
+  if (expressionType.bound !== undefined) {
+    if (node.start instanceof IntLiteralNode && Number(node.start.value) >= expressionType.bound) {
+      throw new IndexOutOfBoundsError(node);
+    }
+
+    if (node.end instanceof IntLiteralNode && Number(node.end.value) > expressionType.bound) {
+      throw new IndexOutOfBoundsError(node);
+    }
+  }
+
+  // bytes.slice(variable, variable) -> bytes
+  // bytes.slice(NumberLiteral, variable) -> bytes
+  // bytes.slice(variable, NumberLiteral) -> bytes
+  if (!(node.start instanceof IntLiteralNode) || !(node.end instanceof IntLiteralNode)) {
+    return new BytesType();
+  }
+
+  const start = Number(node.start.value);
+  const end = Number(node.end.value);
+
+  if (start > end) {
+    throw new IndexOutOfBoundsError(node);
+  }
+
+  // bytes.slice(NumberLiteral start, NumberLiteral end) -> bytes(end - start)
+  return new BytesType(end - start);
 }
