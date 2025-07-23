@@ -2,4 +2,11 @@ ignore:
   - packages/cashc/src/grammar/
   - '**/test/'
   - examples/
-target: 95%
+coverage:
+  status:
+    project:
+      default:
+        target: 95%
+    patch:
+      default:
+        target: 95%
