@@ -15,9 +15,9 @@ describe('type utilities', () => {
     });
 
     it('cannot cast tuples', () => {
-      expect(explicitlyCastable(PrimitiveType.INT, new TupleType(PrimitiveType.INT)))
+      expect(explicitlyCastable(PrimitiveType.INT, new TupleType(PrimitiveType.INT, PrimitiveType.INT)))
         .toEqual(false);
-      expect(explicitlyCastable(new TupleType(PrimitiveType.INT), PrimitiveType.STRING))
+      expect(explicitlyCastable(new TupleType(PrimitiveType.INT, PrimitiveType.INT), PrimitiveType.STRING))
         .toEqual(false);
     });
 
