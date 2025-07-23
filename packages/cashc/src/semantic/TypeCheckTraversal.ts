@@ -406,6 +406,10 @@ function inferTupleType(node: BinaryOpNode): Type {
     return new TupleType(new BytesType(splitIndex), new BytesType());
   }
 
+  if (splitIndex < 0) {
+    throw new IndexOutOfBoundsError(node);
+  }
+
   if (splitIndex > expressionType.bound) {
     throw new IndexOutOfBoundsError(node);
   }
