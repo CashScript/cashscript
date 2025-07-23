@@ -887,7 +887,7 @@ export const fixtures: Fixture[] = [
       bytecode: '14 OP_SPLIT OP_DROP OP_0 14 OP_NUM2BIN OP_EQUAL',
       debug: {
         bytecode: '01147f750001148087',
-        sourceMap: '3:34:3:36;:20::37:1;;4:31:4:32:0;:23::33:1;;:8::35',
+        sourceMap: '3:36:3:38;:22::39:1;;4:31:4:32:0;:23::33:1;;:8::35',
         logs: [],
         requires: [
           {
