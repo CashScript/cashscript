@@ -6,7 +6,8 @@ title: Release Notes
 
 #### cashc compiler
 - :sparkles: Add `.slice(start, end)` operator for bytes and strings.
-- :sparkles: Add bounded bytes typing and bounds checking for `.split()`
+- :sparkles: Add bounded bytes typing and bounds checking for `.split()` (includes checking for negative indices)
+- :racehorse: Add optimisation for `.slice(0, x)` and `.slice(x, y.length)` (also applies to `.split(0)[1]`)
 - :bug: Disallow incorrect bounded bytes typing when using `.split()`
 
 #### CashScript SDK

@@ -878,4 +878,31 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'slice_optimised.cash',
+    artifact: {
+      contractName: 'Slice',
+      constructorInputs: [{ name: 'data', type: 'bytes32' }],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: '14 OP_SPLIT OP_DROP OP_0 14 OP_NUM2BIN OP_EQUAL',
+      debug: {
+        bytecode: '01147f750001148087',
+        sourceMap: '3:34:3:36;:20::37:1;;4:31:4:32:0;:23::33:1;;:8::35',
+        logs: [],
+        requires: [
+          {
+            ip: 8,
+            line: 4,
+            message: undefined,
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/slice_optimised.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];
