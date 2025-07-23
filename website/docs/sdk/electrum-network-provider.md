@@ -117,7 +117,7 @@ const provider = new ElectrumNetworkProvider('chipnet', { manualConnectionManage
 ```
 
 :::tip
-If you're providing an `ElectrumClient` and using it to subscribe to address or blockheader events, you need to enable `manualConnectionManagement` to overwrite the default of connecting and disconnecting for each separate request.
+If you're providing an `ElectrumClient` and using it to subscribe to address or block header events, you need to enable `manualConnectionManagement` to overwrite the default of connecting and disconnecting for each separate request.
 :::
 
 #### connect()
