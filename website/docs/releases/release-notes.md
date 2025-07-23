@@ -6,23 +6,27 @@ title: Release Notes
 
 #### cashc compiler
 - :sparkles: Add `.slice(start, end)` operator for bytes and strings.
-- :sparkles: Add bounded bytes typing and bounds checking for `.split()` (includes checking for negative indices)
-- :racehorse: Add optimisation for `.slice(0, x)` and `.slice(x, y.length)` (also applies to `.split(0)[1]`)
-- :bug: Disallow incorrect bounded bytes typing when using `.split()`
+- :sparkles: Add bounded bytes typing and bounds checking for `.split()` (includes checking for negative indices).
+- :racehorse: Add optimisation for `.slice(0, x)` and `.slice(x, y.length)` (also applies to `.split(0)[1]`).
+- :bug: Disallow incorrect bounded bytes typing when using `.split()`.
 
 #### CashScript SDK
-- :bug: Fix bug with where `ElectrumNetworkProvider` would disconnect in browser on visibility change of the page
+- :bug: Fix bug with where `ElectrumNetworkProvider` would disconnect in browser on visibility change of the page.
 
 ## v0.11.2
 
 #### CashScript SDK
-- :bug: Fix bug with new `generateWcTransactionObject()` throwing when using `placeholderP2PKHUnlocker()`
+- :bug: Fix bug with new `generateWcTransactionObject()` throwing when using `placeholderP2PKHUnlocker()`.
 
 ## v0.11.1
 
 #### CashScript SDK
 - :sparkles: Add `generateWcTransactionObject()` method to `TransactionBuilder` to generate a `WcTransactionObject` that can be used to sign a transaction with a WalletConnect client.
 - :sparkles: Add `placeholderSignature()`, `placeholderPublicKey()` and `placeholderP2PKHUnlocker()` helper functions to the SDK for WalletConnect usage.
+
+---
+
+https://x.com/CashScriptBCH/status/1942513305420968238
 
 ## v0.11.0
 
@@ -54,6 +58,10 @@ This release also contains several breaking changes, please refer to the [migrat
 - :boom: **BREAKING**: Remove support for old contracts compiled with CashScript v0.6.x or earlier.
 - :bug: Fix bug where `JestExtensions` `expect().toLog()` would detect logs from different tests.
 - :bug: Fix bug where certain edge cases in require statements caused the `FailedRequireError` message to be slightly different from the original error message.
+
+---
+
+https://x.com/CashScriptBCH/status/1935662184865890325
 
 #### @cashscript/utils
 - :boom: **BREAKING**: Remove `importArtifact` and `exportArtifact` helper functions. If you want to import or export artifacts, use `'fs'` to read and write files directly.

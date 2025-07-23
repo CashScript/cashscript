@@ -101,6 +101,8 @@ The script will fail if `split()` or `slice()` is called with an index that is o
 ```solidity
 bytes mintingCapability = 0x02;
 bytes noCapability = 0x;
+
+bytes2 data = 0x12345678.slice(1, 3); // 0x3456
 ```
 
 ## Bytes types with semantic meaning
@@ -141,8 +143,8 @@ checkMultisig([sig1, sig2], [pk1, pk2, pk3]);
 Tuples are the type that is returned when calling the `split` member function on a `string` or `bytes` type. Their first or second element can be accessed through an indexing syntax similar to other languages:
 
 ```solidity
-string question = "What is Bitcoin Cash?";
-string answer = question.split(15)[0].split(8)[1]; // Answer is "Cash"
+string bitcoinCash = "Bitcoin Cash";
+string cash = bitcoinCash.split(8)[1];
 ```
 
 :::note
@@ -152,8 +154,8 @@ It is not supported to use a variable for the tupleIndex. Instead you can assign
 It is also possible to assign both sides of the tuple at once with a destructuring syntax:
 
 ```solidity
-string hello, string world = "Hello World".split(5);
-require(hello + "world" == "Hello " + world);
+string hello, string world = "Hello World".split(6);
+require(hello + "World" == "Hello " + world);
 ```
 
 ## Type Casting
