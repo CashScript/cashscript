@@ -2,3 +2,4 @@ ignore:
   - packages/cashc/src/grammar/
   - '**/test/'
   - examples/
+target: 95%
