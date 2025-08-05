@@ -121,7 +121,7 @@ export class TransactionBuilder {
   buildLibauthTransaction(): LibauthTransaction {
     this.checkMaxFee();
 
-    const inputs = this.inputs.map((utxo) => ({
+    const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
       outpointTransactionHash: hexToBin(utxo.txid),
       sequenceNumber: utxo.options?.sequence ?? DEFAULT_SEQUENCE,
