@@ -15,8 +15,8 @@
   "bytecode": "OP_1 OP_NUMEQUAL",
   "source": "contract Example() {\n  function test(int value) {\n    console.log(value, \"test\");\n    require(value == 1, \"Wrong value passed\");\n  }\n}\n",
   "debug": {
-    "bytecode": "007a519c",
-    "sourceMap": "4:12:4:17;;:21::22;:12:::1",
+    "bytecode": "519c",
+    "sourceMap": "4:21:4:22;:4::46:1",
     "logs": [
       {
         "ip": 0,
@@ -33,7 +33,7 @@
     ],
     "requires": [
       {
-        "ip": 4,
+        "ip": 2,
         "line": 4,
         "message": "Wrong value passed"
       }
@@ -41,7 +41,7 @@
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.10.0"
+    "version": "0.11.3"
   },
-  "updatedAt": "2024-09-10T09:55:42.448Z"
+  "updatedAt": "2025-08-05T08:32:16.100Z"
 }
