@@ -296,7 +296,7 @@ describe('Transaction Builder', () => {
     });
   });
 
-  it('should not fail when spending from only P2PKH inputs', async () => {
+  it('should not fail when validly spending from only P2PKH inputs', async () => {
     const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
     const sigTemplate = new SignatureTemplate(alicePriv);
 
@@ -304,10 +304,46 @@ describe('Transaction Builder', () => {
 
     const change = aliceUtxos[0].satoshis + aliceUtxos[1].satoshis - 1000n;
 
-    await expect(new TransactionBuilder({ provider })
+    const transaction = new TransactionBuilder({ provider })
       .addInput(aliceUtxos[0], sigTemplate.unlockP2PKH())
       .addInput(aliceUtxos[1], sigTemplate.unlockP2PKH())
-      .addOutput({ to: aliceAddress, amount: change })
-      .send()).resolves.not.toThrow();
+      .addOutput({ to: aliceAddress, amount: change });
+
+    await expect(transaction.send()).resolves.not.toThrow();
+  });
+
+  // TODO: Currently, P2PKH inputs are not evaluated at all
+  it.skip('should fail when invalidly spending from only P2PKH inputs', async () => {
+    const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
+    const incorrectSigTemplate = new SignatureTemplate(bobPriv);
+
+    expect(aliceUtxos.length).toBeGreaterThan(2);
+
+    const change = aliceUtxos[0].satoshis + aliceUtxos[1].satoshis - 1000n;
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(aliceUtxos[0], incorrectSigTemplate.unlockP2PKH())
+      .addInput(aliceUtxos[1], incorrectSigTemplate.unlockP2PKH())
+      .addOutput({ to: aliceAddress, amount: change });
+
+    await expect(transaction.send()).rejects.toThrow();
+  });
+
+  // TODO: Currently, P2PKH inputs are not evaluated at all
+  it.skip('should fail when invalidly spending from P2PKH and correctly from contract inputs', async () => {
+    const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
+    const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
+    const incorrectSigTemplate = new SignatureTemplate(bobPriv);
+
+    expect(aliceUtxos.length).toBeGreaterThan(2);
+
+    const change = aliceUtxos[0].satoshis + aliceUtxos[1].satoshis - 1000n;
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(aliceUtxos[0], incorrectSigTemplate.unlockP2PKH())
+      .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: aliceAddress, amount: change });
+
+    await expect(transaction.send()).rejects.toThrow();
   });
 });
