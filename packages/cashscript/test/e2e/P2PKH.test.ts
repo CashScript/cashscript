@@ -97,7 +97,7 @@ describe('P2PKH-no-tokens', () => {
 
     // TODO: this fails on mocknet, because mocknet doesn't check inputs vs outputs,
     // we should add a sanity check in our own code
-    itOrSkip(!!process.env.TESTS_USE_CHIPNET, 'should fail when not enough satoshis are provided in utxos', async () => {
+    itOrSkip(Boolean(process.env.TESTS_USE_CHIPNET), 'should fail when not enough satoshis are provided in utxos', async () => {
       // given
       const to = p2pkhContract.address;
       const amount = 1000n;
