@@ -1,21 +1,31 @@
-import { binToHex, hexToBin } from '@bitauth/libauth';
+import { binToHex, decodeTransactionUnsafe, hexToBin, isHex } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
-import { addressToLockScript, randomUtxo } from '../utils.js';
+import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails, randomUtxo } from '../utils.js';
 
 // redeclare the addresses from vars.ts instead of importing them
 const aliceAddress = 'bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp';
 const bobAddress = 'bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc';
 const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
 
+interface MockNetworkProviderOptions {
+  updateUtxoSet: boolean;
+}
+
+// We are setting the default updateUtxoSet to 'false' so that it doesn't break the current behaviour
+// TODO: in a future breaking release we want to set this to 'true' by default
 export default class MockNetworkProvider implements NetworkProvider {
-  private utxoMap: Record<string, Utxo[]> = {};
+  // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
+  private utxoSet: Array<[string, Utxo]> = [];
   private transactionMap: Record<string, string> = {};
   public network: Network = Network.MOCKNET;
   public blockHeight: number = 133700;
+  public options: MockNetworkProviderOptions;
 
-  constructor() {
+  constructor(options?: Partial<MockNetworkProviderOptions>) {
+    this.options = { updateUtxoSet: false, ...options };
+
     for (let i = 0; i < 3; i += 1) {
       this.addUtxo(aliceAddress, randomUtxo());
       this.addUtxo(bobAddress, randomUtxo());
@@ -24,8 +34,8 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
-    const lockingBytecode = binToHex(addressToLockScript(address));
-    return this.utxoMap[lockingBytecode] ?? [];
+    const addressLockingBytecode = binToHex(addressToLockScript(address));
+    return this.utxoSet.filter(([lockingBytecode]) => lockingBytecode === addressLockingBytecode).map(([, utxo]) => utxo);
   }
 
   setBlockHeight(newBlockHeight: number): void {
@@ -44,21 +54,55 @@ export default class MockNetworkProvider implements NetworkProvider {
     const transactionBin = hexToBin(txHex);
 
     const txid = binToHex(sha256(sha256(transactionBin)).reverse());
+
+    if (this.options.updateUtxoSet && this.transactionMap[txid]) {
+      throw new Error(`Transaction with txid ${txid} was already submitted`);
+    }
+
     this.transactionMap[txid] = txHex;
+
+    // If updateUtxoSet is false, we don't need to update the utxo set, and just return the txid
+    if (!this.options.updateUtxoSet) return txid;
+
+    const decodedTransaction = decodeTransactionUnsafe(transactionBin);
+
+    decodedTransaction.inputs.forEach((input) => {
+      const utxoIndex = this.utxoSet.findIndex(
+        ([, utxo]) => utxo.txid === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex,
+      );
+
+      // TODO: we should check what error a BCHN node throws, so we can throw the same error here
+      if (utxoIndex === -1) {
+        throw new Error(`UTXO not found for input ${input.outpointIndex} of transaction ${txid}`);
+      }
+
+      this.utxoSet.splice(utxoIndex, 1);
+    });
+
+    decodedTransaction.outputs.forEach((output, vout) => {
+      this.addUtxo(binToHex(output.lockingBytecode), {
+        txid,
+        vout,
+        satoshis: output.valueSatoshis,
+        token: output.token && libauthTokenDetailsToCashScriptTokenDetails(output.token),
+      });
+    });
+
     return txid;
   }
 
-  addUtxo(address: string, utxo: Utxo): void {
-    const lockingBytecode = binToHex(addressToLockScript(address));
-    if (!this.utxoMap[lockingBytecode]) {
-      this.utxoMap[lockingBytecode] = [];
-    }
+  // Note: the user can technically add the same UTXO multiple times (txid + vout), to the same or different addresses
+  // but we don't check for this in the sendRawTransaction method. We might want to prevent duplicates from being added
+  // in the first place.
+  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void {
+    const lockingBytecode = isHex(addressOrLockingBytecode) ?
+      addressOrLockingBytecode : binToHex(addressToLockScript(addressOrLockingBytecode));
 
-    this.utxoMap[lockingBytecode].push(utxo);
+    this.utxoSet.push([lockingBytecode, utxo]);
   }
 
   reset(): void {
-    this.utxoMap = {};
+    this.utxoSet = [];
     this.transactionMap = {};
   }
 }

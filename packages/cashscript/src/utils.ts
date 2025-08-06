@@ -33,6 +33,7 @@ import {
   TokenDetails,
   AddressType,
   UnlockableUtxo,
+  LibauthTokenDetails,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -113,13 +114,17 @@ export function libauthOutputToCashScriptOutput(output: LibauthOutput): Output {
   return {
     to: output.lockingBytecode,
     amount: output.valueSatoshis,
-    token: output.token && {
-      ...output.token,
-      category: binToHex(output.token.category),
-      nft: output.token.nft && {
-        ...output.token.nft,
-        commitment: binToHex(output.token.nft.commitment),
-      },
+    token: output.token && libauthTokenDetailsToCashScriptTokenDetails(output.token),
+  };
+}
+
+export function libauthTokenDetailsToCashScriptTokenDetails(token: LibauthTokenDetails): TokenDetails {
+  return {
+    ...token,
+    category: binToHex(token.category),
+    nft: token.nft && {
+      ...token.nft,
+      commitment: binToHex(token.nft.commitment),
     },
   };
 }
