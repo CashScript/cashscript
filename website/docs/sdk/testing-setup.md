@@ -29,7 +29,7 @@ const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
 ```
 
 :::note
-The `MockNetworkProvider` evaluates transactions locally but does not process the transaction updates. This means no UTXOs are consumed and no new UTXOs are created when mocking a transaction `send` using the provider.
+By default, the `MockNetworkProvider` evaluates transactions locally but does not process the transaction updates. This means no UTXOs are consumed and no new UTXOs are created when mocking a transaction `send` using the provider. This can be configured by setting the `updateUtxoSet` option to `true`.
 :::
 
 ## Automated testing

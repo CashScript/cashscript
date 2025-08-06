@@ -190,7 +190,7 @@ export function parseType(str: string): Type {
 }
 
 export function isPrimitive(type: Type): type is PrimitiveType {
-  return !!PrimitiveType[type.toString().toUpperCase() as keyof typeof PrimitiveType];
+  return Boolean(PrimitiveType[type.toString().toUpperCase() as keyof typeof PrimitiveType]);
 }
 
 export interface LocationI {

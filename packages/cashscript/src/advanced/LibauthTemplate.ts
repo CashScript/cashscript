@@ -534,7 +534,7 @@ export const getLibauthTemplates = (
 export const debugLibauthTemplate = (template: WalletTemplate, transaction: TransactionBuilder): DebugResults => {
   const allArtifacts = transaction.inputs
     .map(input => 'contract' in input.unlocker ? input.unlocker.contract : undefined)
-    .filter((contract): contract is Contract => !!contract)
+    .filter((contract): contract is Contract => Boolean(contract))
     .map(contract => contract.artifact);
 
   return debugTemplate(template, allArtifacts);
