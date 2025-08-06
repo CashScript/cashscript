@@ -9,6 +9,12 @@ const aliceAddress = 'bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp';
 const bobAddress = 'bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc';
 const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
 
+interface MockNetworkProviderOptions {
+  updateUtxoSet?: boolean;
+}
+
+// We are setting the default updateUtxoSet to 'false' so that it doesn't break the current behaviour
+// TODO: in a future breaking release we want to set this to 'true' by default
 export default class MockNetworkProvider implements NetworkProvider {
   // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
   private utxoMap: Record<string, Utxo[]> = {};
@@ -16,7 +22,7 @@ export default class MockNetworkProvider implements NetworkProvider {
   public network: Network = Network.MOCKNET;
   public blockHeight: number = 133700;
 
-  constructor() {
+  constructor(public options?: MockNetworkProviderOptions) {
     for (let i = 0; i < 3; i += 1) {
       this.addUtxo(aliceAddress, randomUtxo());
       this.addUtxo(bobAddress, randomUtxo());
@@ -57,43 +63,45 @@ export default class MockNetworkProvider implements NetworkProvider {
       throw new Error(`${decoded}`);
     }
 
-    // remove (spend) UTXOs from the map
-    for (const input of decoded.inputs) {
-      for (const lockingBytecodeHex of Object.keys(this.utxoMap)) {
-        const utxos = this.utxoMap[lockingBytecodeHex];
-        const index = utxos.findIndex(
-          (utxo) => utxo.txid === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex,
-        );
+    if (this.options?.updateUtxoSet) {
+      // remove (spend) UTXOs from the map
+      for (const input of decoded.inputs) {
+        for (const lockingBytecodeHex of Object.keys(this.utxoMap)) {
+          const utxos = this.utxoMap[lockingBytecodeHex];
+          const index = utxos.findIndex(
+            (utxo) => utxo.txid === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex,
+          );
 
-        if (index !== -1) {
-          // Remove the UTXO from the map
-          utxos.splice(index, 1);
-          this.utxoMap[lockingBytecodeHex] = utxos;
+          if (index !== -1) {
+            // Remove the UTXO from the map
+            utxos.splice(index, 1);
+            this.utxoMap[lockingBytecodeHex] = utxos;
 
-          if (utxos.length === 0) {
-            delete this.utxoMap[lockingBytecodeHex]; // Clean up empty address entries
+            if (utxos.length === 0) {
+              delete this.utxoMap[lockingBytecodeHex]; // Clean up empty address entries
+            }
+
+            break; // Exit loop after finding and removing the UTXO
           }
-
-          break; // Exit loop after finding and removing the UTXO
         }
       }
-    }
 
-    // add new UTXOs to the map
-    for (const [index, output] of decoded.outputs.entries()) {
-      this.addUtxo(binToHex(output.lockingBytecode), {
-        txid: txid,
-        vout: index,
-        satoshis: output.valueSatoshis,
-        token: output.token && {
-          ...output.token,
-          category: binToHex(output.token.category),
-          nft: output.token.nft && {
-            ...output.token.nft,
-            commitment: binToHex(output.token.nft.commitment),
+      // add new UTXOs to the map
+      for (const [index, output] of decoded.outputs.entries()) {
+        this.addUtxo(binToHex(output.lockingBytecode), {
+          txid: txid,
+          vout: index,
+          satoshis: output.valueSatoshis,
+          token: output.token && {
+            ...output.token,
+            category: binToHex(output.token.category),
+            nft: output.token.nft && {
+              ...output.token.nft,
+              commitment: binToHex(output.token.nft.commitment),
+            },
           },
-        },
-      });
+        });
+      }
     }
 
     return txid;
