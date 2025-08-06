@@ -65,7 +65,7 @@ describeOrSkip(!process.env.TESTS_USE_CHIPNET, 'MockNetworkProvider', () => {
       // utxo should be added to bob
       expect(await provider.getUtxos(bobAddress)).toHaveLength(1);
 
-      await expect(provider.sendRawTransaction(tx)).rejects.toThrow('txn-mempool-conflict');
+      await expect(provider.sendRawTransaction(tx)).rejects.toThrow('already submitted');
     });
   });
 
