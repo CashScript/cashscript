@@ -57,7 +57,7 @@ export class Contract<
   constructor(
     public artifact: TArtifact,
     constructorArgs: TResolved['constructorInputs'],
-    private options?: ContractOptions,
+    public options?: ContractOptions,
   ) {
     this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
     this.addressType = this.options?.addressType ?? 'p2sh32';
@@ -90,7 +90,7 @@ export class Contract<
     } else {
       artifact.abi.forEach((f, i) => {
         // @ts-ignore TODO: see if we can use generics to make TypeScript happy
-        this.functions[f.name] = this.createFunction(f, i);
+        this.functions[f.name] = this.createFunction(f, this.options.ignoreFunctionSelector ? undefined : i);
       });
     }
 
@@ -104,7 +104,7 @@ export class Contract<
     } else {
       artifact.abi.forEach((f, i) => {
         // @ts-ignore TODO: see if we can use generics to make TypeScript happy
-        this.unlock[f.name] = this.createUnlocker(f, i);
+        this.unlock[f.name] = this.createUnlocker(f, this.options.ignoreFunctionSelector ? undefined : i);
       });
     }
 
