@@ -2,9 +2,14 @@
 title: Release Notes
 ---
 
+## v0.11.5
+
+#### CashScript SDK
+- :bug: Remove accidental dependency inclusion of `@types/node`
+
 ## v0.11.4
 
-### CashScript SDK
+#### CashScript SDK
 - :sparkles: Add `updateUtxoSet` option to `MockNetworkProvider` to allow for updating the UTXO set after a transaction is sent.
 - :bug: Fix bug where sending P2PKH-only transactions would throw `No placeholder scenario ID or script ID found`.
 
