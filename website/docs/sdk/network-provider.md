@@ -35,6 +35,15 @@ interface Utxo {
   satoshis: bigint;
   token?: TokenDetails;
 }
+
+interface TokenDetails {
+  amount: bigint;
+  category: string;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: string;
+  };
+}
 ```
 
 #### Example

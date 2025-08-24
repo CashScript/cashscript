@@ -121,6 +121,7 @@ module.exports = {
           { from: '/docs/sdk', to: '/docs/sdk/instantiation' },
           { from: '/docs/sdk/transactions-advanced', to: '/docs/sdk/transaction-builder' },
           { from: '/docs/guides', to: '/docs/guides/covenants' },
+          { from: '/docs/guides/syntax-highlighting', to: '/docs/language/syntax-highlighting' },
           { from: '/docs/getting-started', to: '/docs/basics/getting-started' },
           { from: '/docs/examples', to: '/docs/language/examples' },
         ],
