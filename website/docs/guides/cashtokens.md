@@ -7,7 +7,7 @@ CashTokens are native tokens on Bitcoin Cash, meaning that they are validated by
 CashTokens was first proposed in February of 2022 and actived on Bitcoin Cash mainchain in May of 2023.
 
 :::tip
-The specification for CashTokens is the ['CHIP-2022-02-CashTokens: Token Primitives for Bitcoin '](https://github.com/cashtokens/cashtokens) document.
+You can read more about CashTokens on [cashtokens.org](https://cashtokens.org/) or can refer to the original specification document: ['CHIP-2022-02-CashTokens: Token Primitives for Bitcoin '](https://github.com/cashtokens/cashtokens).
 :::
 
 ## CashTokens Utxo data
@@ -32,7 +32,15 @@ interface TokenDetails {
 }
 ```
 
-Note that a UTXO can hold both an `amount` of fungible tokens as well as an `nft`, as long as both have the same `category` (also reffered to as "tokenId"). 
+The `amount` field is the amount of fungible tokens on the UTXO, the `category` is the "tokenId" for the token on the UTXO.
+Next we have the optional `nft` object, which will only be present if the UTXO contains an NFT.
+The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT.
+Capability `none` then refers to an immutible NFT where the commitment cannot be changes. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
+
+:::note
+A UTXO can hold both an `amount` of fungible tokens as well as an `nft`, as long as both tokens have the same `category`.
+This is quite a common pattern for covenants which want to hold contract state and fungible tokens on the same UTXO.
+:::
 
 ## CashTokens introspection data
 While CashTokens might seem overwhelming at first, realize that in contracts you will only use it through the following introspection details
