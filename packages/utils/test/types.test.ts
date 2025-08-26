@@ -6,6 +6,7 @@ import {
   PrimitiveType,
   TupleType,
 } from '../src/index.js';
+import { describe, it, expect } from 'vitest';
 
 describe('type utilities', () => {
   describe('explicitlyCastable()', () => {

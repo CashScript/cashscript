@@ -2,6 +2,7 @@ import { asmToScript } from '../src/script.js';
 import { buildLineToOpcodesMap, buildLineToAsmMap, formatBitAuthScript } from '../src/bitauth-script.js';
 import { fixtures } from './fixtures/bitauth-script.fixture.js';
 import { compileString } from 'cashc';
+import { describe, it, expect } from 'vitest';
 
 describe('Libauth Script formatting', () => {
   fixtures.forEach((fixture) => {
