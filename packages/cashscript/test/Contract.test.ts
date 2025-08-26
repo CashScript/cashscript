@@ -17,6 +17,7 @@ import hodlVaultArtifact from './fixture/hodl_vault.artifact.js';
 import mecenasArtifact from './fixture/mecenas.artifact.js';
 import deprecatedMecenasArtifact from './fixture/deprecated/mecenas-v0.6.0.json' with { type: 'json' };
 import boundedBytesArtifact from './fixture/bounded_bytes.artifact.js';
+import { describe, expect, it, beforeEach } from 'vitest';
 
 describe('Contract', () => {
   describe('new', () => {

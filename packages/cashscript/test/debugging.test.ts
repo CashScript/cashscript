@@ -1,6 +1,5 @@
 import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
-import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
 import {
@@ -14,6 +13,7 @@ import {
   artifactTestZeroHandling,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
+import { describe, it, expect } from 'vitest';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
@@ -524,15 +524,15 @@ describe('Debugging tests', () => {
     });
   });
 
-  describe('JestExtensions', () => {
+  describe('VitestExtensions', () => {
     const provider = new MockNetworkProvider();
     const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
     const contractTestRequiresUtxo = randomUtxo();
     provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
 
-    // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use JestExtensions
+    // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use VitestExtensions
 
-    it('should fail the JestExtensions test if an incorrect log is expected', async () => {
+    it('should fail the VitestExtensions test if an incorrect log is expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -545,7 +545,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
-    it('should fail the JestExtensions test if a log is logged that is NOT expected', async () => {
+    it('should fail the VitestExtensions test if a log is logged that is NOT expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -564,7 +564,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
-    it('should fail the JestExtensions test if a log is expected where no log is logged', async () => {
+    it('should fail the VitestExtensions test if a log is expected where no log is logged', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -577,7 +577,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: .*Hello World.*\nReceived: (.|\n)*?undefined/);
     });
 
-    it('should fail the JestExtensions test if an incorrect require error message is expected', async () => {
+    it('should fail the VitestExtensions test if an incorrect require error message is expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -590,7 +590,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
 
-    it('should fail the JestExtensions test if a require error message is expected where no error is thrown', async () => {
+    it('should fail the VitestExtensions test if a require error message is expected where no error is thrown', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -603,7 +603,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Contract function did not fail a require statement/);
     });
 
-    it('should fail the JestExtensions test if an error is thrown where it is NOT expected', async () => {
+    it('should fail the VitestExtensions test if an error is thrown where it is NOT expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -626,15 +626,15 @@ describe('Debugging tests', () => {
       // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
       expect(
         () => expect(transaction).toFailRequire(),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
+      ).toThrow('The CashScript VitestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
 
       expect(
         () => expect(transaction).toFailRequireWith('1 should equal 2'),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
+      ).toThrow('The CashScript VitestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
 
       expect(
         () => expect(transaction).toLog('Hello World'),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
+      ).toThrow('The CashScript VitestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
     });
   });
 });

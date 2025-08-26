@@ -12,6 +12,7 @@ import {
 } from '../src/utils.js';
 import { Network } from '../src/interfaces.js';
 import { alicePkh, alicePub } from './fixture/vars.js';
+import { describe, expect, it } from 'vitest';
 
 describe('utils', () => {
   describe('getInputSize', () => {
