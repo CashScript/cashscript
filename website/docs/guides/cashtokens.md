@@ -3,11 +3,11 @@ title: CashTokens
 sidebar_label: CashTokens
 ---
 
-CashTokens are native tokens on Bitcoin Cash, meaning that they are validated by each full node on the network and their transaction rules checked by each miner when constructing new blocks. CashTokens added fungible and non-fungible token primitives.
+CashTokens are native tokens on Bitcoin Cash, meaning that they are validated by all full nodes on the network and their transaction rules checked by each miner when constructing new blocks. CashTokens added fungible and non-fungible token primitives.
 CashTokens was first proposed in February of 2022 and actived on Bitcoin Cash mainchain in May of 2023.
 
 :::tip
-You can read more about CashTokens on [cashtokens.org](https://cashtokens.org/) or can refer to the original specification document: ['CHIP-2022-02-CashTokens: Token Primitives for Bitcoin '](https://github.com/cashtokens/cashtokens).
+You can read more about CashTokens on [cashtokens.org](https://cashtokens.org/) which has the full specification as well as a list of [Usage Examples](https://cashtokens.org/docs/spec/examples).
 :::
 
 ## CashTokens Utxo data
@@ -31,13 +31,18 @@ interface TokenDetails {
   };
 }
 ```
+### Fungible Tokens 
 
 The `amount` field is the amount of fungible tokens on the UTXO, the `category` is the "tokenId" for the token on the UTXO.
-Next we have the optional `nft` object, which will only be present if the UTXO contains an NFT.
-The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT.
+The maximum size for a fungible token `amount` is the max signed 64-bit integer or `9223372036854775807`.
+
+### Non-Fungible Tokens
+
+The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT which can is allowed to be up to 40 bytes.
+
 Capability `none` then refers to an immutible NFT where the commitment cannot be changes. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
 
-:::note
+:::tip
 A UTXO can hold both an `amount` of fungible tokens as well as an `nft`, as long as both tokens have the same `category`.
 This is quite a common pattern for covenants which want to hold contract state and fungible tokens on the same UTXO.
 :::
@@ -100,3 +105,13 @@ contrast this with the following scenario where there is also fungible tokens of
   require(tx.inputs[0].tokenAmount == 10);
   require(tx.inputs[0].tokenCategory == providedTokenId);
 ```
+
+## CashTokens Genesis transactions
+
+A CashTokens genesis transaction is a transaction which creates a new `category` of CashTokens. To create a CashTokens genesis transaction you need a `vout0` UTXO because the txid of the UTXO will be you newly created `category`.
+
+The requirement for a `vout0` UTXO can mean that you might need to create a setup transaction "pre-genesis" which will create this output. The "pre-genesis" txid then is your token's `category`.
+
+:::tip
+CashTokens Creation is illustrated very nicely by transaction diagram in the specification document in the [sectction on token categories](https://cashtokens.org/docs/spec/chip#token-categories).
+:::
