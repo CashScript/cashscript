@@ -131,7 +131,7 @@ Represents the `nSequence` number of a specific input. This value of the input's
 bytes tx.inputs[i].tokenCategory
 ```
 
-Represents the `tokenCategory` of a specific input. Returns 0 when that specific input contains no tokens. When the input contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
+Represents the `tokenCategory` of a specific input. Returns `0x` when that specific input contains no tokens. When the input contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
 :::caution
 The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
@@ -149,7 +149,7 @@ Represents the NFT commitment data of a specific input.
 int tx.inputs[i].tokenAmount
 ```
 
-Represents the amount of fungible tokens of a specific input.
+Represents the amount of fungible tokens of a specific input. Maximum size for a `tokenAmount` is a 64-bit integer.
 
 ### tx.outputs
 Represents the list of outputs of the evaluated transaction. This is an array, and cannot be used on itself. You need to access an output with a specific index and specify the properties you want to access.
@@ -180,7 +180,7 @@ Represents the locking bytecode (`scriptPubKey`) of a specific output.
 bytes tx.output[i].tokenCategory
 ```
 
-Represents the `tokenCategory` of a specific output. Returns 0 when that specific output contains no tokens. When the output contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
+Represents the `tokenCategory` of a specific output. Returns `0x` when that specific output contains no tokens. When the output contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
 :::caution
 The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
@@ -198,7 +198,7 @@ Represents the NFT commitment data of a specific output.
 int tx.output[i].tokenAmount
 ```
 
-Represents the amount of fungible tokens of a specific output.
+Represents the amount of fungible tokens of a specific output. Maximum size for a `tokenAmount` is a 64-bit integer.
 
 ## Constructing locking bytecode
 One of the main use cases of covenants is enforcing transaction outputs (where money is sent). To assist with enforcing these outputs, there is a number of `LockingBytecode` objects that can be instantiated. These locking bytecodes can then be compared to the locking bytecodes of transaction outputs.
