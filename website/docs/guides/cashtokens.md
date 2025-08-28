@@ -7,7 +7,7 @@ CashTokens are native tokens on Bitcoin Cash, meaning that they are validated by
 CashTokens was first proposed in February of 2022 and actived on Bitcoin Cash mainchain in May of 2023.
 
 :::tip
-You can read more about CashTokens on [cashtokens.org](https://cashtokens.org/) which has the full specification as well as a list of [Usage Examples](https://cashtokens.org/docs/spec/examples).
+You can read more about CashTokens on [cashtokens.org](https://cashtokens.org/) which has the full specification as well as a list of [usage examples](https://cashtokens.org/docs/spec/examples).
 :::
 
 ## CashTokens Utxo data
@@ -40,7 +40,7 @@ The maximum size for a fungible token `amount` is the max signed 64-bit integer 
 
 The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT which can is allowed to be up to 40 bytes.
 
-Capability `none` then refers to an immutible NFT where the commitment cannot be changes. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
+Capability `none` then refers to an immutable NFT where the commitment cannot be changes. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
 
 :::tip
 A UTXO can hold both an `amount` of fungible tokens as well as an `nft`, as long as both tokens have the same `category`.
@@ -85,8 +85,8 @@ generally not recommended to do the byte-reversal in script
   require(tx.inputs[0].tokenCategory == providedTokenId.reverse());
 ```
 
-#### 3) "invisibe" empty nfts
-Because the nft-capability has no separate introspection item, and nothing is appended to the `tokenCategory` in case of capability `none`, empty nfts can be "invisibe" when combined with fungible tokens.
+#### 3) "invisible" empty nfts
+Because the nft-capability has no separate introspection item, and nothing is appended to the `tokenCategory` in case of capability `none`, empty nfts can be "invisible" when combined with fungible tokens.
 
 ```solidity
   // Input 0 has an empty nft (commitment 0x) with providedTokenId
@@ -113,5 +113,5 @@ A CashTokens genesis transaction is a transaction which creates a new `category`
 The requirement for a `vout0` UTXO can mean that you might need to create a setup transaction "pre-genesis" which will create this output. The "pre-genesis" txid then is your token's `category`.
 
 :::tip
-CashTokens Creation is illustrated very nicely by transaction diagram in the specification document in the [sectction on token categories](https://cashtokens.org/docs/spec/chip#token-categories).
+CashTokens Creation is illustrated very nicely by transaction diagram in the specification document in the [secction on token categories](https://cashtokens.org/docs/spec/chip#token-categories).
 :::
