@@ -1,4 +1,4 @@
 *
 !dist/**
-!jest/package.json
+!vitest/package.json
 *.map
