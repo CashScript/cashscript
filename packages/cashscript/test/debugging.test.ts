@@ -28,7 +28,7 @@ describe('Debugging tests', () => {
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num, beef, 1, "test", true);
-      const expectedLog = new RegExp(`^Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+      const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
       expect(transaction).toLog(expectedLog);
     });
 
@@ -39,7 +39,7 @@ describe('Debugging tests', () => {
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num, beef, 1, "test", true);
-      const expectedLog = new RegExp(`^Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100 0xbeef 1 test true$`);
+      const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100 0xbeef 1 test true$`);
       expect(transaction).toLog(expectedLog);
     });
 
@@ -49,7 +49,7 @@ describe('Debugging tests', () => {
         .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(incorrectPriv), 1000n))
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      const expectedLog = new RegExp(`^Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+      const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
       expect(transaction).not.toLog(expectedLog);
     });
 
@@ -58,7 +58,7 @@ describe('Debugging tests', () => {
         .addInput(contractUtxo, contractTestLogs.unlock.secondFunction())
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      expect(transaction).toLog(new RegExp('^Test.cash:16 Hello Second Function$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:16 Hello Second Function$'));
       expect(transaction).not.toLog(/Hello First Function/);
     });
 
@@ -76,7 +76,7 @@ describe('Debugging tests', () => {
         .addInput(utxo, contractTestMultipleConstructorParameters.unlock.secondFunction())
         .addOutput({ to: contractTestMultipleConstructorParameters.address, amount: 10000n });
 
-      expect(transaction).toLog(new RegExp('^Test.cash:20 Hello Second Function$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:20 Hello Second Function$'));
       expect(transaction).not.toLog(/Hello First Function/);
     });
 
@@ -85,18 +85,18 @@ describe('Debugging tests', () => {
         .addInput(contractUtxo, contractTestLogs.unlock.functionWithIfStatement(1n))
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      expect(transaction1).toLog(new RegExp('^Test.cash:24 a is 1$'));
-      expect(transaction1).toLog(new RegExp('^Test.cash:31 a equals 1$'));
-      expect(transaction1).toLog(new RegExp('^Test.cash:32 b equals 1$'));
+      expect(transaction1).toLog(new RegExp('^\\[Input #0] Test.cash:24 a is 1$'));
+      expect(transaction1).toLog(new RegExp('^\\[Input #0] Test.cash:31 a equals 1$'));
+      expect(transaction1).toLog(new RegExp('^\\[Input #0] Test.cash:32 b equals 1$'));
       expect(transaction1).not.toLog(/a is not 1/);
 
       const transaction2 = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contractTestLogs.unlock.functionWithIfStatement(2n))
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      expect(transaction2).toLog(new RegExp('^Test.cash:27 a is not 1$'));
-      expect(transaction2).toLog(new RegExp('^Test.cash:31 a equals 2$'));
-      expect(transaction2).toLog(new RegExp('^Test.cash:32 b equals 2$'));
+      expect(transaction2).toLog(new RegExp('^\\[Input #0] Test.cash:27 a is not 1$'));
+      expect(transaction2).toLog(new RegExp('^\\[Input #0] Test.cash:31 a equals 2$'));
+      expect(transaction2).toLog(new RegExp('^\\[Input #0] Test.cash:32 b equals 2$'));
       expect(transaction2).not.toLog(/a is 1/);
     });
 
@@ -111,9 +111,9 @@ describe('Debugging tests', () => {
         .addOutput({ to: contractTestConsecutiveLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num, beef);
-      expect(transaction).toLog(new RegExp(`^Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`));
+      expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:9 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`));
       // console.log(1, "test", true)
-      expect(transaction).toLog(new RegExp('^Test.cash:10 0xbeef 1 test true$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:10 0xbeef 1 test true$'));
     });
 
     it('should log multiple console.log statements with other statements in between', async () => {
@@ -127,10 +127,10 @@ describe('Debugging tests', () => {
         .addOutput({ to: contractTestMultipleLogs.address, amount: 10000n });
 
       // console.log(ownerSig, owner, num);
-      const expectedFirstLog = new RegExp(`^Test.cash:6 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`);
+      const expectedFirstLog = new RegExp(`^\\[Input #0] Test.cash:6 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 100$`);
       expect(transaction).toLog(expectedFirstLog);
 
-      const expectedSecondLog = new RegExp('^Test.cash:11 0xbeef 1 test true$');
+      const expectedSecondLog = new RegExp('^\\[Input #0] Test.cash:11 0xbeef 1 test true$');
       expect(transaction).toLog(expectedSecondLog);
     });
 
@@ -140,8 +140,8 @@ describe('Debugging tests', () => {
         .addInput(contractUtxo, contractTestLogs.unlock.test_log_inside_notif_statement(false))
         .addOutput({ to: contractTestLogs.address, amount: contractUtxo.satoshis - 1000n });
 
-      expect(transaction).toLog(new RegExp(`^Test.cash:52 before: ${contractUtxo.satoshis}$`));
-      expect(transaction).toLog(new RegExp(`^Test.cash:54 after: ${contractUtxo.satoshis}$`));
+      expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:52 before: ${contractUtxo.satoshis}$`));
+      expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:54 after: ${contractUtxo.satoshis}$`));
     });
 
     it('should log intermediate results that get optimised out', async () => {
@@ -150,7 +150,7 @@ describe('Debugging tests', () => {
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
       const expectedHash = binToHex(sha256(alicePub));
-      expect(transaction).toLog(new RegExp(`^Test.cash:43 0x${expectedHash}$`));
+      expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:43 0x${expectedHash}$`));
     });
 
     it.todo('intermediate results that is more complex than the test above');
@@ -542,7 +542,7 @@ describe('Debugging tests', () => {
 
       expect(
         () => expect(transaction).toLog('^This is definitely not the log$'),
-      ).toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
+      ).toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
     it('should fail the JestExtensions test if a log is logged that is NOT expected', async () => {
@@ -554,12 +554,14 @@ describe('Debugging tests', () => {
         .addOutput({ to: contractTestRequires.address, amount: 10000n });
 
       expect(
-        () => expect(transaction).not.toLog('^Test.cash:4 Hello World$'),
-      ).toThrow(/Expected: not .*Test.cash:4 Hello World.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
+        () => expect(transaction).not.toLog('^\\[Input #0] Test.cash:4 Hello World$'),
+      ).toThrow(
+        /Expected: not .*\\\\\[Input #0] Test.cash:4 Hello World.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/,
+      );
 
       expect(
         () => expect(transaction).not.toLog(),
-      ).toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?Test.cash:4 Hello World/);
+      ).toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
     it('should fail the JestExtensions test if a log is expected where no log is logged', async () => {
