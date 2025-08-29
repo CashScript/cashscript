@@ -5,7 +5,10 @@ title: Release Notes
 ## v0.11.5
 
 #### CashScript SDK
-- :bug: Remove accidental dependency inclusion of `@types/node`
+- :sparkles: Include input index in console.log statements for debugging.
+- :sparkles: Improve type inference for function and constructor arguments in the `Contract` class.
+- :hammer_and_wrench: Replace redundant dependencies.
+- :bug: Remove accidental dependency inclusion of `@types/node`.
 
 ## v0.11.4
 
