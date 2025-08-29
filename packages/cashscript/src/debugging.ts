@@ -64,7 +64,8 @@ const debugSingleScenario = (
     .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
 
   for (const log of executedLogs) {
-    logConsoleLogStatement(log, executedDebugSteps, artifact);
+    const inputIndex = extractInputIndexFromScenario(scenarioId);
+    logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex);
   }
 
   const lastExecutedDebugStep = executedDebugSteps[executedDebugSteps.length - 1];
@@ -139,6 +140,13 @@ const debugSingleScenario = (
   return fullDebugSteps;
 };
 
+// Note: this relies on the naming convention that the scenario ID is of the form <name>_input<index>_evaluate
+const extractInputIndexFromScenario = (scenarioId: string): number => {
+  const match = scenarioId.match(/_input(\d+)_/);
+  if (!match) throw new Error(`Invalid scenario ID: ${scenarioId}`);
+  return parseInt(match[1]);
+};
+
 /* eslint-disable @typescript-eslint/indent */
 type VM = AuthenticationVirtualMachine<
   ResolvedTransactionCommon,
@@ -185,6 +193,7 @@ const logConsoleLogStatement = (
   log: LogEntry,
   debugSteps: AuthenticationProgramStateCommon[],
   artifact: Artifact,
+  inputIndex: number,
 ): void => {
   let line = `${artifact.contractName}.cash:${log.line}`;
   const decodedData = log.data.map((element) => {
@@ -194,7 +203,7 @@ const logConsoleLogStatement = (
     const transformedDebugStep = applyStackItemTransformations(element, debugStep);
     return decodeStackItem(element, transformedDebugStep.stack);
   });
-  console.log(`${line} ${decodedData.join(' ')}`);
+  console.log(`[Input #${inputIndex}] ${line} ${decodedData.join(' ')}`);
 };
 
 const applyStackItemTransformations = (
