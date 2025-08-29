@@ -8,7 +8,6 @@ import {
   generateSigningSerializationBch,
   utf8ToBin,
   hexToBin,
-  flattenBinArray,
   LockingBytecodeType,
   encodeTransactionOutput,
   isHex,
@@ -24,6 +23,7 @@ import {
   Op,
   Script,
   scriptToBytecode,
+  encodeNullDataScript,
 } from '@cashscript/utils';
 import {
   Utxo,
@@ -300,30 +300,6 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
     default:
       return 'bitcoincash';
   }
-}
-
-// ////////////////////////////////////////////////////////////////////////////
-// For encoding OP_RETURN data (doesn't require BIP62.3 / MINIMALDATA)
-function encodeNullDataScript(chunks: (number | Uint8Array)[]): Uint8Array {
-  return flattenBinArray(
-    chunks.map((chunk) => {
-      if (typeof chunk === 'number') {
-        return new Uint8Array([chunk]);
-      }
-
-      const pushdataOpcode = getPushDataOpcode(chunk);
-      return new Uint8Array([...pushdataOpcode, ...chunk]);
-    }),
-  );
-}
-
-function getPushDataOpcode(data: Uint8Array): Uint8Array {
-  const { byteLength } = data;
-
-  if (byteLength === 0) return Uint8Array.from([0x4c, 0x00]);
-  if (byteLength < 76) return Uint8Array.from([byteLength]);
-  if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
-  throw new Error('Pushdata too large');
 }
 
 const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
