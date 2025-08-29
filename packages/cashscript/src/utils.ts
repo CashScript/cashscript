@@ -390,3 +390,5 @@ export const isFungibleTokenUtxo = (utxo: Utxo): boolean => (
 );
 
 export const isNonTokenUtxo = (utxo: Utxo): boolean => utxo.token === undefined;
+
+export const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));

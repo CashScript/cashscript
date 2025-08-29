@@ -4,7 +4,6 @@ import {
   Transaction as LibauthTransaction,
   WalletTemplate,
 } from '@bitauth/libauth';
-import delay from 'delay';
 import {
   AbiFunction,
   encodeBip68,
@@ -32,6 +31,7 @@ import {
   calculateDust,
   getOutputSize,
   utxoTokenComparator,
+  delay,
 } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { P2PKH_INPUT_SIZE } from './constants.js';

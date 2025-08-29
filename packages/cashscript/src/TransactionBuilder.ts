@@ -7,7 +7,6 @@ import {
   Transaction as LibauthTransaction,
   WalletTemplate,
 } from '@bitauth/libauth';
-import delay from 'delay';
 import {
   Unlocker,
   Output,
@@ -24,6 +23,7 @@ import { NetworkProvider } from './network/index.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
+  delay,
   generateLibauthSourceOutputs,
   validateInput,
   validateOutput,
