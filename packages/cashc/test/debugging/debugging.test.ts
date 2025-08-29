@@ -6,6 +6,7 @@
 import { URL } from 'url';
 import { compileFile } from '../../src/index.js';
 import { fixtures } from './fixtures.js';
+import { describe, expect, it } from 'vitest';
 
 describe('Debugging', () => {
   fixtures.forEach((fixture) => {

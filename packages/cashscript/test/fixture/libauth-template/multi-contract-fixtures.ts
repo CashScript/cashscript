@@ -5,6 +5,7 @@ import twtArtifact from '../transfer_with_timeout.artifact.js';
 import hodlVaultArtifact from '../hodl_vault.artifact.js';
 import { aliceAddress, alicePkh, alicePriv, alicePub, aliceTokenAddress, bobPkh, bobPriv, bobPub, carolPriv, carolPub, oracle, oraclePub } from '../vars.js';
 import { WalletTemplate } from '@bitauth/libauth';
+import { expect } from 'vitest';
 
 const provider = new MockNetworkProvider();
 

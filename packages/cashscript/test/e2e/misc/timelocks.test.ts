@@ -12,7 +12,8 @@ import { utxoComparator, calculateDust, randomUtxo, isNonTokenUtxo } from '../..
 import p2pkhArtifact from '../../fixture/p2pkh.artifact.js';
 import twtArtifact from '../../fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
-import { describeOrSkip, getTxOutputs } from '../../test-util.js';
+import { getTxOutputs } from '../../test-util.js';
+import { describe, expect, it, beforeAll } from 'vitest';
 
 
 describe('Timelocks', () => {
@@ -39,7 +40,7 @@ describe('Timelocks', () => {
     (provider as any).addUtxo?.(carolAddress, randomUtxo());
   });
 
-  describeOrSkip(Boolean(process.env.TESTS_USE_CHIPNET), 'Locktime', () => {
+  describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('Locktime', () => {
     it('should fail when locktime is higher than current block height', async () => {
       const fee = 1000n;
       const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();

@@ -13,6 +13,7 @@ import {
 import { gatherUtxos, getTxOutputs } from '../test-util.js';
 import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
+import { describe, expect, it, beforeAll } from 'vitest';
 
 describe('TransferWithTimeout', () => {
   const provider = process.env.TESTS_USE_CHIPNET

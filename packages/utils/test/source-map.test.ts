@@ -1,5 +1,6 @@
 import { generateSourceMap, sourceMapToLocationData } from '../src/index.js';
 import { fixtures } from './fixtures/source-map.fixture.js';
+import { describe, it, expect } from 'vitest';
 
 describe('Source map generation', () => {
   fixtures.forEach((fixture) => {
