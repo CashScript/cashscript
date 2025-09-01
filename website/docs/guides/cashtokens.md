@@ -42,7 +42,7 @@ The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `
 
 Capability `none` then refers to an immutable NFT where the commitment cannot be changed. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
 
-:::tip
+:::note
 A UTXO can hold both an `amount` of fungible tokens as well as an `nft`, as long as both tokens have the same `category`.
 This is quite a common pattern for covenants which want to hold contract state and fungible tokens on the same UTXO.
 :::
@@ -128,4 +128,14 @@ The requirement for a `vout0` UTXO can mean that you might need to create a setu
 
 :::tip
 CashTokens Creation is illustrated very nicely by transaction diagram in the specification document in the [section on token categories](https://cashtokens.org/docs/spec/chip#token-categories).
+:::
+
+## CashTokens BCMR metadata
+
+Although not directly related to smart contracts, BCMR metadata is important for user-facing CashTokens. This way user can see your token name, icon, description and any relevant project links directly in their wallet. Many CashTokens wallets use the [Paytaca BCMR indexer](https://bcmr.paytaca.com/) to fetch BCMR metadata info about CashTokens.
+
+The Paytaca BCMR indexer listens for on-chain [authchain](https://github.com/bitjson/chip-bcmr?tab=readme-ov-file#zeroth-descendant-transaction-chains) transactions which publish metadata with an opreturn publication output. These type of metadata updates are self-published on-chain identity claims. The zero-th output chain since the token gensis is the authchain, the UTXO at the "head" of this chain holds the authority to update the token's metadata.
+
+:::tip
+For easy creation of CashTokens with BCMR metadata there is the Paytaca [CashTokens Studio](https://cashtokens.studio/) or to programmatically publish on-chain BCMR authchain updates there is the [AuthUpdate](https://github.com/mr-zwets/AuthUpdate) JS program.
 :::
