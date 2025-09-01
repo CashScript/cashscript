@@ -88,6 +88,8 @@ generally not recommended to do the byte-reversal in script
 #### 3) "invisible" empty nfts
 Because the nft-capability has no separate introspection item, and nothing is appended to the `tokenCategory` in case of capability `none`, empty nfts can be "invisible" when combined with fungible tokens.
 
+First let's consider the case where a UTXO only holds an empty NFT:
+
 ```solidity
   // Input 0 has an empty nft (commitment 0x) with providedTokenId
   // If there was no empty nft the tokenCategory would return 0x
@@ -96,7 +98,7 @@ Because the nft-capability has no separate introspection item, and nothing is ap
   require(tx.inputs[0].tokenCategory == providedTokenId);
 ```
 
-contrast this with the following scenario where there is also fungible tokens of the same category:
+Contrast this with the scenario where a UTXO holds both an empty NFT and fungible tokens of the same category:
 
 ```solidity
   // Input 0 might or might not have an empty nft (commitment 0x) with providedTokenId
@@ -105,6 +107,18 @@ contrast this with the following scenario where there is also fungible tokens of
   require(tx.inputs[0].tokenAmount == 10);
   require(tx.inputs[0].tokenCategory == providedTokenId);
 ```
+
+Both scenarios look the same from the point of the smart contract.
+
+This means that a covenant UTXO holding both a minting NFT and the fungible token supply for the same token `category` cannot prevent that empty nfts are created by users when they are allowed to create a fungible token output. The possibility of these "junk" empty NFTs should be taken into account so they do not present any security problems for the contract system.  
+
+#### 4) Explicit vs implicit burning
+
+CashTokens can be burned explicitly by sending them to an opreturn output, which is provably unspendable. CashTokens can also be burned implicitly, by including them in the inputs but not the outputs of a transaction. Always be mindful when adding token-carrying inputs to not forget to add the tokens in the outputs, otherwise they will be considered as an implicit burn.
+
+:::tip
+Signing for CashTokens inputs is designed in such a way that pre-CashTokens wallets - which only know how to send and receive Bitcoin Cash - cannot spend CashTokens inputs and thus can never accidentally burn CashTokens this way.
+:::
 
 ## CashTokens Genesis transactions
 
