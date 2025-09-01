@@ -40,7 +40,7 @@ The maximum size for a fungible token `amount` is the max signed 64-bit integer 
 
 The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT which can is allowed to be up to 40 bytes.
 
-Capability `none` then refers to an immutable NFT where the commitment cannot be changes. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
+Capability `none` then refers to an immutable NFT where the commitment cannot be changed. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
 
 :::tip
 A UTXO can hold both an `amount` of fungible tokens as well as an `nft`, as long as both tokens have the same `category`.
@@ -56,7 +56,7 @@ While CashTokens might seem overwhelming at first, realize that in contracts you
 
 and their equivalent for outputs:
 
-- **`bytes tx.outputs[i].tokenCategory`** - `tokenCategory` + `tokenCapability` of a specific output.
+- **`bytes tx.outputs[i].tokenCategory`** - `tokenCategory` + `tokenCapability` of a specific output. (see [below](#1-tokencategory-contains-the-nft-capability)).
 - **`bytes tx.outputs[i].nftCommitment`** - NFT commitment data of a specific output
 - **`int tx.outputs[i].tokenAmount`** - Amount of fungible tokens of a specific output.
 
@@ -113,5 +113,5 @@ A CashTokens genesis transaction is a transaction which creates a new `category`
 The requirement for a `vout0` UTXO can mean that you might need to create a setup transaction "pre-genesis" which will create this output. The "pre-genesis" txid then is your token's `category`.
 
 :::tip
-CashTokens Creation is illustrated very nicely by transaction diagram in the specification document in the [secction on token categories](https://cashtokens.org/docs/spec/chip#token-categories).
+CashTokens Creation is illustrated very nicely by transaction diagram in the specification document in the [section on token categories](https://cashtokens.org/docs/spec/chip#token-categories).
 :::
