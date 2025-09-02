@@ -4,7 +4,7 @@ sidebar_label: CashTokens
 ---
 
 CashTokens are native tokens on Bitcoin Cash, meaning that they are validated by all full nodes on the network and their transaction rules checked by each miner when constructing new blocks. CashTokens added fungible and non-fungible token primitives.
-CashTokens was first proposed in February of 2022 and actived on Bitcoin Cash mainchain in May of 2023.
+CashTokens was first proposed in February of 2022 and activated on Bitcoin Cash mainchain in May of 2023.
 
 :::tip
 You can read more about CashTokens on [cashtokens.org](https://cashtokens.org/) which has the full specification as well as a list of [usage examples](https://cashtokens.org/docs/spec/examples).
@@ -132,9 +132,9 @@ CashTokens Creation is illustrated very nicely by transaction diagram in the spe
 
 ## CashTokens BCMR metadata
 
-Although not directly related to smart contracts, BCMR metadata is important for user-facing CashTokens. This way user can see your token name, icon, description and any relevant project links directly in their wallet. Many CashTokens wallets use the [Paytaca BCMR indexer](https://bcmr.paytaca.com/) to fetch BCMR metadata info about CashTokens.
+Although not directly related to smart contracts, BCMR metadata is important for user-facing CashTokens. This way users can see your token name, icon, description and any relevant project links directly in their wallet. Many CashTokens wallets use the [Paytaca BCMR indexer](https://bcmr.paytaca.com/) to fetch BCMR metadata info about CashTokens.
 
-The Paytaca BCMR indexer listens for on-chain [authchain](https://github.com/bitjson/chip-bcmr?tab=readme-ov-file#zeroth-descendant-transaction-chains) transactions which publish metadata with an opreturn publication output. These type of metadata updates are self-published on-chain identity claims. The zero-th output chain since the token gensis is the authchain, the UTXO at the "head" of this chain holds the authority to update the token's metadata.
+The Paytaca BCMR indexer listens for on-chain [authchain](https://github.com/bitjson/chip-bcmr?tab=readme-ov-file#zeroth-descendant-transaction-chains) transactions which publish metadata with an opreturn publication output. These type of metadata updates are self-published on-chain identity claims. The zero-th output chain since the token genesis is the authchain. The UTXO at the "head" of this chain holds the authority to update the token's metadata.
 
 :::tip
 For easy creation of CashTokens with BCMR metadata there is the Paytaca [CashTokens Studio](https://cashtokens.studio/) or to programmatically publish on-chain BCMR authchain updates there is the [AuthUpdate](https://github.com/mr-zwets/AuthUpdate) JS program.
