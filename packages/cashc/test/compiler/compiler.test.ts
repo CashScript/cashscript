@@ -10,7 +10,6 @@ import { getSubdirectories, readCashFiles } from '../test-utils.js';
 import * as Errors from '../../src/Errors.js';
 import { compileString } from '../../src/index.js';
 
-
 describe('Compiler', () => {
   describe('Successful compilation', () => {
     readCashFiles(new URL('../valid-contract-files', import.meta.url)).forEach((file) => {
