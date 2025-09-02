@@ -18,6 +18,7 @@ module.exports = {
         'language/functions',
         'language/globals',
         'language/examples',
+        'language/syntax-highlighting'
       ],
     },
     {
@@ -54,8 +55,8 @@ module.exports = {
       type: 'category',
       label: 'Guides',
       items: [
-        'guides/syntax-highlighting',
         'guides/covenants',
+        'guides/cashtokens',
         'guides/infrastructure',
         'guides/walletconnect',
         'guides/debugging',
