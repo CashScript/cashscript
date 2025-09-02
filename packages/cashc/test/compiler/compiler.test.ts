@@ -9,7 +9,7 @@ import { URL } from 'url';
 import { getSubdirectories, readCashFiles } from '../test-utils.js';
 import * as Errors from '../../src/Errors.js';
 import { compileString } from '../../src/index.js';
-import { describe, expect, it } from 'vitest';
+
 
 describe('Compiler', () => {
   describe('Successful compilation', () => {

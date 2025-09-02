@@ -17,7 +17,7 @@ import { parseCode } from '../../src/compiler.js';
 import { readCashFiles } from '../test-utils.js';
 import { Ast } from '../../src/ast/AST.js';
 import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal.js';
-import { describe, expect, it } from 'vitest';
+
 
 const VALID_CONTRACT_FILES = new URL('../valid-contract-files', import.meta.url);
 

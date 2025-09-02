@@ -3,7 +3,7 @@ import { URL } from 'url';
 import { compileString, parseCode } from '../../src/compiler.js';
 import { buildLineToAsmMap, bytecodeToAsm, bytecodeToScript } from '@cashscript/utils';
 import { hexToBin } from '@bitauth/libauth';
-import { describe, expect, it } from 'vitest';
+
 
 describe('Location', () => {
   it('should retrieve correct text from location', () => {
