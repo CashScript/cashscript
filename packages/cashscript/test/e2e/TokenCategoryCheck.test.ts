@@ -5,7 +5,7 @@ import {
 } from '../../src/index.js';
 import { Network } from '../../src/interfaces.js';
 import artifact from '../fixture/token_category_comparison.artifact.js';
-import { describe, expect, it, beforeAll } from 'vitest';
+
 
 describe('TokenCategoryCheck', () => {
   const provider = process.env.TESTS_USE_CHIPNET

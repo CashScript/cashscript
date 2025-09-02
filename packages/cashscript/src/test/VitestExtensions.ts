@@ -1,5 +1,4 @@
 import { DebugResults } from '../debugging.js';
-import { vi, expect } from 'vitest';
 
 interface Debuggable {
   debug(): DebugResults | Promise<DebugResults>;

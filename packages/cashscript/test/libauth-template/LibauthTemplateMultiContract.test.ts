@@ -1,5 +1,4 @@
 import { fixtures } from '../fixture/libauth-template/multi-contract-fixtures.js';
-import { describe, expect, it } from 'vitest';
 
 describe('Libauth Template generation tests (multi-contract)', () => {
   it.each(fixtures)('should generate a valid libauth template for $name', async (fixture) => {

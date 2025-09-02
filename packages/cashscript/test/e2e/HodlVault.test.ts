@@ -16,7 +16,7 @@ import { gatherUtxos, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
-import { describe, expect, it, beforeAll } from 'vitest';
+
 
 describe('HodlVault', () => {
   const provider = process.env.TESTS_USE_CHIPNET

@@ -19,7 +19,7 @@ import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
 import { gatherUtxos, getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
-import { describe, expect, it, beforeAll } from 'vitest';
+
 
 describe('Transaction Builder', () => {
   const provider = process.env.TESTS_USE_CHIPNET

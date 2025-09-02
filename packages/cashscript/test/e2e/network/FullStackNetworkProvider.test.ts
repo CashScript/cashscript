@@ -9,7 +9,6 @@ import {
 import { gatherUtxos, getTxOutputs } from '../../test-util.js';
 import { FailedRequireError } from '../../../src/Errors.js';
 import artifact from '../../fixture/p2pkh.artifact.js';
-import { describe, expect, it } from 'vitest';
 
 describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('FullStackNetworkProvider', () => {
   const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://api.fullstack.cash/v5/' }));

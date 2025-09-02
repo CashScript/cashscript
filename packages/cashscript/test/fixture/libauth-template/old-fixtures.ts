@@ -5,7 +5,6 @@ import P2PKH from '../p2pkh.artifact.js';
 import HoldVault from '../hodl_vault.artifact.js';
 import { aliceAddress, alicePkh, alicePriv, alicePub, bobPkh, bobPriv, bobPub, oracle, oraclePub } from '../vars.js';
 import { WalletTemplate, hexToBin } from '@bitauth/libauth';
-import { expect } from 'vitest';
 
 const provider = new MockNetworkProvider();
 

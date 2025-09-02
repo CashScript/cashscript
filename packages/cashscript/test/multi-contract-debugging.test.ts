@@ -19,7 +19,6 @@ import bigintArtifact from './fixture/bigint.artifact.js';
 import { ARTIFACT_FUNCTION_NAME_COLLISION, ARTIFACT_NAME_COLLISION, ARTIFACT_CONTRACT_NAME_COLLISION, ARTIFACT_SAME_NAME_DIFFERENT_PATH } from './fixture/debugging/multi_contract_debugging_contracts.js';
 import { addressToLockScript } from '../src/utils.js';
 import SiblingIntrospectionArtifact from './fixture/SiblingIntrospection.artifact.js';
-import { describe, expect, it } from 'vitest';
 
 const bobSignatureTemplate = new SignatureTemplate(bobPriv);
 

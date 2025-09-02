@@ -9,7 +9,7 @@ import { getLargestUtxo, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/mecenas.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
-import { describe, expect, it, beforeAll } from 'vitest';
+
 
 // Mecenas has this.age check omitted for testing
 describe('Mecenas', () => {

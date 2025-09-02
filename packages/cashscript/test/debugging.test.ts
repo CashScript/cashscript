@@ -13,7 +13,6 @@ import {
   artifactTestZeroHandling,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
-import { describe, it, expect } from 'vitest';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {

@@ -1,4 +1,3 @@
-import { expect } from 'vitest';
 
 export const generateWcTransactionObjectFixture = {
   'broadcast': true,

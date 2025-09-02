@@ -1,6 +1,5 @@
 import { Contract, MockNetworkProvider, randomUtxo, SignatureTemplate, TransactionBuilder } from '../src/index.js';
 import { alicePkh, alicePriv, alicePub, bobPriv } from './fixture/vars.js';
-import { describe, expect, it } from 'vitest';
 
 const artifact = {
   contractName: 'P2PKH',

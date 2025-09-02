@@ -13,8 +13,6 @@ import p2pkhArtifact from '../../fixture/p2pkh.artifact.js';
 import twtArtifact from '../../fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
 import { getTxOutputs } from '../../test-util.js';
-import { describe, expect, it, beforeAll } from 'vitest';
-
 
 describe('Timelocks', () => {
   const provider = process.env.TESTS_USE_CHIPNET

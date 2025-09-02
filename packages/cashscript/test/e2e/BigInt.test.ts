@@ -9,7 +9,7 @@ import {
 import artifact from '../fixture/bigint.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 import { gatherUtxos } from '../test-util.js';
-import { describe, expect, it, beforeAll } from 'vitest';
+
 
 describe('BigInt', () => {
   const provider = process.env.TESTS_USE_CHIPNET

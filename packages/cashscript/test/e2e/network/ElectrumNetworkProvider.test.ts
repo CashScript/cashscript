@@ -1,6 +1,5 @@
 import { ElectrumNetworkProvider, Network } from '../../../src/index.js';
 import { ElectrumClient } from '@electrum-cash/network';
-import { describe, expect, it } from 'vitest';
 
 describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('ElectrumNetworkProvider', () => {
   // TODO: Test more of the API

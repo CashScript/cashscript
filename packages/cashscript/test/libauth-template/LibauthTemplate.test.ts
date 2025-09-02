@@ -1,6 +1,5 @@
 import { fixtures } from '../fixture/libauth-template/fixtures.js';
 import { fixtures as oldFixtures } from '../fixture/libauth-template/old-fixtures.js';
-import { describe, expect, it } from 'vitest';
 
 describe('Libauth Template generation tests (single-contract)', () => {
   it.each(fixtures)('should generate a valid libauth template for $name', (fixture) => {

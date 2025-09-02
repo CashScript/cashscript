@@ -4,7 +4,7 @@ import { FailedRequireError } from '../../src/Errors.js';
 import { createOpReturnOutput, randomUtxo } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
 import artifact from '../fixture/announcement.artifact.js';
-import { describe, expect, it, beforeAll } from 'vitest';
+
 
 describe('Announcement', () => {
   const provider = process.env.TESTS_USE_CHIPNET

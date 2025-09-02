@@ -10,7 +10,6 @@ import {
   alicePub,
   bobAddress,
 } from '../../fixture/vars.js';
-import { describe, expect, it, beforeAll, beforeEach } from 'vitest';
 
 describe.runIf(!process.env.TESTS_USE_CHIPNET)('MockNetworkProvider', () => {
   describe('when updateUtxoSet is true', () => {

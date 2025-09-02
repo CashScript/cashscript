@@ -19,7 +19,7 @@ import {
   createOpReturnOutput, randomUtxo,
 } from '../../src/utils.js';
 import artifact from '../fixture/p2pkh.artifact.js';
-import { describe, expect, it, beforeAll } from 'vitest';
+
 
 describe('P2PKH-no-tokens', () => {
   const provider = process.env.TESTS_USE_CHIPNET
