@@ -20,7 +20,6 @@ import { TransactionBuilder } from '../src/TransactionBuilder.js';
 import { gatherUtxos, getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
 
-
 describe('Transaction Builder', () => {
   const provider = process.env.TESTS_USE_CHIPNET
     ? new ElectrumNetworkProvider(Network.CHIPNET)
