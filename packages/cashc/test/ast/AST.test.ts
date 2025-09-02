@@ -18,7 +18,6 @@ import { readCashFiles } from '../test-utils.js';
 import { Ast } from '../../src/ast/AST.js';
 import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal.js';
 
-
 const VALID_CONTRACT_FILES = new URL('../valid-contract-files', import.meta.url);
 
 describe('AST Builder', () => {
