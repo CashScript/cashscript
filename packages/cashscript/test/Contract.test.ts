@@ -18,7 +18,6 @@ import mecenasArtifact from './fixture/mecenas.artifact.js';
 import deprecatedMecenasArtifact from './fixture/deprecated/mecenas-v0.6.0.json' with { type: 'json' };
 import boundedBytesArtifact from './fixture/bounded_bytes.artifact.js';
 
-
 describe('Contract', () => {
   describe('new', () => {
     it('should fail with incorrect constructor args', () => {
