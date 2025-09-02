@@ -8,7 +8,6 @@ import {
   encodeString,
   placeholder,
 } from '../src/index.js';
-import { describe, it, expect } from 'vitest';
 
 describe('data utils', () => {
   describe('encodeBool()', () => {

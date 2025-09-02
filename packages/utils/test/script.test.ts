@@ -11,7 +11,6 @@ import {
   scriptToBytecode,
 } from '../src/index.js';
 import { fixtures } from './script.fixture.js';
-import { describe, it, expect } from 'vitest';
 
 describe('script utils', () => {
   describe('scriptToAsm()', () => {

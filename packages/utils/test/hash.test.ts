@@ -6,7 +6,6 @@ import {
   sha256,
   sha512,
 } from '../src/index.js';
-import { describe, it, expect } from 'vitest';
 
 describe('hashing functions', () => {
   describe('sha512()', () => {
