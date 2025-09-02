@@ -4,7 +4,6 @@ import { compileString, parseCode } from '../../src/compiler.js';
 import { buildLineToAsmMap, bytecodeToAsm, bytecodeToScript } from '@cashscript/utils';
 import { hexToBin } from '@bitauth/libauth';
 
-
 describe('Location', () => {
   it('should retrieve correct text from location', () => {
     const code = fs.readFileSync(new URL('../valid-contract-files/simple_functions.cash', import.meta.url), { encoding: 'utf-8' });
