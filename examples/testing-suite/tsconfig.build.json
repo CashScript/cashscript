@@ -4,7 +4,7 @@
     "module": "esnext",
     "declaration": true,
     "lib": ["es2021", "dom"],
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     "sourceMap": true,
     "strict": true,
     "strictPropertyInitialization": false,
