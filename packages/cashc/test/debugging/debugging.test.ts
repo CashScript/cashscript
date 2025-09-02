@@ -7,7 +7,6 @@ import { URL } from 'url';
 import { compileFile } from '../../src/index.js';
 import { fixtures } from './fixtures.js';
 
-
 describe('Debugging', () => {
   fixtures.forEach((fixture) => {
     it(`should compile ${fixture.fn} to the same bytecode as ${fixture.fnWithLogs}`, () => {
