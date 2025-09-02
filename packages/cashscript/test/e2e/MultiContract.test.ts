@@ -25,6 +25,7 @@ import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
 import { getTxOutputs } from '../test-util.js';
 import SiblingIntrospectionArtifact from '../fixture/SiblingIntrospection.artifact.js';
 
+
 describe('Multi Contract', () => {
   const provider = process.env.TESTS_USE_CHIPNET
     ? new ElectrumNetworkProvider(Network.CHIPNET)

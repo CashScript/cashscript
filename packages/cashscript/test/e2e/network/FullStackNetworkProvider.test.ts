@@ -6,11 +6,11 @@ import {
   bobPriv,
   bobPub,
 } from '../../fixture/vars.js';
-import { describeOrSkip, gatherUtxos, getTxOutputs } from '../../test-util.js';
+import { gatherUtxos, getTxOutputs } from '../../test-util.js';
 import { FailedRequireError } from '../../../src/Errors.js';
 import artifact from '../../fixture/p2pkh.artifact.js';
 
-describeOrSkip(Boolean(process.env.TESTS_USE_CHIPNET), 'FullStackNetworkProvider', () => {
+describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('FullStackNetworkProvider', () => {
   const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://api.fullstack.cash/v5/' }));
 
   describe('get utxos using FullStackNetworkProvider', () => {

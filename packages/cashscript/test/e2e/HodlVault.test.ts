@@ -17,6 +17,7 @@ import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
+
 describe('HodlVault', () => {
   const provider = process.env.TESTS_USE_CHIPNET
     ? new ElectrumNetworkProvider(Network.CHIPNET)
