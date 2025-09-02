@@ -32,7 +32,7 @@ jobs:
         run: yarn
 
       - name: Run tests
-        run: yarn test -- -- --coverage --coverageProvider=v8
+        run: yarn test -- -- --coverage --coverage.provider=v8
 
       - name: Run linter
         run: yarn lint
