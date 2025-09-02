@@ -4,13 +4,13 @@ sidebar_label: CashTokens
 ---
 
 CashTokens are native tokens on Bitcoin Cash, meaning that they are validated by all full nodes on the network and their transaction rules checked by each miner when constructing new blocks. CashTokens added fungible and non-fungible token primitives.
-CashTokens was first proposed in February of 2022 and activated on Bitcoin Cash mainchain in May of 2023.
+CashTokens was first proposed in February of 2022 and activated on Bitcoin Cash mainnet in May of 2023.
 
 :::tip
 You can read more about CashTokens on [cashtokens.org](https://cashtokens.org/) which has the full specification as well as a list of [usage examples](https://cashtokens.org/docs/spec/examples).
 :::
 
-## CashTokens Utxo data
+## CashTokens UTXO data
 
 To understand CashTokens it is helpful to start with the layout of the UTXO data. In the `networkProvider` data from the SDK, the `token` property contains the new CashTokens fields:
 
@@ -31,7 +31,7 @@ interface TokenDetails {
   };
 }
 ```
-### Fungible Tokens 
+### Fungible Tokens
 
 The `amount` field is the amount of fungible tokens on the UTXO, the `category` is the "tokenId" for the token on the UTXO.
 The maximum size for a fungible token `amount` is the max signed 64-bit integer or `9223372036854775807`.
@@ -61,14 +61,32 @@ and their equivalent for outputs:
 - **`int tx.outputs[i].tokenAmount`** - Amount of fungible tokens of a specific output.
 
 ## CashTokens Gotchas
-There are two important "gotchas" to be aware of when developing with CashTokens in smart contracts for the first time
+There are a few important "gotchas" to be aware of when developing with CashTokens in smart contracts for the first time.
 
 #### 1) tokenCategory contains the nft-capability
 ```solidity
 bytes tx.inputs[i].tokenCategory
 ```
 
-When accessing the `tokenCategory` through introspection the result returns `0x` when that specific item does not contain tokens. If the item does have tokens it returns the `bytes32 tokenCategory`. When the item contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
+When accessing the `tokenCategory` through introspection the result returns `0x` (empty byte string) when that specific item does not contain tokens. If the item does have tokens it returns the `bytes32 tokenCategory`. When the item contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
+
+If you want to check for an NFT using introspection, you have either split the `tokenCategory` from the `capability` or check the concatenation of the `tokenCategory` and `capability`.
+
+```solidity
+// Constructor parameters: providedCategory
+
+// Extract the separate tokenCategory and capability
+bytes32 tokenCategory, bytes capability = tx.inputs[0].tokenCategory.split(32);
+
+// Check that the NFT is the correct category and has a "minting" capability
+require(providedCategory == tokenCategory);
+require(capability == 0x02);
+
+// Alternatively:
+
+// Check by concatenating the providedCategory and capability
+require(tx.inputs[0].tokenCategory == providedCategory + 0x02);
+```
 
 #### 2) tokenCategory encoding
 
@@ -79,7 +97,7 @@ The `tokenCategory` introspection variable returns the tokenCategory in the orig
 const contract = new Contract(artifact, [reverseHex(tokenId)], { provider })
 ```
 
-generally not recommended to do the byte-reversal in script 
+It is not recommended to do the byte-reversal in script, because this adds extra unnecessary overhead to the script.
 ```solidity
   // NOT THIS
   require(tx.inputs[0].tokenCategory == providedTokenId.reverse());
@@ -108,15 +126,19 @@ Contrast this with the scenario where a UTXO holds both an empty NFT and fungibl
   require(tx.inputs[0].tokenCategory == providedTokenId);
 ```
 
-Both scenarios look the same from the point of the smart contract.
+The NFT introspection fields (`nftCommitment` and `tokenCategory`) of these UTXOs look the same to the smart contract in both of these scenarios.
 
-This means that a covenant UTXO holding both a minting NFT and the fungible token supply for the same token `category` cannot prevent that empty nfts are created by users when they are allowed to create a fungible token output. The possibility of these "junk" empty NFTs should be taken into account so they do not present any security problems for the contract system.  
+This means that a covenant UTXO holding both a minting NFT and the fungible token supply for the same token `category` cannot prevent that empty nfts are created by users when they are allowed to create a fungible token output. The possibility of these "junk" empty NFTs should be taken into account so they do not present any security problems for the contract system.
+
+:::tip
+The easiest way to prevent issues with "junk" empty NFTs is to check that only NFTs with non-empty commitments can be interacted with in the contract system.
+:::
 
 #### 4) Explicit vs implicit burning
 
-CashTokens can be burned explicitly by sending them to an opreturn output, which is provably unspendable. CashTokens can also be burned implicitly, by including them in the inputs but not the outputs of a transaction. Always be mindful when adding token-carrying inputs to not forget to add the tokens in the outputs, otherwise they will be considered as an implicit burn.
+CashTokens can be burned explicitly by sending them to an OP_RETURN output, which is provably unspendable. CashTokens can also be burned implicitly, by including them in the inputs but not the outputs of a transaction. Always be mindful when adding token-carrying inputs to not forget to add the tokens in the outputs, otherwise they will be considered as an implicit burn.
 
-:::tip
+:::note
 Signing for CashTokens inputs is designed in such a way that pre-CashTokens wallets - which only know how to send and receive Bitcoin Cash - cannot spend CashTokens inputs and thus can never accidentally burn CashTokens this way.
 :::
 
@@ -134,7 +156,7 @@ CashTokens Creation is illustrated very nicely by transaction diagram in the spe
 
 Although not directly related to smart contracts, BCMR metadata is important for user-facing CashTokens. This way users can see your token name, icon, description and any relevant project links directly in their wallet. Many CashTokens wallets use the [Paytaca BCMR indexer](https://bcmr.paytaca.com/) to fetch BCMR metadata info about CashTokens.
 
-The Paytaca BCMR indexer listens for on-chain [authchain](https://github.com/bitjson/chip-bcmr?tab=readme-ov-file#zeroth-descendant-transaction-chains) transactions which publish metadata with an opreturn publication output. These type of metadata updates are self-published on-chain identity claims. The zero-th output chain since the token genesis is the authchain. The UTXO at the "head" of this chain holds the authority to update the token's metadata.
+The Paytaca BCMR indexer listens for on-chain [authchain](https://github.com/bitjson/chip-bcmr?tab=readme-ov-file#zeroth-descendant-transaction-chains) transactions which publish metadata with an OP_RETURN publication output. These type of metadata updates are self-published on-chain identity claims. The zero-th output chain since the token genesis is the authchain. The UTXO at the "head" of this chain holds the authority to update the token's metadata.
 
 :::tip
 For easy creation of CashTokens with BCMR metadata there is the Paytaca [CashTokens Studio](https://cashtokens.studio/) or to programmatically publish on-chain BCMR authchain updates there is the [AuthUpdate](https://github.com/mr-zwets/AuthUpdate) JS program.
