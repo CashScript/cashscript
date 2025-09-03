@@ -56,6 +56,7 @@ module.exports = {
       label: 'Guides',
       items: [
         'guides/covenants',
+        'guides/lifecycle',
         'guides/cashtokens',
         'guides/infrastructure',
         'guides/walletconnect',
