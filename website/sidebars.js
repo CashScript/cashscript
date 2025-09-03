@@ -60,7 +60,8 @@ module.exports = {
         'guides/infrastructure',
         'guides/walletconnect',
         'guides/debugging',
-        'guides/optimization'
+        'guides/optimization',
+        'guides/adversarial',
       ],
     },
     {
