@@ -22,7 +22,7 @@ export default class MockNetworkProvider implements NetworkProvider {
 
   constructor(options?: Partial<MockNetworkProviderOptions>) {
     this.options = { updateUtxoSet: true, ...options };
-    this.vmTarget = this.options.vmTarget ?? "BCH_2025_05";
+    this.vmTarget = this.options.vmTarget ?? 'BCH_2025_05';
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {

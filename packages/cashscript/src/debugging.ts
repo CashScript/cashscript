@@ -7,7 +7,7 @@ import { getBitauthUri } from './LibauthTemplate.js';
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
 
-const createVirualMachine = (vmTarget: AuthenticationVirtualMachineIdentifier) => {
+const createVirtualMachine = (vmTarget: AuthenticationVirtualMachineIdentifier): VM => {
   switch (vmTarget) {
     case 'BCH_2023_05':
       return createVirtualMachineBch2023();
@@ -16,7 +16,7 @@ const createVirualMachine = (vmTarget: AuthenticationVirtualMachineIdentifier) =
     case 'BCH_2026_05':
       return createVirtualMachineBch2026();
     case 'BCH_SPEC':
-      return createVirtualMachineBchSpec();
+      return createVirtualMachineBchSpec() as unknown as VM;
     default:
       throw new Error(`Debugging is not supported for the ${vmTarget} virtual machine.`);
   }
@@ -186,7 +186,7 @@ type CreateProgramResult = { vm: VM, program: Program };
 // internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: WalletTemplate, unlockingScriptId: string, scenarioId: string): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirualMachine(template.supported[0]);
+  const vm = createVirtualMachine(template.supported[0]);
   const compiler = createCompiler(configuration);
 
   if (!template.scripts[unlockingScriptId]) {
