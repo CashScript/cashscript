@@ -236,6 +236,8 @@ const applyStackItemTransformations = (
     instructions: transformationsAuthenticationInstructions,
     signedMessages: [],
     program: { ...debugStep.program },
+    functionTable: debugStep.functionTable ?? {},
+    functionCount: debugStep.functionCount ?? 0,
   };
 
   const vm = createVirtualMachineBch2025();

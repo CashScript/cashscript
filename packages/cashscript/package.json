@@ -45,7 +45,7 @@
     "test": "NODE_OPTIONS='--experimental-vm-modules --no-warnings' jest"
   },
   "dependencies": {
-    "@bitauth/libauth": "^3.1.0-next.2",
+    "@bitauth/libauth": "^3.1.0-next.8",
     "@cashscript/utils": "^0.11.5",
     "@electrum-cash/network": "^4.1.3",
     "@mr-zwets/bchn-api-wrapper": "^1.0.1",
