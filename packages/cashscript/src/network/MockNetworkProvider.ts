@@ -1,12 +1,15 @@
-import { binToHex, decodeTransactionUnsafe, hexToBin, isHex } from '@bitauth/libauth';
+import { AuthenticationVirtualMachineIdentifier, binToHex, decodeTransactionUnsafe, hexToBin, isHex } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails } from '../utils.js';
 
-interface MockNetworkProviderOptions {
+export interface MockNetworkProviderOptions {
   updateUtxoSet: boolean;
+  vmTarget?: VmTarget;
 }
+
+export type VmTarget = AuthenticationVirtualMachineIdentifier;
 
 export default class MockNetworkProvider implements NetworkProvider {
   // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
@@ -15,9 +18,11 @@ export default class MockNetworkProvider implements NetworkProvider {
   public network: Network = Network.MOCKNET;
   public blockHeight: number = 133700;
   public options: MockNetworkProviderOptions;
+  public vmTarget: VmTarget;
 
   constructor(options?: Partial<MockNetworkProviderOptions>) {
     this.options = { updateUtxoSet: true, ...options };
+    this.vmTarget = this.options.vmTarget ?? "BCH_2025_05";
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {

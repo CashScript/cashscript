@@ -18,6 +18,7 @@ export {
   ElectrumNetworkProvider,
   FullStackNetworkProvider,
   MockNetworkProvider,
+  VmTarget,
 } from './network/index.js';
 export { randomUtxo, randomToken, randomNFT } from './utils.js';
 export * from './walletconnect-utils.js';

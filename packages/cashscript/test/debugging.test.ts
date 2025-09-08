@@ -1,4 +1,4 @@
-import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
+import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
@@ -648,5 +648,30 @@ describe('Debugging tests', () => {
 
       expect(() => transactionBuilder.debug()).toThrow(FailedTransactionError);
     });
+  });
+
+  describe('VmTargets', () => {
+    for (const vmTarget of ['BCH_2020_05', undefined, 'BCH_2023_05', 'BCH_2025_05', 'BCH_2026_05', 'BCH_SPEC'] as VmTarget[]) {
+      it(`should execute and log correctly with vmTarget ${vmTarget}`, async () => {
+        const provider = new MockNetworkProvider({ vmTarget });
+        const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
+        const contractUtxo = randomUtxo();
+        provider.addUtxo(contractTestLogs.address, contractUtxo);
+
+        const transaction = new TransactionBuilder({ provider })
+          .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
+          .addOutput({ to: contractTestLogs.address, amount: 10000n });
+
+        if (vmTarget === 'BCH_2020_05') {
+          expect(() => transaction.debug()).toThrow('Debugging is not supported for the BCH_2020_05 virtual machine.');
+          return;
+        }
+
+        expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? 'BCH_2025_05');
+
+        const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+        expect(transaction).toLog(expectedLog);
+      });
+    }
   });
 });

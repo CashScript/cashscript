@@ -1,4 +1,4 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2025, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, AuthenticationVirtualMachineIdentifier, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
@@ -6,6 +6,21 @@ import { getBitauthUri } from './LibauthTemplate.js';
 
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
+
+const createVirualMachine = (vmTarget: AuthenticationVirtualMachineIdentifier) => {
+  switch (vmTarget) {
+    case 'BCH_2023_05':
+      return createVirtualMachineBch2023();
+    case 'BCH_2025_05':
+      return createVirtualMachineBch2025();
+    case 'BCH_2026_05':
+      return createVirtualMachineBch2026();
+    case 'BCH_SPEC':
+      return createVirtualMachineBchSpec();
+    default:
+      throw new Error(`Debugging is not supported for the ${vmTarget} virtual machine.`);
+  }
+};
 
 // debugs the template, optionally logging the execution data
 export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
@@ -61,7 +76,7 @@ const debugSingleScenario = (
 
     for (const log of executedLogs) {
       const inputIndex = extractInputIndexFromScenario(scenarioId);
-      logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex);
+      logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex, vm);
     }
   }
 
@@ -171,7 +186,7 @@ type CreateProgramResult = { vm: VM, program: Program };
 // internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: WalletTemplate, unlockingScriptId: string, scenarioId: string): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachineBch2025();
+  const vm = createVirualMachine(template.supported[0]);
   const compiler = createCompiler(configuration);
 
   if (!template.scripts[unlockingScriptId]) {
@@ -196,7 +211,7 @@ const createProgram = (template: WalletTemplate, unlockingScriptId: string, scen
     throw new FailedTransactionError(scenarioGeneration.scenario, getBitauthUri(template));
   }
 
-  return { vm, program: scenarioGeneration.scenario.program };
+  return { vm: vm as VM, program: scenarioGeneration.scenario.program };
 };
 
 const logConsoleLogStatement = (
@@ -204,13 +219,14 @@ const logConsoleLogStatement = (
   debugSteps: AuthenticationProgramStateCommon[],
   artifact: Artifact,
   inputIndex: number,
+  vm: VM,
 ): void => {
   let line = `${artifact.contractName}.cash:${log.line}`;
   const decodedData = log.data.map((element) => {
     if (typeof element === 'string') return element;
 
     const debugStep = debugSteps.find((step) => step.ip === element.ip)!;
-    const transformedDebugStep = applyStackItemTransformations(element, debugStep);
+    const transformedDebugStep = applyStackItemTransformations(element, debugStep, vm);
     return decodeStackItem(element, transformedDebugStep.stack);
   });
   console.log(`[Input #${inputIndex}] ${line} ${decodedData.join(' ')}`);
@@ -219,6 +235,7 @@ const logConsoleLogStatement = (
 const applyStackItemTransformations = (
   element: StackItem,
   debugStep: AuthenticationProgramStateCommon,
+  vm: VM,
 ): AuthenticationProgramStateCommon => {
   if (!element.transformations) return debugStep;
 
@@ -240,7 +257,6 @@ const applyStackItemTransformations = (
     functionCount: debugStep.functionCount ?? 0,
   };
 
-  const vm = createVirtualMachineBch2025();
   const transformationsEndState = vm.stateEvaluate(transformationsStartState);
 
   return transformationsEndState;
