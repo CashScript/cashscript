@@ -22,7 +22,6 @@ import {
   addressToLockScript, createInputScript, createSighashPreimage, scriptToAddress,
 } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
-import { ElectrumNetworkProvider } from './network/index.js';
 import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
 import semver from 'semver';
 
@@ -57,10 +56,10 @@ export class Contract<
   constructor(
     public artifact: TArtifact,
     constructorArgs: TResolved['constructorInputs'],
-    private options?: ContractOptions,
+    private options: ContractOptions,
   ) {
-    this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
-    this.addressType = this.options?.addressType ?? 'p2sh32';
+    this.provider = this.options.provider;
+    this.addressType = this.options.addressType ?? 'p2sh32';
 
     const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName', 'compiler'];
     if (!expectedProperties.every((property) => property in artifact)) {

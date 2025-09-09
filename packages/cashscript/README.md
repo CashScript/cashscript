@@ -37,7 +37,7 @@ Using the CashScript SDK, you can import contract artifact files, create new ins
   const provider = new ElectrumNetworkProvider('mainnet');
 
   // Create a new P2PKH contract with constructor arguments: { pkh: pkh }
-  const contract = new Contract(P2PKH, [pkh], provider);
+  const contract = new Contract(P2PKH, [pkh], { provider });
 
   // Get contract balance & output address + balance
   console.log('contract address:', contract.address);
