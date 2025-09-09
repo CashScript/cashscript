@@ -30,8 +30,7 @@ import {
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
-import { getBitauthUri } from './LibauthTemplate.js';
-import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import { debugLibauthTemplate, getLibauthTemplates, getBitauthUri } from './advanced/LibauthTemplate.js';
 import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
 import semver from 'semver';
 import { WcTransactionObject } from './walletconnect-utils.js';

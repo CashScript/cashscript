@@ -1,7 +1,11 @@
 import {
+  binToBase64,
   binToHex,
   decodeCashAddress,
+  hexToBin,
+  isHex,
   TransactionBch,
+  utf8ToBin,
   WalletTemplate,
   WalletTemplateEntity,
   WalletTemplateScenario,
@@ -16,34 +20,32 @@ import {
 } from '@bitauth/libauth';
 import {
   AbiFunction,
+  AbiInput,
   Artifact,
+  bytecodeToScript,
+  formatBitAuthScript,
 } from '@cashscript/utils';
 import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from '../Argument.js';
 import { Contract } from '../Contract.js';
 import { DebugResults, debugTemplate } from '../debugging.js';
 import {
+  HashType,
   isP2PKHUnlocker,
   isStandardUnlockableUtxo,
+  isUnlockableUtxo,
+  isUtxoP2PKH,
+  LibauthTokenDetails,
+  Output,
+  SignatureAlgorithm,
   StandardUnlockableUtxo,
+  TokenDetails,
+  UnlockableUtxo,
   Utxo,
 } from '../interfaces.js';
-import {
-  addHexPrefixExceptEmpty,
-  formatBytecodeForDebugging,
-  formatParametersForDebugging,
-  generateTemplateScenarioBytecode,
-  generateTemplateScenarioKeys,
-  generateTemplateScenarioParametersFunctionIndex,
-  generateTemplateScenarioParametersValues,
-  generateTemplateScenarioTransactionOutputLockingBytecode,
-  getHashTypeName,
-  getSignatureAlgorithmName,
-  serialiseTokenDetails,
-} from '../LibauthTemplate.js';
 import SignatureTemplate from '../SignatureTemplate.js';
-import { Transaction } from '../Transaction.js';
-import { addressToLockScript } from '../utils.js';
+import { addressToLockScript, extendedStringify, zip } from '../utils.js';
 import { TransactionBuilder } from '../TransactionBuilder.js';
+import { deflate } from 'pako';
 
 
 /**
@@ -264,7 +266,7 @@ const generateTemplateUnlockScript = (
 export const generateTemplateScenarios = (
   contract: Contract,
   libauthTransaction: TransactionBch,
-  csTransaction: Transaction,
+  csTransaction: TransactionType,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   inputIndex: number,
@@ -295,6 +297,9 @@ export const generateTemplateScenarios = (
     },
   };
 
+  // TODO: understand exactly what this does, and refactor
+  // Looks similar to code in generateTemplateScenarioParametersFunctionIndex
+  // Looks like we just want to use that function and spread in the scenarios data bytecode field
   if (artifact.abi.length > 1) {
     const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
     scenarios![scenarioIdentifier].data!.bytecode!.function_index = functionIndex.toString();
@@ -306,7 +311,7 @@ export const generateTemplateScenarios = (
 const generateTemplateScenarioTransaction = (
   contract: Contract,
   libauthTransaction: TransactionBch,
-  csTransaction: Transaction,
+  csTransaction: TransactionType,
   slotIndex: number,
 ): WalletTemplateScenario['transaction'] => {
   const inputs = libauthTransaction.inputs.map((input, inputIndex) => {
@@ -338,7 +343,7 @@ const generateTemplateScenarioTransaction = (
 };
 
 const generateTemplateScenarioSourceOutputs = (
-  csTransaction: Transaction,
+  csTransaction: TransactionType,
   slotIndex: number,
 ): Array<WalletTemplateScenarioOutput<true>> => {
   return csTransaction.inputs.map((input, inputIndex) => {
@@ -350,15 +355,7 @@ const generateTemplateScenarioSourceOutputs = (
   });
 };
 
-
-/**
- * Creates a transaction object from a TransactionBuilder instance
- *
- * @param txn - The TransactionBuilder instance to convert
- * @returns A transaction object containing inputs, outputs, locktime and version
- */
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const createCSTransaction = (txn: TransactionBuilder) => {
+const createTransactionTypeFromTransactionBuilder = (txn: TransactionBuilder): TransactionType => {
   const csTransaction = {
     inputs: txn.inputs,
     locktime: txn.locktime,
@@ -369,6 +366,13 @@ const createCSTransaction = (txn: TransactionBuilder) => {
   return csTransaction;
 };
 
+interface TransactionType {
+  inputs: UnlockableUtxo[];
+  locktime: number;
+  outputs: Output[];
+  version: number;
+}
+
 export const getLibauthTemplates = (
   txn: TransactionBuilder,
 ): WalletTemplate => {
@@ -377,7 +381,7 @@ export const getLibauthTemplates = (
   }
 
   const libauthTransaction = txn.buildLibauthTransaction();
-  const csTransaction = createCSTransaction(txn);
+  const csTransaction = createTransactionTypeFromTransactionBuilder(txn);
 
   const baseTemplate: WalletTemplate = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
@@ -435,7 +439,7 @@ export const getLibauthTemplates = (
         generateTemplateScenarios(
           contract,
           libauthTransaction,
-          csTransaction as any,
+          csTransaction,
           abiFunction,
           encodedArgs,
           inputIndex,
@@ -617,3 +621,185 @@ const getLockScriptName = (contract: Contract): string => {
 const getUnlockScriptName = (contract: Contract, abiFunction: AbiFunction, inputIndex: number): string => {
   return `${contract.artifact.contractName}_${abiFunction.name}_input${inputIndex}_unlock`;
 };
+
+export const getBitauthUri = (template: WalletTemplate): string => {
+  const base64toBase64Url = (base64: string): string => base64.replace(/\+/g, '-').replace(/\//g, '_');
+  const payload = base64toBase64Url(binToBase64(deflate(utf8ToBin(extendedStringify(template)))));
+  return `https://ide.bitauth.com/import-template/${payload}`;
+};
+
+export const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
+  const signatureAlgorithmNames = {
+    [SignatureAlgorithm.SCHNORR]: 'schnorr_signature',
+    [SignatureAlgorithm.ECDSA]: 'ecdsa_signature',
+  };
+
+  return signatureAlgorithmNames[signatureAlgorithm];
+};
+
+export const getHashTypeName = (hashType: HashType): string => {
+  const hashtypeNames = {
+    [HashType.SIGHASH_ALL]: 'all_outputs',
+    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
+    [HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
+    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
+    [HashType.SIGHASH_SINGLE]: 'corresponding_output',
+    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
+    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
+    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
+    [HashType.SIGHASH_NONE]: 'no_outputs',
+    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
+    [HashType.SIGHASH_NONE | HashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
+    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
+  };
+
+  return hashtypeNames[hashType];
+};
+
+export const addHexPrefixExceptEmpty = (value: string): string => {
+  return value.length > 0 ? `0x${value}` : '';
+};
+
+
+export const formatParametersForDebugging = (types: readonly AbiInput[], args: EncodedFunctionArgument[]): string => {
+  if (types.length === 0) return '// none';
+
+  // We reverse the arguments because the order of the arguments in the bytecode is reversed
+  const typesAndArguments = zip(types, args).reverse();
+
+  return typesAndArguments.map(([input, arg]) => {
+    if (arg instanceof SignatureTemplate) {
+      const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
+      const hashtypeName = getHashTypeName(arg.getHashType(false));
+      return `<${input.name}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
+    }
+
+    const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;
+
+    // we output these values as pushdata, comment will contain the type and the value of the variable
+    // e.g. <timeout> // int = <0xa08601>
+    return `<${input.name}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
+  }).join('\n');
+};
+
+export const formatBytecodeForDebugging = (artifact: Artifact): string => {
+  if (!artifact.debug) {
+    return artifact.bytecode
+      .split(' ')
+      .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
+      .join('\n');
+  }
+
+  return formatBitAuthScript(
+    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
+    artifact.debug.sourceMap,
+    artifact.source,
+  );
+};
+
+export const serialiseTokenDetails = (
+  token?: TokenDetails | LibauthTokenDetails,
+): LibauthTemplateTokenDetails | undefined => {
+  if (!token) return undefined;
+
+  return {
+    amount: token.amount.toString(),
+    category: token.category instanceof Uint8Array ? binToHex(token.category) : token.category,
+    nft: token.nft ? {
+      capability: token.nft.capability,
+      commitment: token.nft.commitment instanceof Uint8Array ? binToHex(token.nft.commitment) : token.nft.commitment,
+    } : undefined,
+  };
+};
+
+export const generateTemplateScenarioParametersValues = (
+  types: readonly AbiInput[],
+  encodedArgs: EncodedFunctionArgument[],
+): Record<string, string> => {
+  const typesAndArguments = zip(types, encodedArgs);
+
+  const entries = typesAndArguments
+    // SignatureTemplates are handled by the 'keys' object in the scenario
+    .filter(([, arg]) => !(arg instanceof SignatureTemplate))
+    .map(([input, arg]) => {
+      const encodedArgumentHex = binToHex(arg as Uint8Array);
+      const prefixedEncodedArgument = addHexPrefixExceptEmpty(encodedArgumentHex);
+      return [input.name, prefixedEncodedArgument] as const;
+    });
+
+  return Object.fromEntries(entries);
+};
+
+export const generateTemplateScenarioKeys = (
+  types: readonly AbiInput[],
+  encodedArgs: EncodedFunctionArgument[],
+): Record<string, string> => {
+  const typesAndArguments = zip(types, encodedArgs);
+
+  const entries = typesAndArguments
+    .filter(([, arg]) => arg instanceof SignatureTemplate)
+    .map(([input, arg]) => ([input.name, binToHex((arg as SignatureTemplate).privateKey)] as const));
+
+  return Object.fromEntries(entries);
+};
+
+// Used for generating the locking / unlocking bytecode for source outputs and inputs
+export const generateTemplateScenarioBytecode = (
+  input: Utxo, inputIndex: number, p2pkhScriptNameTemplate: string, insertSlot?: boolean,
+): WalletTemplateScenarioBytecode | ['slot'] => {
+  if (insertSlot) return ['slot'];
+
+  const p2pkhScriptName = `${p2pkhScriptNameTemplate}_${inputIndex}`;
+  const placeholderKeyName = `placeholder_key_${inputIndex}`;
+
+  // This is for P2PKH inputs in the old transaction builder (TODO: remove when we remove old transaction builder)
+  if (isUtxoP2PKH(input)) {
+    return {
+      script: p2pkhScriptName,
+      overrides: {
+        keys: {
+          privateKeys: {
+            [placeholderKeyName]: binToHex(input.template.privateKey),
+          },
+        },
+      },
+    };
+  }
+
+  if (isUnlockableUtxo(input) && isStandardUnlockableUtxo(input)) {
+    return generateUnlockingScriptParams(input, p2pkhScriptNameTemplate, inputIndex);
+  }
+
+  // 'slot' means that we are currently evaluating this specific input,
+  // {} means that it is the same script type, but not being evaluated
+  return {};
+};
+
+export const generateTemplateScenarioTransactionOutputLockingBytecode = (
+  csOutput: Output,
+  contract: Contract,
+): string | {} => {
+  if (csOutput.to instanceof Uint8Array) return binToHex(csOutput.to);
+  if ([contract.address, contract.tokenAddress].includes(csOutput.to)) return {};
+  return binToHex(addressToLockScript(csOutput.to));
+};
+
+export const generateTemplateScenarioParametersFunctionIndex = (
+  abiFunction: AbiFunction,
+  abi: readonly AbiFunction[],
+): Record<string, string> => {
+  const functionIndex = abi.length > 1
+    ? abi.findIndex((func) => func.name === abiFunction.name)
+    : undefined;
+
+  return functionIndex !== undefined ? { function_index: functionIndex.toString() } : {};
+};
+
+export interface LibauthTemplateTokenDetails {
+  amount: string;
+  category: string;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: string;
+  };
+}
