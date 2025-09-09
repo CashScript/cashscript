@@ -1,4 +1,5 @@
 import {
+  AuthenticationProgramStateResourceLimits,
   binToHex,
   decodeTransaction,
   decodeTransactionUnsafe,
@@ -18,6 +19,7 @@ import {
   isStandardUnlockableUtxo,
   StandardUnlockableUtxo,
   isP2PKHUnlocker,
+  isContractUnlocker,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -41,6 +43,7 @@ export interface TransactionBuilderOptions {
 }
 
 const DEFAULT_SEQUENCE = 0xfffffffe;
+type VmResourceUsage = AuthenticationProgramStateResourceLimits['metrics'] | undefined;
 
 export class TransactionBuilder {
   public provider: NetworkProvider;
@@ -177,6 +180,45 @@ export class TransactionBuilder {
     }
 
     return debugLibauthTemplate(this.getLibauthTemplate(), this);
+  }
+
+  vmResourceUsage(verbose: boolean = false): Array<VmResourceUsage> {
+    const results = this.debug();
+    const result = [] as Array<VmResourceUsage>;
+    const tableData: Array<Record<string, any>> = [];
+
+    const resultKeys = Object.keys(results);
+    for (const [index, input] of this.inputs.entries()) {
+      const key = resultKeys.find((k) => k.includes(`input${index}`));
+      if (key && isContractUnlocker(input.unlocker)) {
+        const metrics = results[key].at(-1)!.metrics!;
+
+        result.push(metrics);
+        tableData.push({
+          "Contract - Function": `${input.unlocker.contract.name} - ${input.unlocker.abiFunction.name}`,
+          Ops: metrics.evaluatedInstructionCount,
+          OpCost: `${metrics.operationCost}/${metrics.maximumOperationCost}`,
+          SigChecks: `${metrics.signatureCheckCount}/${metrics.maximumSignatureCheckCount}`,
+          Hashes: `${metrics.hashDigestIterations}/${metrics.maximumHashDigestIterations}`,
+        });
+      } else {
+        result.push(undefined);
+        tableData.push({
+          "Contract - Function": isP2PKHUnlocker(input.unlocker) ? 'P2PKH' : 'Custom',
+          Ops: 0,
+          OpCost: '',
+          SigChecks: '',
+          Hashes: '',
+        });
+      }
+    }
+
+    if (verbose) {
+      console.log('VM Resource usage by inputs:');
+      console.table(tableData);
+    }
+
+    return result;
   }
 
   bitauthUri(): string {

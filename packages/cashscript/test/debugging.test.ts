@@ -638,3 +638,37 @@ describe('Debugging tests', () => {
     });
   });
 });
+
+describe('VM Resources', () => {
+  it('Should output VM resource usage', async () => {
+    const provider = new MockNetworkProvider();
+
+    const contractSingleFunction = new Contract({ ...artifactTestSingleFunction, contractName: 'SingleFunction' }, [], { provider });
+    const contractZeroHandling = new Contract({ ...artifactTestZeroHandling, contractName: 'ZeroHandling' }, [0n], { provider });
+
+    provider.addUtxo(contractSingleFunction.address, randomUtxo());
+    provider.addUtxo(contractZeroHandling.address, randomUtxo());
+
+    const tx = new TransactionBuilder({ provider })
+      .addInputs(await contractSingleFunction.getUtxos(), contractSingleFunction.unlock.test_require_single_function())
+      .addInputs(await contractZeroHandling.getUtxos(), contractZeroHandling.unlock.test_zero_handling(0n))
+      .addInput((await provider.getUtxos(aliceAddress))[0], new SignatureTemplate(alicePriv).unlockP2PKH())
+      .addOutput({ to: aliceAddress, amount: 1000n });
+
+    console.log = jest.fn();
+    console.table = jest.fn();
+
+    const vmUsage = tx.vmResourceUsage();
+    expect(console.log).not.toHaveBeenCalled();
+    expect(console.table).not.toHaveBeenCalled();
+
+    tx.vmResourceUsage(true);
+    expect(console.log).toHaveBeenCalledWith('VM Resource usage by inputs:');
+    expect(console.table).toHaveBeenCalled();
+
+    jest.restoreAllMocks();
+
+    expect(vmUsage[0]?.hashDigestIterations).toBeGreaterThan(0);
+    expect(vmUsage[2]?.hashDigestIterations).toBeUndefined();
+  });
+});
