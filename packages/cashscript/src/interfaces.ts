@@ -158,7 +158,7 @@ export interface TransactionDetails extends Transaction {
 }
 
 export interface ContractOptions {
-  provider?: NetworkProvider,
+  provider: NetworkProvider,
   addressType?: AddressType,
 }
 

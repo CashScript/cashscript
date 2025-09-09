@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { Artifact, Contract, SignatureTemplate, Transaction, Unlocker } from 'cashscript';
+import { Artifact, Contract, MockNetworkProvider, SignatureTemplate, Transaction, Unlocker } from 'cashscript';
 import p2pkhArtifact from '../fixture/p2pkh.artifact';
 import p2pkhArtifactJsonNotConst from '../fixture/p2pkh.json' with { type: 'json' };
 import announcementArtifact from '../fixture/announcement.artifact';
@@ -32,41 +32,48 @@ interface ManualArtifactType extends Artifact {
   ]
 }
 
+// Create a MockNetworkProvider for the tests
+const provider = new MockNetworkProvider();
+
 // describe('P2PKH contract | single constructor input | single function (2 args)')
 {
   // describe('Constructor arguments')
   {
     // it('should not give type errors when using correct constructor inputs')
-    new Contract(p2pkhArtifact, [alicePkh]);
-    new Contract(p2pkhArtifact, [binToHex(alicePkh)]);
+    new Contract(p2pkhArtifact, [alicePkh], { provider });
+    new Contract(p2pkhArtifact, [binToHex(alicePkh)], { provider });
 
     // it('should give type errors when using empty constructor inputs')
     // @ts-expect-error
-    new Contract(p2pkhArtifact, []);
+    new Contract(p2pkhArtifact, [], { provider });
 
     // it('should give type errors when using incorrect constructor input type')
     // @ts-expect-error
-    new Contract(p2pkhArtifact, [1000n]);
+    new Contract(p2pkhArtifact, [1000n], { provider });
 
     // it('should give type errors when using incorrect constructor input length')
     // @ts-expect-error
-    new Contract(p2pkhArtifact, [alicePkh, 1000n]);
+    new Contract(p2pkhArtifact, [alicePkh, 1000n], { provider });
 
     // it('should not perform type checking when cast to any')
-    new Contract(p2pkhArtifact as any, [alicePkh, 1000n]);
+    new Contract(p2pkhArtifact as any, [alicePkh, 1000n], { provider });
 
     // it('should not perform type checking when cannot infer type')
     // Note: would be very nice if it *could* infer the type from static json
-    new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n]);
+    new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n], { provider });
 
     // it('should perform type checking when manually specifying a type
     // @ts-expect-error
-    new Contract<ManualArtifactType>(p2pkhArtifactJsonNotConst as any, [alicePkh, 1000n]);
+    new Contract<ManualArtifactType>(p2pkhArtifactJsonNotConst as any, [alicePkh, 1000n], { provider });
+
+    // it('requires a provider to be passed')
+    // @ts-expect-error
+    new Contract(p2pkhArtifact, [alicePkh]);
   }
 
   // describe('Contract unlockers')
   {
-    const contract = new Contract(p2pkhArtifact, [alicePkh]);
+    const contract = new Contract(p2pkhArtifact, [alicePkh], { provider });
 
     // it('should not give type errors when using correct function inputs')
     contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
@@ -86,14 +93,14 @@ interface ManualArtifactType extends Artifact {
     contract.unlock.spend(alicePub);
 
     // it('should not perform type checking when cast to any')
-    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n]);
+    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n], { provider });
     contractAsAny.unlock.notAFunction();
     contractAsAny.unlock.spend();
     contractAsAny.unlock.spend(1000n, true);
 
     // it('should not perform type checking when cannot infer type')
     // Note: would be very nice if it *could* infer the type from static json
-    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n]);
+    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n], { provider });
     contractFromUnknown.unlock.notAFunction();
     contractFromUnknown.unlock.spend();
     contractFromUnknown.unlock.spend(1000n, true);
@@ -109,7 +116,7 @@ interface ManualArtifactType extends Artifact {
 
   // describe('Contract functions')
   {
-    const contract = new Contract(p2pkhArtifact, [alicePkh]);
+    const contract = new Contract(p2pkhArtifact, [alicePkh], { provider });
 
     // it('should not give type errors when using correct function inputs')
     contract.functions.spend(alicePub, new SignatureTemplate(alicePriv)).build();
@@ -129,14 +136,14 @@ interface ManualArtifactType extends Artifact {
     contract.functions.spend(alicePub);
 
     // it('should not perform type checking when cast to any')
-    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n]);
+    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n], { provider });
     contractAsAny.functions.notAFunction().build();
     contractAsAny.functions.spend();
     contractAsAny.functions.spend(1000n, true);
 
     // it('should not perform type checking when cannot infer type')
     // Note: would be very nice if it *could* infer the type from static json
-    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n]);
+    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n], { provider });
     contractFromUnknown.functions.notAFunction().build();
     contractFromUnknown.functions.spend();
     contractFromUnknown.functions.spend(1000n, true);
@@ -152,7 +159,7 @@ interface ManualArtifactType extends Artifact {
 
   // describe('Contract unlockers')
   {
-    const contract = new Contract(p2pkhArtifact, [alicePkh]);
+    const contract = new Contract(p2pkhArtifact, [alicePkh], { provider });
 
     // it('should not give type errors when using correct function inputs')
     contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv)).generateLockingBytecode();
@@ -172,14 +179,14 @@ interface ManualArtifactType extends Artifact {
     contract.unlock.spend(alicePub);
 
     // it('should not perform type checking when cast to any')
-    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n]);
+    const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n], { provider });
     contractAsAny.unlock.notAFunction().generateLockingBytecode();
     contractAsAny.unlock.spend();
     contractAsAny.unlock.spend(1000n, true);
 
     // it('should not perform type checking when cannot infer type')
     // Note: would be very nice if it *could* infer the type from static json
-    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n]);
+    const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n], { provider });
     contractFromUnknown.unlock.notAFunction().generateLockingBytecode();
     contractFromUnknown.unlock.spend();
     contractFromUnknown.unlock.spend(1000n, true);
@@ -199,21 +206,21 @@ interface ManualArtifactType extends Artifact {
   // describe('Constructor arguments')
   {
     // it('should not give type errors when using correct constructor inputs')
-    new Contract(announcementArtifact, []);
+    new Contract(announcementArtifact, [], { provider });
 
     // it('should give type errors when using incorrect constructor input length')
     // @ts-expect-error
-    new Contract(announcementArtifact, [1000n]);
+    new Contract(announcementArtifact, [1000n], { provider });
 
     // it('should give type errors when passing in completely incorrect type')
     // @ts-expect-error
-    new Contract(announcementArtifact, 'hello');
+    new Contract(announcementArtifact, 'hello', { provider });
   }
 
   // describe('Contract unlockers')
   {
     // it('should not give type errors when using correct function inputs')
-    const contract = new Contract(announcementArtifact, []);
+    const contract = new Contract(announcementArtifact, [], { provider });
 
     // it('should not give type errors when using correct function inputs')
     contract.unlock.announce();
@@ -230,7 +237,7 @@ interface ManualArtifactType extends Artifact {
   // describe('Contract functions')
   {
     // it('should not give type errors when using correct function inputs')
-    const contract = new Contract(announcementArtifact, []);
+    const contract = new Contract(announcementArtifact, [], { provider });
 
     // it('should not give type errors when using correct function inputs')
     contract.functions.announce();
@@ -250,17 +257,17 @@ interface ManualArtifactType extends Artifact {
   // describe('Constructor arguments')
   {
     // it('should not give type errors when using correct constructor inputs')
-    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub), 1000n, 1000n]);
+    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub), 1000n, 1000n], { provider });
 
     // it('should give type errors when using too few constructor inputs')
     // @ts-expect-error
-    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub)]);
+    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub)], { provider });
 
     // it('should give type errors when using incorrect constructor input type')
     // @ts-expect-error
-    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub), 1000n, 'hello']);
+    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub), 1000n, 'hello'], { provider });
     // @ts-expect-error
-    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub), true, 1000n]);
+    new Contract(hodlVaultArtifact, [alicePub, binToHex(oraclePub), true, 1000n], { provider });
   }
 }
 
@@ -270,12 +277,12 @@ interface ManualArtifactType extends Artifact {
   // describe('Constructor arguments')
   {
     // it('should not give type errors when using correct constructor inputs')
-    new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n]);
+    new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n], { provider });
   }
 
   // describe('Contract unlockers')
   {
-    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n]);
+    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n], { provider });
 
     // it('should not give type errors when using correct function inputs')
     contract.unlock.transfer(new SignatureTemplate(alicePriv));
@@ -300,7 +307,7 @@ interface ManualArtifactType extends Artifact {
 
   // describe('Contract functions')
   {
-    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n]);
+    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n], { provider });
 
     // it('should not give type errors when using correct function inputs')
     contract.functions.transfer(new SignatureTemplate(alicePriv));
