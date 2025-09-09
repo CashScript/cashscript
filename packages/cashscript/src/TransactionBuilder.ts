@@ -195,7 +195,7 @@ export class TransactionBuilder {
 
         result.push(metrics);
         tableData.push({
-          "Contract - Function": `${input.unlocker.contract.name} - ${input.unlocker.abiFunction.name}`,
+          'Contract - Function': `${input.unlocker.contract.name} - ${input.unlocker.abiFunction.name}`,
           Ops: metrics.evaluatedInstructionCount,
           OpCost: `${metrics.operationCost}/${metrics.maximumOperationCost}`,
           SigChecks: `${metrics.signatureCheckCount}/${metrics.maximumSignatureCheckCount}`,
@@ -204,7 +204,7 @@ export class TransactionBuilder {
       } else {
         result.push(undefined);
         tableData.push({
-          "Contract - Function": isP2PKHUnlocker(input.unlocker) ? 'P2PKH' : 'Custom',
+          'Contract - Function': isP2PKHUnlocker(input.unlocker) ? 'P2PKH' : 'Custom',
           Ops: 0,
           OpCost: '',
           SigChecks: '',
