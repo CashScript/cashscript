@@ -7,6 +7,7 @@ title: Release Notes
 #### CashScript SDK
 - :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
 - :boom: **BREAKING**: Make `provider` a required option in `Contract` constructor.
+- :boom: **BREAKING**: Remove deprecated "old" transaction builder (`contract.functions`).
 
 ## v0.11.5
 
