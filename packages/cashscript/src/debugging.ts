@@ -2,7 +2,7 @@ import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationPro
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
-import { getBitauthUri } from './advanced/LibauthTemplate.js';
+import { getBitauthUri } from './LibauthTemplate.js';
 
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
