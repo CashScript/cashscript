@@ -13,8 +13,6 @@ interface MockNetworkProviderOptions {
   updateUtxoSet: boolean;
 }
 
-// We are setting the default updateUtxoSet to 'false' so that it doesn't break the current behaviour
-// TODO: in a future breaking release we want to set this to 'true' by default
 export default class MockNetworkProvider implements NetworkProvider {
   // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
   private utxoSet: Array<[string, Utxo]> = [];
@@ -24,7 +22,7 @@ export default class MockNetworkProvider implements NetworkProvider {
   public options: MockNetworkProviderOptions;
 
   constructor(options?: Partial<MockNetworkProviderOptions>) {
-    this.options = { updateUtxoSet: false, ...options };
+    this.options = { updateUtxoSet: true, ...options };
 
     for (let i = 0; i < 3; i += 1) {
       this.addUtxo(aliceAddress, randomUtxo());

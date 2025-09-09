@@ -13,8 +13,8 @@ import {
 import { describeOrSkip } from '../../test-util.js';
 
 describeOrSkip(!process.env.TESTS_USE_CHIPNET, 'MockNetworkProvider', () => {
-  describe('when updateUtxoSet is true', () => {
-    const provider = new MockNetworkProvider({ updateUtxoSet: true });
+  describe('when updateUtxoSet is default (true)', () => {
+    const provider = new MockNetworkProvider();
 
     let p2pkhInstance: Contract<typeof p2pkhArtifact>;
 
@@ -69,8 +69,8 @@ describeOrSkip(!process.env.TESTS_USE_CHIPNET, 'MockNetworkProvider', () => {
     });
   });
 
-  describe('when updateUtxoSet is default (false)', () => {
-    const provider = new MockNetworkProvider();
+  describe('when updateUtxoSet is set to false', () => {
+    const provider = new MockNetworkProvider({ updateUtxoSet: false });
 
     let p2pkhInstance: Contract<typeof p2pkhArtifact>;
 
