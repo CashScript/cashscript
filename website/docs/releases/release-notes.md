@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.12.0
+
+#### CashScript SDK
+- :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
+
 ## v0.11.5
 
 #### CashScript SDK
