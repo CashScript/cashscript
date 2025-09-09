@@ -10,9 +10,8 @@ import {
   Script,
   scriptToBytecode,
 } from '@cashscript/utils';
-import { Transaction } from './Transaction.js';
 import {
-  ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument,
+  ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, FunctionArgument,
 } from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo, AddressType, ContractUnlocker,
@@ -29,12 +28,10 @@ export class Contract<
   TArtifact extends Artifact = Artifact,
   TResolved extends {
     constructorInputs: ConstructorArgument[];
-    functions: Record<string, any>;
     unlock: Record<string, any>;
   }
   = {
     constructorInputs: ParamsToTuple<TArtifact['constructorInputs']>;
-    functions: AbiToFunctionMap<TArtifact['abi'], Transaction>;
     unlock: AbiToFunctionMap<TArtifact['abi'], Unlocker>;
   },
 > {
@@ -44,10 +41,7 @@ export class Contract<
   bytecode: string;
   bytesize: number;
   opcount: number;
-
-  functions: TResolved['functions'];
   unlock: TResolved['unlock'];
-
   redeemScript: Script;
   public provider: NetworkProvider;
   public addressType: AddressType;
@@ -79,21 +73,7 @@ export class Contract<
 
     this.redeemScript = generateRedeemScript(asmToScript(this.artifact.bytecode), this.encodedConstructorArgs);
 
-    // Populate the functions object with the contract's functions
-    // (with a special case for single function, which has no "function selector")
-    this.functions = {};
-    if (artifact.abi.length === 1) {
-      const f = artifact.abi[0];
-      // @ts-ignore TODO: see if we can use generics to make TypeScript happy
-      this.functions[f.name] = this.createFunction(f);
-    } else {
-      artifact.abi.forEach((f, i) => {
-        // @ts-ignore TODO: see if we can use generics to make TypeScript happy
-        this.functions[f.name] = this.createFunction(f, i);
-      });
-    }
-
-    // Populate the functions object with the contract's functions
+    // Populate the 'unlock' object with the contract's functions
     // (with a special case for single function, which has no "function selector")
     this.unlock = {};
     if (artifact.abi.length === 1) {
@@ -122,27 +102,6 @@ export class Contract<
 
   async getUtxos(): Promise<Utxo[]> {
     return this.provider.getUtxos(this.address);
-  }
-
-  private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
-    return (...args: FunctionArgument[]) => {
-      if (abiFunction.inputs.length !== args.length) {
-        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
-      }
-
-      // Encode passed args (this also performs type checking)
-      const encodedArgs = encodeFunctionArguments(abiFunction, args);
-
-      const unlocker = this.createUnlocker(abiFunction, selector)(...args);
-
-      return new Transaction(
-        this,
-        unlocker,
-        abiFunction,
-        encodedArgs,
-        selector,
-      );
-    };
   }
 
   private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractFunctionUnlocker {
@@ -179,5 +138,4 @@ export class Contract<
   }
 }
 
-export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
 type ContractFunctionUnlocker = (...args: FunctionArgument[]) => ContractUnlocker;

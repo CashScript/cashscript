@@ -59,7 +59,7 @@ describe('Contract', () => {
       const instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider });
 
       expect(typeof instance.address).toBe('string');
-      expect(typeof instance.functions.spend).toBe('function');
+      expect(typeof instance.unlock.spend).toBe('function');
       expect(instance.name).toEqual(p2pkhArtifact.contractName);
     });
 
@@ -68,8 +68,8 @@ describe('Contract', () => {
       const instance = new Contract(twtArtifact, [placeholder(65), placeholder(65), 1000000n], { provider });
 
       expect(typeof instance.address).toBe('string');
-      expect(typeof instance.functions.transfer).toBe('function');
-      expect(typeof instance.functions.timeout).toBe('function');
+      expect(typeof instance.unlock.transfer).toBe('function');
+      expect(typeof instance.unlock.timeout).toBe('function');
       expect(instance.name).toEqual(twtArtifact.contractName);
     });
 
@@ -78,7 +78,7 @@ describe('Contract', () => {
       const instance = new Contract(hodlVaultArtifact, [placeholder(65), placeholder(65), 1000000n, 10000n], { provider });
 
       expect(typeof instance.address).toBe('string');
-      expect(typeof instance.functions.spend).toBe('function');
+      expect(typeof instance.unlock.spend).toBe('function');
       expect(instance.name).toEqual(hodlVaultArtifact.contractName);
     });
 
@@ -87,8 +87,8 @@ describe('Contract', () => {
       const instance = new Contract(mecenasArtifact, [placeholder(20), placeholder(20), 1000000n], { provider });
 
       expect(typeof instance.address).toBe('string');
-      expect(typeof instance.functions.receive).toBe('function');
-      expect(typeof instance.functions.reclaim).toBe('function');
+      expect(typeof instance.unlock.receive).toBe('function');
+      expect(typeof instance.unlock.reclaim).toBe('function');
       expect(instance.name).toEqual(mecenasArtifact.contractName);
     });
 
@@ -136,9 +136,10 @@ describe('Contract', () => {
     });
   });
 
-  describe('Contract functions', () => {
+  describe('Contract unlockers', () => {
     let instance: Contract;
     let bbInstance: Contract;
+
     beforeEach(() => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
@@ -146,22 +147,22 @@ describe('Contract', () => {
     });
 
     it('can\'t call spend with incorrect signature', () => {
-      expect(() => instance.functions.spend()).toThrow();
-      expect(() => instance.functions.spend(0n, 1n)).toThrow();
-      expect(() => instance.functions.spend(alicePub, new SignatureTemplate(alicePriv), 0n)).toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e803'), 1000n)).toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e803000000'), 1000n)).toThrow();
+      expect(() => instance.unlock.spend()).toThrow();
+      expect(() => instance.unlock.spend(0n, 1n)).toThrow();
+      expect(() => instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv), 0n)).toThrow();
+      expect(() => bbInstance.unlock.spend(hexToBin('e803'), 1000n)).toThrow();
+      expect(() => bbInstance.unlock.spend(hexToBin('e803000000'), 1000n)).toThrow();
     });
 
     it('can call spend with incorrect arguments', () => {
-      expect(() => instance.functions.spend(alicePub, new SignatureTemplate(bobPriv))).not.toThrow();
-      expect(() => instance.functions.spend(alicePkh, placeholder(65))).not.toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e8031234'), 1000n)).not.toThrow();
+      expect(() => instance.unlock.spend(alicePub, new SignatureTemplate(bobPriv))).not.toThrow();
+      expect(() => instance.unlock.spend(alicePkh, placeholder(65))).not.toThrow();
+      expect(() => bbInstance.unlock.spend(hexToBin('e8031234'), 1000n)).not.toThrow();
     });
 
     it('can call spend with correct arguments', () => {
-      expect(() => instance.functions.spend(alicePub, new SignatureTemplate(alicePriv))).not.toThrow();
-      expect(() => bbInstance.functions.spend(hexToBin('e8030000'), 1000n)).not.toThrow();
+      expect(() => instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv))).not.toThrow();
+      expect(() => bbInstance.unlock.spend(hexToBin('e8030000'), 1000n)).not.toThrow();
     });
   });
 });

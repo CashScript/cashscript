@@ -43,11 +43,23 @@ Using the CashScript SDK, you can import contract artifact files, create new ins
   console.log('contract address:', contract.address);
   console.log('contract balance:', await contract.getBalance());
 
-  // Call the spend function with the owner's signature
-  // And use it to send 0. 000 100 00 BCH back to the contract's address
-  const txDetails = await contract.functions
-    .spend(pk, new SignatureTemplate(keypair))
-    .to(contract.address, 10000)
+  const transactionBuilder = new TransactionBuilder({ provider });
+  const contractUtxos = await contract.getUtxos();
+
+  const sendAmount = 10_000n;
+  const destinationAddress = '... some address ...';
+
+  // Calculate the change amount, accounting for a miner fee of 1000 satoshis
+  const changeAmount = contractUtxos[0].satoshis - sendAmount - 1000n;
+
+  // Construct a transaction with the transaction builder
+  const txDetails = await transactionBuilder
+    // Add a contract input that spends from the contract using the 'spend' function
+    .addInput(contractUtxos[0], contract.unlock.spend(pk, new SignatureTemplate(keypair)))
+    // Add an output that sends 0. 000 100 00 BCH back to the destination address
+    .addOutput({ to: destinationAddress, amount: sendAmount })
+    // Add a change output that sends the change back to the contract's address
+    .addOutput({ to: contract.address, amount: changeAmount })
     .send();
 
   console.log(txDetails);
