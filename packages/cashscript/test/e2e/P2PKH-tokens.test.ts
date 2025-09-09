@@ -11,6 +11,7 @@ import { getTxOutputs } from '../test-util.js';
 import { Network, TokenDetails, Utxo } from '../../src/interfaces.js';
 import artifact from '../fixture/p2pkh.artifact.js';
 
+// TODO: Replace this with unlockers
 describe('P2PKH-tokens', () => {
   let p2pkhInstance: Contract<typeof artifact>;
 

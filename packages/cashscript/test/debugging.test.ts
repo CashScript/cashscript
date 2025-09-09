@@ -1,5 +1,5 @@
 import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
-import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
+import { alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
@@ -618,23 +618,6 @@ describe('Debugging tests', () => {
       expect(
         () => expect(transaction).not.toFailRequire(),
       ).toThrow(/Contract function failed a require statement\.*\nReceived string: (.|\n)*?1 should equal 2/);
-    });
-
-    it('should throw an error if the old transaction builder is used', async () => {
-      const transaction = contractTestRequires.functions.test_require().to(aliceAddress, 1000n);
-
-      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      expect(
-        () => expect(transaction).toFailRequire(),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
-
-      expect(
-        () => expect(transaction).toFailRequireWith('1 should equal 2'),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
-
-      expect(
-        () => expect(transaction).toLog('Hello World'),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
     });
   });
 });

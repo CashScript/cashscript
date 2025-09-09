@@ -4,8 +4,6 @@ title: Transaction Builder
 
 The CashScript Transaction Builder generalizes transaction building to allow for complex transactions combining multiple different smart contracts within a single transaction or to create basic P2PKH transactions. The Transaction Builder works by adding inputs and outputs to fully specify the transaction shape.
 
-For the documentation for the old and deprecated transaction builder API, refer to [this docs page instead](/docs/sdk/transactions).
-
 :::info
 Defining the inputs and outputs requires careful consideration because the difference in Bitcoin Cash value between in- and outputs is what's paid in transaction fees to the miners.
 :::
