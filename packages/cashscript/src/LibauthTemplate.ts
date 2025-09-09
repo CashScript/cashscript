@@ -25,9 +25,9 @@ import {
   bytecodeToScript,
   formatBitAuthScript,
 } from '@cashscript/utils';
-import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from '../Argument.js';
-import { Contract } from '../Contract.js';
-import { DebugResults, debugTemplate } from '../debugging.js';
+import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from './Argument.js';
+import { Contract } from './Contract.js';
+import { DebugResults, debugTemplate } from './debugging.js';
 import {
   HashType,
   isP2PKHUnlocker,
@@ -41,10 +41,10 @@ import {
   TokenDetails,
   UnlockableUtxo,
   Utxo,
-} from '../interfaces.js';
-import SignatureTemplate from '../SignatureTemplate.js';
-import { addressToLockScript, extendedStringify, zip } from '../utils.js';
-import { TransactionBuilder } from '../TransactionBuilder.js';
+} from './interfaces.js';
+import SignatureTemplate from './SignatureTemplate.js';
+import { addressToLockScript, extendedStringify, zip } from './utils.js';
+import { TransactionBuilder } from './TransactionBuilder.js';
 import { deflate } from 'pako';
 
 
