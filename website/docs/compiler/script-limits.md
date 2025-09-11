@@ -65,7 +65,7 @@ Bitcoin Cash allows multiple OP_RETURN outputs, but the total size of all data o
 
 Bitcoin Cash defines a "dust" threshold for output value. Outputs below this threshold are considered dust and will not be relayed by standard nodes. Provably unspendable outputs (OP_RETURN outputs) are exempt from this rule.
 
-The dust threshold is calculated as:
+The dust threshold for output value is calculated as:
 
 ```ts
 function calculateDust(outputSize: number): number {
@@ -92,6 +92,10 @@ There's 4 types of standard output types: `P2PKH`, `P2SH` (which includes `P2SH2
 The `lockingBytecode` standardness rules can be important for smart contract developers, and is why CashScript has helpers like `LockingBytecodeP2PKH`, `LockingBytecodeP2SH32` and `LockingBytecodeNullData`.
 :::
 
+### Minimum Relay Fee
+
+The Bitcoin Cash protocol does not strictly enforce minimum fees for transactions, minimum transaction fees are enforced as a standardness rule on the relay level. The minimum relay fee for BCH transactions is 1sat/byte (1000sats/kb). This is also the standard minimum fee set by most miners on the network.
+
 ## Summary table
 
 | Limit type | Constraint |
@@ -103,6 +107,7 @@ The `lockingBytecode` standardness rules can be important for smart contract dev
 | Max transaction size | 100,000 bytes for standardness (1MB for consensus) |
 | Max OP_RETURN data size | 220 bytes data payload  (standardness) |
 | Dust threshold | based on output size (standardness) - commonly 1,000 sats is used as dust |
+| Minimum relay fee | 1sat/byte (standardness) |
 | Output Standardness | `P2PKH`, `P2SH` (incl. `P2SH20` & `P2SH32`), `P2MS` and `OP_RETURN` data-outputs|
 
 For further details on transaction validation and standardness rules, see the [documentation on BCH transaction validation][standardness-docs].
