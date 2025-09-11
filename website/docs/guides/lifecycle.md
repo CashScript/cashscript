@@ -10,10 +10,14 @@ This guide will explain the "transaction lifecycle" of a Bitcoin Cash transactio
 Bitcoin Cash has a blocktime of 10 minutes, meaning that on average every 10 minutes a new block is found which adds a collection of transactions to the ledger. On Bitcoin Cash it is standard for transactions to be included in the very next mined block.
 
 :::tip
-The minimum relay-fee for Bitcoin Cash transactions in 1 sat/byte, meaning a transaction with size 500 bytes has to pay at least 500 satoshis mining fee.
+Commonly BCH miners are configured to accept transactions paying a minimum of 1 sat/byte, meaning a transaction of 500 bytes has to pay at least 500 satoshis in mining fee.
 :::
 
 Miners choose which transactions to include in their block. Some miners might set a higher minimum fee or mine empty blocks so transactions can remain pending in the mempool even though a new block was mined. Under normal circumstances, a 1 sat/byte fee rate will be included in the next block but this is not guaranteed.
+
+:::note
+Even if a miner sets a higher minimum fee for inclusion in his own blocks, 1 sat/byte is the standard minimum fee for nodes to relay your transaction around the network. This way it will get into the mempool of nodes across the BCH network.
+:::
 
 ## Mempool
 
@@ -55,7 +59,15 @@ When there are competing transactions (double spends) being propagated on the ne
 Unlike on Ethereum, on Bitcoin Cash you can never have a transaction which has to pay fees but does not get included in the blockchain. Either it gets included and the fee is paid, or it's like it never happened.
 :::
 
+### Accidental Race-Conditions
+
 In open contract systems competing transactions can happen organically and by accident, when 2 different users who might be on different sides of the world, interact with your on-chain system at roughly the same time. This situation can be called "UTXO contention" because 2 users simultaneously try to spend the same anyone-can-spend covenant.
+
+:::tip
+To design around UTXO-contention it is smart to always create multiple duplicate UTXOs for public covenants. This way each of the UTXOs represents a distinct "thread" in a multi-threaded system enabling simultaneous interactions.
+:::
+
+### Intentional Double-Spends
 
 However, it is also possible double-spends are created intentionally. For example in the case of a DEX naively updating its price state, a rational economic actor might be incentivized to ignore the latest unconfirmed transaction chain and to **intentionally** create a competing unconfirmed transaction chain. This way they can interact with the smart contract at an earlier (more advantageous) price.
 
@@ -63,8 +75,4 @@ However, it is also possible double-spends are created intentionally. For exampl
 Smart contract developers developing applications at scale should consider the game-theoretic interaction of advanced, rational economic actors who might benefit from competing against instead of cooperating on building a transaction chain.
 :::
 
-## Adversarial Scenarios
-
-This guide laid out the "transaction lifecycle" of a Bitcoin Cash transaction in general cases but it can be beneficial to specifically analyze how your smart contract system would hold up in adversarial scenarios. For an in depth guide on this more advanced topic, see [the adversarial analysis guide](/docs/guides/adversarial).
-
-Some examples are of adversarial scenarios include: what if the minimum relay fee increase? what if the "first-seen-rule" starts to break down? What if we start to see MEV on Bitcoin Cash?
+Refer to [the adversarial analysis guide](/docs/guides/adversarial) for a more in-depth guide covering the adversarial cases of intentional double spends and miner bribes.
