@@ -129,6 +129,7 @@ describe('HodlVault', () => {
       const amount = 10000n;
       const { utxos, changeAmount } = gatherUtxos(await hodlVault.getUtxos(), { amount, fee: 2000n });
 
+      // sig: improper length
       expect(() => new TransactionBuilder({ provider })
         .addInputs(utxos, hodlVault.unlock.spend(placeholder(100), oracleSig, message))
         .addOutput({ to: to, amount: amount })
@@ -136,6 +137,15 @@ describe('HodlVault', () => {
         .setLocktime(100_000)
         .send()).toThrow("Found type 'bytes100' where type 'sig' was expected");
 
+      // sig: proper length but malformed
+      await expect(new TransactionBuilder({ provider })
+        .addInputs(utxos, hodlVault.unlock.spend(placeholder(70), oracleSig, message))
+        .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
+        .setLocktime(100_000)
+        .send()).rejects.toThrow();
+
+      // datasig: improper length
       const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
       expect(() => new TransactionBuilder({ provider })
         .addInputs(utxos, hodlVault.unlock.spend(signatureTemplate, placeholder(100), message))
@@ -143,6 +153,14 @@ describe('HodlVault', () => {
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
         .send()).toThrow("Found type 'bytes100' where type 'datasig' was expected");
+
+      // datasig: proper length but malformed
+      await expect(new TransactionBuilder({ provider })
+        .addInputs(utxos, hodlVault.unlock.spend(signatureTemplate, placeholder(64), message))
+        .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
+        .setLocktime(100_000)
+        .send()).rejects.toThrow();
     });
   });
 });
