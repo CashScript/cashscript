@@ -43,7 +43,7 @@ The first-seen rule is subjective based on time, because of this different parts
 
 ## Unconfirmed Transaction Chains
 
-Unconfirmed transactions can be chained after one another meaning that even an output of an unconfirmed transaction can already be spent in a new transaction. This means you can have competing unconfirmed transaction **chains** where child transactions are chained to an unconfirmed parent. Any competing transaction for one of the parent transactions then presents a cancellation of the whole chain of dependent child transactions.
+Unconfirmed transactions can be chained after one another meaning that even an output of an unconfirmed transaction can already be spent in a new transaction. This means you can have competing unconfirmed transaction **chains** where child transactions are chained to an unconfirmed parent. A competing transaction for any of the chained unconfirmed transactions then presents a cancellation of the whole chain of dependent child transactions.
 
 There is no maximum to the length of an unconfirmed transaction chain on BCH, software of full nodes has been upgraded to allow for arbitrary length unconfirmed tx chains. This is very important for public covenants which might have many users interacting and transacting with the same smart contract UTXO.
 
