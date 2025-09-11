@@ -48,26 +48,42 @@ This means that in adversarial environments user created transactions on public 
 
 Miner-Extractable-Value (MEV) refers to the value (either in dollars or in BCH) which miners can "extract" by having the ability to decide transaction inclusion and the ability to prioritize or insert their own transactions in their new block.
 
-MEV works quite differently on a UTXO-model blockchain than on an account-based chain. So even if you are very familiar with the MEV mechanisms on Ethereum it will still be helpful to consider how they do - or do not - apply to Bitcoin Cash.
-
 :::note
 On Ethereum the acronym was changed to mean "Maximum-Extractable-Value" because ETH is now a proof-of-stake system and does not have miners. The modified concept still applies to the ETH block producers.
 :::
 
+### MEV Differences from ETH
+
+MEV works quite differently on a UTXO-model blockchain than on an account-based chain. So even if you are very familiar with the MEV mechanisms on Ethereum it will still be helpful to consider how they do - or do not - apply to Bitcoin Cash.
+
+What is not possible to do on UTXO chains is a "sandwich" strategy where a miner would insert a transaction in the middle of a valid transaction chain. In UTXO each transaction explicitly consumes inputs of a previous transaction and creates outputs. Because of this it is not possible to "insert" a transaction in the middle of an unconfirmed chain and thus sandwich strategies are not possible.
+
+### The Power of Block Construction
+
 The reason why block producers are better positioned than other economic actors such as on-chain traders or arbitrageurs is that they can prioritize their own transactions even if conflicting transactions exist in the mempool.
+
+Other actors can construct double spend transactions will face great difficulty in getting their transaction to propagate and they have to pay high mining fees to bribe miners to accept the double spend over the original transaction.
+
+## Expected Evolution of MEV
+
+Below we will extend the adversarial analysis by extrapolating the evolution of MEV on Bitcoin cash based on the example of more mature DeFi ecosystems like Ethereum.
+
+:::tip
+As mentioned at the start, the "happy case" scenario is currently the standard lifecycle for transactions on BCH. The analysis below is speculatively extrapolating how this could evolve in a mature DeFi ecosystem.
+:::
 
 ### Abandoning First-Seen
 
 As should be clear from the explanation higher up, the "first-seen rule" is just a convention and a way to play nice, however it is not per se economically maximizing. If we see more "bribe" double spends then we can expect over times that some miners will deflect from the convention and use custom transaction selection software to extract MEV from bribe transactions.
 
-### Bounty for Transaction Building
+Over time we can expect miners not just to prefer bribes when available but to actively build transactions to extract from or create value for DeFi protocols.
 
-A 1st source of potential MEV on Bitcoin Cash comes from smart contract systems which have a "bounty for transaction building" mechanism. Miners can automate the transaction building or possibly even modify an existing transaction to claim the bounties for such a system.
+### Miners Extracting Value
 
-### Profitable DEX trades
+As we mentioned before, if DEXes don't cleverly aggregate their prices, then miners may be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain.
 
-If DEXes don't cleverly aggregate their prices, then miners may be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain.
+Although miners are not specialists in the optimal construction of DeFi transactions in a block, miner would over time be likely to team up with teams/companies creating this type of software for them. We've already seen the emergence of a specialized 'block constructor' class for Ethereum.
 
-### Not possible on UTXO
+### Miners Providing Value
 
-What is not possible to do on UTXO chains is a "sandwich" strategy where a miner would insert a transaction in the middle of a valid transaction chain. In UTXO each transaction explicitly consumes inputs of a previous transaction and creates outputs. Because of this it is not possible to "insert" a transaction in the middle of an unconfirmed chain and thus sandwich strategies are not possible. 
+A potential way in which miner transaction building can be seen as providing value is in the case of covenants using a 'Bounty for Transaction Building'. Here the value comes not from "extraction" but from smart contract with a mechanism paying a bounty for creating the transactions necessary for the operation of the contract system.
