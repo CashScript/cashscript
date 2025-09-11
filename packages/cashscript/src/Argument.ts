@@ -59,17 +59,17 @@ export function encodeFunctionArgument(argument: FunctionArgument, typeStr: stri
     throw Error(`Value for type ${type} should be a Uint8Array or hex string`);
   }
 
-  // Redefine SIG as a bytes65 (Schnorr) or bytes70, bytes71, bytes72 (ECDSA)
+  // Redefine SIG as a bytes65 (Schnorr) or bytes71, bytes72, bytes73 (ECDSA)
   if (type === PrimitiveType.SIG && argument.byteLength !== 0) {
-    if (![65, 70, 71, 72].includes(argument.byteLength)) {
+    if (![65, 71, 72, 73].includes(argument.byteLength)) {
       throw new TypeError(`bytes${argument.byteLength}`, type);
     }
     type = new BytesType(argument.byteLength);
   }
 
-  // Redefine DATASIG as a bytes64 (Schnorr) or bytes70 (ECDSA) so it is included in the size checks below
+  // Redefine DATASIG as a bytes64 (Schnorr) or bytes70, bytes71, bytes72 (ECDSA) so it is included in the size checks below
   if (type === PrimitiveType.DATASIG && argument.byteLength !== 0) {
-    if (![64, 70].includes(argument.byteLength)) {
+    if (![64, 70, 71, 72].includes(argument.byteLength)) {
       throw new TypeError(`bytes${argument.byteLength}`, type);
     }
     type = new BytesType(argument.byteLength);

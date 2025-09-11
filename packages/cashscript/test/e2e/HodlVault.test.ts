@@ -170,7 +170,7 @@ describe('HodlVault', () => {
 
       // sig: proper length but malformed
       await expect(new TransactionBuilder({ provider })
-        .addInputs(utxos, hodlVault.unlock.spend(placeholder(70), oracleSig, message))
+        .addInputs(utxos, hodlVault.unlock.spend(placeholder(71), oracleSig, message))
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
