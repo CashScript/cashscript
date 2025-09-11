@@ -1,5 +1,5 @@
 import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
-import { alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
+import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
@@ -618,6 +618,19 @@ describe('Debugging tests', () => {
       expect(
         () => expect(transaction).not.toFailRequire(),
       ).toThrow(/Contract function failed a require statement\.*\nReceived string: (.|\n)*?1 should equal 2/);
+    });
+  });
+
+  describe('P2PKH only transaction', () => {
+    it('should debug a transaction with only P2PKH inputs', async () => {
+      const provider = new MockNetworkProvider();
+
+      const result = new TransactionBuilder({ provider })
+        .addInputs(await provider.getUtxos(aliceAddress), new SignatureTemplate(alicePriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .debug();
+
+      expect(Object.keys(result).length).toBeGreaterThan(0);
     });
   });
 });

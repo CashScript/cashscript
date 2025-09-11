@@ -25,14 +25,8 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
 
   for (const unlockingScriptId of unlockingScriptIds) {
     const scenarioIds = (template.scripts[unlockingScriptId] as WalletTemplateScriptUnlocking).passes ?? [];
-    // There are no scenarios defined for P2PKH placeholder scripts, so we skip them
-    if (scenarioIds.length === 0) continue;
 
     const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(artifact.contractName));
-
-    if (!matchingArtifact) {
-      throw new Error(`No artifact found for unlocking script ${unlockingScriptId}`);
-    }
 
     for (const scenarioId of scenarioIds) {
       results[`${unlockingScriptId}.${scenarioId}`] = debugSingleScenario(template, matchingArtifact, unlockingScriptId, scenarioId);
@@ -45,11 +39,15 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
 };
 
 const debugSingleScenario = (
-  template: WalletTemplate, artifact: Artifact, unlockingScriptId: string, scenarioId: string,
+  template: WalletTemplate, artifact: Artifact | undefined, unlockingScriptId: string, scenarioId: string,
 ): DebugResult => {
   const { vm, program } = createProgram(template, unlockingScriptId, scenarioId);
 
   const fullDebugSteps = vm.debug(program);
+
+  if (!artifact) {
+    return fullDebugSteps;
+  }
 
   // P2SH executions have 3 phases, we only want the last one (locking script execution)
   // https://libauth.org/types/AuthenticationVirtualMachine.html#__type.debug
