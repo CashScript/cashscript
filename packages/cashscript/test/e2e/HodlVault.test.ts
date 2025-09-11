@@ -121,6 +121,37 @@ describe('HodlVault', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
 
+    it('should succeed with precomputed ECDSA signature', async () => {
+      const cleanProvider = new MockNetworkProvider();
+      const contract = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider: cleanProvider });
+      cleanProvider.addUtxo(contract.address, {
+        satoshis: 100000n,
+        txid: '11'.repeat(32),
+        vout: 0,
+      });
+      // given
+      const message = oracle.createMessage(100000n, 30000n);
+      const oracleSig = oracle.signMessage(message, SignatureAlgorithm.ECDSA);
+      const to = contract.address;
+      const amount = 10000n;
+      const { utxos, changeAmount } = gatherUtxos(await contract.getUtxos(), { amount, fee: 2000n });
+
+      // @ts-ignore
+      const signature = '3045022100aa004a425c0c911594c0333164f990c760991b7f84272f35d98c9c6617d9c53602207dfe4729224d4e61496dff11963982cf79f05d623a6e4004b5f50b7cefa7175241';
+
+      // when
+      const tx = await new TransactionBuilder({ provider: cleanProvider })
+        .addInputs(utxos, contract.unlock.spend(signature, oracleSig, message))
+        .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
+        .setLocktime(100_000)
+        .send();
+
+      // then
+      const txOutputs = getTxOutputs(tx);
+      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
+    });
+
     it('should fail to accept wrong signature lengths', async () => {
       // given
       const message = oracle.createMessage(100000n, 30000n);
