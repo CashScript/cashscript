@@ -21,11 +21,9 @@ Even if a miner sets a higher minimum fee for inclusion in his own blocks, 1 sat
 
 ## Mempool
 
-Before transactions are included in a block they are waiting for block inclusion in the mempool of the full nodes. Because transactions in the mempool are "seen" but not included in the blockchain yet, the latest state of the blockchain of who owns what is somewhat fuzzy. 
+Before transactions are included in a block they are waiting for block inclusion in the mempool of the full nodes. Because transactions in the mempool are "seen" but not included in the blockchain yet, the latest state of the blockchain of who owns what is somewhat fuzzy.
 
-In some sense only the transactions with 6 confirmations are truly finalized but on the other hand in the normal scenario it's only a matter of time before transactions in the mempool get included in blocks and are 6 blocks deep in the blockchain.
-
-Where things get more complex however is if there are **competing unconfirmed transactions**. In this scenario it is **not** necessarily the case that a transaction is destined to be included in the blockchain. In other words, the latest state of the blockchain is still undecided.
+In a normal scenario it's only a matter of time before a BCH transaction in the mempool gets included in a block. Where things get more complex however is if there are **competing unconfirmed transactions**. In this scenario it is **not** necessarily the clear that a transaction is destined to be included in the blockchain. In other words, the latest state of the blockchain is still undecided.
 
 :::tip
 This is why many BCH indexers will allow you to query UTXOs with the option to include or exclude unconfirmed transactions. By default indexers will include unconfirmed UTXOs/unconfirmed transactions in the query result.
@@ -76,3 +74,19 @@ Smart contract developers developing applications at scale should consider the g
 :::
 
 Refer to [the adversarial analysis guide](/docs/guides/adversarial) for a more in-depth guide covering the adversarial cases of intentional double spends and miner bribes.
+
+## Chain Reorgs
+
+A "Chain Reorganization" or reorg for short is when the full nodes discard the current chain tip of the blockchain and adopt a new longest chain. Because a chain reorg causes different blocks to be part of the canonical blockchain, it might be that different transactions got included than what was initially expected.
+
+
+:::tip
+A great resource to learn more details about reorgs is the ['Chain Reorganization'](https://learnmeabitcoin.com/technical/blockchain/chain-reorganization/) page on the info website learn-me-a-bitcoin.
+:::
+
+:::note
+2-block reorganisations are already super rare occurrences, so having 2+ confirmations is often enough for all practical purposes.
+Many exchanges however use a 6-block confirmation policy for Bitcoin Cash deposits.
+:::
+
+Chain reorgs don't always include all the same transactions, so some transactions can get un-included from the blockchain with a reorg. In this scenario, if no competing transaction was mined then the un-included transaction will just return to the mempool waiting for inclusion in a next block.
