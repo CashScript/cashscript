@@ -40,10 +40,14 @@ For an adversarial attack to pull off this time-sensitive attack, he would requi
 In the case of an late double spend (which does not try to exploit a race condition) the adversarial actor need help from a miner.
 Either the adversarial actor needs to convince the miners to abandon their first seen rule or he needs to be mining himself to be able to construct his own block.
 
+:::caution
+Both race-condition and late double spends can both be used to grief the experience for normal users, however only late double spends can be used to extract economic value.
+:::
+
 To convince existing miners to include the double spend transaction instead of the original, the malicious attacker will include a significantly higher mining fee than the original transaction. This can be seen as a 'miner bribe' being paid to discard the first-seen rule and to accept the double spend instead of the original.
 
 :::note
-Both race-condition and late double spends can both be used to grief the experience for normal users, however only late double spends can be used to extract economic value.
+Attempting a double spend in this way does not incur risk to the adversarial party, either their transaction is not included and they don't pay any fee, or they successfully perform the double spend and they pay the high fee "miner bribe".
 :::
 
 ## Economic Value Extraction 
@@ -56,8 +60,8 @@ If DEXes don't cleverly aggregate their prices across blocks, then it can be eco
 
 Because having a more advantageous (older) price state or ratio might be very profitable, it is worth it for the adversarial actor to pay the high fee "miner bribe" to attempt this double spend transaction.
 
-:::note
-Attempting a double spend in this way does not incur risk to the adversarial party, either their transaction is not included and they don't pay any fee, or they successfully perform the double spend and they pay the high fee "miner bribe".
+:::tip
+We list some possible mitigations which smart contract systems can implement in the section on ['Avoiding MEV'](#avoiding-mev)
 :::
 
 
@@ -66,7 +70,7 @@ Attempting a double spend in this way does not incur risk to the adversarial par
 Miner-Extractable-Value (MEV) refers to the value (either in dollars or in BCH) which miners can "extract" by having the ability to decide transaction inclusion and the ability to prioritize or insert their own transactions in their new block.
 
 :::note
-On Ethereum the acronym was changed to mean "Maximum-Extractable-Value" because ETH is now a proof-of-stake system and does not have miners. The modified concept still applies to the ETH block producers.
+On Ethereum the acronym was changed to mean "Maximum-Extractable-Value" because ETH is now a proof-of-stake system and does not have miners. The modified concept still applies to the ETH block proposers (validators).
 :::
 
 ### MEV Differences from ETH
@@ -83,24 +87,30 @@ Other actors who construct double spend transactions will face great difficulty 
 
 ## Expected Evolution of MEV
 
-Below we will extend the adversarial analysis by extrapolating the evolution of MEV on Bitcoin cash based on the example of more mature DeFi ecosystems like Ethereum.
-
-:::tip
-As mentioned at the start, the "happy case" scenario is currently the standard lifecycle for transactions on BCH. The analysis below is speculatively extrapolating how this could evolve in a mature DeFi ecosystem.
-:::
+Below we will extend the adversarial analysis by extrapolating the evolution of MEV on Bitcoin cash based on the example of more mature DeFi ecosystems like Ethereum. As mentioned at the start, the "happy case" scenario is currently the standard lifecycle for transactions on BCH. The analysis below is speculatively extrapolating how this could evolve in a mature DeFi ecosystem.
 
 ### Abandoning First-Seen
 
-As should be clear from the explanation higher up, the "first-seen rule" is just a convention and a way to play nice, however it is not per se economically maximizing. If we see more "bribe" double spends then we can expect over times that some miners will deflect from the convention and use custom transaction selection software to extract MEV from bribe transactions.
+If over time "bribe" double spends start happening on BCH then we can expect over time that some miners will deflect from the convention and use custom transaction selection software to extract MEV from bribe transactions. Over time we can expect miners not just to prefer bribes when available but to actively build transactions to extract from or create value for DeFi protocols.
 
-Over time we can expect miners not just to prefer bribes when available but to actively build transactions to extract from or create value for DeFi protocols.
+:::tip
+Adversarial analysis should take into account that "first-seen rule" is just a convention and a way to play nice, however it is not economically maximizing when double spends include miner bribes.
+:::
 
-### Miners Extracting Value
+### Specialized Block-Builders
 
-As we mentioned before, if DEXes don't cleverly aggregate their prices, then miners may be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain.
 
-Although miners are not specialists in the optimal construction of DeFi transactions in a block, miner would over time be likely to team up with teams/companies creating this type of software for them. We've already seen the emergence of a specialized 'block constructor' class for Ethereum.
+As described in the section on "stale-state arbitrage" economic actors ay be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain. Although miners are not specialized in the optimal construction of DeFi transactions in a block, miner would over time be likely to team up with teams/companies creating this type of software for them.
 
-### Miners Providing Value
+:::note
+Ethereum with its large amount of MEV has already seen the emergence of specialized 'block builder' as a new class of relevant economic actors separate from the block proposer (who signs the block).
+:::
 
-A potential way in which miner transaction building can be seen as providing value is in the case of covenants using a 'Bounty for Transaction Building'. Here the value comes not from "extraction" but from smart contract with a mechanism paying a bounty for creating the transactions necessary for the operation of the contract system.
+## MEV Avoidance Strategies
+
+### Batching Same-Block Trades
+
+### Centralized Co-signing
+
+### Avoid Bounty Transactions
+
