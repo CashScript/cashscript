@@ -108,9 +108,27 @@ Ethereum with its large amount of MEV has already seen the emergence of speciali
 
 ## MEV Avoidance Strategies
 
+There's a few strategies which dapps can employ to avoid introducing unwanted MEV:
+
 ### Batching Same-Block Trades
+
+For DEXes the solution to the 'stale-state arbitrage' problem is introducing a batching mechanism for same-block trades so they all execute at the same price. The drawback is that this mechanism requires extra contract complexity and careful design. The benefit of including such a MEV avoidance mechanism is that even at scale with many adversarial actors, economic extraction with double spends is not possible.
+
+:::tip
+This strategy of batching same-block trades (or "joint-execution") is the key concept demonstrated by the [Jedex contract prototype](https://github.com/bitjson/jedex#demonstrated-concepts).
+:::
 
 ### Centralized Co-signing
 
+For contract systems relying on a continuously update on-chain oracle price feed, the problem of 'stale-state arbitrage' reappears.
+However in this context the only known solution to adversarial actors exploiting stale state with a late double spend is to require centralized co-signing in the contract system.
+
+The drawback of this approach is that it introduces a central party to enforce honest, sequential actions to prevent late double spends. The approach introduces the need for interactivity and assumes that the central signing service does not collude or cannot be bribed, additionally it also introduces new possible security concerns.
+
 ### Avoid Bounty Transactions
 
+Having anyone-can-claim bounty transactions in a smart contract system directly encourages the development of double spending technology, whether it is race-condition double spends, miner bribe double spends or miner-involved double spends. 
+
+:::tip
+To not incentivize the development of double-spending technologies, it is best to avoid anyone-can-claim bounty transactions in your smart contract system.
+:::
