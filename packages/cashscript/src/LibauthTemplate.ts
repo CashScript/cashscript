@@ -48,7 +48,6 @@ import { addressToLockScript, extendedStringify, getSignatureAndPubkeyFromP2PKHI
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { deflate } from 'pako';
 
-
 /**
  * Generates template entities for P2PKH (Pay to Public Key Hash) placeholder scripts.
  *
@@ -62,6 +61,7 @@ export const generateTemplateEntitiesP2PKH = (
   const lockScriptName = `p2pkh_placeholder_lock_${inputIndex}`;
   const unlockScriptName = `p2pkh_placeholder_unlock_${inputIndex}`;
 
+  // TODO: Add descriptions
   return {
     [`signer_${inputIndex}`]: {
       scripts: [lockScriptName, unlockScriptName],
@@ -319,8 +319,6 @@ export const generateTemplateScenariosP2PKH = (
   csTransaction: TransactionType,
   inputIndex: number,
 ): WalletTemplate['scenarios'] => {
-  // const artifact = contract.artifact;
-  // const encodedConstructorArgs = contract.encodedConstructorArgs;
   const scenarioIdentifier = `P2PKH_spend_input${inputIndex}_evaluate`;
 
   const { signature, publicKey } = getSignatureAndPubkeyFromP2PKHInput(libauthTransaction.inputs[inputIndex]);
@@ -585,7 +583,7 @@ export const getLibauthTemplates = (
 
 export const debugLibauthTemplate = (template: WalletTemplate, transaction: TransactionBuilder): DebugResults => {
   const allArtifacts = transaction.inputs
-    .map(input => 'contract' in input.unlocker ? input.unlocker.contract : undefined)
+    .map(input => isContractUnlocker(input.unlocker) ? input.unlocker.contract : undefined)
     .filter((contract): contract is Contract => Boolean(contract))
     .map(contract => contract.artifact);
 

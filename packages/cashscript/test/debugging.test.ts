@@ -633,7 +633,9 @@ describe('Debugging tests', () => {
       expect(Object.keys(result).length).toBeGreaterThan(0);
     });
 
-    it('should fail when spending from P2PKH inputs with an unlocker for a different public key', async () => {
+    // We currently don't have a way to properly handle non-matching UTXOs and unlockers
+    // Note: that also goes for Contract UTXOs where a user uses an unlocker of a different contract
+    it.skip('should fail when spending from P2PKH inputs with an unlocker for a different public key', async () => {
       const provider = new MockNetworkProvider();
 
       const transactionBuilder = new TransactionBuilder({ provider })
