@@ -294,6 +294,7 @@ export const generateTemplateScenarios = (
         },
         currentBlockHeight: 2,
         currentBlockTime: Math.round(+new Date() / 1000),
+        // TODO: remove usage of private keys in P2SH scenarios as well
         keys: {
           privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
         },
@@ -652,6 +653,7 @@ export const generateUnlockingScriptParams = (
         ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
         ...generateTemplateScenarioParametersValues(contract.artifact.constructorInputs, contract.encodedConstructorArgs),
       },
+      // TODO: remove usage of private keys in P2SH scenarios as well
       keys: {
         privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
       },
