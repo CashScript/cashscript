@@ -1,4 +1,4 @@
-import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
+import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
@@ -622,7 +622,7 @@ describe('Debugging tests', () => {
   });
 
   describe('P2PKH only transaction', () => {
-    it('should debug a transaction with only P2PKH inputs', async () => {
+    it('should succeed when spending from P2PKH inputs with the corresponding unlocker', async () => {
       const provider = new MockNetworkProvider();
 
       const result = new TransactionBuilder({ provider })
@@ -631,6 +631,16 @@ describe('Debugging tests', () => {
         .debug();
 
       expect(Object.keys(result).length).toBeGreaterThan(0);
+    });
+
+    it('should fail when spending from P2PKH inputs with an unlocker for a different public key', async () => {
+      const provider = new MockNetworkProvider();
+
+      const transactionBuilder = new TransactionBuilder({ provider })
+        .addInputs(await provider.getUtxos(aliceAddress), new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n });
+
+      expect(() => transactionBuilder.debug()).toThrow(FailedTransactionError);
     });
   });
 });
