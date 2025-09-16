@@ -45,10 +45,6 @@ const debugSingleScenario = (
 
   const fullDebugSteps = vm.debug(program);
 
-  if (!artifact) {
-    return fullDebugSteps;
-  }
-
   // P2SH executions have 3 phases, we only want the last one (locking script execution)
   // https://libauth.org/types/AuthenticationVirtualMachine.html#__type.debug
   const lockingScriptDebugResult = fullDebugSteps.slice(findLastIndex(fullDebugSteps, (state) => state.ip === 0));
@@ -58,12 +54,15 @@ const debugSingleScenario = (
   const executedDebugSteps = lockingScriptDebugResult
     .filter((debugStep) => debugStep.controlStack.every(item => item === true));
 
-  const executedLogs = (artifact.debug?.logs ?? [])
-    .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
+  // P2PKH inputs do not have an artifact, so we skip the console.log handling
+  if (artifact) {
+    const executedLogs = (artifact.debug?.logs ?? [])
+      .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
 
-  for (const log of executedLogs) {
-    const inputIndex = extractInputIndexFromScenario(scenarioId);
-    logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex);
+    for (const log of executedLogs) {
+      const inputIndex = extractInputIndexFromScenario(scenarioId);
+      logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex);
+    }
   }
 
   const lastExecutedDebugStep = executedDebugSteps[executedDebugSteps.length - 1];
@@ -85,10 +84,17 @@ const debugSingleScenario = (
     const isNullFail = lastExecutedDebugStep.error.includes(AuthenticationErrorCommon.nonNullSignatureFailure);
     const requireStatementIp = failingIp + (isNullFail && isSignatureCheckWithoutVerify(failingInstruction) ? 1 : 0);
 
+    const { program: { inputIndex }, error } = lastExecutedDebugStep;
+
+    // If there is no artifact, this is a P2PKH debug error, error can occur when final CHECKSIG fails with NULLFAIL or when
+    // public key does not match pkh in EQUALVERIFY
+    // Note: due to P2PKHUnlocker implementation, the CHECKSIG cannot fail in practice, only the EQUALVERIFY can fail
+    if (!artifact) {
+      throw new FailedTransactionError(error, getBitauthUri(template));
+    }
+
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((statement) => statement.ip === requireStatementIp);
-
-    const { program: { inputIndex }, error } = lastExecutedDebugStep;
 
     if (requireStatement) {
       // Note that we use failingIp here rather than requireStatementIp, see comment above
@@ -119,10 +125,16 @@ const debugSingleScenario = (
     // console.warn('message', finalExecutedVerifyIp);
     // console.warn(artifact.debug?.requires);
 
+    const { program: { inputIndex } } = lastExecutedDebugStep;
+
+    // If there is no artifact, this is a P2PKH debug error, final verify can only occur when final CHECKSIG failed
+    // Note: due to P2PKHUnlocker implementation, this cannot happen in practice
+    if (!artifact) {
+      throw new FailedTransactionError(evaluationResult, getBitauthUri(template));
+    }
+
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((message) => message.ip === finalExecutedVerifyIp);
-
-    const { program: { inputIndex } } = lastExecutedDebugStep;
 
     if (requireStatement) {
       throw new FailedRequireError(
