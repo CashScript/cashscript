@@ -31,10 +31,10 @@ import { Contract } from './Contract.js';
 import { DebugResults, debugTemplate } from './debugging.js';
 import {
   HashType,
+  isContractUnlocker,
   isP2PKHUnlocker,
   isStandardUnlockableUtxo,
   isUnlockableUtxo,
-  isUtxoP2PKH,
   LibauthTokenDetails,
   Output,
   SignatureAlgorithm,
@@ -280,6 +280,7 @@ export const generateTemplateScenarios = (
   const encodedConstructorArgs = contract.encodedConstructorArgs;
   const scenarioIdentifier = `${artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
 
+  // TODO: Update scenario descriptions
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
     [scenarioIdentifier]: {
@@ -324,6 +325,7 @@ export const generateTemplateScenariosP2PKH = (
 
   const { signature, publicKey } = getSignatureAndPubkeyFromP2PKHInput(libauthTransaction.inputs[inputIndex]);
 
+  // TODO: Update scenario descriptions
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
     [scenarioIdentifier]: {
@@ -459,20 +461,14 @@ export const getLibauthTemplates = (
 
   // We can typecast this because we check that all inputs are standard unlockable at the top of this function
   for (const [inputIndex, input] of (txn.inputs as StandardUnlockableUtxo[]).entries()) {
-    // If template exists on the input, it indicates this is a P2PKH (Pay to Public Key Hash) input
-    if ('template' in input.unlocker) {
-      // @ts-ignore TODO: Remove UtxoP2PKH type and only use UnlockableUtxo in Libauth Template generation
-      input.template = input.unlocker?.template; // Added to support P2PKH inputs in buildTemplate
+    if (isP2PKHUnlocker(input.unlocker)) {
       Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(inputIndex));
       Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(inputIndex));
-
-      Object.assign(scenarios, generateTemplateScenariosP2PKH(libauthTransaction, csTransaction as any, inputIndex));
-
+      Object.assign(scenarios, generateTemplateScenariosP2PKH(libauthTransaction, csTransaction, inputIndex));
       continue;
     }
 
-    // If contract exists on the input, it indicates this is a contract input
-    if ('contract' in input.unlocker) {
+    if (isContractUnlocker(input.unlocker)) {
       const contract = input.unlocker?.contract;
       const abiFunction = input.unlocker?.abiFunction;
 
@@ -806,23 +802,6 @@ export const generateTemplateScenarioBytecode = (
   insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
   if (insertSlot) return ['slot'];
-
-  const p2pkhScriptName = `${p2pkhScriptNameTemplate}_${inputIndex}`;
-
-  // This is for P2PKH inputs in the old transaction builder (TODO: remove when we remove old transaction builder)
-  if (isUtxoP2PKH(input)) {
-    const { signature, publicKey } = getSignatureAndPubkeyFromP2PKHInput(libauthInput);
-
-    return {
-      script: p2pkhScriptName,
-      overrides: {
-        bytecode: {
-          [`signature_${inputIndex}`]: `0x${binToHex(signature)}`,
-          [`public_key_${inputIndex}`]: `0x${binToHex(publicKey)}`,
-        },
-      },
-    };
-  }
 
   if (isUnlockableUtxo(input) && isStandardUnlockableUtxo(input)) {
     return generateUnlockingScriptParams(input, libauthInput, p2pkhScriptNameTemplate, inputIndex);

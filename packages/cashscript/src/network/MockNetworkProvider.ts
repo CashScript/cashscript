@@ -25,6 +25,7 @@ export default class MockNetworkProvider implements NetworkProvider {
     this.options = { updateUtxoSet: true, ...options };
 
     for (let i = 0; i < 3; i += 1) {
+      // TODO: Don't seed the MockNetworkProvider with any UTXOs
       this.addUtxo(aliceAddress, randomUtxo());
       this.addUtxo(bobAddress, randomUtxo());
       this.addUtxo(carolAddress, randomUtxo());
