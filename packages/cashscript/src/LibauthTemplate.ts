@@ -349,35 +349,32 @@ const generateTemplateScenarioTransaction = (
   csTransaction: TransactionType,
   slotIndex: number,
 ): WalletTemplateScenario['transaction'] => {
-  const inputs = libauthTransaction.inputs.map((input, inputIndex) => {
-    const csInput = csTransaction.inputs[inputIndex] as Utxo;
-    const libauthInput = libauthTransaction.inputs[inputIndex];
-
+  const zippedInputs = zip(csTransaction.inputs, libauthTransaction.inputs);
+  const inputs = zippedInputs.map(([csInput, libauthInput], inputIndex) => {
     return {
-      outpointIndex: input.outpointIndex,
-      outpointTransactionHash: binToHex(input.outpointTransactionHash),
-      sequenceNumber: input.sequenceNumber,
+      outpointIndex: libauthInput.outpointIndex,
+      outpointTransactionHash: binToHex(libauthInput.outpointTransactionHash),
+      sequenceNumber: libauthInput.sequenceNumber,
       unlockingBytecode: generateTemplateScenarioBytecode(csInput, libauthInput, inputIndex, 'p2pkh_placeholder_unlock', slotIndex === inputIndex),
     } as WalletTemplateScenarioInput;
   });
 
   const locktime = libauthTransaction.locktime;
 
-  const outputs = libauthTransaction.outputs.map((output, index) => {
-    const csOutput = csTransaction.outputs[index];
-
+  const zippedOutputs = zip(csTransaction.outputs, libauthTransaction.outputs);
+  const outputs = zippedOutputs.map(([csOutput, libauthOutput]) => {
     if (csOutput && contract) {
       return {
         lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput, contract),
-        token: serialiseTokenDetails(output.token),
-        valueSatoshis: Number(output.valueSatoshis),
+        token: serialiseTokenDetails(libauthOutput.token),
+        valueSatoshis: Number(libauthOutput.valueSatoshis),
       } as WalletTemplateScenarioTransactionOutput;
     }
 
     return {
-      lockingBytecode: `${binToHex(output.lockingBytecode)}`,
-      token: serialiseTokenDetails(output.token),
-      valueSatoshis: Number(output.valueSatoshis),
+      lockingBytecode: `${binToHex(libauthOutput.lockingBytecode)}`,
+      token: serialiseTokenDetails(libauthOutput.token),
+      valueSatoshis: Number(libauthOutput.valueSatoshis),
     } as WalletTemplateScenarioTransactionOutput;
   });
 
@@ -391,13 +388,12 @@ const generateTemplateScenarioSourceOutputs = (
   libauthTransaction: TransactionBch,
   slotIndex: number,
 ): Array<WalletTemplateScenarioOutput<true>> => {
-  return csTransaction.inputs.map((input, inputIndex) => {
-    const libauthInput = libauthTransaction.inputs[inputIndex];
-
+  const zippedInputs = zip(csTransaction.inputs, libauthTransaction.inputs);
+  return zippedInputs.map(([csInput, libauthInput], inputIndex) => {
     return {
-      lockingBytecode: generateTemplateScenarioBytecode(input, libauthInput, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex),
-      valueSatoshis: Number(input.satoshis),
-      token: serialiseTokenDetails(input.token),
+      lockingBytecode: generateTemplateScenarioBytecode(csInput, libauthInput, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex),
+      valueSatoshis: Number(csInput.satoshis),
+      token: serialiseTokenDetails(csInput.token),
     };
   });
 };
