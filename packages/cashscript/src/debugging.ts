@@ -1,13 +1,22 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, AuthenticationVirtualMachineIdentifier, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './LibauthTemplate.js';
+import { VmTarget } from './interfaces.js';
 
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
 
-const createVirtualMachine = (vmTarget: AuthenticationVirtualMachineIdentifier): VM => {
+/* eslint-disable @typescript-eslint/indent */
+type VM = AuthenticationVirtualMachine<
+  ResolvedTransactionCommon,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon
+>;
+/* eslint-enable @typescript-eslint/indent */
+
+const createVirtualMachine = (vmTarget: VmTarget): VM => {
   switch (vmTarget) {
     case 'BCH_2023_05':
       return createVirtualMachineBch2023();
@@ -16,6 +25,7 @@ const createVirtualMachine = (vmTarget: AuthenticationVirtualMachineIdentifier):
     case 'BCH_2026_05':
       return createVirtualMachineBch2026();
     case 'BCH_SPEC':
+      // TODO: This typecast is shitty, but it's hard to fix
       return createVirtualMachineBchSpec() as unknown as VM;
     default:
       throw new Error(`Debugging is not supported for the ${vmTarget} virtual machine.`);
@@ -172,21 +182,13 @@ const extractInputIndexFromScenario = (scenarioId: string): number => {
   return parseInt(match[1]);
 };
 
-/* eslint-disable @typescript-eslint/indent */
-type VM = AuthenticationVirtualMachine<
-  ResolvedTransactionCommon,
-  AuthenticationProgramCommon,
-  AuthenticationProgramStateCommon
->;
-/* eslint-enable @typescript-eslint/indent */
-
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
 
 // internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: WalletTemplate, unlockingScriptId: string, scenarioId: string): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachine(template.supported[0]);
+  const vm = createVirtualMachine(template.supported[0] as VmTarget);
   const compiler = createCompiler(configuration);
 
   if (!template.scripts[unlockingScriptId]) {
@@ -211,7 +213,7 @@ const createProgram = (template: WalletTemplate, unlockingScriptId: string, scen
     throw new FailedTransactionError(scenarioGeneration.scenario, getBitauthUri(template));
   }
 
-  return { vm: vm as VM, program: scenarioGeneration.scenario.program };
+  return { vm, program: scenarioGeneration.scenario.program };
 };
 
 const logConsoleLogStatement = (
