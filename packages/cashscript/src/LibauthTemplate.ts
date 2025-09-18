@@ -42,11 +42,13 @@ import {
   TokenDetails,
   UnlockableUtxo,
   Utxo,
+  VmTarget,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { addressToLockScript, extendedStringify, getSignatureAndPubkeyFromP2PKHInput, zip } from './utils.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { deflate } from 'pako';
+import MockNetworkProvider from './network/MockNetworkProvider.js';
 
 // TODO: Add / improve descriptions throughout the template generation
 
@@ -60,11 +62,13 @@ export const getLibauthTemplates = (
   const libauthTransaction = txn.buildLibauthTransaction();
   const csTransaction = createTransactionTypeFromTransactionBuilder(txn);
 
+  const vmTarget = txn.provider instanceof MockNetworkProvider ? txn.provider.vmTarget : VmTarget.BCH_2025_05;
+
   const baseTemplate: WalletTemplate = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
     name: 'CashScript Generated Debugging Template',
-    supported: ['BCH_2025_05'],
+    supported: [vmTarget],
     version: 0,
     entities: {},
     scripts: {},
