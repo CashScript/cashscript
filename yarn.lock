@@ -630,6 +630,11 @@
   resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-3.1.0-next.2.tgz#121782b38774d9fba8226406db9b9af0c8d8e464"
   integrity sha512-XRtk9p8UHvtjSPS38rsfHXzaPHG5j9FpN4qHqqGLoAuZYy675PBiOy9zP6ah8lTnnIVaCFl2ekct8w0Hy1oefw==
 
+"@bitauth/libauth@^3.1.0-next.8":
+  version "3.1.0-next.8"
+  resolved "https://registry.yarnpkg.com/@bitauth/libauth/-/libauth-3.1.0-next.8.tgz#d130e5db6c3c8b24731c8d04c4091be07f48b0ee"
+  integrity sha512-Pm+Ju+YP3JeBLLTiVrBnia2wwE4G17r4XqpvPRMcklElJTe8J6x3JgKRg1by0Xm3ZY6UFxACkEAoSA+x419/zA==
+
 "@chris.troutner/bip32-utils@1.0.5":
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@chris.troutner/bip32-utils/-/bip32-utils-1.0.5.tgz#b6722aeaad5fcda6fba69cbeda7e2a5e8afbd692"

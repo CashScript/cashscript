@@ -144,6 +144,15 @@ export const Network = {
 
 export type Network = (typeof Network)[keyof typeof Network];
 
+export const VmTarget = {
+  BCH_2023_05: literal('BCH_2023_05'),
+  BCH_2025_05: literal('BCH_2025_05'),
+  BCH_2026_05: literal('BCH_2026_05'),
+  BCH_SPEC: literal('BCH_SPEC'),
+};
+
+export type VmTarget = (typeof VmTarget)[keyof typeof VmTarget];
+
 export interface TransactionDetails extends Transaction {
   txid: string;
   hex: string;

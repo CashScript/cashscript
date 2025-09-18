@@ -1,11 +1,36 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2025, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './LibauthTemplate.js';
+import { VmTarget } from './interfaces.js';
 
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
+
+/* eslint-disable @typescript-eslint/indent */
+type VM = AuthenticationVirtualMachine<
+  ResolvedTransactionCommon,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon
+>;
+/* eslint-enable @typescript-eslint/indent */
+
+const createVirtualMachine = (vmTarget: VmTarget): VM => {
+  switch (vmTarget) {
+    case 'BCH_2023_05':
+      return createVirtualMachineBch2023();
+    case 'BCH_2025_05':
+      return createVirtualMachineBch2025();
+    case 'BCH_2026_05':
+      return createVirtualMachineBch2026();
+    case 'BCH_SPEC':
+      // TODO: This typecast is shitty, but it's hard to fix
+      return createVirtualMachineBchSpec() as unknown as VM;
+    default:
+      throw new Error(`Debugging is not supported for the ${vmTarget} virtual machine.`);
+  }
+};
 
 // debugs the template, optionally logging the execution data
 export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
@@ -61,7 +86,7 @@ const debugSingleScenario = (
 
     for (const log of executedLogs) {
       const inputIndex = extractInputIndexFromScenario(scenarioId);
-      logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex);
+      logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex, vm);
     }
   }
 
@@ -157,21 +182,13 @@ const extractInputIndexFromScenario = (scenarioId: string): number => {
   return parseInt(match[1]);
 };
 
-/* eslint-disable @typescript-eslint/indent */
-type VM = AuthenticationVirtualMachine<
-  ResolvedTransactionCommon,
-  AuthenticationProgramCommon,
-  AuthenticationProgramStateCommon
->;
-/* eslint-enable @typescript-eslint/indent */
-
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
 
 // internal util. instantiates the virtual machine and compiles the template into a program
 const createProgram = (template: WalletTemplate, unlockingScriptId: string, scenarioId: string): CreateProgramResult => {
   const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachineBch2025();
+  const vm = createVirtualMachine(template.supported[0] as VmTarget);
   const compiler = createCompiler(configuration);
 
   if (!template.scripts[unlockingScriptId]) {
@@ -204,13 +221,14 @@ const logConsoleLogStatement = (
   debugSteps: AuthenticationProgramStateCommon[],
   artifact: Artifact,
   inputIndex: number,
+  vm: VM,
 ): void => {
   let line = `${artifact.contractName}.cash:${log.line}`;
   const decodedData = log.data.map((element) => {
     if (typeof element === 'string') return element;
 
     const debugStep = debugSteps.find((step) => step.ip === element.ip)!;
-    const transformedDebugStep = applyStackItemTransformations(element, debugStep);
+    const transformedDebugStep = applyStackItemTransformations(element, debugStep, vm);
     return decodeStackItem(element, transformedDebugStep.stack);
   });
   console.log(`[Input #${inputIndex}] ${line} ${decodedData.join(' ')}`);
@@ -219,6 +237,7 @@ const logConsoleLogStatement = (
 const applyStackItemTransformations = (
   element: StackItem,
   debugStep: AuthenticationProgramStateCommon,
+  vm: VM,
 ): AuthenticationProgramStateCommon => {
   if (!element.transformations) return debugStep;
 
@@ -236,9 +255,10 @@ const applyStackItemTransformations = (
     instructions: transformationsAuthenticationInstructions,
     signedMessages: [],
     program: { ...debugStep.program },
+    functionTable: debugStep.functionTable ?? {},
+    functionCount: debugStep.functionCount ?? 0,
   };
 
-  const vm = createVirtualMachineBch2025();
   const transformationsEndState = vm.stateEvaluate(transformationsStartState);
 
   return transformationsEndState;
