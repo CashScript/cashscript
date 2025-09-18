@@ -292,8 +292,6 @@ export const generateTemplateScenarios = (
           ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
           ...generateTemplateScenarioParametersValues(artifact.constructorInputs, encodedConstructorArgs),
         },
-        currentBlockHeight: 2,
-        currentBlockTime: Math.round(+new Date() / 1000),
         // TODO: remove usage of private keys in P2SH scenarios as well
         keys: {
           privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
@@ -336,8 +334,6 @@ export const generateTemplateScenariosP2PKH = (
           [`signature_${inputIndex}`]: `0x${binToHex(signature)}`,
           [`public_key_${inputIndex}`]: `0x${binToHex(publicKey)}`,
         },
-        currentBlockHeight: 2,
-        currentBlockTime: Math.round(+new Date() / 1000),
       },
       transaction: generateTemplateScenarioTransaction(undefined, libauthTransaction, csTransaction, inputIndex),
       sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, libauthTransaction, inputIndex),
