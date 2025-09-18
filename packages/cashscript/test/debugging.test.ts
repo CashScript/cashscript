@@ -624,6 +624,8 @@ describe('Debugging tests', () => {
   describe('P2PKH only transaction', () => {
     it('should succeed when spending from P2PKH inputs with the corresponding unlocker', async () => {
       const provider = new MockNetworkProvider();
+      provider.addUtxo(aliceAddress, randomUtxo());
+      provider.addUtxo(aliceAddress, randomUtxo());
 
       const result = new TransactionBuilder({ provider })
         .addInputs(await provider.getUtxos(aliceAddress), new SignatureTemplate(alicePriv).unlockP2PKH())
@@ -637,6 +639,8 @@ describe('Debugging tests', () => {
     // Note: that also goes for Contract UTXOs where a user uses an unlocker of a different contract
     it.skip('should fail when spending from P2PKH inputs with an unlocker for a different public key', async () => {
       const provider = new MockNetworkProvider();
+      provider.addUtxo(aliceAddress, randomUtxo());
+      provider.addUtxo(aliceAddress, randomUtxo());
 
       const transactionBuilder = new TransactionBuilder({ provider })
         .addInputs(await provider.getUtxos(aliceAddress), new SignatureTemplate(bobPriv).unlockP2PKH())

@@ -8,6 +8,7 @@ title: Release Notes
 - :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
 - :boom: **BREAKING**: Make `provider` a required option in `Contract` constructor.
 - :boom: **BREAKING**: Remove deprecated "old" transaction builder (`contract.functions`).
+- :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
 - :hammer_and_wrench: Improve libauth template generation.
 
 ## v0.11.5

@@ -2,12 +2,7 @@ import { binToHex, decodeTransactionUnsafe, hexToBin, isHex } from '@bitauth/lib
 import { sha256 } from '@cashscript/utils';
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
-import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails, randomUtxo } from '../utils.js';
-
-// redeclare the addresses from vars.ts instead of importing them
-const aliceAddress = 'bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp';
-const bobAddress = 'bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc';
-const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
+import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails } from '../utils.js';
 
 interface MockNetworkProviderOptions {
   updateUtxoSet: boolean;
@@ -23,13 +18,6 @@ export default class MockNetworkProvider implements NetworkProvider {
 
   constructor(options?: Partial<MockNetworkProviderOptions>) {
     this.options = { updateUtxoSet: true, ...options };
-
-    for (let i = 0; i < 3; i += 1) {
-      // TODO: Don't seed the MockNetworkProvider with any UTXOs
-      this.addUtxo(aliceAddress, randomUtxo());
-      this.addUtxo(bobAddress, randomUtxo());
-      this.addUtxo(carolAddress, randomUtxo());
-    }
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
