@@ -48,6 +48,8 @@ import { addressToLockScript, extendedStringify, getSignatureAndPubkeyFromP2PKHI
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { deflate } from 'pako';
 
+// TODO: Add / improve descriptions throughout the template generation
+
 export const getLibauthTemplates = (
   txn: TransactionBuilder,
 ): WalletTemplate => {
@@ -227,7 +229,6 @@ const generateTemplateEntitiesP2PKH = (
   const lockScriptName = `p2pkh_placeholder_lock_${inputIndex}`;
   const unlockScriptName = `p2pkh_placeholder_unlock_${inputIndex}`;
 
-  // TODO: Add descriptions
   return {
     [`signer_${inputIndex}`]: {
       scripts: [lockScriptName, unlockScriptName],
@@ -411,7 +412,6 @@ const generateTemplateScenarios = (
   const encodedConstructorArgs = contract.encodedConstructorArgs;
   const scenarioIdentifier = `${artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
 
-  // TODO: Update scenario descriptions
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
     [scenarioIdentifier]: {
@@ -420,10 +420,10 @@ const generateTemplateScenarios = (
       data: {
         // encode values for the variables defined above in `entities` property
         bytecode: {
+          ...generateTemplateScenarioParametersFunctionIndex(abiFunction, contract.artifact.abi),
           ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
           ...generateTemplateScenarioParametersValues(artifact.constructorInputs, encodedConstructorArgs),
         },
-        // TODO: remove usage of private keys in P2SH scenarios as well
         keys: {
           privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
         },
@@ -432,14 +432,6 @@ const generateTemplateScenarios = (
       sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, libauthTransaction, inputIndex),
     },
   };
-
-  // TODO: understand exactly what this does, and refactor
-  // Looks similar to code in generateTemplateScenarioParametersFunctionIndex
-  // Looks like we just want to use that function and spread in the scenarios data bytecode field
-  if (artifact.abi.length > 1) {
-    const functionIndex = artifact.abi.findIndex((func) => func.name === abiFunction.name);
-    scenarios![scenarioIdentifier].data!.bytecode!.function_index = functionIndex.toString();
-  }
 
   return scenarios;
 };
@@ -450,10 +442,8 @@ const generateTemplateScenariosP2PKH = (
   inputIndex: number,
 ): WalletTemplate['scenarios'] => {
   const scenarioIdentifier = `P2PKH_spend_input${inputIndex}_evaluate`;
-
   const { signature, publicKey } = getSignatureAndPubkeyFromP2PKHInput(libauthTransaction.inputs[inputIndex]);
 
-  // TODO: Update scenario descriptions
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
     [scenarioIdentifier]: {
@@ -609,7 +599,6 @@ const generateUnlockingScriptParams = (
         ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
         ...generateTemplateScenarioParametersValues(contract.artifact.constructorInputs, contract.encodedConstructorArgs),
       },
-      // TODO: remove usage of private keys in P2SH scenarios as well
       keys: {
         privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
       },
