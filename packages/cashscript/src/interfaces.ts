@@ -75,14 +75,6 @@ export function isPlaceholderUnlocker(unlocker: Unlocker): unlocker is Placehold
   return 'placeholder' in unlocker;
 }
 
-export interface UtxoP2PKH extends Utxo {
-  template: SignatureTemplate;
-}
-
-export function isUtxoP2PKH(utxo: Utxo): utxo is UtxoP2PKH {
-  return 'template' in utxo;
-}
-
 export interface Recipient {
   to: string;
   amount: bigint;

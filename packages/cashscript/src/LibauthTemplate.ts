@@ -3,6 +3,7 @@ import {
   binToHex,
   decodeCashAddress,
   hexToBin,
+  Input,
   isHex,
   TransactionBch,
   utf8ToBin,
@@ -30,10 +31,10 @@ import { Contract } from './Contract.js';
 import { DebugResults, debugTemplate } from './debugging.js';
 import {
   HashType,
+  isContractUnlocker,
   isP2PKHUnlocker,
   isStandardUnlockableUtxo,
   isUnlockableUtxo,
-  isUtxoP2PKH,
   LibauthTokenDetails,
   Output,
   SignatureAlgorithm,
@@ -43,10 +44,9 @@ import {
   Utxo,
 } from './interfaces.js';
 import SignatureTemplate from './SignatureTemplate.js';
-import { addressToLockScript, extendedStringify, zip } from './utils.js';
+import { addressToLockScript, extendedStringify, getSignatureAndPubkeyFromP2PKHInput, zip } from './utils.js';
 import { TransactionBuilder } from './TransactionBuilder.js';
 import { deflate } from 'pako';
-
 
 /**
  * Generates template entities for P2PKH (Pay to Public Key Hash) placeholder scripts.
@@ -61,16 +61,22 @@ export const generateTemplateEntitiesP2PKH = (
   const lockScriptName = `p2pkh_placeholder_lock_${inputIndex}`;
   const unlockScriptName = `p2pkh_placeholder_unlock_${inputIndex}`;
 
+  // TODO: Add descriptions
   return {
     [`signer_${inputIndex}`]: {
       scripts: [lockScriptName, unlockScriptName],
-      description: `placeholder_key_${inputIndex}`,
+      description: `P2PKH data for input ${inputIndex}`,
       name: `P2PKH Signer (input #${inputIndex})`,
       variables: {
-        [`placeholder_key_${inputIndex}`]: {
+        [`signature_${inputIndex}`]: {
           description: '',
-          name: `P2PKH Placeholder Key (input #${inputIndex})`,
-          type: 'Key',
+          name: `P2PKH Signature (input #${inputIndex})`,
+          type: 'WalletData',
+        },
+        [`public_key_${inputIndex}`]: {
+          description: '',
+          name: `P2PKH public key (input #${inputIndex})`,
+          type: 'WalletData',
         },
       },
     },
@@ -152,30 +158,29 @@ const createWalletTemplateVariables = (
  *
  */
 export const generateTemplateScriptsP2PKH = (
-  template: SignatureTemplate,
   inputIndex: number,
 ): WalletTemplate['scripts'] => {
   const scripts: WalletTemplate['scripts'] = {};
   const lockScriptName = `p2pkh_placeholder_lock_${inputIndex}`;
   const unlockScriptName = `p2pkh_placeholder_unlock_${inputIndex}`;
-  const placeholderKeyName = `placeholder_key_${inputIndex}`;
 
-  const signatureAlgorithmName = getSignatureAlgorithmName(template.getSignatureAlgorithm());
-  const hashtypeName = getHashTypeName(template.getHashType(false));
-  const signatureString = `${placeholderKeyName}.${signatureAlgorithmName}.${hashtypeName}`;
+  const signatureString = `signature_${inputIndex}`;
+  const publicKeyString = `public_key_${inputIndex}`;
+
   // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
   // this is needed for correct cross-references in the template
   scripts[unlockScriptName] = {
+    passes: [`P2PKH_spend_input${inputIndex}_evaluate`],
     name: `P2PKH Unlock (input #${inputIndex})`,
     script:
-      `<${signatureString}>\n<${placeholderKeyName}.public_key>`,
+      `<${signatureString}>\n<${publicKeyString}>`,
     unlocks: lockScriptName,
   };
   scripts[lockScriptName] = {
     lockingType: 'standard',
     name: `P2PKH Lock (input #${inputIndex})`,
     script:
-      `OP_DUP\nOP_HASH160 <$(<${placeholderKeyName}.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
+      `OP_DUP\nOP_HASH160 <$(<${publicKeyString}> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
   };
 
   return scripts;
@@ -275,6 +280,7 @@ export const generateTemplateScenarios = (
   const encodedConstructorArgs = contract.encodedConstructorArgs;
   const scenarioIdentifier = `${artifact.contractName}_${abiFunction.name}_input${inputIndex}_evaluate`;
 
+  // TODO: Update scenario descriptions
   const scenarios = {
     // single scenario to spend out transaction under test given the CashScript parameters provided
     [scenarioIdentifier]: {
@@ -288,12 +294,13 @@ export const generateTemplateScenarios = (
         },
         currentBlockHeight: 2,
         currentBlockTime: Math.round(+new Date() / 1000),
+        // TODO: remove usage of private keys in P2SH scenarios as well
         keys: {
           privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
         },
       },
       transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, csTransaction, inputIndex),
-      sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, inputIndex),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, libauthTransaction, inputIndex),
     },
   };
 
@@ -308,20 +315,53 @@ export const generateTemplateScenarios = (
   return scenarios;
 };
 
+export const generateTemplateScenariosP2PKH = (
+  libauthTransaction: TransactionBch,
+  csTransaction: TransactionType,
+  inputIndex: number,
+): WalletTemplate['scenarios'] => {
+  const scenarioIdentifier = `P2PKH_spend_input${inputIndex}_evaluate`;
+
+  const { signature, publicKey } = getSignatureAndPubkeyFromP2PKHInput(libauthTransaction.inputs[inputIndex]);
+
+  // TODO: Update scenario descriptions
+  const scenarios = {
+    // single scenario to spend out transaction under test given the CashScript parameters provided
+    [scenarioIdentifier]: {
+      name: `Evaluate P2PKH spend (input #${inputIndex})`,
+      description: 'An example evaluation where this script execution passes.',
+      data: {
+        // encode values for the variables defined above in `entities` property
+        bytecode: {
+          [`signature_${inputIndex}`]: `0x${binToHex(signature)}`,
+          [`public_key_${inputIndex}`]: `0x${binToHex(publicKey)}`,
+        },
+        currentBlockHeight: 2,
+        currentBlockTime: Math.round(+new Date() / 1000),
+      },
+      transaction: generateTemplateScenarioTransaction(undefined, libauthTransaction, csTransaction, inputIndex),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, libauthTransaction, inputIndex),
+    },
+  };
+
+  return scenarios;
+};
+
 const generateTemplateScenarioTransaction = (
-  contract: Contract,
+  contract: Contract | undefined,
   libauthTransaction: TransactionBch,
   csTransaction: TransactionType,
   slotIndex: number,
 ): WalletTemplateScenario['transaction'] => {
   const inputs = libauthTransaction.inputs.map((input, inputIndex) => {
     const csInput = csTransaction.inputs[inputIndex] as Utxo;
+    const libauthInput = libauthTransaction.inputs[inputIndex];
 
     return {
       outpointIndex: input.outpointIndex,
       outpointTransactionHash: binToHex(input.outpointTransactionHash),
       sequenceNumber: input.sequenceNumber,
-      unlockingBytecode: generateTemplateScenarioBytecode(csInput, inputIndex, 'p2pkh_placeholder_unlock', slotIndex === inputIndex),
+      unlockingBytecode: generateTemplateScenarioBytecode(csInput, libauthInput, inputIndex, 'p2pkh_placeholder_unlock', slotIndex === inputIndex),
     } as WalletTemplateScenarioInput;
   });
 
@@ -330,8 +370,16 @@ const generateTemplateScenarioTransaction = (
   const outputs = libauthTransaction.outputs.map((output, index) => {
     const csOutput = csTransaction.outputs[index];
 
+    if (csOutput && contract) {
+      return {
+        lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput, contract),
+        token: serialiseTokenDetails(output.token),
+        valueSatoshis: Number(output.valueSatoshis),
+      } as WalletTemplateScenarioTransactionOutput;
+    }
+
     return {
-      lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput, contract),
+      lockingBytecode: `${binToHex(output.lockingBytecode)}`,
       token: serialiseTokenDetails(output.token),
       valueSatoshis: Number(output.valueSatoshis),
     } as WalletTemplateScenarioTransactionOutput;
@@ -344,11 +392,14 @@ const generateTemplateScenarioTransaction = (
 
 const generateTemplateScenarioSourceOutputs = (
   csTransaction: TransactionType,
+  libauthTransaction: TransactionBch,
   slotIndex: number,
 ): Array<WalletTemplateScenarioOutput<true>> => {
   return csTransaction.inputs.map((input, inputIndex) => {
+    const libauthInput = libauthTransaction.inputs[inputIndex];
+
     return {
-      lockingBytecode: generateTemplateScenarioBytecode(input, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex),
+      lockingBytecode: generateTemplateScenarioBytecode(input, libauthInput, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex),
       valueSatoshis: Number(input.satoshis),
       token: serialiseTokenDetails(input.token),
     };
@@ -409,18 +460,14 @@ export const getLibauthTemplates = (
 
   // We can typecast this because we check that all inputs are standard unlockable at the top of this function
   for (const [inputIndex, input] of (txn.inputs as StandardUnlockableUtxo[]).entries()) {
-    // If template exists on the input, it indicates this is a P2PKH (Pay to Public Key Hash) input
-    if ('template' in input.unlocker) {
-      // @ts-ignore TODO: Remove UtxoP2PKH type and only use UnlockableUtxo in Libauth Template generation
-      input.template = input.unlocker?.template; // Added to support P2PKH inputs in buildTemplate
+    if (isP2PKHUnlocker(input.unlocker)) {
       Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(inputIndex));
-      Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(input.unlocker.template, inputIndex));
-
+      Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(inputIndex));
+      Object.assign(scenarios, generateTemplateScenariosP2PKH(libauthTransaction, csTransaction, inputIndex));
       continue;
     }
 
-    // If contract exists on the input, it indicates this is a contract input
-    if ('contract' in input.unlocker) {
+    if (isContractUnlocker(input.unlocker)) {
       const contract = input.unlocker?.contract;
       const abiFunction = input.unlocker?.abiFunction;
 
@@ -537,7 +584,7 @@ export const getLibauthTemplates = (
 
 export const debugLibauthTemplate = (template: WalletTemplate, transaction: TransactionBuilder): DebugResults => {
   const allArtifacts = transaction.inputs
-    .map(input => 'contract' in input.unlocker ? input.unlocker.contract : undefined)
+    .map(input => isContractUnlocker(input.unlocker) ? input.unlocker.contract : undefined)
     .filter((contract): contract is Contract => Boolean(contract))
     .map(contract => contract.artifact);
 
@@ -575,17 +622,19 @@ const generateLockingScriptParams = (
 
 export const generateUnlockingScriptParams = (
   csInput: StandardUnlockableUtxo,
+  libauthInput: Input,
   p2pkhScriptNameTemplate: string,
   inputIndex: number,
 ): WalletTemplateScenarioBytecode => {
   if (isP2PKHUnlocker(csInput.unlocker)) {
+    const { signature, publicKey } = getSignatureAndPubkeyFromP2PKHInput(libauthInput);
+
     return {
       script: `${p2pkhScriptNameTemplate}_${inputIndex}`,
       overrides: {
-        keys: {
-          privateKeys: {
-            [`placeholder_key_${inputIndex}`]: binToHex(csInput.unlocker.template.privateKey),
-          },
+        bytecode: {
+          [`signature_${inputIndex}`]: `0x${binToHex(signature)}`,
+          [`public_key_${inputIndex}`]: `0x${binToHex(publicKey)}`,
         },
       },
     };
@@ -604,6 +653,7 @@ export const generateUnlockingScriptParams = (
         ...generateTemplateScenarioParametersValues(abiFunction.inputs, encodedFunctionArgs),
         ...generateTemplateScenarioParametersValues(contract.artifact.constructorInputs, contract.encodedConstructorArgs),
       },
+      // TODO: remove usage of private keys in P2SH scenarios as well
       keys: {
         privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
       },
@@ -745,29 +795,16 @@ export const generateTemplateScenarioKeys = (
 
 // Used for generating the locking / unlocking bytecode for source outputs and inputs
 export const generateTemplateScenarioBytecode = (
-  input: Utxo, inputIndex: number, p2pkhScriptNameTemplate: string, insertSlot?: boolean,
+  input: Utxo,
+  libauthInput: Input,
+  inputIndex: number,
+  p2pkhScriptNameTemplate: string,
+  insertSlot?: boolean,
 ): WalletTemplateScenarioBytecode | ['slot'] => {
   if (insertSlot) return ['slot'];
 
-  const p2pkhScriptName = `${p2pkhScriptNameTemplate}_${inputIndex}`;
-  const placeholderKeyName = `placeholder_key_${inputIndex}`;
-
-  // This is for P2PKH inputs in the old transaction builder (TODO: remove when we remove old transaction builder)
-  if (isUtxoP2PKH(input)) {
-    return {
-      script: p2pkhScriptName,
-      overrides: {
-        keys: {
-          privateKeys: {
-            [placeholderKeyName]: binToHex(input.template.privateKey),
-          },
-        },
-      },
-    };
-  }
-
   if (isUnlockableUtxo(input) && isStandardUnlockableUtxo(input)) {
-    return generateUnlockingScriptParams(input, p2pkhScriptNameTemplate, inputIndex);
+    return generateUnlockingScriptParams(input, libauthInput, p2pkhScriptNameTemplate, inputIndex);
   }
 
   // 'slot' means that we are currently evaluating this specific input,
