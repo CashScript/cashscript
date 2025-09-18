@@ -25,14 +25,8 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
 
   for (const unlockingScriptId of unlockingScriptIds) {
     const scenarioIds = (template.scripts[unlockingScriptId] as WalletTemplateScriptUnlocking).passes ?? [];
-    // There are no scenarios defined for P2PKH placeholder scripts, so we skip them
-    if (scenarioIds.length === 0) continue;
 
     const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(artifact.contractName));
-
-    if (!matchingArtifact) {
-      throw new Error(`No artifact found for unlocking script ${unlockingScriptId}`);
-    }
 
     for (const scenarioId of scenarioIds) {
       results[`${unlockingScriptId}.${scenarioId}`] = debugSingleScenario(template, matchingArtifact, unlockingScriptId, scenarioId);
@@ -45,7 +39,7 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
 };
 
 const debugSingleScenario = (
-  template: WalletTemplate, artifact: Artifact, unlockingScriptId: string, scenarioId: string,
+  template: WalletTemplate, artifact: Artifact | undefined, unlockingScriptId: string, scenarioId: string,
 ): DebugResult => {
   const { vm, program } = createProgram(template, unlockingScriptId, scenarioId);
 
@@ -60,12 +54,15 @@ const debugSingleScenario = (
   const executedDebugSteps = lockingScriptDebugResult
     .filter((debugStep) => debugStep.controlStack.every(item => item === true));
 
-  const executedLogs = (artifact.debug?.logs ?? [])
-    .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
+  // P2PKH inputs do not have an artifact, so we skip the console.log handling
+  if (artifact) {
+    const executedLogs = (artifact.debug?.logs ?? [])
+      .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
 
-  for (const log of executedLogs) {
-    const inputIndex = extractInputIndexFromScenario(scenarioId);
-    logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex);
+    for (const log of executedLogs) {
+      const inputIndex = extractInputIndexFromScenario(scenarioId);
+      logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex);
+    }
   }
 
   const lastExecutedDebugStep = executedDebugSteps[executedDebugSteps.length - 1];
@@ -87,10 +84,17 @@ const debugSingleScenario = (
     const isNullFail = lastExecutedDebugStep.error.includes(AuthenticationErrorCommon.nonNullSignatureFailure);
     const requireStatementIp = failingIp + (isNullFail && isSignatureCheckWithoutVerify(failingInstruction) ? 1 : 0);
 
+    const { program: { inputIndex }, error } = lastExecutedDebugStep;
+
+    // If there is no artifact, this is a P2PKH debug error, error can occur when final CHECKSIG fails with NULLFAIL or when
+    // public key does not match pkh in EQUALVERIFY
+    // Note: due to P2PKHUnlocker implementation, the CHECKSIG cannot fail in practice, only the EQUALVERIFY can fail
+    if (!artifact) {
+      throw new FailedTransactionError(error, getBitauthUri(template));
+    }
+
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((statement) => statement.ip === requireStatementIp);
-
-    const { program: { inputIndex }, error } = lastExecutedDebugStep;
 
     if (requireStatement) {
       // Note that we use failingIp here rather than requireStatementIp, see comment above
@@ -121,10 +125,16 @@ const debugSingleScenario = (
     // console.warn('message', finalExecutedVerifyIp);
     // console.warn(artifact.debug?.requires);
 
+    const { program: { inputIndex } } = lastExecutedDebugStep;
+
+    // If there is no artifact, this is a P2PKH debug error, final verify can only occur when final CHECKSIG failed
+    // Note: due to P2PKHUnlocker implementation, this cannot happen in practice
+    if (!artifact) {
+      throw new FailedTransactionError(evaluationResult, getBitauthUri(template));
+    }
+
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((message) => message.ip === finalExecutedVerifyIp);
-
-    const { program: { inputIndex } } = lastExecutedDebugStep;
 
     if (requireStatement) {
       throw new FailedRequireError(
