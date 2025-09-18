@@ -485,6 +485,10 @@ export const fixtures: Fixture[] = [
                   },
                 },
               },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
@@ -495,6 +499,14 @@ export const fixtures: Fixture[] = [
                     'signature_2': expect.any(String),
                     'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -723,6 +735,10 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': [
                 'slot',
               ],
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
@@ -733,6 +749,14 @@ export const fixtures: Fixture[] = [
                     'signature_2': expect.any(String),
                     'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -967,12 +991,24 @@ export const fixtures: Fixture[] = [
                   },
                 },
               },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
               'lockingBytecode': [
                 'slot',
               ],
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
+                },
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
@@ -1205,6 +1241,10 @@ export const fixtures: Fixture[] = [
                   },
                 },
               },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
@@ -1215,6 +1255,14 @@ export const fixtures: Fixture[] = [
                     'signature_2': expect.any(String),
                     'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -1444,6 +1492,10 @@ export const fixtures: Fixture[] = [
                   },
                 },
               },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
@@ -1454,6 +1506,14 @@ export const fixtures: Fixture[] = [
                     'signature_2': expect.any(String),
                     'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -1683,6 +1743,10 @@ export const fixtures: Fixture[] = [
                   },
                 },
               },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
@@ -1693,6 +1757,14 @@ export const fixtures: Fixture[] = [
                     'signature_2': expect.any(String),
                     'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -1922,6 +1994,10 @@ export const fixtures: Fixture[] = [
                   },
                 },
               },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
               'valueSatoshis': expect.any(Number),
             },
             {
@@ -1932,6 +2008,14 @@ export const fixtures: Fixture[] = [
                     'signature_2': expect.any(String),
                     'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),

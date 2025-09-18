@@ -39,6 +39,8 @@ describe('Transaction Builder', () => {
     (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ token: randomToken() }));
     (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
     (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
+    (provider as any).addUtxo?.(aliceAddress, randomUtxo());
+    (provider as any).addUtxo?.(aliceAddress, randomUtxo());
     (provider as any).addUtxo?.(bobAddress, randomUtxo());
     (provider as any).addUtxo?.(bobAddress, randomUtxo());
     (provider as any).addUtxo?.(carolAddress, randomUtxo());
@@ -206,7 +208,7 @@ describe('Transaction Builder', () => {
     const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
     const sigTemplate = new SignatureTemplate(alicePriv);
 
-    expect(aliceUtxos.length).toBeGreaterThan(2);
+    expect(aliceUtxos.length).toBe(2);
 
     const change = aliceUtxos[0].satoshis + aliceUtxos[1].satoshis - 1000n;
 
