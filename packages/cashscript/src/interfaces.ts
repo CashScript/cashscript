@@ -1,4 +1,4 @@
-import { type Transaction } from '@bitauth/libauth';
+import { AuthenticationProgramStateResourceLimits, type Transaction } from '@bitauth/libauth';
 import type { NetworkProvider } from './network/index.js';
 import type SignatureTemplate from './SignatureTemplate.js';
 import { Contract } from './Contract.js';
@@ -164,3 +164,5 @@ export interface ContractOptions {
 }
 
 export type AddressType = 'p2sh20' | 'p2sh32';
+
+export type VmResourceUsage = AuthenticationProgramStateResourceLimits['metrics'];

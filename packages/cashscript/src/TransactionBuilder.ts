@@ -1,5 +1,4 @@
 import {
-  AuthenticationProgramStateResourceLimits,
   binToHex,
   decodeTransaction,
   decodeTransactionUnsafe,
@@ -18,7 +17,7 @@ import {
   isUnlockableUtxo,
   isStandardUnlockableUtxo,
   StandardUnlockableUtxo,
-  isP2PKHUnlocker,
+  VmResourceUsage,
   isContractUnlocker,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
@@ -42,7 +41,6 @@ export interface TransactionBuilderOptions {
 }
 
 const DEFAULT_SEQUENCE = 0xfffffffe;
-type VmResourceUsage = AuthenticationProgramStateResourceLimits['metrics'] | undefined;
 
 export class TransactionBuilder {
   public provider: NetworkProvider;
@@ -176,35 +174,33 @@ export class TransactionBuilder {
     return debugLibauthTemplate(this.getLibauthTemplate(), this);
   }
 
-  vmResourceUsage(verbose: boolean = false): Array<VmResourceUsage> {
+  getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage> {
+    // Note that only StandardUnlockableUtxo inputs are supported for debugging, so any transaction with custom unlockers
+    // cannot be debugged (and therefore cannot return VM resource usage)
     const results = this.debug();
-    const result = [] as Array<VmResourceUsage>;
+    const vmResourceUsage: Array<VmResourceUsage> = [];
     const tableData: Array<Record<string, any>> = [];
 
-    const resultKeys = Object.keys(results);
-    for (const [index, input] of this.inputs.entries()) {
-      const key = resultKeys.find((k) => k.includes(`input${index}`));
-      if (key && isContractUnlocker(input.unlocker)) {
-        const metrics = results[key].at(-1)!.metrics!;
+    const formatMetric = (value: number, total: number, withPercentage: boolean = false): string =>
+      `${formatNumber(value)} / ${formatNumber(total)}${withPercentage ? ` (${(value / total * 100).toFixed(0)}%)` : ''}`;
+    const formatNumber = (value: number): string => value.toLocaleString('en');
 
-        result.push(metrics);
-        tableData.push({
-          'Contract - Function': `${input.unlocker.contract.name} - ${input.unlocker.abiFunction.name}`,
-          Ops: metrics.evaluatedInstructionCount,
-          OpCost: `${metrics.operationCost}/${metrics.maximumOperationCost}`,
-          SigChecks: `${metrics.signatureCheckCount}/${metrics.maximumSignatureCheckCount}`,
-          Hashes: `${metrics.hashDigestIterations}/${metrics.maximumHashDigestIterations}`,
-        });
-      } else {
-        result.push(undefined);
-        tableData.push({
-          'Contract - Function': isP2PKHUnlocker(input.unlocker) ? 'P2PKH' : 'Custom',
-          Ops: 0,
-          OpCost: '',
-          SigChecks: '',
-          Hashes: '',
-        });
-      }
+    const resultEntries = Object.entries(results);
+    for (const [index, input] of this.inputs.entries()) {
+      const [, result] = resultEntries.find(([entryKey]) => entryKey.includes(`input${index}`)) ?? [];
+      const metrics = result?.at(-1)?.metrics;
+
+      // Should not happen
+      if (!metrics) throw new Error('VM resource could not be calculated');
+
+      vmResourceUsage.push(metrics);
+      tableData.push({
+        'Contract - Function': isContractUnlocker(input.unlocker) ? `${input.unlocker.contract.name} - ${input.unlocker.abiFunction.name}` : 'P2PKH Input',
+        Ops: metrics.evaluatedInstructionCount,
+        'Op Cost Budget Usage': formatMetric(metrics.operationCost, metrics.maximumOperationCost, true),
+        SigChecks: formatMetric(metrics.signatureCheckCount, metrics.maximumSignatureCheckCount),
+        Hashes: formatMetric(metrics.hashDigestIterations, metrics.maximumHashDigestIterations),
+      });
     }
 
     if (verbose) {
@@ -212,9 +208,10 @@ export class TransactionBuilder {
       console.table(tableData);
     }
 
-    return result;
+    return vmResourceUsage;
   }
 
+  // TODO: rename to getBitauthUri()
   bitauthUri(): string {
     console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
     return getBitauthUri(this.getLibauthTemplate());

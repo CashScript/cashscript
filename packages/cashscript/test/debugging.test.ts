@@ -688,6 +688,7 @@ describe('VM Resources', () => {
 
     provider.addUtxo(contractSingleFunction.address, randomUtxo());
     provider.addUtxo(contractZeroHandling.address, randomUtxo());
+    provider.addUtxo(aliceAddress, randomUtxo());
 
     const tx = new TransactionBuilder({ provider })
       .addInputs(await contractSingleFunction.getUtxos(), contractSingleFunction.unlock.test_require_single_function())
@@ -698,17 +699,17 @@ describe('VM Resources', () => {
     console.log = jest.fn();
     console.table = jest.fn();
 
-    const vmUsage = tx.vmResourceUsage();
+    const vmUsage = tx.getVmResourceUsage();
     expect(console.log).not.toHaveBeenCalled();
     expect(console.table).not.toHaveBeenCalled();
 
-    tx.vmResourceUsage(true);
+    tx.getVmResourceUsage(true);
     expect(console.log).toHaveBeenCalledWith('VM Resource usage by inputs:');
     expect(console.table).toHaveBeenCalled();
 
     jest.restoreAllMocks();
 
     expect(vmUsage[0]?.hashDigestIterations).toBeGreaterThan(0);
-    expect(vmUsage[2]?.hashDigestIterations).toBeUndefined();
+    expect(vmUsage[2]?.hashDigestIterations).toBeGreaterThan(0);
   });
 });
