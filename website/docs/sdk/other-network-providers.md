@@ -6,13 +6,15 @@ The CashScript SDK needs to connect to the BCH network to perform certain operat
 
 ## MockNetworkProvider
 ```ts
-new MockNetworkProvider()
+new MockNetworkProvider(options?: { updateUtxoSet: boolean })
 ```
 
-The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally. 
+The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally.
 
 The `MockNetworkProvider` has extra methods to enable this local emulation such as `.addUtxo()` and `.setBlockHeight()`.
 You can read more about the `MockNetworkProvider` and automated tests on the [testing setup](/docs/sdk/testing-setup) page.
+
+The `updateUtxoSet` option is used to determine whether the UTXO set should be updated after a transaction is sent. If `updateUtxoSet` is `true`, the UTXO set will be updated to reflect the new state of the mock network. If `updateUtxoSet` is `false` (default), the UTXO set will not be updated.
 
 #### Example
 ```ts

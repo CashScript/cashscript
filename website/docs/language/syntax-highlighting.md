@@ -9,6 +9,10 @@ For Visual Studio Code (and derived editors like Cursor) we have an official [Ca
 
 Because of the first-class CashScript support, Visual Studio Code with this CashScript extension is the recommended way to develop CashScript contracts.
 
+## Cursor
+
+Cursor and other VS Code forks can use the VS Code extension mentioned above. This extension should be findable in the extensions menu within the editor. If it is not, you can manually install it from the [Open VSX Registry](https://open-vsx.org/extension/CashScript/cashscript-vscode).
+
 ## Sublime Text
 The most popular Solidity plugin for Sublime Text 2/3 is [Ethereum](https://packagecontrol.io/packages/Ethereum). Install this plugin with [Package Control](https://packagecontrol.io/), open a `.cash` file and set Solidity as the syntax language in the Sublime menu bar:
 

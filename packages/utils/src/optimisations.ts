@@ -114,6 +114,10 @@ const provableOptimisations = [
   ['OP_16 OP_NIP', 'OP_DROP OP_16'],
 
   ['OP_2 OP_PICK OP_SWAP OP_2 OP_PICK OP_NIP', 'OP_DROP OP_2DUP'],
+
+  // .slice(0, x) optimisation & .slice(x, y.length) optimisation
+  ['OP_0 OP_SPLIT OP_NIP', ''],
+  ['OP_SIZE OP_SPLIT OP_DROP', ''],
 ] as [string, string][];
 
 const unprovableOptimisations = [

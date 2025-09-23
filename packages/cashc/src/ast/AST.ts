@@ -79,7 +79,7 @@ export class ParameterNode extends Node implements Named, Typed {
   }
 }
 
-export abstract class StatementNode extends Node {}
+export abstract class StatementNode extends Node { }
 
 export class VariableDefinitionNode extends StatementNode implements Named, Typed {
   constructor(
@@ -98,8 +98,9 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
 
 export class TupleAssignmentNode extends StatementNode {
   constructor(
-    public var1: { name: string, type: Type },
-    public var2: { name: string, type: Type },
+    // TODO: Use an IdentifierNode instead of a custom type
+    public left: { name: string, type: Type },
+    public right: { name: string, type: Type },
     public tuple: ExpressionNode,
   ) {
     super();
@@ -232,6 +233,20 @@ export class TupleIndexOpNode extends ExpressionNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitTupleIndexOp(this);
+  }
+}
+
+export class SliceNode extends ExpressionNode {
+  constructor(
+    public element: ExpressionNode,
+    public start: ExpressionNode,
+    public end: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitSlice(this);
   }
 }
 

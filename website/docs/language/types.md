@@ -65,10 +65,11 @@ Members:
 
 - `length`: Number of characters in the string.
 - `split(int)`: Splits the string at the specified index and returns a tuple with the two resulting strings.
+- `slice(int,int)`: Returns a substring from the start index up to (but excluding) the end index.
 - `reverse()`: Reverses the string.
 
 :::caution
-The script will fail if `split()` is called with an index that is out of bounds.
+The script will fail if `split()`or `slice()` is called with an index that is out of bounds.
 :::
 
 ## Bytes
@@ -89,16 +90,19 @@ Members:
 
 - `length`: Number of bytes in the sequence.
 - `split(int)`: Splits the byte sequence at the specified index and returns a tuple with the two resulting byte sequences.
+- `slice(int,int)`: Returns the part of the byte sequence from the start index up to (but excluding) the end index.
 - `reverse()`: Reverses the byte sequence.
 
 :::caution
-The script will fail if `split()` is called with an index that is out of bounds.
+The script will fail if `split()` or `slice()` is called with an index that is out of bounds.
 :::
 
 #### Example
 ```solidity
 bytes mintingCapability = 0x02;
 bytes noCapability = 0x;
+
+bytes2 data = 0x12345678.slice(1, 3); // 0x3456
 ```
 
 ## Bytes types with semantic meaning
@@ -139,8 +143,8 @@ checkMultisig([sig1, sig2], [pk1, pk2, pk3]);
 Tuples are the type that is returned when calling the `split` member function on a `string` or `bytes` type. Their first or second element can be accessed through an indexing syntax similar to other languages:
 
 ```solidity
-string question = "What is Bitcoin Cash?";
-string answer = question.split(15)[0].split(8)[1]; // Answer is "Cash"
+string bitcoinCash = "Bitcoin Cash";
+string cash = bitcoinCash.split(8)[1];
 ```
 
 :::note
@@ -150,8 +154,8 @@ It is not supported to use a variable for the tupleIndex. Instead you can assign
 It is also possible to assign both sides of the tuple at once with a destructuring syntax:
 
 ```solidity
-string hello, string world = "Hello World".split(5);
-require(hello + "world" == "Hello " + world);
+string hello, string world = "Hello World".split(6);
+require(hello + "World" == "Hello " + world);
 ```
 
 ## Type Casting
@@ -206,8 +210,9 @@ If you do need to pad bytes to a specific length, you can convert the bytes to `
 
 #### Example
 ```solidity
-bytes data = nftCommitment.split(10)[0]; // (type = bytes, content = 10 bytes)
-bytes20 paddedData = bytes20(int(data)); // (type = bytes20, content = 20 bytes)
+bytes10 data = nftCommitment.split(10)[0];
+// First convert 'bytes' type to 'int' to cast with padding
+bytes20 paddedData = bytes20(int(data));
 require(storedContractState == paddedData);
 ```
 
@@ -217,7 +222,8 @@ When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20`
 
 #### Example
 ```solidity
-bytes pkh = nftCommitment.split(20)[0]; // (type = bytes, content = 20 bytes)
+bytes pkh = tx.inputs[0].nftCommitment; // (type = bytes, content = 20 bytes)
+// Typecast the variable to be able to use it for 'new LockingBytecodeP2PKH()'
 bytes20 bytes20Pkh = bytes20(pkh); // (type = bytes20, content = 20 bytes)
 bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20Pkh);
 ```

@@ -1,0 +1,6 @@
+contract SplitTyped(bytes b) {
+    function spend() {
+        bytes4 x = b.split(4)[0];
+        require(x != b);
+    }
+}

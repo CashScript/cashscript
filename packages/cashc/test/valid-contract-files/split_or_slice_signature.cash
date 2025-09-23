@@ -1,0 +1,9 @@
+contract Test(sig signature) {
+    function spend() {
+        // Assume Schnorr
+        bytes hashtype1 = signature.split(64)[1];
+        bytes1 hashtype2 = signature.slice(64, 65);
+        require(hashtype1 == 0x01);
+        require(hashtype2 == 0x01);
+    }
+}

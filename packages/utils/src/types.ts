@@ -4,7 +4,7 @@ export class ArrayType {
   constructor(
     public elementType: Type,
     public bound?: number,
-  ) {}
+  ) { }
 
   toString(): string {
     return `${this.elementType}[${this.bound ?? ''}]`;
@@ -14,7 +14,7 @@ export class ArrayType {
 export class BytesType {
   constructor(
     public bound?: number,
-  ) {}
+  ) { }
 
   static fromString(str: string): BytesType {
     const bound = str === 'byte' ? 1 : Number.parseInt(str.substring(5), 10) || undefined;
@@ -28,11 +28,12 @@ export class BytesType {
 
 export class TupleType {
   constructor(
-    public elementType?: Type,
-  ) {}
+    public leftType: Type,
+    public rightType: Type,
+  ) { }
 
   toString(): string {
-    return `(${this.elementType}, ${this.elementType})`;
+    return `(${this.leftType}, ${this.rightType})`;
   }
 }
 
@@ -110,7 +111,13 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
 export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (!actual || !expected) return false;
 
-  // Tuples can't be cast
+  if (actual instanceof TupleType && expected instanceof TupleType) {
+    const leftIsCompatible = implicitlyCastable(actual.leftType, expected.leftType);
+    const rightIsCompatible = implicitlyCastable(actual.rightType, expected.rightType);
+    return leftIsCompatible && rightIsCompatible;
+  }
+
+  // Can't cast between Tuple and non-Tuple
   if (actual instanceof TupleType || expected instanceof TupleType) return false;
 
   // Arrays can be cast if their elements can be cast (don't think this is actually used ever)
@@ -183,7 +190,7 @@ export function parseType(str: string): Type {
 }
 
 export function isPrimitive(type: Type): type is PrimitiveType {
-  return !!PrimitiveType[type.toString().toUpperCase() as keyof typeof PrimitiveType];
+  return Boolean(PrimitiveType[type.toString().toUpperCase() as keyof typeof PrimitiveType]);
 }
 
 export interface LocationI {

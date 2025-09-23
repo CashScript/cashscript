@@ -10,7 +10,7 @@ import { describeOrSkip, gatherUtxos, getTxOutputs } from '../../test-util.js';
 import { FailedRequireError } from '../../../src/Errors.js';
 import artifact from '../../fixture/p2pkh.artifact.js';
 
-describeOrSkip(!process.env.TESTS_USE_MOCKNET, 'test FullStackNetworkProvider', () => {
+describeOrSkip(Boolean(process.env.TESTS_USE_CHIPNET), 'FullStackNetworkProvider', () => {
   const provider = new FullStackNetworkProvider('mainnet', new BCHJS({ restURL: 'https://api.fullstack.cash/v5/' }));
 
   describe('get utxos using FullStackNetworkProvider', () => {

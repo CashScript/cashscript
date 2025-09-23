@@ -1,16 +1,19 @@
 import type SignatureTemplate from '../SignatureTemplate.js';
 
+type BytesType = Uint8Array | string;
+type SignatureType = SignatureTemplate | BytesType;
+
 type TypeMap = {
-  [k: `bytes${number}`]: Uint8Array | string; // Matches any "bytes<number>" pattern
+  [k: `bytes${number}`]: BytesType; // Matches any "bytes<number>" pattern
 } & {
-  byte: Uint8Array | string;
-  bytes: Uint8Array | string;
+  byte: BytesType;
+  bytes: BytesType;
   bool: boolean;
   int: bigint;
   string: string;
-  pubkey: Uint8Array | string;
-  sig: SignatureTemplate | Uint8Array | string;
-  datasig: Uint8Array | string;
+  pubkey: BytesType;
+  sig: SignatureType;
+  datasig: BytesType;
 };
 
 // Helper type to process a single parameter by mapping its `type` to a value in `TypeMap`.

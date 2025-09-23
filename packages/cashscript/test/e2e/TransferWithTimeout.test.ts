@@ -15,9 +15,10 @@ import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
 describe('TransferWithTimeout', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
+
   const twtInstancePast = new Contract(twtArtifact, [alicePub, bobPub, 100000n], { provider });
   const twtInstanceFuture = new Contract(twtArtifact, [alicePub, bobPub, 2000000n], { provider });
 

@@ -19,9 +19,12 @@ import {
   StatementNode,
   ContractNode,
   ExpressionNode,
+  SliceNode,
+  IntLiteralNode,
 } from './ast/AST.js';
 import { Symbol, SymbolType } from './ast/SymbolTable.js';
 import { Location, Point } from './ast/Location.js';
+import { BinaryOperator } from './ast/Operator.js';
 
 export class CashScriptError extends Error {
   node: Node;
@@ -73,7 +76,7 @@ export class InvalidSymbolTypeError extends CashScriptError {
   }
 }
 
-export class RedefinitionError extends CashScriptError {}
+export class RedefinitionError extends CashScriptError { }
 
 export class FunctionRedefinitionError extends RedefinitionError {
   constructor(
@@ -160,7 +163,7 @@ export class UnequalTypeError extends TypeError {
 
 export class UnsupportedTypeError extends TypeError {
   constructor(
-    node: BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode,
+    node: BinaryOpNode | UnaryOpNode | TimeOpNode | TupleIndexOpNode | SliceNode,
     actual?: Type,
     expected?: Type,
   ) {
@@ -170,6 +173,8 @@ export class UnsupportedTypeError extends TypeError {
       } else {
         super(node, actual, expected, `Tried to call member 'split' on unsupported type '${actual}'`);
       }
+    } else if (node instanceof SliceNode) {
+      super(node, actual, expected, `Tried to call member 'slice' on unsupported type '${actual}'`);
     } else if (node instanceof BinaryOpNode) {
       super(node, actual, expected, `Tried to apply operator '${node.operator}' to unsupported type '${actual}'`);
     } else if (node instanceof UnaryOpNode && node.operator.startsWith('.')) {
@@ -249,9 +254,22 @@ export class ArrayElementError extends CashScriptError {
 
 export class IndexOutOfBoundsError extends CashScriptError {
   constructor(
-    node: TupleIndexOpNode,
+    node: TupleIndexOpNode | BinaryOpNode | SliceNode,
   ) {
-    super(node, `Index ${node.index} out of bounds`);
+    if (node instanceof TupleIndexOpNode) {
+      super(node, `Index ${node.index} out of bounds`);
+    } else if (
+      node instanceof BinaryOpNode && node.operator === BinaryOperator.SPLIT && node.right instanceof IntLiteralNode
+    ) {
+      const splitIndex = Number(node.right.value);
+      super(node, `Split index ${splitIndex} out of bounds for type ${node.left.type}`);
+    } else if (node instanceof SliceNode) {
+      const start = node.start instanceof IntLiteralNode ? Number(node.start.value) : 'start';
+      const end = node.end instanceof IntLiteralNode ? Number(node.end.value) : 'end';
+      super(node, `Slice indexes (${start}, ${end}) out of bounds for type ${node.element.type}`);
+    } else {
+      super(node, 'Index out of bounds');
+    }
   }
 }
 

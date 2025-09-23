@@ -8,13 +8,17 @@ import {
   generateSigningSerializationBch,
   utf8ToBin,
   hexToBin,
-  flattenBinArray,
   LockingBytecodeType,
   encodeTransactionOutput,
   isHex,
   bigIntToCompactUint,
   NonFungibleTokenCapability,
   bigIntToVmNumber,
+  assertSuccess,
+  AuthenticationInstructionPush,
+  AuthenticationInstructions,
+  decodeAuthenticationInstructions,
+  Input,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -24,6 +28,7 @@ import {
   Op,
   Script,
   scriptToBytecode,
+  encodeNullDataScript,
 } from '@cashscript/utils';
 import {
   Utxo,
@@ -32,6 +37,8 @@ import {
   LibauthOutput,
   TokenDetails,
   AddressType,
+  UnlockableUtxo,
+  LibauthTokenDetails,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -112,15 +119,32 @@ export function libauthOutputToCashScriptOutput(output: LibauthOutput): Output {
   return {
     to: output.lockingBytecode,
     amount: output.valueSatoshis,
-    token: output.token && {
-      ...output.token,
-      category: binToHex(output.token.category),
-      nft: output.token.nft && {
-        ...output.token.nft,
-        commitment: binToHex(output.token.nft.commitment),
-      },
+    token: output.token && libauthTokenDetailsToCashScriptTokenDetails(output.token),
+  };
+}
+
+export function libauthTokenDetailsToCashScriptTokenDetails(token: LibauthTokenDetails): TokenDetails {
+  return {
+    ...token,
+    category: binToHex(token.category),
+    nft: token.nft && {
+      ...token.nft,
+      commitment: binToHex(token.nft.commitment),
     },
   };
+}
+
+export function generateLibauthSourceOutputs(inputs: UnlockableUtxo[]): LibauthOutput[] {
+  const sourceOutputs = inputs.map((input) => {
+    const sourceOutput = {
+      amount: input.satoshis,
+      to: input.unlocker.generateLockingBytecode(),
+      token: input.token,
+    };
+
+    return cashScriptOutputToLibauthOutput(sourceOutput);
+  });
+  return sourceOutputs;
 }
 
 function isTokenAddress(address: string): boolean {
@@ -283,30 +307,6 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
   }
 }
 
-// ////////////////////////////////////////////////////////////////////////////
-// For encoding OP_RETURN data (doesn't require BIP62.3 / MINIMALDATA)
-function encodeNullDataScript(chunks: (number | Uint8Array)[]): Uint8Array {
-  return flattenBinArray(
-    chunks.map((chunk) => {
-      if (typeof chunk === 'number') {
-        return new Uint8Array([chunk]);
-      }
-
-      const pushdataOpcode = getPushDataOpcode(chunk);
-      return new Uint8Array([...pushdataOpcode, ...chunk]);
-    }),
-  );
-}
-
-function getPushDataOpcode(data: Uint8Array): Uint8Array {
-  const { byteLength } = data;
-
-  if (byteLength === 0) return Uint8Array.from([0x4c, 0x00]);
-  if (byteLength < 76) return Uint8Array.from([byteLength]);
-  if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);
-  throw new Error('Pushdata too large');
-}
-
 const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
 
 export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
@@ -371,3 +371,17 @@ export const isFungibleTokenUtxo = (utxo: Utxo): boolean => (
 );
 
 export const isNonTokenUtxo = (utxo: Utxo): boolean => utxo.token === undefined;
+
+export const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const getSignatureAndPubkeyFromP2PKHInput = (
+  libauthInput: Input,
+): { signature: Uint8Array; publicKey: Uint8Array } => {
+  const inputData = (assertSuccess(
+    decodeAuthenticationInstructions(libauthInput.unlockingBytecode)) as AuthenticationInstructions
+  ) as AuthenticationInstructionPush[];
+  const signature = inputData[0].data;
+  const publicKey = inputData[1].data;
+
+  return { signature, publicKey };
+};

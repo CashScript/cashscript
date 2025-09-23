@@ -53,7 +53,7 @@ describe('Multi-Contract-Debugging tests', () => {
             amount: sameNameDifferentPathContractUtxo.satoshis - 2000n,
           });
 
-        expect(tx).toLog('SiblingIntrospection.cash:6 outputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587\nSiblingIntrospection.cash:10 inputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587\nSameNameDifferentPath.cash:5 a is 0');
+        expect(tx).toLog('[Input #0] SiblingIntrospection.cash:6 outputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587\n[Input #0] SiblingIntrospection.cash:10 inputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587\n[Input #1] SameNameDifferentPath.cash:5 a is 0');
       });
 
       it('should log correct data for the reached console.log statements if a require statement fails, and not log unreached console.log statements', () => {
@@ -66,9 +66,9 @@ describe('Multi-Contract-Debugging tests', () => {
             amount: sameNameDifferentPathContractUtxo.satoshis - 2000n,
           });
 
-        expect(tx).toLog('SiblingIntrospection.cash:6 outputBytecode: 0xaa20d510df1721debb0d678d8e424b5f64f04f820005f017cb4731f7be94cd63755787');
-        expect(tx).not.toLog('SiblingIntrospection.cash:10 inputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587');
-        expect(tx).not.toLog('SameNameDifferentPath.cash:5 a is 0');
+        expect(tx).toLog('[Input #0] SiblingIntrospection.cash:6 outputBytecode: 0xaa20d510df1721debb0d678d8e424b5f64f04f820005f017cb4731f7be94cd63755787');
+        expect(tx).not.toLog('[Input #0] SiblingIntrospection.cash:10 inputBytecode: 0xaa2092e16594dd458916b3aa6cae4bf41352d1b3b39658698e8cddbeedd687efec7587');
+        expect(tx).not.toLog('[Input #1] SameNameDifferentPath.cash:5 a is 0');
       });
     });
 
@@ -88,7 +88,7 @@ describe('Multi-Contract-Debugging tests', () => {
         .addOutput({ to: sameNameDifferentPathContract1.address, amount: sameNameDifferentPathContract1Utxo.satoshis })
         .addOutput({ to: sameNameDifferentPathContract2.address, amount: sameNameDifferentPathContract2Utxo.satoshis });
 
-      expect(tx).toLog('SameNameDifferentPath.cash:5 a is 0\nSameNameDifferentPath.cash:8 a is not 0');
+      expect(tx).toLog('[Input #0] SameNameDifferentPath.cash:5 a is 0\n[Input #1] SameNameDifferentPath.cash:8 a is not 0');
     });
   });
 

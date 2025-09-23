@@ -1,0 +1,14 @@
+!full_script=True;
+
+# We are unable to run cashproof any more due to Python ecosystem issues, but we're including this file for reference.
+
+# x.slice(10, 25) & x.split(25)[0].split(10)[1]
+25 OP_SPLIT OP_DROP OP_10 OP_SPLIT OP_NIP
+<=>
+# x.split(10)[1].split(15)[0]
+OP_10 OP_SPLIT OP_NIP OP_15 OP_SPLIT OP_DROP
+;
+
+# Slice optimisation
+OP_0 OP_SPLIT OP_NIP <=> ;
+OP_SIZE OP_SPLIT OP_DROP <=> ;

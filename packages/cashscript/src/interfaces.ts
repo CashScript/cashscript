@@ -56,6 +56,9 @@ export interface P2PKHUnlocker extends Unlocker {
 
 export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
 
+export type PlaceholderP2PKHUnlocker = Unlocker & { placeholder: true };
+
+
 export function isContractUnlocker(unlocker: Unlocker): unlocker is ContractUnlocker {
   return 'contract' in unlocker;
 }
@@ -68,12 +71,8 @@ export function isStandardUnlocker(unlocker: Unlocker): unlocker is StandardUnlo
   return isContractUnlocker(unlocker) || isP2PKHUnlocker(unlocker);
 }
 
-export interface UtxoP2PKH extends Utxo {
-  template: SignatureTemplate;
-}
-
-export function isUtxoP2PKH(utxo: Utxo): utxo is UtxoP2PKH {
-  return 'template' in utxo;
+export function isPlaceholderUnlocker(unlocker: Unlocker): unlocker is PlaceholderP2PKHUnlocker {
+  return 'placeholder' in unlocker;
 }
 
 export interface Recipient {
@@ -145,13 +144,22 @@ export const Network = {
 
 export type Network = (typeof Network)[keyof typeof Network];
 
+export const VmTarget = {
+  BCH_2023_05: literal('BCH_2023_05'),
+  BCH_2025_05: literal('BCH_2025_05'),
+  BCH_2026_05: literal('BCH_2026_05'),
+  BCH_SPEC: literal('BCH_SPEC'),
+};
+
+export type VmTarget = (typeof VmTarget)[keyof typeof VmTarget];
+
 export interface TransactionDetails extends Transaction {
   txid: string;
   hex: string;
 }
 
 export interface ContractOptions {
-  provider?: NetworkProvider,
+  provider: NetworkProvider,
   addressType?: AddressType,
 }
 

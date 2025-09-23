@@ -46,6 +46,7 @@ import {
   NullaryOpNode,
   ConsoleParameterNode,
   ConsoleStatementNode,
+  SliceNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
@@ -251,8 +252,8 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
     this.popFromStack(2);
-    this.pushToStack(node.var1.name);
-    this.pushToStack(node.var2.name);
+    this.pushToStack(node.left.name);
+    this.pushToStack(node.right.name);
     return node;
   }
 
@@ -533,6 +534,27 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(Op.OP_NIP, locationData);
       this.nipFromStack();
     }
+
+    return node;
+  }
+
+  // element.slice(start, end) is equivalent to element.split(end)[0].split(start)[1]
+  visitSlice(node: SliceNode): Node {
+    node.element = this.visit(node.element);
+
+    const locationData = { location: node.location, positionHint: PositionHint.END };
+
+    this.visit(node.end);
+    this.emit(Op.OP_SPLIT, locationData);
+    this.emit(Op.OP_DROP, locationData);
+    this.popFromStack(2);
+    this.pushToStack('(value)');
+
+    this.visit(node.start);
+    this.emit(Op.OP_SPLIT, locationData);
+    this.emit(Op.OP_NIP, locationData);
+    this.popFromStack(2);
+    this.pushToStack('(value)');
 
     return node;
   }

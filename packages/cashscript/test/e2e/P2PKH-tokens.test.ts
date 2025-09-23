@@ -11,13 +11,15 @@ import { getTxOutputs } from '../test-util.js';
 import { Network, TokenDetails, Utxo } from '../../src/interfaces.js';
 import artifact from '../fixture/p2pkh.artifact.js';
 
+// TODO: Replace this with unlockers
 describe('P2PKH-tokens', () => {
   let p2pkhInstance: Contract<typeof artifact>;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_MOCKNET
-      ? new MockNetworkProvider()
-      : new ElectrumNetworkProvider(Network.CHIPNET);
+    const provider = process.env.TESTS_USE_CHIPNET
+      ? new ElectrumNetworkProvider(Network.CHIPNET)
+      : new MockNetworkProvider();
+
     p2pkhInstance = new Contract(artifact, [alicePkh], { provider });
     console.log(p2pkhInstance.tokenAddress);
     (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());

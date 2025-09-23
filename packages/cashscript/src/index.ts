@@ -1,6 +1,5 @@
 export { default as SignatureTemplate } from './SignatureTemplate.js';
-export { Contract, type ContractFunction } from './Contract.js';
-export { Transaction } from './Transaction.js';
+export { Contract } from './Contract.js';
 export { TransactionBuilder } from './TransactionBuilder.js';
 export {
   type ConstructorArgument,
@@ -21,3 +20,4 @@ export {
   MockNetworkProvider,
 } from './network/index.js';
 export { randomUtxo, randomToken, randomNFT } from './utils.js';
+export * from './walletconnect-utils.js';

@@ -42,6 +42,14 @@ To have the best TypeScript integration, we recommend generating the artifact in
 cashc ./Contract.cash --output ./artifact.ts --format ts
 ```
 
+```bash
+cashc ./Contract.cash --size --opcount
+```
+
+:::info
+The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments. This means they are always an underestimate, as the contract hasn't been initialized with contract arguments.
+:::
+
 ## JavaScript Compilation
 Generally CashScript contracts are compiled to an Artifact JSON file using the CLI compiler. As an alternative to this, CashScript contracts can be compiled from within JavaScript apps using the `cashc` package. This package exports two compilation functions.
 

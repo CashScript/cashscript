@@ -1,12 +1,12 @@
 import {
   binToHex,
   decodeTransaction,
+  decodeTransactionUnsafe,
   encodeTransaction,
   hexToBin,
   Transaction as LibauthTransaction,
   WalletTemplate,
 } from '@bitauth/libauth';
-import delay from 'delay';
 import {
   Unlocker,
   Output,
@@ -22,14 +22,17 @@ import { NetworkProvider } from './network/index.js';
 import {
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
+  delay,
+  generateLibauthSourceOutputs,
   validateInput,
   validateOutput,
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
-import { getBitauthUri } from './LibauthTemplate.js';
-import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import { debugLibauthTemplate, getLibauthTemplates, getBitauthUri } from './LibauthTemplate.js';
+import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
 import semver from 'semver';
+import { WcTransactionObject } from './walletconnect-utils.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
@@ -117,7 +120,7 @@ export class TransactionBuilder {
   buildLibauthTransaction(): LibauthTransaction {
     this.checkMaxFee();
 
-    const inputs = this.inputs.map((utxo) => ({
+    const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
       outpointTransactionHash: hexToBin(utxo.txid),
       sequenceNumber: utxo.options?.sequence ?? DEFAULT_SEQUENCE,
@@ -134,15 +137,7 @@ export class TransactionBuilder {
     };
 
     // Generate source outputs from inputs (for signing with SIGHASH_UTXOS)
-    const sourceOutputs = this.inputs.map((input) => {
-      const sourceOutput = {
-        amount: input.satoshis,
-        to: input.unlocker.generateLockingBytecode(),
-        token: input.token,
-      };
-
-      return cashScriptOutputToLibauthOutput(sourceOutput);
-    });
+    const sourceOutputs = generateLibauthSourceOutputs(this.inputs);
 
     const inputScripts = this.inputs.map((input, inputIndex) => (
       input.unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex })
@@ -202,7 +197,7 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw new FailedTransactionError(reason);
+      throw new FailedTransactionError(reason, this.bitauthUri());
     }
   }
 
@@ -225,5 +220,20 @@ export class TransactionBuilder {
 
     // Should not happen
     throw new Error('Could not retrieve transaction details for over 10 minutes');
+  }
+
+  generateWcTransactionObject(options?: WcTransactionOptions): WcTransactionObject {
+    const encodedTransaction = this.build();
+    const transaction = decodeTransactionUnsafe(hexToBin(encodedTransaction));
+
+    const libauthSourceOutputs = generateLibauthSourceOutputs(this.inputs);
+    const sourceOutputs: WcSourceOutput[] = libauthSourceOutputs.map((sourceOutput, index) => {
+      return {
+        ...sourceOutput,
+        ...transaction.inputs[index],
+        ...getWcContractInfo(this.inputs[index]),
+      };
+    });
+    return { ...options, transaction, sourceOutputs };
   }
 }

@@ -825,4 +825,84 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'double_split.cash',
+    artifact: {
+      contractName: 'DoubleSplit',
+      constructorInputs: [{ name: 'pkh', type: 'bytes20' }],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: 'OP_INPUTINDEX OP_UTXOBYTECODE 17 OP_SPLIT OP_DROP OP_3 OP_SPLIT OP_NIP OP_EQUAL',
+      debug: {
+        bytecode: 'c0c701177f75537f7787',
+        sourceMap: '3:36:3:57;:26::74:1;:81::83:0;:26::84:1;:::87;:94::95:0;:26::96:1;:::99;4:8:4:34',
+        logs: [],
+        requires: [
+          {
+            ip: 10,
+            line: 4,
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/double_split.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'slice.cash',
+    artifact: {
+      contractName: 'Slice',
+      constructorInputs: [{ name: 'pkh', type: 'bytes20' }],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: 'OP_INPUTINDEX OP_UTXOBYTECODE 17 OP_SPLIT OP_DROP OP_3 OP_SPLIT OP_NIP OP_EQUAL',
+      debug: {
+        bytecode: 'c0c701177f75537f7787',
+        sourceMap: '3:36:3:57;:26::74:1;:84::86:0;:26::87:1;;:81::82:0;:26::87:1;;4:8:4:34',
+        logs: [],
+        requires: [
+          {
+            ip: 10,
+            line: 4,
+            message: undefined,
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/slice.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'slice_optimised.cash',
+    artifact: {
+      contractName: 'Slice',
+      constructorInputs: [{ name: 'data', type: 'bytes32' }],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: '14 OP_SPLIT OP_DROP OP_0 14 OP_NUM2BIN OP_EQUAL',
+      debug: {
+        bytecode: '01147f750001148087',
+        sourceMap: '3:36:3:38;:22::39:1;;4:31:4:32:0;:23::33:1;;:8::35',
+        logs: [],
+        requires: [
+          {
+            ip: 8,
+            line: 4,
+            message: undefined,
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/slice_optimised.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];

@@ -6,9 +6,10 @@ import { aliceAddress } from '../fixture/vars.js';
 import artifact from '../fixture/announcement.artifact.js';
 
 describe('Announcement', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
+
   const announcement = new Contract(artifact, [], { provider });
   const minerFee = 1000n;
 

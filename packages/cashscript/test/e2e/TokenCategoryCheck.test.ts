@@ -7,9 +7,10 @@ import { Network } from '../../src/interfaces.js';
 import artifact from '../fixture/token_category_comparison.artifact.js';
 
 describe('TokenCategoryCheck', () => {
-  const provider = process.env.TESTS_USE_MOCKNET
-    ? new MockNetworkProvider()
-    : new ElectrumNetworkProvider(Network.CHIPNET);
+  const provider = process.env.TESTS_USE_CHIPNET
+    ? new ElectrumNetworkProvider(Network.CHIPNET)
+    : new MockNetworkProvider();
+
   const checkTokenCategoryContract = new Contract(artifact, [], { provider });
 
   beforeAll(() => {

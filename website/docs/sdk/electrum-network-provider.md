@@ -57,6 +57,15 @@ interface Utxo {
   satoshis: bigint;
   token?: TokenDetails;
 }
+
+interface TokenDetails {
+  amount: bigint;
+  category: string;
+  nft?: {
+    capability: 'none' | 'mutable' | 'minting';
+    commitment: string;
+  };
+}
 ```
 
 #### Example
@@ -115,6 +124,10 @@ By default, the ElectrumNetworkProvider will automatically connect and disconnec
 ```ts
 const provider = new ElectrumNetworkProvider('chipnet', { manualConnectionManagement: true });
 ```
+
+:::tip
+If you're providing an `ElectrumClient` and using it to subscribe to address or block header events, you need to enable `manualConnectionManagement` to overwrite the default of connecting and disconnecting for each separate request.
+:::
 
 #### connect()
 ```ts
