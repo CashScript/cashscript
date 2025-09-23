@@ -10,6 +10,7 @@ title: Release Notes
 - :boom: **BREAKING**: Remove deprecated "old" transaction builder (`contract.functions`).
 - :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
 - :sparkles: Add a configurable `vmTarget` option to `MockNetworkProvider`.
+- :sparkles: Add support for ECDSA signatures in contract unlockers for `sig` and `datasig` parameters.
 - :hammer_and_wrench: Improve libauth template generation.
 
 ## v0.11.5
