@@ -167,13 +167,18 @@ export const fixtures: Fixture[] = [
             'p2pkh_placeholder_lock_0',
             'p2pkh_placeholder_unlock_0',
           ],
-          'description': 'placeholder_key_0',
+          'description': 'P2PKH data for input 0',
           'name': 'P2PKH Signer (input #0)',
           'variables': {
-            'placeholder_key_0': {
+            'signature_0': {
               'description': '',
-              'name': 'P2PKH Placeholder Key (input #0)',
-              'type': 'Key',
+              'name': 'P2PKH Signature (input #0)',
+              'type': 'WalletData',
+            },
+            'public_key_0': {
+              'description': '',
+              'name': 'P2PKH public key (input #0)',
+              'type': 'WalletData',
             },
           },
         },
@@ -182,13 +187,18 @@ export const fixtures: Fixture[] = [
             'p2pkh_placeholder_lock_1',
             'p2pkh_placeholder_unlock_1',
           ],
-          'description': 'placeholder_key_1',
+          'description': 'P2PKH data for input 1',
           'name': 'P2PKH Signer (input #1)',
           'variables': {
-            'placeholder_key_1': {
+            'signature_1': {
               'description': '',
-              'name': 'P2PKH Placeholder Key (input #1)',
-              'type': 'Key',
+              'name': 'P2PKH Signature (input #1)',
+              'type': 'WalletData',
+            },
+            'public_key_1': {
+              'description': '',
+              'name': 'P2PKH public key (input #1)',
+              'type': 'WalletData',
             },
           },
         },
@@ -197,13 +207,18 @@ export const fixtures: Fixture[] = [
             'p2pkh_placeholder_lock_2',
             'p2pkh_placeholder_unlock_2',
           ],
-          'description': 'placeholder_key_2',
+          'description': 'P2PKH data for input 2',
           'name': 'P2PKH Signer (input #2)',
           'variables': {
-            'placeholder_key_2': {
+            'signature_2': {
               'description': '',
-              'name': 'P2PKH Placeholder Key (input #2)',
-              'type': 'Key',
+              'name': 'P2PKH Signature (input #2)',
+              'type': 'WalletData',
+            },
+            'public_key_2': {
+              'description': '',
+              'name': 'P2PKH public key (input #2)',
+              'type': 'WalletData',
             },
           },
         },
@@ -252,49 +267,53 @@ export const fixtures: Fixture[] = [
           'unlocks': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
         },
         'p2pkh_placeholder_unlock_0': {
+          'passes': [
+            'P2PKH_spend_input0_evaluate',
+          ],
           'name': 'P2PKH Unlock (input #0)',
-          'script': '<placeholder_key_0.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_0.public_key>',
+          'script': '<signature_0>\n<public_key_0>',
           'unlocks': 'p2pkh_placeholder_lock_0',
         },
         'p2pkh_placeholder_lock_0': {
           'lockingType': 'standard',
           'name': 'P2PKH Lock (input #0)',
-          'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_0.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
+          'script': 'OP_DUP\nOP_HASH160 <$(<public_key_0> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
         'p2pkh_placeholder_unlock_1': {
+          'passes': [
+            'P2PKH_spend_input1_evaluate',
+          ],
           'name': 'P2PKH Unlock (input #1)',
-          'script': '<placeholder_key_1.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_1.public_key>',
+          'script': '<signature_1>\n<public_key_1>',
           'unlocks': 'p2pkh_placeholder_lock_1',
         },
         'p2pkh_placeholder_lock_1': {
           'lockingType': 'standard',
           'name': 'P2PKH Lock (input #1)',
-          'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_1.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
+          'script': 'OP_DUP\nOP_HASH160 <$(<public_key_1> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
         'p2pkh_placeholder_unlock_2': {
+          'passes': [
+            'P2PKH_spend_input2_evaluate',
+          ],
           'name': 'P2PKH Unlock (input #2)',
-          'script': '<placeholder_key_2.schnorr_signature.all_outputs_all_utxos>\n<placeholder_key_2.public_key>',
+          'script': '<signature_2>\n<public_key_2>',
           'unlocks': 'p2pkh_placeholder_lock_2',
         },
         'p2pkh_placeholder_lock_2': {
           'lockingType': 'standard',
           'name': 'P2PKH Lock (input #2)',
-          'script': 'OP_DUP\nOP_HASH160 <$(<placeholder_key_2.public_key> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
+          'script': 'OP_DUP\nOP_HASH160 <$(<public_key_2> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG',
         },
       },
       'scenarios': {
-        'Bar_funcA_input3_evaluate': {
-          'name': 'Evaluate Bar funcA (input #3)',
+        'P2PKH_spend_input0_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #0)',
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
-              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-              'function_index': '0',
-            },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
-            'keys': {
-              'privateKeys': {},
+              'signature_0': expect.any(String),
+              'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
             },
           },
           'transaction': {
@@ -303,16 +322,9 @@ export const fixtures: Fixture[] = [
                 'outpointIndex': expect.any(Number),
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
-                'unlockingBytecode': {
-                  'script': 'p2pkh_placeholder_unlock_0',
-                  'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
-                    },
-                  },
-                },
+                'unlockingBytecode': [
+                  'slot',
+                ],
               },
               {
                 'outpointIndex': expect.any(Number),
@@ -321,10 +333,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_1',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_1': expect.any(String),
+                      'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -336,10 +347,237 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
+                    'bytecode': {
+                      'signature_2': expect.any(String),
+                      'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_funcA_input3_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '0',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {},
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_execute_input4_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '2',
+                      'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
                     'keys': {
                       'privateKeys': {
-                        'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                        's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
                       },
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Foo_execute_input5_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_funcB_input6_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '1',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {},
+                    },
+                  },
+                },
+              },
+            ],
+            'locktime': 0,
+            'outputs': [
+              {
+                'lockingBytecode': {
+                  'script': 'Foo_432c93902a8a8e49ef246028e707cddaa67a39af46b2b3c11c196cd09c931746_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                    },
+                  },
+                },
+                'valueSatoshis': 8000,
+              },
+              {
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
+                'token': {
+                  'amount': '100000000',
+                  'category': expect.any(String),
+                },
+                'valueSatoshis': 800,
+              },
+              {
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
+                'token': {
+                  'amount': '0',
+                  'category': expect.any(String),
+                  'nft': {
+                    'capability': 'minting',
+                    'commitment': '00',
+                  },
+                },
+                'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': '6a0568656c6c6f05776f726c64',
+                'valueSatoshis': 0,
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_1',
+                'overrides': {
+                  'bytecode': {
+                    'signature_1': expect.any(String),
+                    'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_2',
+                'overrides': {
+                  'bytecode': {
+                    'signature_2': expect.any(String),
+                    'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Foo_432c93902a8a8e49ef246028e707cddaa67a39af46b2b3c11c196cd09c931746_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+        'P2PKH_spend_input1_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #1)',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'signature_1': expect.any(String),
+              'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_0',
+                  'overrides': {
+                    'bytecode': {
+                      'signature_0': expect.any(String),
+                      'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -357,6 +595,38 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_2',
+                  'overrides': {
+                    'bytecode': {
+                      'signature_2': expect.any(String),
+                      'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_funcA_input3_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '0',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {},
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_execute_input4_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '2',
@@ -369,7 +639,6 @@ export const fixtures: Fixture[] = [
                       },
                     },
                   },
-                  'script': 'Bar_execute_input4_unlock',
                 },
               },
               {
@@ -377,6 +646,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Foo_execute_input5_unlock',
                   'overrides': {
                     'bytecode': {
                       'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
@@ -388,7 +658,6 @@ export const fixtures: Fixture[] = [
                       },
                     },
                   },
-                  'script': 'Foo_execute_input5_unlock',
                 },
               },
               {
@@ -396,6 +665,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_funcB_input6_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '1',
@@ -405,11 +675,10 @@ export const fixtures: Fixture[] = [
                       'privateKeys': {},
                     },
                   },
-                  'script': 'Bar_funcB_input6_unlock',
                 },
               },
             ],
-            'locktime': expect.any(Number),
+            'locktime': 0,
             'outputs': [
               {
                 'lockingBytecode': {
@@ -454,10 +723,259 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_0',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                  'bytecode': {
+                    'signature_0': expect.any(String),
+                    'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_2',
+                'overrides': {
+                  'bytecode': {
+                    'signature_2': expect.any(String),
+                    'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Foo_432c93902a8a8e49ef246028e707cddaa67a39af46b2b3c11c196cd09c931746_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+        'P2PKH_spend_input2_evaluate': {
+          'name': 'Evaluate P2PKH spend (input #2)',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'signature_2': expect.any(String),
+              'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_0',
+                  'overrides': {
+                    'bytecode': {
+                      'signature_0': expect.any(String),
+                      'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_1',
+                  'overrides': {
+                    'bytecode': {
+                      'signature_1': expect.any(String),
+                      'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_funcA_input3_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '0',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {},
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_execute_input4_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '2',
+                      'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Foo_execute_input5_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_funcB_input6_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '1',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {},
+                    },
+                  },
+                },
+              },
+            ],
+            'locktime': 0,
+            'outputs': [
+              {
+                'lockingBytecode': {
+                  'script': 'Foo_432c93902a8a8e49ef246028e707cddaa67a39af46b2b3c11c196cd09c931746_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                    },
+                  },
+                },
+                'valueSatoshis': 8000,
+              },
+              {
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
+                'token': {
+                  'amount': '100000000',
+                  'category': expect.any(String),
+                },
+                'valueSatoshis': 800,
+              },
+              {
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
+                'token': {
+                  'amount': '0',
+                  'category': expect.any(String),
+                  'nft': {
+                    'capability': 'minting',
+                    'commitment': '00',
+                  },
+                },
+                'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': '6a0568656c6c6f05776f726c64',
+                'valueSatoshis': 0,
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_0',
+                'overrides': {
+                  'bytecode': {
+                    'signature_0': expect.any(String),
+                    'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
                 },
               },
@@ -467,10 +985,38 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_1',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_1': expect.any(String),
+                    'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': [
+                'slot',
+              ],
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
                   },
                 },
               },
@@ -478,13 +1024,245 @@ export const fixtures: Fixture[] = [
             },
             {
               'lockingBytecode': {
-                'script': 'p2pkh_placeholder_lock_2',
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Foo_432c93902a8a8e49ef246028e707cddaa67a39af46b2b3c11c196cd09c931746_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'Bar_dfa9a690eb3692ca0655d91a1bebf908bd27f73faf31ec7fe316bde6c0fbed2e_lock',
+                'overrides': {
+                  'bytecode': {
+                    'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+          ],
+        },
+        'Bar_funcA_input3_evaluate': {
+          'name': 'Evaluate Bar funcA (input #3)',
+          'description': 'An example evaluation where this script execution passes.',
+          'data': {
+            'bytecode': {
+              'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+              'function_index': '0',
+            },
+            'keys': {
+              'privateKeys': {},
+            },
+          },
+          'transaction': {
+            'inputs': [
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_0',
+                  'overrides': {
+                    'bytecode': {
+                      'signature_0': expect.any(String),
+                      'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_1',
+                  'overrides': {
+                    'bytecode': {
+                      'signature_1': expect.any(String),
+                      'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'p2pkh_placeholder_unlock_2',
+                  'overrides': {
+                    'bytecode': {
+                      'signature_2': expect.any(String),
+                      'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': [
+                  'slot',
+                ],
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_execute_input4_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '2',
+                      'pk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Foo_execute_input5_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                    },
+                    'keys': {
+                      'privateKeys': {
+                        's': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                'outpointIndex': expect.any(Number),
+                'outpointTransactionHash': expect.any(String),
+                'sequenceNumber': 4294967294,
+                'unlockingBytecode': {
+                  'script': 'Bar_funcB_input6_unlock',
+                  'overrides': {
+                    'bytecode': {
+                      'function_index': '1',
+                      'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
+                    },
+                    'keys': {
+                      'privateKeys': {},
+                    },
+                  },
+                },
+              },
+            ],
+            'locktime': 0,
+            'outputs': [
+              {
+                'lockingBytecode': {
+                  'script': 'Foo_432c93902a8a8e49ef246028e707cddaa67a39af46b2b3c11c196cd09c931746_lock',
+                  'overrides': {
+                    'bytecode': {
+                      'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
+                    },
+                  },
+                },
+                'valueSatoshis': 8000,
+              },
+              {
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
+                'token': {
+                  'amount': '100000000',
+                  'category': expect.any(String),
+                },
+                'valueSatoshis': 800,
+              },
+              {
+                'lockingBytecode': '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
+                'token': {
+                  'amount': '0',
+                  'category': expect.any(String),
+                  'nft': {
+                    'capability': 'minting',
+                    'commitment': '00',
+                  },
+                },
+                'valueSatoshis': 1000,
+              },
+              {
+                'lockingBytecode': '6a0568656c6c6f05776f726c64',
+                'valueSatoshis': 0,
+              },
+            ],
+            'version': 2,
+          },
+          'sourceOutputs': [
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_0',
+                'overrides': {
+                  'bytecode': {
+                    'signature_0': expect.any(String),
+                    'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_1',
+                'overrides': {
+                  'bytecode': {
+                    'signature_1': expect.any(String),
+                    'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+              },
+              'valueSatoshis': expect.any(Number),
+            },
+            {
+              'lockingBytecode': {
+                'script': 'p2pkh_placeholder_lock_2',
+                'overrides': {
+                  'bytecode': {
+                    'signature_2': expect.any(String),
+                    'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
+                  },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -539,8 +1317,6 @@ export const fixtures: Fixture[] = [
               'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '2',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
@@ -556,10 +1332,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_0',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_0': expect.any(String),
+                      'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -571,10 +1346,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_1',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_1': expect.any(String),
+                      'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -586,10 +1360,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_2': expect.any(String),
+                      'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -599,6 +1372,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_funcA_input3_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '0',
@@ -608,7 +1382,6 @@ export const fixtures: Fixture[] = [
                       'privateKeys': {},
                     },
                   },
-                  'script': 'Bar_funcA_input3_unlock',
                 },
               },
               {
@@ -624,6 +1397,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Foo_execute_input5_unlock',
                   'overrides': {
                     'bytecode': {
                       'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
@@ -635,7 +1409,6 @@ export const fixtures: Fixture[] = [
                       },
                     },
                   },
-                  'script': 'Foo_execute_input5_unlock',
                 },
               },
               {
@@ -643,6 +1416,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_funcB_input6_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '1',
@@ -652,9 +1426,7 @@ export const fixtures: Fixture[] = [
                       'privateKeys': {},
                     },
                   },
-                  'script': 'Bar_funcB_input6_unlock',
                 },
-
               },
             ],
             'locktime': 0,
@@ -702,10 +1474,9 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_0',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_0': expect.any(String),
+                    'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
                 },
               },
@@ -715,12 +1486,15 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_1',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_1': expect.any(String),
+                    'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
                 },
+              },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -728,11 +1502,18 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_2',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_2': expect.any(String),
+                    'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -786,8 +1567,6 @@ export const fixtures: Fixture[] = [
               'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
               'pkh_foo': '0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 's': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
@@ -803,10 +1582,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_0',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_0': expect.any(String),
+                      'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -818,10 +1596,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_1',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_1': expect.any(String),
+                      'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -833,10 +1610,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_2': expect.any(String),
+                      'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -846,6 +1622,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_funcA_input3_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '0',
@@ -855,7 +1632,6 @@ export const fixtures: Fixture[] = [
                       'privateKeys': {},
                     },
                   },
-                  'script': 'Bar_funcA_input3_unlock',
                 },
               },
               {
@@ -863,6 +1639,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_execute_input4_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '2',
@@ -875,7 +1652,6 @@ export const fixtures: Fixture[] = [
                       },
                     },
                   },
-                  'script': 'Bar_execute_input4_unlock',
                 },
               },
               {
@@ -891,17 +1667,16 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_funcB_input6_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '1',
                       'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
-
                     },
                     'keys': {
                       'privateKeys': {},
                     },
                   },
-                  'script': 'Bar_funcB_input6_unlock',
                 },
               },
             ],
@@ -950,10 +1725,9 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_0',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_0': expect.any(String),
+                    'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
                 },
               },
@@ -963,12 +1737,15 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_1',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_1': expect.any(String),
+                    'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
                 },
+              },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -976,11 +1753,18 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_2',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_2': expect.any(String),
+                    'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -1034,8 +1818,6 @@ export const fixtures: Fixture[] = [
               'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '1',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {},
             },
@@ -1049,10 +1831,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_0',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_0': expect.any(String),
+                      'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -1064,10 +1845,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_1',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_1': expect.any(String),
+                      'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -1079,10 +1859,9 @@ export const fixtures: Fixture[] = [
                 'unlockingBytecode': {
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
-                    'keys': {
-                      'privateKeys': {
-                        'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                      },
+                    'bytecode': {
+                      'signature_2': expect.any(String),
+                      'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                     },
                   },
                 },
@@ -1092,6 +1871,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_funcA_input3_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '0',
@@ -1101,7 +1881,6 @@ export const fixtures: Fixture[] = [
                       'privateKeys': {},
                     },
                   },
-                  'script': 'Bar_funcA_input3_unlock',
                 },
               },
               {
@@ -1109,6 +1888,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Bar_execute_input4_unlock',
                   'overrides': {
                     'bytecode': {
                       'function_index': '2',
@@ -1121,7 +1901,6 @@ export const fixtures: Fixture[] = [
                       },
                     },
                   },
-                  'script': 'Bar_execute_input4_unlock',
                 },
               },
               {
@@ -1129,6 +1908,7 @@ export const fixtures: Fixture[] = [
                 'outpointTransactionHash': expect.any(String),
                 'sequenceNumber': 4294967294,
                 'unlockingBytecode': {
+                  'script': 'Foo_execute_input5_unlock',
                   'overrides': {
                     'bytecode': {
                       'pk': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
@@ -1140,7 +1920,6 @@ export const fixtures: Fixture[] = [
                       },
                     },
                   },
-                  'script': 'Foo_execute_input5_unlock',
                 },
               },
               {
@@ -1197,10 +1976,9 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_0',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_0': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_0': expect.any(String),
+                    'public_key_0': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
                 },
               },
@@ -1210,12 +1988,15 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_1',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_1': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_1': expect.any(String),
+                    'public_key_1': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
                 },
+              },
+              'token': {
+                'amount': '100000000',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
               },
               'valueSatoshis': expect.any(Number),
             },
@@ -1223,11 +2004,18 @@ export const fixtures: Fixture[] = [
               'lockingBytecode': {
                 'script': 'p2pkh_placeholder_lock_2',
                 'overrides': {
-                  'keys': {
-                    'privateKeys': {
-                      'placeholder_key_2': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
-                    },
+                  'bytecode': {
+                    'signature_2': expect.any(String),
+                    'public_key_2': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
                   },
+                },
+              },
+              'token': {
+                'amount': '0',
+                'category': expect.stringMatching(/^[0-9a-f]{64}$/),
+                'nft': {
+                  'capability': 'minting',
+                  'commitment': '00',
                 },
               },
               'valueSatoshis': expect.any(Number),
@@ -1345,8 +2133,6 @@ export const fixtures: Fixture[] = [
               'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '0',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {},
             },
@@ -1543,8 +2329,6 @@ export const fixtures: Fixture[] = [
               'minBlock': '0xb88201',
               'priceTarget': '0x3075',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 'ownerSig': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
@@ -1635,8 +2419,6 @@ export const fixtures: Fixture[] = [
               'timeout': '0xa08601',
               'function_index': '1',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 'senderSig': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
@@ -1944,8 +2726,6 @@ export const fixtures: Fixture[] = [
               'timeout': '0xa08601',
               'function_index': '1',
             },
-            'currentBlockHeight': 2,
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 'senderSig': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
@@ -2102,8 +2882,6 @@ export const fixtures: Fixture[] = [
               'timeout': '0xa08601',
               'function_index': '1',
             },
-            'currentBlockHeight': 2,
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 'senderSig': '81597823a901865622658cbf6d50c0286aa1d70fa1af98f897e34a0623a828ff',
@@ -2260,8 +3038,6 @@ export const fixtures: Fixture[] = [
               'timeout': '0xa08601',
               'function_index': '0',
             },
-            'currentBlockHeight': 2,
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 'recipientSig': '81597823a901865622658cbf6d50c0286aa1d70fa1af98f897e34a0623a828ff',
@@ -2418,8 +3194,6 @@ export const fixtures: Fixture[] = [
               'timeout': '0xa08601',
               'function_index': '0',
             },
-            'currentBlockHeight': 2,
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 'recipientSig': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',
@@ -2690,8 +3464,6 @@ export const fixtures: Fixture[] = [
               'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '2',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 's': '36f8155c559f3a670586bbbf9fd52beef6f96124f5a3a39c167fc24b052d24d7',
@@ -2774,8 +3546,6 @@ export const fixtures: Fixture[] = [
               'pkh_bar': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
               'function_index': '2',
             },
-            'currentBlockHeight': expect.any(Number),
-            'currentBlockTime': expect.any(Number),
             'keys': {
               'privateKeys': {
                 's': '71080d8b52ec7b12adaec909ed54cd989b682ce2c35647eec219a16f5f90c528',

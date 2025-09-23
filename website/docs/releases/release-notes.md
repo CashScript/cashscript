@@ -2,6 +2,17 @@
 title: Release Notes
 ---
 
+## v0.12.0
+
+#### CashScript SDK
+- :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
+- :boom: **BREAKING**: Make `provider` a required option in `Contract` constructor.
+- :boom: **BREAKING**: Remove deprecated "old" transaction builder (`contract.functions`).
+- :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
+- :sparkles: Add a configurable `vmTarget` option to `MockNetworkProvider`.
+- :sparkles: Add support for ECDSA signatures in contract unlockers for `sig` and `datasig` parameters.
+- :hammer_and_wrench: Improve libauth template generation.
+
 ## v0.11.5
 
 #### CashScript SDK

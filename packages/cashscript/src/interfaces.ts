@@ -75,14 +75,6 @@ export function isPlaceholderUnlocker(unlocker: Unlocker): unlocker is Placehold
   return 'placeholder' in unlocker;
 }
 
-export interface UtxoP2PKH extends Utxo {
-  template: SignatureTemplate;
-}
-
-export function isUtxoP2PKH(utxo: Utxo): utxo is UtxoP2PKH {
-  return 'template' in utxo;
-}
-
 export interface Recipient {
   to: string;
   amount: bigint;
@@ -152,13 +144,22 @@ export const Network = {
 
 export type Network = (typeof Network)[keyof typeof Network];
 
+export const VmTarget = {
+  BCH_2023_05: literal('BCH_2023_05'),
+  BCH_2025_05: literal('BCH_2025_05'),
+  BCH_2026_05: literal('BCH_2026_05'),
+  BCH_SPEC: literal('BCH_SPEC'),
+};
+
+export type VmTarget = (typeof VmTarget)[keyof typeof VmTarget];
+
 export interface TransactionDetails extends Transaction {
   txid: string;
   hex: string;
 }
 
 export interface ContractOptions {
-  provider?: NetworkProvider,
+  provider: NetworkProvider,
   addressType?: AddressType,
 }
 

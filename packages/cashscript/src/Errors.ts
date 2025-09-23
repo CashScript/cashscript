@@ -37,7 +37,7 @@ export class NoDebugInformationInArtifactError extends Error {
 }
 
 export class FailedTransactionError extends Error {
-  constructor(public reason: string, public bitauthUri?: string) {
+  constructor(public reason: string, public bitauthUri: string) {
     const warning = 'WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template';
     super(`${reason}${bitauthUri ? `\n\n${warning}\n\nBitauth URI: ${bitauthUri}` : ''}`);
   }

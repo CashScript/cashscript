@@ -1,4 +1,4 @@
-import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
+import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
@@ -619,23 +619,63 @@ describe('Debugging tests', () => {
         () => expect(transaction).not.toFailRequire(),
       ).toThrow(/Contract function failed a require statement\.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
+  });
 
-    it('should throw an error if the old transaction builder is used', async () => {
-      const transaction = contractTestRequires.functions.test_require().to(aliceAddress, 1000n);
+  describe('P2PKH only transaction', () => {
+    it('should succeed when spending from P2PKH inputs with the corresponding unlocker', async () => {
+      const provider = new MockNetworkProvider();
+      provider.addUtxo(aliceAddress, randomUtxo());
+      provider.addUtxo(aliceAddress, randomUtxo());
 
-      // Note: We're wrapping the expect call in another expect, since we expect the inner expect to throw
-      expect(
-        () => expect(transaction).toFailRequire(),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
+      const result = new TransactionBuilder({ provider })
+        .addInputs(await provider.getUtxos(aliceAddress), new SignatureTemplate(alicePriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .debug();
 
-      expect(
-        () => expect(transaction).toFailRequireWith('1 should equal 2'),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
-
-      expect(
-        () => expect(transaction).toLog('Hello World'),
-      ).toThrow('The CashScript JestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
+      expect(Object.keys(result).length).toBeGreaterThan(0);
     });
+
+    // We currently don't have a way to properly handle non-matching UTXOs and unlockers
+    // Note: that also goes for Contract UTXOs where a user uses an unlocker of a different contract
+    it.skip('should fail when spending from P2PKH inputs with an unlocker for a different public key', async () => {
+      const provider = new MockNetworkProvider();
+      provider.addUtxo(aliceAddress, randomUtxo());
+      provider.addUtxo(aliceAddress, randomUtxo());
+
+      const transactionBuilder = new TransactionBuilder({ provider })
+        .addInputs(await provider.getUtxos(aliceAddress), new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n });
+
+      expect(() => transactionBuilder.debug()).toThrow(FailedTransactionError);
+    });
+  });
+
+  describe('VmTargets', () => {
+    const vmTargets = [
+      undefined,
+      VmTarget.BCH_2023_05,
+      VmTarget.BCH_2025_05,
+      VmTarget.BCH_2026_05,
+      VmTarget.BCH_SPEC,
+    ] as const;
+
+    for (const vmTarget of vmTargets) {
+      it(`should execute and log correctly with vmTarget ${vmTarget}`, async () => {
+        const provider = new MockNetworkProvider({ vmTarget });
+        const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
+        const contractUtxo = randomUtxo();
+        provider.addUtxo(contractTestLogs.address, contractUtxo);
+
+        const transaction = new TransactionBuilder({ provider })
+          .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
+          .addOutput({ to: contractTestLogs.address, amount: 10000n });
+
+        expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? 'BCH_2025_05');
+
+        const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+        expect(transaction).toLog(expectedLog);
+      });
+    }
   });
 });
 

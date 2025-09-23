@@ -32,8 +32,7 @@ import {
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
-import { getBitauthUri } from './LibauthTemplate.js';
-import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import { debugLibauthTemplate, getLibauthTemplates, getBitauthUri } from './LibauthTemplate.js';
 import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
 import semver from 'semver';
 import { WcTransactionObject } from './walletconnect-utils.js';
@@ -161,11 +160,6 @@ export class TransactionBuilder {
   }
 
   debug(): DebugResults {
-    // do not debug a pure P2PKH-spend transaction
-    if (this.inputs.every((input) => isP2PKHUnlocker(input.unlocker))) {
-      return {};
-    }
-
     if (this.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
       throw new Error('Cannot debug a transaction with custom unlocker');
     }
@@ -246,7 +240,7 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw new FailedTransactionError(reason);
+      throw new FailedTransactionError(reason, this.bitauthUri());
     }
   }
 

@@ -10,9 +10,8 @@ import {
   Script,
   scriptToBytecode,
 } from '@cashscript/utils';
-import { Transaction } from './Transaction.js';
 import {
-  ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, encodeFunctionArguments, FunctionArgument,
+  ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, FunctionArgument,
 } from './Argument.js';
 import {
   Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo, AddressType, ContractUnlocker,
@@ -22,7 +21,6 @@ import {
   addressToLockScript, createInputScript, createSighashPreimage, scriptToAddress,
 } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
-import { ElectrumNetworkProvider } from './network/index.js';
 import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
 import semver from 'semver';
 
@@ -30,12 +28,10 @@ export class Contract<
   TArtifact extends Artifact = Artifact,
   TResolved extends {
     constructorInputs: ConstructorArgument[];
-    functions: Record<string, any>;
     unlock: Record<string, any>;
   }
   = {
     constructorInputs: ParamsToTuple<TArtifact['constructorInputs']>;
-    functions: AbiToFunctionMap<TArtifact['abi'], Transaction>;
     unlock: AbiToFunctionMap<TArtifact['abi'], Unlocker>;
   },
 > {
@@ -45,10 +41,7 @@ export class Contract<
   bytecode: string;
   bytesize: number;
   opcount: number;
-
-  functions: TResolved['functions'];
   unlock: TResolved['unlock'];
-
   redeemScript: Script;
   public provider: NetworkProvider;
   public addressType: AddressType;
@@ -57,10 +50,10 @@ export class Contract<
   constructor(
     public artifact: TArtifact,
     constructorArgs: TResolved['constructorInputs'],
-    private options?: ContractOptions,
+    private options: ContractOptions,
   ) {
-    this.provider = this.options?.provider ?? new ElectrumNetworkProvider();
-    this.addressType = this.options?.addressType ?? 'p2sh32';
+    this.provider = this.options.provider;
+    this.addressType = this.options.addressType ?? 'p2sh32';
 
     const expectedProperties = ['abi', 'bytecode', 'constructorInputs', 'contractName', 'compiler'];
     if (!expectedProperties.every((property) => property in artifact)) {
@@ -80,21 +73,7 @@ export class Contract<
 
     this.redeemScript = generateRedeemScript(asmToScript(this.artifact.bytecode), this.encodedConstructorArgs);
 
-    // Populate the functions object with the contract's functions
-    // (with a special case for single function, which has no "function selector")
-    this.functions = {};
-    if (artifact.abi.length === 1) {
-      const f = artifact.abi[0];
-      // @ts-ignore TODO: see if we can use generics to make TypeScript happy
-      this.functions[f.name] = this.createFunction(f);
-    } else {
-      artifact.abi.forEach((f, i) => {
-        // @ts-ignore TODO: see if we can use generics to make TypeScript happy
-        this.functions[f.name] = this.createFunction(f, i);
-      });
-    }
-
-    // Populate the functions object with the contract's functions
+    // Populate the 'unlock' object with the contract's functions
     // (with a special case for single function, which has no "function selector")
     this.unlock = {};
     if (artifact.abi.length === 1) {
@@ -123,27 +102,6 @@ export class Contract<
 
   async getUtxos(): Promise<Utxo[]> {
     return this.provider.getUtxos(this.address);
-  }
-
-  private createFunction(abiFunction: AbiFunction, selector?: number): ContractFunction {
-    return (...args: FunctionArgument[]) => {
-      if (abiFunction.inputs.length !== args.length) {
-        throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
-      }
-
-      // Encode passed args (this also performs type checking)
-      const encodedArgs = encodeFunctionArguments(abiFunction, args);
-
-      const unlocker = this.createUnlocker(abiFunction, selector)(...args);
-
-      return new Transaction(
-        this,
-        unlocker,
-        abiFunction,
-        encodedArgs,
-        selector,
-      );
-    };
   }
 
   private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractFunctionUnlocker {
@@ -180,5 +138,4 @@ export class Contract<
   }
 }
 
-export type ContractFunction = (...args: FunctionArgument[]) => Transaction;
 type ContractFunctionUnlocker = (...args: FunctionArgument[]) => ContractUnlocker;
