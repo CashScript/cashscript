@@ -17,6 +17,8 @@ import {
   isUnlockableUtxo,
   isStandardUnlockableUtxo,
   StandardUnlockableUtxo,
+  VmResourceUsage,
+  isContractUnlocker,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -172,6 +174,44 @@ export class TransactionBuilder {
     return debugLibauthTemplate(this.getLibauthTemplate(), this);
   }
 
+  getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage> {
+    // Note that only StandardUnlockableUtxo inputs are supported for debugging, so any transaction with custom unlockers
+    // cannot be debugged (and therefore cannot return VM resource usage)
+    const results = this.debug();
+    const vmResourceUsage: Array<VmResourceUsage> = [];
+    const tableData: Array<Record<string, any>> = [];
+
+    const formatMetric = (value: number, total: number, withPercentage: boolean = false): string =>
+      `${formatNumber(value)} / ${formatNumber(total)}${withPercentage ? ` (${(value / total * 100).toFixed(0)}%)` : ''}`;
+    const formatNumber = (value: number): string => value.toLocaleString('en');
+
+    const resultEntries = Object.entries(results);
+    for (const [index, input] of this.inputs.entries()) {
+      const [, result] = resultEntries.find(([entryKey]) => entryKey.includes(`input${index}`)) ?? [];
+      const metrics = result?.at(-1)?.metrics;
+
+      // Should not happen
+      if (!metrics) throw new Error('VM resource could not be calculated');
+
+      vmResourceUsage.push(metrics);
+      tableData.push({
+        'Contract - Function': isContractUnlocker(input.unlocker) ? `${input.unlocker.contract.name} - ${input.unlocker.abiFunction.name}` : 'P2PKH Input',
+        Ops: metrics.evaluatedInstructionCount,
+        'Op Cost Budget Usage': formatMetric(metrics.operationCost, metrics.maximumOperationCost, true),
+        SigChecks: formatMetric(metrics.signatureCheckCount, metrics.maximumSignatureCheckCount),
+        Hashes: formatMetric(metrics.hashDigestIterations, metrics.maximumHashDigestIterations),
+      });
+    }
+
+    if (verbose) {
+      console.log('VM Resource usage by inputs:');
+      console.table(tableData);
+    }
+
+    return vmResourceUsage;
+  }
+
+  // TODO: rename to getBitauthUri()
   bitauthUri(): string {
     console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
     return getBitauthUri(this.getLibauthTemplate());
