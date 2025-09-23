@@ -14,7 +14,7 @@ import {
   oracle,
   oraclePub,
 } from '../fixture/vars.js';
-import { gatherUtxos, getTxOutputs } from '../test-util.js';
+import { gatherUtxos, getTxOutputs, itOrSkip } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
@@ -122,7 +122,8 @@ describe('HodlVault', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
 
-    it('should succeed with precomputed ECDSA signature', async () => {
+    itOrSkip(!Boolean(process.env.TESTS_USE_CHIPNET), 'should succeed with precomputed ECDSA signature', async () => {
+      // given
       const cleanProvider = new MockNetworkProvider();
       const contract = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider: cleanProvider });
       cleanProvider.addUtxo(contract.address, {
@@ -130,14 +131,11 @@ describe('HodlVault', () => {
         txid: '11'.repeat(32),
         vout: 0,
       });
-      // given
       const message = oracle.createMessage(100000n, 30000n);
       const oracleSig = oracle.signMessage(message, SignatureAlgorithm.ECDSA);
       const to = contract.address;
       const amount = 10000n;
       const { utxos, changeAmount } = gatherUtxos(await contract.getUtxos(), { amount, fee: 2000n });
-
-      // @ts-ignore
       const signature = '3045022100aa004a425c0c911594c0333164f990c760991b7f84272f35d98c9c6617d9c53602207dfe4729224d4e61496dff11963982cf79f05d623a6e4004b5f50b7cefa7175241';
 
       // when
@@ -161,38 +159,49 @@ describe('HodlVault', () => {
       const amount = 10000n;
       const { utxos, changeAmount } = gatherUtxos(await hodlVault.getUtxos(), { amount, fee: 2000n });
 
-      // sig: improper length
-      expect(() => new TransactionBuilder({ provider })
-        .addInputs(utxos, hodlVault.unlock.spend(placeholder(100), oracleSig, message))
-        .addOutput({ to: to, amount: amount })
-        .addOutput({ to: to, amount: changeAmount })
-        .setLocktime(100_000)
-        .send()).toThrow("Found type 'bytes100' where type 'sig' was expected");
+      // sig: unlocker should throw when given an improper length
+      expect(() => hodlVault.unlock.spend(placeholder(100), oracleSig, message)).toThrow("Found type 'bytes100' where type 'sig' was expected");
 
-      // sig: proper length but malformed
+      // sig: unlocker should not throw when given a proper length, but transaction should fail on invalid sig
+      // Note that this fails with "FailedTransactionEvaluationError" because an invalid signature encoding is NOT a failed
+      // require statement
       await expect(new TransactionBuilder({ provider })
         .addInputs(utxos, hodlVault.unlock.spend(placeholder(71), oracleSig, message))
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
-        .send()).rejects.toThrow();
+        .send()).rejects.toThrow('HodlVault.cash:27 Error in transaction at input 0 in contract HodlVault.cash at line 27');
 
-      // datasig: improper length
-      const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
-      expect(() => new TransactionBuilder({ provider })
-        .addInputs(utxos, hodlVault.unlock.spend(signatureTemplate, placeholder(100), message))
+      // sig: unlocker should not throw when given an empty byte array, but transaction should fail on require statement
+      // Note that this fails with "FailedRequireError" because a zero-length signature IS a failed require statement
+      await expect(new TransactionBuilder({ provider })
+        .addInputs(utxos, hodlVault.unlock.spend(placeholder(0), oracleSig, message))
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
-        .send()).toThrow("Found type 'bytes100' where type 'datasig' was expected");
+        .send()).rejects.toThrow('HodlVault.cash:27 Require statement failed at input 0 in contract HodlVault.cash at line 27');
 
-      // datasig: proper length but malformed
+      // datasig: unlocker should throw when given an improper length
+      const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
+      expect(() => hodlVault.unlock.spend(signatureTemplate, placeholder(100), message)).toThrow("Found type 'bytes100' where type 'datasig' was expected");
+
+      // datasig: unlocker should not throw when given a proper length, but transaction should fail on invalid sig
+      // TODO: This somehow fails with "FailedRequireError" instead of "FailedTransactionEvaluationError", check why
       await expect(new TransactionBuilder({ provider })
         .addInputs(utxos, hodlVault.unlock.spend(signatureTemplate, placeholder(64), message))
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
-        .send()).rejects.toThrow();
+        .send()).rejects.toThrow('HodlVault.cash:26 Require statement failed at input 0 in contract HodlVault.cash at line 26');
+
+      // datasig: unlocker should not throw when given an empty byte array, but transaction should fail on require statement
+      // Note that this fails with "FailedRequireError" because a zero-length signature IS a failed require statement
+      await expect(new TransactionBuilder({ provider })
+        .addInputs(utxos, hodlVault.unlock.spend(signatureTemplate, placeholder(0), message))
+        .addOutput({ to: to, amount: amount })
+        .addOutput({ to: to, amount: changeAmount })
+        .setLocktime(100_000)
+        .send()).rejects.toThrow('HodlVault.cash:26 Require statement failed at input 0 in contract HodlVault.cash at line 26');
     });
   });
 });
