@@ -1,0 +1,1 @@
+import 'cashscript/vitest.setup.js';
