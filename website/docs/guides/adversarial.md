@@ -41,7 +41,7 @@ In the case of an late double spend (which does not try to exploit a race condit
 Either the adversarial actor needs to convince the miners to abandon their first seen rule or he needs to be mining himself to be able to construct his own block.
 
 :::caution
-Both race-condition and late double spends can both be used to grief the experience for normal users, however only late double spends can be used to extract economic value.
+Both race-condition and late double spends can be used to grief the experience for normal users, however only late double spends can be used to extract economic value.
 :::
 
 To convince existing miners to include the double spend transaction instead of the original, the malicious attacker will include a significantly higher mining fee than the original transaction. This can be seen as a 'miner bribe' being paid to discard the first-seen rule and to accept the double spend instead of the original.
@@ -50,7 +50,7 @@ To convince existing miners to include the double spend transaction instead of t
 Attempting a double spend in this way does not incur risk to the adversarial party, either their transaction is not included and they don't pay any fee, or they successfully perform the double spend and they pay the high fee "miner bribe".
 :::
 
-## Economic Value Extraction 
+## Economic Value Extraction
 
 We will now consider what motive the adversarial actor might have to perform these bribes. The two classes of motives are either the profit motive for an economically motivated actor or causing on-chain disruption for a maliciously motivated actor.
 
@@ -127,7 +127,7 @@ The drawback of this approach is that it introduces a central party to enforce h
 
 ### Avoid Bounty Transactions
 
-Having anyone-can-claim bounty transactions in a smart contract system directly encourages the development of double spending technology, whether it is race-condition double spends, miner bribe double spends or miner-involved double spends. 
+Having anyone-can-claim bounty transactions in a smart contract system directly encourages the development of double spending technology, whether it is race-condition double spends, miner bribe double spends or miner-involved double spends.
 
 :::tip
 To not incentivize the development of double-spending technologies, it is best to avoid anyone-can-claim bounty transactions in your smart contract system.

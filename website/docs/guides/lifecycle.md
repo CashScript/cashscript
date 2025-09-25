@@ -3,7 +3,7 @@ title: Transaction Lifecycle
 sidebar_label: Transaction Lifecycle
 ---
 
-This guide will explain the "transaction lifecycle" of a Bitcoin Cash transaction. We'll talk about what the mempool is and how block inclusion works. Further we'll discuss the possibility of unconfirmed transaction chains and conflicting transactions to cover all the possibilities of the transaction lifecycle!
+This guide will explain the "transaction lifecycle" of a Bitcoin Cash transaction. We'll talk about what the mempool is and how block inclusion works. Further we'll discuss the possibility of unconfirmed transaction chains and conflicting transactions to cover the full transaction lifecycle!
 
 ## Block Inclusion
 

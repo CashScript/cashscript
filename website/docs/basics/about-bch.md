@@ -8,7 +8,7 @@ Bitcoin Cash (ticker BCH) is one of the biggest cryptocurrencies. Bitcoin Cash i
 Bitcoin Cash shares many of the same fundamentals as Bitcoin (BTC) like the *Proof-of-Work* consensus algorithm and the *UTXO data-model*. However regarding smart contract programmability, Bitcoin Cash has significantly diverged from Bitcoin (BTC). We will go over the main differences between BCH and BTC, and then delve into the smart contract capabilities of Bitcoin Cash!
 
 :::info
-To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'](https://github.com/bitcoinbook/bitcoinbook). The core of Bitcoin's design is still very much the same in Bitcoin Cash.
+To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'](https://github.com/bitcoinbook/bitcoinbook). The core of Bitcoin's design is still very much the same in Bitcoin Cash. To learn more about BCH's transaction lifecycle, see the dedicated guide ['Transaction Lifecycle'](/docs/guides/lifecycle).
 :::
 
 ## How BCH differs from BTC
