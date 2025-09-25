@@ -7,10 +7,13 @@ import {
   Network,
   randomUtxo,
   SignatureTemplate,
+  TransactionBuilder,
 } from '../src/index.js';
 import {
+  aliceAddress,
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
+import { generateLibauthSourceOutputs } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
 import hodlVaultArtifact from './fixture/hodl_vault.artifact.js';
@@ -137,11 +140,12 @@ describe('Contract', () => {
   });
 
   describe('Contract unlockers', () => {
+    let provider: MockNetworkProvider;
     let instance: Contract;
     let bbInstance: Contract;
 
     beforeEach(() => {
-      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
+      provider = new MockNetworkProvider();
       instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
       bbInstance = new Contract(boundedBytesArtifact, [], { provider });
     });
@@ -163,6 +167,30 @@ describe('Contract', () => {
     it('can call spend with correct arguments', () => {
       expect(() => instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv))).not.toThrow();
       expect(() => bbInstance.unlock.spend(hexToBin('e8030000'), 1000n)).not.toThrow();
+    });
+
+    it('generates correct locking bytecode', () => {
+      expect(instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)).generateLockingBytecode())
+        .toEqual(hexToBin('aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587'));
+    });
+
+    it('generates correct unlocking bytecode', () => {
+      const utxo = {
+        txid: 'e5ac1aa9730d7514b541895e466c987327a4b0c57fcbbd50fc73788f5c0f65d9',
+        vout: 4,
+        satoshis: 102745n,
+      };
+
+      const unlocker = instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+      const transactionBuilder = new TransactionBuilder({ provider })
+        .addInput(utxo, unlocker)
+        .addOutput({ to: aliceAddress, amount: 1000n });
+
+      const transaction = transactionBuilder.buildLibauthTransaction();
+      const sourceOutputs = generateLibauthSourceOutputs(transactionBuilder.inputs);
+
+      expect(unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex: 0 }))
+        .toEqual(hexToBin('4135fac4118af15e0d66f30548dd0c31e1108f3389af96bb9db4f2305706e18fe52cc7163f6440fae98c48332d09c30380527a90604f14b4b3fc0c3aa0884c9c0a61210373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c0881914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97078a988ac'));
     });
   });
 });
