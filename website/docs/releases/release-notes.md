@@ -12,6 +12,7 @@ title: Release Notes
 - :sparkles: Add a configurable `vmTarget` option to `MockNetworkProvider`.
 - :sparkles: Add support for ECDSA signatures in contract unlockers for `sig` and `datasig` parameters.
 - :hammer_and_wrench: Improve libauth template generation.
+- :bug: Fix bug where `SignatureTemplate` would not accept private key hex strings as a signer.
 
 ## v0.11.5
 

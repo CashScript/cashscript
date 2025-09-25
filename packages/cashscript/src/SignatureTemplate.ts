@@ -1,4 +1,4 @@
-import { decodePrivateKeyWif, secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
+import { decodePrivateKeyWif, hexToBin, isHex, secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
 import { hash256, scriptToBytecode } from '@cashscript/utils';
 import {
   GenerateUnlockingBytecodeOptions,
@@ -20,7 +20,12 @@ export default class SignatureTemplate {
       const wif = signer.toWIF();
       this.privateKey = decodeWif(wif);
     } else if (typeof signer === 'string') {
-      this.privateKey = decodeWif(signer);
+      const maybeHexString = signer.startsWith('0x') ? signer.slice(2) : signer;
+      if (isHex(maybeHexString)) {
+        this.privateKey = hexToBin(maybeHexString);
+      } else {
+        this.privateKey = decodeWif(maybeHexString);
+      }
     } else {
       this.privateKey = signer;
     }
