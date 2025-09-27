@@ -37,7 +37,7 @@ For an adversarial attack to pull off this time-sensitive attack, he would requi
 
 ### Late Double Spends
 
-In the case of an late double spend (which does not try to exploit a race condition) the adversarial actor need help from a miner.
+In the case of a late double spend (which does not try to exploit a race condition) the adversarial actor need help from a miner.
 Either the adversarial actor needs to convince the miners to abandon their first seen rule or he needs to be mining himself to be able to construct his own block.
 
 :::caution
@@ -100,7 +100,7 @@ Adversarial analysis should take into account that "first-seen rule" is just a c
 ### Specialized Block-Builders
 
 
-As described in the section on "stale-state arbitrage" economic actors ay be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain. Although miners are not specialized in the optimal construction of DeFi transactions in a block, miner would over time be likely to team up with teams/companies creating this type of software for them.
+As described in the section on "stale-state arbitrage" economic actors may be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain. Although miners are not specialized in the optimal construction of DeFi transactions in a block, miner would over time be likely to team up with teams/companies creating this type of software for them.
 
 :::note
 Ethereum with its large amount of MEV has already seen the emergence of specialized 'block builder' as a new class of relevant economic actors separate from the block proposer (who signs the block).

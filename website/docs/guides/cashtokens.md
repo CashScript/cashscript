@@ -60,10 +60,31 @@ and their equivalent for outputs:
 - **`bytes tx.outputs[i].nftCommitment`** - NFT commitment data of a specific output
 - **`int tx.outputs[i].tokenAmount`** - Amount of fungible tokens of a specific output.
 
-## CashTokens Gotchas
-There are a few important "gotchas" to be aware of when developing with CashTokens in smart contracts for the first time.
+## CashTokens Use cases
 
-#### 1) tokenCategory contains the nft-capability
+The Jedex has a section on novel "[demonstrated concepts](https://github.com/bitjson/jedex#demonstrated-concepts)" enabled by CashTokens. The Jedex overview serves as the best reference to-date for the new possibilities enabled by CashTokens.
+
+:::tip
+The [Jedex demo](https://github.com/bitjson/jedex) also introduces very advanced concepts on multi-threading and MEV avoidance through batching. This core feature of 'joint-execution' is how the DEX got its name.
+:::
+
+Below we'll create a short list of the use cases which will be the most important to know about:
+
+- **Covenant tracking tokens** - this is what enables unique authentication of contract deployments 
+- **Commitment-based state management** - this is what `mutable` nfts are extremely useful for
+- **Depository covenants/token pools**  - which we would call token sidecars
+- **Role tokens** - these are authentication tokens for admins
+- **Token-unlocked covenants** - this concept has also been called "pay-to-nft"
+- **Redeemable NFTs** - `immutable` nfts can carry state as a receipt which can be returned later for payout
+- **Coupled covenants/logic offloading** - which we would call sidecar functions
+- **Spin-off covenants** - the idea that contract create regular helper contracts to perform some task
+
+## CashTokens Gotchas
+There are a few important "gotchas" to be aware of when developing with CashTokens in smart contracts for the first time. We'll separate them on gotchas on the contract side, and gotchas on the transaction building side.
+
+### Contract Gotchas
+
+#### tokenCategory contains the nft-capability
 ```solidity
 bytes tx.inputs[i].tokenCategory
 ```
@@ -73,37 +94,37 @@ When accessing the `tokenCategory` through introspection the result returns `0x`
 If you want to check for an NFT using introspection, you have either split the `tokenCategory` from the `capability` or check the concatenation of the `tokenCategory` and `capability`.
 
 ```solidity
-// Constructor parameters: providedCategory
+  // Constructor parameters: providedCategory
 
-// Extract the separate tokenCategory and capability
-bytes32 tokenCategory, bytes capability = tx.inputs[0].tokenCategory.split(32);
+  // Extract the separate tokenCategory and capability
+  bytes32 tokenCategory, bytes capability = tx.inputs[0].tokenCategory.split(32);
 
-// Check that the NFT is the correct category and has a "minting" capability
-require(providedCategory == tokenCategory);
-require(capability == 0x02);
+  // Check that the NFT is the correct category and has a "minting" capability
+  require(providedCategory == tokenCategory);
+  require(capability == 0x02);
 
-// Alternatively:
+  // Alternatively:
 
-// Check by concatenating the providedCategory and capability
-require(tx.inputs[0].tokenCategory == providedCategory + 0x02);
+  // Check by concatenating the providedCategory and capability
+  require(tx.inputs[0].tokenCategory == providedCategory + 0x02);
 ```
 
-#### 2) tokenCategory encoding
+#### protect the minting capability
 
-The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
+If a covenant contains a `minting` NFT then all outputs should be carefully accounted for in the contract logic to not accidentally allow to mint extra new NFTs.
 
-```ts
-// when using a standard encoded tokenId, reverse the hex before using it in your contract
-const contract = new Contract(artifact, [reverseHex(tokenId)], { provider })
-```
-
-It is not recommended to do the byte-reversal in script, because this adds extra unnecessary overhead to the script.
+For a variable number of outputs you could use the following construction:
 ```solidity
-  // NOT THIS
-  require(tx.inputs[0].tokenCategory == providedTokenId.reverse());
+  // Optionally create bch-change output at outputIndex 5
+  if (tx.outputs.length > 5) {
+        require(tx.outputs[5].tokenCategory == 0x, "Invalid BCH change output - should not hold any tokens");
+  }
+
+  // Don't allow more outputs to prevent minting extra NFTs
+  require(tx.outputs.length <= 6, "Invalid number of outputs - should have 6 at most");
 ```
 
-#### 3) "invisible" empty nfts
+#### "invisible" empty nfts
 Because the nft-capability has no separate introspection item, and nothing is appended to the `tokenCategory` in case of capability `none`, empty nfts can be "invisible" when combined with fungible tokens.
 
 First let's consider the case where a UTXO only holds an empty NFT:
@@ -134,7 +155,28 @@ This means that a covenant UTXO holding both a minting NFT and the fungible toke
 The easiest way to prevent issues with "junk" empty NFTs is to check that only NFTs with non-empty commitments can be interacted with in the contract system.
 :::
 
-#### 4) Explicit vs implicit burning
+### Transaction Building Gotchas
+
+#### tokenCategory encoding
+
+The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
+
+```ts
+// when using a standard encoded tokenId, reverse the hex before using it in your contract
+const contract = new Contract(artifact, [reverseHex(tokenId)], { provider })
+```
+
+#### Combined BCH + CashTokens UTXOs
+
+Most end-user CashTokens wallets expect CashTokens UTXOs to only hold a tiny amount of BCH like 1000 sats. Deviating from the expectation might cause unforeseen problems with user's wallets.
+
+:::tip
+You can hard code in your contract that any user token output should have exactly `1000` sats, this avoids possible complicating freedom during transaction building. 
+:::
+
+However when constructing a transaction with user owned UTXOs, you should always make sure to check whether you handle the edge case of users with combined BCH + CashTokens UTXOs correctly in change output handling both for BCH and the tokens.
+
+#### Explicit vs implicit burning
 
 CashTokens can be burned explicitly by sending them to an OP_RETURN output, which is provably unspendable. CashTokens can also be burned implicitly, by including them in the inputs but not the outputs of a transaction. Always be mindful when adding token-carrying inputs to not forget to add the tokens in the outputs, otherwise they will be considered as an implicit burn.
 
