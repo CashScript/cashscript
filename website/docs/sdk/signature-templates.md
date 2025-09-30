@@ -2,7 +2,7 @@
 title: Signature Templates
 ---
 
-When a contract function has a `sig` parameter, it needs a cryptographic signature from a private key for the spending transaction. 
+When a contract function has a `sig` parameter, it needs a cryptographic signature from a private key for the spending transaction.
 In place of a signature, a `SignatureTemplate` can be passed, which will generate the correct signature when the transaction is built.
 
 :::tip
@@ -59,7 +59,7 @@ transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
 
 ### getPublicKey()
 
-The `SignatureTemplate` also had a helper method to get the matching PublicKey in the following way:
+The `SignatureTemplate` also has a helper method to get the matching PublicKey in the following way:
 
 ```ts
 signatureTemplate.getPublicKey(): Uint8Array
@@ -70,6 +70,23 @@ signatureTemplate.getPublicKey(): Uint8Array
 import { aliceTemplate } from './somewhere.js';
 
 const alicePublicKey = aliceTemplate.getPublicKey()
+```
+
+### signMessageHash()
+
+The `SignatureTemplate` also has a helper method to sign a message hash, which can be used to sign non-transaction messages. This is useful for generating `datasig` signatures for smart contract use cases.
+
+```ts
+signatureTemplate.signMessageHash(message: Uint8Array): Uint8Array
+```
+
+#### Example
+```ts
+import { aliceTemplate } from './somewhere.js';
+import { sha256 } from '@cashscript/utils';
+import { hexToBin } from '@bitauth/libauth';
+
+const signature = aliceTemplate.signMessageHash(sha256(hexToBin('0000000000000000000000')));
 ```
 
 ## Advanced Usage
