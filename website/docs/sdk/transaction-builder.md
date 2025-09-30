@@ -13,14 +13,15 @@ Defining the inputs and outputs requires careful consideration because the diffe
 new TransactionBuilder(options: TransactionBuilderOptions)
 ```
 
-To start, you need to instantiate a transaction builder and pass in a `NetworkProvider` instance.
+To start, you need to instantiate a transaction builder and pass in a `NetworkProvider` instance and other options.
 
 ```ts
 interface TransactionBuilderOptions {
   provider: NetworkProvider;
+  maximumFeeSatoshis?: bigint;
+  maximumFeeSatsPerByte?: number;
 }
 ```
-
 
 #### Example
 ```ts
@@ -29,6 +30,20 @@ import { ElectrumNetworkProvider, TransactionBuilder, Network } from 'cashscript
 const provider = new ElectrumNetworkProvider(Network.MAINNET);
 const transactionBuilder = new TransactionBuilder({ provider });
 ```
+
+### Constructor Options
+
+#### provider
+
+The `provider` option is used to specify the network provider to use when sending the transaction.
+
+#### maximumFeeSatoshis
+
+The `maximumFeeSatoshis` option is used to specify the maximum fee for the transaction in satoshis. If this fee is exceeded, an error will be thrown when building the transaction.
+
+#### maximumFeeSatsPerByte
+
+The `maximumFeeSatsPerByte` option is used to specify the maximum fee per byte for the transaction. If this fee is exceeded, an error will be thrown when building the transaction.
 
 ## Transaction Building
 
@@ -157,18 +172,6 @@ Sets the locktime for the transaction to set a transaction-level absolute timelo
 ```ts
 // Set locktime one day from now
 transactionBuilder.setLocktime(((Date.now() / 1000) + 24 * 60 * 60) * 1000);
-```
-
-### setMaxFee()
-```ts
-transactionBuilder.setMaxFee(maxFee: bigint): this
-```
-
-Sets a max fee for the transaction. Because the transaction builder does not automatically add a change output, you can set a max fee as a safety measure to make sure you don't accidentally pay too much in fees. If the transaction fee exceeds the max fee, an error will be thrown when building the transaction.
-
-#### Example
-```ts
-transactionBuilder.setMaxFee(1000n);
 ```
 
 ## Completing the Transaction
