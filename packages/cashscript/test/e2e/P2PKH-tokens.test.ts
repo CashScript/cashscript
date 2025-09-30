@@ -195,24 +195,18 @@ describe('P2PKH-tokens', () => {
 
     it('should throw an error when trying to send a token the contract doesn\'t have', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
-      const tokenUtxo = contractUtxos.find(isFungibleTokenUtxo);
       const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
-
-      if (!tokenUtxo) {
-        throw new Error('No token UTXO found with fungible tokens');
-      }
 
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
-      const token = { ...tokenUtxo.token!, category: '0000000000000000000000000000000000000000000000000000000000000000' };
+      const token = { category: '0000000000000000000000000000000000000000000000000000000000000000', amount: 100n };
       const fee = 1000n;
-      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n) + tokenUtxo.satoshis;
+      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n);
       const changeAmount = fullBchBalance - fee - amount;
 
       const unlocker = p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
       const txPromise = new TransactionBuilder({ provider })
         .addInputs(nonTokenUtxos, unlocker)
-        .addInput(tokenUtxo, unlocker)
         .addOutput({ to, amount, token })
         .addOutput({ to, amount: changeAmount })
         .send();
@@ -251,8 +245,59 @@ describe('P2PKH-tokens', () => {
       );
     });
 
-    it.todo('cannot burn fungible tokens when allowImplicitFungibleTokenBurn is false (default)');
-    it.todo('can burn fungible tokens when allowImplicitFungibleTokenBurn is true');
+    it('cannot burn fungible tokens when allowImplicitFungibleTokenBurn is false (default)', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const tokenUtxo = contractUtxos.find(isFungibleTokenUtxo);
+      const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
+
+      if (!tokenUtxo) {
+        throw new Error('No token UTXO found with fungible tokens');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const token = { ...tokenUtxo.token!, amount: tokenUtxo.token!.amount - 1n };
+      const fee = 1000n;
+      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n) + tokenUtxo.satoshis;
+      const changeAmount = fullBchBalance - fee - amount;
+
+      const unlocker = p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(nonTokenUtxos, unlocker)
+        .addInput(tokenUtxo, unlocker)
+        .addOutput({ to, amount, token })
+        .addOutput({ to, amount: changeAmount })
+        .send();
+
+      await expect(txPromise).rejects.toThrow('Implicit burning of fungible tokens for category');
+    });
+
+    it('can burn fungible tokens when allowImplicitFungibleTokenBurn is true', async () => {
+      const contractUtxos = await p2pkhInstance.getUtxos();
+      const tokenUtxo = contractUtxos.find(isFungibleTokenUtxo);
+      const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
+
+      if (!tokenUtxo) {
+        throw new Error('No token UTXO found with fungible tokens');
+      }
+
+      const to = p2pkhInstance.tokenAddress;
+      const amount = 1000n;
+      const token = { ...tokenUtxo.token!, amount: tokenUtxo.token!.amount - 1n };
+      const fee = 1000n;
+      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n) + tokenUtxo.satoshis;
+      const changeAmount = fullBchBalance - fee - amount;
+
+      const unlocker = p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+      const txPromise = new TransactionBuilder({ provider, allowImplicitFungibleTokenBurn: true })
+        .addInputs(nonTokenUtxos, unlocker)
+        .addInput(tokenUtxo, unlocker)
+        .addOutput({ to, amount, token })
+        .addOutput({ to, amount: changeAmount })
+        .send();
+
+      await expect(txPromise).resolves.toBeDefined();
+    });
   });
 });
 

@@ -10,7 +10,7 @@ title: Release Notes
 - :boom: **BREAKING**: Remove deprecated "old" transaction builder (`contract.functions`).
 - :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
 - :boom: **BREAKING**: Replace `setMaxFee()` method on `TransactionBuilder` with `TransactionBuilderOptions` on the constructor.
-- :sparkles: Add `maximumFeeSatsPerByte` option to `TransactionBuilder` constructor.
+- :sparkles: Add `maximumFeeSatsPerByte` and `allowImplicitFungibleTokenBurn` options to `TransactionBuilder` constructor.
 - :sparkles: Add a configurable `vmTarget` option to `MockNetworkProvider`.
 - :sparkles: Add support for ECDSA signatures in contract unlockers for `sig` and `datasig` parameters.
 - :sparkles: Add `signMessageHash()` method to `SignatureTemplate` to allow for signing of non-transaction messages.

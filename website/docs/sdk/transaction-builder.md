@@ -45,6 +45,10 @@ The `maximumFeeSatoshis` option is used to specify the maximum fee for the trans
 
 The `maximumFeeSatsPerByte` option is used to specify the maximum fee per byte for the transaction. If this fee is exceeded, an error will be thrown when building the transaction.
 
+#### allowImplicitFungibleTokenBurn
+
+The `allowImplicitFungibleTokenBurn` option is used to specify whether implicit burning of fungible tokens is allowed (default: `false`). If this is set to `true`, the transaction builder will not throw an error when burning fungible tokens.
+
 ## Transaction Building
 
 ### addInput()
