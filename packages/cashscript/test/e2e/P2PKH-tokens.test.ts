@@ -1,6 +1,8 @@
 import { randomUtxo, randomToken, randomNFT } from '../../src/utils.js';
 import {
   Contract, SignatureTemplate, ElectrumNetworkProvider, MockNetworkProvider,
+  TransactionBuilder,
+  NetworkProvider,
 } from '../../src/index.js';
 import {
   alicePkh,
@@ -14,9 +16,10 @@ import artifact from '../fixture/p2pkh.artifact.js';
 // TODO: Replace this with unlockers
 describe('P2PKH-tokens', () => {
   let p2pkhInstance: Contract<typeof artifact>;
+  let provider: NetworkProvider;
 
   beforeAll(() => {
-    const provider = process.env.TESTS_USE_CHIPNET
+    provider = process.env.TESTS_USE_CHIPNET
       ? new ElectrumNetworkProvider(Network.CHIPNET)
       : new MockNetworkProvider();
 
@@ -61,15 +64,19 @@ describe('P2PKH-tokens', () => {
         throw new Error('No token UTXO found with fungible tokens');
       }
 
+      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n) + tokenUtxo.satoshis;
+
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
       const { token } = tokenUtxo;
+      const fee = 1000n;
+      const changeAmount = fullBchBalance - fee - amount;
 
-      const tx = await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(tokenUtxo)
-        .to(to, amount, token)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(nonTokenUtxos, p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+        .addInput(tokenUtxo, p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount, token })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       const txOutputs = getTxOutputs(tx);
@@ -87,24 +94,21 @@ describe('P2PKH-tokens', () => {
 
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
+      const fee = 1000n;
+      const fullBchBalance = nftUtxo1.satoshis + nftUtxo2.satoshis + nonTokenUtxos.reduce(
+        (total, utxo) => total + utxo.satoshis, 0n,
+      );
+      const changeAmount = fullBchBalance - fee - amount;
 
-      // We ran into a bug with the order of the properties, so we re-order the properties here to test that it works
-      const reorderedToken1 = {
-        nft: {
-          commitment: nftUtxo1.token!.nft!.commitment,
-          capability: nftUtxo1.token!.nft!.capability,
-        },
-        category: nftUtxo1.token!.category,
-        amount: 0n,
-      };
+      const unlocker = p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
 
-      const tx = await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(nftUtxo1)
-        .from(nftUtxo2)
-        .to(to, amount, reorderedToken1)
-        .to(to, amount, nftUtxo2.token)
+      const tx = await new TransactionBuilder({ provider })
+        .addInputs(nonTokenUtxos, unlocker)
+        .addInput(nftUtxo1, unlocker)
+        .addInput(nftUtxo2, unlocker)
+        .addOutput({ to, amount, token: nftUtxo1.token })
+        .addOutput({ to, amount, token: nftUtxo2.token })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       const txOutputs = getTxOutputs(tx);
@@ -113,59 +117,23 @@ describe('P2PKH-tokens', () => {
       );
     });
 
-    it('can automatically select UTXOs for fungible tokens', async () => {
-      const contractUtxos = await p2pkhInstance.getUtxos();
-      const tokenUtxo = contractUtxos.find(isFungibleTokenUtxo);
-
-      if (!tokenUtxo) {
-        throw new Error('No token UTXO found with fungible tokens');
-      }
-
-      const to = p2pkhInstance.tokenAddress;
-      const amount = 1000n;
-      const { token } = tokenUtxo;
-
-      const tx = await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .to(to, amount, token)
-        .send();
-
-      const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
-    });
-
-    it('adds automatic change output for fungible tokens', async () => {
-      const contractUtxos = await p2pkhInstance.getUtxos();
-      const tokenUtxo = contractUtxos.find(isFungibleTokenUtxo);
-      const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
-
-      if (!tokenUtxo) {
-        throw new Error('No token UTXO found with fungible tokens');
-      }
-
-      const to = p2pkhInstance.tokenAddress;
-      const amount = 1000n;
-      const { token } = tokenUtxo;
-
-      const tx = await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(tokenUtxo)
-        .to(to, amount)
-        .send();
-
-      const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
-    });
-
-    it('can create new token categories', async () => {
+    it('can create new token category (NFT and fungible token)', async () => {
+      const fee = 1000n;
       const to = p2pkhInstance.tokenAddress;
 
-      // Send a transaction to be used as the genesis UTXO
-      await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .to(to, 10_000n)
+      // As a prerequisite to creating a new token category, we need a vout0 UTXO, so we create one here
+      const nonTokenUtxosBeforeGenesis = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo);
+      const preGenesisAmount = 10_000n;
+      const fullBchBalance = nonTokenUtxosBeforeGenesis.reduce((total, utxo) => total + utxo.satoshis, 0n);
+      const preGenesisChangeAmount = fullBchBalance - fee - preGenesisAmount;
+
+      await new TransactionBuilder({ provider })
+        .addInputs(nonTokenUtxosBeforeGenesis, p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount: preGenesisAmount })
+        .addOutput({ to, amount: preGenesisChangeAmount })
         .send();
+
+      //////////////////////////////////////////////////////////////////////////////////////////////////
 
       const contractUtxos = await p2pkhInstance.getUtxos();
       const [genesisUtxo] = contractUtxos.filter((utxo) => utxo.vout === 0 && utxo.satoshis > 2000);
@@ -175,6 +143,7 @@ describe('P2PKH-tokens', () => {
       }
 
       const amount = 1000n;
+      const changeAmount = genesisUtxo.satoshis - fee - amount;
       const token: TokenDetails = {
         amount: 1000n,
         category: genesisUtxo.txid,
@@ -184,71 +153,15 @@ describe('P2PKH-tokens', () => {
         },
       };
 
-      const tx = await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(genesisUtxo)
-        .to(to, amount, token)
+      const tx = await new TransactionBuilder({ provider })
+        .addInput(genesisUtxo, p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+        .addOutput({ to, amount, token })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
       const txOutputs = getTxOutputs(tx);
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
     });
-
-    it('adds automatic change output for NFTs', async () => {
-      const contractUtxos = await p2pkhInstance.getUtxos();
-      const nftUtxo = contractUtxos.find(isNftUtxo);
-      const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
-
-      if (!nftUtxo) {
-        throw new Error('No token UTXO found with an NFT');
-      }
-
-      const to = p2pkhInstance.tokenAddress;
-      const amount = 1000n;
-      const { token } = nftUtxo;
-
-      const tx = await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(nftUtxo)
-        .to(to, amount)
-        .send();
-
-      const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
-    });
-
-    it('can disable automatic change output for fungible tokens', async () => {
-      const contractUtxos = await p2pkhInstance.getUtxos();
-      const tokenUtxo = contractUtxos.find(isFungibleTokenUtxo);
-      const nonTokenUtxos = contractUtxos.filter(isNonTokenUtxo);
-
-      if (!tokenUtxo) {
-        throw new Error('No token UTXO found with fungible tokens');
-      }
-
-      const to = p2pkhInstance.tokenAddress;
-      const amount = 1000n;
-      const token = { ...tokenUtxo.token!, amount: tokenUtxo.token!.amount - 1n };
-
-      const tx = await p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(tokenUtxo)
-        .to(to, amount, token)
-        .withoutTokenChange()
-        .send();
-
-      const txOutputs = getTxOutputs(tx);
-      expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount, token }]));
-
-      // Check that the change output is not present
-      txOutputs.forEach((output) => {
-        expect(output.token?.amount).not.toEqual(1n);
-      });
-    });
-
-    it.todo('can disable automatic change output for NFTs');
 
     it('should throw an error when trying to send more tokens than the contract has', async () => {
       const contractUtxos = await p2pkhInstance.getUtxos();
@@ -262,15 +175,22 @@ describe('P2PKH-tokens', () => {
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
       const token = { ...tokenUtxo.token!, amount: tokenUtxo.token!.amount + 1n };
+      const fee = 1000n;
+      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n) + tokenUtxo.satoshis;
+      const changeAmount = fullBchBalance - fee - amount;
 
-      const txPromise = p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(tokenUtxo)
-        .to(to, amount, token)
+      const unlocker = p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(nonTokenUtxos, unlocker)
+        .addInput(tokenUtxo, unlocker)
+        .addOutput({ to, amount, token })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
-      await expect(txPromise).rejects.toThrow(/Insufficient funds for token/);
+      await expect(txPromise).rejects.toThrow(
+        /the sum of fungible tokens in the transaction outputs exceed that of the transaction inputs for a category/,
+      );
     });
 
     it('should throw an error when trying to send a token the contract doesn\'t have', async () => {
@@ -285,15 +205,21 @@ describe('P2PKH-tokens', () => {
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
       const token = { ...tokenUtxo.token!, category: '0000000000000000000000000000000000000000000000000000000000000000' };
+      const fee = 1000n;
+      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n) + tokenUtxo.satoshis;
+      const changeAmount = fullBchBalance - fee - amount;
 
-      const txPromise = p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(tokenUtxo)
-        .to(to, amount, token)
+      const unlocker = p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(nonTokenUtxos, unlocker)
+        .addInput(tokenUtxo, unlocker)
+        .addOutput({ to, amount, token })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
-      await expect(txPromise).rejects.toThrow(/Insufficient funds for token/);
+      await expect(txPromise).rejects.toThrow(
+        /the transaction creates new fungible tokens for a category without a matching genesis input/,
+      );
     });
 
     it('should throw an error when trying to send an NFT the contract doesn\'t have', async () => {
@@ -308,20 +234,25 @@ describe('P2PKH-tokens', () => {
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
       const token = { ...nftUtxo.token!, category: '0000000000000000000000000000000000000000000000000000000000000000' };
+      const fee = 1000n;
+      const fullBchBalance = nonTokenUtxos.reduce((total, utxo) => total + utxo.satoshis, 0n) + nftUtxo.satoshis;
+      const changeAmount = fullBchBalance - fee - amount;
 
-      const txPromise = p2pkhInstance.functions
-        .spend(alicePub, new SignatureTemplate(alicePriv))
-        .from(nonTokenUtxos)
-        .from(nftUtxo)
-        .to(to, amount, token)
+      const unlocker = p2pkhInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+      const txPromise = new TransactionBuilder({ provider })
+        .addInputs(nonTokenUtxos, unlocker)
+        .addInput(nftUtxo, unlocker)
+        .addOutput({ to, amount, token })
+        .addOutput({ to, amount: changeAmount })
         .send();
 
-      await expect(txPromise).rejects.toThrow(/NFT output with token category .* does not have corresponding input/);
+      await expect(txPromise).rejects.toThrow(
+        /the transaction creates an immutable token for a category without a matching minting token/,
+      );
     });
 
-    it.todo('can mint new NFTs if the NFT has minting capabilities');
-    it.todo('can change the NFT commitment if the NFT has mutable capabilities');
-    // TODO: Add more edge case tests for NFTs (minting, mutable, change outputs with multiple kinds of NFTs)
+    it.todo('cannot burn fungible tokens when allowImplicitFungibleTokenBurn is false (default)');
+    it.todo('can burn fungible tokens when allowImplicitFungibleTokenBurn is true');
   });
 });
 
