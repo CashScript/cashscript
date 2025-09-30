@@ -31,13 +31,17 @@ export default class SignatureTemplate {
     }
   }
 
-  // TODO: Allow signing of non-transaction messages (i.e. don't add the hashtype)
   generateSignature(payload: Uint8Array, bchForkId?: boolean): Uint8Array {
+    const signature = this.signMessageHash(payload);
+    return Uint8Array.from([...signature, this.getHashType(bchForkId)]);
+  }
+
+  signMessageHash(payload: Uint8Array): Uint8Array {
     const signature = this.signatureAlgorithm === SignatureAlgorithm.SCHNORR
       ? secp256k1.signMessageHashSchnorr(this.privateKey, payload) as Uint8Array
       : secp256k1.signMessageHashDER(this.privateKey, payload) as Uint8Array;
 
-    return Uint8Array.from([...signature, this.getHashType(bchForkId)]);
+    return signature;
   }
 
   getHashType(bchForkId: boolean = true): number {

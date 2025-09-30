@@ -46,6 +46,22 @@ describe('SignatureTemplate', () => {
     });
   });
 
+  describe('signMessageHash', () => {
+    it('should generate a correct signature using Schnorr', () => {
+      const signatureTemplate = new SignatureTemplate(alicePriv);
+      const signature = signatureTemplate.signMessageHash(hexToBin('0000000000000000000000'));
+      expect(signature).toEqual(hexToBin('bcac180e17de108003cce026708bd2af54b860dad2626cee157f4ed5abd993b9085d615015f905978adc51e8878226280ddd27d899f086519c0978e53332d799'));
+    });
+  });
+
+  describe('signMessageHash', () => {
+    it('should generate a correct signature using ECDSA', () => {
+      const signatureTemplate = new SignatureTemplate(alicePriv, undefined, SignatureAlgorithm.ECDSA);
+      const signature = signatureTemplate.signMessageHash(hexToBin('0000000000000000000000'));
+      expect(signature).toEqual(hexToBin('3045022100fa1d6a159a124e99479f78152422d55ff3c16f7fac5ae47fa291907f8f47613f02200d6c906f667b3712860b6f5a1f296ecb7dcd44da83c6a1eb45869b61c6b8dadb'));
+    });
+  });
+
   describe('getPublicKey', () => {
     it('should generate a correct public key', () => {
       const signatureTemplate = new SignatureTemplate(alicePriv);

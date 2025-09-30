@@ -11,6 +11,7 @@ title: Release Notes
 - :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
 - :sparkles: Add a configurable `vmTarget` option to `MockNetworkProvider`.
 - :sparkles: Add support for ECDSA signatures in contract unlockers for `sig` and `datasig` parameters.
+- :sparkles: Add `signMessageHash()` method to `SignatureTemplate` to allow for signing of non-transaction messages.
 - :hammer_and_wrench: Improve libauth template generation.
 - :bug: Fix bug where `SignatureTemplate` would not accept private key hex strings as a signer.
 
