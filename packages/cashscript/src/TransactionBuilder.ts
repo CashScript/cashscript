@@ -38,6 +38,8 @@ import { WcTransactionObject } from './walletconnect-utils.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
+  maximumFeeSatoshis?: bigint;
+  maximumFeeSatsPerByte?: number;
 }
 
 const DEFAULT_SEQUENCE = 0xfffffffe;
@@ -48,10 +50,9 @@ export class TransactionBuilder {
   public outputs: Output[] = [];
 
   public locktime: number = 0;
-  public maxFee?: bigint;
 
   constructor(
-    options: TransactionBuilderOptions,
+    private options: TransactionBuilderOptions,
   ) {
     this.provider = options.provider;
   }
@@ -102,26 +103,26 @@ export class TransactionBuilder {
     return this;
   }
 
-  setMaxFee(maxFee: bigint): this {
-    this.maxFee = maxFee;
-    return this;
-  }
-
-  private checkMaxFee(): void {
-    if (!this.maxFee) return;
-
+  private checkMaxFee(transaction: LibauthTransaction): void {
     const totalInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
     const totalOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
     const fee = totalInputAmount - totalOutputAmount;
 
-    if (fee > this.maxFee) {
-      throw new Error(`Transaction fee of ${fee} is higher than max fee of ${this.maxFee}`);
+    if (this.options.maximumFeeSatoshis && fee > this.options.maximumFeeSatoshis) {
+      throw new Error(`Transaction fee of ${fee} is higher than max fee of ${this.options.maximumFeeSatoshis}`);
+    }
+
+    if (this.options.maximumFeeSatsPerByte) {
+      const transactionSize = encodeTransaction(transaction).byteLength;
+      const feePerByte = Number(fee) / transactionSize;
+
+      if (feePerByte > this.options.maximumFeeSatsPerByte) {
+        throw new Error(`Transaction fee per byte of ${feePerByte} is higher than max fee per byte of ${this.options.maximumFeeSatsPerByte}`);
+      }
     }
   }
 
   buildLibauthTransaction(): LibauthTransaction {
-    this.checkMaxFee();
-
     const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
       outpointTransactionHash: hexToBin(utxo.txid),
@@ -148,6 +149,8 @@ export class TransactionBuilder {
     inputScripts.forEach((script, i) => {
       transaction.inputs[i].unlockingBytecode = script;
     });
+
+    this.checkMaxFee(transaction);
 
     return transaction;
   }
