@@ -10,9 +10,8 @@ import {
   alicePub,
   bobAddress,
 } from '../../fixture/vars.js';
-import { describeOrSkip } from '../../test-util.js';
 
-describeOrSkip(!process.env.TESTS_USE_CHIPNET, 'MockNetworkProvider', () => {
+describe.runIf(!process.env.TESTS_USE_CHIPNET)('MockNetworkProvider', () => {
   describe('when updateUtxoSet is true', () => {
     const provider = new MockNetworkProvider({ updateUtxoSet: true });
 
