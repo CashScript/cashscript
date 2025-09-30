@@ -2,6 +2,53 @@
 title: Migration Notes
 ---
 
+## v0.11 to v0.12
+
+There are several breaking changes to the SDK in this release.
+
+### CashScript SDK
+
+#### Old Transaction Builder Removal
+
+The most impactful breaking change is the removal of the deprecated 'Simple Transaction Builder'. See [below for steps to migrate to the new transaction builder](/docs/releases/migration-notes#sdk-transaction-builder).
+
+#### Contract constructor
+Before, the `provider` option was optional in the `Contract` constructor. This is no longer the case.
+
+```ts
+// Before: defaults to mainnet ElectrumNetworkProvider
+const contract = new Contract(artifact, constructorArgs);
+
+// After: explicitly specify the provider
+const provider = new ElectrumNetworkProvider('mainnet');
+const contract = new Contract(artifact, constructorArgs, { provider });
+```
+
+#### Transaction Builder Max Fee
+Before, the `setMaxFee()` method was used to set the maximum fee for the transaction. This was replaced with the `maximumFeeSatoshis` option in the constructor. Additionally, the `maximumFeeSatsPerByte` option was added.
+
+```ts
+// Before: setMaxFee() was used to set the maximum fee
+const builder = new TransactionBuilder({ provider }).setMaxFee(1000n);
+
+// After: maximumFeeSatoshis option was added to the constructor
+const builder = new TransactionBuilder({ provider, maximumFeeSatoshis: 1000n });
+```
+
+#### MockNetworkProvider
+
+Before, the `updateUtxoSet` option was `false` by default for the `MockNetworkProvider`. This is now `true` by default to better match real-world network behaviour.
+
+```ts
+// Before: updateUtxoSet is false by default
+const provider = new MockNetworkProvider();
+
+// After: updateUtxoSet is true by default, if you want to keep the old behaviour, set it to false
+const provider = new MockNetworkProvider({ updateUtxoSet: false });
+```
+
+Earlier, the `MockNetworkProvider` also automatically added some test UTXOs to the provider, which is no longer the case. Make sure to add any UTXOs you need manually.
+
 ## v0.10 to v0.11
 
 There are several breaking changes to the compiler and SDK in this release. They are listed below in their own sections.

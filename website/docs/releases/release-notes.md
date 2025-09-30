@@ -4,16 +4,16 @@ title: Release Notes
 
 ## v0.12.0
 
-#### CashScript SDK
-- :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
-- :boom: **BREAKING**: Make `provider` a required option in `Contract` constructor.
-- :boom: **BREAKING**: Remove deprecated "old" transaction builder (`contract.functions`).
-- :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
-- :boom: **BREAKING**: Replace `setMaxFee()` method on `TransactionBuilder` with `TransactionBuilderOptions` on the constructor.
+#### CashScript SDK`TransactionBuilderOptions` on the constructor.
 - :sparkles: Add `maximumFeeSatsPerByte` and `allowImplicitFungibleTokenBurn` options to `TransactionBuilder` constructor.
 - :sparkles: Add a configurable `vmTarget` option to `MockNetworkProvider`.
 - :sparkles: Add support for ECDSA signatures in contract unlockers for `sig` and `datasig` parameters.
 - :sparkles: Add `signMessageHash()` method to `SignatureTemplate` to allow for signing of non-transaction messages.
+- :boom: **BREAKING**: Remove deprecated "old" transaction builder (`contract.functions`).
+- :boom: **BREAKING**: Make `provider` a required option in `Contract` constructor.
+- :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
+- :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
+- :boom: **BREAKING**: Replace `setMaxFee()` method on `TransactionBuilder` with
 - :hammer_and_wrench: Improve libauth template generation.
 - :bug: Fix bug where `SignatureTemplate` would not accept private key hex strings as a signer.
 
