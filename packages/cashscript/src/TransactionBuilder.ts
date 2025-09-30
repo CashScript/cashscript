@@ -40,6 +40,7 @@ export interface TransactionBuilderOptions {
   provider: NetworkProvider;
   maximumFeeSatoshis?: bigint;
   maximumFeeSatsPerByte?: number;
+  allowImplicitFungibleTokenBurn?: boolean;
 }
 
 const DEFAULT_SEQUENCE = 0xfffffffe;
@@ -50,11 +51,16 @@ export class TransactionBuilder {
   public outputs: Output[] = [];
 
   public locktime: number = 0;
+  public options: TransactionBuilderOptions;
 
   constructor(
-    private options: TransactionBuilderOptions,
+    options: TransactionBuilderOptions,
   ) {
     this.provider = options.provider;
+    this.options = {
+      allowImplicitFungibleTokenBurn: options.allowImplicitFungibleTokenBurn ?? false,
+      ...options,
+    };
   }
 
   addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
@@ -114,7 +120,7 @@ export class TransactionBuilder {
 
     if (this.options.maximumFeeSatsPerByte) {
       const transactionSize = encodeTransaction(transaction).byteLength;
-      const feePerByte = Number(fee) / transactionSize;
+      const feePerByte = Number((Number(fee) / transactionSize).toFixed(2));
 
       if (feePerByte > this.options.maximumFeeSatsPerByte) {
         throw new Error(`Transaction fee per byte of ${feePerByte} is higher than max fee per byte of ${this.options.maximumFeeSatsPerByte}`);
@@ -122,7 +128,34 @@ export class TransactionBuilder {
     }
   }
 
+  private checkFungibleTokenBurn(): void {
+    if (this.options.allowImplicitFungibleTokenBurn) return;
+
+    const tokenInputAmounts: Record<string, bigint> = {};
+    const tokenOutputAmounts: Record<string, bigint> = {};
+
+    for (const input of this.inputs) {
+      if (input.token?.amount) {
+        tokenInputAmounts[input.token.category] = (tokenInputAmounts[input.token.category] || 0n) + input.token.amount;
+      }
+    }
+    for (const output of this.outputs) {
+      if (output.token?.amount) {
+        tokenOutputAmounts[output.token.category] = (tokenOutputAmounts[output.token.category] || 0n) + output.token.amount;
+      }
+    }
+
+    for (const [category, inputAmount] of Object.entries(tokenInputAmounts)) {
+      const outputAmount = tokenOutputAmounts[category] || 0n;
+      if (outputAmount < inputAmount) {
+        throw new Error(`Implicit burning of fungible tokens for category ${category} is not allowed (input amount: ${inputAmount}, output amount: ${outputAmount}). If this is intended, set allowImplicitFungibleTokenBurn to true.`);
+      }
+    }
+  }
+
   buildLibauthTransaction(): LibauthTransaction {
+    this.checkFungibleTokenBurn();
+
     const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
       outpointTransactionHash: hexToBin(utxo.txid),
