@@ -31,11 +31,11 @@ import {
   VmTarget,
 } from '../interfaces.js';
 import SignatureTemplate from '../SignatureTemplate.js';
-import { addressToLockScript, extendedStringify, getSignatureAndPubkeyFromP2PKHInput, zip } from '../utils.js';
+import { addressToLockScript, extendedStringify, zip } from '../utils.js';
 import { TransactionBuilder } from '../TransactionBuilder.js';
 import { deflate } from 'pako';
 import MockNetworkProvider from '../network/MockNetworkProvider.js';
-import { addHexPrefixExceptEmpty, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getUnlockScriptName, lockingBytecodeIsSetToSlot, serialiseTokenDetails } from './utils.js';
+import { addHexPrefixExceptEmpty, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getSignatureAndPubkeyFromP2PKHInput, getUnlockScriptName, lockingBytecodeIsSetToSlot, serialiseTokenDetails } from './utils.js';
 
 // TODO: Add / improve descriptions throughout the template generation
 

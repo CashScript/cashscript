@@ -4,7 +4,8 @@ title: Release Notes
 
 ## v0.12.0
 
-#### CashScript SDK`TransactionBuilderOptions` on the constructor.
+#### CashScript SDK
+- :sparkles: Add `getVmResourceUsage` method to `TransactionBuilder`.
 - :sparkles: Add `maximumFeeSatsPerByte` and `allowImplicitFungibleTokenBurn` options to `TransactionBuilder` constructor.
 - :sparkles: Add a configurable `vmTarget` option to `MockNetworkProvider`.
 - :sparkles: Add support for ECDSA signatures in contract unlockers for `sig` and `datasig` parameters.
@@ -14,6 +15,7 @@ title: Release Notes
 - :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
 - :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
 - :boom: **BREAKING**: Replace `setMaxFee()` method on `TransactionBuilder` with
+- :boom: **BREAKING**: Rename `bitauthUri()` method on `TransactionBuilder` to `getBitauthUri()` for consistency.
 - :hammer_and_wrench: Improve libauth template generation.
 - :bug: Fix bug where `SignatureTemplate` would not accept private key hex strings as a signer.
 
@@ -62,6 +64,8 @@ https://x.com/CashScriptBCH/status/1942513305420968238
 This update adds CashScript support for the new BCH 2025 network upgrade. To read more about the upgrade, see [this blog post](https://blog.bitjson.com/2025-chips/).
 
 This release also contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
+
+Thanks [kiok](https://x.com/cypherpunk_bch) for the significant contributions!
 
 #### cashc compiler
 - :bug: Fix bug where source code in `--format ts` artifacts used incorrect quotation marks.

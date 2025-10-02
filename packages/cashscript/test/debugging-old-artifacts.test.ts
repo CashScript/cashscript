@@ -35,7 +35,7 @@ describe('Debugging tests - old artifacts', () => {
       .addInput(contractUtxo, contractTestLogs.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
       .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-    console.warn(transaction.bitauthUri());
+    console.warn(transaction.getBitauthUri());
 
     expect(() => transaction.debug()).not.toThrow();
   });
@@ -50,7 +50,7 @@ describe('Debugging tests - old artifacts', () => {
       .addInput(contractUtxo, contractTestLogs.unlock.spend(alicePub, new SignatureTemplate(bobPriv)))
       .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-    console.warn(transaction.bitauthUri());
+    console.warn(transaction.getBitauthUri());
 
     expect(() => transaction.debug()).toThrow();
   });

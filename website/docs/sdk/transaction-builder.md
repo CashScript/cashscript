@@ -243,12 +243,12 @@ transactionBuilder.debug(): DebugResult
 
 If you want to debug a transaction locally instead of sending it to the network, you can call the `debug()` function on the transaction. This will return intermediate values and the final result of the transaction. It will also show any logged values and `require` error messages.
 
-### bitauthUri()
+### getBitauthUri()
 ```ts
-transactionBuilder.bitauthUri(): string
+transactionBuilder.getBitauthUri(): string
 ```
 
-If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
+If you prefer a lower-level debugging experience, you can call the `getBitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
 You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
 
 :::caution

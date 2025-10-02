@@ -24,7 +24,7 @@ const provider = new ElectrumNetworkProvider('mainnet');
 const contract = new Contract(artifact, constructorArgs, { provider });
 ```
 
-#### Transaction Builder Max Fee
+#### Transaction Builder
 Before, the `setMaxFee()` method was used to set the maximum fee for the transaction. This was replaced with the `maximumFeeSatoshis` option in the constructor. Additionally, the `maximumFeeSatsPerByte` option was added.
 
 ```ts
@@ -34,6 +34,8 @@ const builder = new TransactionBuilder({ provider }).setMaxFee(1000n);
 // After: maximumFeeSatoshis option was added to the constructor
 const builder = new TransactionBuilder({ provider, maximumFeeSatoshis: 1000n });
 ```
+
+Addtionally, `transactionBuilder.bitauthUri()` was renamed to `transactionBuilder.getBitauthUri()` for consistency.
 
 #### MockNetworkProvider
 
