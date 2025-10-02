@@ -35,7 +35,7 @@ const builder = new TransactionBuilder({ provider }).setMaxFee(1000n);
 const builder = new TransactionBuilder({ provider, maximumFeeSatoshis: 1000n });
 ```
 
-Addtionally, `transactionBuilder.bitauthUri()` was renamed to `transactionBuilder.getBitauthUri()` for consistency.
+Additionally, `transactionBuilder.bitauthUri()` was renamed to `transactionBuilder.getBitauthUri()` for consistency.
 
 #### MockNetworkProvider
 
