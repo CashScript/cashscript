@@ -14,7 +14,7 @@ title: Release Notes
 - :boom: **BREAKING**: Make `provider` a required option in `Contract` constructor.
 - :boom: **BREAKING**: Set `updateUtxoSet` to `true` by default for `MockNetworkProvider`.
 - :boom: **BREAKING**: No longer seed the MockNetworkProvider with any test UTXOs.
-- :boom: **BREAKING**: Replace `setMaxFee()` method on `TransactionBuilder` with
+- :boom: **BREAKING**: Replace `setMaxFee()` method on `TransactionBuilder` with `maximumFeeSatoshis` option.
 - :boom: **BREAKING**: Rename `bitauthUri()` method on `TransactionBuilder` to `getBitauthUri()` for consistency.
 - :hammer_and_wrench: Improve libauth template generation.
 - :bug: Fix bug where `SignatureTemplate` would not accept private key hex strings as a signer.
