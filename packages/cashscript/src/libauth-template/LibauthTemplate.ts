@@ -1,20 +1,13 @@
 import {
   binToBase64,
   binToHex,
-  decodeCashAddress,
-  hexToBin,
   Input,
-  isHex,
   TransactionBch,
   utf8ToBin,
   WalletTemplate,
-  WalletTemplateEntity,
   WalletTemplateScenario,
   WalletTemplateScenarioBytecode,
-  WalletTemplateScenarioInput,
   WalletTemplateScenarioOutput,
-  WalletTemplateScenarioTransactionOutput,
-  WalletTemplateScript,
   WalletTemplateScriptLocking,
   WalletTemplateScriptUnlocking,
   WalletTemplateVariable,
@@ -23,193 +16,118 @@ import {
   AbiFunction,
   AbiInput,
   Artifact,
-  bytecodeToScript,
-  formatBitAuthScript,
 } from '@cashscript/utils';
-import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from './Argument.js';
-import { Contract } from './Contract.js';
-import { DebugResults, debugTemplate } from './debugging.js';
+import { EncodedConstructorArgument, EncodedFunctionArgument, encodeFunctionArguments } from '../Argument.js';
+import { Contract } from '../Contract.js';
+import { DebugResults, debugTemplate } from '../debugging.js';
 import {
-  HashType,
   isContractUnlocker,
   isP2PKHUnlocker,
   isStandardUnlockableUtxo,
   isUnlockableUtxo,
-  LibauthTokenDetails,
   Output,
-  SignatureAlgorithm,
   StandardUnlockableUtxo,
-  TokenDetails,
-  UnlockableUtxo,
   Utxo,
   VmTarget,
-} from './interfaces.js';
-import SignatureTemplate from './SignatureTemplate.js';
-import { addressToLockScript, extendedStringify, getSignatureAndPubkeyFromP2PKHInput, zip } from './utils.js';
-import { TransactionBuilder } from './TransactionBuilder.js';
+} from '../interfaces.js';
+import SignatureTemplate from '../SignatureTemplate.js';
+import { addressToLockScript, extendedStringify, getSignatureAndPubkeyFromP2PKHInput, zip } from '../utils.js';
+import { TransactionBuilder } from '../TransactionBuilder.js';
 import { deflate } from 'pako';
-import MockNetworkProvider from './network/MockNetworkProvider.js';
+import MockNetworkProvider from '../network/MockNetworkProvider.js';
+import { addHexPrefixExceptEmpty, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getUnlockScriptName, lockingBytecodeIsSetToSlot, serialiseTokenDetails } from './utils.js';
 
 // TODO: Add / improve descriptions throughout the template generation
 
-export const getLibauthTemplates = (
-  txn: TransactionBuilder,
+export const getLibauthTemplate = (
+  transactionBuilder: TransactionBuilder,
 ): WalletTemplate => {
-  if (txn.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
+  if (transactionBuilder.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
     throw new Error('Cannot use debugging functionality with a transaction that contains custom unlockers');
   }
 
-  const libauthTransaction = txn.buildLibauthTransaction();
-  const csTransaction = createTransactionTypeFromTransactionBuilder(txn);
+  const libauthTransaction = transactionBuilder.buildLibauthTransaction();
 
-  const vmTarget = txn.provider instanceof MockNetworkProvider ? txn.provider.vmTarget : VmTarget.BCH_2025_05;
+  const vmTarget = transactionBuilder.provider instanceof MockNetworkProvider
+    ? transactionBuilder.provider.vmTarget
+    : VmTarget.BCH_2025_05;
 
-  const baseTemplate: WalletTemplate = {
+  const template: WalletTemplate = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
     name: 'CashScript Generated Debugging Template',
     supported: [vmTarget],
     version: 0,
-    entities: {},
-    scripts: {},
-    scenarios: {},
+    entities: generateAllTemplateEntities(transactionBuilder),
+    scripts: generateAllTemplateScripts(transactionBuilder),
+    scenarios: generateAllTemplateScenarios(libauthTransaction, transactionBuilder),
   };
 
-  // Initialize collections for entities, scripts, and scenarios
-  const entities: Record<string, WalletTemplateEntity> = {};
-  const scripts: Record<string, WalletTemplateScript> = {};
-  const scenarios: Record<string, WalletTemplateScenario> = {};
-
-  // Initialize collections for P2PKH entities and scripts
-  const p2pkhEntities: Record<string, WalletTemplateEntity> = {};
-  const p2pkhScripts: Record<string, WalletTemplateScript> = {};
+  // TODO: Refactor the below code to not have deep reassignment of scenario.sourceOutputs and scenario.transaction.outputs
 
   // Initialize bytecode mappings, these will be used to map the locking and unlocking scripts and naming the scripts
   const unlockingBytecodeToLockingBytecodeParams: Record<string, WalletTemplateScenarioBytecode> = {};
   const lockingBytecodeToLockingBytecodeParams: Record<string, WalletTemplateScenarioBytecode> = {};
 
   // We can typecast this because we check that all inputs are standard unlockable at the top of this function
-  for (const [inputIndex, input] of (txn.inputs as StandardUnlockableUtxo[]).entries()) {
-    if (isP2PKHUnlocker(input.unlocker)) {
-      Object.assign(p2pkhEntities, generateTemplateEntitiesP2PKH(inputIndex));
-      Object.assign(p2pkhScripts, generateTemplateScriptsP2PKH(inputIndex));
-      Object.assign(scenarios, generateTemplateScenariosP2PKH(libauthTransaction, csTransaction, inputIndex));
-      continue;
-    }
-
+  for (const [inputIndex, input] of (transactionBuilder.inputs as StandardUnlockableUtxo[]).entries()) {
     if (isContractUnlocker(input.unlocker)) {
-      const contract = input.unlocker?.contract;
-      const abiFunction = input.unlocker?.abiFunction;
+      const lockScriptName = getLockScriptName(input.unlocker.contract);
+      if (!lockScriptName) continue;
 
-      if (!abiFunction) {
-        throw new Error('No ABI function found in unlocker');
-      }
+      const lockingScriptParams = generateLockingScriptParams(input.unlocker.contract, input, lockScriptName);
 
-      // Encode the function arguments for this contract input
-      const encodedArgs = encodeFunctionArguments(
-        abiFunction,
-        input.unlocker.params ?? [],
-      );
+      const unlockingBytecode = binToHex(libauthTransaction.inputs[inputIndex].unlockingBytecode);
+      unlockingBytecodeToLockingBytecodeParams[unlockingBytecode] = lockingScriptParams;
 
-      // Generate a scenario object for this contract input
-      Object.assign(scenarios,
-        generateTemplateScenarios(
-          contract,
-          libauthTransaction,
-          csTransaction,
-          abiFunction,
-          encodedArgs,
-          inputIndex,
-        ),
-      );
-
-      // Generate entities for this contract input
-      const entity = generateTemplateEntitiesP2SH(
-        contract,
-        abiFunction,
-        encodedArgs,
-        inputIndex,
-      );
-
-      // Generate scripts for this contract input
-      const script = generateTemplateScriptsP2SH(
-        contract,
-        abiFunction,
-        encodedArgs,
-        contract.encodedConstructorArgs,
-        inputIndex,
-      );
-
-      // Find the lock script name for this contract input
-      const lockScriptName = Object.keys(script).find(scriptName => scriptName.includes('_lock'));
-      if (lockScriptName) {
-        // Generate bytecodes for this contract input
-        const unlockingBytecode = binToHex(libauthTransaction.inputs[inputIndex].unlockingBytecode);
-        const lockingScriptParams = generateLockingScriptParams(input.unlocker.contract, input, lockScriptName);
-
-        // Assign a name to the unlocking bytecode so later it can be used to replace the bytecode/slot in scenarios
-        unlockingBytecodeToLockingBytecodeParams[unlockingBytecode] = lockingScriptParams;
-        // Assign a name to the locking bytecode so later it can be used to replace with bytecode/slot in scenarios
-        lockingBytecodeToLockingBytecodeParams[binToHex(addressToLockScript(contract.address))] = lockingScriptParams;
-      }
-
-      // Add entities and scripts to the base template and repeat the process for the next input
-      Object.assign(entities, entity);
-      Object.assign(scripts, script);
+      const lockingBytecode = binToHex(addressToLockScript(input.unlocker.contract.address));
+      lockingBytecodeToLockingBytecodeParams[lockingBytecode] = lockingScriptParams;
     }
   }
 
-  Object.assign(entities, p2pkhEntities);
-  Object.assign(scripts, p2pkhScripts);
-
-  const finalTemplate = { ...baseTemplate, entities, scripts, scenarios };
-
-  // Loop through all scenarios and map the locking and unlocking scripts to the scenarios
-  // Replace the script tag with the identifiers we created earlier
-
-  // For Inputs
-  for (const scenario of Object.values(scenarios)) {
+  for (const scenario of Object.values(template.scenarios!)) {
+    // For Inputs
     for (const [idx, input] of libauthTransaction.inputs.entries()) {
       const unlockingBytecode = binToHex(input.unlockingBytecode);
+      const lockingBytecodeParams = unlockingBytecodeToLockingBytecodeParams[unlockingBytecode];
 
-      // If false then it stays lockingBytecode: {}
-      if (unlockingBytecodeToLockingBytecodeParams[unlockingBytecode]) {
-        // ['slot'] this identifies the source output in which the locking script under test will be placed
-        if (Array.isArray(scenario?.sourceOutputs?.[idx]?.lockingBytecode)) continue;
+      // If lockingBytecodeParams is unknown, then it stays at default: {}
+      if (!lockingBytecodeParams) continue;
 
-        // If true then assign a name to the locking bytecode script.
-        if (scenario.sourceOutputs && scenario.sourceOutputs[idx]) {
-          scenario.sourceOutputs[idx] = {
-            ...scenario.sourceOutputs[idx],
-            lockingBytecode: unlockingBytecodeToLockingBytecodeParams[unlockingBytecode],
-          };
-        }
+      //  If locking bytecode is set to ['slot'] then this is being evaluated by the scenario, so we don't replace bytecode
+      if (lockingBytecodeIsSetToSlot(scenario?.sourceOutputs?.[idx]?.lockingBytecode)) continue;
+
+      // If lockingBytecodeParams is known, and this input is not ['slot'] then assign a locking bytecode as source output
+      if (scenario.sourceOutputs?.[idx]) {
+        scenario.sourceOutputs[idx] = {
+          ...scenario.sourceOutputs[idx],
+          lockingBytecode: lockingBytecodeParams,
+        };
       }
     }
 
     // For Outputs
     for (const [idx, output] of libauthTransaction.outputs.entries()) {
       const lockingBytecode = binToHex(output.lockingBytecode);
+      const lockingBytecodeParams = lockingBytecodeToLockingBytecodeParams[lockingBytecode];
 
-      // If false then it stays lockingBytecode: {}
-      if (lockingBytecodeToLockingBytecodeParams[lockingBytecode]) {
+      // If lockingBytecodeParams is unknown, then it stays at default: {}
+      if (!lockingBytecodeParams) continue;
 
-        // ['slot'] this identifies the source output in which the locking script under test will be placed
-        if (Array.isArray(scenario?.transaction?.outputs?.[idx]?.lockingBytecode)) continue;
+      //  If locking bytecode is set to ['slot'] then this is being evaluated by the scenario, so we don't replace bytecode
+      if (lockingBytecodeIsSetToSlot(scenario?.transaction?.outputs?.[idx]?.lockingBytecode)) continue;
 
-        // If true then assign a name to the locking bytecode script.
-        if (scenario?.transaction && scenario?.transaction?.outputs && scenario?.transaction?.outputs[idx]) {
-          scenario.transaction.outputs[idx] = {
-            ...scenario.transaction.outputs[idx],
-            lockingBytecode: lockingBytecodeToLockingBytecodeParams[lockingBytecode],
-          };
-        }
+      // If lockingBytecodeParams is known, and this input is not ['slot'] then assign a locking bytecode as source output
+      if (scenario?.transaction?.outputs?.[idx]) {
+        scenario.transaction.outputs[idx] = {
+          ...scenario.transaction.outputs[idx],
+          lockingBytecode: lockingBytecodeParams,
+        };
       }
     }
-
   }
 
-  return finalTemplate;
+  return template;
 };
 
 export const debugLibauthTemplate = (template: WalletTemplate, transaction: TransactionBuilder): DebugResults => {
@@ -225,6 +143,77 @@ export const getBitauthUri = (template: WalletTemplate): string => {
   const base64toBase64Url = (base64: string): string => base64.replace(/\+/g, '-').replace(/\//g, '_');
   const payload = base64toBase64Url(binToBase64(deflate(utf8ToBin(extendedStringify(template)))));
   return `https://ide.bitauth.com/import-template/${payload}`;
+};
+
+const generateAllTemplateEntities = (
+  transactionBuilder: TransactionBuilder,
+): WalletTemplate['entities'] => {
+  const entities = transactionBuilder.inputs.map((input, inputIndex) => {
+    if (isP2PKHUnlocker(input.unlocker)) {
+      return generateTemplateEntitiesP2PKH(inputIndex);
+    }
+
+    if (isContractUnlocker(input.unlocker)) {
+      const encodedArgs = encodeFunctionArguments(input.unlocker.abiFunction, input.unlocker.params ?? []);
+      return generateTemplateEntitiesP2SH(input.unlocker.contract, input.unlocker.abiFunction, encodedArgs, inputIndex);
+    }
+
+    throw new Error('Unknown unlocker type');
+  });
+
+  return entities.reduce((acc, entity) => ({ ...acc, ...entity }), {});
+};
+
+const generateAllTemplateScripts = (
+  transactionBuilder: TransactionBuilder,
+): WalletTemplate['scripts'] => {
+  const scripts = transactionBuilder.inputs.map((input, inputIndex) => {
+    if (isP2PKHUnlocker(input.unlocker)) {
+      return generateTemplateScriptsP2PKH(inputIndex);
+    }
+
+    if (isContractUnlocker(input.unlocker)) {
+      const encodedArgs = encodeFunctionArguments(input.unlocker.abiFunction, input.unlocker.params ?? []);
+      return generateTemplateScriptsP2SH(
+        input.unlocker.contract,
+        input.unlocker.abiFunction,
+        encodedArgs,
+        input.unlocker.contract.encodedConstructorArgs,
+        inputIndex,
+      );
+    }
+
+    throw new Error('Unknown unlocker type');
+  });
+
+  return scripts.reduce((acc, script) => ({ ...acc, ...script }), {});
+};
+
+const generateAllTemplateScenarios = (
+  libauthTransaction: TransactionBch,
+  transactionBuilder: TransactionBuilder,
+): WalletTemplate['scenarios'] => {
+  const scenarios = transactionBuilder.inputs.map((input, inputIndex) => {
+    if (isP2PKHUnlocker(input.unlocker)) {
+      return generateTemplateScenariosP2PKH(libauthTransaction, transactionBuilder, inputIndex);
+    }
+
+    if (isContractUnlocker(input.unlocker)) {
+      const encodedArgs = encodeFunctionArguments(input.unlocker.abiFunction, input.unlocker.params ?? []);
+      return generateTemplateScenarios(
+        input.unlocker.contract,
+        libauthTransaction,
+        transactionBuilder,
+        input.unlocker.abiFunction,
+        encodedArgs,
+        inputIndex,
+      );
+    }
+
+    throw new Error('Unknown unlocker type');
+  });
+
+  return scenarios.reduce((acc, scenario) => ({ ...acc, ...scenario }), {});
 };
 
 const generateTemplateEntitiesP2PKH = (
@@ -268,18 +257,12 @@ const generateTemplateEntitiesP2SH = (
         getLockScriptName(contract),
         getUnlockScriptName(contract, abiFunction, inputIndex),
       ],
-      variables: createWalletTemplateVariables(contract.artifact, abiFunction, encodedFunctionArgs),
+      variables: {
+        ...createWalletTemplateVariables(contract.artifact, abiFunction, encodedFunctionArgs),
+        ...generateFunctionIndexTemplateVariable(contract.artifact.abi),
+      },
     },
   };
-
-  // function_index is a special variable that indicates the function to execute
-  if (contract.artifact.abi.length > 1) {
-    entities[contract.artifact.contractName + '_input' + inputIndex + '_parameters'].variables.function_index = {
-      description: 'Script function index to execute',
-      name: 'function_index',
-      type: 'WalletData',
-    };
-  }
 
   return entities;
 };
@@ -317,27 +300,23 @@ const createWalletTemplateVariables = (
 const generateTemplateScriptsP2PKH = (
   inputIndex: number,
 ): WalletTemplate['scripts'] => {
-  const scripts: WalletTemplate['scripts'] = {};
   const lockScriptName = `p2pkh_placeholder_lock_${inputIndex}`;
   const unlockScriptName = `p2pkh_placeholder_unlock_${inputIndex}`;
 
-  const signatureString = `signature_${inputIndex}`;
-  const publicKeyString = `public_key_${inputIndex}`;
-
-  // add extra unlocking and locking script for P2PKH inputs spent alongside our contract
-  // this is needed for correct cross-references in the template
-  scripts[unlockScriptName] = {
-    passes: [`P2PKH_spend_input${inputIndex}_evaluate`],
-    name: `P2PKH Unlock (input #${inputIndex})`,
-    script:
-      `<${signatureString}>\n<${publicKeyString}>`,
-    unlocks: lockScriptName,
-  };
-  scripts[lockScriptName] = {
-    lockingType: 'standard',
-    name: `P2PKH Lock (input #${inputIndex})`,
-    script:
-      `OP_DUP\nOP_HASH160 <$(<${publicKeyString}> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
+  const scripts = {
+    [unlockScriptName]: {
+      passes: [`P2PKH_spend_input${inputIndex}_evaluate`],
+      name: `P2PKH Unlock (input #${inputIndex})`,
+      script:
+        `<signature_${inputIndex}>\n<public_key_${inputIndex}>`,
+      unlocks: lockScriptName,
+    },
+    [lockScriptName]: {
+      lockingType: 'standard',
+      name: `P2PKH Lock (input #${inputIndex})`,
+      script:
+        `OP_DUP\nOP_HASH160 <$(<public_key_${inputIndex}> OP_HASH160\n)> OP_EQUALVERIFY\nOP_CHECKSIG`,
+    },
   };
 
   return scripts;
@@ -350,7 +329,6 @@ const generateTemplateScriptsP2SH = (
   encodedConstructorArgs: EncodedConstructorArgument[],
   inputIndex: number,
 ): WalletTemplate['scripts'] => {
-  // definition of locking scripts and unlocking scripts with their respective bytecode
   const unlockingScriptName = getUnlockScriptName(contract, abiFunction, inputIndex);
   const lockingScriptName = getLockScriptName(contract);
 
@@ -407,7 +385,7 @@ const generateTemplateUnlockScript = (
 const generateTemplateScenarios = (
   contract: Contract,
   libauthTransaction: TransactionBch,
-  csTransaction: TransactionType,
+  transactionBuilder: TransactionBuilder,
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   inputIndex: number,
@@ -432,8 +410,8 @@ const generateTemplateScenarios = (
           privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
         },
       },
-      transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, csTransaction, inputIndex),
-      sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, libauthTransaction, inputIndex),
+      transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, transactionBuilder, inputIndex),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(transactionBuilder, libauthTransaction, inputIndex),
     },
   };
 
@@ -442,7 +420,7 @@ const generateTemplateScenarios = (
 
 const generateTemplateScenariosP2PKH = (
   libauthTransaction: TransactionBch,
-  csTransaction: TransactionType,
+  transactionBuilder: TransactionBuilder,
   inputIndex: number,
 ): WalletTemplate['scenarios'] => {
   const scenarioIdentifier = `P2PKH_spend_input${inputIndex}_evaluate`;
@@ -460,8 +438,8 @@ const generateTemplateScenariosP2PKH = (
           [`public_key_${inputIndex}`]: `0x${binToHex(publicKey)}`,
         },
       },
-      transaction: generateTemplateScenarioTransaction(undefined, libauthTransaction, csTransaction, inputIndex),
-      sourceOutputs: generateTemplateScenarioSourceOutputs(csTransaction, libauthTransaction, inputIndex),
+      transaction: generateTemplateScenarioTransaction(undefined, libauthTransaction, transactionBuilder, inputIndex),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(transactionBuilder, libauthTransaction, inputIndex),
     },
   };
 
@@ -471,36 +449,36 @@ const generateTemplateScenariosP2PKH = (
 const generateTemplateScenarioTransaction = (
   contract: Contract | undefined,
   libauthTransaction: TransactionBch,
-  csTransaction: TransactionType,
+  transactionBuilder: TransactionBuilder,
   slotIndex: number,
 ): WalletTemplateScenario['transaction'] => {
-  const zippedInputs = zip(csTransaction.inputs, libauthTransaction.inputs);
+  const zippedInputs = zip(transactionBuilder.inputs, libauthTransaction.inputs);
   const inputs = zippedInputs.map(([csInput, libauthInput], inputIndex) => {
     return {
       outpointIndex: libauthInput.outpointIndex,
       outpointTransactionHash: binToHex(libauthInput.outpointTransactionHash),
       sequenceNumber: libauthInput.sequenceNumber,
       unlockingBytecode: generateTemplateScenarioBytecode(csInput, libauthInput, inputIndex, 'p2pkh_placeholder_unlock', slotIndex === inputIndex),
-    } as WalletTemplateScenarioInput;
+    };
   });
 
   const locktime = libauthTransaction.locktime;
 
-  const zippedOutputs = zip(csTransaction.outputs, libauthTransaction.outputs);
+  const zippedOutputs = zip(transactionBuilder.outputs, libauthTransaction.outputs);
   const outputs = zippedOutputs.map(([csOutput, libauthOutput]) => {
     if (csOutput && contract) {
       return {
         lockingBytecode: generateTemplateScenarioTransactionOutputLockingBytecode(csOutput, contract),
         token: serialiseTokenDetails(libauthOutput.token),
         valueSatoshis: Number(libauthOutput.valueSatoshis),
-      } as WalletTemplateScenarioTransactionOutput;
+      };
     }
 
     return {
       lockingBytecode: `${binToHex(libauthOutput.lockingBytecode)}`,
       token: serialiseTokenDetails(libauthOutput.token),
       valueSatoshis: Number(libauthOutput.valueSatoshis),
-    } as WalletTemplateScenarioTransactionOutput;
+    };
   });
 
   const version = libauthTransaction.version;
@@ -509,11 +487,11 @@ const generateTemplateScenarioTransaction = (
 };
 
 const generateTemplateScenarioSourceOutputs = (
-  csTransaction: TransactionType,
+  transactionBuilder: TransactionBuilder,
   libauthTransaction: TransactionBch,
   slotIndex: number,
 ): Array<WalletTemplateScenarioOutput<true>> => {
-  const zippedInputs = zip(csTransaction.inputs, libauthTransaction.inputs);
+  const zippedInputs = zip(transactionBuilder.inputs, libauthTransaction.inputs);
   return zippedInputs.map(([csInput, libauthInput], inputIndex) => {
     return {
       lockingBytecode: generateTemplateScenarioBytecode(csInput, libauthInput, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex),
@@ -522,24 +500,6 @@ const generateTemplateScenarioSourceOutputs = (
     };
   });
 };
-
-const createTransactionTypeFromTransactionBuilder = (txn: TransactionBuilder): TransactionType => {
-  const csTransaction = {
-    inputs: txn.inputs,
-    locktime: txn.locktime,
-    outputs: txn.outputs,
-    version: 2,
-  };
-
-  return csTransaction;
-};
-
-interface TransactionType {
-  inputs: UnlockableUtxo[];
-  locktime: number;
-  outputs: Output[];
-  version: number;
-}
 
 const generateLockingScriptParams = (
   contract: Contract,
@@ -607,101 +567,6 @@ const generateUnlockingScriptParams = (
         privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
       },
     },
-  };
-};
-
-const getLockScriptName = (contract: Contract): string => {
-  const result = decodeCashAddress(contract.address);
-  if (typeof result === 'string') throw new Error(result);
-
-  return `${contract.artifact.contractName}_${binToHex(result.payload)}_lock`;
-};
-
-const getUnlockScriptName = (contract: Contract, abiFunction: AbiFunction, inputIndex: number): string => {
-  return `${contract.artifact.contractName}_${abiFunction.name}_input${inputIndex}_unlock`;
-};
-
-
-const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm): string => {
-  const signatureAlgorithmNames = {
-    [SignatureAlgorithm.SCHNORR]: 'schnorr_signature',
-    [SignatureAlgorithm.ECDSA]: 'ecdsa_signature',
-  };
-
-  return signatureAlgorithmNames[signatureAlgorithm];
-};
-
-const getHashTypeName = (hashType: HashType): string => {
-  const hashtypeNames = {
-    [HashType.SIGHASH_ALL]: 'all_outputs',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_SINGLE]: 'corresponding_output',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_NONE]: 'no_outputs',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
-  };
-
-  return hashtypeNames[hashType];
-};
-
-const addHexPrefixExceptEmpty = (value: string): string => {
-  return value.length > 0 ? `0x${value}` : '';
-};
-
-const formatParametersForDebugging = (types: readonly AbiInput[], args: EncodedFunctionArgument[]): string => {
-  if (types.length === 0) return '// none';
-
-  // We reverse the arguments because the order of the arguments in the bytecode is reversed
-  const typesAndArguments = zip(types, args).reverse();
-
-  return typesAndArguments.map(([input, arg]) => {
-    if (arg instanceof SignatureTemplate) {
-      const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
-      const hashtypeName = getHashTypeName(arg.getHashType(false));
-      return `<${input.name}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
-    }
-
-    const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;
-
-    // we output these values as pushdata, comment will contain the type and the value of the variable
-    // e.g. <timeout> // int = <0xa08601>
-    return `<${input.name}> // ${typeStr} = <${`0x${binToHex(arg)}`}>`;
-  }).join('\n');
-};
-
-const formatBytecodeForDebugging = (artifact: Artifact): string => {
-  if (!artifact.debug) {
-    return artifact.bytecode
-      .split(' ')
-      .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
-      .join('\n');
-  }
-
-  return formatBitAuthScript(
-    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
-    artifact.debug.sourceMap,
-    artifact.source,
-  );
-};
-
-const serialiseTokenDetails = (
-  token?: TokenDetails | LibauthTokenDetails,
-): LibauthTemplateTokenDetails | undefined => {
-  if (!token) return undefined;
-
-  return {
-    amount: token.amount.toString(),
-    category: token.category instanceof Uint8Array ? binToHex(token.category) : token.category,
-    nft: token.nft ? {
-      capability: token.nft.capability,
-      commitment: token.nft.commitment instanceof Uint8Array ? binToHex(token.nft.commitment) : token.nft.commitment,
-    } : undefined,
   };
 };
 
@@ -775,11 +640,18 @@ const generateTemplateScenarioParametersFunctionIndex = (
   return functionIndex !== undefined ? { function_index: functionIndex.toString() } : {};
 };
 
-interface LibauthTemplateTokenDetails {
-  amount: string;
-  category: string;
-  nft?: {
-    capability: 'none' | 'mutable' | 'minting';
-    commitment: string;
-  };
-}
+const generateFunctionIndexTemplateVariable = (
+  abi: readonly AbiFunction[],
+): Record<string, WalletTemplateVariable> => {
+  if (abi.length > 1) {
+    return {
+      function_index: {
+        description: 'Script function index to execute',
+        name: 'function_index',
+        type: 'WalletData',
+      },
+    };
+  }
+
+  return {};
+};
