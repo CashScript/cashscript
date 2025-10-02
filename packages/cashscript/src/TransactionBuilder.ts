@@ -31,7 +31,7 @@ import {
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
-import { debugLibauthTemplate, getLibauthTemplates, getBitauthUri } from './LibauthTemplate.js';
+import { debugLibauthTemplate, getLibauthTemplate, getBitauthUri } from './libauth-template/LibauthTemplate.js';
 import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
 import semver from 'semver';
 import { WcTransactionObject } from './walletconnect-utils.js';
@@ -254,7 +254,7 @@ export class TransactionBuilder {
   }
 
   getLibauthTemplate(): WalletTemplate {
-    return getLibauthTemplates(this);
+    return getLibauthTemplate(this);
   }
 
   async send(): Promise<TransactionDetails>;
