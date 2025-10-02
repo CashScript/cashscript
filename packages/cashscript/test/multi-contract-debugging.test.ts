@@ -143,7 +143,7 @@ describe('Multi-Contract-Debugging tests', () => {
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
-      console.warn(transaction.bitauthUri());
+      console.warn(transaction.getBitauthUri());
 
       await expect(transaction).toFailRequireWith('P2PKH.cash:4 Require statement failed at input 0 in contract P2PKH.cash at line 4.');
     });
@@ -169,7 +169,7 @@ describe('Multi-Contract-Debugging tests', () => {
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
-      console.warn(transaction.bitauthUri());
+      console.warn(transaction.getBitauthUri());
 
       await expect(transaction).toFailRequireWith('BigInt.cash:4 Require statement failed at input 1 in contract BigInt.cash at line 4.');
     });
@@ -197,7 +197,7 @@ describe('Multi-Contract-Debugging tests', () => {
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
-      console.warn(transaction.bitauthUri());
+      console.warn(transaction.getBitauthUri());
 
       await expect(transaction).toFailRequireWith('P2PKH.cash:5 Require statement failed at input 0 in contract P2PKH.cash at line 5');
     });
@@ -225,7 +225,7 @@ describe('Multi-Contract-Debugging tests', () => {
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
-      console.warn(transaction.bitauthUri());
+      console.warn(transaction.getBitauthUri());
 
       await expect(transaction).toFailRequireWith('BigInt.cash');
     });

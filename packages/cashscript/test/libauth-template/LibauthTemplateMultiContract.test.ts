@@ -6,7 +6,7 @@ describe('Libauth Template generation tests (multi-contract)', () => {
       const builder = await fixture.transaction;
       const generatedTemplate = builder.getLibauthTemplate();
       // console.warn(JSON.stringify(generatedTemplate, null, 2));
-      // console.warn(builder.bitauthUri());
+      // console.warn(builder.getBitauthUri());
       expect(generatedTemplate).toEqual(fixture.template);
     });
   });

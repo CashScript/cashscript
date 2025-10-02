@@ -247,8 +247,7 @@ export class TransactionBuilder {
     return vmResourceUsage;
   }
 
-  // TODO: rename to getBitauthUri()
-  bitauthUri(): string {
+  getBitauthUri(): string {
     console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
     return getBitauthUri(this.getLibauthTemplate());
   }
@@ -273,7 +272,7 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw new FailedTransactionError(reason, this.bitauthUri());
+      throw new FailedTransactionError(reason, this.getBitauthUri());
     }
   }
 

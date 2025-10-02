@@ -248,17 +248,51 @@ const txHex = await instance.functions
   .build()
 ```
 
-### debug() & bitauthUri()
+### debug() & getBitauthUri()
 
 If you want to debug a transaction locally instead of sending it to the network, you can call the `debug()` function on the transaction. This will return intermediate values and the final result of the transaction. It will also show any logged values and `require` error messages.
 
-If you prefer a lower-level debugging experience, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
+If you prefer a lower-level debugging experience, you can call the `getBitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE. This URI is also displayed in the console whenever a transaction fails.
 
 You can read more about debugging transactions on the [debugging page](/docs/guides/debugging).
 
 :::caution
 It is unsafe to debug transactions on mainnet using the BitAuth IDE as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
+
+### getVmResourceUsage()
+```ts
+transaction.getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage>
+```
+
+The `getVmResourceUsage()` function allows you to get the VM resource usage for the transaction. This can be useful for debugging and optimization.
+
+```ts
+interface VmResourceUsage {
+  arithmeticCost: number;
+  definedFunctions: number;
+  hashDigestIterations: number;
+  maximumOperationCost: number;
+  maximumHashDigestIterations: number;
+  maximumSignatureCheckCount: number;
+  densityControlLength: number;
+  operationCost: number;
+  signatureCheckCount: number;
+}
+```
+
+The verbose mode logs the VM resource usage for each input to the console.
+
+```
+VM Resource usage by inputs:
+┌─────────┬─────────────────────────────────────────────────┬─────┬──────────────────────────┬───────────┬──────────┐
+│ (index) │ Contract - Function                             │ Ops │ Op Cost Budget Usage     │ SigChecks │ Hashes   │
+├─────────┼─────────────────────────────────────────────────┼─────┼──────────────────────────┼───────────┼──────────┤
+│ 0       │ 'SingleFunction - test_require_single_function' │ 7   │ '1,155 / 36,000 (3%)'    │ '0 / 1'   │ '2 / 22' │
+│ 1       │ 'ZeroHandling - test_zero_handling'             │ 13  │ '1,760 / 40,800 (4%)'    │ '0 / 1'   │ '2 / 25' │
+│ 2       │ 'P2PKH Input'                                   │ 7   │ '28,217 / 112,800 (25%)' │ '1 / 3'   │ '7 / 70' │
+└─────────┴─────────────────────────────────────────────────┴─────┴──────────────────────────┴───────────┴──────────┘
+```
 
 ## Transaction errors
 

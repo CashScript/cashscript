@@ -14,11 +14,6 @@ import {
   bigIntToCompactUint,
   NonFungibleTokenCapability,
   bigIntToVmNumber,
-  assertSuccess,
-  AuthenticationInstructionPush,
-  AuthenticationInstructions,
-  decodeAuthenticationInstructions,
-  Input,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -373,15 +368,3 @@ export const isFungibleTokenUtxo = (utxo: Utxo): boolean => (
 export const isNonTokenUtxo = (utxo: Utxo): boolean => utxo.token === undefined;
 
 export const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
-
-export const getSignatureAndPubkeyFromP2PKHInput = (
-  libauthInput: Input,
-): { signature: Uint8Array; publicKey: Uint8Array } => {
-  const inputData = (assertSuccess(
-    decodeAuthenticationInstructions(libauthInput.unlockingBytecode)) as AuthenticationInstructions
-  ) as AuthenticationInstructionPush[];
-  const signature = inputData[0].data;
-  const publicKey = inputData[1].data;
-
-  return { signature, publicKey };
-};

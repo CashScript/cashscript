@@ -87,7 +87,7 @@ describe('Multi Contract', () => {
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
-      console.log(transaction.bitauthUri());
+      console.log(transaction.getBitauthUri());
 
       const txPromise = transaction.send();
 
@@ -173,7 +173,7 @@ describe('Multi Contract', () => {
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
-      console.log(transaction.bitauthUri());
+      console.log(transaction.getBitauthUri());
 
       const txPromise = transaction.send();
 
