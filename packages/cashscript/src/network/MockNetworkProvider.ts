@@ -3,6 +3,7 @@ import { sha256 } from '@cashscript/utils';
 import { Utxo, Network, VmTarget } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails } from '../utils.js';
+import { DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
 
 export interface MockNetworkProviderOptions {
   updateUtxoSet: boolean;
@@ -20,7 +21,7 @@ export default class MockNetworkProvider implements NetworkProvider {
 
   constructor(options?: Partial<MockNetworkProviderOptions>) {
     this.options = { updateUtxoSet: true, ...options };
-    this.vmTarget = this.options.vmTarget ?? VmTarget.BCH_2025_05;
+    this.vmTarget = this.options.vmTarget ?? DEFAULT_VM_TARGET;
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
