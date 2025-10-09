@@ -1,5 +1,5 @@
 import { stringify } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider, TransactionBuilder, Output } from 'cashscript';
+import { Contract, SignatureTemplate, TransactionBuilder, Output, MockNetworkProvider, randomUtxo } from 'cashscript';
 import { compileFile } from 'cashc';
 import { URL } from 'url';
 
@@ -14,13 +14,17 @@ import {
 // Compile the HodlVault contract to an artifact object
 const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
 
-// Initialise a network provider for network operations on CHIPNET
-const provider = new ElectrumNetworkProvider('chipnet');
+// Once you're ready to send transactions on a real network (like chipnet or mainnet), use the ElectrumNetworkProvider
+// const provider = new ElectrumNetworkProvider();
+const provider = new MockNetworkProvider();
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters
 const parameters = [alicePub, oraclePub, 100000n, 30000n];
 const contract = new Contract(artifact, parameters, { provider });
+
+// Add a mock UTXO to the mock network provider
+provider.addUtxo(contract.address, randomUtxo());
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
