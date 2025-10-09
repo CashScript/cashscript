@@ -1,6 +1,6 @@
 import { stringify } from '@bitauth/libauth';
 import { compileFile } from 'cashc';
-import { Contract, ElectrumNetworkProvider, Output, SignatureTemplate, TransactionBuilder } from 'cashscript';
+import { Contract, MockNetworkProvider, Output, randomUtxo, SignatureTemplate, TransactionBuilder } from 'cashscript';
 import { URL } from 'url';
 
 // Import Bob and Alice's keys from common.ts
@@ -14,13 +14,17 @@ import {
 // Compile the TransferWithTimeout contract
 const artifact = compileFile(new URL('transfer_with_timeout.cash', import.meta.url));
 
-// Initialise a network provider for network operations on CHIPNET
-const provider = new ElectrumNetworkProvider('chipnet');
+// Once you're ready to send transactions on a real network (like chipnet or mainnet), use the ElectrumNetworkProvider
+// const provider = new ElectrumNetworkProvider();
+const provider = new MockNetworkProvider();
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters:
 // { sender: alicePk, recipient: bobPk, timeout: 1000000 } - timeout is a past block
 const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
+
+// Add a mock UTXO to the mock network provider
+provider.addUtxo(contract.address, randomUtxo());
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
