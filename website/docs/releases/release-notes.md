@@ -2,6 +2,12 @@
 title: Release Notes
 ---
 
+## v0.13.0-next.0
+
+#### CashScript SDK
+
+- :hammer_and_wrench: Update default VM target to `BCH_2026_05`.
+
 ## v0.12.1
 
 #### CashScript SDK
