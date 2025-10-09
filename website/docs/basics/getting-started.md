@@ -119,7 +119,6 @@ For a code example of how to generate key-pairs with Libauth, see the [CashScrip
 
 With the instantiated contract, we can now get the contract address and get the contract balance and UTXOs in the following way:
 
-
 ```javascript
 import { ElectrumNetworkProvider, Contract } from 'cashscript';
 import artifact from './TransferWithTimeout.json' with { type: 'json' };

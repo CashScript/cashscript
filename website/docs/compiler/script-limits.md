@@ -78,18 +78,8 @@ Before CashTokens `546` bytes was often used as good default value, however with
 For ease of development, it is standard practice to use 1,000 satoshis as dust to outputs.
 
 :::note
-The standard practice of 1,000 satoshis as dust amount for outputs is only considering `P2PH`, `P2SH` and `P2PK` output types.
-For `P2MS` (raw multisig) a higher dust limits may be required, you can [find more info here][info-dust-limit]
-:::
-
-### Output Standardness
-
-Bitcoin Cash only allows a few types of `lockingBytecode` scripts for outputs in the normal network relay rules. These are called 'standard outputs', contrasted to 'non-standard outputs' which cause the transaction not to relay on the network.
-
-There's 4 types of standard output types: `P2PKH`, `P2SH` (which includes `P2SH20` & `P2SH32`), `P2MS` and `OP_RETURN` data-outputs. For more details see the [standard outputs documentation][standard-outputs-docs].
-
-:::caution
-The `lockingBytecode` standardness rules can be important for smart contract developers, and is why CashScript has helpers like `LockingBytecodeP2PKH`, `LockingBytecodeP2SH32` and `LockingBytecodeNullData`.
+The standard practice of 1,000 satoshis as dust amount for outputs is only considering `P2PKH`, `P2SH20` and `P2SH32` output types.
+For other custom locking bytecode outputs a higher dust limits may be required, you can [find more info here][info-dust-limit]
 :::
 
 ### Minimum Relay Fee
@@ -100,15 +90,15 @@ The Bitcoin Cash protocol does not strictly enforce minimum fees for transaction
 
 | Limit type | Constraint |
 |------------|-------------|
-| Max contract size | 1,650 bytes (standardness) |
-| NFT commitment length | 40 bytes (consensus) |
+| Max contract size | 10,000 bytes (consensus) |
+| NFT commitment length | 128 bytes (consensus) |
 | Operation cost limit | Based on script length (consensus) |
 | Max stack element size | 10,000 bytes (consensus) |
 | Max transaction size | 100,000 bytes for standardness (1MB for consensus) |
-| Max OP_RETURN data size | 220 bytes data payload  (standardness) |
+| Output locking bytecode size | 201 bytes (standardness) |
+| Max OP_RETURN data size | 220 bytes data payload (standardness) |
 | Dust threshold | based on output size (standardness) - commonly 1,000 sats is used as dust |
 | Minimum relay fee | 1sat/byte (standardness) |
-| Output Standardness | `P2PKH`, `P2SH` (incl. `P2SH20` & `P2SH32`), `P2MS` and `OP_RETURN` data-outputs|
 
 For further details on transaction validation and standardness rules, see the [documentation on BCH transaction validation][standardness-docs].
 
