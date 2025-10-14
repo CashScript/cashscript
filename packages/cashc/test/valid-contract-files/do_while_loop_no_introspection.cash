@@ -1,0 +1,12 @@
+contract Loopy() {
+    function doLoop() {
+        int i = 0;
+        int x = 2;
+
+        do {
+            i = i + 1;
+            console.log(i);
+            require(i + x < 10);
+        } while (i < 10);
+    }
+}
