@@ -47,6 +47,7 @@ import {
   ConsoleParameterNode,
   ConsoleStatementNode,
   SliceNode,
+  DoWhileNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
@@ -377,6 +378,23 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     this.emit(Op.OP_ENDIF, endLocationData);
     this.scopeDepth -= 1;
+
+    return node;
+  }
+
+  visitDoWhile(node: DoWhileNode): Node {
+    this.scopeDepth += 1;
+    this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
+
+    const stackDepth = this.stack.length;
+    node.block = this.visit(node.block);
+    this.removeScopedVariables(stackDepth, node.block);
+
+    node.condition = this.visit(node.condition);
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
 
     return node;
   }
