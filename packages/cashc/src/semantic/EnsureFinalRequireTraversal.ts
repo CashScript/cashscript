@@ -7,6 +7,7 @@ import {
   TimeOpNode,
   BranchNode,
   ConsoleStatementNode,
+  DoWhileNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } from '../Errors.js';
@@ -47,6 +48,11 @@ function ensureFinalStatementIsRequire(statements: StatementNode[] = []): void {
   if (finalStatement instanceof BranchNode) {
     ensureFinalStatementIsRequire(finalStatement.ifBlock.statements);
     ensureFinalStatementIsRequire(finalStatement.elseBlock?.statements);
+    return;
+  }
+
+  if (finalStatement instanceof DoWhileNode) {
+    ensureFinalStatementIsRequire(finalStatement.block.statements);
     return;
   }
 

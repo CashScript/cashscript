@@ -1,0 +1,10 @@
+contract Loopy() {
+    function doLoop() {
+        int i = 0;
+
+        do {
+            i = i + 1;
+            require(i < 10);
+        } while (i < tx.inputs.length);
+    }
+}
