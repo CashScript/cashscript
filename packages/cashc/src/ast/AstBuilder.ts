@@ -34,6 +34,7 @@ import {
   ConsoleStatementNode,
   ConsoleParameterNode,
   SliceNode,
+  DoWhileNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -68,6 +69,8 @@ import type {
   StatementContext,
   RequireMessageContext,
   SliceContext,
+  DoWhileStatementContext,
+  LoopStatementContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -212,6 +215,18 @@ export default class AstBuilder
     const branch = new BranchNode(condition, ifBlock, elseBlock);
     branch.location = Location.fromCtx(ctx);
     return branch;
+  }
+
+  visitLoopStatement(ctx: LoopStatementContext): DoWhileNode {
+    return this.visit(ctx.doWhileStatement()) as DoWhileNode;
+  }
+
+  visitDoWhileStatement(ctx: DoWhileStatementContext): DoWhileNode {
+    const condition = this.visit(ctx.expression());
+    const block = this.visit(ctx.block()) as StatementNode;
+    const doWhile = new DoWhileNode(condition, block);
+    doWhile.location = Location.fromCtx(ctx);
+    return doWhile;
   }
 
   visitBlock(ctx: BlockContext): BlockNode {
