@@ -52,6 +52,7 @@ statement
     | timeOpStatement
     | requireStatement
     | ifStatement
+    | loopStatement
     | consoleStatement
     ;
 
@@ -77,6 +78,14 @@ requireStatement
 
 ifStatement
     : 'if' '(' expression ')' ifBlock=block ('else' elseBlock=block)?
+    ;
+
+loopStatement
+    : doWhileStatement
+    ;
+
+doWhileStatement
+    : 'do' block 'while' '(' expression ')' ';'
     ;
 
 consoleStatement
