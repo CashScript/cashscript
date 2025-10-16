@@ -1,4 +1,5 @@
 import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
+import { DEFAULT_VM_TARGET } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
@@ -670,7 +671,7 @@ describe('Debugging tests', () => {
           .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
           .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-        expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? 'BCH_2025_05');
+        expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? DEFAULT_VM_TARGET);
 
         const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
         expect(transaction).toLog(expectedLog);

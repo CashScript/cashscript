@@ -13,7 +13,7 @@ Contract authors should be careful when allowing a range of versions to check th
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 pragma cashscript >= 0.7.0 < 0.9.3;
 ```
 
@@ -22,7 +22,7 @@ A CashScript constructor works slightly differently than what you might be used 
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract HTLC(pubkey sender, pubkey recipient, int expiration, bytes32 hash) {
     ...
@@ -46,7 +46,7 @@ The main construct in a CashScript contract is the function. A contract can cont
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     function transfer(sig recipientSig) {
@@ -89,7 +89,7 @@ The error message in a `require` statement is only available in debug evaluation
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
@@ -122,8 +122,8 @@ hashedValue = sha256(hashedValue);
 myString = 'Cash';
 ```
 
-### Control structures
-The only control structures in CashScript are `if...else` statements. This is due to limitations in the underlying Bitcoin Script which prevents loops, recursion, and `return` statements. If-else statements follow usual semantics known from languages like C or JavaScript.
+### If statements
+If and if-else statements follow usual semantics known from languages like C or JavaScript. If the condition within the `if` statement evaluates to `true`, the block of code within the `if` statement is executed. If the condition evaluates to `false`, the block of code within the optional `else` statement is executed.
 
 :::note
 There is no implicit type conversion from non-boolean to boolean types. So `if (1) { ... }` is not valid CashScript and should instead be written as `if (bool(1)) { ... }`
@@ -131,7 +131,7 @@ There is no implicit type conversion from non-boolean to boolean types. So `if (
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
     function spend(pubkey pk, sig s, bytes message) {
@@ -149,6 +149,31 @@ contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
 }
 ```
 
+### Loops (beta)
+
+Currently, CashScript only supports `do {} while ()` loops in the 0.13.0-next.0 pre-release. More advanced loop constructs will be added in the full 0.13.0 release. Keep in mind that in a `do {} while ()` loop, the condition is checked *after* the block of code within the loop is executed. This means that the block of code within the loop will be executed at least once, even if the condition is initially `false`.
+
+:::caution
+Loops in CashScript are currently in beta and may not fully behave as expected with debugging and console.log statements. The syntax for loops may change in the future.
+:::
+
+#### Example
+```solidity
+pragma cashscript ^0.13.0;
+
+contract NoTokensAllowed() {
+    function spend() {
+        int inputIndex = 0;
+
+        // Loop over all inputs (variable length), and make sure that none of them contain tokens
+        do {
+            require(tx.inputs[inputIndex].tokenCategory == 0x);
+            inputIndex = inputIndex + 1;
+        } while (inputIndex < tx.inputs.length);
+    }
+}
+```
+
 ### console.log()
 The `console.log` statement can be used to log values during debug evaluation of a transaction. Any variables or primitive values (such as ints, strings, bytes, etc) can be logged. You can read more about debugging in the [debugging guide](/docs/guides/debugging).
 
@@ -158,7 +183,7 @@ Logging is only available in debug evaluation of a transaction, but has no impac
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
