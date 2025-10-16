@@ -122,8 +122,8 @@ hashedValue = sha256(hashedValue);
 myString = 'Cash';
 ```
 
-### Control structures
-The only control structures in CashScript are `if...else` statements. This is due to limitations in the underlying Bitcoin Script which prevents loops, recursion, and `return` statements. If-else statements follow usual semantics known from languages like C or JavaScript.
+### If statements
+If and if-else statements follow usual semantics known from languages like C or JavaScript. If the condition within the `if` statement evaluates to `true`, the block of code within the `if` statement is executed. If the condition evaluates to `false`, the block of code within the optional `else` statement is executed.
 
 :::note
 There is no implicit type conversion from non-boolean to boolean types. So `if (1) { ... }` is not valid CashScript and should instead be written as `if (bool(1)) { ... }`
@@ -145,6 +145,31 @@ contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
         } else {
             require(false); // fail
         }
+    }
+}
+```
+
+### Loops (beta)
+
+Currently, CashScript only supports `do {} while ()` loops in the 0.13.0-next.0 pre-release. More advanced loop constructs will be added in the full 0.13.0 release. Keep in mind that in a `do {} while ()` loop, the condition is checked *after* the block of code within the loop is executed. This means that the block of code within the loop will be executed at least once, even if the condition is initially `false`.
+
+:::caution
+Loops in CashScript are currently in beta and may not fully behave as expected with debugging and console.log statements. The syntax for loops may change in the future.
+:::
+
+#### Example
+```solidity
+pragma cashscript ^0.13.0;
+
+contract NoTokensAllowed() {
+    function spend() {
+        int inputIndex = 0;
+
+        // Loop over all inputs (variable length), and make sure that none of them contain tokens
+        do {
+            require(tx.inputs[inputIndex].tokenCategory == 0x);
+            inputIndex = inputIndex + 1;
+        } while (inputIndex < tx.inputs.length);
     }
 }
 ```
