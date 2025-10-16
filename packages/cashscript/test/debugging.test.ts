@@ -1,4 +1,5 @@
 import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
+import { DEFAULT_VM_TARGET } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
@@ -13,7 +14,6 @@ import {
   artifactTestZeroHandling,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
-import { DEFAULT_VM_TARGET } from 'cashscript/src/libauth-template/utils.js';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
