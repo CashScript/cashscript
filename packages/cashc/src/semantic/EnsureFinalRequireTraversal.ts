@@ -51,8 +51,9 @@ function ensureFinalStatementIsRequire(statements: StatementNode[] = []): void {
     return;
   }
 
+  // TODO: Revisit this later, for now we allow do-while loops to not have a require() at the end
   if (finalStatement instanceof DoWhileNode) {
-    ensureFinalStatementIsRequire(finalStatement.block.statements);
+    // ensureFinalStatementIsRequire(finalStatement.block.statements);
     return;
   }
 

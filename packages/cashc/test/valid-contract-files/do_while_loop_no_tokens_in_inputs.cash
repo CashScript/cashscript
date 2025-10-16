@@ -1,0 +1,13 @@
+pragma cashscript ^0.12.0;
+
+contract Loopy() {
+    function doLoop() {
+        int inputIndex = 0;
+
+        // Loop over all inputs (variable length), and make sure that none of them contain tokens
+        do {
+            require(tx.inputs[inputIndex].tokenCategory == 0x);
+            inputIndex = inputIndex + 1;
+        } while (inputIndex < tx.inputs.length);
+    }
+}
