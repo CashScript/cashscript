@@ -198,7 +198,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   removeFinalVerifyFromFunction(functionBodyNode: Node): void {
     // After EnsureFinalRequireTraversal, we know that the final opcodes are either
-    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
+    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP", "OP_ENDIF" or "OP_UNTIL"
 
     const finalOp = this.output.pop() as Op;
     const { location, positionHint } = this.locationData.pop()!;
@@ -220,7 +220,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(finalOp, { location, positionHint: PositionHint.END });
 
       // At this point there is no verification value left on the stack:
-      //  - scoped stack is cleared inside branch ended by OP_ENDIF
+      //  - scoped stack is cleared inside block ended by OP_ENDIF or OP_UNTIL
       //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
       //  - OP_VERIFY does not leave a verification value
       // so we add OP_1 to the script (indicating success)
