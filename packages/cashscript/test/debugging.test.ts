@@ -12,6 +12,7 @@ import {
   artifactTestSingleFunction,
   artifactTestMultilineRequires,
   artifactTestZeroHandling,
+  artifactTestRequireInsideLoop,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
@@ -165,6 +166,10 @@ describe('Debugging tests', () => {
     const contractTestMultiLineRequires = new Contract(artifactTestMultilineRequires, [], { provider });
     const contractTestMultiLineRequiresUtxo = randomUtxo();
     provider.addUtxo(contractTestMultiLineRequires.address, contractTestMultiLineRequiresUtxo);
+
+    const contractTestRequireInsideLoop = new Contract(artifactTestRequireInsideLoop, [], { provider });
+    const contractTestRequireInsideLoopUtxo = randomUtxo();
+    provider.addUtxo(contractTestRequireInsideLoop.address, contractTestRequireInsideLoopUtxo);
 
     // test_require
     it('should fail with error message when require statement fails in a multi-function contract', async () => {
@@ -449,6 +454,17 @@ describe('Debugging tests', () => {
       ])
     );`);
     });
+
+    it('should fail a require statement inside a loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequireInsideLoopUtxo, contractTestRequireInsideLoop.unlock.test_require_inside_loop())
+        .addOutput({ to: contractTestRequireInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:7 Require statement failed at input 0 in contract Test.cash at line 7 with the following message: i should be less than 6.');
+      expect(transaction).toFailRequireWith('Failing statement: require(i < 6, \'i should be less than 6\')');
+    });
+
+    it.todo('should fail correct require statement inside nested loops');
   });
 
   describe('Non-require error messages', () => {

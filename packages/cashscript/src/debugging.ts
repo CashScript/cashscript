@@ -75,9 +75,12 @@ const debugSingleScenario = (
   const lockingScriptDebugResult = fullDebugSteps.slice(findLastIndex(fullDebugSteps, (state) => state.ip === 0));
 
   // The controlStack determines whether the current debug step is in the executed branch
+  // It also tracks loop / function usage, but for the purpose of determining whether a step was executed,
+  // we only need to check that there are no 'false' items in the control stack.
   // https://libauth.org/types/AuthenticationProgramStateControlStack.html
+  // https://github.com/bitjson/bch-loops#control-stack
   const executedDebugSteps = lockingScriptDebugResult
-    .filter((debugStep) => debugStep.controlStack.every(item => item === true));
+    .filter((debugStep) => debugStep.controlStack.every(item => item !== false));
 
   // P2PKH inputs do not have an artifact, so we skip the console.log handling
   if (artifact) {

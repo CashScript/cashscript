@@ -94,6 +94,18 @@ contract Test() {
 }
 `;
 
+const CONTRACT_TEST_REQUIRE_INSIDE_LOOP = `
+contract Test() {
+  function test_require_inside_loop() {
+    int i = 0;
+    do {
+      i = i + 1;
+      require(i < 6, 'i should be less than 6');
+    } while (i < 10);
+  }
+}
+`;
+
 const CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION = `
 contract Test() {
   function test_require_single_function() {
@@ -321,3 +333,4 @@ export const artifactTestLogs = compileString(CONTRACT_TEST_LOGS);
 export const artifactTestConsecutiveLogs = compileString(CONTRACT_TEST_CONSECUTIVE_LOGS);
 export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTIPLE_LOGS);
 export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS);
+export const artifactTestRequireInsideLoop = compileString(CONTRACT_TEST_REQUIRE_INSIDE_LOOP);
