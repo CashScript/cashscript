@@ -192,7 +192,7 @@ describe('Debugging tests', () => {
       expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:32 outer loop i: 1$'));
     });
 
-    it.todo('should log intermediate results that get optimsed out inside a loop');
+    it.todo('should log intermediate results that get optimised out inside a loop');
   });
 
   describe('require statements', () => {
