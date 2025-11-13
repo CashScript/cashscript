@@ -14,15 +14,21 @@ import {
   artifactTestMultilineRequires,
   artifactTestZeroHandling,
   artifactTestRequireInsideLoop,
+  artifactTestLogInsideLoop,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
     const provider = new MockNetworkProvider();
+
     const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
     const contractUtxo = randomUtxo();
     provider.addUtxo(contractTestLogs.address, contractUtxo);
+
+    const contractTestLogInsideLoop = new Contract(artifactTestLogInsideLoop, [], { provider });
+    const contractTestLogInsideLoopUtxo = randomUtxo();
+    provider.addUtxo(contractTestLogInsideLoop.address, contractTestLogInsideLoopUtxo);
 
     it('should log correct values', async () => {
       const transaction = new TransactionBuilder({ provider })
@@ -156,6 +162,38 @@ describe('Debugging tests', () => {
     });
 
     it.todo('intermediate results that is more complex than the test above');
+
+    it('should log inside a loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.test_log_inside_loop())
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 1$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 2$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 3$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 4$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 5$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 6$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 7$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 8$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 9$'));
+    });
+
+    it('should log inside a complex nested loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestLogInsideLoopUtxo, contractTestLogInsideLoop.unlock.test_log_inside_loop_complex())
+        .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 0 j: 0 k: 0 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 0 j: 1 k: 1 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:32 outer loop i: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 1 j: 0 k: 1 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 1 j: 1 k: 2 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:32 outer loop i: 1$'));
+    });
+
+    it.todo('should log intermediate results that get optimsed out inside a loop');
   });
 
   describe('require statements', () => {
