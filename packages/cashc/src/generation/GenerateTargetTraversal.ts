@@ -396,6 +396,8 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
     this.popFromStack();
 
+    this.scopeDepth -= 1;
+
     return node;
   }
 
