@@ -1,10 +1,12 @@
 import { AbiFunction, AbiInput, Artifact, bytecodeToScript, formatBitAuthScript } from '@cashscript/utils';
-import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails } from '../interfaces.js';
+import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
 import { hexToBin, binToHex, isHex, decodeCashAddress, type WalletTemplateScenarioBytecode, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
 import { EncodedFunctionArgument } from '../Argument.js';
 import { zip } from '../utils.js';
 import SignatureTemplate from '../SignatureTemplate.js';
 import { Contract } from '../Contract.js';
+
+export const DEFAULT_VM_TARGET = VmTarget.BCH_2026_05;
 
 export const getLockScriptName = (contract: Contract): string => {
   const result = decodeCashAddress(contract.address);

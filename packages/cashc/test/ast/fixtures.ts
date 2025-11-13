@@ -25,6 +25,7 @@ import {
   UnaryOpNode,
   InstantiationNode,
   ConsoleStatementNode,
+  DoWhileNode,
 } from '../../src/ast/AST.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator.js';
 import { Class, TimeOp } from '../../src/ast/Globals.js';
@@ -930,6 +931,54 @@ export const fixtures: Fixture[] = [
             ]),
           ),
         ],
+      ),
+    ),
+  },
+  {
+    fn: 'do_while_loop.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'Loopy',
+        [],
+        [new FunctionDefinitionNode(
+          'doLoop',
+          [],
+          new BlockNode([
+            new VariableDefinitionNode(
+              PrimitiveType.INT,
+              [],
+              'i',
+              new IntLiteralNode(0n),
+            ),
+            new DoWhileNode(
+              new BinaryOpNode(
+                new IdentifierNode('i'),
+                BinaryOperator.LT,
+                new NullaryOpNode(NullaryOperator.INPUT_COUNT),
+              ),
+              new BlockNode([
+                new AssignNode(
+                  new IdentifierNode('i'),
+                  new BinaryOpNode(
+                    new IdentifierNode('i'),
+                    BinaryOperator.PLUS,
+                    new IntLiteralNode(1n),
+                  ),
+                ),
+              ]),
+            ),
+            new ConsoleStatementNode([
+              new IdentifierNode('i'),
+            ]),
+            new RequireNode(
+              new BinaryOpNode(
+                new IdentifierNode('i'),
+                BinaryOperator.GT,
+                new IntLiteralNode(2n),
+              ),
+            ),
+          ]),
+        )],
       ),
     ),
   },

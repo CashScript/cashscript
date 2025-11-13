@@ -1,5 +1,5 @@
 import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
-import { Artifact, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
+import { Artifact, LogData, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './libauth-template/LibauthTemplate.js';
@@ -75,18 +75,35 @@ const debugSingleScenario = (
   const lockingScriptDebugResult = fullDebugSteps.slice(findLastIndex(fullDebugSteps, (state) => state.ip === 0));
 
   // The controlStack determines whether the current debug step is in the executed branch
+  // It also tracks loop / function usage, but for the purpose of determining whether a step was executed,
+  // we only need to check that there are no 'false' items in the control stack.
   // https://libauth.org/types/AuthenticationProgramStateControlStack.html
+  // https://github.com/bitjson/bch-loops#control-stack
   const executedDebugSteps = lockingScriptDebugResult
-    .filter((debugStep) => debugStep.controlStack.every(item => item === true));
+    .filter((debugStep) => debugStep.controlStack.every(item => item !== false));
 
   // P2PKH inputs do not have an artifact, so we skip the console.log handling
   if (artifact) {
-    const executedLogs = (artifact.debug?.logs ?? [])
-      .filter((log) => executedDebugSteps.some((debugStep) => log.ip === debugStep.ip));
+    // Try to match each executed debug step to a log entry if it exists. Note that inside loops,
+    // the same log statement may be executed multiple times in different debug steps
+    // Also note that multiple log statements may exist for the same ip, so we need to handle all of them
+    const executedLogs = executedDebugSteps
+      .flatMap((debugStep, index) => {
+        const logEntries = artifact.debug?.logs?.filter((log) => log.ip === debugStep.ip);
+        if (!logEntries || logEntries.length === 0) return [];
 
-    for (const log of executedLogs) {
+        const reversedPriorDebugSteps = executedDebugSteps.slice(0, index + 1).reverse();
+
+        return logEntries.map((logEntry) => {
+          const decodedLogData = logEntry.data
+            .map((dataEntry) => decodeLogDataEntry(dataEntry, reversedPriorDebugSteps, vm));
+          return { logEntry, decodedLogData };
+        });
+      });
+
+    for (const { logEntry, decodedLogData } of executedLogs) {
       const inputIndex = extractInputIndexFromScenario(scenarioId);
-      logConsoleLogStatement(log, executedDebugSteps, artifact, inputIndex, vm);
+      logConsoleLogStatement(logEntry, decodedLogData, artifact.contractName, inputIndex);
     }
   }
 
@@ -218,20 +235,28 @@ const createProgram = (template: WalletTemplate, unlockingScriptId: string, scen
 
 const logConsoleLogStatement = (
   log: LogEntry,
-  debugSteps: AuthenticationProgramStateCommon[],
-  artifact: Artifact,
+  decodedLogData: Array<string | bigint | boolean>,
+  contractName: string,
   inputIndex: number,
-  vm: VM,
 ): void => {
-  let line = `${artifact.contractName}.cash:${log.line}`;
-  const decodedData = log.data.map((element) => {
-    if (typeof element === 'string') return element;
+  console.log(`[Input #${inputIndex}] ${contractName}.cash:${log.line} ${decodedLogData.join(' ')}`);
+};
 
-    const debugStep = debugSteps.find((step) => step.ip === element.ip)!;
-    const transformedDebugStep = applyStackItemTransformations(element, debugStep, vm);
-    return decodeStackItem(element, transformedDebugStep.stack);
-  });
-  console.log(`[Input #${inputIndex}] ${line} ${decodedData.join(' ')}`);
+const decodeLogDataEntry = (
+  dataEntry: LogData,
+  reversedPriorDebugSteps: AuthenticationProgramStateCommon[],
+  vm: VM,
+): string | bigint | boolean => {
+  if (typeof dataEntry === 'string') return dataEntry;
+
+  const dataEntryDebugStep = reversedPriorDebugSteps.find((step) => step.ip === dataEntry.ip);
+
+  if (!dataEntryDebugStep) {
+    throw new Error(`Should not happen: corresponding data entry debug step not found for entry at ip ${dataEntry.ip}`);
+  }
+
+  const transformedDebugStep = applyStackItemTransformations(dataEntry, dataEntryDebugStep, vm);
+  return decodeStackItem(dataEntry, transformedDebugStep.stack);
 };
 
 const applyStackItemTransformations = (
@@ -264,7 +289,7 @@ const applyStackItemTransformations = (
   return transformationsEndState;
 };
 
-const decodeStackItem = (element: StackItem, stack: Uint8Array[]): any => {
+const decodeStackItem = (element: StackItem, stack: Uint8Array[]): string | bigint | boolean => {
   // Reversed since stack is in reverse order
   const stackItem = [...stack].reverse()[element.stackIndex];
 

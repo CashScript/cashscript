@@ -1,5 +1,5 @@
 import { stringify } from '@bitauth/libauth';
-import { Contract, ElectrumNetworkProvider, Output, TransactionBuilder } from 'cashscript';
+import { Contract, MockNetworkProvider, Output, randomUtxo, TransactionBuilder } from 'cashscript';
 import { compileFile } from 'cashc';
 import { URL } from 'url';
 
@@ -9,14 +9,18 @@ import { aliceAddress, alicePkh, bobPkh } from './common.js';
 // Compile the Mecenas contract to an artifact object
 const artifact = compileFile(new URL('mecenas.cash', import.meta.url));
 
-// Initialise a network provider for network operations on CHIPNET
-const provider = new ElectrumNetworkProvider('chipnet');
+// Once you're ready to send transactions on a real network (like chipnet or mainnet), use the ElectrumNetworkProvider
+// const provider = new ElectrumNetworkProvider();
+const provider = new MockNetworkProvider();
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters:
 // (recipient: alicePkh, funder: bobPkh, pledge: 10000)
 const pledgeAmount = 10_000n;
 const contract = new Contract(artifact, [alicePkh, bobPkh, pledgeAmount], { provider });
+
+// Add a mock UTXO to the mock network provider
+provider.addUtxo(contract.address, randomUtxo());
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
