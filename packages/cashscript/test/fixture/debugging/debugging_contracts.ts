@@ -264,18 +264,19 @@ contract Test(pubkey owner) {
       require(tx.outputs[this.activeInputIndex].value == inputValue - 1000);
     }
   }
+}
 `;
 
 const CONTRACT_TEST_LOG_INSIDE_LOOP = `
 contract Test() {
   function test_log_inside_loop() {
-    int x = 0;
+    int i = 0;
     do {
-      console.log('x:', x);
-      x = x + 1;
-    } while (x < 10);
+      console.log('i:', i);
+      i = i + 1;
+    } while (i < 10);
 
-    require(x == 10);
+    require(i == 10);
   }
 
   function test_log_inside_loop_complex() {
