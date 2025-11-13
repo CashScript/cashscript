@@ -164,19 +164,19 @@ describe('Debugging tests', () => {
 
     it('should log inside a loop', async () => {
       const transaction = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, contractTestLogs.unlock.test_log_inside_loop())
-        .addOutput({ to: contractTestLogs.address, amount: 10000n });
+        .addInput(contractUtxo, contractTestLogInsideLoop.unlock.test_log_inside_loop())
+        .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
 
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 0$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 1$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 2$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 3$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 4$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 5$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 6$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 7$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 8$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:62 i: 9$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 1$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 2$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 3$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 4$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 5$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 6$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 7$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 8$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 9$'));
     });
 
     it('should log inside a complex nested loop', async () => {
