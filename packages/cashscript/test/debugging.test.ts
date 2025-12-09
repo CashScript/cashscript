@@ -555,7 +555,7 @@ describe('Debugging tests', () => {
       expect(
         () => expect(transaction).not.toLog('^\\[Input #0] Test.cash:4 Hello World$'),
       ).toThrow(
-        /Expected: not .*\\\\\[Input #0] Test.cash:4 Hello World.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/,
+        /Expected: not .*\[Input #0] Test.cash:4 Hello World.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/,
       );
 
       expect(
