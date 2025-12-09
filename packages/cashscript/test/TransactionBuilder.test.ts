@@ -17,7 +17,7 @@ import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo,
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
-import { gatherUtxos, getTxOutputs } from './test-util.js';
+import { getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
 
 describe('Transaction Builder', () => {
@@ -39,104 +39,12 @@ describe('Transaction Builder', () => {
     (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ token: randomToken() }));
     (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
     (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
+    (provider as any).addUtxo?.(aliceAddress, randomUtxo());
+    (provider as any).addUtxo?.(aliceAddress, randomUtxo());
     (provider as any).addUtxo?.(bobAddress, randomUtxo());
     (provider as any).addUtxo?.(bobAddress, randomUtxo());
     (provider as any).addUtxo?.(carolAddress, randomUtxo());
     (provider as any).addUtxo?.(carolAddress, randomUtxo());
-  });
-
-  describe('should return the same transaction as the simple transaction builder', () => {
-    it('for a single-output (+ change) transaction from a single type of contract', async () => {
-      // given
-      const to = p2pkhInstance.address;
-      const amount = 1000n;
-      const fee = 2000n;
-
-      const utxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
-      const { utxos: gathered, total } = gatherUtxos(utxos, { amount, fee });
-
-      const change = total - amount - fee;
-      const dustAmount = calculateDust({ to, amount: change });
-
-      if (change < 0) {
-        throw new Error('Not enough funds to send transaction');
-      }
-
-      // when
-      const simpleTransaction = await p2pkhInstance.functions
-        .spend(bobPub, new SignatureTemplate(bobPriv))
-        .from(gathered)
-        .to(to, amount)
-        .to(change > dustAmount ? [{ to, amount: change }] : [])
-        .withoutChange()
-        .withoutTokenChange()
-        .withTime(0)
-        .build();
-
-      const advancedTransaction = new TransactionBuilder({ provider })
-        .addInputs(gathered, p2pkhInstance.unlock.spend(bobPub, new SignatureTemplate(bobPriv)))
-        .addOutput({ to, amount })
-        .addOutputs(change > dustAmount ? [{ to, amount: change }] : [])
-        .build();
-
-      const simpleDecoded = stringify(decodeTransactionUnsafe(hexToBin(simpleTransaction)));
-      const advancedDecoded = stringify(decodeTransactionUnsafe(hexToBin(advancedTransaction)));
-
-      // then
-      expect(advancedDecoded).toEqual(simpleDecoded);
-    });
-
-    it('for a multi-output (+ change) transaction with P2SH and P2PKH inputs', async () => {
-      // given
-      const to = bobAddress;
-      const amount = 10000n;
-      const fee = 2000n;
-
-      const contractUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
-      const bobUtxos = await provider.getUtxos(bobAddress);
-      const bobTemplate = new SignatureTemplate(bobPriv);
-
-      const totalInputUtxos = [...contractUtxos.slice(0, 2), ...bobUtxos.slice(0, 2)];
-      const totalInputAmount = totalInputUtxos.reduce((acc, utxo) => acc + utxo.satoshis, 0n);
-
-      const change = totalInputAmount - (amount * 2n) - fee;
-      const dustAmount = calculateDust({ to, amount: change });
-
-      if (change < 0) {
-        throw new Error('Not enough funds to send transaction');
-      }
-
-      // when
-      const simpleTransaction = await p2pkhInstance.functions
-        .spend(bobPub, bobTemplate)
-        .fromP2PKH(bobUtxos[0], bobTemplate)
-        .from(contractUtxos[0])
-        .fromP2PKH(bobUtxos[1], bobTemplate)
-        .from(contractUtxos[1])
-        .to(to, amount)
-        .to(to, amount)
-        .to(change > dustAmount ? [{ to, amount: change }] : [])
-        .withoutChange()
-        .withoutTokenChange()
-        .withTime(0)
-        .build();
-
-      const advancedTransaction = new TransactionBuilder({ provider })
-        .addInput(bobUtxos[0], bobTemplate.unlockP2PKH())
-        .addInput(contractUtxos[0], p2pkhInstance.unlock.spend(bobPub, bobTemplate))
-        .addInput(bobUtxos[1], bobTemplate.unlockP2PKH())
-        .addInput(contractUtxos[1], p2pkhInstance.unlock.spend(bobPub, bobTemplate))
-        .addOutput({ to, amount })
-        .addOutput({ to, amount })
-        .addOutputs(change > dustAmount ? [{ to, amount: change }] : [])
-        .build();
-
-      const simpleDecoded = stringify(decodeTransactionUnsafe(hexToBin(simpleTransaction)));
-      const advancedDecoded = stringify(decodeTransactionUnsafe(hexToBin(advancedTransaction)));
-
-      // then
-      expect(advancedDecoded).toEqual(simpleDecoded);
-    });
   });
 
   describe('test TransactionBuilder.build', () => {
@@ -172,9 +80,9 @@ describe('Transaction Builder', () => {
       expect(txOutputs).toEqual(expect.arrayContaining(outputs));
     });
 
-    it('should fail when fee is higher than maxFee', async () => {
+    it('should fail when fee is higher than maximumFeeSatoshis', async () => {
       const fee = 2000n;
-      const maxFee = 1000n;
+      const maximumFeeSatoshis = 1000n;
       const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
       const amount = p2pkhUtxos[0].satoshis - fee;
@@ -185,17 +93,16 @@ describe('Transaction Builder', () => {
       }
 
       expect(() => {
-        new TransactionBuilder({ provider })
+        new TransactionBuilder({ provider, maximumFeeSatoshis })
           .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
           .addOutput({ to: p2pkhInstance.address, amount })
-          .setMaxFee(maxFee)
           .build();
-      }).toThrow(`Transaction fee of ${fee} is higher than max fee of ${maxFee}`);
+      }).toThrow(`Transaction fee of ${fee} is higher than max fee of ${maximumFeeSatoshis}`);
     });
 
-    it('should succeed when fee is lower than maxFee', async () => {
+    it('should succeed when fee is lower than maximumFeeSatoshis', async () => {
       const fee = 1000n;
-      const maxFee = 2000n;
+      const maximumFeeSatoshis = 2000n;
       const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
 
       const amount = p2pkhUtxos[0].satoshis - fee;
@@ -205,10 +112,49 @@ describe('Transaction Builder', () => {
         throw new Error('Not enough funds to send transaction');
       }
 
-      const tx = new TransactionBuilder({ provider })
+      const tx = new TransactionBuilder({ provider, maximumFeeSatoshis })
         .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
         .addOutput({ to: p2pkhInstance.address, amount })
-        .setMaxFee(maxFee)
+        .build();
+
+      expect(tx).toBeDefined();
+    });
+
+    it('should fail when fee per byte is higher than maximumFeeSatsPerByte', async () => {
+      const fee = 2000n;
+      const maximumFeeSatsPerByte = 1.0;
+      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
+
+      const amount = p2pkhUtxos[0].satoshis - fee;
+      const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
+
+      if (amount < dustAmount) {
+        throw new Error('Not enough funds to send transaction');
+      }
+
+      expect(() => {
+        new TransactionBuilder({ provider, maximumFeeSatsPerByte })
+          .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+          .addOutput({ to: p2pkhInstance.address, amount })
+          .build();
+      }).toThrow(`Transaction fee per byte of 9.05 is higher than max fee per byte of ${maximumFeeSatsPerByte}`);
+    });
+
+    it('should succeed when fee per byte is lower than maximumFeeSatsPerByte', async () => {
+      const fee = 1000n;
+      const maximumFeeSatsPerByte = 10.0;
+      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
+
+      const amount = p2pkhUtxos[0].satoshis - fee;
+      const dustAmount = calculateDust({ to: p2pkhInstance.address, amount });
+
+      if (amount < dustAmount) {
+        throw new Error('Not enough funds to send transaction');
+      }
+
+      const tx = new TransactionBuilder({ provider, maximumFeeSatsPerByte })
+        .addInput(p2pkhUtxos[0], p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+        .addOutput({ to: p2pkhInstance.address, amount })
         .build();
 
       expect(tx).toBeDefined();
@@ -300,7 +246,7 @@ describe('Transaction Builder', () => {
     const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
     const sigTemplate = new SignatureTemplate(alicePriv);
 
-    expect(aliceUtxos.length).toBeGreaterThan(2);
+    expect(aliceUtxos.length).toBe(2);
 
     const change = aliceUtxos[0].satoshis + aliceUtxos[1].satoshis - 1000n;
 

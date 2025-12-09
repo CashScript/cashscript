@@ -1,20 +1,14 @@
 import { binToHex, decodeTransactionUnsafe, hexToBin, isHex } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
-import { Utxo, Network } from '../interfaces.js';
+import { Utxo, Network, VmTarget } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
-import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails, randomUtxo } from '../utils.js';
+import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails } from '../utils.js';
 
-// redeclare the addresses from vars.ts instead of importing them
-const aliceAddress = 'bchtest:qpgjmwev3spwlwkgmyjrr2s2cvlkkzlewq62mzgjnp';
-const bobAddress = 'bchtest:qz6q5gqnxdldkr07xpls5474mmzmlesd6qnux4skuc';
-const carolAddress = 'bchtest:qqsr7nqwe6rq5crj63gy5gdqchpnwmguusmr7tfmsj';
-
-interface MockNetworkProviderOptions {
+export interface MockNetworkProviderOptions {
   updateUtxoSet: boolean;
+  vmTarget?: VmTarget;
 }
 
-// We are setting the default updateUtxoSet to 'false' so that it doesn't break the current behaviour
-// TODO: in a future breaking release we want to set this to 'true' by default
 export default class MockNetworkProvider implements NetworkProvider {
   // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
   private utxoSet: Array<[string, Utxo]> = [];
@@ -22,15 +16,11 @@ export default class MockNetworkProvider implements NetworkProvider {
   public network: Network = Network.MOCKNET;
   public blockHeight: number = 133700;
   public options: MockNetworkProviderOptions;
+  public vmTarget: VmTarget;
 
   constructor(options?: Partial<MockNetworkProviderOptions>) {
-    this.options = { updateUtxoSet: false, ...options };
-
-    for (let i = 0; i < 3; i += 1) {
-      this.addUtxo(aliceAddress, randomUtxo());
-      this.addUtxo(bobAddress, randomUtxo());
-      this.addUtxo(carolAddress, randomUtxo());
-    }
+    this.options = { updateUtxoSet: true, ...options };
+    this.vmTarget = this.options.vmTarget ?? VmTarget.BCH_2025_05;
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {

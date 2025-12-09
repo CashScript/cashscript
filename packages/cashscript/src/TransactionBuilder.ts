@@ -17,7 +17,8 @@ import {
   isUnlockableUtxo,
   isStandardUnlockableUtxo,
   StandardUnlockableUtxo,
-  isP2PKHUnlocker,
+  VmResourceUsage,
+  isContractUnlocker,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -30,14 +31,16 @@ import {
 } from './utils.js';
 import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
-import { getBitauthUri } from './LibauthTemplate.js';
-import { debugLibauthTemplate, getLibauthTemplates } from './advanced/LibauthTemplate.js';
+import { debugLibauthTemplate, getLibauthTemplate, getBitauthUri } from './libauth-template/LibauthTemplate.js';
 import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
 import semver from 'semver';
 import { WcTransactionObject } from './walletconnect-utils.js';
 
 export interface TransactionBuilderOptions {
   provider: NetworkProvider;
+  maximumFeeSatoshis?: bigint;
+  maximumFeeSatsPerByte?: number;
+  allowImplicitFungibleTokenBurn?: boolean;
 }
 
 const DEFAULT_SEQUENCE = 0xfffffffe;
@@ -48,12 +51,16 @@ export class TransactionBuilder {
   public outputs: Output[] = [];
 
   public locktime: number = 0;
-  public maxFee?: bigint;
+  public options: TransactionBuilderOptions;
 
   constructor(
     options: TransactionBuilderOptions,
   ) {
     this.provider = options.provider;
+    this.options = {
+      allowImplicitFungibleTokenBurn: options.allowImplicitFungibleTokenBurn ?? false,
+      ...options,
+    };
   }
 
   addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
@@ -102,25 +109,52 @@ export class TransactionBuilder {
     return this;
   }
 
-  setMaxFee(maxFee: bigint): this {
-    this.maxFee = maxFee;
-    return this;
-  }
-
-  private checkMaxFee(): void {
-    if (!this.maxFee) return;
-
+  private checkMaxFee(transaction: LibauthTransaction): void {
     const totalInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
     const totalOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
     const fee = totalInputAmount - totalOutputAmount;
 
-    if (fee > this.maxFee) {
-      throw new Error(`Transaction fee of ${fee} is higher than max fee of ${this.maxFee}`);
+    if (this.options.maximumFeeSatoshis && fee > this.options.maximumFeeSatoshis) {
+      throw new Error(`Transaction fee of ${fee} is higher than max fee of ${this.options.maximumFeeSatoshis}`);
+    }
+
+    if (this.options.maximumFeeSatsPerByte) {
+      const transactionSize = encodeTransaction(transaction).byteLength;
+      const feePerByte = Number((Number(fee) / transactionSize).toFixed(2));
+
+      if (feePerByte > this.options.maximumFeeSatsPerByte) {
+        throw new Error(`Transaction fee per byte of ${feePerByte} is higher than max fee per byte of ${this.options.maximumFeeSatsPerByte}`);
+      }
+    }
+  }
+
+  private checkFungibleTokenBurn(): void {
+    if (this.options.allowImplicitFungibleTokenBurn) return;
+
+    const tokenInputAmounts: Record<string, bigint> = {};
+    const tokenOutputAmounts: Record<string, bigint> = {};
+
+    for (const input of this.inputs) {
+      if (input.token?.amount) {
+        tokenInputAmounts[input.token.category] = (tokenInputAmounts[input.token.category] || 0n) + input.token.amount;
+      }
+    }
+    for (const output of this.outputs) {
+      if (output.token?.amount) {
+        tokenOutputAmounts[output.token.category] = (tokenOutputAmounts[output.token.category] || 0n) + output.token.amount;
+      }
+    }
+
+    for (const [category, inputAmount] of Object.entries(tokenInputAmounts)) {
+      const outputAmount = tokenOutputAmounts[category] || 0n;
+      if (outputAmount < inputAmount) {
+        throw new Error(`Implicit burning of fungible tokens for category ${category} is not allowed (input amount: ${inputAmount}, output amount: ${outputAmount}). If this is intended, set allowImplicitFungibleTokenBurn to true.`);
+      }
     }
   }
 
   buildLibauthTransaction(): LibauthTransaction {
-    this.checkMaxFee();
+    this.checkFungibleTokenBurn();
 
     const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
@@ -149,6 +183,8 @@ export class TransactionBuilder {
       transaction.inputs[i].unlockingBytecode = script;
     });
 
+    this.checkMaxFee(transaction);
+
     return transaction;
   }
 
@@ -158,11 +194,6 @@ export class TransactionBuilder {
   }
 
   debug(): DebugResults {
-    // do not debug a pure P2PKH-spend transaction
-    if (this.inputs.every((input) => isP2PKHUnlocker(input.unlocker))) {
-      return {};
-    }
-
     if (this.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
       throw new Error('Cannot debug a transaction with custom unlocker');
     }
@@ -179,13 +210,50 @@ export class TransactionBuilder {
     return debugLibauthTemplate(this.getLibauthTemplate(), this);
   }
 
-  bitauthUri(): string {
+  getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage> {
+    // Note that only StandardUnlockableUtxo inputs are supported for debugging, so any transaction with custom unlockers
+    // cannot be debugged (and therefore cannot return VM resource usage)
+    const results = this.debug();
+    const vmResourceUsage: Array<VmResourceUsage> = [];
+    const tableData: Array<Record<string, any>> = [];
+
+    const formatMetric = (value: number, total: number, withPercentage: boolean = false): string =>
+      `${formatNumber(value)} / ${formatNumber(total)}${withPercentage ? ` (${(value / total * 100).toFixed(0)}%)` : ''}`;
+    const formatNumber = (value: number): string => value.toLocaleString('en');
+
+    const resultEntries = Object.entries(results);
+    for (const [index, input] of this.inputs.entries()) {
+      const [, result] = resultEntries.find(([entryKey]) => entryKey.includes(`input${index}`)) ?? [];
+      const metrics = result?.at(-1)?.metrics;
+
+      // Should not happen
+      if (!metrics) throw new Error('VM resource could not be calculated');
+
+      vmResourceUsage.push(metrics);
+      tableData.push({
+        'Contract - Function': isContractUnlocker(input.unlocker) ? `${input.unlocker.contract.name} - ${input.unlocker.abiFunction.name}` : 'P2PKH Input',
+        Ops: metrics.evaluatedInstructionCount,
+        'Op Cost Budget Usage': formatMetric(metrics.operationCost, metrics.maximumOperationCost, true),
+        SigChecks: formatMetric(metrics.signatureCheckCount, metrics.maximumSignatureCheckCount),
+        Hashes: formatMetric(metrics.hashDigestIterations, metrics.maximumHashDigestIterations),
+      });
+    }
+
+    if (verbose) {
+      console.log('VM Resource usage by inputs:');
+      console.table(tableData);
+    }
+
+    return vmResourceUsage;
+  }
+
+  getBitauthUri(): string {
     console.warn('WARNING: it is unsafe to use this Bitauth URI when using real private keys as they are included in the transaction template');
     return getBitauthUri(this.getLibauthTemplate());
   }
 
   getLibauthTemplate(): WalletTemplate {
-    return getLibauthTemplates(this);
+    return getLibauthTemplate(this);
   }
 
   async send(): Promise<TransactionDetails>;
@@ -204,7 +272,7 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw new FailedTransactionError(reason);
+      throw new FailedTransactionError(reason, this.getBitauthUri());
     }
   }
 

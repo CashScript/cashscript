@@ -42,10 +42,10 @@ To help with debugging you can add `console.log` statements to your CashScript c
 
 Whenever a transaction fails, there will be a link in the console to open your smart contract transaction in the BitAuth IDE. This will allow you to inspect the transaction in detail, and see exactly why the transaction failed. In the BitAuth IDE you will see the raw BCH Script mapping to each line in your CashScript contract. Find the failing line and investigate the failing OpCode. You can break up the failing line, one opcode at a time, to see how the stack evolves and ends with your `require` failure.
 
-It's also possible to export the transaction for step-by-step debugging in the BitAuth IDE without failure. To do so, you can call the `bitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE.
+It's also possible to export the transaction for step-by-step debugging in the BitAuth IDE without failure. To do so, you can call the `getBitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE.
 
 ```ts
-const uri = await transactionBuilder.bitauthUri();
+const uri = await transactionBuilder.getBitauthUri();
 ```
 
 :::caution
@@ -75,7 +75,7 @@ OP_3 OP_ROLL OP_SWAP OP_CHECKSIGVERIFY /*         require(checkSig(senderSig, se
 OP_SWAP OP_CHECKLOCKTIMEVERIFY         /*         require(tx.time >= timeout);                                         */
 OP_2DROP OP_1                          /*     }                                                                        */
 OP_ENDIF                               /* }                                                                            */
-          
+
 ```
 
 [BitauthIDE]: https://ide.bitauth.com/import-template/eJzFWAtv2zYQ_isCN2BJ4drUW8raAK3jNkbSJEvcFUMdGBR1stXakidRWYIg--07SrIk23LgDhlGBKEiHu-7x3fUMY_k55TPYMHIEZkJsUyPer3Qh64XCpaJWZfHi558gEiEnIkwjl4LWCznTMDrO9ot9na_pXFEOsSHlCfhUkqhuuFiGScCfCVI4oXCWTorVlEwYgtAiT6-u8nfKR8hgoRJ6RPwsuk0jKbKqATCDWm2LJSRo6_kff90olHNnFCT3HbIHSRpjkg7RJopQkjJ0SMZJSxKA0i-hGI2ChcQZ2ISRstM0MmSJWiBwI1ScN3sfhyJhHGh8ARyhxUWoQ9ZxPM_GlsrP1qQlIMcSvmJHkrzc_2pNL7NqnnMv6NU25JYNzyLclnpNUtC5s0LV1OIfEhuwum2O-N6cUxq65U4qH0akxJmTGqnap0dIh6W8tUZPJCnTrmyG2oTR8zCVOFlWDcBau1f2HwO4oQJJkES4OEyxHy24VSLe0LVynaglf63YVWh2QtppWgHzirkmE8f7rfhymqoMpOLKSJW4B54lpdCCbShqRUPR4N77RXRTjAUXrI0hZ2U3dgGd2yeyVK93YxEWyHgaq_XZF1beY2jNxUF5TkTxUkyScNpxESWQBfdnOBeVJ1O5HMm7uP0WEG9KDOOxhE-bYQxjKqEofL1AOY7w0gob5U36vFYnmZFKNL2-i5q9qm9aFchlDMeZKMiM0stnenas6fGVoRaZDBavDqi4igVScZFnKxHroxs0yt671KfUh2de1PVQy6wzLzv8FDIUN0JTNM0HN8OdF91dA6e5wDYNtWtAMAzqBMYzKQ6DTzDsWzVtkzX81zDCMDEZX5cJW5buaY6vqFalmq5mouPGlcD29JBM3QwPNPjuh84oOIyZcw1dU-1mQVUc6lmaWbg0uMys96DAB77MI6U_UbvlbJM2HTBGh8i5W_aVdUu_XVPHc3xqvcj0C86fgy64koLlQ7K5BTp6qxyVbGjk3On5NKh8vgvvMZcXcOfWZhArfaXVKnqWJ5tCyb4bB-vL68muoK_rob9MzlT-evi86fBb5_fncvn4YcGdFX9ovT8AFFrK_BYkS7tMUpoQyJcX56fF_NITv3TQf_sZvhxw2s5ksLtA-yQ-HcEO2gid2o7Dg-f4V8JfTG8UramwfnNYDvgT_t4tK_Xe4r-vwzPp5pmq--OnCW7PMk8hlnw80au4PpOCjZptsq12qTZ74Pr4Yc_GtA1zcqikiyrvlx7UmwX9M2Xd1dNnpXoz9Gsgu6UVjxLsDXoNbTzy_7ZaPhpUDvcDHgTWtx382Afv63Oiv2P1BJaO7m-vCqCvXP8FwyXdXRxUpwbzwyEfjHYFfSeoi9fXKRoCyHCK0S8b2NYdXgoXjYwg_JV26dFaW3_1pvddxG2tQzveKCU2mUZ_TUDWZOyvS4_00XvW3SHsiftSk2ywUVTVo1AfQtCxS_RaZC1Kwh5ic6INO4ZZNWOke1LAVFlY8mzJEHs97KJPIVwOsNd2vprGWtypNqGhViaa3QIfr7zhC6T8A4zc1b-2bgfEstwLddjhqepaJvuO6pl2hq1uUZdz0HjTUvXLIeCYXsAGmO2a_HA9j3K8YfbJL9V5N9UxotMPpI8yfKy8EhkUx5j3zAsnEGjVm9G9Z5TbMLQFgBuBa5lqrYWcNc3HGrqAQ-Au6aqqtRmjgm6r_nUU33VBWmyjUmjlu5z3fAC2S_jIQQRh4ts4cnkGxgH17LzaBQdPHbg7yuWfCXpPBbk9gkvKnJR5CHUTIqjsHTlx9ZWYlvMVQ1HM1Xug61xmfvA9wPbMTBArmcyZpgOhs-2ASzHYTLjkthww0ScIqMxWdRFpKfmvy00WY1xlnC4fA5-ZXmbSsNxnm4xL_8AUE0PwQ==

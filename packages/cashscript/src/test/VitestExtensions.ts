@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { DebugResults } from '../debugging.js';
 
 interface Debuggable {
@@ -28,11 +29,10 @@ export function toLog(
   // silence actual stdout output
   loggerSpy.mockImplementation(() => { });
 
+  // Run debug, ignoring any errors because we only care about the logs, even if the transaction fails
   try {
-    executeDebug(transaction);
-  } catch (error) {
-    if (error instanceof OldTransactionBuilderError) throw error;
-  }
+    transaction.debug();
+  } catch (error) { }
 
   // We concatenate all the logs into a single string - if no logs are present, we set received to undefined
   const receivedBase = loggerSpy.mock.calls.reduce((acc, [log]) => `${acc}\n${log}`, '').trim();
@@ -69,14 +69,11 @@ export function toFailRequireWith(
 ): ExpectationResult {
   const { utils, isNot } = this;
   try {
-    executeDebug(transaction);
-
+    transaction.debug();
     const matcherHint = utils.matcherHint('.toFailRequireWith', undefined, match.toString(), { isNot: isNot });
     const message = (): string => `${matcherHint}\n\nContract function did not fail a require statement.`;
     return { message, pass: false };
   } catch (transactionError: any) {
-    if (transactionError instanceof OldTransactionBuilderError) throw transactionError;
-
     const matcherHint = utils.matcherHint('toFailRequireWith', 'received', 'expected', { isNot: isNot });
     const expectedText = `Expected pattern: ${isNot ? 'not ' : ''}${utils.printExpected(match)}`;
     const receivedText = `Received string: ${utils.printReceived(transactionError?.message ?? '')}`;
@@ -98,33 +95,12 @@ export function toFailRequire(
 ): ExpectationResult {
   const { utils } = this;
   try {
-    executeDebug(transaction);
+    transaction.debug();
     const message = (): string => 'Contract function did not fail a require statement.';
     return { message, pass: false };
   } catch (transactionError: any) {
-    if (transactionError instanceof OldTransactionBuilderError) throw transactionError;
-
     const receivedText = `Received string: ${utils.printReceived(transactionError?.message ?? '')}`;
     const message = (): string => `Contract function failed a require statement.\n${receivedText}`;
     return { message, pass: true };
-  }
-}
-
-
-// Wrapper function with custom error in case people use it with the old transaction builder
-// This is a temporary solution until we fully remove the old transaction builder from the SDK
-const executeDebug = (transaction: Debuggable): void => {
-  const debugResults = transaction.debug();
-
-  if (debugResults instanceof Promise) {
-    debugResults.catch(() => { });
-    throw new OldTransactionBuilderError();
-  }
-};
-
-class OldTransactionBuilderError extends Error {
-  constructor() {
-    super('The CashScript VitestExtensions do not support the old transaction builder since v0.11.0. Please use the new TransactionBuilder class.');
-    this.name = 'OldTransactionBuilderError';
   }
 }
