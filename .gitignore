@@ -1,7 +1,6 @@
 lerna-debug.log
 npm-debug.log
 **/dist/
-**/dist-test/
 **/node_modules/
 
 **/.DS_Store

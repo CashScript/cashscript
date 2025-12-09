@@ -23,7 +23,6 @@
   "exclude": [
     "node_modules",
     "dist",
-    "**/dist-test",
     "taksks",
   ],
 }
