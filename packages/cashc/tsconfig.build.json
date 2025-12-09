@@ -1,11 +1,12 @@
 {
   "extends": "../../tsconfig.build.json",
-
   "compilerOptions": {
     "outDir": "./dist",
-    "types": ["vitest/globals"]
+    "types": [
+      "node",
+      "vitest/globals"
+    ]
   },
-
   "include": [
     "src/**/*",
   ],

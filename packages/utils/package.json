@@ -45,7 +45,7 @@
   "devDependencies": {
     "eslint": "^8.54.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.15"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
 }
