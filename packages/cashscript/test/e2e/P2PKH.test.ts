@@ -20,7 +20,6 @@ import {
 } from '../../src/utils.js';
 import artifact from '../fixture/p2pkh.artifact.js';
 
-
 describe('P2PKH-no-tokens', () => {
   const provider = process.env.TESTS_USE_CHIPNET
     ? new ElectrumNetworkProvider(Network.CHIPNET)

@@ -10,7 +10,6 @@ import artifact from '../fixture/bigint.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 import { gatherUtxos } from '../test-util.js';
 
-
 describe('BigInt', () => {
   const provider = process.env.TESTS_USE_CHIPNET
     ? new ElectrumNetworkProvider(Network.CHIPNET)

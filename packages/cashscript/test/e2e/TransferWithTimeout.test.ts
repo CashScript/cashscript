@@ -14,7 +14,6 @@ import { gatherUtxos, getTxOutputs } from '../test-util.js';
 import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
-
 describe('TransferWithTimeout', () => {
   const provider = process.env.TESTS_USE_CHIPNET
     ? new ElectrumNetworkProvider(Network.CHIPNET)
