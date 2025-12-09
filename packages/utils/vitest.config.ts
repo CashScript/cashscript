@@ -4,7 +4,7 @@ export default defineConfig({
   root: './test',
   test: {
     environment: 'node',
-    reporters: ['verbose'],
+    silent: 'passed-only',
     globals: true,
     coverage: {
       provider: 'v8',

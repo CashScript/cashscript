@@ -9,7 +9,7 @@ export default defineConfig({
     exclude: ['**/types/**'],
     testTimeout: 50000,
     globals: true,
-    reporters: ['verbose'],
+    silent: 'passed-only',
     coverage: {
       provider: 'v8',
     },

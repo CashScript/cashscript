@@ -6,7 +6,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     testTimeout: 50000,
-    reporters: ['verbose'],
+    silent: 'passed-only',
     setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
