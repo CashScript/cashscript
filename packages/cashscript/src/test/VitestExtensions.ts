@@ -87,7 +87,6 @@ export function toFailRequireWith(
   }
 }
 
-
 export function toFailRequire(
   this: any,
   transaction: Debuggable,
@@ -103,3 +102,10 @@ export function toFailRequire(
     return { message, pass: true };
   }
 }
+
+// Extend Vitest with the custom matchers, this file needs to be imported in the vitest.setup.ts file or the test file
+expect.extend({
+  toLog,
+  toFailRequire,
+  toFailRequireWith,
+});
