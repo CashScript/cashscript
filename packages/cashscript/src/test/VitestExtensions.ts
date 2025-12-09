@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import { DebugResults } from '../debugging.js';
 
 interface Debuggable {

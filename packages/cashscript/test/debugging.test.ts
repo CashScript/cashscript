@@ -13,7 +13,6 @@ import {
   artifactTestZeroHandling,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
-import { vi } from 'vitest';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
@@ -659,23 +658,21 @@ describe('Debugging tests', () => {
       VmTarget.BCH_SPEC,
     ] as const;
 
-    for (const vmTarget of vmTargets) {
-      it(`should execute and log correctly with vmTarget ${vmTarget}`, async () => {
-        const provider = new MockNetworkProvider({ vmTarget });
-        const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
-        const contractUtxo = randomUtxo();
-        provider.addUtxo(contractTestLogs.address, contractUtxo);
+    it.each(vmTargets)('should execute and log correctly with vmTarget %s', async (vmTarget) => {
+      const provider = new MockNetworkProvider({ vmTarget });
+      const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
+      const contractUtxo = randomUtxo();
+      provider.addUtxo(contractTestLogs.address, contractUtxo);
 
-        const transaction = new TransactionBuilder({ provider })
-          .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
-          .addOutput({ to: contractTestLogs.address, amount: 10000n });
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-        expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? 'BCH_2025_05');
+      expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? 'BCH_2025_05');
 
-        const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
-        expect(transaction).toLog(expectedLog);
-      });
-    }
+      const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+      expect(transaction).toLog(expectedLog);
+    });
   });
 });
 

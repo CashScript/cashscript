@@ -3,8 +3,14 @@
     "target": "es2021",
     "module": "esnext",
     "declaration": true,
-    "lib": ["es2021", "dom"],
-    "types": ["node", "jest"],
+    "lib": [
+      "es2021",
+      "dom"
+    ],
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
     "sourceMap": true,
     "strict": true,
     "strictPropertyInitialization": false,
