@@ -1,4 +1,5 @@
 import { DebugResults } from '../debugging.js';
+import type { MatcherState } from '@vitest/expect';
 
 interface Debuggable {
   debug(): DebugResults | Promise<DebugResults>;
@@ -14,8 +15,7 @@ interface ExpectationResult {
 }
 
 export function toLog(
-  // FIXME: improve type definition
-  this: any,
+  this: MatcherState,
   transaction: Debuggable,
   match?: RegExp | string,
 ): ExpectationResult {
@@ -62,7 +62,7 @@ export function toLog(
 }
 
 export function toFailRequireWith(
-  this: any,
+  this: MatcherState,
   transaction: Debuggable,
   match: RegExp | string,
 ): ExpectationResult {
@@ -88,7 +88,7 @@ export function toFailRequireWith(
 }
 
 export function toFailRequire(
-  this: any,
+  this: MatcherState,
   transaction: Debuggable,
 ): ExpectationResult {
   const { utils } = this;
