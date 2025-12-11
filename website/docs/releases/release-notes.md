@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.12.1
+
+#### CashScript SDK
+- :sparkles: Add Vitest extensions for automated testing.
+
 ## v0.12.0
 
 #### CashScript SDK
