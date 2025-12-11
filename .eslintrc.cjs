@@ -11,9 +11,6 @@ module.exports = {
     sourceType: 'module',  // Allows for the use of imports
     extraFileExtensions: ['.cjs'],
   },
-  env: {
-    'jest': true,
-  },
   rules: {
     'max-len': ['error', { code: 125, ignoreStrings: true, ignoreTemplateLiterals: true }],
     'import/no-cycle': 0, // Needed for AST -> AstVisitor -> AST

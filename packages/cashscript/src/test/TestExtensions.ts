@@ -1,8 +1,4 @@
-import { MatcherContext } from '@jest/expect';
-import { SyncExpectationResult } from 'expect';
 import { DebugResults } from '../debugging.js';
-
-export { };
 
 declare global {
   namespace jest {
@@ -16,16 +12,19 @@ declare global {
 }
 
 interface Debuggable {
-  debug(): DebugResults | Promise<DebugResults>;
+  debug(): DebugResults;
 }
 
+type TestFramework = typeof vi;
+const testFramework: TestFramework = (globalThis as any).vi ?? (globalThis as any).jest;
+
+// Extend Vitest with the custom matchers, this file needs to be imported in the vitest.setup.ts file or the test file
 expect.extend({
   toLog(
-    this: MatcherContext,
     transaction: Debuggable,
     match?: RegExp | string,
-  ): SyncExpectationResult {
-    const loggerSpy = jest.spyOn(console, 'log');
+  ) {
+    const loggerSpy = testFramework.spyOn(console, 'log');
 
     // Clear any previous calls (if spy reused accidentally)
     loggerSpy.mockClear();
@@ -65,14 +64,23 @@ expect.extend({
 
     return { message, pass: true };
   },
-});
-
-expect.extend({
+  toFailRequire(
+    transaction: Debuggable,
+  ) {
+    try {
+      transaction.debug();
+      const message = (): string => 'Contract function did not fail a require statement.';
+      return { message, pass: false };
+    } catch (transactionError: any) {
+      const receivedText = `Received string: ${this.utils.printReceived(transactionError?.message ?? '')}`;
+      const message = (): string => `Contract function failed a require statement.\n${receivedText}`;
+      return { message, pass: true };
+    }
+  },
   toFailRequireWith(
-    this: MatcherContext,
     transaction: Debuggable,
     match: RegExp | string,
-  ): SyncExpectationResult {
+  ) {
     try {
       transaction.debug();
       const matcherHint = this.utils.matcherHint('.toFailRequireWith', undefined, match.toString(), { isNot: this.isNot });
@@ -92,18 +100,6 @@ expect.extend({
       }
     }
   },
-  toFailRequire(
-    this: MatcherContext,
-    transaction: Debuggable,
-  ): SyncExpectationResult {
-    try {
-      transaction.debug();
-      const message = (): string => 'Contract function did not fail a require statement.';
-      return { message, pass: false };
-    } catch (transactionError: any) {
-      const receivedText = `Received string: ${this.utils.printReceived(transactionError?.message ?? '')}`;
-      const message = (): string => `Contract function failed a require statement.\n${receivedText}`;
-      return { message, pass: true };
-    }
-  },
 });
+
+export { };
