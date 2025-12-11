@@ -523,15 +523,15 @@ describe('Debugging tests', () => {
     });
   });
 
-  describe('VitestExtensions', () => {
+  describe('TestExtensions', () => {
     const provider = new MockNetworkProvider();
     const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
     const contractTestRequiresUtxo = randomUtxo();
     provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
 
-    // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use VitestExtensions
+    // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use TestExtensions
 
-    it('should fail the VitestExtensions test if an incorrect log is expected', async () => {
+    it('should fail the TestExtensions test if an incorrect log is expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -544,7 +544,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
-    it('should fail the VitestExtensions test if a log is logged that is NOT expected', async () => {
+    it('should fail the TestExtensions test if a log is logged that is NOT expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -563,7 +563,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
-    it('should fail the VitestExtensions test if a log is expected where no log is logged', async () => {
+    it('should fail the TestExtensions test if a log is expected where no log is logged', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -576,7 +576,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: .*Hello World.*\nReceived: (.|\n)*?undefined/);
     });
 
-    it('should fail the VitestExtensions test if an incorrect require error message is expected', async () => {
+    it('should fail the TestExtensions test if an incorrect require error message is expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -589,7 +589,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
 
-    it('should fail the VitestExtensions test if a require error message is expected where no error is thrown', async () => {
+    it('should fail the TestExtensions test if a require error message is expected where no error is thrown', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -602,7 +602,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Contract function did not fail a require statement/);
     });
 
-    it('should fail the VitestExtensions test if an error is thrown where it is NOT expected', async () => {
+    it('should fail the TestExtensions test if an error is thrown where it is NOT expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
