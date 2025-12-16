@@ -203,13 +203,13 @@ import { aliceTemplate, aliceAddress, bobAddress, contract, provider } from './s
 
 const contractUtxos = await contract.getUtxos();
 const aliceUtxos = await provider.getUtxos(aliceAddress);
+const maximumFeeSatoshis = 1000n;
 
-const txDetails = await new TransactionBuilder({ provider })
+const txDetails = await new TransactionBuilder({ provider, maximumFeeSatoshis })
   .addInput(contractUtxos[0], contract.unlock.spend(aliceTemplate, 1000n))
   .addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH())
   .addOutput({ to: bobAddress, amount: 100_000n })
   .addOpReturnOutput(['0x6d02', 'Hello World!'])
-  .setMaxFee(2000n)
   .send()
 ```
 
@@ -226,13 +226,13 @@ import { aliceTemplate, aliceAddress, bobAddress, contract, provider } from './s
 
 const contractUtxos = await contract.getUtxos();
 const aliceUtxos = await provider.getUtxos(aliceAddress);
+const maximumFeeSatoshis = 1000n;
 
-const txHex = new TransactionBuilder({ provider })
+const txHex = new TransactionBuilder({ provider, maximumFeeSatoshis })
   .addInput(contractUtxos[0], contract.unlock.spend(aliceTemplate, 1000n))
   .addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH())
   .addOutput({ to: bobAddress, amount: 100_000n })
   .addOpReturnOutput(['0x6d02', 'Hello World!'])
-  .setMaxFee(2000n)
   .build()
 ```
 

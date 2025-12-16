@@ -56,7 +56,7 @@ While CashTokens might seem overwhelming at first, realize that in contracts you
 
 and their equivalent for outputs:
 
-- **`bytes tx.outputs[i].tokenCategory`** - `tokenCategory` + `tokenCapability` of a specific output. (see [below](#1-tokencategory-contains-the-nft-capability)).
+- **`bytes tx.outputs[i].tokenCategory`** - `tokenCategory` + `tokenCapability` of a specific output. (see [below](#tokencategory-contains-the-nft-capability)).
 - **`bytes tx.outputs[i].nftCommitment`** - NFT commitment data of a specific output
 - **`int tx.outputs[i].tokenAmount`** - Amount of fungible tokens of a specific output.
 
@@ -70,7 +70,7 @@ The [Jedex demo](https://github.com/bitjson/jedex) also introduces very advanced
 
 Below we'll create a short list of the use cases which will be the most important to know about:
 
-- **Covenant tracking tokens** - this is what enables unique authentication of contract deployments 
+- **Covenant tracking tokens** - this is what enables unique authentication of contract deployments
 - **Commitment-based state management** - this is what `mutable` nfts are extremely useful for
 - **Depository covenants/token pools**  - which we would call token sidecars
 - **Role tokens** - these are authentication tokens for admins
@@ -171,7 +171,7 @@ const contract = new Contract(artifact, [reverseHex(tokenId)], { provider })
 Most end-user CashTokens wallets expect CashTokens UTXOs to only hold a tiny amount of BCH like 1000 sats. Deviating from the expectation might cause unforeseen problems with user's wallets.
 
 :::tip
-You can hard code in your contract that any user token output should have exactly `1000` sats, this avoids possible complicating freedom during transaction building. 
+You can hard code in your contract that any user token output should have exactly `1000` sats, this avoids possible complicating freedom during transaction building.
 :::
 
 However when constructing a transaction with user owned UTXOs, you should always make sure to check whether you handle the edge case of users with combined BCH + CashTokens UTXOs correctly in change output handling both for BCH and the tokens.

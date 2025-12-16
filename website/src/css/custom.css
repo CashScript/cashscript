@@ -44,6 +44,8 @@
 
   /* Slightly smaller code font */
   --ifm-code-font-size: 95%;
+
+  --docsearch-muted-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 .navbar--dark {
@@ -79,6 +81,8 @@ html[data-theme="dark"] {
   --ifm-heading-color: #ffffff;
 
   --ifm-alert-background-color: #474748;
+
+  --docsearch-muted-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* NOTE admonitions should be light grey (instead of secondary colour) */
@@ -97,4 +101,8 @@ html[data-theme="dark"] {
 /* THIS IS A HACK TO GET ALERT TITLES TO BE BLACK WHILE NORMAL HEADINGS ARE WHITE IN DARK MODE */
 h5 {
   color: var(--ifm-alert-color) !important;
+}
+
+.DocSearch-Search-Icon {
+  color: var(--ifm-heading-color) !important;
 }
