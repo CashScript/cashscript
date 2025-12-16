@@ -6,7 +6,13 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './index.module.css';
 
-const features = [
+type FeatureItem = {
+  title: string;
+  description: React.ReactNode;
+  imageUrl?: string;
+};
+
+const features: FeatureItem[] = [
   {
     title: 'TypeScript SDK',
     description: (
@@ -47,8 +53,8 @@ const features = [
   },
 ];
 
-function Feature({imageUrl, title, description}) {
-  const imgUrl = useBaseUrl(imageUrl);
+function Feature({ imageUrl, title, description }: FeatureItem) {
+  const imgUrl = imageUrl ? useBaseUrl(imageUrl) : undefined;
   return (
     <div className={classnames('col col--6', styles.feature)}>
       {imgUrl && (
@@ -62,14 +68,13 @@ function Feature({imageUrl, title, description}) {
   );
 }
 
-function Home() {
+function Home(): React.ReactNode {
   const context = useDocusaurusContext();
-  const {siteConfig = {}} = context;
+  const { siteConfig } = context;
   return (
     <Layout
       title={`${siteConfig.title}: ${siteConfig.tagline}`}
-      description='A high-level smart contract language for Bitcoin Cash. Write complex smart contracts with a straightforward syntax and integrate them into your JavaScript applications.'
-      keywords={['cashscript','smart contracts','bitcoin cash', 'compiler', 'sdk', 'programming language']}>
+      description='A high-level smart contract language for Bitcoin Cash. Write complex smart contracts with a straightforward syntax and integrate them into your JavaScript applications.'>
       <header className={classnames('hero', styles.banner)}>
         <div className='container'>
           <div className='row'>
@@ -99,7 +104,7 @@ function Home() {
         </div>
       </header>
       <main>
-        {features && features.length && (
+        {features && features.length > 0 && (
           <section className={styles.features}>
             <div className='container margin-vert--md'>
               <div className='row'>

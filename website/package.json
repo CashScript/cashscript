@@ -9,7 +9,6 @@
     "deploy": "docusaurus deploy"
   },
   "dependencies": {
-    "@babel/helper-get-function-arity": "^7.16.7",
     "@branchup/docusaurus-plugin-simple-analytics": "^1.1.0",
     "@docusaurus/core": "^3.9.2",
     "@docusaurus/plugin-client-redirects": "^3.9.2",
@@ -18,6 +17,10 @@
     "prism-react-renderer": "^2.4.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@docusaurus/tsconfig": "^3.9.2",
+    "typescript": "^5.9.2"
   },
   "browserslist": {
     "production": [

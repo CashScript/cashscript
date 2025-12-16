@@ -1,4 +1,8 @@
-module.exports = {
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
+import type { Options as ClassicPresetOptions } from '@docusaurus/preset-classic';
+
+const config: Config = {
   title: 'CashScript',
   tagline: 'Smart contracts for Bitcoin Cash',
   url: 'https://cashscript.org',
@@ -8,8 +12,8 @@ module.exports = {
   projectName: 'cashscript',
   themeConfig: {
     prism: {
-      theme: require('prism-react-renderer').themes.nightOwlLight,
-      darkTheme: require('prism-react-renderer').themes.nightOwl,
+      theme: prismThemes.nightOwlLight,
+      darkTheme: prismThemes.nightOwl,
       additionalLanguages: ['solidity', 'antlr4'],
     },
     image: 'img/logo.svg',
@@ -19,7 +23,7 @@ module.exports = {
         src: 'img/logo.svg',
       },
       items: [
-        {to: '/docs/basics/about', label: 'Docs', position: 'right'},
+        { to: '/docs/basics/about', label: 'Docs', position: 'right' },
         {
           href: 'https://playground.cashscript.org',
           label: 'Playground',
@@ -99,15 +103,15 @@ module.exports = {
   },
   presets: [
     [
-      '@docusaurus/preset-classic',
+      'classic',
       {
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: './src/css/custom.css',
         },
         docs: {
-          sidebarPath: './sidebars.js',
+          sidebarPath: './sidebars.ts',
         },
-      },
+      } as ClassicPresetOptions,
     ],
   ],
   plugins: [
@@ -116,7 +120,7 @@ module.exports = {
       {
         fromExtensions: ['html'],
         redirects: [
-          { from: ['/docs', '/docs/about', '/docs/basics'], to: '/docs/basics/about'},
+          { from: ['/docs', '/docs/about', '/docs/basics'], to: '/docs/basics/about' },
           { from: '/docs/language', to: '/docs/language/contracts' },
           { from: '/docs/sdk', to: '/docs/sdk/instantiation' },
           { from: '/docs/sdk/transactions-advanced', to: '/docs/sdk/transaction-builder' },
@@ -130,3 +134,5 @@ module.exports = {
     ['@branchup/docusaurus-plugin-simple-analytics', {}],
   ],
 };
+
+export default config;
