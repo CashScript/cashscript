@@ -1,7 +1,6 @@
 import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
 import { DEFAULT_VM_TARGET } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
-import '../src/test/JestExtensions.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
 import {
@@ -579,15 +578,15 @@ describe('Debugging tests', () => {
     });
   });
 
-  describe('JestExtensions', () => {
+  describe('TestExtensions', () => {
     const provider = new MockNetworkProvider();
     const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
     const contractTestRequiresUtxo = randomUtxo();
     provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
 
-    // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use JestExtensions
+    // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use TestExtensions
 
-    it('should fail the JestExtensions test if an incorrect log is expected', async () => {
+    it('should fail the TestExtensions test if an incorrect log is expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -600,7 +599,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: .*This is definitely not the log.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
-    it('should fail the JestExtensions test if a log is logged that is NOT expected', async () => {
+    it('should fail the TestExtensions test if a log is logged that is NOT expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -611,7 +610,7 @@ describe('Debugging tests', () => {
       expect(
         () => expect(transaction).not.toLog('^\\[Input #0] Test.cash:4 Hello World$'),
       ).toThrow(
-        /Expected: not .*\\\\\[Input #0] Test.cash:4 Hello World.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/,
+        /Expected: not .*\[Input #0] Test.cash:4 Hello World.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/,
       );
 
       expect(
@@ -619,7 +618,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: not .*undefined.*\nReceived: (.|\n)*?\[Input #0] Test.cash:4 Hello World/);
     });
 
-    it('should fail the JestExtensions test if a log is expected where no log is logged', async () => {
+    it('should fail the TestExtensions test if a log is expected where no log is logged', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -632,7 +631,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected: .*Hello World.*\nReceived: (.|\n)*?undefined/);
     });
 
-    it('should fail the JestExtensions test if an incorrect require error message is expected', async () => {
+    it('should fail the TestExtensions test if an incorrect require error message is expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -645,7 +644,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Expected pattern: .*1 should equal 3.*\nReceived string: (.|\n)*?1 should equal 2/);
     });
 
-    it('should fail the JestExtensions test if a require error message is expected where no error is thrown', async () => {
+    it('should fail the TestExtensions test if a require error message is expected where no error is thrown', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -658,7 +657,7 @@ describe('Debugging tests', () => {
       ).toThrow(/Contract function did not fail a require statement/);
     });
 
-    it('should fail the JestExtensions test if an error is thrown where it is NOT expected', async () => {
+    it('should fail the TestExtensions test if an error is thrown where it is NOT expected', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(
           contractTestRequiresUtxo,
@@ -714,23 +713,21 @@ describe('Debugging tests', () => {
       VmTarget.BCH_SPEC,
     ] as const;
 
-    for (const vmTarget of vmTargets) {
-      it(`should execute and log correctly with vmTarget ${vmTarget}`, async () => {
-        const provider = new MockNetworkProvider({ vmTarget });
-        const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
-        const contractUtxo = randomUtxo();
-        provider.addUtxo(contractTestLogs.address, contractUtxo);
+    it.each(vmTargets)('should execute and log correctly with vmTarget %s', async (vmTarget) => {
+      const provider = new MockNetworkProvider({ vmTarget });
+      const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
+      const contractUtxo = randomUtxo();
+      provider.addUtxo(contractTestLogs.address, contractUtxo);
 
-        const transaction = new TransactionBuilder({ provider })
-          .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
-          .addOutput({ to: contractTestLogs.address, amount: 10000n });
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-        expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? DEFAULT_VM_TARGET);
+      expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? DEFAULT_VM_TARGET);
 
-        const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
-        expect(transaction).toLog(expectedLog);
-      });
-    }
+      const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
+      expect(transaction).toLog(expectedLog);
+    });
   });
 });
 
@@ -751,8 +748,8 @@ describe('VM Resources', () => {
       .addInput((await provider.getUtxos(aliceAddress))[0], new SignatureTemplate(alicePriv).unlockP2PKH())
       .addOutput({ to: aliceAddress, amount: 1000n });
 
-    console.log = jest.fn();
-    console.table = jest.fn();
+    console.log = vi.fn();
+    console.table = vi.fn();
 
     const vmUsage = tx.getVmResourceUsage();
     expect(console.log).not.toHaveBeenCalled();
@@ -762,7 +759,7 @@ describe('VM Resources', () => {
     expect(console.log).toHaveBeenCalledWith('VM Resource usage by inputs:');
     expect(console.table).toHaveBeenCalled();
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
 
     expect(vmUsage[0]?.hashDigestIterations).toBeGreaterThan(0);
     expect(vmUsage[2]?.hashDigestIterations).toBeGreaterThan(0);

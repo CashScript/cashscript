@@ -1,14 +1,14 @@
 {
   "extends": "../../tsconfig.build.json",
-
   "compilerOptions": {
     "outDir": "./dist",
+    "types": [
+      "vitest/globals"
+    ]
   },
-
   "include": [
     "src/**/*",
   ],
-
   "exclude": [
     "test/fixture"
   ],

@@ -14,7 +14,7 @@ import {
   oracle,
   oraclePub,
 } from '../fixture/vars.js';
-import { gatherUtxos, getTxOutputs, itOrSkip } from '../test-util.js';
+import { gatherUtxos, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
@@ -122,7 +122,7 @@ describe('HodlVault', () => {
       expect(txOutputs).toEqual(expect.arrayContaining([{ to, amount }]));
     });
 
-    itOrSkip(!Boolean(process.env.TESTS_USE_CHIPNET), 'should succeed with precomputed ECDSA signature', async () => {
+    it.skipIf(process.env.TESTS_USE_CHIPNET)('should succeed with precomputed ECDSA signature', async () => {
       // given
       const cleanProvider = new MockNetworkProvider();
       const contract = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider: cleanProvider });

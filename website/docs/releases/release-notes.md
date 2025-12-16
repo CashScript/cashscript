@@ -13,6 +13,11 @@ title: Release Notes
 - :sparkles: Add support for `do {} while ()` loops in debug tooling.
 - :hammer_and_wrench: Update default VM target to `BCH_2026_05`.
 
+## v0.12.1
+
+#### CashScript SDK
+- :sparkles: Add Vitest extensions for automated testing.
+
 ## v0.12.0
 
 #### CashScript SDK
@@ -392,7 +397,7 @@ CashScript used to be very tightly coupled with BITBOX. This proved to be proble
 - :boom: Remove `Sig` alias for `SignatureTemplate` that was deprecated in v0.4.1.
 - :boom: **BREAKING**: Refactor contract instantiation flow
   - A contract is now instantiated by providing a compiled artifact, constructor arguments and an optional network provider.
-  - Anyone can implement the NetworkProvider interface to create a custom provider. The CashScript SDK offers three providers out of the box: one based on electrum-cash (default), one based on FullStack.cash' infrastructure, and one based on BITBOX. See the [NetworkProvider docs](/docs/sdk/instantiation#networkprovider) for details.
+  - Anyone can implement the NetworkProvider interface to create a custom provider. The CashScript SDK offers three providers out of the box: one based on electrum-cash (default), one based on FullStack.cash' infrastructure, and one based on BITBOX. See the [NetworkProvider docs](/docs/sdk/network-provider) for details.
   - See the [migration notes](/docs/releases/migration-notes#v04-to-v05) for details on migrating from the old contract instantiation flow.
 - :boom: **BREAKING**: Remove the artifacts `'networks'` field and `.deployed()` functionality, This proved to be confusing and is better suited to be handled outside of the CashScript SDK.
 - :boom: **BREAKING**: `.send()` now returns a libauth Transaction instead of a BITBOX Transaction object. Alternatively a `raw` flag can be passed into the function to return a raw hex string.

@@ -61,7 +61,7 @@ If DEXes don't cleverly aggregate their prices across blocks, then it can be eco
 Because having a more advantageous (older) price state or ratio might be very profitable, it is worth it for the adversarial actor to pay the high fee "miner bribe" to attempt this double spend transaction.
 
 :::tip
-We list some possible mitigations which smart contract systems can implement in the section on ['Avoiding MEV'](#avoiding-mev)
+We list some possible mitigations which smart contract systems can implement in the section on ['Avoiding MEV'](#mev-avoidance-strategies)
 :::
 
 

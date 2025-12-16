@@ -34,9 +34,11 @@ By default, the `MockNetworkProvider` evaluates transactions locally but does no
 
 ## Automated testing
 
-To make writing automated tests for CashScript contracts easier, we provide a Jest extension that enables easy testing of `console.log` values and `require` error messages. To use the extension, you can import it from `cashscript/jest`.
+To make writing automated tests for CashScript contracts easier, we provide Vitest and Jest extensions that enables easy testing of `console.log` values and `require` error messages. To use the extension, you can import it from `cashscript/vitest` or `cashscript/jest`.
 
 ```ts
+import 'cashscript/vitest';
+// or
 import 'cashscript/jest';
 ```
 
@@ -113,7 +115,7 @@ contract Example() {
 ```ts title="Example test file"
 import artifact from '../artifacts/example.artifact.js';
 import { Contract, MockNetworkProvider, randomUtxo } from 'cashscript';
-import 'cashscript/jest';
+import 'cashscript/vitest';
 
 describe('Example contract', () => {
   const provider = new MockNetworkProvider();

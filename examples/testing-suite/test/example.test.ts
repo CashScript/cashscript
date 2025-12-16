@@ -1,6 +1,6 @@
 import artifact from '../artifacts/example.artifact.js';
 import { Contract, MockNetworkProvider, TransactionBuilder, randomUtxo } from 'cashscript';
-import 'cashscript/jest';
+import 'cashscript/vitest';
 
 describe('test example contract functions', () => {
   it('should check for output logs and error messages', async () => {

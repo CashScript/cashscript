@@ -182,6 +182,16 @@ See the following table for information on which types can be cast to other whic
 | sig     | bytes                  | bytes                              |
 | datasig | bytes                  | bytes                              |
 
+:::caution
+Casting from `int` to `bool` does not currently change the value of the integer. This can have unexpected consequences in boolean comparisons.
+
+```solidity
+if (bool(7)) { ...} // This works as expected
+if (bool(7) == true) { ... } // This does not work as expected
+```
+
+:::
+
 ### Int to Byte Casting
 
 When casting integer types to bytes of a certain size, the integer value is padded with zeros, e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros by passing in a `size` parameter, which indicates the size of the output, e.g. `bytes(0, 4 - 2) == 0x0000`.
