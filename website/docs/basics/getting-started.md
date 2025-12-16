@@ -36,7 +36,7 @@ To write CashScript smart contracts locally you use a code editor. For the best 
 :::
 
 :::tip
-To set up your CashScript developer environment, see the [Syntax Highlighting](/docs/guides/syntax-highlighting) guide.
+To set up your CashScript developer environment, see the [Syntax Highlighting](/docs/language/syntax-highlighting) guide.
 :::
 
 ### Installing the CashScript compiler

@@ -64,7 +64,7 @@ contract.address: string
 A contract's regular address (without token-support) can be retrieved through the `address` member field.
 
 :::note
-Wallets will not allow you to send CashTokens to this address. For that you must use the [tokenAddress](#tokenAddress) below. Wallets which have not upgraded might not recognize this new address type.
+Wallets will not allow you to send CashTokens to this address. For that you must use the [tokenAddress](#tokenaddress) below. Wallets which have not upgraded might not recognize this new address type.
 :::
 
 #### Example

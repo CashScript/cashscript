@@ -325,6 +325,6 @@ With contracts holding minting NFTs, all outputs need to be carefully controlled
 ## Conclusion
 We have discussed the main uses for covenants as they exist on Bitcoin Cash today. We've seen how we can achieve different use cases by combining transaction output restrictions to `P2SH` and `P2PKH` outputs. We also touched on more advanced subjects such as keeping local state in NFTs. Covenants and CashTokens are the **main differentiating factor** for BCH smart contracts when compared to BTC, while keeping the same **efficient, atomic verification**.
 
-Keeping local state in NFTs and issuing NFTs as receipts are two strategies which can be used to create much more sophisticated decentralized applications. You can read more of these advanced CashTokens use cases in our [dedicated guide](/docs/guides/cashtokens#cashtokens-usecases)!
+Keeping local state in NFTs and issuing NFTs as receipts are two strategies which can be used to create much more sophisticated decentralized applications. You can read more of these advanced CashTokens use cases in our [dedicated guide](/docs/guides/cashtokens#cashtokens-use-cases)!
 
 [bitcoin-covenants]: https://fc16.ifca.ai/bitcoin/papers/MES16.pdf
