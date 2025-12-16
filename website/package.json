@@ -9,6 +9,7 @@
     "deploy": "docusaurus deploy"
   },
   "dependencies": {
+    "@babel/helper-get-function-arity": "^7.16.7",
     "@branchup/docusaurus-plugin-simple-analytics": "^1.1.0",
     "@docusaurus/core": "^2.4.1",
     "@docusaurus/plugin-client-redirects": "^2.4.1",
