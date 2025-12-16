@@ -73,3 +73,7 @@ To run specific tests, you can use the `-t` flag to match the name mentioned in 
 # Run all tests in the 'Transaction Builder' describe block (test/e2e/transaction-builder/TransactionBuilder.test.ts)
 yarn test -t 'Transaction Builder'
 ```
+
+## Code Coverage
+
+New contributions have a code coverage target of 90%+. You can run `yarn test --coverage` to see the coverage report before submitting a PR.
