@@ -1,14 +1,15 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  root: './test',
   test: {
     environment: 'node',
-    silent: 'passed-only',
+    include: ['test/**/*.{test,spec}.?(c|m)[jt]s?(x)'],
+    exclude: ['**/types/**'],
     globals: true,
+    silent: 'passed-only',
     coverage: {
       provider: 'v8',
-      reporter: ['json-summary'],
+      include: ['src/**/*.ts'],
     },
   },
 });
