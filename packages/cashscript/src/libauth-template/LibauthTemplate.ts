@@ -28,14 +28,13 @@ import {
   Output,
   StandardUnlockableUtxo,
   Utxo,
-  VmTarget,
 } from '../interfaces.js';
 import SignatureTemplate from '../SignatureTemplate.js';
 import { addressToLockScript, extendedStringify, zip } from '../utils.js';
 import { TransactionBuilder } from '../TransactionBuilder.js';
 import { deflate } from 'pako';
 import MockNetworkProvider from '../network/MockNetworkProvider.js';
-import { addHexPrefixExceptEmpty, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getSignatureAndPubkeyFromP2PKHInput, getUnlockScriptName, lockingBytecodeIsSetToSlot, serialiseTokenDetails } from './utils.js';
+import { addHexPrefixExceptEmpty, DEFAULT_VM_TARGET, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getSignatureAndPubkeyFromP2PKHInput, getUnlockScriptName, lockingBytecodeIsSetToSlot, serialiseTokenDetails } from './utils.js';
 
 // TODO: Add / improve descriptions throughout the template generation
 
@@ -50,7 +49,7 @@ export const getLibauthTemplate = (
 
   const vmTarget = transactionBuilder.provider instanceof MockNetworkProvider
     ? transactionBuilder.provider.vmTarget
-    : VmTarget.BCH_2025_05;
+    : DEFAULT_VM_TARGET;
 
   const template: WalletTemplate = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',

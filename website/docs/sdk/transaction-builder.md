@@ -113,7 +113,7 @@ transactionBuilder.addOutput(output: Output): this
 transactionBuilder.addOutputs(outputs: Output[]): this
 ```
 
-Adds a single output or a list of outputs to the transaction.
+Adds a single output or a list of outputs to the transaction. The `to` field in an output can be a string representing a cash address, or a `Uint8Array` representing a locking bytecode. For `P2PKH`, `P2SH20` and `P2SH32` outputs, it is easiest to use the cash address string. For `P2S` outputs, you need to use the locking bytecode.
 
 ```ts
 interface Output {
