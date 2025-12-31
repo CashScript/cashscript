@@ -44,7 +44,7 @@ function maxOperationCost(unlockingBytecodeLength) {
 
 - Signature operation count (SigChecks): Limits the number of signature verifications (`OP_CHECKSIG`, `OP_CHECKDATASIG`) per transaction to ensure efficient validation.
 - Hashing limit: Limits the number of hashing operations (`OP_SHA256`, `OP_HASH160`) allowed per transaction to prevent excessive resource usage.
-- Stack element byte length: Each stack element has a maximum length of 10,000 bytes, affecting Pay-to-Script-Hash (P2SH) contracts.
+- Stack element byte length: stack elements have a maximum length of 10,000 bytes.
 
 ## General transaction limits
 
