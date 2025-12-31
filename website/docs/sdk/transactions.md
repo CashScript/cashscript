@@ -265,7 +265,7 @@ It is unsafe to debug transactions on mainnet using the BitAuth IDE as private k
 transaction.getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage>
 ```
 
-The `getVmResourceUsage()` function allows you to get the VM resource usage for the transaction. This can be useful for debugging and optimization.
+The `getVmResourceUsage()` function allows you to get the VM resource usage for the transaction. This can be useful for debugging and optimization. The VM resource usage is calculated for each input individually so the result is an array of `VmResourceUsage` results corresponding to each of the transaction inputs.
 
 ```ts
 interface VmResourceUsage {
@@ -281,7 +281,7 @@ interface VmResourceUsage {
 }
 ```
 
-The verbose mode logs the VM resource usage for each input to the console.
+The verbose mode also logs the VM resource usage for each input as a table to the console.
 
 ```
 VM Resource usage by inputs:
