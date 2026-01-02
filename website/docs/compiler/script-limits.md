@@ -17,7 +17,7 @@ The Bitcoin Cash limits contract bytecode for P2SH outputs is **10,000 bytes** b
 
 ### Maximum contract size (P2S)
 
-The Bitcoin Cash limits contract bytecode for P2S outputs is **201 bytes** by the BCH consensus rules. Technically this limit is the 'maximum locking bytecode length' because for P2S outputs the script is provided direclty in the **locking bytecode**.
+The Bitcoin Cash limits contract bytecode for P2S outputs is **201 bytes** by the BCH consensus rules. Technically this limit is the 'maximum locking bytecode length' because for P2S outputs the script is provided directly in the **locking bytecode**.
 
 
 ### NFT commitment length limit
