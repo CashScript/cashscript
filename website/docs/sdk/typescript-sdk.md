@@ -2,13 +2,26 @@
 title: TypeScript SDK
 ---
 
-CashScript offers a TypeScript SDK, which makes it easy to build smart contract transactions, both in browser or on the server. By offering full type-safety, developers can be confident in the quality and reliability of their applications. The SDK can also be used easily in vanilla JavaScript codebases, although the benefits of the type-safety will be lost.
+CashScript offers a TypeScript SDK, which makes it easy to build smart contract transactions, both in browser or on the server.
+The CashScript SDK enables advanced debugging tooling for CashScript contracts, standardized network providers to get BCH blockchain information and a simple API for transaction building when using smart contracts.
+
+The TypeScript SDK has [full TypeScript integration](#full-typescript-integration) with the CashScript smart contract language.
+The full type-safety enables clear APIs which communicates info about the expected argument to each function and method.
+This in turn speeds up development time and allows for higher code quality with better safety guarantees.
 
 :::info
-Because of the separation of the compiler and the SDK, CashScript contracts can be integrated into other programming languages in the future.
+The SDK can also be used easily in vanilla JavaScript codebases, although the benefits of the type-safety will be lost.
 :::
 
-## SDK Classes
+## When to use the SDK
+
+The CashScript TypeScript SDK is designed to make it as easy as possible to create smart contract transactions for contracts written in CashScript (the smart contract language). So we highly recommend using the SDK when using CashScript to write your smart contracts.
+
+If you are not using the CashScript contract language, you can still use the CashScript SDK for transaction building and BCH networking functionality! This can be especially useful if you are familiar with the CashScript classes and want manual control over the input and outputs in a transaction. The SDK makes it easy to spend from P2PKH inputs and send to different types of outputs, including OP_RETURN data outputs.
+
+It's also possible the use the CashScript SDK for hand-optimized contract **not** written with the CashScript contract language, but this is considered [advanced usage](#advanced-non-cashscript-contracts).
+
+## The 4 SDK Classes
 
 The CashScript SDK consists of 4 classes, together they form one cohesive structure to build BCH smart contract applications.
 The documentation also follows the structure of these 4 classes:
@@ -51,31 +64,4 @@ The constructor of the `Contract` class takes in an `Artifact`, this is the outp
 
 You can also use the CashScript SDK without relying on the CashScript contract language and compiler. This way you can still leverage the a lot of the tooling while having full control over the raw BCH script so this can be hand-written or hand-optimized. 
 
-There's two ways to go about this, either you create a custom `Artifact` so you can still use the `Contract` class or you create a custom `Unlocker` to use in the transaction building directly.
-
-### Custom Artifacts
-
-You can create an Artifact for a fully hand-written contract so it becomes possible to use the contract with the nice features of the CashScript SDK! An example of this is [Cauldron_Swap_Test](https://github.com/mr-zwets/Cauldron_Swap_Test) which uses `Artifact bytecode` not produced by `cashc` at all but still uses the CashScript SDK.
-
-### Custom Unlockers
-
-In the [addInput() method](./transaction-builder#addInput()) on the TransactionBuilder you can provide a custom `Unlocker`
-
-```ts
-transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
-```
-
-the `Unlocker` interface is the following:
-
-```ts
-interface Unlocker {
-  generateLockingBytecode: () => Uint8Array;
-  generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
-}
-
-interface GenerateUnlockingBytecodeOptions {
-  transaction: Transaction;
-  sourceOutputs: LibauthOutput[];
-  inputIndex: number;
-}
-```
+There's two ways to go about this, either you create a custom `Artifact` so you can still use the `Contract` class or you create a custom `Unlocker` to use in the transaction building directly. These two methods for using hand optimized contract bytecode are discussed in the [optimization guide](../guides/optimization#hand-optimizing-bytecode).
