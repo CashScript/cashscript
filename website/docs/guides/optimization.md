@@ -153,7 +153,7 @@ It's worth considering whether hand-optimizing the contract is necessary at all.
 
 ### Optimizing with the BitauthIDE
 
-When optimizing the bytecode of your contract to ensure it is the smallest possible bytesize you'll likely want to use the [BitauthIDE](https://ide.bitauth.com) so you can see the stack changes for each executed OpCode. Low-level understanding can also give good intuition about the [optimization tips](#optimization-tips) for the CashScript code.
+When optimizing the bytecode of your contract to ensure it is the smallest possible bytesize you'll likely want to use the [BitauthIDE][BitauthIDE] so you can see the stack changes for each executed OpCode. Low-level understanding can also give good intuition about the [optimization tips](#optimization-tips) for the CashScript code.
 
 ### Method 1) Custom Artifact
 
@@ -176,12 +176,12 @@ If you use hand-optimized `bytecode` in your Contract's artifact, the `debug` in
 :::
 
 :::tip
-You can create an `Artifact` for a fully hand-written contract so it becomes possible to use the contract with the nice features of the CashScript SDK! An example of this is [Cauldron_Swap_Test](https://github.com/mr-zwets/Cauldron_Swap_Test) which uses `Artifact bytecode` not produced by `cashc` at all but still uses the CashScript SDK.
+You can create an `Artifact` for a fully hand-written contract so it becomes possible to use the contract with the nice features of the CashScript SDK! An example of this is [Cauldron_Swap_Test][Cauldron_Swap_Test] which uses `Artifact bytecode` not produced by `cashc` at all but still uses the CashScript SDK.
 :::
 
 ### Method 2) Custom Unlockers
 
-In the [addInput() method](./transaction-builder#addInput()) on the TransactionBuilder you can provide a custom `Unlocker`
+In the [addInput() method][addInput()] on the TransactionBuilder you can provide a custom `Unlocker`
 
 ```ts
 transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
@@ -204,3 +204,5 @@ interface GenerateUnlockingBytecodeOptions {
 
 
 [BitauthIDE]: https://ide.bitauth.com
+[Cauldron_Swap_Test]: https://github.com/mr-zwets/Cauldron_Swap_Test
+[addInput()]: /docs/sdk/transaction-builder#addinput

@@ -64,4 +64,4 @@ The constructor of the `Contract` class takes in an `Artifact`, this is the outp
 
 You can also use the CashScript SDK without relying on the CashScript contract language and compiler. This way you can still leverage the a lot of the tooling while having full control over the raw BCH script so this can be hand-written or hand-optimized. 
 
-There's two ways to go about this, either you create a custom `Artifact` so you can still use the `Contract` class or you create a custom `Unlocker` to use in the transaction building directly. These two methods for using hand optimized contract bytecode are discussed in the [optimization guide](../guides/optimization#hand-optimizing-bytecode).
+There's two ways to go about this, either you create a custom `Artifact` so you can still use the `Contract` class or you create a custom `Unlocker` to use in the transaction building directly. These two methods for using hand optimized contract bytecode are discussed in the [optimization guide](/docs/guides/optimization#advanced-hand-optimizing-bytecode).
