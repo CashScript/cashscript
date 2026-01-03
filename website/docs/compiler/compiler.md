@@ -5,6 +5,10 @@ title: Compiler
 The CashScript compiler is called `cashc` and is used to compile CashScript `.cash` contract files into `.json` (or `.ts`) artifact files.
 These artifact files can be used to instantiate a CashScript contract with the help of the CashScript SDK. For more information on this artifact format refer to [Artifacts](/docs/compiler/artifacts).
 
+:::info
+Because of the separation of the compiler and the SDK, CashScript contracts can be integrated into other programming languages in the future.
+:::
+
 ## Command Line Interface
 
 The `cashc` command line interface is used to compile CashScript `.cash` files into `.json` (or `.ts`) artifact files.

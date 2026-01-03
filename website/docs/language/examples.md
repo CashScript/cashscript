@@ -2,7 +2,7 @@
 title: Examples
 ---
 
-An extensive collection of examples is available in the [GitHub repository](https://github.com/CashScript/cashscript/tree/master/examples). Below we discuss a few of these examples in more details and go through their functionality. This example page focuses on the CashScript syntax, while the [SDK Examples page](/docs/sdk/examples) in the SDK section focuses on use of the SDK to build an application.
+An extensive collection of examples is available in the [GitHub repository][GitHub-CashScript-Examples]. Below we discuss a few of these examples in more details and go through their functionality. This example page focuses on the CashScript syntax, while the [SDK Examples page](/docs/sdk/examples) in the SDK section focuses on use of the SDK to build an application.
 
 ## HodlVault
 For better or worse, HODLing and waiting for price increases is one of the main things people want to do with their cryptocurrency. But it can be difficult to hold on to your cryptocurrency when the price is going down. So to prevent weak hands from getting the best of you, it's better to store your stash in a smart contract that enforces HODLing for you.
@@ -90,7 +90,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
 
 ## AMM DEX
 
-AMM DEX contract based on [the Cauldron DEX contract](https://www.cauldron.quest/_files/ugd/ae85be_b1dc04d2b6b94ab5a200e3d8cd197aa3.pdf), you can read more details about the contract design there.
+AMM DEX contract based on [the Cauldron DEX contract][Cauldron-Whitepaper], you can read more details about the contract design there.
 
 The CashScript contract code has the big advantage of abstracting away any stack management, having variable names, explicit types and a logical order of operations (compared to the 'reverse Polish notation' of raw script).
 
@@ -135,6 +135,9 @@ contract DexContract(bytes20 poolOwnerPkh) {
 }
 ```
 
-Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes). Furthermore, even contracts with hand-optimized bytecode can still be used with the CashScript SDK, [find out more in the optimization guide](/docs/guides/optimization#hand-optimizing-bytecode).
+Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes). Furthermore, even contracts with hand-optimized bytecode can still be used with the CashScript SDK, [find out more in the optimization guide](/docs/guides/optimization#advanced-hand-optimizing-bytecode).
 
 More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/guides/covenants).
+
+[GitHub-CashScript-Examples]: https://github.com/CashScript/cashscript/tree/master/examples
+[Cauldron-Whitepaper]: https://www.cauldron.quest/_files/ugd/ae85be_b1dc04d2b6b94ab5a200e3d8cd197aa3.pdf

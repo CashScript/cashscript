@@ -8,14 +8,14 @@ Bitcoin Cash (ticker BCH) is one of the biggest cryptocurrencies. Bitcoin Cash i
 Bitcoin Cash shares many of the same fundamentals as Bitcoin (BTC) like the *Proof-of-Work* consensus algorithm and the *UTXO data-model*. However regarding smart contract programmability, Bitcoin Cash has significantly diverged from Bitcoin (BTC). We will go over the main differences between BCH and BTC, and then delve into the smart contract capabilities of Bitcoin Cash!
 
 :::info
-To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'](https://github.com/bitcoinbook/bitcoinbook). The core of Bitcoin's design is still very much the same in Bitcoin Cash. To learn more about BCH's transaction lifecycle, see the dedicated guide ['Transaction Lifecycle'](/docs/guides/lifecycle).
+To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'][Mastering Bitcoin]. The core of Bitcoin's design is still very much the same in Bitcoin Cash. To learn more about BCH's transaction lifecycle, see the dedicated guide ['Transaction Lifecycle'](/docs/guides/lifecycle).
 :::
 
 ## How BCH differs from BTC
 
 Although BCH and BTC share the same Bitcoin fundamentals, both projects have significantly diverged in some areas since 2017. For example, Bitcoin Cash does not have Segwit or Taproot, instead Bitcoin Cash has had multiple upgrades specifically focused on improving the smart contract capabilities. Bitcoin Cash has re-enabled many useful opcodes, has introduce native introspection, has added CashTokens, has reworked the script limits and introduced BigInts.
 
-So part that **has** significantly diverged between BTC and BCH is the *virtual machine* (VM), the environment in which smart contracts are evaluated. So the greatly improved VM specifically is what makes it possible to write powerful smart contracts on BCH in the first place!
+So part that **has** significantly diverged between BTC and BCH is the *virtual machine* (VM), the environment in which smart contracts are evaluated. The Bitcoin Cash VM is also referred to as the **CashVM**. The greatly improved VM specifically is what makes it possible to write powerful smart contracts on BCH in the first place! On the overview of [all the BCH network upgrades][BCH upgrades], you'll notice the recent years have been fully focused on VM improvements.
 
 ## UTXO model
 Bitcoin Cash transactions work with in- and outputs. All current balances are so called *Unspent Transaction Outputs (UTXOs)*, which simply means they can be used as inputs for future spending transactions.
@@ -39,7 +39,7 @@ Bitcoin Cash has had many script upgrades, including transaction introspection a
 Smart contracts on Bitcoin Cash only have access to the current transaction context, which enables 'local state'. This model allows transactions to be verified independently and efficiently. Because there is no global state that can impact the execution of these smart contracts, the results are deterministic and predictable.
 
 :::tip
-The UTXO model where transactions only have access to the local transaction context enables parallel transaction validation and is the reason why Bitcoin Cash is hugely scalable!
+The UTXO model where transactions only have access to the local transaction context enables parallel transaction validation and is the reason why Bitcoin Cash is hugely scalable with low fees!
 :::
 
 ### Bitcoin Cash Script
@@ -48,10 +48,13 @@ The locking and unlocking scripts of regular transactions and smart contracts on
 
 ### CashScript
 
-CashScript is a high-level programming language for smart contracts on Bitcoin Cash that offers a strong abstraction for a smoother development experience. CashScript fully abstracts the management of items on the 'stack' from developers, allowing them to focus on their application logic instead of low-level details.
+CashScript is a high-level programming language for smart contracts on Bitcoin Cash that offers a strong abstraction for a smoother development experience. CashScript fully abstracts the management of items on the 'stack' from contract developers, allowing them to focus on their application logic instead of low-level details.
 
 The CashScript syntax is based on Ethereum's smart contract language Solidity, but its functionality is very different since smart contracts on Bitcoin Cash differ greatly from smart contracts on Ethereum.
 
 :::info
-Bitcoin's "Local State" versus Ethereum's "Global State" requires a very different mental model and way to structure smart contract applications!
+Bitcoin Cash's "Local State" versus Ethereum's "Global State" requires a very different mental model and way to structure smart contract applications!
 :::
+
+[Mastering Bitcoin]: https://github.com/bitcoinbook/bitcoinbook
+[BCH upgrades]: https://upgradespecs.bitcoincashnode.org/

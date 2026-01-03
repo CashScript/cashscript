@@ -4,11 +4,6 @@ title: Contract Instantiation
 
 Before interacting with a smart contract on the BCH network, the CashScript SDK needs to instantiate a `Contract` object. This is done by providing the contract's information and constructor arguments. After this instantiation, the CashScript SDK can interact with the BCH contract.
 
-:::info
-CashScript offers a TypeScript SDK, which can also be used easily in vanilla JavaScript codebases.
-Because of the separation of the compiler and the SDK, CashScript contracts can be integrated into other languages in the future.
-:::
-
 ## Creating a Contract
 The `Contract` class is used to represent a CashScript contract in a JavaScript object. These objects can be used to retrieve information such as the contract's address and balance. Contract objects can be used to interact with the contract by generating an `Unlocker` by calling the contract's unlocker functions.
 
@@ -17,16 +12,20 @@ The `Contract` class is used to represent a CashScript contract in a JavaScript 
 new Contract(
   artifact: Artifact,
   constructorArgs: ConstructorArgument[],
-  options? : {
+  options : {
     provider: NetworkProvider,
-    addressType: 'p2sh20' | 'p2sh32',
+    addressType?: 'p2sh20' | 'p2sh32',
   }
 )
 ```
 
 A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `addressType`.
 
-An `Artifact` object is the result of compiling a CashScript contract. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)). If compilation is done using the `cashc` CLI with the <span style={{ display: 'inline-block' }}>`--format ts`</span> option, you will get explicit types and type checking for the constructor arguments and function arguments.
+An `Artifact` object is the result of compiling a CashScript contract. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)). 
+
+:::tip
+If compilation is done using the `cashc` CLI with the <span style={{ display: 'inline-block' }}>`--format ts`</span> option to output TypeScript Artifacts, you will get explicit types and type checking for the constructor arguments and function arguments of the `Contract` class.
+:::
 
 The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but the network providers can be configured. See the docs on [NetworkProvider](/docs/sdk/network-provider).
 
@@ -170,6 +169,10 @@ contract.unlock.<functionName>(...args: FunctionArgument[]): Unlocker
 Once a smart contract has been instantiated, you can invoke a contract function on a smart contract UTXO to use the '[Transaction Builder](/docs/sdk/transaction-builder)' by calling the function name under the `unlock` member field of a contract object.
 To call these functions successfully, the provided parameters must match the function signature defined in the CashScript code.
 
+:::tip
+When using a TypeScript contract Artifact, you will get explicit types and type checking for the function name and arguments.
+:::
+
 These contract functions return an incomplete `transactionBuilder` object, which needs to be completed by providing outputs of the transaction. For more information see the [transaction-builder](/docs/sdk/transaction-builder) page.
 
 ```ts
@@ -180,6 +183,3 @@ const contractUtxos = await contract.getUtxos();
 transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
 ```
 
-:::tip
-If the contract artifact is generated using the `cashc` CLI with the `--format ts` option, you will get explicit types and type checking for the function name and arguments.
-:::

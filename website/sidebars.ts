@@ -37,6 +37,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'TypeScript SDK',
       items: [
+        'sdk/typescript-sdk',
         'sdk/instantiation',
         'sdk/transaction-builder',
         {
