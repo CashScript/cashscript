@@ -15,7 +15,7 @@ To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'][M
 
 Although BCH and BTC share the same Bitcoin fundamentals, both projects have significantly diverged in some areas since 2017. For example, Bitcoin Cash does not have Segwit or Taproot, instead Bitcoin Cash has had multiple upgrades specifically focused on improving the smart contract capabilities. Bitcoin Cash has re-enabled many useful opcodes, has introduce native introspection, has added CashTokens, has reworked the script limits and introduced BigInts.
 
-So part that **has** significantly diverged between BTC and BCH is the *virtual machine* (VM), the environment in which smart contracts are evaluated. The Bitcoin Cash VM is also refered to as the **CashVM**. The greatly improved VM specifically is what makes it possible to write powerful smart contracts on BCH in the first place!
+So part that **has** significantly diverged between BTC and BCH is the *virtual machine* (VM), the environment in which smart contracts are evaluated. The Bitcoin Cash VM is also referred to as the **CashVM**. The greatly improved VM specifically is what makes it possible to write powerful smart contracts on BCH in the first place! On the overview of [all the BCH network upgrades][BCH upgrades], you'll notice the recent years have been fully focused on VM improvements.
 
 ## UTXO model
 Bitcoin Cash transactions work with in- and outputs. All current balances are so called *Unspent Transaction Outputs (UTXOs)*, which simply means they can be used as inputs for future spending transactions.
@@ -57,3 +57,4 @@ Bitcoin Cash's "Local State" versus Ethereum's "Global State" requires a very di
 :::
 
 [Mastering Bitcoin]: https://github.com/bitcoinbook/bitcoinbook
+[BCH upgrades]: https://upgradespecs.bitcoincashnode.org/
