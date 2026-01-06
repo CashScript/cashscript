@@ -11,23 +11,20 @@ Some of the limits below are hard BCH consensus rules, others are standardness r
 
 ## Contract-related limits
 
-### Maximum contract size
+### Maximum contract size (P2SH)
 
-The Bitcoin Cash limits contract bytecode to **1,650 bytes** in the standardness rules. Transactions with contract bytecode won't be relayed by most nodes.
+The Bitcoin Cash limits contract bytecode for P2SH outputs is **10,000 bytes** by the BCH consensus rules. Technically this limit is the 'maximum unlocking bytecode length' because for P2SH outputs the full script is provided in the **unlocking bytecode**.
 
-While typical contracts stay well below this, complex contracts with extensive logic might need adjustments to fit within this constraint.
+### Maximum contract size (P2S)
 
-#### Modular contract design
+The Bitcoin Cash limits contract bytecode for P2S outputs is **201 bytes** by the BCH consensus rules. Technically this limit is the 'maximum locking bytecode length' because for P2S outputs the script is provided directly in the **locking bytecode**.
 
-To keep contracts within size limits, consider modular design. Splitting contract logic into smaller, independent components allows each function to be deployed separately, reducing transaction size. See [Contract Optimization](/docs/guides/optimization) for more details.
 
 ### NFT commitment length limit
 
-NFT commitments can store up to 40 bytes of data as local state. If more data is needed, you can hash the full state and store only the hash in the commitment data. Later, when required, the full state must be provided and validated against the stored hash.
+NFT commitments can store up to 128 bytes of data as local state. This 128-bytes limit on commitment length is of practical importance for contract authors, as workarounds are needed to keep more data in local state.
 
-:::caution
-The 40-bytes limit on commitment length is of great practical importance for contract authors. Workarounds are needed to keep more bytes of local state in smart contracts.
-:::
+If your local state grows larger than the allowed maximum, one option is to hash the full state and store only the hash in the commitment data. Later, when using the local state, the full state must be provided and validated against the stored state hash.
 
 ### Operation cost limit
 
@@ -47,7 +44,7 @@ function maxOperationCost(unlockingBytecodeLength) {
 
 - Signature operation count (SigChecks): Limits the number of signature verifications (`OP_CHECKSIG`, `OP_CHECKDATASIG`) per transaction to ensure efficient validation.
 - Hashing limit: Limits the number of hashing operations (`OP_SHA256`, `OP_HASH160`) allowed per transaction to prevent excessive resource usage.
-- Stack element byte length: Each stack element has a maximum length of 10,000 bytes, affecting Pay-to-Script-Hash (P2SH) contracts.
+- Stack element byte length: stack elements have a maximum length of 10,000 bytes.
 
 ## General transaction limits
 
