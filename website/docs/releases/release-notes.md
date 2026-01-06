@@ -24,6 +24,10 @@ title: Release Notes
 - :hammer_and_wrench: Improve libauth template generation.
 - :bug: Fix bug where `SignatureTemplate` would not accept private key hex strings as a signer.
 
+---
+
+https://x.com/CashScriptBCH/status/1973692336782876974
+
 ## v0.11.5
 
 #### CashScript SDK

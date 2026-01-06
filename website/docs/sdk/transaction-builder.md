@@ -20,6 +20,7 @@ interface TransactionBuilderOptions {
   provider: NetworkProvider;
   maximumFeeSatoshis?: bigint;
   maximumFeeSatsPerByte?: number;
+  allowImplicitFungibleTokenBurn?: boolean;
 }
 ```
 

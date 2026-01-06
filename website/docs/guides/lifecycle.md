@@ -37,7 +37,7 @@ The "first-seen rule" is a default mempool inclusion and relay rule for full nod
 On BTC the mempool node default policy got changed to replace-by-fee, and tooling to submit your non-standard transaction directly to mining pools has become commonplace with ordinals.
 :::
 
-The first-seen rule is subjective based on time, because of this different parts of the network might enforce this rule for conflicting transactions in case of a race condition. For P2PKH transactions a trustless notification system was developed called [double-spend-proofs](https://docs.bitcoincashnode.org/doc/dsproof-implementation-notes/) (DSPs). However DSPs unfortunately do not work for smart contract transactions.
+The first-seen rule is subjective based on time, because of this different parts of the network might enforce this rule for conflicting transactions in case of a race condition. For P2PKH transactions a trustless notification system was developed called [double-spend-proofs][double-spend-proofs] (DSPs). However DSPs unfortunately do not work for smart contract transactions.
 
 ## Unconfirmed Transaction Chains
 
@@ -81,7 +81,7 @@ A "Chain Reorganization" or reorg for short is when the full nodes discard the c
 
 
 :::tip
-A great resource to learn more details about reorgs is the ['Chain Reorganization'](https://learnmeabitcoin.com/technical/blockchain/chain-reorganization/) page on the info website learn-me-a-bitcoin.
+A great resource to learn more details about reorgs is the ['Chain Reorganization'][chain-reorganization] page on the info website learn-me-a-bitcoin.
 :::
 
 :::note
@@ -90,3 +90,6 @@ Many exchanges however use a 6-block confirmation policy for Bitcoin Cash deposi
 :::
 
 Chain reorgs don't always include all the same transactions, so some transactions can get un-included from the blockchain with a reorg. In this scenario, if no competing transaction was mined then the un-included transaction will just return to the mempool waiting for inclusion in a next block.
+
+[double-spend-proofs]: https://docs.bitcoincashnode.org/doc/dsproof-implementation-notes/
+[chain-reorganization]: https://learnmeabitcoin.com/technical/blockchain/chain-reorganization/

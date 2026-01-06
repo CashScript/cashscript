@@ -147,7 +147,7 @@ Covenants can also use 'simulated state', where state is kept in the contract sc
 
 To demonstrate the concept of 'local state' we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `this.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
 
-Besides these wasted days it can also be inconvenient to claim at set intervals, rather than the "streaming" model that the Ethereum project [Sablier](https://www.sablier.finance/) employs. Instead of set intervals, you should be able to claim funds at any time during the "money stream". Using local state, we can approach a similar system with BCH.
+Besides these wasted days it can also be inconvenient to claim at set intervals, rather than the "streaming" model that the Ethereum project [Sablier][Sablier] employs. Instead of set intervals, you should be able to claim funds at any time during the "money stream". Using local state, we can approach a similar system with BCH.
 
 ```solidity
 // Mutable NFT Commitment contract state
@@ -328,3 +328,4 @@ We have discussed the main uses for covenants as they exist on Bitcoin Cash toda
 Keeping local state in NFTs and issuing NFTs as receipts are two strategies which can be used to create much more sophisticated decentralized applications. You can read more of these advanced CashTokens use cases in our [dedicated guide](/docs/guides/cashtokens#cashtokens-use-cases)!
 
 [bitcoin-covenants]: https://fc16.ifca.ai/bitcoin/papers/MES16.pdf
+[Sablier]: https://www.sablier.finance/
