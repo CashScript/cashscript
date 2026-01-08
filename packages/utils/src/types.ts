@@ -155,10 +155,9 @@ export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   return actual === expected;
 }
 
-export function resultingType(
-  left?: Type,
-  right?: Type,
-): Type | undefined {
+function resultingTypeForArrayElements(left: Type | undefined, right: Type | undefined): Type | undefined {
+  if (!left || !right) return undefined;
+
   if (implicitlyCastable(left, right)) return right;
   if (implicitlyCastable(right, left)) return left;
   if (left instanceof BytesType && right instanceof BytesType) {
@@ -171,7 +170,7 @@ export function arrayType(types: Type[]): Type | undefined {
   if (types.length === 0) return undefined;
   let resType: Type | undefined = types[0];
   types.forEach((t) => {
-    resType = resultingType(resType, t) as Type;
+    resType = resultingTypeForArrayElements(resType, t) as Type;
   });
   return resType;
 }

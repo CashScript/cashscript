@@ -1,0 +1,7 @@
+contract Test() {
+    function spend() {
+        string x = "Hello World";
+        string y = x << 4;
+        require(y == 0x0000000055667788);
+    }
+}

@@ -26,8 +26,9 @@ Operators:
 
 - Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (all evaluate to `bool`)
 - Arithmetic operators: `+`, `-`, unary `-`, `*`, `/`, `%` (modulo).
+- Arithmetic shift operators: `<<`, `>>` (left and right shift)
 
-Note the lack of the `**` (exponentiation) operator as well as any shifting operators.
+Note the lack of the `**` (exponentiation).
 
 #### Number Formatting
 
@@ -83,8 +84,9 @@ Operators:
 - `&` (bitwise AND)
 - `|` (bitwise OR)
 - `^` (bitwise XOR)
-
-Note the lack of the bitshift operators (`<<` and `>>`) as well as bitwise INVERT (`~`).
+- `<<` (bitwise left shift)
+- `>>` (bitwise right shift)
+- `~` (bitwise inversion)
 
 Members:
 
@@ -239,14 +241,16 @@ An overview of all supported operators and their precedence is included below. N
 | 6          | Member access                       | `<object>.<member>`      |
 | 7          | Unary minus                         | `-`                      |
 | 7          | Logical NOT                         | `!`                      |
+| 7          | Bitwise inversion                   | `~`                      |
 | 8          | Multiplication, division and modulo | `*`, `/`, `%`            |
 | 9          | Addition and subtraction            | `+`, `-`                 |
 | 9          | String / bytes concatenation        | `+`                      |
-| 10         | Numeric comparison                  | `<`, `>`, `<=`, `>=`     |
-| 11         | Equality and inequality             | `==`, `!=`               |
-| 12         | Bitwise AND                         | `&`                      |
-| 13         | Bitwise XOR                         | `^`                      |
-| 14         | Bitwise OR                          | \|                       |
-| 15         | Logical AND                         | `&&`                     |
-| 16         | Logical OR                          | \|\|                     |
-| 17         | Assignment                          | `=`                      |
+| 10         | Bitwise / Arithmetic shift          | `<<`, `>>`               |
+| 11         | Numeric comparison                  | `<`, `>`, `<=`, `>=`     |
+| 12         | Equality and inequality             | `==`, `!=`               |
+| 13         | Bitwise AND                         | `&`                      |
+| 14         | Bitwise XOR                         | `^`                      |
+| 15         | Bitwise OR                          | `\|`                     |
+| 16         | Logical AND                         | `&&`                     |
+| 17         | Logical OR                          | `\|\|`                   |
+| 18         | Assignment                          | `=`                      |

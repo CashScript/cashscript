@@ -273,6 +273,15 @@ export class IndexOutOfBoundsError extends CashScriptError {
   }
 }
 
+export class BitshiftBitcountNegativeError extends CashScriptError {
+  constructor(
+    node: BinaryOpNode,
+    bitcount: number,
+  ) {
+    super(node, `Bitshift bitcount cannot be negative: ${bitcount}`);
+  }
+}
+
 export class VersionError extends Error {
   constructor(
     actual: string,
