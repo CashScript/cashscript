@@ -33,7 +33,7 @@ import {
 import SignatureTemplate from '../SignatureTemplate.js';
 import { addressToLockScript, extendedStringify, zip } from '../utils.js';
 import { TransactionBuilder } from '../TransactionBuilder.js';
-import { deflate } from 'pako';
+import { zlibSync } from 'fflate';
 import MockNetworkProvider from '../network/MockNetworkProvider.js';
 import { addHexPrefixExceptEmpty, DEFAULT_VM_TARGET, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getSignatureAndPubkeyFromP2PKHInput, getUnlockScriptName, serialiseTokenDetails } from './utils.js';
 
@@ -77,7 +77,7 @@ export const debugLibauthTemplate = (template: WalletTemplate, transaction: Tran
 
 export const getBitauthUri = (template: WalletTemplate): string => {
   const base64toBase64Url = (base64: string): string => base64.replace(/\+/g, '-').replace(/\//g, '_');
-  const payload = base64toBase64Url(binToBase64(deflate(utf8ToBin(extendedStringify(template)))));
+  const payload = base64toBase64Url(binToBase64(zlibSync(utf8ToBin(extendedStringify(template)))));
   return `https://ide.bitauth.com/import-template/${payload}`;
 };
 
