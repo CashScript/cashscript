@@ -3,7 +3,6 @@ import {
   explicitlyCastable,
   implicitlyCastable,
   implicitlyCastableSignature,
-  resultingType,
   arrayType,
   ArrayType,
   TupleType,
@@ -43,9 +42,11 @@ import {
   IndexOutOfBoundsError,
   CastSizeError,
   TupleAssignmentError,
+  BitshiftBitcountNegativeError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
+import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
@@ -138,7 +139,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // already checked in symbol table
 
-    const parameterTypes = node.parameters.map((p) => p.type as Type);
+    const parameterTypes = node.parameters.map((p) => p.type!);
     expectParameters(node, parameterTypes, definition.parameters);
 
     // Additional array length check for checkMultiSig
@@ -161,7 +162,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // already checked in symbol table
 
-    const parameterTypes = node.parameters.map((p) => p.type as Type);
+    const parameterTypes = node.parameters.map((p) => p.type!);
     expectParameters(node, parameterTypes, definition.parameters);
 
     node.type = type;
@@ -198,8 +199,8 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
 
-    const resType = resultingType(node.left.type, node.right.type);
-    if (!resType && !node.operator.startsWith('.')) {
+    const resType = resultingTypeForBinaryOp(node.operator, node.left.type!, node.right.type!);
+    if (!resType) {
       throw new UnequalTypeError(node);
     }
 
@@ -243,6 +244,15 @@ export default class TypeCheckTraversal extends AstTraversal {
         expectSameSizeBytes(node, node.left.type, node.right.type);
         node.type = node.left.type;
         return node;
+      case BinaryOperator.SHIFT_LEFT:
+      case BinaryOperator.SHIFT_RIGHT:
+        expectAnyOfTypes(node, node.left.type, [new BytesType(), PrimitiveType.INT]);
+        expectInt(node, node.right.type);
+        if (node.right instanceof IntLiteralNode && Number(node.right.value) < 0) {
+          throw new BitshiftBitcountNegativeError(node, Number(node.right.value));
+        }
+        node.type = node.left.type;
+        return node;
       case BinaryOperator.SPLIT:
         expectAnyOfTypes(node, node.left.type, [new BytesType(), PrimitiveType.STRING]);
         expectInt(node, node.right.type);
@@ -264,6 +274,10 @@ export default class TypeCheckTraversal extends AstTraversal {
       case UnaryOperator.NEGATE:
         expectInt(node, node.expression.type);
         node.type = PrimitiveType.INT;
+        return node;
+      case UnaryOperator.INVERT:
+        expectBytes(node, node.expression.type);
+        node.type = node.expression.type;
         return node;
       case UnaryOperator.SIZE:
         expectAnyOfTypes(node, node.expression.type, [new BytesType(), PrimitiveType.STRING]);
@@ -358,6 +372,10 @@ function expectBool(node: ExpectedNode, actual?: Type): void {
 
 function expectInt(node: ExpectedNode, actual?: Type): void {
   expectAnyOfTypes(node, actual, [PrimitiveType.INT]);
+}
+
+function expectBytes(node: ExpectedNode, actual?: Type): void {
+  expectAnyOfTypes(node, actual, [new BytesType()]);
 }
 
 function expectSameSizeBytes(node: BinaryOpNode, left?: Type, right?: Type): void {

@@ -956,4 +956,28 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'bitshift.cash',
+    artifact: {
+      contractName: 'Bitshift',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: '1122334455667788 OP_4 OP_LSHIFTBIN OP_4 OP_RSHIFTBIN 0000000055667788 OP_EQUALVERIFY OP_8 OP_2 OP_RSHIFTNUM OP_1 OP_LSHIFTNUM OP_16 OP_NUMEQUAL',
+      debug: {
+        bytecode: '081122334455667788549854990800000000556677888858528e518d609c',
+        sourceMap: '3:19:3:37;4:24:4:25;:19:::1;:29::30:0;:19:::1;6:21:6:39:0;:8::41:1;8:16:8:17:0;9:21:9:22;:16:::1;:26::27:0;:16:::1;11:22:11:24:0;:8::26:1',
+        logs: [],
+        requires: [
+          { ip: 6, line: 6 },
+          { ip: 14, line: 11 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/bitshift.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];

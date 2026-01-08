@@ -78,23 +78,25 @@ export default class CashScriptParser extends Parser {
 	public static readonly T__57 = 58;
 	public static readonly T__58 = 59;
 	public static readonly T__59 = 60;
-	public static readonly VersionLiteral = 61;
-	public static readonly BooleanLiteral = 62;
-	public static readonly NumberUnit = 63;
-	public static readonly NumberLiteral = 64;
-	public static readonly NumberPart = 65;
-	public static readonly ExponentPart = 66;
-	public static readonly Bytes = 67;
-	public static readonly Bound = 68;
-	public static readonly StringLiteral = 69;
-	public static readonly DateLiteral = 70;
-	public static readonly HexLiteral = 71;
-	public static readonly TxVar = 72;
-	public static readonly NullaryOp = 73;
-	public static readonly Identifier = 74;
-	public static readonly WHITESPACE = 75;
-	public static readonly COMMENT = 76;
-	public static readonly LINE_COMMENT = 77;
+	public static readonly T__60 = 61;
+	public static readonly T__61 = 62;
+	public static readonly VersionLiteral = 63;
+	public static readonly BooleanLiteral = 64;
+	public static readonly NumberUnit = 65;
+	public static readonly NumberLiteral = 66;
+	public static readonly NumberPart = 67;
+	public static readonly ExponentPart = 68;
+	public static readonly Bytes = 69;
+	public static readonly Bound = 70;
+	public static readonly StringLiteral = 71;
+	public static readonly DateLiteral = 72;
+	public static readonly HexLiteral = 73;
+	public static readonly TxVar = 74;
+	public static readonly NullaryOp = 75;
+	public static readonly Identifier = 76;
+	public static readonly WHITESPACE = 77;
+	public static readonly COMMENT = 78;
+	public static readonly LINE_COMMENT = 79;
 	public static readonly EOF = Token.EOF;
 	public static readonly RULE_sourceFile = 0;
 	public static readonly RULE_pragmaDirective = 1;
@@ -159,6 +161,7 @@ export default class CashScriptParser extends Parser {
                                                             "'!'", "'-'", 
                                                             "'*'", "'/'", 
                                                             "'%'", "'+'", 
+                                                            "'>>'", "'<<'", 
                                                             "'=='", "'!='", 
                                                             "'&'", "'|'", 
                                                             "'&&'", "'||'", 
@@ -168,6 +171,7 @@ export default class CashScriptParser extends Parser {
                                                             "'pubkey'", 
                                                             "'sig'", "'datasig'" ];
 	public static readonly symbolicNames: (string | null)[] = [ null, null, 
+                                                             null, null, 
                                                              null, null, 
                                                              null, null, 
                                                              null, null, 
@@ -347,7 +351,7 @@ export default class CashScriptParser extends Parser {
 			this.state = 80;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & 2032) !== 0) || _la===61) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & 2032) !== 0) || _la===63) {
 				{
 				this.state = 79;
 				this.versionConstraint();
@@ -506,7 +510,7 @@ export default class CashScriptParser extends Parser {
 			this.state = 108;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 11272192) !== 0) || ((((_la - 55)) & ~0x1F) === 0 && ((1 << (_la - 55)) & 528447) !== 0)) {
+			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 11272192) !== 0) || ((((_la - 57)) & ~0x1F) === 0 && ((1 << (_la - 57)) & 528447) !== 0)) {
 				{
 				{
 				this.state = 105;
@@ -549,7 +553,7 @@ export default class CashScriptParser extends Parser {
 			this.state = 125;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 55)) & ~0x1F) === 0 && ((1 << (_la - 55)) & 4159) !== 0)) {
+			if (((((_la - 57)) & ~0x1F) === 0 && ((1 << (_la - 57)) & 4159) !== 0)) {
 				{
 				this.state = 114;
 				this.parameter();
@@ -646,7 +650,7 @@ export default class CashScriptParser extends Parser {
 				this.state = 136;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 11272192) !== 0) || ((((_la - 55)) & ~0x1F) === 0 && ((1 << (_la - 55)) & 528447) !== 0)) {
+				while ((((_la) & ~0x1F) === 0 && ((1 << _la) & 11272192) !== 0) || ((((_la - 57)) & ~0x1F) === 0 && ((1 << (_la - 57)) & 528447) !== 0)) {
 					{
 					{
 					this.state = 133;
@@ -665,14 +669,14 @@ export default class CashScriptParser extends Parser {
 			case 19:
 			case 21:
 			case 23:
-			case 55:
-			case 56:
 			case 57:
 			case 58:
 			case 59:
 			case 60:
-			case 67:
-			case 74:
+			case 61:
+			case 62:
+			case 69:
+			case 76:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 140;
@@ -790,7 +794,7 @@ export default class CashScriptParser extends Parser {
 			this.state = 157;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			while (_la===54) {
+			while (_la===56) {
 				{
 				{
 				this.state = 154;
@@ -1160,18 +1164,18 @@ export default class CashScriptParser extends Parser {
 			this.state = 228;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 74:
+			case 76:
 				this.enterOuterAlt(localctx, 1);
 				{
 				this.state = 226;
 				this.match(CashScriptParser.Identifier);
 				}
 				break;
-			case 62:
 			case 64:
-			case 69:
-			case 70:
+			case 66:
 			case 71:
+			case 72:
+			case 73:
 				this.enterOuterAlt(localctx, 2);
 				{
 				this.state = 227;
@@ -1210,7 +1214,7 @@ export default class CashScriptParser extends Parser {
 			this.state = 242;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 62)) & ~0x1F) === 0 && ((1 << (_la - 62)) & 4997) !== 0)) {
+			if (((((_la - 64)) & ~0x1F) === 0 && ((1 << (_la - 64)) & 4997) !== 0)) {
 				{
 				this.state = 231;
 				this.consoleParameter();
@@ -1304,7 +1308,7 @@ export default class CashScriptParser extends Parser {
 			this.state = 261;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
-			if (((((_la - 15)) & ~0x1F) === 0 && ((1 << (_la - 15)) & 402920961) !== 0) || ((((_la - 55)) & ~0x1F) === 0 && ((1 << (_la - 55)) & 905919) !== 0)) {
+			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & 184582176) !== 0) || ((((_la - 33)) & ~0x1F) === 0 && ((1 << (_la - 33)) & 3204449793) !== 0) || ((((_la - 66)) & ~0x1F) === 0 && ((1 << (_la - 66)) & 1769) !== 0)) {
 				{
 				this.state = 250;
 				this.expression(0);
@@ -1511,7 +1515,7 @@ export default class CashScriptParser extends Parser {
 				this.state = 298;
 				(localctx as UnaryOpContext)._op = this._input.LT(1);
 				_la = this._input.LA(1);
-				if(!(_la===42 || _la===43)) {
+				if(!(_la===5 || _la===42 || _la===43)) {
 				    (localctx as UnaryOpContext)._op = this._errHandler.recoverInline(this);
 				}
 				else {
@@ -1519,7 +1523,7 @@ export default class CashScriptParser extends Parser {
 				    this.consume();
 				}
 				this.state = 299;
-				this.expression(14);
+				this.expression(15);
 				}
 				break;
 			case 8:
@@ -1532,7 +1536,7 @@ export default class CashScriptParser extends Parser {
 				this.state = 312;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				if (((((_la - 15)) & ~0x1F) === 0 && ((1 << (_la - 15)) & 402920961) !== 0) || ((((_la - 55)) & ~0x1F) === 0 && ((1 << (_la - 55)) & 905919) !== 0)) {
+				if ((((_la) & ~0x1F) === 0 && ((1 << _la) & 184582176) !== 0) || ((((_la - 33)) & ~0x1F) === 0 && ((1 << (_la - 33)) & 3204449793) !== 0) || ((((_la - 66)) & ~0x1F) === 0 && ((1 << (_la - 66)) & 1769) !== 0)) {
 					{
 					this.state = 301;
 					this.expression(0);
@@ -1600,7 +1604,7 @@ export default class CashScriptParser extends Parser {
 				break;
 			}
 			this._ctx.stop = this._input.LT(-1);
-			this.state = 369;
+			this.state = 372;
 			this._errHandler.sync(this);
 			_alt = this._interp.adaptivePredict(this._input, 29, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
@@ -1610,7 +1614,7 @@ export default class CashScriptParser extends Parser {
 					}
 					_prevctx = localctx;
 					{
-					this.state = 367;
+					this.state = 370;
 					this._errHandler.sync(this);
 					switch ( this._interp.adaptivePredict(this._input, 28, this._ctx) ) {
 					case 1:
@@ -1619,8 +1623,8 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 320;
-						if (!(this.precpred(this._ctx, 13))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 13)");
+						if (!(this.precpred(this._ctx, 14))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 14)");
 						}
 						this.state = 321;
 						(localctx as BinaryOpContext)._op = this._input.LT(1);
@@ -1633,7 +1637,7 @@ export default class CashScriptParser extends Parser {
 						    this.consume();
 						}
 						this.state = 322;
-						(localctx as BinaryOpContext)._right = this.expression(14);
+						(localctx as BinaryOpContext)._right = this.expression(15);
 						}
 						break;
 					case 2:
@@ -1642,8 +1646,8 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 323;
-						if (!(this.precpred(this._ctx, 12))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 12)");
+						if (!(this.precpred(this._ctx, 13))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 13)");
 						}
 						this.state = 324;
 						(localctx as BinaryOpContext)._op = this._input.LT(1);
@@ -1656,7 +1660,7 @@ export default class CashScriptParser extends Parser {
 						    this.consume();
 						}
 						this.state = 325;
-						(localctx as BinaryOpContext)._right = this.expression(13);
+						(localctx as BinaryOpContext)._right = this.expression(14);
 						}
 						break;
 					case 3:
@@ -1665,33 +1669,10 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 326;
-						if (!(this.precpred(this._ctx, 11))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 11)");
+						if (!(this.precpred(this._ctx, 12))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 12)");
 						}
 						this.state = 327;
-						(localctx as BinaryOpContext)._op = this._input.LT(1);
-						_la = this._input.LA(1);
-						if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 960) !== 0))) {
-						    (localctx as BinaryOpContext)._op = this._errHandler.recoverInline(this);
-						}
-						else {
-							this._errHandler.reportMatch(this);
-						    this.consume();
-						}
-						this.state = 328;
-						(localctx as BinaryOpContext)._right = this.expression(12);
-						}
-						break;
-					case 4:
-						{
-						localctx = new BinaryOpContext(this, new ExpressionContext(this, _parentctx, _parentState));
-						(localctx as BinaryOpContext)._left = _prevctx;
-						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
-						this.state = 329;
-						if (!(this.precpred(this._ctx, 10))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 10)");
-						}
-						this.state = 330;
 						(localctx as BinaryOpContext)._op = this._input.LT(1);
 						_la = this._input.LA(1);
 						if(!(_la===48 || _la===49)) {
@@ -1701,8 +1682,31 @@ export default class CashScriptParser extends Parser {
 							this._errHandler.reportMatch(this);
 						    this.consume();
 						}
+						this.state = 328;
+						(localctx as BinaryOpContext)._right = this.expression(13);
+						}
+						break;
+					case 4:
+						{
+						localctx = new BinaryOpContext(this, new ExpressionContext(this, _parentctx, _parentState));
+						(localctx as BinaryOpContext)._left = _prevctx;
+						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
+						this.state = 329;
+						if (!(this.precpred(this._ctx, 11))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 11)");
+						}
+						this.state = 330;
+						(localctx as BinaryOpContext)._op = this._input.LT(1);
+						_la = this._input.LA(1);
+						if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 960) !== 0))) {
+						    (localctx as BinaryOpContext)._op = this._errHandler.recoverInline(this);
+						}
+						else {
+							this._errHandler.reportMatch(this);
+						    this.consume();
+						}
 						this.state = 331;
-						(localctx as BinaryOpContext)._right = this.expression(11);
+						(localctx as BinaryOpContext)._right = this.expression(12);
 						}
 						break;
 					case 5:
@@ -1711,13 +1715,21 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 332;
-						if (!(this.precpred(this._ctx, 9))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 9)");
+						if (!(this.precpred(this._ctx, 10))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 10)");
 						}
 						this.state = 333;
-						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__49);
+						(localctx as BinaryOpContext)._op = this._input.LT(1);
+						_la = this._input.LA(1);
+						if(!(_la===50 || _la===51)) {
+						    (localctx as BinaryOpContext)._op = this._errHandler.recoverInline(this);
+						}
+						else {
+							this._errHandler.reportMatch(this);
+						    this.consume();
+						}
 						this.state = 334;
-						(localctx as BinaryOpContext)._right = this.expression(10);
+						(localctx as BinaryOpContext)._right = this.expression(11);
 						}
 						break;
 					case 6:
@@ -1726,13 +1738,13 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 335;
-						if (!(this.precpred(this._ctx, 8))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 8)");
+						if (!(this.precpred(this._ctx, 9))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 9)");
 						}
 						this.state = 336;
-						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__3);
+						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__51);
 						this.state = 337;
-						(localctx as BinaryOpContext)._right = this.expression(9);
+						(localctx as BinaryOpContext)._right = this.expression(10);
 						}
 						break;
 					case 7:
@@ -1741,13 +1753,13 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 338;
-						if (!(this.precpred(this._ctx, 7))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 7)");
+						if (!(this.precpred(this._ctx, 8))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 8)");
 						}
 						this.state = 339;
-						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__50);
+						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__3);
 						this.state = 340;
-						(localctx as BinaryOpContext)._right = this.expression(8);
+						(localctx as BinaryOpContext)._right = this.expression(9);
 						}
 						break;
 					case 8:
@@ -1756,13 +1768,13 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 341;
-						if (!(this.precpred(this._ctx, 6))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
+						if (!(this.precpred(this._ctx, 7))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 7)");
 						}
 						this.state = 342;
-						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__51);
+						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__52);
 						this.state = 343;
-						(localctx as BinaryOpContext)._right = this.expression(7);
+						(localctx as BinaryOpContext)._right = this.expression(8);
 						}
 						break;
 					case 9:
@@ -1771,40 +1783,55 @@ export default class CashScriptParser extends Parser {
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 344;
-						if (!(this.precpred(this._ctx, 5))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 5)");
+						if (!(this.precpred(this._ctx, 6))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 6)");
 						}
 						this.state = 345;
-						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__52);
+						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__53);
 						this.state = 346;
-						(localctx as BinaryOpContext)._right = this.expression(6);
+						(localctx as BinaryOpContext)._right = this.expression(7);
 						}
 						break;
 					case 10:
 						{
-						localctx = new TupleIndexOpContext(this, new ExpressionContext(this, _parentctx, _parentState));
+						localctx = new BinaryOpContext(this, new ExpressionContext(this, _parentctx, _parentState));
+						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
 						this.state = 347;
-						if (!(this.precpred(this._ctx, 20))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 20)");
+						if (!(this.precpred(this._ctx, 5))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 5)");
 						}
 						this.state = 348;
-						this.match(CashScriptParser.T__24);
+						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__54);
 						this.state = 349;
-						(localctx as TupleIndexOpContext)._index = this.match(CashScriptParser.NumberLiteral);
-						this.state = 350;
-						this.match(CashScriptParser.T__25);
+						(localctx as BinaryOpContext)._right = this.expression(6);
 						}
 						break;
 					case 11:
 						{
+						localctx = new TupleIndexOpContext(this, new ExpressionContext(this, _parentctx, _parentState));
+						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
+						this.state = 350;
+						if (!(this.precpred(this._ctx, 21))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 21)");
+						}
+						this.state = 351;
+						this.match(CashScriptParser.T__24);
+						this.state = 352;
+						(localctx as TupleIndexOpContext)._index = this.match(CashScriptParser.NumberLiteral);
+						this.state = 353;
+						this.match(CashScriptParser.T__25);
+						}
+						break;
+					case 12:
+						{
 						localctx = new UnaryOpContext(this, new ExpressionContext(this, _parentctx, _parentState));
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
-						this.state = 351;
-						if (!(this.precpred(this._ctx, 17))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 17)");
+						this.state = 354;
+						if (!(this.precpred(this._ctx, 18))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 18)");
 						}
-						this.state = 352;
+						this.state = 355;
 						(localctx as UnaryOpContext)._op = this._input.LT(1);
 						_la = this._input.LA(1);
 						if(!(_la===38 || _la===39)) {
@@ -1816,52 +1843,52 @@ export default class CashScriptParser extends Parser {
 						}
 						}
 						break;
-					case 12:
+					case 13:
 						{
 						localctx = new BinaryOpContext(this, new ExpressionContext(this, _parentctx, _parentState));
 						(localctx as BinaryOpContext)._left = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
-						this.state = 353;
-						if (!(this.precpred(this._ctx, 16))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 16)");
-						}
-						this.state = 354;
-						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__39);
-						this.state = 355;
-						this.match(CashScriptParser.T__14);
 						this.state = 356;
-						(localctx as BinaryOpContext)._right = this.expression(0);
+						if (!(this.precpred(this._ctx, 17))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 17)");
+						}
 						this.state = 357;
+						(localctx as BinaryOpContext)._op = this.match(CashScriptParser.T__39);
+						this.state = 358;
+						this.match(CashScriptParser.T__14);
+						this.state = 359;
+						(localctx as BinaryOpContext)._right = this.expression(0);
+						this.state = 360;
 						this.match(CashScriptParser.T__16);
 						}
 						break;
-					case 13:
+					case 14:
 						{
 						localctx = new SliceContext(this, new ExpressionContext(this, _parentctx, _parentState));
 						(localctx as SliceContext)._element = _prevctx;
 						this.pushNewRecursionContext(localctx, _startState, CashScriptParser.RULE_expression);
-						this.state = 359;
-						if (!(this.precpred(this._ctx, 15))) {
-							throw this.createFailedPredicateException("this.precpred(this._ctx, 15)");
-						}
-						this.state = 360;
-						this.match(CashScriptParser.T__40);
-						this.state = 361;
-						this.match(CashScriptParser.T__14);
 						this.state = 362;
-						(localctx as SliceContext)._start = this.expression(0);
+						if (!(this.precpred(this._ctx, 16))) {
+							throw this.createFailedPredicateException("this.precpred(this._ctx, 16)");
+						}
 						this.state = 363;
-						this.match(CashScriptParser.T__15);
+						this.match(CashScriptParser.T__40);
 						this.state = 364;
-						(localctx as SliceContext)._end = this.expression(0);
+						this.match(CashScriptParser.T__14);
 						this.state = 365;
+						(localctx as SliceContext)._start = this.expression(0);
+						this.state = 366;
+						this.match(CashScriptParser.T__15);
+						this.state = 367;
+						(localctx as SliceContext)._end = this.expression(0);
+						this.state = 368;
 						this.match(CashScriptParser.T__16);
 						}
 						break;
 					}
 					}
 				}
-				this.state = 371;
+				this.state = 374;
 				this._errHandler.sync(this);
 				_alt = this._interp.adaptivePredict(this._input, 29, this._ctx);
 			}
@@ -1888,8 +1915,8 @@ export default class CashScriptParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 372;
-			this.match(CashScriptParser.T__53);
+			this.state = 375;
+			this.match(CashScriptParser.T__55);
 			}
 		}
 		catch (re) {
@@ -1911,41 +1938,41 @@ export default class CashScriptParser extends Parser {
 		let localctx: LiteralContext = new LiteralContext(this, this._ctx, this.state);
 		this.enterRule(localctx, 56, CashScriptParser.RULE_literal);
 		try {
-			this.state = 379;
+			this.state = 382;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
-			case 62:
+			case 64:
 				this.enterOuterAlt(localctx, 1);
 				{
-				this.state = 374;
+				this.state = 377;
 				this.match(CashScriptParser.BooleanLiteral);
 				}
 				break;
-			case 64:
+			case 66:
 				this.enterOuterAlt(localctx, 2);
 				{
-				this.state = 375;
+				this.state = 378;
 				this.numberLiteral();
 				}
 				break;
-			case 69:
+			case 71:
 				this.enterOuterAlt(localctx, 3);
 				{
-				this.state = 376;
+				this.state = 379;
 				this.match(CashScriptParser.StringLiteral);
 				}
 				break;
-			case 70:
+			case 72:
 				this.enterOuterAlt(localctx, 4);
 				{
-				this.state = 377;
+				this.state = 380;
 				this.match(CashScriptParser.DateLiteral);
 				}
 				break;
-			case 71:
+			case 73:
 				this.enterOuterAlt(localctx, 5);
 				{
-				this.state = 378;
+				this.state = 381;
 				this.match(CashScriptParser.HexLiteral);
 				}
 				break;
@@ -1974,14 +2001,14 @@ export default class CashScriptParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 381;
+			this.state = 384;
 			this.match(CashScriptParser.NumberLiteral);
-			this.state = 383;
+			this.state = 386;
 			this._errHandler.sync(this);
 			switch ( this._interp.adaptivePredict(this._input, 31, this._ctx) ) {
 			case 1:
 				{
-				this.state = 382;
+				this.state = 385;
 				this.match(CashScriptParser.NumberUnit);
 				}
 				break;
@@ -2010,9 +2037,9 @@ export default class CashScriptParser extends Parser {
 		try {
 			this.enterOuterAlt(localctx, 1);
 			{
-			this.state = 385;
+			this.state = 388;
 			_la = this._input.LA(1);
-			if(!(((((_la - 55)) & ~0x1F) === 0 && ((1 << (_la - 55)) & 4159) !== 0))) {
+			if(!(((((_la - 57)) & ~0x1F) === 0 && ((1 << (_la - 57)) & 4159) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -2046,36 +2073,38 @@ export default class CashScriptParser extends Parser {
 	private expression_sempred(localctx: ExpressionContext, predIndex: number): boolean {
 		switch (predIndex) {
 		case 0:
-			return this.precpred(this._ctx, 13);
+			return this.precpred(this._ctx, 14);
 		case 1:
-			return this.precpred(this._ctx, 12);
+			return this.precpred(this._ctx, 13);
 		case 2:
-			return this.precpred(this._ctx, 11);
+			return this.precpred(this._ctx, 12);
 		case 3:
-			return this.precpred(this._ctx, 10);
+			return this.precpred(this._ctx, 11);
 		case 4:
-			return this.precpred(this._ctx, 9);
+			return this.precpred(this._ctx, 10);
 		case 5:
-			return this.precpred(this._ctx, 8);
+			return this.precpred(this._ctx, 9);
 		case 6:
-			return this.precpred(this._ctx, 7);
+			return this.precpred(this._ctx, 8);
 		case 7:
-			return this.precpred(this._ctx, 6);
+			return this.precpred(this._ctx, 7);
 		case 8:
-			return this.precpred(this._ctx, 5);
+			return this.precpred(this._ctx, 6);
 		case 9:
-			return this.precpred(this._ctx, 20);
+			return this.precpred(this._ctx, 5);
 		case 10:
-			return this.precpred(this._ctx, 17);
+			return this.precpred(this._ctx, 21);
 		case 11:
-			return this.precpred(this._ctx, 16);
+			return this.precpred(this._ctx, 18);
 		case 12:
-			return this.precpred(this._ctx, 15);
+			return this.precpred(this._ctx, 17);
+		case 13:
+			return this.precpred(this._ctx, 16);
 		}
 		return true;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,77,388,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,79,391,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,7,7,2,8,7,8,2,9,7,9,2,
 	10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,2,15,7,15,2,16,7,16,2,17,
 	7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,2,22,7,22,2,23,7,23,2,24,7,
@@ -2102,107 +2131,109 @@ export default class CashScriptParser extends Parser {
 	8,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,
 	26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,
 	1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,1,
-	26,1,26,1,26,1,26,1,26,5,26,368,8,26,10,26,12,26,371,9,26,1,27,1,27,1,28,
-	1,28,1,28,1,28,1,28,3,28,380,8,28,1,29,1,29,3,29,384,8,29,1,30,1,30,1,30,
-	0,1,52,31,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,
-	44,46,48,50,52,54,56,58,60,0,10,1,0,4,10,1,0,28,32,2,0,28,32,34,37,1,0,
-	42,43,1,0,44,46,2,0,43,43,47,47,1,0,6,9,1,0,48,49,1,0,38,39,2,0,55,60,67,
-	67,417,0,65,1,0,0,0,2,71,1,0,0,0,4,76,1,0,0,0,6,78,1,0,0,0,8,83,1,0,0,0,
-	10,87,1,0,0,0,12,89,1,0,0,0,14,101,1,0,0,0,16,113,1,0,0,0,18,129,1,0,0,
-	0,20,141,1,0,0,0,22,151,1,0,0,0,24,153,1,0,0,0,26,165,1,0,0,0,28,174,1,
-	0,0,0,30,179,1,0,0,0,32,191,1,0,0,0,34,201,1,0,0,0,36,210,1,0,0,0,38,212,
-	1,0,0,0,40,220,1,0,0,0,42,224,1,0,0,0,44,228,1,0,0,0,46,230,1,0,0,0,48,
-	246,1,0,0,0,50,249,1,0,0,0,52,318,1,0,0,0,54,372,1,0,0,0,56,379,1,0,0,0,
-	58,381,1,0,0,0,60,385,1,0,0,0,62,64,3,2,1,0,63,62,1,0,0,0,64,67,1,0,0,0,
-	65,63,1,0,0,0,65,66,1,0,0,0,66,68,1,0,0,0,67,65,1,0,0,0,68,69,3,12,6,0,
-	69,70,5,0,0,1,70,1,1,0,0,0,71,72,5,1,0,0,72,73,3,4,2,0,73,74,3,6,3,0,74,
-	75,5,2,0,0,75,3,1,0,0,0,76,77,5,3,0,0,77,5,1,0,0,0,78,80,3,8,4,0,79,81,
-	3,8,4,0,80,79,1,0,0,0,80,81,1,0,0,0,81,7,1,0,0,0,82,84,3,10,5,0,83,82,1,
-	0,0,0,83,84,1,0,0,0,84,85,1,0,0,0,85,86,5,61,0,0,86,9,1,0,0,0,87,88,7,0,
-	0,0,88,11,1,0,0,0,89,90,5,11,0,0,90,91,5,74,0,0,91,92,3,16,8,0,92,96,5,
-	12,0,0,93,95,3,14,7,0,94,93,1,0,0,0,95,98,1,0,0,0,96,94,1,0,0,0,96,97,1,
-	0,0,0,97,99,1,0,0,0,98,96,1,0,0,0,99,100,5,13,0,0,100,13,1,0,0,0,101,102,
-	5,14,0,0,102,103,5,74,0,0,103,104,3,16,8,0,104,108,5,12,0,0,105,107,3,22,
-	11,0,106,105,1,0,0,0,107,110,1,0,0,0,108,106,1,0,0,0,108,109,1,0,0,0,109,
-	111,1,0,0,0,110,108,1,0,0,0,111,112,5,13,0,0,112,15,1,0,0,0,113,125,5,15,
-	0,0,114,119,3,18,9,0,115,116,5,16,0,0,116,118,3,18,9,0,117,115,1,0,0,0,
-	118,121,1,0,0,0,119,117,1,0,0,0,119,120,1,0,0,0,120,123,1,0,0,0,121,119,
-	1,0,0,0,122,124,5,16,0,0,123,122,1,0,0,0,123,124,1,0,0,0,124,126,1,0,0,
-	0,125,114,1,0,0,0,125,126,1,0,0,0,126,127,1,0,0,0,127,128,5,17,0,0,128,
-	17,1,0,0,0,129,130,3,60,30,0,130,131,5,74,0,0,131,19,1,0,0,0,132,136,5,
-	12,0,0,133,135,3,22,11,0,134,133,1,0,0,0,135,138,1,0,0,0,136,134,1,0,0,
-	0,136,137,1,0,0,0,137,139,1,0,0,0,138,136,1,0,0,0,139,142,5,13,0,0,140,
-	142,3,22,11,0,141,132,1,0,0,0,141,140,1,0,0,0,142,21,1,0,0,0,143,152,3,
-	24,12,0,144,152,3,26,13,0,145,152,3,28,14,0,146,152,3,30,15,0,147,152,3,
-	32,16,0,148,152,3,34,17,0,149,152,3,36,18,0,150,152,3,40,20,0,151,143,1,
-	0,0,0,151,144,1,0,0,0,151,145,1,0,0,0,151,146,1,0,0,0,151,147,1,0,0,0,151,
-	148,1,0,0,0,151,149,1,0,0,0,151,150,1,0,0,0,152,23,1,0,0,0,153,157,3,60,
-	30,0,154,156,3,54,27,0,155,154,1,0,0,0,156,159,1,0,0,0,157,155,1,0,0,0,
-	157,158,1,0,0,0,158,160,1,0,0,0,159,157,1,0,0,0,160,161,5,74,0,0,161,162,
-	5,10,0,0,162,163,3,52,26,0,163,164,5,2,0,0,164,25,1,0,0,0,165,166,3,60,
-	30,0,166,167,5,74,0,0,167,168,5,16,0,0,168,169,3,60,30,0,169,170,5,74,0,
-	0,170,171,5,10,0,0,171,172,3,52,26,0,172,173,5,2,0,0,173,27,1,0,0,0,174,
-	175,5,74,0,0,175,176,5,10,0,0,176,177,3,52,26,0,177,178,5,2,0,0,178,29,
-	1,0,0,0,179,180,5,18,0,0,180,181,5,15,0,0,181,182,5,72,0,0,182,183,5,6,
-	0,0,183,186,3,52,26,0,184,185,5,16,0,0,185,187,3,42,21,0,186,184,1,0,0,
-	0,186,187,1,0,0,0,187,188,1,0,0,0,188,189,5,17,0,0,189,190,5,2,0,0,190,
-	31,1,0,0,0,191,192,5,18,0,0,192,193,5,15,0,0,193,196,3,52,26,0,194,195,
-	5,16,0,0,195,197,3,42,21,0,196,194,1,0,0,0,196,197,1,0,0,0,197,198,1,0,
-	0,0,198,199,5,17,0,0,199,200,5,2,0,0,200,33,1,0,0,0,201,202,5,19,0,0,202,
-	203,5,15,0,0,203,204,3,52,26,0,204,205,5,17,0,0,205,208,3,20,10,0,206,207,
-	5,20,0,0,207,209,3,20,10,0,208,206,1,0,0,0,208,209,1,0,0,0,209,35,1,0,0,
-	0,210,211,3,38,19,0,211,37,1,0,0,0,212,213,5,21,0,0,213,214,3,20,10,0,214,
-	215,5,22,0,0,215,216,5,15,0,0,216,217,3,52,26,0,217,218,5,17,0,0,218,219,
-	5,2,0,0,219,39,1,0,0,0,220,221,5,23,0,0,221,222,3,46,23,0,222,223,5,2,0,
-	0,223,41,1,0,0,0,224,225,5,69,0,0,225,43,1,0,0,0,226,229,5,74,0,0,227,229,
-	3,56,28,0,228,226,1,0,0,0,228,227,1,0,0,0,229,45,1,0,0,0,230,242,5,15,0,
-	0,231,236,3,44,22,0,232,233,5,16,0,0,233,235,3,44,22,0,234,232,1,0,0,0,
-	235,238,1,0,0,0,236,234,1,0,0,0,236,237,1,0,0,0,237,240,1,0,0,0,238,236,
-	1,0,0,0,239,241,5,16,0,0,240,239,1,0,0,0,240,241,1,0,0,0,241,243,1,0,0,
-	0,242,231,1,0,0,0,242,243,1,0,0,0,243,244,1,0,0,0,244,245,5,17,0,0,245,
-	47,1,0,0,0,246,247,5,74,0,0,247,248,3,50,25,0,248,49,1,0,0,0,249,261,5,
-	15,0,0,250,255,3,52,26,0,251,252,5,16,0,0,252,254,3,52,26,0,253,251,1,0,
-	0,0,254,257,1,0,0,0,255,253,1,0,0,0,255,256,1,0,0,0,256,259,1,0,0,0,257,
-	255,1,0,0,0,258,260,5,16,0,0,259,258,1,0,0,0,259,260,1,0,0,0,260,262,1,
-	0,0,0,261,250,1,0,0,0,261,262,1,0,0,0,262,263,1,0,0,0,263,264,5,17,0,0,
-	264,51,1,0,0,0,265,266,6,26,-1,0,266,267,5,15,0,0,267,268,3,52,26,0,268,
-	269,5,17,0,0,269,319,1,0,0,0,270,271,3,60,30,0,271,272,5,15,0,0,272,275,
-	3,52,26,0,273,274,5,16,0,0,274,276,3,52,26,0,275,273,1,0,0,0,275,276,1,
-	0,0,0,276,278,1,0,0,0,277,279,5,16,0,0,278,277,1,0,0,0,278,279,1,0,0,0,
-	279,280,1,0,0,0,280,281,5,17,0,0,281,319,1,0,0,0,282,319,3,48,24,0,283,
-	284,5,24,0,0,284,285,5,74,0,0,285,319,3,50,25,0,286,287,5,27,0,0,287,288,
-	5,25,0,0,288,289,3,52,26,0,289,290,5,26,0,0,290,291,7,1,0,0,291,319,1,0,
-	0,0,292,293,5,33,0,0,293,294,5,25,0,0,294,295,3,52,26,0,295,296,5,26,0,
-	0,296,297,7,2,0,0,297,319,1,0,0,0,298,299,7,3,0,0,299,319,3,52,26,14,300,
-	312,5,25,0,0,301,306,3,52,26,0,302,303,5,16,0,0,303,305,3,52,26,0,304,302,
-	1,0,0,0,305,308,1,0,0,0,306,304,1,0,0,0,306,307,1,0,0,0,307,310,1,0,0,0,
-	308,306,1,0,0,0,309,311,5,16,0,0,310,309,1,0,0,0,310,311,1,0,0,0,311,313,
-	1,0,0,0,312,301,1,0,0,0,312,313,1,0,0,0,313,314,1,0,0,0,314,319,5,26,0,
-	0,315,319,5,73,0,0,316,319,5,74,0,0,317,319,3,56,28,0,318,265,1,0,0,0,318,
-	270,1,0,0,0,318,282,1,0,0,0,318,283,1,0,0,0,318,286,1,0,0,0,318,292,1,0,
-	0,0,318,298,1,0,0,0,318,300,1,0,0,0,318,315,1,0,0,0,318,316,1,0,0,0,318,
-	317,1,0,0,0,319,369,1,0,0,0,320,321,10,13,0,0,321,322,7,4,0,0,322,368,3,
-	52,26,14,323,324,10,12,0,0,324,325,7,5,0,0,325,368,3,52,26,13,326,327,10,
-	11,0,0,327,328,7,6,0,0,328,368,3,52,26,12,329,330,10,10,0,0,330,331,7,7,
-	0,0,331,368,3,52,26,11,332,333,10,9,0,0,333,334,5,50,0,0,334,368,3,52,26,
-	10,335,336,10,8,0,0,336,337,5,4,0,0,337,368,3,52,26,9,338,339,10,7,0,0,
-	339,340,5,51,0,0,340,368,3,52,26,8,341,342,10,6,0,0,342,343,5,52,0,0,343,
-	368,3,52,26,7,344,345,10,5,0,0,345,346,5,53,0,0,346,368,3,52,26,6,347,348,
-	10,20,0,0,348,349,5,25,0,0,349,350,5,64,0,0,350,368,5,26,0,0,351,352,10,
-	17,0,0,352,368,7,8,0,0,353,354,10,16,0,0,354,355,5,40,0,0,355,356,5,15,
-	0,0,356,357,3,52,26,0,357,358,5,17,0,0,358,368,1,0,0,0,359,360,10,15,0,
-	0,360,361,5,41,0,0,361,362,5,15,0,0,362,363,3,52,26,0,363,364,5,16,0,0,
-	364,365,3,52,26,0,365,366,5,17,0,0,366,368,1,0,0,0,367,320,1,0,0,0,367,
-	323,1,0,0,0,367,326,1,0,0,0,367,329,1,0,0,0,367,332,1,0,0,0,367,335,1,0,
-	0,0,367,338,1,0,0,0,367,341,1,0,0,0,367,344,1,0,0,0,367,347,1,0,0,0,367,
-	351,1,0,0,0,367,353,1,0,0,0,367,359,1,0,0,0,368,371,1,0,0,0,369,367,1,0,
-	0,0,369,370,1,0,0,0,370,53,1,0,0,0,371,369,1,0,0,0,372,373,5,54,0,0,373,
-	55,1,0,0,0,374,380,5,62,0,0,375,380,3,58,29,0,376,380,5,69,0,0,377,380,
-	5,70,0,0,378,380,5,71,0,0,379,374,1,0,0,0,379,375,1,0,0,0,379,376,1,0,0,
-	0,379,377,1,0,0,0,379,378,1,0,0,0,380,57,1,0,0,0,381,383,5,64,0,0,382,384,
-	5,63,0,0,383,382,1,0,0,0,383,384,1,0,0,0,384,59,1,0,0,0,385,386,7,9,0,0,
-	386,61,1,0,0,0,32,65,80,83,96,108,119,123,125,136,141,151,157,186,196,208,
-	228,236,240,242,255,259,261,275,278,306,310,312,318,367,369,379,383];
+	26,1,26,1,26,1,26,1,26,1,26,1,26,1,26,5,26,371,8,26,10,26,12,26,374,9,26,
+	1,27,1,27,1,28,1,28,1,28,1,28,1,28,3,28,383,8,28,1,29,1,29,3,29,387,8,29,
+	1,30,1,30,1,30,0,1,52,31,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,
+	34,36,38,40,42,44,46,48,50,52,54,56,58,60,0,11,1,0,4,10,1,0,28,32,2,0,28,
+	32,34,37,2,0,5,5,42,43,1,0,44,46,2,0,43,43,47,47,1,0,48,49,1,0,6,9,1,0,
+	50,51,1,0,38,39,2,0,57,62,69,69,421,0,65,1,0,0,0,2,71,1,0,0,0,4,76,1,0,
+	0,0,6,78,1,0,0,0,8,83,1,0,0,0,10,87,1,0,0,0,12,89,1,0,0,0,14,101,1,0,0,
+	0,16,113,1,0,0,0,18,129,1,0,0,0,20,141,1,0,0,0,22,151,1,0,0,0,24,153,1,
+	0,0,0,26,165,1,0,0,0,28,174,1,0,0,0,30,179,1,0,0,0,32,191,1,0,0,0,34,201,
+	1,0,0,0,36,210,1,0,0,0,38,212,1,0,0,0,40,220,1,0,0,0,42,224,1,0,0,0,44,
+	228,1,0,0,0,46,230,1,0,0,0,48,246,1,0,0,0,50,249,1,0,0,0,52,318,1,0,0,0,
+	54,375,1,0,0,0,56,382,1,0,0,0,58,384,1,0,0,0,60,388,1,0,0,0,62,64,3,2,1,
+	0,63,62,1,0,0,0,64,67,1,0,0,0,65,63,1,0,0,0,65,66,1,0,0,0,66,68,1,0,0,0,
+	67,65,1,0,0,0,68,69,3,12,6,0,69,70,5,0,0,1,70,1,1,0,0,0,71,72,5,1,0,0,72,
+	73,3,4,2,0,73,74,3,6,3,0,74,75,5,2,0,0,75,3,1,0,0,0,76,77,5,3,0,0,77,5,
+	1,0,0,0,78,80,3,8,4,0,79,81,3,8,4,0,80,79,1,0,0,0,80,81,1,0,0,0,81,7,1,
+	0,0,0,82,84,3,10,5,0,83,82,1,0,0,0,83,84,1,0,0,0,84,85,1,0,0,0,85,86,5,
+	63,0,0,86,9,1,0,0,0,87,88,7,0,0,0,88,11,1,0,0,0,89,90,5,11,0,0,90,91,5,
+	76,0,0,91,92,3,16,8,0,92,96,5,12,0,0,93,95,3,14,7,0,94,93,1,0,0,0,95,98,
+	1,0,0,0,96,94,1,0,0,0,96,97,1,0,0,0,97,99,1,0,0,0,98,96,1,0,0,0,99,100,
+	5,13,0,0,100,13,1,0,0,0,101,102,5,14,0,0,102,103,5,76,0,0,103,104,3,16,
+	8,0,104,108,5,12,0,0,105,107,3,22,11,0,106,105,1,0,0,0,107,110,1,0,0,0,
+	108,106,1,0,0,0,108,109,1,0,0,0,109,111,1,0,0,0,110,108,1,0,0,0,111,112,
+	5,13,0,0,112,15,1,0,0,0,113,125,5,15,0,0,114,119,3,18,9,0,115,116,5,16,
+	0,0,116,118,3,18,9,0,117,115,1,0,0,0,118,121,1,0,0,0,119,117,1,0,0,0,119,
+	120,1,0,0,0,120,123,1,0,0,0,121,119,1,0,0,0,122,124,5,16,0,0,123,122,1,
+	0,0,0,123,124,1,0,0,0,124,126,1,0,0,0,125,114,1,0,0,0,125,126,1,0,0,0,126,
+	127,1,0,0,0,127,128,5,17,0,0,128,17,1,0,0,0,129,130,3,60,30,0,130,131,5,
+	76,0,0,131,19,1,0,0,0,132,136,5,12,0,0,133,135,3,22,11,0,134,133,1,0,0,
+	0,135,138,1,0,0,0,136,134,1,0,0,0,136,137,1,0,0,0,137,139,1,0,0,0,138,136,
+	1,0,0,0,139,142,5,13,0,0,140,142,3,22,11,0,141,132,1,0,0,0,141,140,1,0,
+	0,0,142,21,1,0,0,0,143,152,3,24,12,0,144,152,3,26,13,0,145,152,3,28,14,
+	0,146,152,3,30,15,0,147,152,3,32,16,0,148,152,3,34,17,0,149,152,3,36,18,
+	0,150,152,3,40,20,0,151,143,1,0,0,0,151,144,1,0,0,0,151,145,1,0,0,0,151,
+	146,1,0,0,0,151,147,1,0,0,0,151,148,1,0,0,0,151,149,1,0,0,0,151,150,1,0,
+	0,0,152,23,1,0,0,0,153,157,3,60,30,0,154,156,3,54,27,0,155,154,1,0,0,0,
+	156,159,1,0,0,0,157,155,1,0,0,0,157,158,1,0,0,0,158,160,1,0,0,0,159,157,
+	1,0,0,0,160,161,5,76,0,0,161,162,5,10,0,0,162,163,3,52,26,0,163,164,5,2,
+	0,0,164,25,1,0,0,0,165,166,3,60,30,0,166,167,5,76,0,0,167,168,5,16,0,0,
+	168,169,3,60,30,0,169,170,5,76,0,0,170,171,5,10,0,0,171,172,3,52,26,0,172,
+	173,5,2,0,0,173,27,1,0,0,0,174,175,5,76,0,0,175,176,5,10,0,0,176,177,3,
+	52,26,0,177,178,5,2,0,0,178,29,1,0,0,0,179,180,5,18,0,0,180,181,5,15,0,
+	0,181,182,5,74,0,0,182,183,5,6,0,0,183,186,3,52,26,0,184,185,5,16,0,0,185,
+	187,3,42,21,0,186,184,1,0,0,0,186,187,1,0,0,0,187,188,1,0,0,0,188,189,5,
+	17,0,0,189,190,5,2,0,0,190,31,1,0,0,0,191,192,5,18,0,0,192,193,5,15,0,0,
+	193,196,3,52,26,0,194,195,5,16,0,0,195,197,3,42,21,0,196,194,1,0,0,0,196,
+	197,1,0,0,0,197,198,1,0,0,0,198,199,5,17,0,0,199,200,5,2,0,0,200,33,1,0,
+	0,0,201,202,5,19,0,0,202,203,5,15,0,0,203,204,3,52,26,0,204,205,5,17,0,
+	0,205,208,3,20,10,0,206,207,5,20,0,0,207,209,3,20,10,0,208,206,1,0,0,0,
+	208,209,1,0,0,0,209,35,1,0,0,0,210,211,3,38,19,0,211,37,1,0,0,0,212,213,
+	5,21,0,0,213,214,3,20,10,0,214,215,5,22,0,0,215,216,5,15,0,0,216,217,3,
+	52,26,0,217,218,5,17,0,0,218,219,5,2,0,0,219,39,1,0,0,0,220,221,5,23,0,
+	0,221,222,3,46,23,0,222,223,5,2,0,0,223,41,1,0,0,0,224,225,5,71,0,0,225,
+	43,1,0,0,0,226,229,5,76,0,0,227,229,3,56,28,0,228,226,1,0,0,0,228,227,1,
+	0,0,0,229,45,1,0,0,0,230,242,5,15,0,0,231,236,3,44,22,0,232,233,5,16,0,
+	0,233,235,3,44,22,0,234,232,1,0,0,0,235,238,1,0,0,0,236,234,1,0,0,0,236,
+	237,1,0,0,0,237,240,1,0,0,0,238,236,1,0,0,0,239,241,5,16,0,0,240,239,1,
+	0,0,0,240,241,1,0,0,0,241,243,1,0,0,0,242,231,1,0,0,0,242,243,1,0,0,0,243,
+	244,1,0,0,0,244,245,5,17,0,0,245,47,1,0,0,0,246,247,5,76,0,0,247,248,3,
+	50,25,0,248,49,1,0,0,0,249,261,5,15,0,0,250,255,3,52,26,0,251,252,5,16,
+	0,0,252,254,3,52,26,0,253,251,1,0,0,0,254,257,1,0,0,0,255,253,1,0,0,0,255,
+	256,1,0,0,0,256,259,1,0,0,0,257,255,1,0,0,0,258,260,5,16,0,0,259,258,1,
+	0,0,0,259,260,1,0,0,0,260,262,1,0,0,0,261,250,1,0,0,0,261,262,1,0,0,0,262,
+	263,1,0,0,0,263,264,5,17,0,0,264,51,1,0,0,0,265,266,6,26,-1,0,266,267,5,
+	15,0,0,267,268,3,52,26,0,268,269,5,17,0,0,269,319,1,0,0,0,270,271,3,60,
+	30,0,271,272,5,15,0,0,272,275,3,52,26,0,273,274,5,16,0,0,274,276,3,52,26,
+	0,275,273,1,0,0,0,275,276,1,0,0,0,276,278,1,0,0,0,277,279,5,16,0,0,278,
+	277,1,0,0,0,278,279,1,0,0,0,279,280,1,0,0,0,280,281,5,17,0,0,281,319,1,
+	0,0,0,282,319,3,48,24,0,283,284,5,24,0,0,284,285,5,76,0,0,285,319,3,50,
+	25,0,286,287,5,27,0,0,287,288,5,25,0,0,288,289,3,52,26,0,289,290,5,26,0,
+	0,290,291,7,1,0,0,291,319,1,0,0,0,292,293,5,33,0,0,293,294,5,25,0,0,294,
+	295,3,52,26,0,295,296,5,26,0,0,296,297,7,2,0,0,297,319,1,0,0,0,298,299,
+	7,3,0,0,299,319,3,52,26,15,300,312,5,25,0,0,301,306,3,52,26,0,302,303,5,
+	16,0,0,303,305,3,52,26,0,304,302,1,0,0,0,305,308,1,0,0,0,306,304,1,0,0,
+	0,306,307,1,0,0,0,307,310,1,0,0,0,308,306,1,0,0,0,309,311,5,16,0,0,310,
+	309,1,0,0,0,310,311,1,0,0,0,311,313,1,0,0,0,312,301,1,0,0,0,312,313,1,0,
+	0,0,313,314,1,0,0,0,314,319,5,26,0,0,315,319,5,75,0,0,316,319,5,76,0,0,
+	317,319,3,56,28,0,318,265,1,0,0,0,318,270,1,0,0,0,318,282,1,0,0,0,318,283,
+	1,0,0,0,318,286,1,0,0,0,318,292,1,0,0,0,318,298,1,0,0,0,318,300,1,0,0,0,
+	318,315,1,0,0,0,318,316,1,0,0,0,318,317,1,0,0,0,319,372,1,0,0,0,320,321,
+	10,14,0,0,321,322,7,4,0,0,322,371,3,52,26,15,323,324,10,13,0,0,324,325,
+	7,5,0,0,325,371,3,52,26,14,326,327,10,12,0,0,327,328,7,6,0,0,328,371,3,
+	52,26,13,329,330,10,11,0,0,330,331,7,7,0,0,331,371,3,52,26,12,332,333,10,
+	10,0,0,333,334,7,8,0,0,334,371,3,52,26,11,335,336,10,9,0,0,336,337,5,52,
+	0,0,337,371,3,52,26,10,338,339,10,8,0,0,339,340,5,4,0,0,340,371,3,52,26,
+	9,341,342,10,7,0,0,342,343,5,53,0,0,343,371,3,52,26,8,344,345,10,6,0,0,
+	345,346,5,54,0,0,346,371,3,52,26,7,347,348,10,5,0,0,348,349,5,55,0,0,349,
+	371,3,52,26,6,350,351,10,21,0,0,351,352,5,25,0,0,352,353,5,66,0,0,353,371,
+	5,26,0,0,354,355,10,18,0,0,355,371,7,9,0,0,356,357,10,17,0,0,357,358,5,
+	40,0,0,358,359,5,15,0,0,359,360,3,52,26,0,360,361,5,17,0,0,361,371,1,0,
+	0,0,362,363,10,16,0,0,363,364,5,41,0,0,364,365,5,15,0,0,365,366,3,52,26,
+	0,366,367,5,16,0,0,367,368,3,52,26,0,368,369,5,17,0,0,369,371,1,0,0,0,370,
+	320,1,0,0,0,370,323,1,0,0,0,370,326,1,0,0,0,370,329,1,0,0,0,370,332,1,0,
+	0,0,370,335,1,0,0,0,370,338,1,0,0,0,370,341,1,0,0,0,370,344,1,0,0,0,370,
+	347,1,0,0,0,370,350,1,0,0,0,370,354,1,0,0,0,370,356,1,0,0,0,370,362,1,0,
+	0,0,371,374,1,0,0,0,372,370,1,0,0,0,372,373,1,0,0,0,373,53,1,0,0,0,374,
+	372,1,0,0,0,375,376,5,56,0,0,376,55,1,0,0,0,377,383,5,64,0,0,378,383,3,
+	58,29,0,379,383,5,71,0,0,380,383,5,72,0,0,381,383,5,73,0,0,382,377,1,0,
+	0,0,382,378,1,0,0,0,382,379,1,0,0,0,382,380,1,0,0,0,382,381,1,0,0,0,383,
+	57,1,0,0,0,384,386,5,66,0,0,385,387,5,65,0,0,386,385,1,0,0,0,386,387,1,
+	0,0,0,387,59,1,0,0,0,388,389,7,10,0,0,389,61,1,0,0,0,32,65,80,83,96,108,
+	119,123,125,136,141,151,157,186,196,208,228,236,240,242,255,259,261,275,
+	278,306,310,312,318,370,372,382,386];
 
 	private static __ATN: ATN;
 	public static get _ATN(): ATN {
