@@ -13,16 +13,16 @@ Some of the limits below are hard BCH consensus rules, others are standardness r
 
 ### Maximum contract size (P2SH)
 
-The Bitcoin Cash limits contract bytecode for P2SH outputs is **10,000 bytes** by the BCH consensus rules. Technically this limit is the 'maximum unlocking bytecode length' because for P2SH outputs the full script is provided in the **unlocking bytecode**.
+The limit on Bitcoin Cash for contract bytecode for P2SH outputs is **10,000 bytes** by the BCH consensus rules. Technically this limit is the 'maximum unlocking bytecode length' because for P2SH outputs the full script is provided in the **unlocking bytecode**.
 
 ### Maximum contract size (P2S)
 
-The Bitcoin Cash limits contract bytecode for P2S outputs is **201 bytes** by the BCH consensus rules. Technically this limit is the 'maximum locking bytecode length' because for P2S outputs the script is provided directly in the **locking bytecode**.
+The limit on Bitcoin Cash for contract bytecode for P2S outputs is **201 bytes** by the BCH consensus rules. Technically this limit is the 'maximum locking bytecode length' because for P2S outputs the script is provided directly in the **locking bytecode**.
 
 
 ### NFT commitment length limit
 
-NFT commitments can store up to 128 bytes of data as local state. This 128-bytes limit on commitment length is of practical importance for contract authors, as workarounds are needed to keep more data in local state.
+NFT commitments can store up to **128 bytes** of data as local state. This 128-bytes limit on commitment length is of practical importance for contract authors, as workarounds are needed to keep more data in local state.
 
 If your local state grows larger than the allowed maximum, one option is to hash the full state and store only the hash in the commitment data. Later, when using the local state, the full state must be provided and validated against the stored state hash.
 
@@ -71,12 +71,12 @@ function calculateDust(outputSize: number): number {
 }
 ```
 
-Before CashTokens `546` bytes was often used as good default value, however with tokenData outputs have become larger in size.
-For ease of development, it is standard practice to use 1,000 satoshis as dust to outputs.
+Before CashTokens `546` sats was often used as dust default value, however with tokenData outputs have become larger in size, which affects the dust value calculation.
+For ease of development, it is standard practice to use `1,000` satoshis as dust to outputs.
 
 :::note
-The standard practice of 1,000 satoshis as dust amount for outputs is only considering `P2PKH`, `P2SH20` and `P2SH32` output types.
-For other custom locking bytecode outputs a higher dust limits may be required, you can [find more info here][info-dust-limit]
+The standard practice of 1,000 satoshis as dust amount for outputs is for the `P2PKH`, `P2SH20` and `P2SH32` output types.
+For custom locking bytecode outputs a higher dust limits may be required, you can [find more info here][info-dust-limit].
 :::
 
 ### Minimum Relay Fee
