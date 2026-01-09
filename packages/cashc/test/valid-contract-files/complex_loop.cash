@@ -1,0 +1,31 @@
+contract Loopy() {
+    function doLoop() {
+        int inputSum = 0;
+        int outputSum = 0;
+        int tokenCount = 0;
+        int i = 0;
+
+        do {
+            inputSum = tx.inputs[i].value;
+            i = i + 1;
+
+            int x = tx.outputs.length;
+            bool b = i < x;
+
+            if (b) {
+                b = tx.outputs[i].tokenCategory != 0x;
+
+                if (b) {
+                    outputSum = outputSum + tx.outputs[i].value;
+                } else {
+                    tokenCount = tokenCount + 1;
+                }
+
+                console.log(tokenCount);
+            }
+        } while (i < tx.inputs.length);
+
+        require(inputSum > outputSum);
+        require(tokenCount > 0);
+    }
+}

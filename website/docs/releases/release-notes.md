@@ -2,6 +2,17 @@
 title: Release Notes
 ---
 
+## v0.13.0-next.1
+
+#### cashc compiler
+- :sparkles: Add support for `do {} while ()` loops.
+- :racehorse: Add optimisations for negated number comparisons.
+
+#### CashScript SDK
+
+- :sparkles: Add support for `do {} while ()` loops in debug tooling.
+- :hammer_and_wrench: Update default VM target to `BCH_2026_05`.
+
 ## v0.12.1
 
 #### CashScript SDK

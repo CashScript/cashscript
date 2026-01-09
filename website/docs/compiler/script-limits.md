@@ -11,23 +11,20 @@ Some of the limits below are hard BCH consensus rules, others are standardness r
 
 ## Contract-related limits
 
-### Maximum contract size
+### Maximum contract size (P2SH)
 
-The Bitcoin Cash limits contract bytecode to **1,650 bytes** in the standardness rules. Transactions with contract bytecode won't be relayed by most nodes.
+The limit on Bitcoin Cash for contract bytecode for P2SH outputs is **10,000 bytes** by the BCH consensus rules. Technically this limit is the 'maximum unlocking bytecode length' because for P2SH outputs the full script is provided in the **unlocking bytecode**.
 
-While typical contracts stay well below this, complex contracts with extensive logic might need adjustments to fit within this constraint.
+### Maximum contract size (P2S)
 
-#### Modular contract design
+The limit on Bitcoin Cash for contract bytecode for P2S outputs is **201 bytes** by the BCH consensus rules. Technically this limit is the 'maximum locking bytecode length' because for P2S outputs the script is provided directly in the **locking bytecode**.
 
-To keep contracts within size limits, consider modular design. Splitting contract logic into smaller, independent components allows each function to be deployed separately, reducing transaction size. See [Contract Optimization](/docs/guides/optimization) for more details.
 
 ### NFT commitment length limit
 
-NFT commitments can store up to 40 bytes of data as local state. If more data is needed, you can hash the full state and store only the hash in the commitment data. Later, when required, the full state must be provided and validated against the stored hash.
+NFT commitments can store up to **128 bytes** of data as local state. This 128-bytes limit on commitment length is of practical importance for contract authors, as workarounds are needed to keep more data in local state.
 
-:::caution
-The 40-bytes limit on commitment length is of great practical importance for contract authors. Workarounds are needed to keep more bytes of local state in smart contracts.
-:::
+If your local state grows larger than the allowed maximum, one option is to hash the full state and store only the hash in the commitment data. Later, when using the local state, the full state must be provided and validated against the stored state hash.
 
 ### Operation cost limit
 
@@ -47,7 +44,7 @@ function maxOperationCost(unlockingBytecodeLength) {
 
 - Signature operation count (SigChecks): Limits the number of signature verifications (`OP_CHECKSIG`, `OP_CHECKDATASIG`) per transaction to ensure efficient validation.
 - Hashing limit: Limits the number of hashing operations (`OP_SHA256`, `OP_HASH160`) allowed per transaction to prevent excessive resource usage.
-- Stack element byte length: Each stack element has a maximum length of 10,000 bytes, affecting Pay-to-Script-Hash (P2SH) contracts.
+- Stack element byte length: stack elements have a maximum length of 10,000 bytes.
 
 ## General transaction limits
 
@@ -74,22 +71,12 @@ function calculateDust(outputSize: number): number {
 }
 ```
 
-Before CashTokens `546` bytes was often used as good default value, however with tokenData outputs have become larger in size.
-For ease of development, it is standard practice to use 1,000 satoshis as dust to outputs.
+Before CashTokens `546` sats was often used as dust default value, however with tokenData outputs have become larger in size, which affects the dust value calculation.
+For ease of development, it is standard practice to use `1,000` satoshis as dust to outputs.
 
 :::note
-The standard practice of 1,000 satoshis as dust amount for outputs is only considering `P2PH`, `P2SH` and `P2PK` output types.
-For `P2MS` (raw multisig) a higher dust limits may be required, you can [find more info here][info-dust-limit]
-:::
-
-### Output Standardness
-
-Bitcoin Cash only allows a few types of `lockingBytecode` scripts for outputs in the normal network relay rules. These are called 'standard outputs', contrasted to 'non-standard outputs' which cause the transaction not to relay on the network.
-
-There's 4 types of standard output types: `P2PKH`, `P2SH` (which includes `P2SH20` & `P2SH32`), `P2MS` and `OP_RETURN` data-outputs. For more details see the [standard outputs documentation][standard-outputs-docs].
-
-:::caution
-The `lockingBytecode` standardness rules can be important for smart contract developers, and is why CashScript has helpers like `LockingBytecodeP2PKH`, `LockingBytecodeP2SH32` and `LockingBytecodeNullData`.
+The standard practice of 1,000 satoshis as dust amount for outputs is for the `P2PKH`, `P2SH20` and `P2SH32` output types.
+For custom locking bytecode outputs a higher dust limits may be required, you can [find more info here][info-dust-limit].
 :::
 
 ### Minimum Relay Fee
@@ -100,15 +87,15 @@ The Bitcoin Cash protocol does not strictly enforce minimum fees for transaction
 
 | Limit type | Constraint |
 |------------|-------------|
-| Max contract size | 1,650 bytes (standardness) |
-| NFT commitment length | 40 bytes (consensus) |
+| Max contract size | 10,000 bytes (consensus) |
+| NFT commitment length | 128 bytes (consensus) |
 | Operation cost limit | Based on script length (consensus) |
 | Max stack element size | 10,000 bytes (consensus) |
 | Max transaction size | 100,000 bytes for standardness (1MB for consensus) |
-| Max OP_RETURN data size | 220 bytes data payload  (standardness) |
+| Output locking bytecode size | 201 bytes (standardness) |
+| Max OP_RETURN data size | 220 bytes data payload (standardness) |
 | Dust threshold | based on output size (standardness) - commonly 1,000 sats is used as dust |
 | Minimum relay fee | 1sat/byte (standardness) |
-| Output Standardness | `P2PKH`, `P2SH` (incl. `P2SH20` & `P2SH32`), `P2MS` and `OP_RETURN` data-outputs|
 
 For further details on transaction validation and standardness rules, see the [documentation on BCH transaction validation][standardness-docs].
 

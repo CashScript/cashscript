@@ -1,18 +1,19 @@
 import {
-  OpcodesBch2023,
   encodeDataPush,
   hexToBin,
   disassembleBytecodeBch,
   flattenBinArray,
   encodeAuthenticationInstructions,
   decodeAuthenticationInstructions,
+  OpcodesBch,
+  AuthenticationInstruction,
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
 import { optimisationReplacements } from './optimisations.js';
 import { FullLocationData, PositionHint, SingleLocationData } from './types.js';
 import { LogEntry, RequireStatement } from './artifact.js';
 
-export const Op = OpcodesBch2023;
+export const Op = OpcodesBch;
 export type Op = number;
 export type OpOrData = Op | Uint8Array;
 export type Script = OpOrData[];
@@ -66,8 +67,10 @@ export function asmToBytecode(asm: string): Uint8Array {
 
   // Convert the ASM tokens to AuthenticationInstructions
   const instructions = asm.split(' ').map((token) => {
+    // Even though the OpcodesBch type allows for { [key: number]: string }, we know that the keys are always the opcodes
+    // so we can safely cast to the AuthenticationInstruction type
     if (token.startsWith('OP_')) {
-      return { opcode: Op[token as keyof typeof Op] };
+      return { opcode: Op[token as keyof typeof Op] } as AuthenticationInstruction;
     }
 
     const data = token.replace(/<|>/g, '').replace(/^0x/, '');

@@ -1,0 +1,12 @@
+contract Loopy() {
+    function doLoop() {
+        int i = 0;
+
+        while (i < tx.inputs.length) {
+            i = i + 1;
+        }
+
+        console.log(i);
+        require(i > 2);
+    }
+}

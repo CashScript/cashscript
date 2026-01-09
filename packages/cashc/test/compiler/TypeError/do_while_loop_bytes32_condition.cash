@@ -1,0 +1,12 @@
+contract Loopy() {
+    function doLoop() {
+        int i = 0;
+
+        do {
+            i = i + 1;
+        } while (tx.inputs[0].outpointTransactionHash);
+
+        console.log(i);
+        require(i > 2);
+    }
+}

@@ -52,6 +52,7 @@ statement
     | timeOpStatement
     | requireStatement
     | ifStatement
+    | loopStatement
     | consoleStatement
     ;
 
@@ -77,6 +78,14 @@ requireStatement
 
 ifStatement
     : 'if' '(' expression ')' ifBlock=block ('else' elseBlock=block)?
+    ;
+
+loopStatement
+    : doWhileStatement
+    ;
+
+doWhileStatement
+    : 'do' block 'while' '(' expression ')' ';'
     ;
 
 consoleStatement
@@ -115,10 +124,10 @@ expression
     | expression op=('.reverse()' | '.length') # UnaryOp
     | left=expression op='.split' '(' right=expression ')' # BinaryOp
     | element=expression '.slice' '(' start=expression ',' end=expression ')' # Slice
-    | op=('!' | '-') expression # UnaryOp
+    | op=('!' | '-' | '~') expression # UnaryOp
     | left=expression op=('*' | '/' | '%') right=expression # BinaryOp
     | left=expression op=('+' | '-') right=expression # BinaryOp
-    // | expression ('>>' | '<<') expression --- OP_LSHIFT & RSHIFT are disabled in BCH Script
+    | left=expression op=('>>' | '<<') right=expression # BinaryOp
     | left=expression op=('<' | '<=' | '>' | '>=') right=expression # BinaryOp
     | left=expression op=('==' | '!=') right=expression # BinaryOp
     | left=expression op='&' right=expression # BinaryOp

@@ -905,4 +905,79 @@ export const fixtures: Fixture[] = [
       updatedAt: '',
     },
   },
+  {
+    fn: 'complex_loop.cash',
+    artifact: {
+      contractName: 'Loopy',
+      constructorInputs: [],
+      abi: [{ name: 'doLoop', inputs: [] }],
+      bytecode: 'OP_0 OP_0 OP_0 OP_0 OP_BEGIN OP_DUP OP_UTXOVALUE OP_4 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_FROMALTSTACK OP_DUP OP_1ADD OP_NIP OP_TXOUTPUTCOUNT OP_2DUP OP_LESSTHAN OP_DUP OP_IF OP_2 OP_PICK OP_OUTPUTTOKENCATEGORY OP_0 OP_EQUAL OP_NOT OP_NIP OP_DUP OP_IF OP_4 OP_PICK OP_3 OP_PICK OP_OUTPUTVALUE OP_ADD OP_5 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_FROMALTSTACK OP_FROMALTSTACK OP_ELSE OP_3 OP_PICK OP_1ADD OP_4 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_FROMALTSTACK OP_ENDIF OP_ENDIF OP_2DROP OP_DUP OP_TXINPUTCOUNT OP_GREATERTHANOREQUAL OP_UNTIL OP_2SWAP OP_GREATERTHAN OP_VERIFY OP_SWAP OP_0 OP_GREATERTHAN OP_NIP',
+      debug: {
+        bytecode: '000000006576c6547a757c6b7c6b7c6c6c768b77c46e9f76635279d100879177766354795379cc93557a757c6b7c6b7c6b7c6c6c6c6753798b547a757c6b7c6b7c6c6c68686d76c3a26672a0697c00a077',
+        sourceMap: '3:23:3:24;4:24:4:25;5:25:5:26;6:16:6:17;8:8:26:39;9:33:9:34;:23::41:1;:12::42;;;;;;;;;;10:16:10:17:0;:::21:1;:12::22;12:20:12:37:0;13:21:13:26;::::1;15:16:15:17:0;:19:25:13;16:31:16:32;;:20::47:1;:51::53:0;:20:::1;;:16::54;18:20:18:21:0;:23:20:17;19:32:19:41;;:55::56;;:44::63:1;:32;:20::64;;;;;;;;;;;;;20:23:22:17:0;21:33:21:43;;:::47:1;:20::48;;;;;;;;;;20:23:22:17;15:19:25:13;8:11:26:9;26:17::18:0;:21::37;8:8::39:1;;28:16:28:36:0;::::1;:8::38;29:16:29:26:0;:29::30;:8::32:1;2:4:30:5',
+        logs: [
+          { ip: 68, line: 24, data: [{ stackIndex: 3, type: 'int', ip: 68 }] },
+        ],
+        requires: [
+          { ip: 76, line: 28 },
+          { ip: 80, line: 29 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/complex_loop.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'do_while_loop_no_introspection.cash',
+    artifact: {
+      contractName: 'Loopy',
+      constructorInputs: [],
+      abi: [{ name: 'doLoop', inputs: [] }],
+      bytecode: 'OP_0 OP_2 OP_BEGIN OP_OVER OP_1ADD OP_ROT OP_DROP OP_SWAP OP_2DUP OP_ADD OP_10 OP_LESSTHAN OP_VERIFY OP_OVER OP_10 OP_GREATERTHANOREQUAL OP_UNTIL OP_2DROP OP_1',
+      debug: {
+        bytecode: '005265788b7b757c6e935a9f69785aa2666d51',
+        sourceMap: '3:16:3:17;4::4;6:8:10:25;7:16:7:17;:::21:1;:12::22;;;9:20:9:25:0;::::1;:28::30:0;:20:::1;:12::32;10:17:10:18:0;:21::23;6:8::25:1;;2:4:11:5;',
+        logs: [
+          { ip: 8, line: 8, data: [{ stackIndex: 1, type: 'int', ip: 8 }] },
+        ],
+        requires: [
+          { ip: 12, line: 9 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/do_while_loop_no_introspection.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'bitshift.cash',
+    artifact: {
+      contractName: 'Bitshift',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: '1122334455667788 OP_4 OP_LSHIFTBIN OP_4 OP_RSHIFTBIN 0000000055667788 OP_EQUALVERIFY OP_8 OP_2 OP_RSHIFTNUM OP_1 OP_LSHIFTNUM OP_16 OP_NUMEQUAL',
+      debug: {
+        bytecode: '081122334455667788549854990800000000556677888858528e518d609c',
+        sourceMap: '3:19:3:37;4:24:4:25;:19:::1;:29::30:0;:19:::1;6:21:6:39:0;:8::41:1;8:16:8:17:0;9:21:9:22;:16:::1;:26::27:0;:16:::1;11:22:11:24:0;:8::26:1',
+        logs: [],
+        requires: [
+          { ip: 6, line: 6 },
+          { ip: 14, line: 11 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/bitshift.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
 ];

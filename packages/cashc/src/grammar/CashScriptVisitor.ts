@@ -21,6 +21,8 @@ import { AssignStatementContext } from "./CashScriptParser.js";
 import { TimeOpStatementContext } from "./CashScriptParser.js";
 import { RequireStatementContext } from "./CashScriptParser.js";
 import { IfStatementContext } from "./CashScriptParser.js";
+import { LoopStatementContext } from "./CashScriptParser.js";
+import { DoWhileStatementContext } from "./CashScriptParser.js";
 import { ConsoleStatementContext } from "./CashScriptParser.js";
 import { RequireMessageContext } from "./CashScriptParser.js";
 import { ConsoleParameterContext } from "./CashScriptParser.js";
@@ -162,6 +164,18 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitIfStatement?: (ctx: IfStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.loopStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitLoopStatement?: (ctx: LoopStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.doWhileStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitDoWhileStatement?: (ctx: DoWhileStatementContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.consoleStatement`.
 	 * @param ctx the parse tree

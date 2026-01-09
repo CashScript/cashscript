@@ -52,7 +52,7 @@ We can start from a basic `TransferWithTimeout` smart contract, a simple contrac
 
 Open your code editor to start writing your first CashScript smart contract. Then create a new file `TransferWithTimeout.cash` and copy over the smart contracts code from below.
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     // Allow the recipient to claim their received money
@@ -118,7 +118,6 @@ For a code example of how to generate key-pairs with Libauth, see the [CashScrip
 :::
 
 With the instantiated contract, we can now get the contract address and get the contract balance and UTXOs in the following way:
-
 
 ```javascript
 import { ElectrumNetworkProvider, Contract } from 'cashscript';
