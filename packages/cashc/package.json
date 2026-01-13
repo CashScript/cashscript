@@ -62,7 +62,6 @@
     "eslint-plugin-import": "^2.31.0",
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
-    "url-join": "^5.0.0",
     "vitest": "^4.0.15"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
