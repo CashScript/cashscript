@@ -214,18 +214,6 @@ Casting an integer to a fixed-size byte-length can be a very important when stor
 VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
 :::
 
-### Bytes to BytesX Casting
-
-If you do need to pad bytes to a specific length, you can convert the bytes to `int` first, and then cast to the bounded `bytes` type. This will pad the bytes with zeros to the specified length, like specified in the *Int to Byte Casting* section above.
-
-#### Example
-```solidity
-bytes10 data = nftCommitment.split(10)[0];
-// First convert 'bytes' type to 'int' to cast with padding
-bytes20 paddedData = bytes20(int(data));
-require(storedContractState == paddedData);
-```
-
 ### Semantic Byte Casting
 
 When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20` or `bytes32`), this is a purely semantic cast. The bytes are not padded with zeros, and no checks are performed to ensure the cast bytes are of the correct length. This can be helpful in certain cases, such as `LockingBytecode`, which expects a specific length input.
