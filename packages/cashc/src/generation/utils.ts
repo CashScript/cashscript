@@ -27,6 +27,10 @@ export function compileCast(from: Type, to: Type): Script {
     return [Op.OP_BIN2NUM];
   }
 
+  if (from === PrimitiveType.INT && to === PrimitiveType.BOOL) {
+    return [Op.OP_0NOTEQUAL];
+  }
+
   return [];
 }
 

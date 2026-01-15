@@ -171,9 +171,13 @@ export const fixtures: Fixture[] = [
               ),
               new BranchNode(
                 new BinaryOpNode(
-                  new IdentifierNode('d'),
-                  BinaryOperator.EQ,
-                  new IdentifierNode('x'),
+                  new BinaryOpNode(
+                    new IdentifierNode('d'),
+                    BinaryOperator.EQ,
+                    new IdentifierNode('x'),
+                  ),
+                  BinaryOperator.AND,
+                  new CastNode(PrimitiveType.BOOL, new IdentifierNode('x')),
                 ),
                 new BlockNode([
                   new VariableDefinitionNode(
