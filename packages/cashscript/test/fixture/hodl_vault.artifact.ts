@@ -68,7 +68,7 @@ export default {
   },
   compiler: {
     name: 'cashc',
-    version: '0.11.0',
+    version: '0.13.0-next.2',
   },
-  updatedAt: '2025-06-16T15:05:55.227Z',
+  updatedAt: '2026-01-20T10:49:40.224Z',
 } as const;

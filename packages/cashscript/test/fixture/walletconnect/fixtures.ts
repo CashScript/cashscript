@@ -91,7 +91,7 @@ export const generateWcTransactionObjectFixture = {
           },
           'compiler': {
             'name': 'cashc',
-            'version': '0.11.0',
+            'version': expect.any(String),
           },
           'updatedAt': expect.any(String),
         },
@@ -107,4 +107,4 @@ export const generateWcTransactionObjectFixture = {
     },
   ],
 }
-;
+  ;
