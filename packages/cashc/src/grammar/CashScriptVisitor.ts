@@ -46,6 +46,7 @@ import { ModifierContext } from "./CashScriptParser.js";
 import { LiteralContext } from "./CashScriptParser.js";
 import { NumberLiteralContext } from "./CashScriptParser.js";
 import { TypeNameContext } from "./CashScriptParser.js";
+import { TypeCastContext } from "./CashScriptParser.js";
 
 
 /**
@@ -327,5 +328,11 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitTypeName?: (ctx: TypeNameContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.typeCast`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTypeCast?: (ctx: TypeCastContext) => Result;
 }
 

@@ -40,7 +40,6 @@ import {
   AssignTypeError,
   ArrayElementError,
   IndexOutOfBoundsError,
-  CastSizeError,
   TupleAssignmentError,
   BitshiftBitcountNegativeError,
 } from '../Errors.js';
@@ -116,17 +115,9 @@ export default class TypeCheckTraversal extends AstTraversal {
 
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
-    node.size = this.visitOptional(node.size);
 
     if (!explicitlyCastable(node.expression.type, node.type)) {
       throw new CastTypeError(node);
-    }
-
-    // Variable size cast is only possible from INT to unbounded BYTES
-    if (node.size) {
-      if (node.expression.type !== PrimitiveType.INT || node.type.toString() !== 'bytes') {
-        throw new CastSizeError(node);
-      }
     }
 
     return node;

@@ -202,14 +202,6 @@ export class CastTypeError extends TypeError {
   }
 }
 
-export class CastSizeError extends CashScriptError {
-  constructor(
-    node: CastNode,
-  ) {
-    super(node, 'Unexpected cast size argument found');
-  }
-}
-
 export class AssignTypeError extends TypeError {
   constructor(
     node: AssignNode | VariableDefinitionNode,

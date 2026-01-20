@@ -200,7 +200,7 @@ export class CastNode extends ExpressionNode implements Typed {
   constructor(
     public type: Type,
     public expression: ExpressionNode,
-    public size?: ExpressionNode,
+    public isUnsafe: boolean,
   ) {
     super();
   }

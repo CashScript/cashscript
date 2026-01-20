@@ -412,15 +412,8 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
 
-    // Special case for sized bytes cast, since it has another node to traverse
-    if (node.size) {
-      node.size = this.visit(node.size);
-      this.emit(Op.OP_NUM2BIN, { location: node.location, positionHint: PositionHint.END });
-      this.popFromStack();
-    }
-
     this.emit(
-      compileCast(node.expression.type as PrimitiveType, node.type),
+      compileCast(node.expression.type as PrimitiveType, node.type, node.isUnsafe),
       { location: node.location, positionHint: PositionHint.END },
     );
     this.popFromStack();

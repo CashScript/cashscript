@@ -18,17 +18,19 @@ export function compileTimeOp(op: TimeOp): Script {
   return mapping[op];
 }
 
-export function compileCast(from: Type, to: Type): Script {
+export function compileCast(from: Type, to: Type, isUnsafe: boolean): Script {
+  if (isUnsafe) return [];
+
   if (from === PrimitiveType.INT && to instanceof BytesType && to.bound !== undefined) {
     return [encodeInt(BigInt(to.bound)), Op.OP_NUM2BIN];
   }
 
-  if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
-    return [Op.OP_BIN2NUM];
-  }
-
   if (from === PrimitiveType.INT && to === PrimitiveType.BOOL) {
     return [Op.OP_0NOTEQUAL];
+  }
+
+  if (from instanceof BytesType && to === PrimitiveType.INT) {
+    return [Op.OP_BIN2NUM];
   }
 
   return [];

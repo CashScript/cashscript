@@ -194,7 +194,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitCast(node: CastNode): Node {
-    this.addOutput(`${node.type}(`);
+    this.addOutput(`${node.isUnsafe ? 'unsafe_' : ''}${node.type}(`);
     node.expression = this.visit(node.expression);
     this.addOutput(')');
     return node;

@@ -177,7 +177,7 @@ export const fixtures: Fixture[] = [
                     new IdentifierNode('x'),
                   ),
                   BinaryOperator.AND,
-                  new CastNode(PrimitiveType.BOOL, new IdentifierNode('x')),
+                  new CastNode(PrimitiveType.BOOL, new IdentifierNode('x'), false),
                 ),
                 new BlockNode([
                   new VariableDefinitionNode(
@@ -372,6 +372,7 @@ export const fixtures: Fixture[] = [
               new CastNode(
                 PrimitiveType.INT,
                 new IdentifierNode('blockHeightBin'),
+                false,
               ),
             ),
             new VariableDefinitionNode(
@@ -381,6 +382,7 @@ export const fixtures: Fixture[] = [
               new CastNode(
                 PrimitiveType.INT,
                 new IdentifierNode('priceBin'),
+                false,
               ),
             ),
             new RequireNode(
@@ -813,6 +815,7 @@ export const fixtures: Fixture[] = [
                   new CastNode(
                     new BytesType(),
                     new StringLiteralNode('A contract may not injure a human being or, through inaction, allow a human being to come to harm.', '\''),
+                    false,
                   ),
                 ])],
               ),

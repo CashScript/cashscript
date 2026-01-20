@@ -115,7 +115,7 @@ expressionList
 
 expression
     : '(' expression ')' # Parenthesised
-    | typeName '(' castable=expression (',' size=expression)? ','? ')' # Cast
+    | typeCast '(' castable=expression ','? ')' # Cast
     | functionCall # FunctionCallExpression
     | 'new' Identifier expressionList #Instantiation
     | expression '[' index=NumberLiteral ']' # TupleIndexOp
@@ -158,7 +158,15 @@ numberLiteral
     ;
 
 typeName
-    : 'int' | 'bool' | 'string' | 'pubkey' | 'sig' | 'datasig' | Bytes
+    : PrimitiveType 
+    | BoundedBytes 
+    | UnboundedBytes
+    ;
+
+typeCast
+    : PrimitiveType
+    | UnboundedBytes
+    | UnsafeCast
     ;
 
 VersionLiteral
@@ -186,8 +194,21 @@ ExponentPart
     : [eE] NumberPart
     ;
 
-Bytes
-    : 'bytes' Bound? | 'byte'
+PrimitiveType
+    : 'int'
+    | 'bool'
+    | 'string'
+    | 'pubkey'
+    | 'sig'
+    | 'datasig'
+    ;
+
+UnboundedBytes
+    : 'bytes'
+    ;
+
+BoundedBytes
+    : 'bytes' Bound | 'byte'
     ;
 
 Bound
@@ -210,6 +231,13 @@ HexLiteral
 TxVar
     : 'this.age'
     | 'tx.time'
+    ;
+
+UnsafeCast
+    : 'unsafe_int'
+    | 'unsafe_bool'
+    | 'unsafe_bytes' Bound?
+    | 'unsafe_byte'
     ;
 
 NullaryOp

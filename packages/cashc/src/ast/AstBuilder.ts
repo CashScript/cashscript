@@ -241,10 +241,11 @@ export default class AstBuilder
   }
 
   visitCast(ctx: CastContext): CastNode {
-    const type = parseType(ctx.typeName().getText());
+    const rawType = ctx.typeCast().getText();
+    const type = parseType(rawType.replace('unsafe_', ''));
+    const isUnsafe = rawType.startsWith('unsafe_');
     const expression = this.visit(ctx._castable);
-    const size = ctx._size && this.visit(ctx._size);
-    const cast = new CastNode(type, expression, size);
+    const cast = new CastNode(type, expression, isUnsafe);
     cast.location = Location.fromCtx(ctx);
     return cast;
   }
