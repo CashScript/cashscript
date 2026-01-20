@@ -50,6 +50,7 @@ export function compileGlobalFunction(fn: GlobalFunction): Script {
     [GlobalFunction.HASH160]: [Op.OP_HASH160],
     [GlobalFunction.HASH256]: [Op.OP_HASH256],
     [GlobalFunction.WITHIN]: [Op.OP_WITHIN],
+    [GlobalFunction.TO_PADDED_BYTES]: [Op.OP_NUM2BIN],
   };
 
   return mapping[fn];

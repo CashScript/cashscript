@@ -411,12 +411,12 @@ export const fixtures: Fixture[] = [
       contractName: 'BoundedBytes',
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [{ name: 'b', type: 'bytes4' }, { name: 'i', type: 'int' }] }],
-      bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL', // require(b == bytes4(i))
+      bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL', // require(b == toPaddedBytes(i, 4))
       debug: {
         bytecode: '7c548087',
         logs: [],
         requires: [{ ip: 4, line: 3 }],
-        sourceMap: '3:28:3:29;:21::30:1;;:8::32',
+        sourceMap: '3:35:3:36;:38::39;:21::40:1;:8::42',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/bounded_bytes.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -701,7 +701,7 @@ export const fixtures: Fixture[] = [
         bytecode: '5a7c80815a9c',
         logs: [],
         requires: [{ ip: 6, line: 4 }],
-        sourceMap: '3:28:3:30;:32::36;:22::37:1;4:16:4:26;:30::32:0;:8::34:1',
+        sourceMap: '3:36:3:38;:40::44;:22::45:1;4:16:4:26;:30::32:0;:8::34:1',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/num2bin_variable.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -887,7 +887,7 @@ export const fixtures: Fixture[] = [
       bytecode: '14 OP_SPLIT OP_DROP OP_0 14 OP_NUM2BIN OP_EQUAL',
       debug: {
         bytecode: '01147f750001148087',
-        sourceMap: '3:36:3:38;:22::39:1;;4:31:4:32:0;:23::33:1;;:8::35',
+        sourceMap: '3:36:3:38;:22::39:1;;4:37:4:38:0;:40::42;:23::43:1;:8::45',
         logs: [],
         requires: [
           {

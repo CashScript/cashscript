@@ -143,6 +143,12 @@ export default class TypeCheckTraversal extends AstTraversal {
     }
 
     node.type = type;
+
+    // Infer the type of the toPaddedBytes function (depends on the second parameter)
+    if (node.identifier.name === GlobalFunction.TO_PADDED_BYTES) {
+      node.type = inferPaddedBytesType(node);
+    }
+
     return node;
   }
 
@@ -483,3 +489,11 @@ function inferSliceType(node: SliceNode): Type {
   // bytes.slice(NumberLiteral start, NumberLiteral end) -> bytes(end - start)
   return new BytesType(end - start);
 }
+
+const inferPaddedBytesType = (node: FunctionCallNode): Type => {
+  if (node.parameters[1] instanceof IntLiteralNode) {
+    return new BytesType(Number(node.parameters[1].value));
+  }
+
+  return new BytesType();
+};
