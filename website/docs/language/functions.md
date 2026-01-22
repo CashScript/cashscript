@@ -113,4 +113,19 @@ bool checkDataSig(datasig s, bytes msg, pubkey pk)
 
 Checks that sig `s` is a valid signature for message `msg` and matches with public key `pk`.
 
+## Other functions
+
+### toPaddedBytes()
+```solidity
+bytes toPaddedBytes(int value, int length)
+```
+
+Pads the integer `value` with zeros to the specified `length`. This is most useful when storing integer values in local state (see [local state guide][local-state-guide]).
+
+:::tip
+Using `bytes20 placeholderPkh = toPaddedBytes(0, 20)` will generate a 20 byte zero-array at runtime, whereas
+`bytes20 placeholderPkh = 0x0000000000000000000000000000000000000000` will actually take 20 bytes of space in your contract.
+:::
+
 [bip146]: https://github.com/bitcoin/bips/blob/master/bip-0146.mediawiki
+[local-state-guide]: /docs/guides/covenants#keeping-local-state-in-nfts
