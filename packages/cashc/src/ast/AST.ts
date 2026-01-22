@@ -165,6 +165,19 @@ export class BranchNode extends StatementNode {
   }
 }
 
+export class DoWhileNode extends StatementNode {
+  constructor(
+    public condition: ExpressionNode,
+    public block: BlockNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitDoWhile(this);
+  }
+}
+
 export class BlockNode extends Node {
   symbolTable?: SymbolTable;
 
@@ -187,7 +200,7 @@ export class CastNode extends ExpressionNode implements Typed {
   constructor(
     public type: Type,
     public expression: ExpressionNode,
-    public size?: ExpressionNode,
+    public isUnsafe: boolean,
   ) {
     super();
   }

@@ -1,6 +1,6 @@
 contract Test() {
     function hello() {
-        bytes1 b = bytes1(0x1234);
+        bytes1 b = unsafe_bytes1(0x1234);
         require(b.length == 1);
     }
 }

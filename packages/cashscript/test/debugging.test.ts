@@ -1,4 +1,5 @@
 import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
+import { DEFAULT_VM_TARGET } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
@@ -11,15 +12,22 @@ import {
   artifactTestSingleFunction,
   artifactTestMultilineRequires,
   artifactTestZeroHandling,
+  artifactTestRequireInsideLoop,
+  artifactTestLogInsideLoop,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
     const provider = new MockNetworkProvider();
+
     const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
     const contractUtxo = randomUtxo();
     provider.addUtxo(contractTestLogs.address, contractUtxo);
+
+    const contractTestLogInsideLoop = new Contract(artifactTestLogInsideLoop, [], { provider });
+    const contractTestLogInsideLoopUtxo = randomUtxo();
+    provider.addUtxo(contractTestLogInsideLoop.address, contractTestLogInsideLoopUtxo);
 
     it('should log correct values', async () => {
       const transaction = new TransactionBuilder({ provider })
@@ -153,6 +161,38 @@ describe('Debugging tests', () => {
     });
 
     it.todo('intermediate results that is more complex than the test above');
+
+    it('should log inside a loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogInsideLoop.unlock.test_log_inside_loop())
+        .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 1$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 2$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 3$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 4$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 5$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 6$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 7$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 8$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 9$'));
+    });
+
+    it('should log inside a complex nested loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestLogInsideLoopUtxo, contractTestLogInsideLoop.unlock.test_log_inside_loop_complex())
+        .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 0 j: 0 k: 0 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 0 j: 1 k: 1 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:32 outer loop i: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 1 j: 0 k: 1 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 1 j: 1 k: 2 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:32 outer loop i: 1$'));
+    });
+
+    it.todo('should log intermediate results that get optimised out inside a loop');
   });
 
   describe('require statements', () => {
@@ -164,6 +204,10 @@ describe('Debugging tests', () => {
     const contractTestMultiLineRequires = new Contract(artifactTestMultilineRequires, [], { provider });
     const contractTestMultiLineRequiresUtxo = randomUtxo();
     provider.addUtxo(contractTestMultiLineRequires.address, contractTestMultiLineRequiresUtxo);
+
+    const contractTestRequireInsideLoop = new Contract(artifactTestRequireInsideLoop, [], { provider });
+    const contractTestRequireInsideLoopUtxo = randomUtxo();
+    provider.addUtxo(contractTestRequireInsideLoop.address, contractTestRequireInsideLoopUtxo);
 
     // test_require
     it('should fail with error message when require statement fails in a multi-function contract', async () => {
@@ -448,6 +492,17 @@ describe('Debugging tests', () => {
       ])
     );`);
     });
+
+    it('should fail a require statement inside a loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequireInsideLoopUtxo, contractTestRequireInsideLoop.unlock.test_require_inside_loop())
+        .addOutput({ to: contractTestRequireInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:7 Require statement failed at input 0 in contract Test.cash at line 7 with the following message: i should be less than 6.');
+      expect(transaction).toFailRequireWith('Failing statement: require(i < 6, \'i should be less than 6\')');
+    });
+
+    it.todo('should fail correct require statement inside nested loops');
   });
 
   describe('Non-require error messages', () => {
@@ -668,7 +723,7 @@ describe('Debugging tests', () => {
         .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
         .addOutput({ to: contractTestLogs.address, amount: 10000n });
 
-      expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? 'BCH_2025_05');
+      expect(transaction.getLibauthTemplate().supported[0]).toBe(vmTarget ?? DEFAULT_VM_TARGET);
 
       const expectedLog = new RegExp(`^\\[Input #0] Test.cash:10 0x[0-9a-f]{130} 0x${binToHex(alicePub)} 1000 0xbeef 1 test true$`);
       expect(transaction).toLog(expectedLog);

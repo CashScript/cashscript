@@ -1,0 +1,7 @@
+contract Test() {
+    function spend() {
+        bytes8 x = 0x1122334455667788;
+        bytes8 y = x << 0x04;
+        require(y == 0x0000000055667788);
+    }
+}

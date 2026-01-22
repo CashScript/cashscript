@@ -26,8 +26,9 @@ Operators:
 
 - Comparisons: `<=`, `<`, `==`, `!=`, `>=`, `>` (all evaluate to `bool`)
 - Arithmetic operators: `+`, `-`, unary `-`, `*`, `/`, `%` (modulo).
+- Arithmetic shift operators: `<<`, `>>` (left and right shift)
 
-Note the lack of the `**` (exponentiation) operator as well as any shifting operators.
+Note the lack of the `**` (exponentiation).
 
 #### Number Formatting
 
@@ -69,7 +70,7 @@ Members:
 - `reverse()`: Reverses the string.
 
 :::caution
-The script will fail if `split()`or `slice()` is called with an index that is out of bounds.
+The script will fail if `split()` or `slice()` is called with an index that is out of bounds.
 :::
 
 ## Bytes
@@ -83,8 +84,9 @@ Operators:
 - `&` (bitwise AND)
 - `|` (bitwise OR)
 - `^` (bitwise XOR)
-
-Note the lack of the bitshift operators (`<<` and `>>`) as well as bitwise INVERT (`~`).
+- `<<` (bitwise left shift)
+- `>>` (bitwise right shift)
+- `~` (bitwise inversion)
 
 Members:
 
@@ -165,7 +167,7 @@ Type casting can be done both explicitly and implicitly depending on the type. `
 ```solidity
 pubkey pk = pubkey(0x0000);
 bytes editedPk = bytes(pk) + 0x1234;
-bytes4 zeroBytes = bytes4(0); // 0x00000000
+bool b = bool(5); // true
 ```
 
 ### Casting Table
@@ -177,53 +179,37 @@ See the following table for information on which types can be cast to other whic
 | int     |                        | bytes, bool                        |
 | bool    |                        | int                                |
 | string  |                        | bytes                              |
-| bytes   |                        | sig, pubkey, int                   |
+| bytes   |                        | sig, datasig, pubkey, int          |
 | pubkey  | bytes                  | bytes                              |
 | sig     | bytes                  | bytes                              |
 | datasig | bytes                  | bytes                              |
 
-:::caution
-Casting from `int` to `bool` does not currently change the value of the integer. This can have unexpected consequences in boolean comparisons.
+### Semantic Bytes Casting
 
-```solidity
-if (bool(7)) { ...} // This works as expected
-if (bool(7) == true) { ... } // This does not work as expected
-```
-
-:::
-
-### Int to Byte Casting
-
-When casting integer types to bytes of a certain size, the integer value is padded with zeros, e.g. `bytes4(0) == 0x00000000`. It is also possible to pad with a variable number of zeros by passing in a `size` parameter, which indicates the size of the output, e.g. `bytes(0, 4 - 2) == 0x0000`.
-
-:::tip
-Using `bytes20 placeholderPkh= bytes20(0)` will generate a 20 byte zero-array programmatically, whereas
-`bytes20 placeholderPkh= 0x0000000000000000000000000000000000000000` will actually take 20 bytes of space in your contract.
-:::
-
-Casting an integer to a fixed-size byte-length can be a very important when storing local state in an nftCommitment. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each individual case depending on the integer range. Below we add a table with info on the maximum integer size for common cases:
-
-| Integer Type    | Max integer value                  | Max Byte Size in Script Number Format  |
-| --------------  | -----------------------------------| ---------------------------------------|
-| Satoshis        | 2.1 quadrillion (21,000,000 BCH)   | 7 bytes                                |
-| CashTokens      | 9.2 quintillion (`2^63 - 1`)       | 8 bytes for max supply token           |
-| Locktime        | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
-| SequenceNumber  | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
-
-:::info
-VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
-:::
-
-### Semantic Byte Casting
-
-When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20` or `bytes32`), this is a purely semantic cast. The bytes are not padded with zeros, and no checks are performed to ensure the cast bytes are of the correct length. This can be helpful in certain cases, such as `LockingBytecode`, which expects a specific length input.
+When casting unbounded `bytes` types to bounded `bytes` types (such as `bytes20` or `bytes32`), this is a purely semantic cast. The bytes are not padded with zeros, and no checks are performed to ensure the cast bytes are of the correct length. This is why this cast is marked with the `unsafe_` prefix. This can be helpful in certain cases, such as `LockingBytecode`, which expects a specific length input.
 
 #### Example
 ```solidity
 bytes pkh = tx.inputs[0].nftCommitment; // (type = bytes, content = 20 bytes)
 // Typecast the variable to be able to use it for 'new LockingBytecodeP2PKH()'
-bytes20 bytes20Pkh = bytes20(pkh); // (type = bytes20, content = 20 bytes)
+bytes20 bytes20Pkh = unsafe_bytes20(pkh); // (type = bytes20, content = 20 bytes)
 bytes25 lockingBytecode = new LockingBytecodeP2PKH(bytes20Pkh);
+```
+
+### Other Semantic Casting
+When casting a `bytes` to an `int` or when casting an `int` to a `bool`, opcodes are added to the script to perform a conversion between the two types. If you are an advanced user and want to perform these casts without the added opcodes, you can use the `unsafe_` prefix.
+
+#### Example
+```solidity
+bytes bytesValue = 0x123456000000; // not a valid minimally encoded integer
+
+int(bytesValue); // (type = int, content = 0x123456)
+unsafe_int(bytesValue); // (type = int, content = 0x123456000000)
+
+int intValue = 25;
+
+bool(intValue); // (type = bool, content = true / 0x01)
+unsafe_bool(intValue); // (type = bool, content = 25 / 0x19)
 ```
 
 ## Operators
@@ -239,14 +225,16 @@ An overview of all supported operators and their precedence is included below. N
 | 6          | Member access                       | `<object>.<member>`      |
 | 7          | Unary minus                         | `-`                      |
 | 7          | Logical NOT                         | `!`                      |
+| 7          | Bitwise inversion                   | `~`                      |
 | 8          | Multiplication, division and modulo | `*`, `/`, `%`            |
 | 9          | Addition and subtraction            | `+`, `-`                 |
 | 9          | String / bytes concatenation        | `+`                      |
-| 10         | Numeric comparison                  | `<`, `>`, `<=`, `>=`     |
-| 11         | Equality and inequality             | `==`, `!=`               |
-| 12         | Bitwise AND                         | `&`                      |
-| 13         | Bitwise XOR                         | `^`                      |
-| 14         | Bitwise OR                          | \|                       |
-| 15         | Logical AND                         | `&&`                     |
-| 16         | Logical OR                          | \|\|                     |
-| 17         | Assignment                          | `=`                      |
+| 10         | Bitwise / Arithmetic shift          | `<<`, `>>`               |
+| 11         | Numeric comparison                  | `<`, `>`, `<=`, `>=`     |
+| 12         | Equality and inequality             | `==`, `!=`               |
+| 13         | Bitwise AND                         | `&`                      |
+| 14         | Bitwise XOR                         | `^`                      |
+| 15         | Bitwise OR                          | `\|`                     |
+| 16         | Logical AND                         | `&&`                     |
+| 17         | Logical OR                          | `\|\|`                   |
+| 18         | Assignment                          | `=`                      |

@@ -1,7 +1,7 @@
 import { PrimitiveType, ArrayType, BytesType } from '@cashscript/utils';
 import { SymbolTable, Symbol } from './SymbolTable.js';
 
-export const NumberUnit: { [index:string] : number } = {
+export const NumberUnit: { [index: string]: number } = {
   SATOSHIS: 1,
   SATS: 1,
   FINNEY: 10,
@@ -27,6 +27,7 @@ export enum GlobalFunction {
   CHECKSIG = 'checkSig',
   CHECKMULTISIG = 'checkMultiSig',
   CHECKDATASIG = 'checkDataSig',
+  TO_PADDED_BYTES = 'toPaddedBytes',
 }
 
 export enum TimeOp {
@@ -101,4 +102,8 @@ GLOBAL_SYMBOL_TABLE.set(Symbol.function(
 GLOBAL_SYMBOL_TABLE.set(Symbol.function(
   GlobalFunction.CHECKDATASIG, PrimitiveType.BOOL,
   [PrimitiveType.DATASIG, new BytesType(), PrimitiveType.PUBKEY],
+));
+GLOBAL_SYMBOL_TABLE.set(Symbol.function(
+  GlobalFunction.TO_PADDED_BYTES, new BytesType(),
+  [PrimitiveType.INT, PrimitiveType.INT],
 ));

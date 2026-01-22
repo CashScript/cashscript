@@ -17,10 +17,10 @@ export default {
     },
   ],
   bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
-  source: 'contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == bytes4(i));\n    }\n}\n',
+  source: 'contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == toPaddedBytes(i, 4));\n    }\n}\n',
   debug: {
     bytecode: '7c548087',
-    sourceMap: '3:28:3:29;:21::30:1;;:8::32',
+    sourceMap: '3:35:3:36;:38::39;:21::40:1;:8::42',
     logs: [],
     requires: [
       {
@@ -31,7 +31,7 @@ export default {
   },
   compiler: {
     name: 'cashc',
-    version: '0.11.0',
+    version: '0.13.0-next.2',
   },
-  updatedAt: '2025-06-16T15:05:56.281Z',
+  updatedAt: '2026-01-20T10:49:41.226Z',
 } as const;

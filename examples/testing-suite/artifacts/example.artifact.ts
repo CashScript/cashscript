@@ -13,10 +13,10 @@ export default {
     },
   ],
   bytecode: 'OP_1 OP_NUMEQUAL',
-  source: 'contract Example() {\n  function test(int value) {\n    console.log(value, \'test\');\n    require(value == 1, \'Wrong value passed\');\n  }\n}\n',
+  source: 'contract Example() {\n  function test(int value) {\n    console.log(value, "test");\n    require(value == 1, "Wrong value passed");\n  }\n}\n',
   debug: {
-    bytecode: '007a519c',
-    sourceMap: '4:12:4:17;;:21::22;:12:::1',
+    bytecode: '519c',
+    sourceMap: '4:21:4:22;:4::46:1',
     logs: [
       {
         ip: 0,
@@ -33,7 +33,7 @@ export default {
     ],
     requires: [
       {
-        ip: 4,
+        ip: 2,
         line: 4,
         message: 'Wrong value passed',
       },
@@ -41,7 +41,7 @@ export default {
   },
   compiler: {
     name: 'cashc',
-    version: '0.11.0',
+    version: '0.13.0-next.2',
   },
-  updatedAt: '2025-04-11T09:08:09.750Z',
+  updatedAt: '2026-01-13T10:40:29.996Z',
 } as const;

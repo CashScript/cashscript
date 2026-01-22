@@ -11,7 +11,6 @@
 
 import fs from 'fs';
 import { URL } from 'url';
-import urlJoin from 'url-join';
 import { fixtures } from './fixtures.js';
 import { parseCode } from '../../src/compiler.js';
 import { readCashFiles } from '../test-utils.js';
@@ -24,7 +23,7 @@ describe('AST Builder', () => {
   describe('AST correctness', () => {
     fixtures.forEach((fixture) => {
       it(`should build correct AST for ${fixture.fn}`, () => {
-        const url = new URL(urlJoin(VALID_CONTRACT_FILES.toString(), fixture.fn));
+        const url = new URL(fixture.fn, `${VALID_CONTRACT_FILES}/`);
         const code = fs.readFileSync(url, { encoding: 'utf-8' });
         const ast = parseCode(code);
         expect(ast).toMatchObject(fixture.ast);

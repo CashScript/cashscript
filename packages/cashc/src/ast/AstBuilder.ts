@@ -34,6 +34,7 @@ import {
   ConsoleStatementNode,
   ConsoleParameterNode,
   SliceNode,
+  DoWhileNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -68,6 +69,8 @@ import type {
   StatementContext,
   RequireMessageContext,
   SliceContext,
+  DoWhileStatementContext,
+  LoopStatementContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -214,6 +217,18 @@ export default class AstBuilder
     return branch;
   }
 
+  visitLoopStatement(ctx: LoopStatementContext): DoWhileNode {
+    return this.visit(ctx.doWhileStatement()) as DoWhileNode;
+  }
+
+  visitDoWhileStatement(ctx: DoWhileStatementContext): DoWhileNode {
+    const condition = this.visit(ctx.expression());
+    const block = this.visit(ctx.block()) as StatementNode;
+    const doWhile = new DoWhileNode(condition, block);
+    doWhile.location = Location.fromCtx(ctx);
+    return doWhile;
+  }
+
   visitBlock(ctx: BlockContext): BlockNode {
     const statements = ctx.statement_list().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
@@ -226,10 +241,11 @@ export default class AstBuilder
   }
 
   visitCast(ctx: CastContext): CastNode {
-    const type = parseType(ctx.typeName().getText());
+    const rawType = ctx.typeCast().getText();
+    const type = parseType(rawType.replace('unsafe_', ''));
+    const isUnsafe = rawType.startsWith('unsafe_');
     const expression = this.visit(ctx._castable);
-    const size = ctx._size && this.visit(ctx._size);
-    const cast = new CastNode(type, expression, size);
+    const cast = new CastNode(type, expression, isUnsafe);
     cast.location = Location.fromCtx(ctx);
     return cast;
   }

@@ -2,6 +2,56 @@
 title: Migration Notes
 ---
 
+## v0.12 to v0.13
+
+### cashc compiler
+
+#### bounded bytes casting
+
+To indicate that `bytes4(bytes)` casting is purely semantic (and does not offer any type safety), we have renamed it to `unsafe_bytes4(bytes)`. We have also disallowed `bytes4(int)` casting (see section *int to padded bytes casting*).
+
+```solidity
+bytes x = 0x12345678;
+
+// before
+bytes4(x); // => 0x12345678 (correct semantic cast)
+bytes5(x); // => 0x12345678 (incorrect semantic cast)
+
+// after
+// marked as unsafe to indicate that this is a purely semantic cast
+unsafe_bytes4(x); // => 0x12345678 (correct semantic cast)
+unsafe_bytes5(x); // => 0x12345678 (incorrect semantic cast)
+```
+
+#### int to padded bytes casting
+
+In the past, `bytes4(int)` or `bytes(int, 4)` would perform a `NUM2BIN` operation, padding the value to 4 bytes, while `bytes4(bytes)` was a purely semantic type cast. This caused confusion, so instead you can now use the `toPaddedBytes(int, length)` function to perform the same padding (`NUM2BIN`) operation.
+
+```solidity
+// before
+bytes4(5); // => 0x05000000
+bytes(5, 4); // => 0x05000000
+
+// after
+toPaddedBytes(5, 4); // => 0x05000000
+```
+
+#### bool casting
+
+The `bool()` casting function now correctly changes the value of the argument to `true` for non-zero values and `false` for zero values, instead of only semantically treating the value as a boolean. This worked correctly when using the boolean directly inside `require` or `if` statements, but not when using it in a comparison.
+
+```solidity
+// before
+require(bool(5)); // => true
+require(bool(5) == true); // => false || compiles to 0x05 0x01 OP_NUMEQUALVERIFY
+
+// after
+require(bool(5)); // => still true
+require(bool(5) == true); // => true || compiles to 0x05 OP_0NOTEQUAL 0x01 OP_NUMEQUALVERIFY
+```
+
+If you want to keep the old behaviour (without added opcodes), you can use the `unsafe_bool()` casting function instead.
+
 ## v0.11 to v0.12
 
 There are several breaking changes to the SDK in this release.

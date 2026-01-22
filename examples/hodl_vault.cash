@@ -1,4 +1,4 @@
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 // This contract forces HODLing until a certain price target has been reached
 // A minimum block is provided to ensure that oracle price entries from before this block are disregarded
@@ -11,7 +11,7 @@ contract HodlVault(
     int minBlock,
     int priceTarget
 ) {
-    function spend(sig ownerSig, datasig oracleSig, bytes oracleMessage) {
+    function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {
         // message: { blockHeight, price }
         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);
         int blockHeight = int(blockHeightBin);

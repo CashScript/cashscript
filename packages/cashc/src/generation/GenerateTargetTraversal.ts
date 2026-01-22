@@ -7,7 +7,6 @@ import {
   Op,
   OpOrData,
   PrimitiveType,
-  resultingType,
   Script,
   scriptToAsm,
   generateSourceMap,
@@ -47,6 +46,7 @@ import {
   ConsoleParameterNode,
   ConsoleStatementNode,
   SliceNode,
+  DoWhileNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
@@ -59,6 +59,7 @@ import {
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
+import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -197,7 +198,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   removeFinalVerifyFromFunction(functionBodyNode: Node): void {
     // After EnsureFinalRequireTraversal, we know that the final opcodes are either
-    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
+    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP", "OP_ENDIF" or "OP_UNTIL"
 
     const finalOp = this.output.pop() as Op;
     const { location, positionHint } = this.locationData.pop()!;
@@ -219,7 +220,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(finalOp, { location, positionHint: PositionHint.END });
 
       // At this point there is no verification value left on the stack:
-      //  - scoped stack is cleared inside branch ended by OP_ENDIF
+      //  - scoped stack is cleared inside block ended by OP_ENDIF or OP_UNTIL
       //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
       //  - OP_VERIFY does not leave a verification value
       // so we add OP_1 to the script (indicating success)
@@ -381,6 +382,25 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return node;
   }
 
+  visitDoWhile(node: DoWhileNode): Node {
+    this.scopeDepth += 1;
+    this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
+
+    const stackDepth = this.stack.length;
+    node.block = this.visit(node.block);
+    this.removeScopedVariables(stackDepth, node.block);
+
+    node.condition = this.visit(node.condition);
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.scopeDepth -= 1;
+
+    return node;
+  }
+
   removeScopedVariables(depthBeforeScope: number, node: Node): void {
     const dropCount = this.stack.length - depthBeforeScope;
     for (let i = 0; i < dropCount; i += 1) {
@@ -392,15 +412,8 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
 
-    // Special case for sized bytes cast, since it has another node to traverse
-    if (node.size) {
-      node.size = this.visit(node.size);
-      this.emit(Op.OP_NUM2BIN, { location: node.location, positionHint: PositionHint.END });
-      this.popFromStack();
-    }
-
     this.emit(
-      compileCast(node.expression.type as PrimitiveType, node.type),
+      compileCast(node.expression.type as PrimitiveType, node.type, node.isUnsafe),
       { location: node.location, positionHint: PositionHint.END },
     );
     this.popFromStack();
@@ -562,7 +575,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    const isNumeric = resultingType(node.left.type, node.right.type) === PrimitiveType.INT;
+    const isNumeric = resultingTypeForBinaryOp(node.operator, node.left.type!, node.right.type!) === PrimitiveType.INT;
     this.emit(compileBinaryOp(node.operator, isNumeric), { location: node.location, positionHint: PositionHint.END });
     this.popFromStack(2);
     this.pushToStack('(value)');

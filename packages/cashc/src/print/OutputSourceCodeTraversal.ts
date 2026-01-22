@@ -29,6 +29,7 @@ import {
   ConsoleStatementNode,
   ConsoleParameterNode,
   SliceNode,
+  DoWhileNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 
@@ -163,6 +164,15 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
+  visitDoWhile(node: DoWhileNode): Node {
+    this.addOutput('do ', true);
+    node.block = this.visit(node.block) as BlockNode;
+    this.addOutput(' while (', true);
+    node.condition = this.visit(node.condition);
+    this.addOutput(');\n');
+    return node;
+  }
+
   visitConsoleStatement(node: ConsoleStatementNode): Node {
     this.addOutput('console.log(', true);
     node.parameters = this.visitCommaList(node.parameters) as ConsoleParameterNode[];
@@ -184,7 +194,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitCast(node: CastNode): Node {
-    this.addOutput(`${node.type}(`);
+    this.addOutput(`${node.isUnsafe ? 'unsafe_' : ''}${node.type}(`);
     node.expression = this.visit(node.expression);
     this.addOutput(')');
     return node;

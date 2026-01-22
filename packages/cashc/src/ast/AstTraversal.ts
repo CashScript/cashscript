@@ -28,6 +28,7 @@ import {
   ConsoleStatementNode,
   ConsoleParameterNode,
   SliceNode,
+  DoWhileNode,
 } from './AST.js';
 import AstVisitor from './AstVisitor.js';
 
@@ -86,6 +87,12 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
+  visitDoWhile(node: DoWhileNode): Node {
+    node.condition = this.visit(node.condition);
+    node.block = this.visit(node.block) as StatementNode;
+    return node;
+  }
+
   visitBlock(node: BlockNode): Node {
     node.statements = this.visitOptionalList(node.statements) as StatementNode[];
     return node;
@@ -93,7 +100,6 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
-    node.size = this.visitOptional(node.size);
     return node;
   }
 

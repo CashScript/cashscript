@@ -1,6 +1,6 @@
 {
   "name": "testing-suite",
-  "version": "0.12.1",
+  "version": "0.13.0-next.3",
   "description": "Example project to develop and test CashScript contracts",
   "main": "index.js",
   "type": "module",
@@ -12,21 +12,14 @@
     "test": "test"
   },
   "scripts": {
-    "build": "yarn clean && yarn compile",
-    "clean": "rm -rf ./dist",
-    "compile": "tsc -p tsconfig.json && yarn run task:compile",
+    "compile": "tsx tasks/compile.ts",
     "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
-    "prepare": "yarn build",
-    "prepublishOnly": "yarn test && yarn lint",
-    "task:compile": "tsx tasks/index.ts compile",
-    "pretest": "yarn run task:compile",
     "test": "vitest run"
   },
   "dependencies": {
     "@bitauth/libauth": "^3.1.0-next.8",
-    "cashc": "^0.12.1",
-    "cashscript": "^0.12.1",
-    "url-join": "^5.0.0"
+    "cashc": "^0.13.0-next.3",
+    "cashscript": "^0.13.0-next.3"
   },
   "devDependencies": {
     "tsx": "^4.20.3",

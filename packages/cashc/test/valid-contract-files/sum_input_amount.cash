@@ -1,0 +1,14 @@
+contract Loopy() {
+    function doLoop() {
+        int sum = 0;
+        int i = 0;
+
+        do {
+            sum = tx.inputs[i].value;
+            i = i + 1;
+        } while (i < tx.inputs.length);
+
+        console.log(sum);
+        require(sum > 2000);
+    }
+}

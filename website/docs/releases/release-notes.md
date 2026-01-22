@@ -2,12 +2,40 @@
 title: Release Notes
 ---
 
+## v0.13.0-next.3
+
+This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
+
+#### cashc compiler
+- :sparkles: Add support for `do {} while ()` loops.
+- :sparkles: Add support for bitwise and arithmetic shift operators (`<<`, `>>`) and bitwise inversion (`~`).
+- :sparkles: Add `unsafe_bool()` and `unsafe_int()` casting for semantic-only casts.
+- :bug: **BREAKING**: Fix issue where `bool()` casting did not change the value of the argument.
+- :boom: **BREAKING**: Rename `bytes4(int)` and `bytes(int, 4)` to `toPaddedBytes(int, 4)`.
+- :boom: **BREAKING**: Rename `bytes4(bytes)` to `unsafe_bytes4(bytes)`.
+- :racehorse: Add optimisations for negated number comparisons.
+
+#### CashScript SDK
+
+- :sparkles: Add support for `do {} while ()` loops in debug tooling.
+- :hammer_and_wrench: Update default VM target to `BCH_2026_05`.
+- :hammer_and_wrench: Improve package size by tidying up dependencies.
+
+#### Testing Suite
+
+- :hammer_and_wrench: Add README.md to help guide users on how to use the testing suite.
+- :hammer_and_wrench: Compile all contracts in the `contracts/` directory and save the artifacts in the `artifacts/` directory.
+- :hammer_and_wrench: Compile TS artifacts as well as JSON artifacts.
+- :hammer_and_wrench: Add key management utilities for testing.
+
 ## v0.12.1
 
 #### CashScript SDK
 - :sparkles: Add Vitest extensions for automated testing.
 
 ## v0.12.0
+
+This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### CashScript SDK
 - :sparkles: Add `getVmResourceUsage` method to `TransactionBuilder`.

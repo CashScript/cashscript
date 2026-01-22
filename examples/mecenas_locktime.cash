@@ -1,4 +1,4 @@
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 // This is an experimental contract for a more "streaming" Mecenas experience
 // Completely untested, just a concept
@@ -40,7 +40,7 @@ contract Mecenas(
             // Insert new initialBlock (OP_PUSHBYTES_8 <tx.locktime>)
             // Note that constructor parameters are added in reverse order,
             // so initialBlock is the first statement in the contract bytecode.
-            bytes newContract = 0x08 + bytes8(tx.locktime) + this.activeBytecode.split(9)[1];
+            bytes newContract = 0x08 + toPaddedBytes(tx.locktime, 8) + this.activeBytecode.split(9)[1];
 
             // Create the locking bytecode for the new contract and check that
             // the change output sends to that contract
