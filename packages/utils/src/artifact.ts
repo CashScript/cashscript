@@ -1,3 +1,7 @@
+export interface CompilerOptions {
+  enforceFunctionParameterTypes?: boolean;
+}
+
 export interface AbiInput {
   name: string;
   type: string;
@@ -52,6 +56,7 @@ export interface Artifact {
   compiler: {
     name: string;
     version: string;
+    options?: CompilerOptions;
   }
   updatedAt: string;
 }

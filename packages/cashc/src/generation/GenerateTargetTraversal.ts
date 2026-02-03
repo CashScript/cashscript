@@ -17,6 +17,7 @@ import {
   SingleLocationData,
   StackItem,
   BytesType,
+  CompilerOptions,
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -74,6 +75,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+
+  constructor(private compilerOptions: CompilerOptions) {
+    super();
+  }
 
   private emit(op: OpOrData | OpOrData[], locationData: SingleLocationData): void {
     if (Array.isArray(op)) {
@@ -189,7 +194,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.currentFunction = node;
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
-    this.enforceFunctionParameterTypes(node);
+
+    if (this.compilerOptions.enforceFunctionParameterTypes) {
+      this.enforceFunctionParameterTypes(node);
+    }
+
     node.body = this.visit(node.body) as BlockNode;
 
     this.removeFinalVerifyFromFunction(node.body);

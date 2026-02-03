@@ -1,6 +1,6 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, generateSourceMap, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
+import { Artifact, CompilerOptions, generateSourceMap, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -13,7 +13,13 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 
-export function compileString(code: string): Artifact {
+export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
+  enforceFunctionParameterTypes: true,
+};
+
+export function compileString(code: string, compilerOptions: CompilerOptions = {}): Artifact {
+  const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions };
+
   // Lexing + parsing
   let ast = parseCode(code);
 
@@ -23,7 +29,7 @@ export function compileString(code: string): Artifact {
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
 
   // Code generation
-  const traversal = new GenerateTargetTraversal();
+  const traversal = new GenerateTargetTraversal(mergedCompilerOptions);
   ast = ast.accept(traversal) as Ast;
 
   const constructorParamLength = ast.contract.parameters.length;
@@ -52,12 +58,12 @@ export function compileString(code: string): Artifact {
     requires: optimisationResult.requires,
   };
 
-  return generateArtifact(ast, optimisationResult.script, code, debug);
+  return generateArtifact(ast, optimisationResult.script, code, debug, compilerOptions);
 }
 
-export function compileFile(codeFile: PathLike): Artifact {
+export function compileFile(codeFile: PathLike, compilerOptions: CompilerOptions = {}): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
-  return compileString(code);
+  return compileString(code, compilerOptions);
 }
 
 export function parseCode(code: string): Ast {
