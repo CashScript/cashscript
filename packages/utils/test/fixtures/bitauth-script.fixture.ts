@@ -217,7 +217,11 @@ contract HodlVault(
     int minBlock,
     int priceTarget
 ) {
-    function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {
+    function spend(
+        sig ownerSig,
+        datasig oracleSig,
+        bytes8 oracleMessage
+    ) {
         // message: { blockHeight, price }
         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);
         int blockHeight = int(blockHeightBin);
@@ -236,27 +240,29 @@ contract HodlVault(
     }
 }
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
-    asmBytecode: 'OP_6 OP_PICK OP_4 OP_SPLIT OP_SWAP OP_BIN2NUM OP_SWAP OP_BIN2NUM OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY OP_CHECKSIG',
-    sourceMap: '14:49:14:62;;:69::70;:49::71:1;15:30:15:44:0;:26::45:1;16:24:16:32:0;:20::33:1;19:16:19:27:0;:31::39;;:16:::1;:8::41;20:27:20:38:0;:8::40:1;;23:25:23:36:0;;:16:::1;:8::38;26:29:26::0;;:40::53;;:55::63;;:8::66:1;27::27:45',
+    asmBytecode: 'OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_6 OP_PICK OP_4 OP_SPLIT OP_SWAP OP_BIN2NUM OP_SWAP OP_BIN2NUM OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY OP_CHECKSIG',
+    sourceMap: '15:8:15:28;;;;;;18:49:18:62;;:69::70;:49::71:1;19:30:19:44:0;:26::45:1;20:24:20:32:0;:20::33:1;23:16:23:27:0;:31::39;;:16:::1;:8::41;24:27:24:38:0;:8::40:1;;27:25:27:36:0;;:16:::1;:8::38;30:29:30::0;;:40::53;;:55::63;;:8::66:1;31::31:45',
     expectedLineToOpcodeMap: {
-      14: [Op.OP_6, Op.OP_PICK, Op.OP_4, Op.OP_SPLIT],
-      15: [Op.OP_SWAP, Op.OP_BIN2NUM],
-      16: [Op.OP_SWAP, Op.OP_BIN2NUM],
-      19: [Op.OP_OVER, Op.OP_5, Op.OP_ROLL, Op.OP_GREATERTHANOREQUAL, Op.OP_VERIFY],
-      20: [Op.OP_SWAP, Op.OP_CHECKLOCKTIMEVERIFY, Op.OP_DROP],
-      23: [Op.OP_3, Op.OP_ROLL, Op.OP_GREATERTHANOREQUAL, Op.OP_VERIFY],
-      26: [Op.OP_3, Op.OP_ROLL, Op.OP_4, Op.OP_ROLL, Op.OP_3, Op.OP_ROLL, Op.OP_CHECKDATASIGVERIFY],
-      27: [Op.OP_CHECKSIG],
+      15: [Op.OP_6, Op.OP_PICK, Op.OP_SIZE, Op.OP_8, Op.OP_EQUALVERIFY, Op.OP_DROP],
+      18: [Op.OP_6, Op.OP_PICK, Op.OP_4, Op.OP_SPLIT],
+      19: [Op.OP_SWAP, Op.OP_BIN2NUM],
+      20: [Op.OP_SWAP, Op.OP_BIN2NUM],
+      23: [Op.OP_OVER, Op.OP_5, Op.OP_ROLL, Op.OP_GREATERTHANOREQUAL, Op.OP_VERIFY],
+      24: [Op.OP_SWAP, Op.OP_CHECKLOCKTIMEVERIFY, Op.OP_DROP],
+      27: [Op.OP_3, Op.OP_ROLL, Op.OP_GREATERTHANOREQUAL, Op.OP_VERIFY],
+      30: [Op.OP_3, Op.OP_ROLL, Op.OP_4, Op.OP_ROLL, Op.OP_3, Op.OP_ROLL, Op.OP_CHECKDATASIGVERIFY],
+      31: [Op.OP_CHECKSIG],
     },
     expectedLineToAsmMap: {
-      14: 'OP_6 OP_PICK OP_4 OP_SPLIT',
-      15: 'OP_SWAP OP_BIN2NUM',
-      16: 'OP_SWAP OP_BIN2NUM',
-      19: 'OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY',
-      20: 'OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP',
-      23: 'OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY',
-      26: 'OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY',
-      27: 'OP_CHECKSIG',
+      15: 'OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP',
+      18: 'OP_6 OP_PICK OP_4 OP_SPLIT',
+      19: 'OP_SWAP OP_BIN2NUM',
+      20: 'OP_SWAP OP_BIN2NUM',
+      23: 'OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY',
+      24: 'OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP',
+      27: 'OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY',
+      30: 'OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY',
+      31: 'OP_CHECKSIG',
     },
     expectedBitAuthScript: `
                                                              /* // This contract forces HODLing until a certain price target has been reached                                          */
