@@ -275,6 +275,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(Op.OP_SIZE, { location: node.location, positionHint: PositionHint.START });
       this.emit(encodeInt(BigInt(node.type.bound)), { location: node.location, positionHint: PositionHint.START });
       this.emit(Op.OP_EQUALVERIFY, { location: node.location, positionHint: PositionHint.START });
+      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.START });
 
       // We don't perform any stack operations, because these ops leave the original stack unchanged
     }
