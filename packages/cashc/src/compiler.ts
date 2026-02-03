@@ -58,7 +58,7 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
     requires: optimisationResult.requires,
   };
 
-  return generateArtifact(ast, optimisationResult.script, code, debug, compilerOptions);
+  return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions);
 }
 
 export function compileFile(codeFile: PathLike, compilerOptions: CompilerOptions = {}): Artifact {

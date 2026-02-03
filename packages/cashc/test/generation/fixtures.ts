@@ -1,4 +1,4 @@
-import { Artifact } from '@cashscript/utils';
+import { Artifact, CompilerOptions } from '@cashscript/utils';
 import fs from 'fs';
 import { URL } from 'url';
 import { version } from '../../src/index.js';
@@ -6,6 +6,7 @@ import { version } from '../../src/index.js';
 interface Fixture {
   fn: string,
   artifact: Artifact,
+  compilerOptions?: CompilerOptions,
 }
 
 export const fixtures: Fixture[] = [
@@ -33,6 +34,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -73,6 +77,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -119,6 +126,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -159,6 +169,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -231,6 +244,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -254,6 +270,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -284,6 +303,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -312,6 +334,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -371,6 +396,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -403,6 +431,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -428,6 +459,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -461,6 +495,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -543,6 +580,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -617,6 +657,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -667,6 +710,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -690,6 +736,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -713,6 +762,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -739,6 +791,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -762,6 +817,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -787,6 +845,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -827,6 +888,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -853,6 +917,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -880,6 +947,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -907,6 +977,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -933,6 +1006,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -958,6 +1034,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -982,6 +1061,9 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
       },
       updatedAt: '',
     },
@@ -1006,7 +1088,7 @@ export const fixtures: Fixture[] = [
         + 'OP_2 OP_PICK OP_SIZE OP_4 OP_EQUALVERIFY '
         // if(enforcedBool == true) )
         + 'OP_DUP OP_1 OP_NUMEQUAL OP_IF '
-        // require(nonEnforcedInt > 6
+        // require(nonEnforcedInt > 6)
         + 'OP_OVER OP_6 OP_GREATERTHAN OP_VERIFY '
         // Cleanup
         + 'OP_ENDIF '
@@ -1029,6 +1111,59 @@ export const fixtures: Fixture[] = [
       compiler: {
         name: 'cashc',
         version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    // Same as the fixture above, but with enforceFunctionParameterTypes disabled
+    fn: 'type_enforcement.cash',
+    compilerOptions: {
+      enforceFunctionParameterTypes: false,
+    },
+    artifact: {
+      contractName: 'TypeEnforcement',
+      constructorInputs: [],
+      abi: [{
+        name: 'spend', inputs: [
+          { name: 'nonEnforcedInt', type: 'int' },
+          { name: 'enforcedBool', type: 'bool' },
+          { name: 'enforcedBytes', type: 'bytes4' },
+          { name: 'nonEnforcedBytes', type: 'bytes' },
+        ],
+      }],
+      bytecode:
+        // if(enforcedBool == true)
+        'OP_OVER OP_1 OP_NUMEQUAL OP_IF '
+        // require(nonEnforcedInt > 6)
+        + 'OP_DUP OP_6 OP_GREATERTHAN OP_VERIFY '
+        // Cleanup
+        + 'OP_ENDIF '
+        // if(enforcedBool == false) {
+        + 'OP_SWAP OP_0 OP_NUMEQUAL OP_IF '
+        // require(enforcedBytes == nonEnforcedBytes)
+        + 'OP_OVER OP_3 OP_PICK OP_EQUALVERIFY '
+        // Cleanup
+        + 'OP_ENDIF OP_2DROP OP_DROP OP_1',
+      debug: {
+        bytecode: '78519c637656a069687c009c6378537988686d7551',
+        sourceMap: '8:12:8:24;:28::32;:12:::1;:34:10:9:0;9:20:9:34;:37::38;:20:::1;:12::40;8:34:10:9;12:12:12:24:0;:28::33;:12:::1;:35:14:9:0;13:20:13:33;:37::53;;:12::55:1;12:35:14:9;2:4:15:5;;',
+        logs: [],
+        requires: [
+          { ip: 7, line: 9 },
+          { ip: 16, line: 13 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/type_enforcement.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: false,
+        },
       },
       updatedAt: '',
     },
