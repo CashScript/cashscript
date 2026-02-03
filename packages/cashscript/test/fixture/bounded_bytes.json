@@ -16,15 +16,15 @@
       ]
     }
   ],
-  "bytecode": "OP_DUP OP_SIZE OP_4 OP_EQUALVERIFY OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL",
+  "bytecode": "OP_DUP OP_SIZE OP_4 OP_EQUALVERIFY OP_DROP OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL",
   "source": "contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == toPaddedBytes(i, 4));\n    }\n}\n",
   "debug": {
-    "bytecode": "768254887c548087",
-    "sourceMap": "2:19:2:27;;;;3:35:3:36;:38::39;:21::40:1;:8::42",
+    "bytecode": "76825488757c548087",
+    "sourceMap": "2:19:2:27;;;;;3:35:3:36;:38::39;:21::40:1;:8::42",
     "logs": [],
     "requires": [
       {
-        "ip": 8,
+        "ip": 9,
         "line": 3
       }
     ]
@@ -36,5 +36,5 @@
       "enforceFunctionParameterTypes": true
     }
   },
-  "updatedAt": "2026-02-03T11:06:40.606Z"
+  "updatedAt": "2026-02-03T11:38:30.029Z"
 }

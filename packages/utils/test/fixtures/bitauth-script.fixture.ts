@@ -270,7 +270,11 @@ contract HodlVault(
                                                              /*     int minBlock,                                                                                                      */
                                                              /*     int priceTarget                                                                                                    */
                                                              /* ) {                                                                                                                    */
-                                                             /*     function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {                                            */
+                                                             /*     function spend(                                                                                                    */
+                                                             /*         sig ownerSig,                                                                                                  */
+                                                             /*         datasig oracleSig,                                                                                             */
+OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP             /*         bytes8 oracleMessage                                                                                           */
+                                                             /*     ) {                                                                                                                */
                                                              /*         // message: { blockHeight, price }                                                                             */
 OP_6 OP_PICK OP_4 OP_SPLIT                                   /*         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);                                               */
 OP_SWAP OP_BIN2NUM                                           /*         int blockHeight = int(blockHeightBin);                                                                         */
