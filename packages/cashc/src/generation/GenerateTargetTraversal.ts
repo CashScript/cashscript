@@ -59,7 +59,7 @@ import {
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
-import { resultingTypeForBinaryOp } from '../utils.js';
+import { isNumericType } from '../utils.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -575,8 +575,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    const isNumeric = resultingTypeForBinaryOp(node.operator, node.left.type!, node.right.type!) === PrimitiveType.INT;
-    this.emit(compileBinaryOp(node.operator, isNumeric), { location: node.location, positionHint: PositionHint.END });
+    const bothOperandsAreNumeric = isNumericType(node.left.type) && isNumericType(node.right.type);
+    this.emit(
+      compileBinaryOp(node.operator, bothOperandsAreNumeric),
+      { location: node.location, positionHint: PositionHint.END },
+    );
     this.popFromStack(2);
     this.pushToStack('(value)');
     if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value)');

@@ -296,11 +296,11 @@ export const fixtures: Fixture[] = [
       abi: [{ name: 'hello', inputs: [{ name: 'pk', type: 'pubkey' }, { name: 's', type: 'sig' }] }],
       bytecode:
         // require((ripemd160(bytes(pk)) == hash160(0x0) == !true));
-        'OP_DUP OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_EQUALVERIFY '
+        'OP_DUP OP_RIPEMD160 OP_0 OP_HASH160 OP_EQUAL OP_1 OP_NOT OP_NUMEQUALVERIFY '
         // require(checkSig(s, pk));
         + 'OP_CHECKSIG',
       debug: {
-        bytecode: '76a600a987519188ac',
+        bytecode: '76a600a98751919dac',
         logs: [],
         requires: [
           { ip: 7, line: 3 },
@@ -766,9 +766,9 @@ export const fixtures: Fixture[] = [
       contractName: 'MultilineStatements',
       constructorInputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'string' }],
       abi: [{ name: 'spend', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'string' }] }],
-      bytecode: 'OP_ROT OP_SWAP OP_2 OP_SUB OP_NUMEQUAL OP_2 OP_PICK OP_2 OP_PICK OP_EQUAL OP_BOOLAND OP_IF OP_0 OP_VERIFY OP_ELSE OP_OVER 48656c6c6f20 OP_2 OP_PICK OP_CAT OP_EQUAL OP_IF OP_DUP 576f726c64 OP_EQUALVERIFY OP_ELSE OP_1 OP_0 OP_NOT OP_NOT OP_NOT OP_EQUALVERIFY OP_ENDIF OP_ENDIF OP_2DROP OP_1',
+      bytecode: 'OP_ROT OP_SWAP OP_2 OP_SUB OP_NUMEQUAL OP_2 OP_PICK OP_2 OP_PICK OP_EQUAL OP_BOOLAND OP_IF OP_0 OP_VERIFY OP_ELSE OP_OVER 48656c6c6f20 OP_2 OP_PICK OP_CAT OP_EQUAL OP_IF OP_DUP 576f726c64 OP_EQUALVERIFY OP_ELSE OP_1 OP_0 OP_NOT OP_NOT OP_NOT OP_NUMEQUALVERIFY OP_ENDIF OP_ENDIF OP_2DROP OP_1',
       debug: {
-        bytecode: '7b7c52949c52795279879a63006967780648656c6c6f2052797e87637605576f726c64886751009191918868686d51',
+        bytecode: '7b7c52949c52795279879a63006967780648656c6c6f2052797e87637605576f726c64886751009191919d68686d51',
         logs: [],
         requires: [
           { ip: 15, line: 11 },

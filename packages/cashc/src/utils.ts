@@ -1,4 +1,4 @@
-import { BytesType, implicitlyCastable, Type } from '@cashscript/utils';
+import { BytesType, implicitlyCastable, PrimitiveType, Type } from '@cashscript/utils';
 import { BinaryOperator } from './ast/Operator.js';
 
 export function resultingTypeForBinaryOp(
@@ -15,4 +15,8 @@ export function resultingTypeForBinaryOp(
   }
 
   return undefined;
+}
+
+export function isNumericType(type?: Type): boolean {
+  return type === PrimitiveType.INT || type === PrimitiveType.BOOL;
 }
