@@ -16,6 +16,7 @@ import {
   PositionHint,
   SingleLocationData,
   StackItem,
+  BytesType,
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -188,6 +189,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.currentFunction = node;
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    this.enforceFunctionParameterTypes(node);
     node.body = this.visit(node.body) as BlockNode;
 
     this.removeFinalVerifyFromFunction(node.body);
@@ -236,6 +238,43 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
       this.nipFromStack();
     }
+  }
+
+  enforceFunctionParameterTypes(node: FunctionDefinitionNode): void {
+    node.parameters.forEach((parameter) => this.enforceFunctionParameterType(parameter));
+  }
+
+  enforceFunctionParameterType(node: ParameterNode): void {
+    if (!this.shouldEnforceFunctionParameterType(node)) return;
+
+    const stackIndex = this.getStackIndex(node.name);
+    this.emit(encodeInt(BigInt(stackIndex)), { location: node.location, positionHint: PositionHint.START });
+
+    if (node.type === PrimitiveType.BOOL) {
+      // For booleans, we take it from the stack and force-convert it to a boolean using OP_0NOTEQUAL
+      this.emit(Op.OP_ROLL, { location: node.location, positionHint: PositionHint.START });
+      this.emit(Op.OP_0NOTEQUAL, { location: node.location, positionHint: PositionHint.START });
+
+      // We remove the original stack value and push the new boolean value to the top of the stack
+      this.removeFromStack(stackIndex);
+      this.pushToStack(node.name);
+    }
+
+    if (node.type instanceof BytesType && node.type.bound !== undefined) {
+      // For bounded bytes, we copy it from the stack and *check* that it is the correct size
+      this.emit(Op.OP_PICK, { location: node.location, positionHint: PositionHint.START });
+      this.emit(Op.OP_SIZE, { location: node.location, positionHint: PositionHint.START });
+      this.emit(encodeInt(BigInt(node.type.bound)), { location: node.location, positionHint: PositionHint.START });
+      this.emit(Op.OP_EQUALVERIFY, { location: node.location, positionHint: PositionHint.START });
+
+      // We don't perform any stack operations, because these ops leave the original stack unchanged
+    }
+  }
+
+  shouldEnforceFunctionParameterType(node: ParameterNode): boolean {
+    if (node.type === PrimitiveType.BOOL) return true;
+    if (node.type instanceof BytesType && node.type.bound !== undefined) return true;
+    return false;
   }
 
   visitParameter(node: ParameterNode): Node {
@@ -452,7 +491,6 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitInstantiation(node: InstantiationNode): Node {
-
     if (node.identifier.name === Class.LOCKING_BYTECODE_P2PKH) {
       // OP_DUP OP_HASH160 OP_PUSH<20>
       this.emit(hexToBin('76a914'), { location: node.location, positionHint: PositionHint.START });

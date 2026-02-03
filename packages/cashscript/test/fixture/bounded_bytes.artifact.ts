@@ -16,22 +16,22 @@ export default {
       ],
     },
   ],
-  bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
+  bytecode: 'OP_DUP OP_SIZE OP_4 OP_EQUALVERIFY OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
   source: 'contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == toPaddedBytes(i, 4));\n    }\n}\n',
   debug: {
-    bytecode: '7c548087',
-    sourceMap: '3:35:3:36;:38::39;:21::40:1;:8::42',
+    bytecode: '768254887c548087',
+    sourceMap: '2:19:2:27;;;;3:35:3:36;:38::39;:21::40:1;:8::42',
     logs: [],
     requires: [
       {
-        ip: 4,
+        ip: 8,
         line: 3,
       },
     ],
   },
   compiler: {
     name: 'cashc',
-    version: '0.13.0-next.2',
+    version: '0.13.0-next.3',
   },
-  updatedAt: '2026-01-20T10:49:41.226Z',
+  updatedAt: '2026-02-03T10:22:00.236Z',
 } as const;

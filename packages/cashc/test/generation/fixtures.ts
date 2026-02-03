@@ -337,8 +337,10 @@ export const fixtures: Fixture[] = [
         },
       ],
       bytecode:
+        // Implicit type enforcement for oracleMessage: require(oracleMessage.length == 8)
+        'OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY '
         // bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);
-        'OP_6 OP_PICK OP_4 OP_SPLIT '
+        + 'OP_6 OP_PICK OP_4 OP_SPLIT '
         // int blockHeight = int(blockHeightBin);
         + 'OP_SWAP OP_BIN2NUM '
         // int price = int(priceBin);
@@ -354,16 +356,16 @@ export const fixtures: Fixture[] = [
         // require(checkSig(ownerSig, ownerPk));
         + 'OP_CHECKSIG',
       debug: {
-        bytecode: '5679547f7c817c8178557aa2697cb175537aa269537a547a537abbac',
+        bytecode: '56798258885679547f7c817c8178557aa2697cb175537aa269537a547a537abbac',
         logs: [],
         requires: [
-          { ip: 16, line: 19 },
-          { ip: 18, line: 20 },
-          { ip: 23, line: 23 },
-          { ip: 30, line: 26 },
-          { ip: 32, line: 31 },
+          { ip: 21, line: 23 },
+          { ip: 23, line: 24 },
+          { ip: 28, line: 27 },
+          { ip: 35, line: 30 },
+          { ip: 37, line: 35 },
         ],
-        sourceMap: '14:49:14:62;;:69::70;:49::71:1;15:30:15:44:0;:26::45:1;16:24:16:32:0;:20::33:1;19:16:19:27:0;:31::39;;:16:::1;:8::41;20:27:20:38:0;:8::40:1;;23:25:23:36:0;;:16:::1;:8::38;27:12:27:21:0;;28::28:25;;29::29:20;;26:8:30:11:1;31::31:45',
+        sourceMap: '15:8:15:28;;;;;18:49:18:62;;:69::70;:49::71:1;19:30:19:44:0;:26::45:1;20:24:20:32:0;:20::33:1;23:16:23:27:0;:31::39;;:16:::1;:8::41;24:27:24:38:0;:8::40:1;;27:25:27:36:0;;:16:::1;:8::38;31:12:31:21:0;;32::32:25;;33::33:20;;30:8:34:11:1;35::35:45',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/hodl_vault.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -411,12 +413,16 @@ export const fixtures: Fixture[] = [
       contractName: 'BoundedBytes',
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [{ name: 'b', type: 'bytes4' }, { name: 'i', type: 'int' }] }],
-      bytecode: 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL', // require(b == toPaddedBytes(i, 4))
+      bytecode:
+        // Implicit type enforcement for b: require(b.length == 4)
+        'OP_DUP OP_SIZE OP_4 OP_EQUALVERIFY '
+        // require(b == toPaddedBytes(i, 4))
+        + 'OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
       debug: {
-        bytecode: '7c548087',
+        bytecode: '768254887c548087',
         logs: [],
-        requires: [{ ip: 4, line: 3 }],
-        sourceMap: '3:35:3:36;:38::39;:21::40:1;:8::42',
+        requires: [{ ip: 8, line: 3 }],
+        sourceMap: '2:19:2:27;;;;3:35:3:36;:38::39;:21::40:1;:8::42',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/bounded_bytes.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -973,6 +979,53 @@ export const fixtures: Fixture[] = [
         ],
       },
       source: fs.readFileSync(new URL('../valid-contract-files/bitshift.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'type_enforcement.cash',
+    artifact: {
+      contractName: 'TypeEnforcement',
+      constructorInputs: [],
+      abi: [{
+        name: 'spend', inputs: [
+          { name: 'nonEnforcedInt', type: 'int' },
+          { name: 'enforcedBool', type: 'bool' },
+          { name: 'enforcedBytes', type: 'bytes4' },
+          { name: 'nonEnforcedBytes', type: 'bytes' },
+        ],
+      }],
+      bytecode:
+        // Implicit type enforcement for enforcedBool: enforcedBool = bool(enforcedBool)
+        'OP_SWAP OP_0NOTEQUAL '
+        // Implicit type enforcement for enforcedBytes: require(enforcedBytes.length == 4)
+        + 'OP_2 OP_PICK OP_SIZE OP_4 OP_EQUALVERIFY '
+        // if(enforcedBool == true) )
+        + 'OP_DUP OP_1 OP_NUMEQUAL OP_IF '
+        // require(nonEnforcedInt > 6
+        + 'OP_OVER OP_6 OP_GREATERTHAN OP_VERIFY '
+        // Cleanup
+        + 'OP_ENDIF '
+        // if(enforcedBool == false) {
+        + 'OP_0 OP_NUMEQUAL OP_IF '
+        // require(enforcedBytes == nonEnforcedBytes)
+        + 'OP_OVER OP_3 OP_PICK OP_EQUALVERIFY '
+        // Cleanup
+        + 'OP_ENDIF OP_2DROP OP_DROP OP_1',
+      debug: {
+        bytecode: '7c92527982548876519c637856a06968009c6378537988686d7551',
+        sourceMap: '4:8:4:25;;5::5:28;;;;;8:12:8:24;:28::32;:12:::1;:34:10:9:0;9:20:9:34;:37::38;:20:::1;:12::40;8:34:10:9;12:28:12:33:0;:12:::1;:35:14:9:0;13:20:13:33;:37::53;;:12::55:1;12:35:14:9;2:4:15:5;;',
+        logs: [],
+        requires: [
+          { ip: 14, line: 9 },
+          { ip: 22, line: 13 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/type_enforcement.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
         name: 'cashc',
         version,
