@@ -32,6 +32,9 @@ export default {
   compiler: {
     name: 'cashc',
     version: '0.13.0-next.3',
+    options: {
+      enforceFunctionParameterTypes: true,
+    },
   },
-  updatedAt: '2026-02-03T10:22:00.236Z',
+  updatedAt: '2026-02-03T11:06:40.805Z',
 } as const;
