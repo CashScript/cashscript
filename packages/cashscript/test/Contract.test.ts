@@ -108,16 +108,19 @@ describe('Contract', () => {
   });
 
   describe('getBalance', () => {
+    const provider = process.env.TESTS_USE_CHIPNET
+      ? new ElectrumNetworkProvider(Network.CHIPNET)
+      : new MockNetworkProvider();
+
     // Not very robust, as this depends on the example P2PKH contract having balance
     it('should return balance for existing contract', async () => {
-      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
+      (provider as any).addUtxo?.(instance.address, randomUtxo());
 
       expect(await instance.getBalance()).toBeGreaterThan(0n);
     });
 
     it('should return zero balance for new contract', async () => {
-      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider });
 
       expect(await instance.getBalance()).toBe(0n);

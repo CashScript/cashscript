@@ -1,4 +1,4 @@
-import { binToHex } from '@bitauth/libauth';
+import { binToHex, hexToBin, isHex } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
 import {
   ElectrumClient,
@@ -57,10 +57,19 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
-    const scripthash = addressToElectrumScriptHash(address);
+    const lockingBytecode = addressToLockScript(address);
+    return this.getUtxosForLockingBytecode(lockingBytecode);
+  }
 
+  async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]> {
+    if (typeof lockingBytecode === 'string' && !isHex(lockingBytecode)) {
+      throw new Error(`Invalid locking bytecode: ${lockingBytecode} is not a valid hex string`);
+    }
+
+    const lockingBytecodeBin = typeof lockingBytecode === 'string' ? hexToBin(lockingBytecode) : lockingBytecode;
+    const scriptHash = lockingBytecodeToElectrumScriptHash(lockingBytecodeBin);
     const filteringOption = 'include_tokens';
-    const result = await this.performRequest('blockchain.scripthash.listunspent', scripthash, filteringOption) as ElectrumUtxo[];
+    const result = await this.performRequest('blockchain.scripthash.listunspent', scriptHash, filteringOption) as ElectrumUtxo[];
 
     const utxos = result.map((utxo) => ({
       txid: utxo.tx_hash,
@@ -166,25 +175,8 @@ interface BlockHeader {
   hex: string;
 }
 
-/**
- * Helper function to convert an address to an electrum-cash compatible scripthash.
- * This is necessary to support electrum versions lower than 1.4.3, which do not
- * support addresses, only script hashes.
- *
- * @param address Address to convert to an electrum scripthash
- *
- * @returns The corresponding script hash in an electrum-cash compatible format
- */
-function addressToElectrumScriptHash(address: string): string {
-  // Retrieve locking script
-  const lockScript = addressToLockScript(address);
-
-  // Hash locking script
-  const scriptHash = sha256(lockScript);
-
-  // Reverse scripthash
+function lockingBytecodeToElectrumScriptHash(lockingBytecode: Uint8Array): string {
+  const scriptHash = sha256(lockingBytecode);
   scriptHash.reverse();
-
-  // Return scripthash as a hex string
   return binToHex(scriptHash);
 }

@@ -147,7 +147,7 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   throw Error('Pushdata too large');
 }
 
-export function generateRedeemScript(baseScript: Script, encodedConstructorArgs: Script): Script {
+export function generateContractBytecodeScript(baseScript: Script, encodedConstructorArgs: Script): Script {
   return [...encodedConstructorArgs.slice().reverse(), ...baseScript];
 }
 

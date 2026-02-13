@@ -181,17 +181,20 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
 }
 
 // ////////// BUILD OBJECTS ///////////////////////////////////////////////////
-export function createInputScript(
-  redeemScript: Script,
+export function createUnlockingBytecode(
+  addressType: AddressType,
+  contractBytecode: Uint8Array,
   encodedArgs: Uint8Array[],
   selector?: number,
 ): Uint8Array {
-  // Create unlock script / redeemScriptSig (add potential selector)
   const unlockScript = [...encodedArgs].reverse();
   if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 
+  // P2S inputs do not need to provide the redeem script
+  if (addressType === 'p2s') return scriptToBytecode(unlockScript);
+
   // Create input script and compile it to bytecode
-  const inputScript = [...unlockScript, scriptToBytecode(redeemScript)];
+  const inputScript = [...unlockScript, contractBytecode];
   return scriptToBytecode(inputScript);
 }
 
@@ -234,6 +237,8 @@ export function toRegExp(reasons: string[]): RegExp {
 export function scriptToAddress(
   script: Script, network: string, addressType: AddressType, tokenSupport: boolean,
 ): string {
+  if (addressType === 'p2s') return binToHex(scriptToBytecode(script));
+
   const bytecode = scriptToLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
 
@@ -244,6 +249,8 @@ export function scriptToAddress(
 }
 
 export function scriptToLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
+  if (addressType === 'p2s') return scriptToBytecode(script);
+
   const scriptBytecode = scriptToBytecode(script);
   const scriptHash = (addressType === 'p2sh20') ? hash160(scriptBytecode) : hash256(scriptBytecode);
   const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };

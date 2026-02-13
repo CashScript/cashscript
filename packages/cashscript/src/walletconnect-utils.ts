@@ -1,6 +1,6 @@
 import { type LibauthOutput, isContractUnlocker, type PlaceholderP2PKHUnlocker, type UnlockableUtxo } from './interfaces.js';
-import { type AbiFunction, type Artifact, scriptToBytecode } from '@cashscript/utils';
-import { cashAddressToLockingBytecode, type Input, type TransactionCommon } from '@bitauth/libauth';
+import { type AbiFunction, type Artifact } from '@cashscript/utils';
+import { cashAddressToLockingBytecode, hexToBin, type Input, type TransactionCommon } from '@bitauth/libauth';
 
 // Wallet Connect interfaces according to the spec
 // see https://github.com/mainnet-pat/wc2-bch-bcr
@@ -39,7 +39,7 @@ export function getWcContractInfo(input: UnlockableUtxo): WcContractInfo | {} {
   const wcContractObj: WcContractInfo = {
     contract: {
       abiFunction: abiFunction,
-      redeemScript: scriptToBytecode(contract.redeemScript),
+      redeemScript: hexToBin(contract.bytecode),
       artifact: contract.artifact,
     },
   };

@@ -98,7 +98,7 @@ describe('script utils', () => {
     });
   });
 
-  describe.skip('TODO: generateRedeemScript()', () => {
+  describe.skip('TODO: generateContractBytecodeScript()', () => {
   });
 
   describe.skip('TODO: optimiseBytecode()', () => {

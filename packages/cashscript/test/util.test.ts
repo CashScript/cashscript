@@ -7,7 +7,7 @@ import {
 } from '@cashscript/utils';
 import {
   scriptToAddress,
-  createInputScript,
+  createUnlockingBytecode,
   getInputSize,
 } from '../src/utils.js';
 import { Network } from '../src/interfaces.js';
@@ -34,13 +34,13 @@ describe('utils', () => {
     });
   });
 
-  describe('createInputScript', () => {
+  describe('createUnlockingBytecode', () => {
     it('should create an input script without selector', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
-      const redeemScript = asmToScript(asm);
+      const contractBytecode = asmToBytecode(asm);
       const args = [alicePub, placeholder(1)];
 
-      const inputScript = createInputScript(redeemScript, args);
+      const inputScript = createUnlockingBytecode('p2sh32', contractBytecode, args);
 
       const expectedInputScriptAsm = `00 ${binToHex(alicePub)} ${binToHex(asmToBytecode(asm))}`;
       expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
@@ -48,13 +48,24 @@ describe('utils', () => {
 
     it('should create an input script with selector', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
-      const redeemScript = asmToScript(asm);
+      const contractBytecode = asmToBytecode(asm);
       const args = [alicePub, placeholder(1)];
       const selector = 1;
 
-      const inputScript = createInputScript(redeemScript, args, selector);
+      const inputScript = createUnlockingBytecode('p2sh32', contractBytecode, args, selector);
 
       const expectedInputScriptAsm = `00 ${binToHex(alicePub)} OP_1 ${binToHex(asmToBytecode(asm))}`;
+      expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
+    });
+
+    it('should create an input script for a P2S contract', () => {
+      const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
+      const contractBytecode = asmToBytecode(asm);
+      const args = [alicePub, placeholder(1)];
+
+      const inputScript = createUnlockingBytecode('p2s', contractBytecode, args);
+
+      const expectedInputScriptAsm = `00 ${binToHex(alicePub)}`;
       expect(bytecodeToAsm(inputScript)).toEqual(expectedInputScriptAsm);
     });
   });
@@ -62,20 +73,20 @@ describe('utils', () => {
   describe('scriptToAddress', () => {
     it('should convert a redeem script to a cashaddress', () => {
       const asm = `${binToHex(alicePkh)} OP_OVER OP_HASH160 OP_EQUALVERIFY OP_CHECKSIG`;
-      const redeemScript = asmToScript(asm);
+      const contractBytecodeScript = asmToScript(asm);
 
-      const mainnetAddressP2sh32 = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh32', false);
-      const testnetAddressP2sh32 = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh32', false);
-      const regtestAddressP2sh32 = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh32', false);
-      const mainnetAddressP2sh20 = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh20', false);
-      const testnetAddressP2sh20 = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh20', false);
-      const regtestAddressP2sh20 = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh20', false);
-      const mainnetAddressP2sh32Tokens = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh32', true);
-      const testnetAddressP2sh32Tokens = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh32', true);
-      const regtestAddressP2sh32Tokens = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh32', true);
-      const mainnetAddressP2sh20Tokens = scriptToAddress(redeemScript, Network.MAINNET, 'p2sh20', true);
-      const testnetAddressP2sh20Tokens = scriptToAddress(redeemScript, Network.TESTNET4, 'p2sh20', true);
-      const regtestAddressP2sh20Tokens = scriptToAddress(redeemScript, Network.REGTEST, 'p2sh20', true);
+      const mainnetAddressP2sh32 = scriptToAddress(contractBytecodeScript, Network.MAINNET, 'p2sh32', false);
+      const testnetAddressP2sh32 = scriptToAddress(contractBytecodeScript, Network.TESTNET4, 'p2sh32', false);
+      const regtestAddressP2sh32 = scriptToAddress(contractBytecodeScript, Network.REGTEST, 'p2sh32', false);
+      const mainnetAddressP2sh20 = scriptToAddress(contractBytecodeScript, Network.MAINNET, 'p2sh20', false);
+      const testnetAddressP2sh20 = scriptToAddress(contractBytecodeScript, Network.TESTNET4, 'p2sh20', false);
+      const regtestAddressP2sh20 = scriptToAddress(contractBytecodeScript, Network.REGTEST, 'p2sh20', false);
+      const mainnetAddressP2sh32Tokens = scriptToAddress(contractBytecodeScript, Network.MAINNET, 'p2sh32', true);
+      const testnetAddressP2sh32Tokens = scriptToAddress(contractBytecodeScript, Network.TESTNET4, 'p2sh32', true);
+      const regtestAddressP2sh32Tokens = scriptToAddress(contractBytecodeScript, Network.REGTEST, 'p2sh32', true);
+      const mainnetAddressP2sh20Tokens = scriptToAddress(contractBytecodeScript, Network.MAINNET, 'p2sh20', true);
+      const testnetAddressP2sh20Tokens = scriptToAddress(contractBytecodeScript, Network.TESTNET4, 'p2sh20', true);
+      const regtestAddressP2sh20Tokens = scriptToAddress(contractBytecodeScript, Network.REGTEST, 'p2sh20', true);
 
       const expectedMainnetAddressP2sh32 = 'bitcoincash:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d23629h20jd0s';
       const expectedTestnetAddressP2sh32 = 'bchtest:pv6dnl7ws66dzdk2wn5akmmyx0f4fztx56lqvszjuu52fsw3d2362xsm3276z';

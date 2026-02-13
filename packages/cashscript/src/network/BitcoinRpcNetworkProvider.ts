@@ -34,6 +34,10 @@ export default class BitcoinRpcNetworkProvider implements NetworkProvider {
     return utxos;
   }
 
+  async getUtxosForLockingBytecode(_lockingBytecode: Uint8Array | string): Promise<Utxo[]> {
+    throw new Error('BitcoinRpcNetworkProvider does not support getUtxosForLockingBytecode');
+  }
+
   async getBlockHeight(): Promise<number> {
     return this.rpcClient.request<GetBlockCount>('getblockcount');
   }

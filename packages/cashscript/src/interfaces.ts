@@ -163,6 +163,6 @@ export interface ContractOptions {
   addressType?: AddressType,
 }
 
-export type AddressType = 'p2sh20' | 'p2sh32';
+export type AddressType = 'p2sh20' | 'p2sh32' | 'p2s';
 
 export type VmResourceUsage = AuthenticationProgramStateResourceLimits['metrics'];

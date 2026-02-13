@@ -25,8 +25,13 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
-    const addressLockingBytecode = binToHex(addressToLockScript(address));
-    return this.utxoSet.filter(([lockingBytecode]) => lockingBytecode === addressLockingBytecode).map(([, utxo]) => utxo);
+    const addressLockingBytecode = addressToLockScript(address);
+    return this.getUtxosForLockingBytecode(addressLockingBytecode);
+  }
+
+  async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]> {
+    const lockingBytecodeHex = typeof lockingBytecode === 'string' ? lockingBytecode : binToHex(lockingBytecode);
+    return this.utxoSet.filter(([key]) => key === lockingBytecodeHex).map(([, utxo]) => utxo);
   }
 
   setBlockHeight(newBlockHeight: number): void {

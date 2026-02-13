@@ -13,7 +13,7 @@ export default class FullStackNetworkProvider implements NetworkProvider {
   constructor(
     public network: Network,
     private bchjs: BCHJS,
-  ) {}
+  ) { }
 
   async getUtxos(address: string): Promise<Utxo[]> {
     const result = await this.bchjs.Electrumx.utxo(address);
@@ -25,6 +25,10 @@ export default class FullStackNetworkProvider implements NetworkProvider {
     }));
 
     return utxos;
+  }
+
+  async getUtxosForLockingBytecode(_lockingBytecode: Uint8Array | string): Promise<Utxo[]> {
+    throw new Error('FullStackNetworkProvider does not support getUtxosForLockingBytecode');
   }
 
   async getBlockHeight(): Promise<number> {

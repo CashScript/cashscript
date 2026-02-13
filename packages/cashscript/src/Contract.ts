@@ -1,13 +1,12 @@
-import { binToHex } from '@bitauth/libauth';
+import { binToHex, hexToBin } from '@bitauth/libauth';
 import {
   AbiFunction,
   Artifact,
   asmToScript,
   calculateBytesize,
   countOpcodes,
-  generateRedeemScript,
+  generateContractBytecodeScript,
   hash256,
-  Script,
   scriptToBytecode,
 } from '@cashscript/utils';
 import {
@@ -18,7 +17,7 @@ import {
 } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
-  addressToLockScript, createInputScript, createSighashPreimage, scriptToAddress,
+  addressToLockScript, createUnlockingBytecode, createSighashPreimage, scriptToAddress,
 } from './utils.js';
 import SignatureTemplate from './SignatureTemplate.js';
 import { ParamsToTuple, AbiToFunctionMap } from './types/type-inference.js';
@@ -38,14 +37,15 @@ export class Contract<
   name: string;
   address: string;
   tokenAddress: string;
+  lockingBytecode: string;
   bytecode: string;
   bytesize: number;
   opcount: number;
   unlock: TResolved['unlock'];
-  redeemScript: Script;
-  public provider: NetworkProvider;
-  public addressType: AddressType;
-  public encodedConstructorArgs: Uint8Array[];
+  provider: NetworkProvider;
+  addressType: AddressType;
+
+  encodedConstructorArgs: Uint8Array[];
 
   constructor(
     public artifact: TArtifact,
@@ -71,8 +71,6 @@ export class Contract<
     // Encode arguments (this also performs type checking)
     this.encodedConstructorArgs = encodeConstructorArguments(artifact, constructorArgs);
 
-    this.redeemScript = generateRedeemScript(asmToScript(this.artifact.bytecode), this.encodedConstructorArgs);
-
     // Populate the 'unlock' object with the contract's functions
     // (with a special case for single function, which has no "function selector")
     this.unlock = {};
@@ -87,12 +85,17 @@ export class Contract<
       });
     }
 
+    const contractBytecodeScript = generateContractBytecodeScript(
+      asmToScript(this.artifact.bytecode), this.encodedConstructorArgs,
+    );
+
     this.name = artifact.contractName;
-    this.address = scriptToAddress(this.redeemScript, this.provider.network, this.addressType, false);
-    this.tokenAddress = scriptToAddress(this.redeemScript, this.provider.network, this.addressType, true);
-    this.bytecode = binToHex(scriptToBytecode(this.redeemScript));
-    this.bytesize = calculateBytesize(this.redeemScript);
-    this.opcount = countOpcodes(this.redeemScript);
+    this.address = scriptToAddress(contractBytecodeScript, this.provider.network, this.addressType, false);
+    this.tokenAddress = scriptToAddress(contractBytecodeScript, this.provider.network, this.addressType, true);
+    this.bytecode = binToHex(scriptToBytecode(contractBytecodeScript));
+    this.lockingBytecode = this.addressType === 'p2s' ? this.bytecode : binToHex(addressToLockScript(this.address));
+    this.bytesize = calculateBytesize(contractBytecodeScript);
+    this.opcount = countOpcodes(contractBytecodeScript);
   }
 
   async getBalance(): Promise<bigint> {
@@ -101,6 +104,10 @@ export class Contract<
   }
 
   async getUtxos(): Promise<Utxo[]> {
+    if (this.addressType === 'p2s') {
+      return this.provider.getUtxosForLockingBytecode(this.bytecode);
+    }
+
     return this.provider.getUtxos(this.address);
   }
 
@@ -110,7 +117,7 @@ export class Contract<
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
       }
 
-      const bytecode = scriptToBytecode(this.redeemScript);
+      const bytecode = hexToBin(this.bytecode);
 
       const encodedArgs = args
         .map((arg, i) => encodeFunctionArgument(arg, abiFunction.inputs[i].type));
@@ -127,7 +134,7 @@ export class Contract<
           return arg.generateSignature(sighash);
         });
 
-        const unlockingBytecode = createInputScript(this.redeemScript, completeArgs, selector);
+        const unlockingBytecode = createUnlockingBytecode(this.addressType, hexToBin(this.bytecode), completeArgs, selector);
         return unlockingBytecode;
       };
 
