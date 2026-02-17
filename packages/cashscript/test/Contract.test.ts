@@ -97,8 +97,8 @@ describe('Contract', () => {
 
     it('should create a P2SH20 contract when specified in the constructor arguments', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const p2sh20Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, addressType: 'p2sh20' });
-      const p2sh32Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, addressType: 'p2sh32' });
+      const p2sh20Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, contractType: 'p2sh20' });
+      const p2sh32Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, contractType: 'p2sh32' });
 
       const P2SH20_ADDRESS_SIZE = 42;
       const P2SH32_ADDRESS_SIZE = 61;

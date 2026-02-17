@@ -34,6 +34,7 @@ import {
   AddressType,
   UnlockableUtxo,
   LibauthTokenDetails,
+  ContractType,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -182,7 +183,7 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
 
 // ////////// BUILD OBJECTS ///////////////////////////////////////////////////
 export function createUnlockingBytecode(
-  addressType: AddressType,
+  contractType: ContractType,
   contractBytecode: Uint8Array,
   encodedArgs: Uint8Array[],
   selector?: number,
@@ -191,7 +192,7 @@ export function createUnlockingBytecode(
   if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 
   // P2S inputs do not need to provide the redeem script
-  if (addressType === 'p2s') return scriptToBytecode(unlockScript);
+  if (contractType === 'p2s') return scriptToBytecode(unlockScript);
 
   // Create input script and compile it to bytecode
   const inputScript = [...unlockScript, contractBytecode];
@@ -237,9 +238,7 @@ export function toRegExp(reasons: string[]): RegExp {
 export function scriptToAddress(
   script: Script, network: string, addressType: AddressType, tokenSupport: boolean,
 ): string {
-  if (addressType === 'p2s') return binToHex(scriptToBytecode(script));
-
-  const bytecode = scriptToLockingBytecode(script, addressType);
+  const bytecode = scriptToP2SHLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
 
   const result = lockingBytecodeToCashAddress({ bytecode, prefix, tokenSupport });
@@ -248,9 +247,7 @@ export function scriptToAddress(
   return result.address;
 }
 
-export function scriptToLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
-  if (addressType === 'p2s') return scriptToBytecode(script);
-
+export function scriptToP2SHLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
   const scriptBytecode = scriptToBytecode(script);
   const scriptHash = (addressType === 'p2sh20') ? hash160(scriptBytecode) : hash256(scriptBytecode);
   const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };

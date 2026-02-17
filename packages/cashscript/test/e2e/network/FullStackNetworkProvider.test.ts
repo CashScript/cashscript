@@ -16,7 +16,7 @@ describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('FullStackNetworkProvider
   describe('get utxos using FullStackNetworkProvider', () => {
     it('should get the utxos for a p2sh20 contract', async () => {
       // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
-      const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, addressType: 'p2sh20' });
+      const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, contractType: 'p2sh20' });
       console.log(p2pkhInstance.address);
 
       const utxos = await p2pkhInstance.getUtxos();
@@ -24,7 +24,7 @@ describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('FullStackNetworkProvider
     });
     it('should get the utxos for a p2sh32 contract', async () => {
       // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
-      const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, addressType: 'p2sh32' });
+      const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, contractType: 'p2sh32' });
       console.log(p2pkhInstance.address);
 
       const utxos = await p2pkhInstance.getUtxos();
@@ -35,7 +35,7 @@ describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('FullStackNetworkProvider
   describe('send using FullStackNetworkProvider', () => {
     // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other tests
     // Using p2sh20 address because it is funded on mainnet
-    const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, addressType: 'p2sh20' });
+    const p2pkhInstance = new Contract(artifact, [bobPkh], { provider, contractType: 'p2sh20' });
     console.log(p2pkhInstance.address);
 
     it('should fail when using incorrect function arguments', async () => {

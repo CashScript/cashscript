@@ -298,7 +298,7 @@ const generateTemplateLockScript = (
   constructorArguments: EncodedFunctionArgument[],
 ): WalletTemplateScriptLocking => {
   return {
-    lockingType: contract.addressType === 'p2s' ? 'standard' : contract.addressType,
+    lockingType: contract.contractType === 'p2s' ? 'standard' : contract.contractType,
     name: contract.artifact.contractName,
     script: [
       `// "${contract.artifact.contractName}" contract constructor parameters`,

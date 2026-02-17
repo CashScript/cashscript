@@ -1289,7 +1289,7 @@ export const fixtures: Fixture[] = [
   {
     name: 'P2PKH (with P2PKH inputs & P2SH20 address type & ECDSA signature algorithm)',
     transaction: (() => {
-      const contract = new Contract(P2PKH, [alicePkh], { provider, addressType: 'p2sh20' });
+      const contract = new Contract(P2PKH, [alicePkh], { provider, contractType: 'p2sh20' });
       const contractUtxo = randomUtxo();
       provider.addUtxo(contract.address, contractUtxo);
 

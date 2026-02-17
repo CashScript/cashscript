@@ -58,6 +58,7 @@ export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
 
 export type PlaceholderP2PKHUnlocker = Unlocker & { placeholder: true };
 
+export type ContractFunctionUnlocker = (...args: FunctionArgument[]) => ContractUnlocker;
 
 export function isContractUnlocker(unlocker: Unlocker): unlocker is ContractUnlocker {
   return 'contract' in unlocker;
@@ -158,11 +159,12 @@ export interface TransactionDetails extends Transaction {
   hex: string;
 }
 
-export interface ContractOptions {
+export interface ContractOptions<TContractType extends ContractType = ContractType> {
   provider: NetworkProvider,
-  addressType?: AddressType,
+  contractType?: TContractType,
 }
 
-export type AddressType = 'p2sh20' | 'p2sh32' | 'p2s';
+export type ContractType = 'p2sh20' | 'p2sh32' | 'p2s';
+export type AddressType = 'p2sh20' | 'p2sh32';
 
 export type VmResourceUsage = AuthenticationProgramStateResourceLimits['metrics'];
