@@ -47,7 +47,7 @@ new FullStackNetworkProvider(network: Network, bchjs: BCHJS)
 The `FullStackNetworkProvider` uses [FullStack.cash][fullstack]' infrastructure to connect to the BCH network. FullStack.cash' offers dedicated infrastructure and support plans for larger projects. Both `network` and `bchjs` parameters are mandatory, where `bchjs` is an instance of FullStack.cash' [BCHJS][bchjs].
 
 :::caution
-The `FullStackNetworkProvider` does not currently support CashTokens. If you want to use CashTokens, please use the `ElectrumNetworkProvider` instead.
+The `FullStackNetworkProvider` does not currently support CashTokens or the `getUtxosForLockingBytecode()` method. If you want to use these features, please use the `ElectrumNetworkProvider` instead.
 :::
 
 #### Example
@@ -72,7 +72,7 @@ new BitcoinRpcNetworkProvider(network: Network, url: string, options?: any)
 The `BitcoinRpcNetworkProvider` uses a direct connection to a BCH node. Note that a regular node does not have indexing, so any address of interest (e.g. the contract address) need to be registered by the node *before* sending any funds to those addresses. Because of this it is recommended to use a different network provider unless you have a specific reason to use the RPC provider.
 
 :::caution
-The `BitcoinRpcNetworkProvider` does not currently support CashTokens. If you want to use CashTokens, use the `ElectrumNetworkProvider` instead.
+The `BitcoinRpcNetworkProvider` does not currently support CashTokens or the `getUtxosForLockingBytecode()` method. If you want to use these features, please use the `ElectrumNetworkProvider` instead.
 :::
 
 #### Example

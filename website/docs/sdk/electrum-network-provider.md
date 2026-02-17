@@ -52,7 +52,6 @@ const provider = new ElectrumNetworkProvider('chipnet', { hostname });
 
 ## ElectrumNetworkProvider Methods
 
-
 ### getUtxos()
 ```ts
 async provider.getUtxos(address: string): Promise<Utxo[]>;
@@ -80,6 +79,16 @@ interface TokenDetails {
 #### Example
 ```ts
 const userUtxos = await provider.getUtxos(userAddress)
+```
+### getUtxosForLockingBytecode()
+```ts
+async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+```
+Returns all UTXOs for a specific locking bytecode. Both confirmed and unconfirmed UTXOs are included.
+
+#### Example
+```ts
+const utxos = await provider.getUtxosForLockingBytecode(lockingBytecode)
 ```
 
 ### getBlockHeight()

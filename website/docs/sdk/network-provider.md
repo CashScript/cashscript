@@ -51,6 +51,17 @@ interface TokenDetails {
 const userUtxos = await provider.getUtxos(userAddress)
 ```
 
+### getUtxosForLockingBytecode()
+```ts
+async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+```
+Returns all UTXOs for a specific locking bytecode. Both confirmed and unconfirmed UTXOs are included.
+
+#### Example
+```ts
+const utxos = await provider.getUtxosForLockingBytecode(lockingBytecode)
+```
+
 ### getBlockHeight()
 ```ts
 async provider.getBlockHeight(): Promise<number>;
