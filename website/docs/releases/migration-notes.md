@@ -52,6 +52,41 @@ require(bool(5) == true); // => true || compiles to 0x05 OP_0NOTEQUAL 0x01 OP_NU
 
 If you want to keep the old behaviour (without added opcodes), you can use the `unsafe_bool()` casting function instead.
 
+#### Function parameter type enforcement
+
+Function parameter types are now strictly enforced by default. Previously, no length checks were performed on bounded bytes types like `bytes20` and `bytes32` and no value checks were performed on boolean values. That meant that you could pass arguments to functions that were not of the correct type, which could lead to runtime vulnerabilities.
+
+We made this the new compiler default because it is more secure and more explicit. If you want to opt out of this behaviour, you can set the `enforceFunctionParameterTypes` option to `false` in the compiler options when compiling programatically, or use the `--skip-enforce-function-parameter-types` flag when using the CLI.
+
+Now, the compiler adds extra opcodes to the script to enforce the correct types. If you pass a byte string of an incorrect length to a function that expects e.g. a `bytes20`, the transaction will fail. If you pass in a numeric non-boolean value to a function that expects a `bool`, it will be converted to a boolean value using the `OP_0NOTEQUAL` opcode. If you pass in a non-numeric value to a function that expects a `bool`, the transaction will fail.
+
+We added no extra checks for `int` values, because any numeric operations on a non-numeric value will automatically fail the entire transaction.
+
+### CashScript SDK
+
+The `addressType` option on the `Contract` constructor has been renamed to `contractType`.
+
+```ts
+// Before: addressType option
+const contract = new Contract(artifact, constructorArgs, { addressType: 'p2sh32' });
+
+// After: contractType option
+const contract = new Contract(artifact, constructorArgs, { contractType: 'p2sh32' });
+```
+
+### Network Provider
+
+If you are using a custom network provider, you will need to update the code for the custom provider to implement the new `getUtxosForLockingBytecode()` method to be compatible with the new `NetworkProvider` interface.
+
+```ts
+  /**
+   * Retrieve all UTXOs (confirmed and unconfirmed) for a given locking bytecode.
+   * @param lockingBytecode The locking bytecode for which we wish to retrieve UTXOs.
+   * @returns List of UTXOs spendable by the provided locking bytecode.
+   */
+  getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+```
+
 ## v0.11 to v0.12
 
 There are several breaking changes to the SDK in this release.

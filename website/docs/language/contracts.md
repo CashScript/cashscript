@@ -71,8 +71,8 @@ Function parameters are passed in the reversed order of their declaration. This 
 
 In CashScript the types for the function arguments are **not** enforced automatically at the contract level. This can be especially relevant for types like `bool`, `bytesX` and other semantic bytes types. Instead this type information is only used by the SDK to check whether these arguments match the expected type during transaction building.
 
-:::caution
-The typings for the function arguments are only semantic, this means the length of bounded bytes types like `bytes20` are **not** contract enforced automatically. Instead add an explicit length check `require(item.length == 20)`.
+:::info
+The typings for function arguments are enforced by default for boolean values and bounded bytes types such as `bytes20` and `bytes32`.
 :::
 
 ## Statements

@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.13.0-next.3
+## v0.13.0-next.4
 
 This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
@@ -10,14 +10,21 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add support for `do {} while ()` loops.
 - :sparkles: Add support for bitwise and arithmetic shift operators (`<<`, `>>`) and bitwise inversion (`~`).
 - :sparkles: Add `unsafe_bool()` and `unsafe_int()` casting for semantic-only casts.
+- :hammer_and_wrench: **BREAKING**: Function parameter types are now strictly enforced (bounded bytes and boolean values).
+- :hammer_and_wrench: Add compiler option to `cashc` (programmatic and CLI compilation) to allow for opting out of function parameter type enforcement.
 - :bug: **BREAKING**: Fix issue where `bool()` casting did not change the value of the argument.
 - :boom: **BREAKING**: Rename `bytes4(int)` and `bytes(int, 4)` to `toPaddedBytes(int, 4)`.
 - :boom: **BREAKING**: Rename `bytes4(bytes)` to `unsafe_bytes4(bytes)`.
-- :racehorse: Add optimisations for negated number comparisons.
+- :racehorse: Add optimisations for negated number comparisons and boolean comparisons.
 
 #### CashScript SDK
 
 - :sparkles: Add support for `do {} while ()` loops in debug tooling.
+- :sparkles: Add support for `p2s` contract type.
+- :sparkles: Add `lockingBytecode` property to `Contract` class.
+- :sparkles: Add `getUtxosForLockingBytecode()` method to `ElectrumNetworkProvider` class and `MockNetworkProvider` interface.
+- :hammer_and_wrench: **BREAKING**: Rename `addressType` option on `Contract` constructor to `contractType`.
+- :hammer_and_wrench: **BREAKING**: Remove undocumented `redeemScript` property from `Contract` class.
 - :hammer_and_wrench: Update default VM target to `BCH_2026_05`.
 - :hammer_and_wrench: Improve package size by tidying up dependencies.
 

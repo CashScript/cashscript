@@ -29,7 +29,7 @@ If compilation is done using the `cashc` CLI with the <span style={{ display: 'i
 
 The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but the network providers can be configured. See the docs on [NetworkProvider](/docs/sdk/network-provider).
 
-The `contractType` option is used to choose between a `p2sh20`, `p2sh32` or `p2s` contract type for the CashScript contract. By default `p2sh32` is used because it has increased cryptographic security — but it is not yet supported by all wallets.
+The `contractType` option is used to choose between a `p2sh20`, `p2sh32` or `p2s` contract type for the CashScript contract. By default `p2sh32` is used because it has increased cryptographic security over `p2sh20` — but it is not yet supported by all wallets. `p2s` is a new contract type where the contract code is not hidden behind a hash. This has some benefits for public visibility of the contract code.
 
 :::caution
 p2sh32 was introduced because p2sh20 is cryptographically insecure for a large subset of smart contracts. For contracts holding large sums of BCH this provides an incentive to find a hash collision and hack the contract.
