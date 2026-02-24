@@ -1,0 +1,16 @@
+contract ForWhileNested() {
+    function spend() {
+        int sum = 0;
+
+        for (int i = 0; i < 2; i = i + 1) {
+            int j = 0;
+
+            while (j < 2) {
+                sum = sum + i + j;
+                j = j + 1;
+            }
+        }
+
+        require(sum == 4);
+    }
+}

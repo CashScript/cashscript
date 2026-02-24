@@ -35,6 +35,8 @@ import {
   ConsoleParameterNode,
   SliceNode,
   DoWhileNode,
+  WhileNode,
+  ForNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -67,10 +69,15 @@ import type {
   ConsoleStatementContext,
   ConsoleParameterContext,
   StatementContext,
+  NonControlStatementContext,
+  ControlStatementContext,
   RequireMessageContext,
   SliceContext,
   DoWhileStatementContext,
   LoopStatementContext,
+  WhileStatementContext,
+  ForStatementContext,
+  ForInitContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -154,7 +161,22 @@ export default class AstBuilder
   }
 
   visitStatement(ctx: StatementContext): StatementNode {
-    // Statement nodes only have a single child, so we can just visit that child
+    // Non-control statements include a trailing semicolon at the statement level.
+    // Preserve legacy source-map behavior by assigning location from this wrapper rule.
+    const statement = this.visit(ctx.getChild(0)) as StatementNode;
+
+    if (ctx.nonControlStatement()) {
+      statement.location = Location.fromCtx(ctx);
+    }
+
+    return statement;
+  }
+
+  visitNonControlStatement(ctx: NonControlStatementContext): StatementNode {
+    return this.visit(ctx.getChild(0));
+  }
+
+  visitControlStatement(ctx: ControlStatementContext): StatementNode {
     return this.visit(ctx.getChild(0));
   }
 
@@ -217,16 +239,49 @@ export default class AstBuilder
     return branch;
   }
 
-  visitLoopStatement(ctx: LoopStatementContext): DoWhileNode {
-    return this.visit(ctx.doWhileStatement()) as DoWhileNode;
+  visitLoopStatement(ctx: LoopStatementContext): StatementNode {
+    if (ctx.doWhileStatement()) return this.visit(ctx.doWhileStatement()) as DoWhileNode;
+    if (ctx.whileStatement()) return this.visit(ctx.whileStatement()) as WhileNode;
+    if (ctx.forStatement()) return this.visit(ctx.forStatement()) as ForNode;
+    throw new Error('Invalid loop statement');
   }
 
   visitDoWhileStatement(ctx: DoWhileStatementContext): DoWhileNode {
     const condition = this.visit(ctx.expression());
-    const block = this.visit(ctx.block()) as StatementNode;
+    const block = this.visit(ctx.block()) as BlockNode;
     const doWhile = new DoWhileNode(condition, block);
     doWhile.location = Location.fromCtx(ctx);
     return doWhile;
+  }
+
+  visitWhileStatement(ctx: WhileStatementContext): WhileNode {
+    const condition = this.visit(ctx.expression());
+    const block = this.visit(ctx.block()) as BlockNode;
+    const whileStatement = new WhileNode(condition, block);
+    whileStatement.location = Location.fromCtx(ctx);
+    return whileStatement;
+  }
+
+  visitForStatement(ctx: ForStatementContext): ForNode {
+    const init = this.visit(ctx.forInit()) as VariableDefinitionNode | AssignNode;
+    const condition = this.visit(ctx.expression());
+    const update = this.visit(ctx.assignStatement()) as AssignNode;
+    const block = this.visit(ctx.block()) as BlockNode;
+    const forStatement = new ForNode(init, condition, update, block);
+    forStatement.location = Location.fromCtx(ctx);
+    return forStatement;
+  }
+
+  visitForInit(ctx: ForInitContext): VariableDefinitionNode | AssignNode {
+    if (ctx.variableDefinition()) {
+      return this.visit(ctx.variableDefinition()) as VariableDefinitionNode;
+    }
+
+    if (ctx.assignStatement()) {
+      return this.visit(ctx.assignStatement()) as AssignNode;
+    }
+
+    throw new Error('Invalid for-loop init statement');
   }
 
   visitBlock(ctx: BlockContext): BlockNode {

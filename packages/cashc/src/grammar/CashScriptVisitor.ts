@@ -15,15 +15,20 @@ import { ParameterListContext } from "./CashScriptParser.js";
 import { ParameterContext } from "./CashScriptParser.js";
 import { BlockContext } from "./CashScriptParser.js";
 import { StatementContext } from "./CashScriptParser.js";
+import { NonControlStatementContext } from "./CashScriptParser.js";
+import { ControlStatementContext } from "./CashScriptParser.js";
 import { VariableDefinitionContext } from "./CashScriptParser.js";
 import { TupleAssignmentContext } from "./CashScriptParser.js";
 import { AssignStatementContext } from "./CashScriptParser.js";
 import { TimeOpStatementContext } from "./CashScriptParser.js";
 import { RequireStatementContext } from "./CashScriptParser.js";
+import { ConsoleStatementContext } from "./CashScriptParser.js";
 import { IfStatementContext } from "./CashScriptParser.js";
 import { LoopStatementContext } from "./CashScriptParser.js";
 import { DoWhileStatementContext } from "./CashScriptParser.js";
-import { ConsoleStatementContext } from "./CashScriptParser.js";
+import { WhileStatementContext } from "./CashScriptParser.js";
+import { ForStatementContext } from "./CashScriptParser.js";
+import { ForInitContext } from "./CashScriptParser.js";
 import { RequireMessageContext } from "./CashScriptParser.js";
 import { ConsoleParameterContext } from "./CashScriptParser.js";
 import { ConsoleParameterListContext } from "./CashScriptParser.js";
@@ -130,6 +135,18 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 */
 	visitStatement?: (ctx: StatementContext) => Result;
 	/**
+	 * Visit a parse tree produced by `CashScriptParser.nonControlStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNonControlStatement?: (ctx: NonControlStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.controlStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitControlStatement?: (ctx: ControlStatementContext) => Result;
+	/**
 	 * Visit a parse tree produced by `CashScriptParser.variableDefinition`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -160,6 +177,12 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 */
 	visitRequireStatement?: (ctx: RequireStatementContext) => Result;
 	/**
+	 * Visit a parse tree produced by `CashScriptParser.consoleStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConsoleStatement?: (ctx: ConsoleStatementContext) => Result;
+	/**
 	 * Visit a parse tree produced by `CashScriptParser.ifStatement`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -178,11 +201,23 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 */
 	visitDoWhileStatement?: (ctx: DoWhileStatementContext) => Result;
 	/**
-	 * Visit a parse tree produced by `CashScriptParser.consoleStatement`.
+	 * Visit a parse tree produced by `CashScriptParser.whileStatement`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitConsoleStatement?: (ctx: ConsoleStatementContext) => Result;
+	visitWhileStatement?: (ctx: WhileStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.forStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitForStatement?: (ctx: ForStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.forInit`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitForInit?: (ctx: ForInitContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.requireMessage`.
 	 * @param ctx the parse tree

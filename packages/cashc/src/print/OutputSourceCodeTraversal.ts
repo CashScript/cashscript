@@ -17,7 +17,6 @@ import {
   IntLiteralNode,
   HexLiteralNode,
   StringLiteralNode,
-  StatementNode,
   BlockNode,
   TimeOpNode,
   ArrayNode,
@@ -30,6 +29,9 @@ import {
   ConsoleParameterNode,
   SliceNode,
   DoWhileNode,
+  WhileNode,
+  ForNode,
+  NonControlStatementNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 
@@ -105,7 +107,6 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     this.addOutput(`${node.type} ${node.name} = `, true);
     this.visit(node.expression);
-    this.addOutput(';\n');
 
     return node;
   }
@@ -113,7 +114,6 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     this.addOutput(`${node.left.type} ${node.left.name}, ${node.right.type} ${node.right.name} = `, true);
     this.visit(node.tuple);
-    this.addOutput(';\n');
 
     return node;
   }
@@ -123,7 +123,6 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     this.addOutput(' = ');
     node.expression = this.visit(node.expression);
-    this.addOutput(';\n');
 
     return node;
   }
@@ -131,7 +130,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitTimeOp(node: TimeOpNode): Node {
     this.addOutput(`require(${node.timeOp} >= `, true);
     node.expression = this.visit(node.expression);
-    this.addOutput(');\n');
+    this.addOutput(')');
     return node;
   }
 
@@ -143,8 +142,15 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
       this.addOutput(`, "${node.message}"`);
     }
 
-    this.addOutput(');\n');
+    this.addOutput(')');
 
+    return node;
+  }
+
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    this.addOutput('console.log(', true);
+    node.parameters = this.visitCommaList(node.parameters) as ConsoleParameterNode[];
+    this.addOutput(')');
     return node;
   }
 
@@ -173,10 +179,26 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     return node;
   }
 
-  visitConsoleStatement(node: ConsoleStatementNode): Node {
-    this.addOutput('console.log(', true);
-    node.parameters = this.visitCommaList(node.parameters) as ConsoleParameterNode[];
-    this.addOutput(');\n');
+  visitWhile(node: WhileNode): Node {
+    this.addOutput('while (', true);
+    node.condition = this.visit(node.condition);
+    this.addOutput(') ');
+    node.block = this.visit(node.block) as BlockNode;
+    this.addOutput('\n');
+    return node;
+  }
+
+  visitFor(node: ForNode): Node {
+    this.addOutput('for (', true);
+
+    node.init = this.visit(node.init) as VariableDefinitionNode | AssignNode;
+    this.addOutput('; ');
+    node.condition = this.visit(node.condition);
+    this.addOutput('; ');
+    node.update = this.visit(node.update) as AssignNode;
+    this.addOutput(') ');
+    node.block = this.visit(node.block) as BlockNode;
+    this.addOutput('\n');
     return node;
   }
 
@@ -186,7 +208,13 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput('\n');
 
     this.indent();
-    node.statements = this.visitOptionalList(node.statements) as StatementNode[];
+
+    node.statements = node.statements?.map((n) => {
+      const visited = this.visit(n);
+      if (n instanceof NonControlStatementNode) this.addOutput(';\n');
+      return visited;
+    });
+
     this.unindent();
     this.addOutput('}', true);
 

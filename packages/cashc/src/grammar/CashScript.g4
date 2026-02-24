@@ -46,34 +46,46 @@ block
     ;
 
 statement
+    : controlStatement
+    | nonControlStatement ';'
+    ;
+
+nonControlStatement
     : variableDefinition
     | tupleAssignment
     | assignStatement
     | timeOpStatement
     | requireStatement
-    | ifStatement
-    | loopStatement
     | consoleStatement
     ;
 
+controlStatement
+    : ifStatement
+    | loopStatement
+    ;
+
 variableDefinition
-    : typeName modifier* Identifier '=' expression ';'
+    : typeName modifier* Identifier '=' expression
     ;
 
 tupleAssignment
-    : typeName Identifier ',' typeName Identifier '=' expression ';'
+    : typeName Identifier ',' typeName Identifier '=' expression
     ;
 
 assignStatement
-    : Identifier '=' expression ';'
+    : Identifier '=' expression
     ;
 
 timeOpStatement
-    : 'require' '(' TxVar '>=' expression (',' requireMessage)? ')' ';'
+    : 'require' '(' TxVar '>=' expression (',' requireMessage)? ')'
     ;
 
 requireStatement
-    : 'require' '(' expression (',' requireMessage)? ')' ';'
+    : 'require' '(' expression (',' requireMessage)? ')'
+    ;
+
+consoleStatement
+    : 'console.log' consoleParameterList
     ;
 
 ifStatement
@@ -82,14 +94,25 @@ ifStatement
 
 loopStatement
     : doWhileStatement
+    | whileStatement
+    | forStatement
     ;
 
 doWhileStatement
     : 'do' block 'while' '(' expression ')' ';'
     ;
 
-consoleStatement
-    : 'console.log' consoleParameterList ';'
+whileStatement
+    : 'while' '(' expression ')' block
+    ;
+
+forStatement
+    : 'for' '(' forInit ';' expression ';' assignStatement ')' block
+    ;
+
+forInit
+    : variableDefinition
+    | assignStatement
     ;
 
 requireMessage

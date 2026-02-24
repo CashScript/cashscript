@@ -26,6 +26,8 @@ import {
   InstantiationNode,
   ConsoleStatementNode,
   DoWhileNode,
+  WhileNode,
+  ForNode,
 } from '../../src/ast/AST.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../../src/ast/Operator.js';
 import { Class, TimeOp } from '../../src/ast/Globals.js';
@@ -982,6 +984,110 @@ export const fixtures: Fixture[] = [
                 new IdentifierNode('i'),
                 BinaryOperator.GT,
                 new IntLiteralNode(2n),
+              ),
+            ),
+          ]),
+        )],
+      ),
+    ),
+  },
+  {
+    fn: 'while_loop_basic.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'WhileLoopBasic',
+        [],
+        [new FunctionDefinitionNode(
+          'spend',
+          [],
+          new BlockNode([
+            new VariableDefinitionNode(
+              PrimitiveType.INT,
+              [],
+              'i',
+              new IntLiteralNode(0n),
+            ),
+            new WhileNode(
+              new BinaryOpNode(
+                new IdentifierNode('i'),
+                BinaryOperator.LT,
+                new IntLiteralNode(3n),
+              ),
+              new BlockNode([
+                new AssignNode(
+                  new IdentifierNode('i'),
+                  new BinaryOpNode(
+                    new IdentifierNode('i'),
+                    BinaryOperator.PLUS,
+                    new IntLiteralNode(1n),
+                  ),
+                ),
+              ]),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new IdentifierNode('i'),
+                BinaryOperator.EQ,
+                new IntLiteralNode(3n),
+              ),
+            ),
+          ]),
+        )],
+      ),
+    ),
+  },
+  {
+    fn: 'for_loop_basic.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'ForLoopBasic',
+        [],
+        [new FunctionDefinitionNode(
+          'spend',
+          [],
+          new BlockNode([
+            new VariableDefinitionNode(
+              PrimitiveType.INT,
+              [],
+              'sum',
+              new IntLiteralNode(0n),
+            ),
+            new ForNode(
+              new VariableDefinitionNode(
+                PrimitiveType.INT,
+                [],
+                'i',
+                new IntLiteralNode(0n),
+              ),
+              new BinaryOpNode(
+                new IdentifierNode('i'),
+                BinaryOperator.LT,
+                new IntLiteralNode(3n),
+              ),
+              new AssignNode(
+                new IdentifierNode('i'),
+                new BinaryOpNode(
+                  new IdentifierNode('i'),
+                  BinaryOperator.PLUS,
+                  new IntLiteralNode(1n),
+                ),
+              ),
+              new BlockNode([
+                new AssignNode(
+                  new IdentifierNode('sum'),
+                  new BinaryOpNode(
+                    new IdentifierNode('sum'),
+                    BinaryOperator.PLUS,
+                    new IdentifierNode('i'),
+                  ),
+                ),
+              ]),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new IdentifierNode('sum'),
+                BinaryOperator.EQ,
+                new IntLiteralNode(3n),
               ),
             ),
           ]),
