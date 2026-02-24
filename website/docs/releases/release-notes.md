@@ -23,6 +23,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add support for `p2s` contract type.
 - :sparkles: Add `lockingBytecode` property to `Contract` class.
 - :sparkles: Add `getUtxosForLockingBytecode()` method to `ElectrumNetworkProvider` class and `MockNetworkProvider` interface.
+- :sparkles: In the `MockNetworkProvider`, `addUtxo()` now also allows UTXOs to be added by locking bytecode.
 - :hammer_and_wrench: **BREAKING**: Rename `addressType` option on `Contract` constructor to `contractType`.
 - :hammer_and_wrench: **BREAKING**: Remove undocumented `redeemScript` property from `Contract` class.
 - :hammer_and_wrench: Update default VM target to `BCH_2026_05`.

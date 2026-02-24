@@ -19,6 +19,22 @@ interface MockNetworkProviderOptions {
   updateUtxoSet?: boolean;
   vmTarget?: VmTarget;
 }
+
+interface MockNetworkProvider extends NetworkProvider {
+  options: MockNetworkProviderOptions;
+  vmTarget: VmTarget;
+
+  constructor(options?: Partial<MockNetworkProviderOptions>) {}
+
+  // Hardcode the block height
+  setBlockHeight(newBlockHeight: number): void;
+
+  // Add a UTXO to the UTXO set of the mock network
+  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void;
+
+  // Reset the UTXO set and transaction list of the mock network
+  reset(): void;
+}
 ```
 
 The `updateUtxoSet` option is used to determine whether the UTXO set should be updated after a transaction is sent. If `updateUtxoSet` is `true` (default), the UTXO set will be updated to reflect the new state of the mock network. If `updateUtxoSet` is `false`, the UTXO set will not be updated.

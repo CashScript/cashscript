@@ -6,7 +6,7 @@ import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails } from
 import { DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
 
 export interface MockNetworkProviderOptions {
-  updateUtxoSet: boolean;
+  updateUtxoSet?: boolean;
   vmTarget?: VmTarget;
 }
 
@@ -14,8 +14,8 @@ export default class MockNetworkProvider implements NetworkProvider {
   // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
   private utxoSet: Array<[string, Utxo]> = [];
   private transactionMap: Record<string, string> = {};
+  private blockHeight: number = 133700;
   public network: Network = Network.MOCKNET;
-  public blockHeight: number = 133700;
   public options: MockNetworkProviderOptions;
   public vmTarget: VmTarget;
 
