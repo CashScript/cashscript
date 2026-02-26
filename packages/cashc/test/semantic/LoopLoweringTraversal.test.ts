@@ -114,6 +114,9 @@ describe('LoopLoweringTraversal', () => {
     const doWhileStatements = loweredDoWhile.block.statements ?? [];
     const finalDoWhileStatement = doWhileStatements[doWhileStatements.length - 1];
 
+    const originalSumAdditionStatement = originalFor.block.statements?.[0] as AssignNode;
+    const loweredSumAdditionStatement = loweredDoWhile.block.statements?.[0] as AssignNode;
+
     expect(scopedBlock).toBeInstanceOf(BlockNode);
     expect(init).toBeInstanceOf(VariableDefinitionNode);
     expect(loopBranch).toBeInstanceOf(BranchNode);
@@ -136,6 +139,7 @@ describe('LoopLoweringTraversal', () => {
     expect(loweredDoWhile.location).toBe(originalFor.location);
     expect(loopBranch.condition.location).toBe(originalCondition.location);
     expect(loweredDoWhile.condition.location).toBe(originalCondition.location);
+    expect(loweredSumAdditionStatement.location).toBe(originalSumAdditionStatement.location);
   });
 
   it('should recursively lower nested while/for loops', () => {

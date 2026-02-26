@@ -8,6 +8,7 @@ contract ForWhileNested() {
             while (j < 2) {
                 sum = sum + i + j;
                 j = j + 1;
+                console.log("sum:", sum, "i:", i, "j:", j);
             }
         }
 

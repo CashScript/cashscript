@@ -96,7 +96,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.elseBlock = this.visitOptional(node.elseBlock);
 
     if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
-      throw new TypeError(node, node.condition.type, PrimitiveType.BOOL);
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
     }
 
     return node;
@@ -107,7 +107,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.block = this.visit(node.block);
 
     if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
-      throw new TypeError(node, node.condition.type, PrimitiveType.BOOL);
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
     }
 
     return node;

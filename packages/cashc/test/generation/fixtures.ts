@@ -985,6 +985,125 @@ export const fixtures: Fixture[] = [
     },
   },
   {
+    fn: 'while_loop_basic.cash',
+    artifact: {
+      contractName: 'WhileLoopBasic',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: 'OP_0 OP_DUP OP_3 OP_LESSTHAN OP_IF OP_BEGIN OP_DUP OP_1ADD OP_NIP OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL OP_ENDIF OP_3 OP_NUMEQUAL',
+      debug: {
+        bytecode: '0076539f6365768b777653a26668539c',
+        sourceMap: '3:16:3:17;5:15:5:16;:19::20;:15:::1;:22:7:9:0;:8;6:16:6:17;:::21:1;:12::22;5:15:5:16:0;:19::20;:8:7:9:1;;:22;9:21:9:22:0;:8::24:1',
+        logs: [],
+        requires: [
+          { ip: 16, line: 9 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/while_loop_basic.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'for_loop_basic.cash',
+    artifact: {
+      contractName: 'ForLoopBasic',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: 'OP_0 OP_0 OP_DUP OP_3 OP_LESSTHAN OP_IF OP_BEGIN OP_2DUP OP_ADD OP_ROT OP_DROP OP_SWAP OP_DUP OP_1ADD OP_NIP OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL OP_ENDIF OP_SWAP OP_3 OP_NUMEQUAL OP_NIP',
+      debug: {
+        bytecode: '000076539f63656e937b757c768b777653a266687c539c77',
+        sourceMap: '3:18:3:19;5:21:5:22;:24::25;:28::29;:24:::1;:42:7:9:0;:8;6:18:6:25;::::1;:12::26;;;5:35:5:36:0;:::40:1;:31;:24::25:0;:28::29;:8:7:9:1;;:42;9:16:9:19:0;:23::24;:8::26:1;2:4:10:5',
+        logs: [],
+        requires: [
+          { ip: 23, line: 9 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/for_loop_basic.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'for_while_nested.cash',
+    artifact: {
+      contractName: 'ForWhileNested',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode: 'OP_0 OP_0 OP_DUP OP_2 OP_LESSTHAN OP_IF OP_BEGIN OP_0 OP_DUP OP_2 OP_LESSTHAN OP_IF OP_BEGIN OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_DUP OP_1ADD OP_NIP OP_DUP OP_2 OP_GREATERTHANOREQUAL OP_UNTIL OP_ENDIF OP_OVER OP_1ADD OP_ROT OP_DROP OP_NIP OP_DUP OP_2 OP_GREATERTHANOREQUAL OP_UNTIL OP_ENDIF OP_SWAP OP_4 OP_NUMEQUAL OP_NIP',
+      debug: {
+        bytecode: '000076529f63650076529f636552795279937893537a757c6b7c6c768b777652a26668788b7b75777652a266687c549c77',
+        sourceMap: '3:18:3:19;5:21:5:22;:24::25;:28::29;:24:::1;:42:13:9:0;:8;6:20:6:21;8:19:8:20;:23::24;:19:::1;:26:12:13:0;:12;9:22:9:25;;:28::29;;:22:::1;:32::33:0;:22:::1;:16::34;;;;;;;10:20:10:21:0;:::25:1;:16::26;8:19:8:20:0;:23::24;:12:12:13:1;;:26;5:35:5:36:0;:::40:1;:31;;::13:9;:24:5:25:0;:28::29;:8:13:9:1;;:42;15:16:15:19:0;:23::24;:8::26:1;2:4:16:5',
+        logs: [
+          {
+            ip: 30,
+            line: 11,
+            data: [
+              'sum:',
+              { stackIndex: 2, type: 'int', ip: 30 },
+              'i:',
+              { stackIndex: 1, type: 'int', ip: 30 },
+              'j:',
+              { stackIndex: 0, type: 'int', ip: 30 },
+            ],
+          },
+        ],
+        requires: [
+          { ip: 48, line: 15 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/for_while_nested.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
+      },
+      updatedAt: '',
+    },
+  },
+  {
+    fn: 'while_loop.cash',
+    artifact: {
+      contractName: 'Loopy',
+      constructorInputs: [],
+      abi: [{ name: 'doLoop', inputs: [] }],
+      bytecode: 'OP_0 OP_DUP OP_TXINPUTCOUNT OP_LESSTHAN OP_IF OP_BEGIN OP_DUP OP_1ADD OP_NIP OP_DUP OP_TXINPUTCOUNT OP_GREATERTHANOREQUAL OP_UNTIL OP_ENDIF OP_2 OP_GREATERTHAN',
+      debug: {
+        bytecode: '0076c39f6365768b7776c3a2666852a0',
+        sourceMap: '3:16:3:17;5:15:5:16;:19::35;:15:::1;:37:7:9:0;:8;6:16:6:17;:::21:1;:12::22;5:15:5:16:0;:19::35;:8:7:9:1;;:37;10:20:10:21:0;:8::23:1',
+        logs: [
+          { ip: 14, line: 9, data: [{ stackIndex: 0, type: 'int', ip: 14 }] },
+        ],
+        requires: [
+          { ip: 16, line: 10 },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/while_loop.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+        },
+      },
+      updatedAt: '',
+    },
+  },
+  {
     fn: 'complex_loop.cash',
     artifact: {
       contractName: 'Loopy',

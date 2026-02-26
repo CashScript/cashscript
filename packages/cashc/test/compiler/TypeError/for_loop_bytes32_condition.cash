@@ -1,0 +1,7 @@
+contract ForLoopConditionTypeError() {
+    function spend() {
+        for (int i = 0; tx.inputs[0].outpointTransactionHash; i = i + 1) {
+            require(i < 3);
+        }
+    }
+}

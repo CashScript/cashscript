@@ -103,6 +103,45 @@ contract Test() {
       require(i < 6, 'i should be less than 6');
     } while (i < 10);
   }
+
+  function test_require_inside_while_loop() {
+    int i = 0;
+
+    while (i < 10) {
+      i = i + 1;
+      require(i < 6, 'while i should be less than 6');
+    }
+
+    require(i == 10);
+  }
+
+  function test_require_inside_for_loop() {
+    int i = 0;
+
+    for (i = 0; i < 4; i = i + 1) {
+      require(i < 2, 'for i should be less than 2');
+    }
+
+    require(i == 4);
+  }
+
+  function test_require_inside_loop_complex() {
+    int i = 0;
+
+    do {
+      int j = 0;
+
+      while (j < 3) {
+        j = j + 1;
+        int k = i + j;
+        require(k < 2, 'k should be less than 2');
+      }
+
+      i = i + 1;
+    } while (i < 3);
+
+    require(i == 3);
+  }
 }
 `;
 
@@ -279,6 +318,28 @@ contract Test() {
     require(i == 10);
   }
 
+  function test_log_inside_while_loop() {
+    int i = 0;
+
+    while (i < 3) {
+      console.log('while i:', i);
+      i = i + 1;
+    }
+
+    require(i == 3);
+  }
+
+  function test_log_inside_for_loop() {
+    int sum = 0;
+
+    for (int i = 0; i < 3; i = i + 1) {
+      sum = sum + i;
+      console.log('for i:', i, 'sum:', sum);
+    }
+
+    require(sum == 3);
+  }
+
   function test_log_inside_loop_complex() {
     int i = 0;
 
@@ -291,12 +352,12 @@ contract Test() {
       int m = 10;
       require(m < 20);
 
-      do {
+      while (j < 2) {
         int k = i + j;
         require(k < 100);
         console.log('inner loop', 'i:', i, 'j:', j, 'k:', k, 'l:', l, 'm:', m);
         j = j + 1;
-      } while (j < 2);
+      }
 
       console.log('outer loop', 'i:', i);
 

@@ -184,12 +184,32 @@ describe('Debugging tests', () => {
         .addInput(contractTestLogInsideLoopUtxo, contractTestLogInsideLoop.unlock.test_log_inside_loop_complex())
         .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
 
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 0 j: 0 k: 0 l: 5 m: 10$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 0 j: 1 k: 1 l: 5 m: 10$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:32 outer loop i: 0$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 1 j: 0 k: 1 l: 5 m: 10$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:28 inner loop i: 1 j: 1 k: 2 l: 5 m: 10$'));
-      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:32 outer loop i: 1$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:50 inner loop i: 0 j: 0 k: 0 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:50 inner loop i: 0 j: 1 k: 1 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:54 outer loop i: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:50 inner loop i: 1 j: 0 k: 1 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:50 inner loop i: 1 j: 1 k: 2 l: 5 m: 10$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:54 outer loop i: 1$'));
+    });
+
+    it('should log inside a while loop with correct source lines after lowering', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestLogInsideLoopUtxo, contractTestLogInsideLoop.unlock.test_log_inside_while_loop())
+        .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:17 while i: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:17 while i: 1$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:17 while i: 2$'));
+    });
+
+    it('should log inside a for loop with correct source lines after lowering', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestLogInsideLoopUtxo, contractTestLogInsideLoop.unlock.test_log_inside_for_loop())
+        .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:29 for i: 0 sum: 0$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:29 for i: 1 sum: 1$'));
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:29 for i: 2 sum: 3$'));
     });
 
     it.todo('should log intermediate results that get optimised out inside a loop');
@@ -502,7 +522,32 @@ describe('Debugging tests', () => {
       expect(transaction).toFailRequireWith('Failing statement: require(i < 6, \'i should be less than 6\')');
     });
 
-    it.todo('should fail correct require statement inside nested loops');
+    it('should fail a require statement inside a while loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequireInsideLoopUtxo, contractTestRequireInsideLoop.unlock.test_require_inside_while_loop())
+        .addOutput({ to: contractTestRequireInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:16 Require statement failed at input 0 in contract Test.cash at line 16 with the following message: while i should be less than 6.');
+      expect(transaction).toFailRequireWith('Failing statement: require(i < 6, \'while i should be less than 6\')');
+    });
+
+    it('should fail a require statement inside a for loop', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequireInsideLoopUtxo, contractTestRequireInsideLoop.unlock.test_require_inside_for_loop())
+        .addOutput({ to: contractTestRequireInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:26 Require statement failed at input 0 in contract Test.cash at line 26 with the following message: for i should be less than 2.');
+      expect(transaction).toFailRequireWith('Failing statement: require(i < 2, \'for i should be less than 2\')');
+    });
+
+    it('should fail the correct require statement inside complex nested loops', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestRequireInsideLoopUtxo, contractTestRequireInsideLoop.unlock.test_require_inside_loop_complex())
+        .addOutput({ to: contractTestRequireInsideLoop.address, amount: 10000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:41 Require statement failed at input 0 in contract Test.cash at line 41 with the following message: k should be less than 2.');
+      expect(transaction).toFailRequireWith('Failing statement: require(k < 2, \'k should be less than 2\')');
+    });
   });
 
   describe('Non-require error messages', () => {
