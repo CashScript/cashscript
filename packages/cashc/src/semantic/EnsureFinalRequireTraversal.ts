@@ -8,6 +8,8 @@ import {
   BranchNode,
   ConsoleStatementNode,
   DoWhileNode,
+  WhileNode,
+  ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } from '../Errors.js';
@@ -51,8 +53,12 @@ function ensureFinalStatementIsRequire(statements: StatementNode[] = []): void {
     return;
   }
 
-  // TODO: Revisit this later, for now we allow do-while loops to not have a require() at the end
-  if (finalStatement instanceof DoWhileNode) {
+  // TODO: Revisit this later, for now we allow loops to not have a require() at the end
+  if (
+    finalStatement instanceof DoWhileNode
+    || finalStatement instanceof WhileNode
+    || finalStatement instanceof ForNode
+  ) {
     // ensureFinalStatementIsRequire(finalStatement.block.statements);
     return;
   }

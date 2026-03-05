@@ -49,6 +49,8 @@ import {
   ConsoleStatementNode,
   SliceNode,
   DoWhileNode,
+  WhileNode,
+  ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
@@ -446,6 +448,69 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.popFromStack();
 
     this.scopeDepth -= 1;
+
+    return node;
+  }
+
+  visitWhile(node: WhileNode): Node {
+    this.scopeDepth += 1;
+    this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
+
+    node.condition = this.visit(node.condition);
+    this.emit(Op.OP_DUP, { location: node.condition.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_TOALTSTACK, { location: node.condition.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.popFromStack();
+    this.emit(Op.OP_IF, { location: node.block.location, positionHint: PositionHint.START });
+
+    const bodyStackDepth = this.stack.length;
+    node.block = this.visit(node.block) as BlockNode;
+    this.removeScopedVariables(bodyStackDepth, node.block);
+
+    this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_FROMALTSTACK, { location: node.block.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.scopeDepth -= 1;
+
+    return node;
+  }
+
+  visitFor(node: ForNode): Node {
+    const forScopeStackDepth = this.stack.length;
+    node.init = this.visit(node.init) as VariableDefinitionNode | AssignNode;
+
+    this.scopeDepth += 1;
+    this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
+
+    node.condition = this.visit(node.condition);
+    this.emit(Op.OP_DUP, { location: node.condition.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_TOALTSTACK, { location: node.condition.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.popFromStack();
+    this.emit(Op.OP_IF, { location: node.block.location, positionHint: PositionHint.START });
+
+    const bodyStackDepth = this.stack.length;
+    node.block = this.visit(node.block) as BlockNode;
+    node.update = this.visit(node.update) as AssignNode;
+    this.removeScopedVariables(bodyStackDepth, node.block);
+
+    this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_FROMALTSTACK, { location: node.block.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.scopeDepth -= 1;
+    this.removeScopedVariables(forScopeStackDepth, node);
 
     return node;
   }

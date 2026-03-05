@@ -206,6 +206,8 @@ export class WhileNode extends ControlStatementNode {
 }
 
 export class ForNode extends ControlStatementNode {
+  symbolTable?: SymbolTable;
+
   constructor(
     public init: VariableDefinitionNode | AssignNode,
     public condition: ExpressionNode,

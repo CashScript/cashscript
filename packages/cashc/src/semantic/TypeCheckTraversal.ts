@@ -29,6 +29,8 @@ import {
   SliceNode,
   IntLiteralNode,
   DoWhileNode,
+  WhileNode,
+  ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import {
@@ -104,6 +106,30 @@ export default class TypeCheckTraversal extends AstTraversal {
 
   visitDoWhile(node: DoWhileNode): Node {
     node.condition = this.visit(node.condition);
+    node.block = this.visit(node.block);
+
+    if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
+    }
+
+    return node;
+  }
+
+  visitWhile(node: WhileNode): Node {
+    node.condition = this.visit(node.condition);
+    node.block = this.visit(node.block);
+
+    if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
+    }
+
+    return node;
+  }
+
+  visitFor(node: ForNode): Node {
+    node.init = this.visit(node.init) as AssignNode | VariableDefinitionNode;
+    node.condition = this.visit(node.condition);
+    node.update = this.visit(node.update) as AssignNode;
     node.block = this.visit(node.block);
 
     if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {

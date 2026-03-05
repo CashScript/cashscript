@@ -14,6 +14,7 @@ import {
   TupleAssignmentNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable.js';
@@ -88,6 +89,24 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.symbolTables.unshift(node.symbolTable);
 
     node.statements = this.visitOptionalList(node.statements) as StatementNode[];
+
+    const unusedSymbols = node.symbolTable.unusedSymbols();
+    if (unusedSymbols.length !== 0) {
+      throw new UnusedVariableError(unusedSymbols[0]);
+    }
+
+    this.symbolTables.shift();
+    return node;
+  }
+
+  visitFor(node: ForNode): Node {
+    node.symbolTable = new SymbolTable(this.symbolTables[0]);
+    this.symbolTables.unshift(node.symbolTable);
+
+    node.init = this.visit(node.init) as VariableDefinitionNode | AssignNode;
+    node.condition = this.visit(node.condition);
+    node.update = this.visit(node.update) as AssignNode;
+    node.block = this.visit(node.block);
 
     const unusedSymbols = node.symbolTable.unusedSymbols();
     if (unusedSymbols.length !== 0) {

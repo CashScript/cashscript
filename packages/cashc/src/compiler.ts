@@ -12,7 +12,6 @@ import CashScriptParser from './grammar/CashScriptParser.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
-import LoopLoweringTraversal from './semantic/LoopLoweringTraversal.js';
 
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
@@ -23,9 +22,6 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
 
   // Lexing + parsing
   let ast = parseCode(code);
-
-  // Loop lowering
-  ast = ast.accept(new LoopLoweringTraversal()) as Ast;
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
