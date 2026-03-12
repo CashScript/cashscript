@@ -2,16 +2,17 @@
 title: Release Notes
 ---
 
-## v0.13.0-next.4
+## v0.13.0-next.5
 
 This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### cashc compiler
-- :sparkles: Add support for `do {} while ()` loops.
+- :sparkles: Add support for `for`, `while` and `do-while` loops.
 - :sparkles: Add support for bitwise and arithmetic shift operators (`<<`, `>>`) and bitwise inversion (`~`).
 - :sparkles: Add `unsafe_bool()` and `unsafe_int()` casting for semantic-only casts.
 - :hammer_and_wrench: **BREAKING**: Function parameter types are now strictly enforced (bounded bytes and boolean values).
 - :hammer_and_wrench: Add compiler option to `cashc` (programmatic and CLI compilation) to allow for opting out of function parameter type enforcement.
+- :bug: Fix issue where casting bytes larger than `bytes8` to `int` was not allowed.
 - :bug: **BREAKING**: Fix issue where `bool()` casting did not change the value of the argument.
 - :boom: **BREAKING**: Rename `bytes4(int)` and `bytes(int, 4)` to `toPaddedBytes(int, 4)`.
 - :boom: **BREAKING**: Rename `bytes4(bytes)` to `unsafe_bytes4(bytes)`.
@@ -19,7 +20,7 @@ This release contains several breaking changes, please refer to the [migration n
 
 #### CashScript SDK
 
-- :sparkles: Add support for `do {} while ()` loops in debug tooling.
+- :sparkles: Add support for loops in debug tooling.
 - :sparkles: Add support for `p2s` contract type.
 - :sparkles: Add `lockingBytecode` property to `Contract` class.
 - :sparkles: Add `getUtxosForLockingBytecode()` method to `ElectrumNetworkProvider` class and `MockNetworkProvider` interface.

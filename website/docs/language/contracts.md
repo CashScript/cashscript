@@ -151,11 +151,56 @@ contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
 
 ### Loops (beta)
 
-Currently, CashScript only supports `do {} while ()` loops in the 0.13.0-next.0 pre-release. More advanced loop constructs will be added in the full 0.13.0 release. Keep in mind that in a `do {} while ()` loop, the condition is checked *after* the block of code within the loop is executed. This means that the block of code within the loop will be executed at least once, even if the condition is initially `false`.
+Currently, CashScript supports `for`, `while` and `do-while` loops in the `0.13.0-next` pre-release.
 
 :::caution
 Loops in CashScript are currently in beta and may not fully behave as expected with debugging and console.log statements. The syntax for loops may change in the future.
 :::
+
+#### for loop
+
+For loops are the main loop construct in CashScript and has a similar syntax to languages like JavaScript or C. The loop header consists of three parts: the initialization, the condition and the update. The initialization is executed only once before the loop starts. The condition is checked before each iteration of the loop. The update is executed after each iteration of the loop.
+
+#### Example
+```solidity
+pragma cashscript ^0.13.0;
+
+contract NoTokensAllowed() {
+    function spend() {
+        int inputIndex = 0;
+
+        // Loop over all inputs (variable length), and make sure that none of them contain tokens
+        for (int inputIndex = 0; inputIndex < tx.inputs.length; inputIndex = inputIndex + 1) {
+            require(tx.inputs[inputIndex].tokenCategory == 0x);
+        }
+    }
+}
+```
+
+#### while loop
+
+While loops are similar to for loops, but the initialization and update are not specified, so it it loops as long as the condition is true. The condition is checked *before* each iteration of the loop (unlike do-while loops).
+
+#### Example
+```solidity
+pragma cashscript ^0.13.0;
+
+contract NoTokensAllowed() {
+    function spend() {
+        int inputIndex = 0;
+
+        // Loop over all inputs (variable length), and make sure that none of them contain tokens
+        while (inputIndex < tx.inputs.length) {
+            require(tx.inputs[inputIndex].tokenCategory == 0x);
+            inputIndex = inputIndex + 1;
+        }
+    }
+}
+```
+
+#### do-while loop
+
+Do-while loops are similar to while loops, but the condition is checked *after* the block of code within the loop is executed. This means that the block of code within the loop will be executed at least once, even if the condition is initially `false`.
 
 #### Example
 ```solidity
