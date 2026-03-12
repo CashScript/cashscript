@@ -90,8 +90,6 @@ export const formatBytecodeForDebugging = (artifact: Artifact): string => {
   const usesUnstableControlFlowFormatting = [
     'OP_DEFINE',
     'OP_INVOKE',
-    'OP_BEGIN',
-    'OP_UNTIL',
   ].some((opcode) => artifact.bytecode.includes(opcode));
 
   if (usesUnstableControlFlowFormatting) {

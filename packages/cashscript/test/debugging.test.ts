@@ -774,7 +774,6 @@ describe('Debugging tests', () => {
       expect(transaction).toLog(expectedLog);
     });
   });
-
 });
 
 describe('VM Resources', () => {
