@@ -18,6 +18,8 @@ import {
   StackItem,
   BytesType,
   CompilerOptions,
+  SourceTagEntry,
+  SourceTagKind,
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -72,6 +74,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   stack: string[] = [];
   consoleLogs: LogEntry[] = [];
   requires: RequireStatement[] = [];
+  sourceTags: SourceTagEntry[] = [];
   finalStackUsage: Record<string, StackItem> = {};
 
   private scopeDepth = 0;
@@ -499,7 +502,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     const bodyStackDepth = this.stack.length;
     node.block = this.visit(node.block) as BlockNode;
+
+    const updateStartIndex = this.output.length;
     node.update = this.visit(node.update) as AssignNode;
+    const updateEndIndex = this.output.length - 1;
+    this.sourceTags.push({ startIndex: updateStartIndex, endIndex: updateEndIndex, kind: SourceTagKind.FOR_UPDATE });
+
     this.removeScopedVariables(bodyStackDepth, node.block);
 
     this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });

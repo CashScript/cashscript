@@ -10,7 +10,7 @@ import {
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
 import { optimisationReplacements } from './optimisations.js';
-import { FullLocationData, PositionHint, SingleLocationData } from './types.js';
+import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry } from './types.js';
 import { LogEntry, RequireStatement } from './artifact.js';
 
 export const Op = OpcodesBch;
@@ -156,6 +156,7 @@ interface OptimiseBytecodeResult {
   locationData: FullLocationData;
   logs: LogEntry[];
   requires: RequireStatement[];
+  sourceTags: SourceTagEntry[];
 }
 
 export function optimiseBytecode(
@@ -163,6 +164,7 @@ export function optimiseBytecode(
   locationData: FullLocationData,
   logs: LogEntry[],
   requires: RequireStatement[],
+  sourceTags: SourceTagEntry[],
   constructorParamLength: number,
   runs: number = 1000,
 ): OptimiseBytecodeResult {
@@ -173,7 +175,8 @@ export function optimiseBytecode(
       locationData: newLocationData,
       logs: newLogs,
       requires: newRequires,
-    } = replaceOps(script, locationData, logs, requires, constructorParamLength, optimisationReplacements);
+      sourceTags: newSourceTags,
+    } = replaceOps(script, locationData, logs, requires, sourceTags, constructorParamLength, optimisationReplacements);
 
     // Break on fixed point
     if (scriptToAsm(oldScript) === scriptToAsm(newScript)) break;
@@ -182,9 +185,10 @@ export function optimiseBytecode(
     locationData = newLocationData;
     logs = newLogs;
     requires = newRequires;
+    sourceTags = newSourceTags;
   }
 
-  return { script, locationData, logs, requires };
+  return { script, locationData, logs, requires, sourceTags };
 }
 
 export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script {
@@ -243,6 +247,7 @@ interface ReplaceOpsResult {
   locationData: FullLocationData;
   logs: LogEntry[];
   requires: RequireStatement[];
+  sourceTags: SourceTagEntry[];
 }
 
 function replaceOps(
@@ -250,6 +255,7 @@ function replaceOps(
   locationData: FullLocationData,
   logs: LogEntry[],
   requires: RequireStatement[],
+  sourceTags: SourceTagEntry[],
   constructorParamLength: number,
   optimisations: string[][],
 ): ReplaceOpsResult {
@@ -257,6 +263,7 @@ function replaceOps(
   let newLocationData = [...locationData];
   let newLogs = [...logs];
   let newRequires = [...requires];
+  let newSourceTags = [...sourceTags];
 
   optimisations.forEach(([pattern, replacement]) => {
     let processedAsm = '';
@@ -357,6 +364,13 @@ function replaceOps(
         };
       });
 
+      // Source tags use raw script indices (no constructor offset), so we adjust using scriptIndex directly
+      newSourceTags = newSourceTags.map((tag) => ({
+        ...tag,
+        startIndex: tag.startIndex >= scriptIndex ? Math.max(scriptIndex, tag.startIndex - lengthDiff) : tag.startIndex,
+        endIndex: tag.endIndex >= scriptIndex ? Math.max(scriptIndex, tag.endIndex - lengthDiff) : tag.endIndex,
+      }));
+
       // We add the replacement to the processed asm
       processedAsm = mergeAsm(processedAsm, replacement);
 
@@ -381,6 +395,7 @@ function replaceOps(
     locationData: newLocationData,
     logs: newLogs,
     requires: newRequires,
+    sourceTags: newSourceTags,
   };
 }
 

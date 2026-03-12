@@ -48,3 +48,7 @@ export function decodeString(encodedString: Uint8Array): string {
 export function placeholder(size: number): Uint8Array {
   return new Uint8Array(size).fill(0);
 }
+
+export function range(start: number, end: number): number[] {
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+}

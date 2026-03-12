@@ -1,6 +1,6 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, CompilerOptions, generateSourceMap, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
+import { Artifact, CompilerOptions, generateSourceMap, generateSourceTags, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -41,6 +41,7 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
     sourceMapToLocationData(traversal.sourceMap),
     traversal.consoleLogs,
     traversal.requires,
+    traversal.sourceTags,
     constructorParamLength,
   );
 
@@ -51,11 +52,13 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
   }
 
   // Attach debug information
+  const sourceTags = generateSourceTags(optimisationResult.sourceTags);
   const debug = {
     bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
     sourceMap: generateSourceMap(optimisationResult.locationData),
     logs: optimisationResult.logs,
     requires: optimisationResult.requires,
+    ...(sourceTags ? { sourceTags } : {}),
   };
 
   return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions);

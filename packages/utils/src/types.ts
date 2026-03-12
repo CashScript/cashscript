@@ -220,3 +220,15 @@ export enum PositionHint {
   START = 0,
   END = 1,
 }
+
+// Semantic tags for opcodes that need special treatment in debugging output (e.g. synthetic labels).
+// Currently used for loop constructs where opcode order diverges from source line order.
+export enum SourceTagKind {
+  FOR_UPDATE = 'fu',
+}
+
+export interface SourceTagEntry {
+  startIndex: number; // first opcode index (inclusive)
+  endIndex: number; // last opcode index (inclusive)
+  kind: SourceTagKind;
+}

@@ -1024,6 +1024,7 @@ export const fixtures: Fixture[] = [
         requires: [
           { ip: 24, line: 9 },
         ],
+        sourceTags: '14:16:fu',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/for_loop_basic.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1052,6 +1053,7 @@ export const fixtures: Fixture[] = [
           { ip: 38, line: 12 },
           { ip: 41, line: 13 },
         ],
+        sourceTags: '25:27:fu',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/for_loop_stack_items.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1091,6 +1093,7 @@ export const fixtures: Fixture[] = [
         requires: [
           { ip: 50, line: 15 },
         ],
+        sourceTags: '38:42:fu',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/for_while_nested.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {

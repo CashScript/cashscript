@@ -17,6 +17,7 @@ export interface DebugInformation {
   sourceMap: string; // see documentation for `generateSourceMap`
   logs: readonly LogEntry[]; // log entries generated from `console.log` statements
   requires: readonly RequireStatement[]; // messages for failing `require` statements
+  sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
 }
 
 export interface LogEntry {

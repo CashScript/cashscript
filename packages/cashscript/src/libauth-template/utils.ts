@@ -84,6 +84,7 @@ export const formatBytecodeForDebugging = (artifact: Artifact): string => {
     bytecodeToScript(hexToBin(artifact.debug.bytecode)),
     artifact.debug.sourceMap,
     artifact.source,
+    artifact.debug.sourceTags,
   );
 };
 
