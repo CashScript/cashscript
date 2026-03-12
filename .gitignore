@@ -106,3 +106,5 @@ typings/
 .dynamodb/
 
 manual-test.ts
+
+.claude/
