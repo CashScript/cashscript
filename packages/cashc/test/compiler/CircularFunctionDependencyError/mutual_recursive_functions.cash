@@ -1,0 +1,13 @@
+contract Test() {
+    function spend(int value) {
+        require(first_(value));
+    }
+
+    function first_(int value) {
+        require(second_(value));
+    }
+
+    function second_(int value) {
+        require(first_(value));
+    }
+}

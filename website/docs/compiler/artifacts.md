@@ -13,12 +13,13 @@ Artifacts allow any third-party SDKs to be developed, since these SDKs only need
 interface Artifact {
   contractName: string // Contract name
   constructorInputs: AbiInput[] // Arguments required to instantiate a contract
-  abi: AbiFunction[] // functions that can be called
+  abi: AbiFunction[] // Public functions that can be called from the SDK
   bytecode: string // Compiled Script without constructor parameters added (in ASM format)
   source: string // Source code of the CashScript contract
   compiler: {
     name: string // Compiler used to compile this contract
     version: string // Compiler version used to compile this contract
+    target?: string // Optional VM target required by this artifact (e.g. BCH_2026_05)
     options?: CompilerOptions // Compiler options used to compile this contract
   }
   debug?: {
@@ -56,10 +57,20 @@ interface StackItem {
 interface RequireStatement {
   ip: number; // instruction pointer
   line: number; // line in the source code
-  message: string; // custom message for failing `require` statement
+  message?: string; // custom message for failing `require` statement
 }
 
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean; // Enforce function parameter types (default: true)
+  internalFunctionPrefix?: string; // Optional custom prefix used to mark helper functions as internal
+  target?: 'BCH_2023_05' | 'BCH_2025_05' | 'BCH_2026_05' | 'BCH_SPEC'; // Optional explicit VM target override recorded in the artifact metadata
 }
 ```
+
+:::note
+By default, functions whose names end with `_` are excluded from the artifact ABI. They can still be called by other CashScript functions, but they are not exposed as public SDK entrypoints.
+:::
+
+:::note
+Artifacts using BCH function opcodes record `compiler.target: 'BCH_2026_05'`. SDK integrations can use this to validate that their runtime/debug environment matches the contract's required VM semantics.
+:::

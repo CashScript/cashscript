@@ -5,13 +5,15 @@ import {
   type RequestResponse,
   type ElectrumClientEvents,
 } from '@electrum-cash/network';
-import { Utxo, Network } from '../interfaces.js';
+import { Utxo, Network, VmTarget } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
+import { DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
 
 
 interface OptionsBase {
   manualConnectionManagement?: boolean;
+  vmTarget?: VmTarget;
 }
 
 interface CustomHostNameOptions extends OptionsBase {
@@ -28,10 +30,12 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumClient<ElectrumClientEvents>;
   private concurrentRequests: number = 0;
   private manualConnectionManagement: boolean;
+  public vmTarget: VmTarget;
 
   constructor(public network: Network = Network.MAINNET, options: Options = {}) {
     this.electrum = this.instantiateElectrumClient(network, options);
     this.manualConnectionManagement = options?.manualConnectionManagement ?? false;
+    this.vmTarget = options.vmTarget ?? DEFAULT_VM_TARGET;
   }
 
   private instantiateElectrumClient(network: Network, options: Options): ElectrumClient<ElectrumClientEvents> {

@@ -1,4 +1,5 @@
 import { GLOBAL_SYMBOL_TABLE, Modifier } from '../ast/Globals.js';
+import { PrimitiveType } from '@cashscript/utils';
 import {
   ContractNode,
   ParameterNode,
@@ -29,7 +30,7 @@ import {
 
 export default class SymbolTableTraversal extends AstTraversal {
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];
-  private functionNames: Map<string, boolean> = new Map<string, boolean>();
+  private functionDefinitions: Map<string, Symbol> = new Map<string, Symbol>();
   private currentFunction: FunctionDefinitionNode;
   private expectedSymbolType: SymbolType = SymbolType.VARIABLE;
   private insideConsoleStatement: boolean = false;
@@ -39,6 +40,20 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.symbolTables.unshift(node.symbolTable);
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+
+    node.functions.forEach((func) => {
+      if (this.functionDefinitions.get(func.name) || GLOBAL_SYMBOL_TABLE.get(func.name)) {
+        throw new FunctionRedefinitionError(func);
+      }
+
+      this.functionDefinitions.set(func.name, Symbol.definedFunction(
+        func.name,
+        PrimitiveType.BOOL,
+        func,
+        func.parameters.map((parameter) => parameter.type),
+      ));
+    });
+
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
 
     const unusedSymbols = node.symbolTable.unusedSymbols();
@@ -47,6 +62,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     this.symbolTables.shift();
+    this.functionDefinitions.clear();
     return node;
   }
 
@@ -61,13 +77,6 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.currentFunction = node;
-
-    // Checked for function redefinition, but they are not included in the
-    // symbol table, as internal function calls are not supported.
-    if (this.functionNames.get(node.name)) {
-      throw new FunctionRedefinitionError(node);
-    }
-    this.functionNames.set(node.name, true);
 
     node.symbolTable = new SymbolTable(this.symbolTables[0]);
     this.symbolTables.unshift(node.symbolTable);
@@ -157,10 +166,24 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitFunctionCall(node: FunctionCallNode): Node {
-    this.expectedSymbolType = SymbolType.FUNCTION;
-    node.identifier = this.visit(node.identifier) as IdentifierNode;
-    this.expectedSymbolType = SymbolType.VARIABLE;
+    const symbol = this.symbolTables[0].get(node.identifier.name);
+    if (symbol?.symbolType === SymbolType.FUNCTION) {
+      node.identifier.definition = symbol;
+      node.identifier.definition.references.push(node.identifier);
+    } else if (this.functionDefinitions.has(node.identifier.name)) {
+      node.identifier.definition = this.functionDefinitions.get(node.identifier.name)!;
+    } else if (symbol) {
+      throw new InvalidSymbolTypeError(node.identifier, SymbolType.FUNCTION);
+    } else {
+      throw new UndefinedReferenceError(node.identifier);
+    }
+
     node.parameters = this.visitList(node.parameters);
+
+    if (node.identifier.definition?.definition instanceof FunctionDefinitionNode) {
+      this.currentFunction.calledFunctions.add(node.identifier.name);
+    }
+
     return node;
   }
 

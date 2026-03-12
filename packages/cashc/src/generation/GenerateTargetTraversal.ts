@@ -9,6 +9,7 @@ import {
   PrimitiveType,
   Script,
   scriptToAsm,
+  scriptToBytecode,
   generateSourceMap,
   FullLocationData,
   LogEntry,
@@ -65,7 +66,7 @@ import {
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
-import { isNumericType } from '../utils.js';
+import { getInvokedFunctionClosure, getPublicFunctions, isNumericType } from '../utils.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -80,6 +81,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+  private functionIndices = new Map<string, number>();
 
   constructor(private compilerOptions: CompilerOptions) {
     super();
@@ -145,22 +147,30 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    const publicFunctions = getPublicFunctions(node.functions, this.compilerOptions);
 
     // Keep track of constructor parameter count for instructor pointer calculation
     this.constructorParameterCount = node.parameters.length;
 
-    if (node.functions.length === 1) {
-      node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
+    const invokedFunctions = getInvokedFunctionClosure(node.functions);
+    if (invokedFunctions.size > 0) {
+      const functionDefinitions = node.functions.filter((func) => invokedFunctions.has(func.name));
+      this.functionIndices = new Map(functionDefinitions.map((func, index) => [func.name, index]));
+      this.emitFunctionDefinitions(functionDefinitions);
+    }
+
+    if (publicFunctions.length === 1) {
+      publicFunctions[0] = this.visit(publicFunctions[0]) as FunctionDefinitionNode;
     } else {
       this.pushToStack('$$', true);
-      node.functions = node.functions.map((f, i) => {
+      publicFunctions.forEach((f, i) => {
         const locationData = { location: f.location, positionHint: PositionHint.START };
 
         const stackCopy = [...this.stack];
         const selectorIndex = this.getStackIndex('$$');
 
         this.emit(encodeInt(BigInt(selectorIndex)), locationData);
-        if (i === node.functions.length - 1) {
+        if (i === publicFunctions.length - 1) {
           this.emit(Op.OP_ROLL, locationData);
           this.removeFromStack(selectorIndex);
         } else {
@@ -171,23 +181,22 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
         this.emit(encodeInt(BigInt(i)), locationData);
         this.emit(Op.OP_NUMEQUAL, locationData);
 
-        if (i < node.functions.length - 1) {
+        if (i < publicFunctions.length - 1) {
           this.emit(Op.OP_IF, locationData);
         } else {
           this.emit(Op.OP_VERIFY, locationData);
         }
 
-        f = this.visit(f) as FunctionDefinitionNode;
+        this.visit(f);
 
-        if (i < node.functions.length - 1) {
+        if (i < publicFunctions.length - 1) {
           this.emit(Op.OP_ELSE, { ...locationData, positionHint: PositionHint.END });
         }
 
         this.stack = [...stackCopy];
-        return f;
       });
 
-      for (let i = 0; i < node.functions.length - 1; i += 1) {
+      for (let i = 0; i < publicFunctions.length - 1; i += 1) {
         this.emit(Op.OP_ENDIF, { location: node.location, positionHint: PositionHint.END });
       }
     }
@@ -210,6 +219,29 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.cleanStack(node.body);
 
     return node;
+  }
+
+  private emitFunctionDefinitions(functions: FunctionDefinitionNode[]): void {
+    functions.forEach((func) => {
+      const locationData = { location: func.location, positionHint: PositionHint.START };
+      const functionBytecode = this.generateFunctionBytecode(func);
+
+      this.emit(functionBytecode, locationData);
+      this.pushToStack('(value)');
+      this.emit(encodeInt(BigInt(this.functionIndices.get(func.name)!)), locationData);
+      this.pushToStack('(value)');
+      this.emit(Op.OP_DEFINE, { location: func.location, positionHint: PositionHint.END });
+      this.popFromStack(2);
+    });
+  }
+
+  private generateFunctionBytecode(node: FunctionDefinitionNode): Uint8Array {
+    const traversal = new GenerateTargetTraversalWithLocation(this.compilerOptions);
+    traversal.functionIndices = new Map(this.functionIndices);
+    traversal.constructorParameterCount = this.constructorParameterCount;
+    node.accept(traversal);
+    traversal.output = asmToScript(scriptToAsm(traversal.output));
+    return scriptToBytecode(traversal.output);
   }
 
   removeFinalVerifyFromFunction(functionBodyNode: Node): void {
@@ -549,6 +581,15 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     }
 
     node.parameters = this.visitList(node.parameters);
+
+    if (node.identifier.definition?.definition instanceof FunctionDefinitionNode) {
+      this.emit(encodeInt(BigInt(this.functionIndices.get(node.identifier.name)!)), { location: node.location, positionHint: PositionHint.START });
+      this.pushToStack('(value)');
+      this.emit(Op.OP_INVOKE, { location: node.location, positionHint: PositionHint.END });
+      this.popFromStack(node.parameters.length + 1);
+      this.pushToStack('(value)');
+      return node;
+    }
 
     this.emit(
       compileGlobalFunction(node.identifier.name as GlobalFunction),

@@ -3,6 +3,8 @@ This folder contains a number of example CashScript contracts to show off its fu
 
 The "Hello World" of cash contracts is defining the P2PKH pattern inside a cash contract, which can be found under [`p2pkh.cash`](/examples/p2pkh.cash). Its usage can be found under [`p2pkh.ts`](/examples/p2pkh.ts).
 
+For BCH function calls and internal helpers compiled via `OP_DEFINE` / `OP_INVOKE`, see [`helper-functions.cash`](/examples/helper-functions.cash) and [`helper-functions.ts`](/examples/helper-functions.ts). This example uses the supported helper-function subset and configures the mock provider for `BCH_2026_05`.
+
 ## Running the examples
 To run the examples, clone this repository and navigate to the `examples/` directory. Since the examples depend on the SDK, be sure to run `yarn` inside the `examples/` directory, which installs all required packages.
 

@@ -244,6 +244,30 @@ export class ArrayElementError extends CashScriptError {
   }
 }
 
+export class InvokedFunctionSignatureCheckError extends CashScriptError {
+  constructor(
+    public node: FunctionCallNode,
+  ) {
+    super(node, `Invoked functions cannot use '${node.identifier.name}'`);
+  }
+}
+
+export class InvokedFunctionContractParameterReferenceError extends CashScriptError {
+  constructor(
+    public node: IdentifierNode,
+  ) {
+    super(node, `Invoked functions cannot reference contract parameter '${node.name}'`);
+  }
+}
+
+export class CircularFunctionDependencyError extends CashScriptError {
+  constructor(
+    public node: FunctionDefinitionNode,
+  ) {
+    super(node, `Circular dependency detected for function '${node.name}'`);
+  }
+}
+
 export class IndexOutOfBoundsError extends CashScriptError {
   constructor(
     node: TupleIndexOpNode | BinaryOpNode | SliceNode,

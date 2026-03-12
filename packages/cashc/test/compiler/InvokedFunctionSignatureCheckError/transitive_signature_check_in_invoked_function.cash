@@ -1,0 +1,13 @@
+contract Test(pubkey owner) {
+  function spend(sig ownerSig) {
+    require(wrapper_(ownerSig));
+  }
+
+  function wrapper_(sig ownerSig) {
+    require(checkOwner_(ownerSig));
+  }
+
+  function checkOwner_(sig ownerSig) {
+    require(checkSig(ownerSig, owner));
+  }
+}

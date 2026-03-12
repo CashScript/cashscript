@@ -59,9 +59,51 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 }
 ```
 
+### Internal Helper Functions (beta)
+
+CashScript functions can also call other functions in the same contract.
+
+:::caution
+User-defined function calls and internal helper functions are currently in beta. The naming convention and some implementation details may still change in a future release.
+
+This feature depends on BCH 2026 function semantics. Artifacts for contracts using helper functions record `compiler.target: 'BCH_2026_05'`. When testing or integrating these contracts in apps, make sure your environment is configured for `BCH_2026_05`.
+:::
+
+If a function name ends with `_`, CashScript treats it as an internal helper:
+
+- it can still be called from other contract functions
+- it is not included in the compiled ABI
+- it is therefore not exposed as an SDK unlock method
+
+This is useful for shared validation logic that should not appear as a public entrypoint.
+
+```solidity
+contract Vault(pubkey owner) {
+    function spend(sig ownerSig, int value) {
+        require(checkSig(ownerSig, owner));
+        require(isPositiveEven_(value));
+    }
+
+    function isPositiveEven_(int value) {
+        require(value > 0);
+        require(value % 2 == 0);
+    }
+}
+```
+
+For details on how these helper functions compile to BCH `OP_DEFINE` and `OP_INVOKE`, see [BCH Functions (beta)](/docs/compiler/bch-functions).
+
+:::caution
+Internally-invoked functions currently cannot use `checkSig()`, `checkMultiSig()`, or `checkDataSig()`, and they also cannot reference constructor parameters. Keep signature validation and constructor-parameter-dependent logic in public entrypoint functions for now.
+:::
+
+:::note
+When testing helper-function contracts locally, configure your `MockNetworkProvider` for `BCH_2026_05` so local evaluation matches the artifact's required VM target.
+:::
+
 ### Function Arguments
 
-Function arguments are provided by the user in the unlocking script of the transaction inputs when spending from the contract. Note that function arguments are variables and can be reassigned inside the function body.
+Function arguments are provided by the user in the unlocking script of the transaction inputs when spending from the contract. Note that function arguments are variables and can be reassigned inside the function body. User-defined function calls return a boolean value, so they are usually used inside `require(...)` statements.
 
 Because the arguments are provided by the user when spending from the contract, these are 'untrusted arguments'. This means that these arguments can be crafted in a specific way by anyone to see if they can exploit the contract logic.
 
@@ -246,12 +288,12 @@ contract P2PKH(bytes20 pkh) {
 
 ## Scope
 
-CashScript uses nested scopes for parameters, variables and global functions. There cannot be two identical names within the same scope or within a nested scope.
+CashScript uses nested scopes for parameters, variables, user-defined functions and global functions. There cannot be two identical names within the same scope or within a nested scope.
 
 There are the following scopes in the nesting order:
 
 - **Global scope** - contains global functions and global variables (e.g. `sha256`, `hash160`, `checkSig`, etc.)
-- **Contract scope** - contains contract parameters
+- **Contract scope** - contains contract parameters and user-defined function names
 - **Function scope** - contains function parameters and local variables
 - **Local scope** - contains local variables introduced by control flow blocks (e.g. `if`, `else`)
 
@@ -259,7 +301,7 @@ There are the following scopes in the nesting order:
 ```solidity
 // Global scope (contains global functions and global variables like sha256, hash160, checkSig, etc.)
 
-// Contract scope (contains contract parameters - sender, recipient, timeout)
+// Contract scope (contains contract parameters and function names)
 contract TransferWithTimeout(
     pubkey sender,
     pubkey recipient,

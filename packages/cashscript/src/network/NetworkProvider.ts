@@ -1,10 +1,16 @@
-import { Utxo, Network } from '../interfaces.js';
+import { Utxo, Network, VmTarget } from '../interfaces.js';
 
 export default interface NetworkProvider {
   /**
    * Variable indicating the network that this provider connects to.
    */
   network: Network;
+
+  /**
+   * Optional VM target metadata used for local validation/debugging.
+   * Providers that know which BCH VM rules they target should expose this.
+   */
+  vmTarget?: VmTarget;
 
   /**
    * Retrieve all UTXOs (confirmed and unconfirmed) for a given address.

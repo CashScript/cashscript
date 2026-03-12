@@ -17,9 +17,9 @@ To create a new virtual UTXO use `provider.addUtxo(address, utxo)`. You can use 
 #### Example
 
 ```ts
-import { MockNetworkProvider, randomUtxo, randomToken, randomNFT } from 'cashscript';
+import { MockNetworkProvider, randomUtxo, randomToken, randomNFT, VmTarget } from 'cashscript';
 
-const provider = new MockNetworkProvider();
+const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
 const contractUtxo = provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
 
 const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
@@ -27,6 +27,10 @@ const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
   token: { ...randomNFT(), ...randomToken() },
 }));
 ```
+
+:::note
+If your contract artifact records `compiler.target` metadata, such as helper-function contracts using BCH `OP_DEFINE` / `OP_INVOKE`, configure your testing provider for the same VM target. Otherwise the SDK will fail fast on target mismatches.
+:::
 
 :::note
 By default, the `MockNetworkProvider` evaluates transactions locally but does not process the transaction updates. This means no UTXOs are consumed and no new UTXOs are created when mocking a transaction `send` using the provider. This can be configured by setting the `updateUtxoSet` option to `true`.

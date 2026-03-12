@@ -135,7 +135,7 @@ consoleParameterList
     ;
 
 functionCall
-    : Identifier expressionList // Only built-in functions are accepted
+    : Identifier expressionList // Built-in and user-defined functions are accepted
     ;
 
 expressionList
@@ -294,3 +294,13 @@ LINE_COMMENT
     : '//' ~[\r\n]* -> channel(HIDDEN)
     ;
 ```
+
+:::note
+User-defined function calls compile to BCH function opcodes. Functions whose names end with `_` are treated as internal helpers and are excluded from the public ABI.
+:::
+
+For the full compilation model, see [BCH Functions (beta)](/docs/compiler/bch-functions).
+
+:::caution
+Internally-invoked functions currently cannot use `checkSig()`, `checkMultiSig()`, or `checkDataSig()`.
+:::

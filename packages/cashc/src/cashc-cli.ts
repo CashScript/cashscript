@@ -27,6 +27,10 @@ program
   .option('-s, --size', 'Display the size in bytes of the compiled bytecode.')
   .option('-S, --skip-enforce-function-parameter-types', 'Do not enforce function parameter types.')
   .addOption(
+    new Option('-t, --target <target>', 'Record a required VM target in the artifact metadata.')
+      .choices(['BCH_2023_05', 'BCH_2025_05', 'BCH_2026_05', 'BCH_SPEC']),
+  )
+  .addOption(
     new Option('-f, --format <format>', 'Specify the format of the output.')
       .choices(['json', 'ts'])
       .default('json'),
@@ -51,6 +55,7 @@ function run(): void {
 
   const compilerOptions: CompilerOptions = {
     enforceFunctionParameterTypes: !opts.skipEnforceFunctionParameterTypes,
+    ...(opts.target ? { target: opts.target } : {}),
   };
 
   try {

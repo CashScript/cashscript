@@ -1,0 +1,9 @@
+contract InternalHelperFunctions() {
+    function spend(int x) {
+        require(isTen_(x));
+    }
+
+    function isTen_(int value) {
+        require(value == 10);
+    }
+}

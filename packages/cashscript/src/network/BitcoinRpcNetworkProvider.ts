@@ -1,5 +1,6 @@
-import { Utxo, Network } from '../interfaces.js';
+import { Utxo, Network, VmTarget } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
+import { DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
 import {
   BchnRpcClient,
   type GetBlockCount,
@@ -10,6 +11,7 @@ import {
 
 export default class BitcoinRpcNetworkProvider implements NetworkProvider {
   private rpcClient: BchnRpcClient;
+  public vmTarget: VmTarget;
 
   constructor(
     public network: Network,
@@ -17,9 +19,12 @@ export default class BitcoinRpcNetworkProvider implements NetworkProvider {
     opts: {
       rpcUser: string;
       rpcPassword: string;
+      vmTarget?: VmTarget;
     },
   ) {
-    this.rpcClient = new BchnRpcClient({ url, ...opts });
+    const { rpcUser, rpcPassword } = opts;
+    this.rpcClient = new BchnRpcClient({ url, rpcUser, rpcPassword });
+    this.vmTarget = opts.vmTarget ?? DEFAULT_VM_TARGET;
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {

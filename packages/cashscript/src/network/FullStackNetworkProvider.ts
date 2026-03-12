@@ -1,5 +1,6 @@
-import { Utxo, Network } from '../interfaces.js';
+import { Utxo, Network, VmTarget } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
+import { DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
 
 export default class FullStackNetworkProvider implements NetworkProvider {
   /**
@@ -10,10 +11,15 @@ export default class FullStackNetworkProvider implements NetworkProvider {
    *   apiToken: 'eyJhbGciO...' // Your JWT token here.
    * })
    */
+  public vmTarget: VmTarget;
+
   constructor(
     public network: Network,
     private bchjs: BCHJS,
-  ) { }
+    vmTarget: VmTarget = DEFAULT_VM_TARGET,
+  ) {
+    this.vmTarget = vmTarget;
+  }
 
   async getUtxos(address: string): Promise<Utxo[]> {
     const result = await this.bchjs.Electrumx.utxo(address);

@@ -1,0 +1,9 @@
+contract Test() {
+    function spend(int value) {
+        require(loop_(value));
+    }
+
+    function loop_(int value) {
+        require(loop_(value));
+    }
+}

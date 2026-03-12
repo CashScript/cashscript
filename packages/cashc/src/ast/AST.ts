@@ -52,6 +52,7 @@ export class ContractNode extends Node implements Named {
 export class FunctionDefinitionNode extends Node implements Named {
   symbolTable?: SymbolTable;
   opRolls: Map<string, IdentifierNode> = new Map();
+  calledFunctions: Set<string> = new Set();
 
   constructor(
     public name: string,

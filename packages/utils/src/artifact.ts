@@ -1,5 +1,13 @@
+export type VmTarget =
+  | 'BCH_2023_05'
+  | 'BCH_2025_05'
+  | 'BCH_2026_05'
+  | 'BCH_SPEC';
+
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
+  internalFunctionPrefix?: string;
+  target?: VmTarget;
 }
 
 export interface AbiInput {
@@ -57,6 +65,7 @@ export interface Artifact {
   compiler: {
     name: string;
     version: string;
+    target?: VmTarget;
     options?: CompilerOptions;
   }
   updatedAt: string;
