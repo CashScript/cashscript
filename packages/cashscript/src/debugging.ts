@@ -69,10 +69,13 @@ const debugSingleScenario = (
   const { vm, program } = createProgram(template, unlockingScriptId, scenarioId);
 
   const fullDebugSteps = vm.debug(program);
+  const lockingScriptStartIndex = getLockingScriptStartIndex(fullDebugSteps, artifact);
 
-  // P2SH executions have 3 phases, we only want the last one (locking script execution)
+  // P2SH executions have 3 phases, and BCH functions can introduce nested bytecode frames with `ip === 0`.
+  // We slice from the first step whose active bytecode ends with the contract bytecode, rather than from the
+  // last `ip === 0`, so invoked helper functions do not get mistaken for the start of the locking script phase.
   // https://libauth.org/types/AuthenticationVirtualMachine.html#__type.debug
-  const lockingScriptDebugResult = fullDebugSteps.slice(findLastIndex(fullDebugSteps, (state) => state.ip === 0));
+  const lockingScriptDebugResult = fullDebugSteps.slice(lockingScriptStartIndex);
 
   // The controlStack determines whether the current debug step is in the executed branch
   // It also tracks loop / function usage, but for the purpose of determining whether a step was executed,
@@ -190,6 +193,36 @@ const debugSingleScenario = (
   }
 
   return fullDebugSteps;
+};
+
+const instructionsToBytecodeHex = (instructions: AuthenticationInstruction[]): string => (
+  binToHex(Uint8Array.from(instructions.flatMap((instruction) => Array.from(encodeAuthenticationInstruction(instruction)))))
+);
+
+const getLockingScriptStartIndex = (
+  fullDebugSteps: AuthenticationProgramStateCommon[],
+  artifact: Artifact | undefined,
+): number => {
+  const rootFrameStartIndex = findLastIndex(
+    fullDebugSteps,
+    (state) => state.ip === 0 && state.controlStack.length === 0,
+  );
+
+  if (rootFrameStartIndex !== -1) {
+    return rootFrameStartIndex;
+  }
+
+  if (artifact?.debug?.bytecode) {
+    const matchingBytecodeIndex = fullDebugSteps.findIndex((state) => (
+      state.ip === 0 && instructionsToBytecodeHex(state.instructions).endsWith(artifact.debug!.bytecode)
+    ));
+
+    if (matchingBytecodeIndex !== -1) {
+      return matchingBytecodeIndex;
+    }
+  }
+
+  return findLastIndex(fullDebugSteps, (state) => state.ip === 0);
 };
 
 // Note: this relies on the naming convention that the scenario ID is of the form <name>_input<index>_evaluate

@@ -1,0 +1,13 @@
+contract Test(int requiredValue) {
+  function spend(int value) {
+    require(wrapper_(value));
+  }
+
+  function wrapper_(int value) {
+    require(matchesRequiredValue_(value));
+  }
+
+  function matchesRequiredValue_(int value) {
+    require(value == requiredValue);
+  }
+}

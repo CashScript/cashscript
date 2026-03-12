@@ -36,6 +36,7 @@ import { TransactionBuilder } from '../TransactionBuilder.js';
 import { zlibSync } from 'fflate';
 import MockNetworkProvider from '../network/MockNetworkProvider.js';
 import { addHexPrefixExceptEmpty, DEFAULT_VM_TARGET, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getSignatureAndPubkeyFromP2PKHInput, getUnlockScriptName, serialiseTokenDetails } from './utils.js';
+import { VmTarget } from '../interfaces.js';
 
 // TODO: Add / improve descriptions throughout the template generation
 
@@ -47,9 +48,35 @@ export const getLibauthTemplate = (
     throw new Error('Cannot use debugging functionality with a transaction that contains custom unlockers');
   }
 
-  const vmTarget = transactionBuilder.provider instanceof MockNetworkProvider
+  const requiredArtifactVmTargets = Array.from(new Set(
+    transactionBuilder.inputs
+      .flatMap((input) => isContractUnlocker(input.unlocker)
+        ? [input.unlocker.contract.artifact.compiler.target]
+        : [])
+      .filter((target): target is VmTarget => Boolean(target)),
+  ));
+
+  if (requiredArtifactVmTargets.length > 1) {
+    throw new Error(`Cannot build a transaction template for contracts requiring different VM targets: ${requiredArtifactVmTargets.join(', ')}`);
+  }
+
+  const requiredArtifactVmTarget = requiredArtifactVmTargets[0];
+  const providerVmTarget = transactionBuilder.provider instanceof MockNetworkProvider
     ? transactionBuilder.provider.vmTarget
-    : DEFAULT_VM_TARGET;
+    : undefined;
+
+  if (
+    requiredArtifactVmTarget
+    && providerVmTarget
+    && providerVmTarget !== requiredArtifactVmTarget
+    && providerVmTarget !== VmTarget.BCH_SPEC
+  ) {
+    throw new Error(`Contract artifact requires VM target ${requiredArtifactVmTarget}, but the current provider is configured for ${providerVmTarget}`);
+  }
+
+  const vmTarget = requiredArtifactVmTarget
+    ?? providerVmTarget
+    ?? DEFAULT_VM_TARGET;
 
   const template: WalletTemplate = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',

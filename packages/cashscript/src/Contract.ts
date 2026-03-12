@@ -140,6 +140,15 @@ class ContractInternal<
       throw new Error(`Artifact compiled with unsupported compiler version: ${artifact.compiler.version}, required >=0.7.0`);
     }
 
+    if (
+      artifact.compiler.target
+      && this.provider.vmTarget
+      && this.provider.vmTarget !== artifact.compiler.target
+      && this.provider.vmTarget !== 'BCH_SPEC'
+    ) {
+      throw new Error(`Artifact requires VM target ${artifact.compiler.target}, but the current provider is configured for ${this.provider.vmTarget}`);
+    }
+
     if (artifact.constructorInputs.length !== constructorArgs.length) {
       throw new Error(`Incorrect number of arguments passed to ${artifact.contractName} constructor. Expected ${artifact.constructorInputs.length} arguments (${artifact.constructorInputs.map((input) => input.type)}) but got ${constructorArgs.length}`);
     }

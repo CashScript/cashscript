@@ -28,6 +28,10 @@ export class Symbol {
     return new Symbol(name, type, SymbolType.FUNCTION, undefined, parameters);
   }
 
+  static definedFunction(name: string, type: Type, definition: Node, parameters: Type[]): Symbol {
+    return new Symbol(name, type, SymbolType.FUNCTION, definition, parameters);
+  }
+
   static class(name: string, type: Type, parameters: Type[]): Symbol {
     return new Symbol(name, type, SymbolType.CLASS, undefined, parameters);
   }
@@ -73,6 +77,6 @@ export class SymbolTable {
   unusedSymbols(): Symbol[] {
     return Array.from(this.symbols)
       .map((e) => e[1])
-      .filter((s) => s.references.length === 0);
+      .filter((s) => s.symbolType === SymbolType.VARIABLE && s.references.length === 0);
   }
 }

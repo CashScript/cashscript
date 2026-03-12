@@ -12,6 +12,7 @@ import CashScriptParser from './grammar/CashScriptParser.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
+import EnsureInvokedFunctionsSafeTraversal from './semantic/EnsureInvokedFunctionsSafeTraversal.js';
 import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
 
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
@@ -36,7 +37,8 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
-  ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
+  ast = ast.accept(new EnsureFinalRequireTraversal(mergedCompilerOptions)) as Ast;
+  ast = ast.accept(new EnsureInvokedFunctionsSafeTraversal()) as Ast;
   if (mergedCompilerOptions.enforceLocktimeGuard) {
     ast = ast.accept(new InjectLocktimeGuardTraversal()) as Ast;
   }

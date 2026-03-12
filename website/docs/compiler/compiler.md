@@ -5,6 +5,8 @@ title: Compiler
 The CashScript compiler is called `cashc` and is used to compile CashScript `.cash` contract files into `.json` (or `.ts`) artifact files.
 These artifact files can be used to instantiate a CashScript contract with the help of the CashScript SDK. For more information on this artifact format refer to [Artifacts](/docs/compiler/artifacts).
 
+For details on how user-defined function calls compile to BCH `OP_DEFINE` and `OP_INVOKE`, see [BCH Functions (beta)](/docs/compiler/bch-functions).
+
 :::info
 Because of the separation of the compiler and the SDK, CashScript contracts can be integrated into other programming languages in the future.
 :::
@@ -37,8 +39,9 @@ Options:
   -c, --opcount                                Display the number of opcodes in the compiled bytecode.
   -s, --size                                   Display the size in bytes of the compiled bytecode.
   -S, --skip-enforce-function-parameter-types  Do not enforce function parameter types.
-  -L, --skip-enforce-locktime-guard            Do not inject a tx.time guard when tx.locktime is used.
-  -f, --format <format>                        Specify the format of the output. (choices: "json", "ts", default: "json")
+  -t, --target <target>                        Record a required VM target in the artifact metadata.
+  -f, --format <format>                        Specify the format of the output. (choices: "json", "ts", default:
+                                               "json")
   -?, --help                                   Display help
 ```
 
@@ -101,6 +104,8 @@ const P2PKH = compileString(source);
 ```ts
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
+  internalFunctionPrefix?: string;
+  target?: 'BCH_2023_05' | 'BCH_2025_05' | 'BCH_2026_05' | 'BCH_SPEC';
 }
 ```
 
@@ -109,3 +114,7 @@ The `enforceFunctionParameterTypes` option is used to enforce function parameter
 If set to `false`, the compiler will not enforce function parameter types. This means that it is possible for `bytes20` values to have a different length at runtime than the expected 20 bytes. Or that `bool` values are not actually booleans, but integers.
 
 This option is useful if you are certain that passing in incorrect function parameter types will not cause runtime vulnerabilities, and you want to save on the extra opcodes that are added to the script to enforce the types.
+
+The `internalFunctionPrefix` option can be used to customize how the compiler detects internal helper functions. If set, functions using that prefix are excluded from the public ABI and are only callable from other CashScript functions. By default, CashScript uses the `foo_()` convention for internal helpers.
+
+The `target` option can be used to explicitly record a required VM target in the artifact metadata. In most cases this is inferred automatically when the compiled contract uses BCH function opcodes such as `OP_DEFINE` and `OP_INVOKE`.

@@ -134,7 +134,7 @@ consoleParameterList
     ;
 
 functionCall
-    : Identifier expressionList // Only built-in functions are accepted
+    : Identifier expressionList // Built-in and user-defined functions are accepted
     ;
 
 expressionList

@@ -1,9 +1,9 @@
 import artifact from '../artifacts/example.artifact.js';
-import { Contract, MockNetworkProvider, TransactionBuilder, randomUtxo } from 'cashscript';
+import { Contract, MockNetworkProvider, TransactionBuilder, randomUtxo, VmTarget } from 'cashscript';
 import 'cashscript/vitest';
 
 describe('test example contract functions', () => {
-  const provider = new MockNetworkProvider();
+  const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
   const contract = new Contract(artifact, [], { provider });
 
   // Create a contract Utxo
@@ -26,6 +26,10 @@ describe('test example contract functions', () => {
 
     expect(transaction).toLog(/0 test/);
     expect(transaction).toFailRequireWith(/Wrong value passed/);
+  });
+
+  it('should expose only the public test function in the ABI', () => {
+    expect(artifact.abi.map((func) => func.name)).toEqual(['test']);
   });
 
 });

@@ -22,6 +22,20 @@ The network parameter can be one of 6 different options.
 const connectedNetwork = provider.network;
 ```
 
+### vmTarget
+```ts
+provider.vmTarget?: 'BCH_2023_05' | 'BCH_2025_05' | 'BCH_2026_05' | 'BCH_SPEC';
+```
+
+Providers can optionally expose the BCH VM target they are configured for. CashScript uses this metadata to validate artifact requirements during local testing, debugging, and transaction-template generation.
+
+This is especially relevant for contracts using BCH helper-function opcodes like `OP_DEFINE` and `OP_INVOKE`, which currently require `BCH_2026_05`.
+
+#### Example
+```ts
+const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+```
+
 ### getUtxos()
 ```ts
 async provider.getUtxos(address: string): Promise<Utxo[]>;

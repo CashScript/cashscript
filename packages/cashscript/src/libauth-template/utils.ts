@@ -1,4 +1,12 @@
-import { AbiFunction, AbiInput, Artifact, bytecodeToScript, formatBitAuthScript, sha256 } from '@cashscript/utils';
+import {
+  AbiFunction,
+  AbiInput,
+  Artifact,
+  bytecodeToBitAuthAsm,
+  bytecodeToScript,
+  formatBitAuthScript,
+  sha256,
+} from '@cashscript/utils';
 import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
 import { hexToBin, binToHex, isHex, decodeCashAddress, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
 import { EncodedFunctionArgument } from '../Argument.js';
@@ -82,6 +90,17 @@ export const formatBytecodeForDebugging = (artifact: Artifact): string => {
       .split(' ')
       .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
       .join('\n');
+  }
+
+  const usesUnstableControlFlowFormatting = [
+    'OP_DEFINE',
+    'OP_INVOKE',
+    'OP_BEGIN',
+    'OP_UNTIL',
+  ].some((opcode) => artifact.bytecode.includes(opcode));
+
+  if (usesUnstableControlFlowFormatting) {
+    return bytecodeToBitAuthAsm(hexToBin(artifact.debug.bytecode));
   }
 
   return formatBitAuthScript(

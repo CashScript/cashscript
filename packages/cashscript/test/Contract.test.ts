@@ -1,5 +1,6 @@
 import { decodeTransactionUnsafe, hexToBin } from '@bitauth/libauth';
 import { placeholder } from '@cashscript/utils';
+import { compileString } from 'cashc';
 import {
   Contract,
   ElectrumNetworkProvider,
@@ -8,6 +9,7 @@ import {
   randomUtxo,
   SignatureTemplate,
   TransactionBuilder,
+  VmTarget,
 } from '../src/index.js';
 import {
   aliceAddress,
@@ -21,6 +23,79 @@ import hodlVaultArtifact from './fixture/hodl_vault.artifact.js';
 import mecenasArtifact from './fixture/mecenas.artifact.js';
 import deprecatedMecenasArtifact from './fixture/deprecated/mecenas-v0.6.0.json' with { type: 'json' };
 import boundedBytesArtifact from './fixture/bounded_bytes.artifact.js';
+
+const helperFunctionArtifact = compileString(`
+contract HelperFunctions() {
+  function spend(int value) {
+    require(isAtLeastSeven_(value));
+  }
+
+  function isAtLeastSeven_(int value) {
+    require(value >= 7);
+  }
+}
+`);
+
+const nestedHelperFunctionArtifact = compileString(`
+contract NestedHelperFunctions() {
+  function spend(int value) {
+    require(isPositiveAndEven_(value));
+  }
+
+  function spendPlusOne(int value) {
+    require(isPositiveAndEven_(value + 1));
+  }
+
+  function isPositiveAndEven_(int value) {
+    require(isPositive_(value));
+    require(isEven_(value));
+  }
+
+  function isPositive_(int value) {
+    require(value > 0);
+  }
+
+  function isEven_(int value) {
+    require(value % 2 == 0);
+  }
+
+  function unused_(int value) {
+    require(value == 42);
+  }
+}
+`);
+
+const oldHelperFunctionArtifact = {
+  ...helperFunctionArtifact,
+  compiler: {
+    ...helperFunctionArtifact.compiler,
+    target: undefined,
+  },
+};
+
+const zeroArgHelperArtifact = compileString(`
+contract ZeroArgHelper() {
+  function spend() {
+    require(exactlyOneOutput_());
+  }
+
+  function exactlyOneOutput_() {
+    require(tx.outputs.length == 1);
+  }
+}
+`);
+
+const publicFunctionCallArtifact = compileString(`
+contract PublicFunctionCalls() {
+  function spend(int value) {
+    require(validate(value));
+  }
+
+  function validate(int value) {
+    require(value == 7);
+  }
+}
+`);
 
 describe('Contract', () => {
   describe('new', () => {
@@ -217,6 +292,180 @@ describe('Contract', () => {
 
       expect(unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex: 0 }))
         .toEqual(hexToBin('4135fac4118af15e0d66f30548dd0c31e1108f3389af96bb9db4f2305706e18fe52cc7163f6440fae98c48332d09c30380527a90604f14b4b3fc0c3aa0884c9c0a61210373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c0881914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97078a988ac'));
+    });
+  });
+
+  describe('helper functions', () => {
+    it('exposes only public functions in the ABI and generated unlockers', () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+      const instance = new Contract(helperFunctionArtifact, [], { provider });
+
+      expect(helperFunctionArtifact.abi.map((func) => func.name)).toEqual(['spend']);
+      expect(helperFunctionArtifact.compiler.target).toBe(VmTarget.BCH_2026_05);
+      expect(helperFunctionArtifact.bytecode).toContain('OP_DEFINE');
+      expect(helperFunctionArtifact.bytecode).toContain('OP_INVOKE');
+      expect(typeof instance.unlock.spend).toBe('function');
+      expect((instance.unlock as Record<string, unknown>).isAtLeastSeven_).toBeUndefined();
+    });
+
+    it('generates unlockers for helper-function contracts under BCH_2026_05', () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+      const instance = new Contract(helperFunctionArtifact, [], { provider });
+
+      const unlocker = instance.unlock.spend(7n);
+
+      expect(unlocker.abiFunction.name).toBe('spend');
+      expect(unlocker.params).toEqual([7n]);
+      expect(instance.address).toContain(':');
+      expect(new TransactionBuilder({ provider })
+        .addInput(randomUtxo(), unlocker)
+        .addOutput({ to: instance.address, amount: 1000n })
+        .getLibauthTemplate()
+        .supported[0]).toBe(VmTarget.BCH_2026_05);
+    });
+
+    it('can execute a helper-function contract on BCH_2026_05', async () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+      const instance = new Contract(helperFunctionArtifact, [], { provider });
+      const utxo = randomUtxo();
+      provider.addUtxo(instance.address, utxo);
+
+      const successTransaction = new TransactionBuilder({ provider })
+        .addInput(utxo, instance.unlock.spend(7n))
+        .addOutput({ to: instance.address, amount: 1000n });
+
+      await expect(successTransaction.send()).resolves.toBeDefined();
+
+      const failingUtxo = randomUtxo();
+      provider.addUtxo(instance.address, failingUtxo);
+
+      const failingTransaction = new TransactionBuilder({ provider })
+        .addInput(failingUtxo, instance.unlock.spend(6n))
+        .addOutput({ to: instance.address, amount: 1000n });
+
+      await expect(failingTransaction.send()).rejects.toThrow();
+    });
+
+    it('supports nested helper calls shared across multiple public functions', async () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+      const instance = new Contract(nestedHelperFunctionArtifact, [], { provider });
+
+      expect(nestedHelperFunctionArtifact.abi.map((func) => func.name)).toEqual(['spend', 'spendPlusOne']);
+      expect(nestedHelperFunctionArtifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(3);
+      expect(nestedHelperFunctionArtifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(2);
+      expect((instance.unlock as Record<string, unknown>).isPositiveAndEven_).toBeUndefined();
+      expect((instance.unlock as Record<string, unknown>).unused_).toBeUndefined();
+
+      const successUtxo = randomUtxo();
+      provider.addUtxo(instance.address, successUtxo);
+
+      await expect(
+        new TransactionBuilder({ provider })
+          .addInput(successUtxo, instance.unlock.spend(8n))
+          .addOutput({ to: instance.address, amount: 1000n })
+          .send(),
+      ).resolves.toBeDefined();
+
+      const sharedHelperUtxo = randomUtxo();
+      provider.addUtxo(instance.address, sharedHelperUtxo);
+
+      await expect(
+        new TransactionBuilder({ provider })
+          .addInput(sharedHelperUtxo, instance.unlock.spendPlusOne(3n))
+          .addOutput({ to: instance.address, amount: 1000n })
+          .send(),
+      ).resolves.toBeDefined();
+    });
+
+    it('supports zero-argument helper functions', async () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+      const instance = new Contract(zeroArgHelperArtifact, [], { provider });
+      const utxo = randomUtxo();
+      provider.addUtxo(instance.address, utxo);
+
+      await expect(
+        new TransactionBuilder({ provider })
+          .addInput(utxo, instance.unlock.spend())
+          .addOutput({ to: instance.address, amount: 1000n })
+          .send(),
+      ).resolves.toBeDefined();
+    });
+
+    it('supports invoking a public function from another public function while keeping both ABI methods', async () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+      const instance = new Contract(publicFunctionCallArtifact, [], { provider });
+
+      expect(publicFunctionCallArtifact.abi.map((func) => func.name)).toEqual(['spend', 'validate']);
+
+      const utxo = randomUtxo();
+      provider.addUtxo(instance.address, utxo);
+
+      await expect(
+        new TransactionBuilder({ provider })
+          .addInput(utxo, instance.unlock.spend(7n))
+          .addOutput({ to: instance.address, amount: 1000n })
+          .send(),
+      ).resolves.toBeDefined();
+    });
+
+    it('fails nested helper validation through the SDK when helper requirements are not met', async () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+      const instance = new Contract(nestedHelperFunctionArtifact, [], { provider });
+      const utxo = randomUtxo();
+      provider.addUtxo(instance.address, utxo);
+
+      await expect(
+        new TransactionBuilder({ provider })
+          .addInput(utxo, instance.unlock.spend(3n))
+          .addOutput({ to: instance.address, amount: 1000n })
+          .send(),
+      ).rejects.toThrow();
+    });
+
+    it('fails fast when a provider VM target does not match the artifact requirement', () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2025_05 });
+
+      expect(() => new Contract(helperFunctionArtifact, [], { provider }))
+        .toThrow(/requires VM target BCH_2026_05/);
+    });
+
+    it('fails fast when an electrum provider VM target does not match the artifact requirement', () => {
+      const provider = new ElectrumNetworkProvider(Network.CHIPNET, { vmTarget: VmTarget.BCH_2025_05 });
+
+      expect(() => new Contract(helperFunctionArtifact, [], { provider }))
+        .toThrow(/requires VM target BCH_2026_05/);
+    });
+
+    it('accepts older artifacts that do not encode compiler.target metadata', () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
+
+      expect(() => new Contract(oldHelperFunctionArtifact, [], { provider })).not.toThrow();
+    });
+
+    it('fails when mixing contracts that require different VM targets in one transaction template', () => {
+      const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_SPEC });
+      const helperInstance = new Contract(helperFunctionArtifact, [], { provider });
+      const legacyTargetArtifact = {
+        ...helperFunctionArtifact,
+        contractName: 'LegacyTargetHelper',
+        compiler: {
+          ...helperFunctionArtifact.compiler,
+          target: VmTarget.BCH_2025_05,
+        },
+      };
+      const legacyInstance = new Contract(legacyTargetArtifact, [], { provider });
+
+      const utxo1 = randomUtxo();
+      const utxo2 = randomUtxo();
+      provider.addUtxo(helperInstance.address, utxo1);
+      provider.addUtxo(legacyInstance.address, utxo2);
+
+      expect(() => new TransactionBuilder({ provider })
+        .addInput(utxo1, helperInstance.unlock.spend(7n))
+        .addInput(utxo2, legacyInstance.unlock.spend(7n))
+        .addOutput({ to: helperInstance.address, amount: 1000n })
+        .getLibauthTemplate())
+        .toThrow(/different VM targets/);
     });
   });
 });

@@ -1,0 +1,9 @@
+contract Test() {
+    function sha256(int value) {
+        require(value == 1);
+    }
+
+    function spend() {
+        require(true);
+    }
+}
