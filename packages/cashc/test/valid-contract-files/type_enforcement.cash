@@ -4,7 +4,7 @@ contract TypeEnforcement() {
         bool enforcedBool,
         bytes4 enforcedBytes,
         bytes nonEnforcedBytes
-    ) {
+    ) public {
         if (enforcedBool == true) {
             require(nonEnforcedInt > 6);
         }

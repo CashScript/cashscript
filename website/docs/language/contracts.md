@@ -59,46 +59,50 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 }
 ```
 
-### Internal Helper Functions (beta)
+### Internal Functions (beta)
 
 CashScript functions can also call other functions in the same contract.
 
 :::caution
-User-defined function calls and internal helper functions are currently in beta. The naming convention and some implementation details may still change in a future release.
+User-defined internal functions are currently in beta. The visibility syntax and some implementation details may still change in a future release.
 
-This feature depends on BCH 2026 function semantics. Artifacts for contracts using helper functions record `compiler.target: 'BCH_2026_05'`. When testing or integrating these contracts in apps, make sure your environment is configured for `BCH_2026_05`.
+This feature depends on BCH 2026 function semantics. Artifacts for contracts using internal functions record `compiler.target: 'BCH_2026_05'`. When testing or integrating these contracts in apps, make sure your environment is configured for `BCH_2026_05`.
 :::
 
-If a function name ends with `_`, CashScript treats it as an internal helper:
+Visibility is declared explicitly on the function definition:
 
 - it can still be called from other contract functions
 - it is not included in the compiled ABI
 - it is therefore not exposed as an SDK unlock method
 
-This is useful for shared validation logic that should not appear as a public entrypoint.
+For backward compatibility, omitted visibility currently still defaults to `public` and produces a compiler warning.
+
+This is useful for shared logic that should not appear as a public entrypoint.
 
 ```solidity
 contract Vault(pubkey owner) {
-    function spend(sig ownerSig, int value) {
+    function spend(sig ownerSig, int value) public {
         require(checkSig(ownerSig, owner));
-        require(isPositiveEven_(value));
+        require(isPositiveEven(value));
     }
 
-    function isPositiveEven_(int value) {
+    function isPositiveEven(int value) internal {
         require(value > 0);
         require(value % 2 == 0);
     }
 }
 ```
 
-For details on how these helper functions compile to BCH `OP_DEFINE` and `OP_INVOKE`, see [BCH Functions (beta)](/docs/compiler/bch-functions).
+These are general internal functions, not a separate "predicate-only" feature.
+
+For details on how these internal functions compile to BCH `OP_DEFINE` and `OP_INVOKE`, see [BCH Internal Functions (beta)](/docs/compiler/bch-functions).
 
 :::caution
 Internally-invoked functions currently cannot use `checkSig()`, `checkMultiSig()`, or `checkDataSig()`, and they also cannot reference constructor parameters. Keep signature validation and constructor-parameter-dependent logic in public entrypoint functions for now.
 :::
 
 :::note
-When testing helper-function contracts locally, configure your `MockNetworkProvider` for `BCH_2026_05` so local evaluation matches the artifact's required VM target.
+When testing contracts that use internal functions locally, configure your `MockNetworkProvider` for `BCH_2026_05` so local evaluation matches the artifact's required VM target.
 :::
 
 ### Function Arguments

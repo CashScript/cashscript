@@ -1,91 +1,104 @@
 # BCH Functions Proposal Review
 
-This document summarizes the working-tree patch on top of the current `next` branch. It is intended as a developer-facing review aid for the CashScript team.
+This document summarizes the current working-tree patch on top of `next`. It is intended as a maintainer-facing review aid for the CashScript team.
 
-The goal of this patch is to add user-defined function calls to CashScript by compiling them to BCH function opcodes while keeping the supported subset safe enough for real integrations to experiment with.
+The goal of this patch is to add safe user-defined internal functions to CashScript using BCH `OP_DEFINE` / `OP_INVOKE`, while keeping the language model understandable for developers and conservative enough for real integrations.
 
 ## Scope
 
-This proposal adds:
+This patch adds:
 
-- user-defined function calls inside a contract
-- compilation of those calls to `OP_DEFINE` and `OP_INVOKE`
-- an internal helper convention based on function names ending in `_`
-- compiler restrictions for cases the current lowering cannot yet support safely
-- artifact/runtime metadata so SDK integrations can validate VM-target expectations
-- expanded compiler, codegen, SDK, runtime, and docs coverage
+- explicit function visibility syntax: `public` and `internal`
+- user-defined contract-function calls compiled to BCH function opcodes
+- ABI filtering so only `public` functions are externally callable
+- reachability-based function-table emission from public entrypoints
+- compiler restrictions for patterns the current model does not safely support
+- artifact/debug/runtime metadata updates needed for BCH 2026 function semantics
+- expanded compiler, SDK, debugging, testing-suite, and documentation coverage
 
-This proposal does not attempt to solve:
+This patch intentionally does not add:
 
-- signature-check support inside invoked helper functions
-- constructor-parameter capture inside invoked helper functions
-- recursive or mutually-recursive helper calls
-- new syntax such as explicit `internal`/`public` modifiers
+- signature checks inside internally invoked functions
+- constructor-parameter capture inside internally invoked functions
+- recursion or mutual recursion in invoked function graphs
+- mandatory explicit visibility on all functions yet
+- arbitrary typed internal return values beyond the current boolean-style model
+
+## High-Level Model
+
+CashScript functions now have two roles:
+
+- `public`: appears in the artifact ABI and is exposed by the SDK
+- `internal`: callable only from other contract functions and lowered to BCH function opcodes
+
+If visibility is omitted, the compiler currently defaults to `public` and emits a warning. That keeps existing contracts source-compatible while nudging authors toward explicit visibility.
+
+Public functions may also call other public functions. In that case, the called function remains in the ABI and is also emitted into the BCH function table if it is invoked internally.
 
 ## Why This Approach
 
-The BCH functions CHIP makes internal code reuse possible at the script level with `OP_DEFINE` and `OP_INVOKE`. CashScript can benefit from that, but the compiler and SDK currently assume a flatter execution model:
+The BCH functions CHIP makes internal code reuse possible at the script level, but CashScript and the SDK previously assumed:
 
-- a contract exposes public ABI functions
-- signing/debugging generally reason about a single active bytecode body
-- function visibility is not part of the language syntax
+- ABI functions are the externally visible boundary
+- most execution/debug reasoning happens within a single active bytecode body
+- visibility is not yet enforced as a mandatory source-level concept
 
-Given those constraints, the patch takes a conservative path:
+So the patch takes a conservative path:
 
-1. Reuse the existing CashScript function model rather than inventing new syntax.
-2. Treat helper functions as a convention, not a grammar change.
-3. Only compile the subset we can model safely today.
-4. Reject unsupported patterns explicitly at compile time.
-5. Carry enough artifact/provider metadata that SDK users can detect VM-target mismatches early.
-
-This keeps the patch small enough to review while avoiding silent miscompilation.
+1. Make visibility explicit instead of relying on naming conventions.
+2. Keep omitted visibility backward-compatible for now.
+3. Compile only the subset we can model safely today.
+4. Reject unsupported patterns at compile time rather than risk silent miscompilation.
+5. Carry enough artifact/runtime/debug metadata to make BCH-function contracts inspectable and testable.
 
 ## Language And Compiler Model
 
-### User-defined calls
+### Visibility
 
-CashScript `functionCall` grammar now allows calls to user-defined contract functions as well as built-ins.
+Examples:
 
-The semantic pass now:
+```solidity
+contract Example() {
+    function spend(int x) public {
+        require(validate(x));
+    }
 
-- registers contract functions in a function-definition map
-- resolves user-defined calls distinctly from built-in function symbols
-- tracks call edges on each `FunctionDefinitionNode`
-
-That call graph is then used by code generation and safety analysis.
-
-### Internal helper convention
-
-Functions whose names end with `_` are treated as internal helpers.
+    function validate(int value) internal {
+        require(value == 7);
+    }
+}
+```
 
 Effects:
 
-- they can still be called by other contract functions
-- they are excluded from the artifact ABI
-- they are not exposed as SDK unlock methods
-- a contract with only helper functions is rejected as empty from the ABI perspective
-- user-defined functions still cannot redefine built-in global function names
+- `public` functions remain ABI entrypoints
+- `internal` functions are hidden from the ABI
+- internal/public classification no longer depends on prefixes or suffixes
 
-The main reason for choosing `foo_()` is that it works with the current grammar, keeps the change small, and avoids introducing visibility syntax without parser/tooling changes.
+### Reachability
+
+The compiler computes the invoked-function closure starting from public entrypoints only.
+
+That means:
+
+- reachable internal/public invocations are compiled into the BCH function table
+- dead internal-only call chains are ignored
+- helper reachability is anchored to real external entrypoints, not arbitrary dead call edges
 
 ### Code generation
 
-The compiler computes the transitive closure of invoked functions and emits only that reachable set into the BCH function table.
-
 Lowering works like this:
 
-1. Public entrypoints remain selected through the existing CashScript ABI dispatch path.
-2. Reachable invoked functions are compiled into bytecode fragments.
-3. Those fragments are registered with `OP_DEFINE`.
-4. Calls to user-defined functions emit the function index followed by `OP_INVOKE`.
-
-Important consequence: unused helper functions do not generate `OP_DEFINE` entries.
+1. Public ABI dispatch stays on the existing CashScript path.
+2. Reachable invoked functions are compiled into separate bytecode fragments.
+3. Those fragments are registered using `OP_DEFINE`.
+4. User-defined calls emit the function index plus `OP_INVOKE`.
 
 ## Safety Boundaries
 
-The proposal intentionally rejects cases that are not sound under the current frame/signing model.
+The implementation intentionally rejects patterns that are not sound under the current execution/signing/debug model.
 
-### Disallowed in invoked helper functions
+### Disallowed in internally invoked functions
 
 - `checkSig()`
 - `checkMultiSig()`
@@ -94,201 +107,149 @@ The proposal intentionally rejects cases that are not sound under the current fr
 - direct recursion
 - mutual recursion
 
-### Why these are rejected
+### Why those restrictions exist
 
-Signature operations are the most important remaining semantic gap. Invoked bytecode changes the covered-bytecode story, and the current SDK/compiler pipeline does not yet model per-invocation signing semantics precisely enough to safely support those operations.
+These are conservative safety/tooling restrictions, not BCH opcode impossibilities.
 
-Constructor-parameter capture is also unsafe in the current lowering. Invoked bytecode runs with a stack frame that is not equivalent to a lexical closure, so referencing constructor parameters from helper bodies would risk reading the wrong stack slot.
+- Signature operations are blocked because nested invocation frames complicate signing/debug/template attribution, and the current SDK/compiler pipeline should not claim stronger guarantees than it can model.
+- Constructor-parameter capture is blocked because it creates closure-like hidden dependencies on outer contract state, which is easy to misunderstand and harder to audit safely.
+- Recursion is blocked because the current function-table model is intentionally acyclic and bounded.
 
-Recursion is rejected because the current implementation uses a predeclared function table and does not try to model recursive helper execution or the associated safety/debug complexity.
+The design principle is straightforward: if the compiler cannot prove the lowering is safe and predictable, it rejects the pattern.
 
-The design principle here is simple: if the compiler cannot prove the current lowering is safe, it should reject the pattern.
+## Artifact, Target, And SDK Integration
 
-## Artifact And SDK Integration
+### Artifact behavior
 
-### Artifact changes
+Artifacts now:
 
-Artifacts now record an optional `compiler.target` field.
+- include only `public` functions in the ABI
+- record BCH-function contracts with `compiler.target` at least `BCH_2026_05`
+- reject explicit lower targets when function opcodes are required
+- still allow explicit `BCH_SPEC`
 
-For contracts using BCH function opcodes, the compiler records:
+This prevents artifacts from claiming an older VM target while containing BCH 2026 function opcodes.
 
-- `compiler.target: 'BCH_2026_05'`
+### SDK/runtime behavior
 
-The `CompilerOptions.target` option and CLI `--target` flag also allow explicit overrides when needed.
+The SDK validates target compatibility against provider VM-target metadata and continues to expose only public ABI methods.
 
-Compiler options stored in artifacts are normalized so `target` is kept as artifact metadata rather than mixed into the generic `compiler.options` bag.
+This means:
 
-### Provider/runtime validation
+- internal functions are not available as unlock methods
+- BCH-function artifacts fail fast if paired with incompatible provider expectations
+- mixed-target local testing is harder to misconfigure silently
 
-The SDK now uses provider VM-target metadata where available.
+## Debugging And Tooling
 
-Changes include:
+Nested invoked-function debugging is materially better than the initial branch state.
 
-- `NetworkProvider` exposes optional `vmTarget`
-- `ElectrumNetworkProvider`, `FullStackNetworkProvider`, and `BitcoinRpcNetworkProvider` carry `vmTarget`
-- `Contract` fails fast when an artifact target and provider target conflict
-- libauth-template generation rejects transactions that mix contracts requiring different VM targets
+The current patch adds:
 
-This is primarily a safety and developer-experience improvement. It reduces the chance that teams compile a BCH-functions contract and then accidentally test it under a provider/debug configuration targeting older rules.
+- frame-aware debug metadata on logs, stack items, and require statements
+- frame-aware matching in SDK debug decoding
+- better root-locking-script slicing when nested invoked frames are present
+- fallback attribution for nested internal-function require failures
+- explicit source locations for require statements
 
-## Debugging And Tooling Adjustments
+Practically, this means `console.log` and failing `require(...)` inside internally invoked functions can now be surfaced with the internal frame’s source line and statement, rather than collapsing everything onto the public wrapper.
 
-Two debug-related adjustments were needed to keep the existing experience coherent:
+## Return-Value Semantics
 
-- locking-script debug slicing now handles nested invoked frames more carefully rather than assuming the last `ip === 0` is the start of the root locking script
-- pretty formatting for debug bytecode falls back to execution-order ASM when the contract uses control-flow/function opcodes whose reformatting can destabilize source mapping
+Internal functions are currently modeled as boolean-style reusable subroutines.
 
-This does not fully redesign debug metadata for nested frames, but it avoids known misleading output in the current tooling.
+In practice:
 
-One remaining limitation is that debug attribution for `console.log` and `require(...)` inside invoked helper frames is still less precise than for top-level public functions. Runtime behavior is covered by tests, but nested-frame debugging should still be treated as best-effort.
+- user-defined calls are used naturally in boolean positions like `require(validate(x));`
+- invoked functions currently compile to leave a single success value on the stack
 
-## Optimizations Included In The Patch
+So this is “general internal functions” in visibility/reuse terms, but not yet a full arbitrary typed-return function system.
 
-The implementation also includes a few targeted codegen cleanups:
+## Tests And Validation
 
-- only reachable helper functions are emitted into the BCH function table
-- unused helpers produce no `OP_DEFINE`/`OP_INVOKE` overhead
-- scoped variable cleanup emits `OP_2DROP` where possible
-- shallow replacement patterns use `OP_SWAP`/`OP_ROT` instead of always using integer-push plus `OP_ROLL`
-- `require` debug metadata no longer writes `message: undefined`
+Coverage was expanded in several layers.
 
-These changes are small but worthwhile because helper-function support should not add avoidable bytecode bloat or unnecessary debug noise.
+### Compiler / parser / codegen
 
-## Files Touched
+- explicit `public` / `internal` parsing
+- comments/newlines around visibility
+- no more underscore-based visibility inference
+- omitted-visibility warning behavior
+- ABI filtering for internal functions
+- reachability-based `OP_DEFINE` emission
+- rejection of pre-2026 explicit targets for BCH-function contracts
+- debug metadata coverage for frame bytecode and require locations
 
-The patch spans four main areas.
+### SDK / runtime / debugging
 
-### Compiler and semantic analysis
+- internal-function contracts execute under `BCH_2026_05`
+- nested internal call chains work across public entrypoints
+- zero-argument invoked functions work
+- public-to-public internal invocation preserves ABI visibility
+- nested internal logs are attributed to the internal source line
+- nested internal require failures are attributed to the internal failing statement
 
-- `packages/cashc/src/grammar/CashScript.g4`
-- `packages/cashc/src/semantic/SymbolTableTraversal.ts`
-- `packages/cashc/src/semantic/EnsureFinalRequireTraversal.ts`
-- `packages/cashc/src/semantic/EnsureInvokedFunctionsSafeTraversal.ts`
-- `packages/cashc/src/generation/GenerateTargetTraversal.ts`
-- `packages/cashc/src/artifact/Artifact.ts`
-- `packages/cashc/src/Errors.ts`
-- `packages/cashc/src/utils.ts`
-- `packages/cashc/src/cashc-cli.ts`
+### Example project coverage
 
-### SDK and runtime integration
-
-- `packages/cashscript/src/Contract.ts`
-- `packages/cashscript/src/libauth-template/LibauthTemplate.ts`
-- `packages/cashscript/src/libauth-template/utils.ts`
-- `packages/cashscript/src/debugging.ts`
-- `packages/cashscript/src/network/NetworkProvider.ts`
-- `packages/cashscript/src/network/ElectrumNetworkProvider.ts`
-- `packages/cashscript/src/network/FullStackNetworkProvider.ts`
-- `packages/cashscript/src/network/BitcoinRpcNetworkProvider.ts`
-
-### Shared artifact types
-
-- `packages/utils/src/artifact.ts`
-
-### Tests and docs
-
-- `packages/cashc/test/...`
-- `packages/cashscript/test/Contract.test.ts`
-- `website/docs/compiler/bch-functions.md`
-- `website/docs/compiler/compiler.md`
-- `website/docs/compiler/artifacts.md`
-- `website/docs/compiler/grammar.md`
-- `website/docs/language/contracts.md`
-- `website/docs/language/functions.md`
-
-## Test Coverage Added
-
-The patch adds or updates tests in several layers.
-
-### Compiler/codegen tests
-
-- user-defined function calls are accepted instead of rejected as undefined references
-- helper functions are hidden from the ABI
-- reachable helper closure emits only reachable `OP_DEFINE`s
-- unused helpers emit no BCH function opcodes
-- helper-only contracts are rejected
-- transitive signature-op usage in helpers is rejected
-- transitive constructor-parameter usage in helpers is rejected
-- direct recursion is rejected
-- mutual recursion is rejected
-
-### SDK/runtime tests
-
-- helper-function contracts instantiate cleanly under `BCH_2026_05`
-- helper functions do not appear on generated unlocker surfaces
-- nested helper chains execute correctly
-- shared helper chains across multiple public entrypoints work
-- zero-argument helpers execute correctly
-- public-to-public internal invocation works while preserving ABI visibility
-- failing helper validation fails transaction execution
-- older artifacts lacking `compiler.target` remain accepted
-- artifact/provider VM-target mismatches fail fast
-- mixed-target transaction templates fail fast
-- Electrum-provider VM-target mismatch is also validated
+The testing-suite example now includes a dedicated internal-functions contract and test. Existing generic example contracts were intentionally left in their original form so this patch stays scoped to the new functions feature rather than rewriting the broader examples set before acceptance.
 
 ### Validation run status
 
-The patch has been validated with:
+The working tree has been validated with:
 
-- `npm run build`
-- `cd packages/utils && yarn test`
-- `cd packages/cashc && yarn test`
-- `cd packages/cashscript && yarn test`
+- `cd packages/utils && yarn run build`
+- `cd packages/cashc && yarn run build`
+- `cd packages/cashscript && yarn run build`
+- `yarn vitest run packages/cashc/test/compiler/compiler.test.ts`
+- `cd packages/cashc && yarn vitest run test/generation/generation.test.ts`
+- `yarn vitest run packages/cashc/test/ast/AST.test.ts`
+- `yarn vitest run packages/cashscript/test/debugging.test.ts`
+- `yarn vitest run packages/cashscript/test/Contract.test.ts`
 - `cd examples/testing-suite && yarn test`
 
-Those package-level runs are the most reliable signal in this workspace because root-level parallel test execution can race against sibling-package build outputs.
+## Documentation And DX Changes
 
-## Documentation Updates
+Docs were updated to reflect the current branch rather than the earlier helper-naming model.
 
-The external docs now cover:
+The user-facing story is now:
 
-- the BCH functions compilation model
-- the `foo_()` helper convention
-- the beta status of the feature
-- the current safety limitations
-- artifact `compiler.target` metadata
-- compiler `--target` / `CompilerOptions.target`
-- provider `vmTarget` behavior for local validation
-- the BCH 2026 requirement for testing and integration environments
+- explicit `public` / `internal`
+- omitted visibility remains backward-compatible but warns
+- BCH 2026 is required for function-opcode contracts
+- internal-function restrictions are documented explicitly
 
-That should make it much easier for downstream teams to understand what is supported today and what is intentionally out of scope.
+Functions-specific examples and happy-path fixtures were updated to use explicit visibility where helpful, while older generic example contracts were intentionally left alone to keep branch scope tight.
 
-## Tradeoffs And Known Limitations
+## Remaining Tradeoffs And Caveats
 
-The main tradeoff in this proposal is that it prefers a safe restricted subset over a more powerful but underspecified feature.
+This patch looks production-ready enough for maintainer review, but there are still some intentional transitional choices:
 
-Benefits:
+- omitted visibility still defaults to `public`
+- omitted-visibility warnings are transitional rather than the final UX
+- some older compiler error fixtures still trigger warnings because they intentionally preserve legacy-style source
+- visibility parsing still uses compiler preprocessing rather than being grammar-native
 
-- small and reviewable patch
-- no silent unsafe behavior in the unsupported cases we identified
-- clear ABI boundary between public functions and helpers
-- early VM-target validation in local integrations
+These are mostly rollout and ergonomics concerns, not correctness/safety blockers.
 
-Limitations:
+## Review Focus
 
-- no signature ops in invoked helpers
-- no constructor-parameter capture in invoked helpers
-- no recursion
-- visibility remains convention-based instead of syntax-based
-- nested-frame debug metadata is improved but not fully redesigned, especially for helper `console.log` / `require(...)` attribution
+The highest-value maintainer questions are:
 
-## Suggested Review Questions
-
-The most useful questions for the CashScript team to evaluate are:
-
-1. Is `foo_()` an acceptable temporary/internal-helper convention until explicit visibility syntax exists?
-2. Is the current restricted subset the right release boundary for an experimental BCH-functions integration?
-3. Is `compiler.target` the right artifact-level representation for VM-target requirements?
-4. Should explicit target selection remain optional/inferred, or should the compiler require it whenever 2026-only opcodes are emitted?
-5. Does the team want to preserve the helper convention long-term, or eventually replace it with grammar-level visibility modifiers?
+1. Is explicit visibility the right language direction versus naming conventions?
+2. Are the current internal-function restrictions conservative enough for merge?
+3. Is the BCH 2026 target enforcement strict enough and correctly placed?
+4. Is the boolean-style internal return model acceptable for this iteration?
+5. Is the preprocessing-based visibility parser acceptable for now, or should grammar-native syntax be required before merge?
 
 ## Bottom Line
 
-This patch is intentionally not a full language-level function system. It is a careful integration of BCH `OP_DEFINE`/`OP_INVOKE` into CashScript that:
+The patch is now much stronger than the earlier helper-function branch state:
 
-- enables internal code reuse today
-- avoids the unsafe cases we identified
-- gives SDK users better target-awareness and earlier failures
-- comes with enough tests and docs to make team review practical
+- visibility is explicit
+- ABI boundaries are coherent
+- reachability is correct
+- target metadata cannot lie
+- nested debug attribution is materially improved
+- examples/tests/docs are aligned with the intended design
 
-If the team agrees with the restricted safety model, this should be a solid base for discussing whether BCH functions belong in CashScript and what the next iteration should solve.
+The remaining concerns are mostly about rollout polish and syntax implementation strategy, not about core semantic safety.

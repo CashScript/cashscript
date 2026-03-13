@@ -322,6 +322,8 @@ function replaceOps(
       const scriptIp = scriptIndex + constructorParamLength;
 
       newRequires = newRequires.map((require) => {
+        if (require.frameBytecode) return require;
+
         // We calculate the new ip of the require by subtracting the length diff between the matched pattern and replacement
         const newCalculatedRequireIp = require.ip - lengthDiff;
 
@@ -334,15 +336,18 @@ function replaceOps(
       });
 
       newLogs = newLogs.map((log) => {
+        if (log.frameBytecode) return log;
+
         // We calculate the new ip of the log by subtracting the length diff between the matched pattern and replacement
         const newCalculatedLogIp = log.ip - lengthDiff;
 
         return {
+          ...log,
           // If the log is within the pattern, we want to make sure that the new ip is at least the scriptIp
           ip: log.ip >= scriptIp ? Math.max(scriptIp, newCalculatedLogIp) : log.ip,
-          line: log.line,
           data: log.data.map((data) => {
             if (typeof data === 'string') return data;
+            if (data.frameBytecode) return data;
 
             // If the log is completely before the pattern, we don't need to change anything
             if (data.ip <= scriptIp) return data;

@@ -79,7 +79,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
-    this.addOutput(')');
+    this.addOutput(`) ${node.visibility}`);
     this.outputSymbolTable(node.symbolTable);
     this.addOutput(' ');
 

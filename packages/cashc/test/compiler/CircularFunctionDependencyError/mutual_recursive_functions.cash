@@ -1,13 +1,13 @@
 contract Test() {
-    function spend(int value) {
-        require(first_(value));
+    function spend(int value) public {
+        require(first(value));
     }
 
-    function first_(int value) {
-        require(second_(value));
+    function first(int value) internal {
+        require(second(value));
     }
 
-    function second_(int value) {
-        require(first_(value));
+    function second(int value) internal {
+        require(first(value));
     }
 }

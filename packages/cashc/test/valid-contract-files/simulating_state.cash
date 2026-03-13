@@ -4,7 +4,7 @@ contract SimulatingState(
     int pledgePerBlock,
     bytes8 initialBlock,
 ) {
-    function receive() {
+    function receive() public {
         // Check that the first output sends to the recipient
         bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
         require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
@@ -45,7 +45,7 @@ contract SimulatingState(
         }
     }
 
-    function reclaim(pubkey pk, sig s) {
+    function reclaim(pubkey pk, sig s) public {
         require(hash160(pk) == funder);
         require(checkSig(s, pk));
     }

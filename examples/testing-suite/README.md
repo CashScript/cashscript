@@ -4,7 +4,7 @@ This is an example project to demonstrate how to write and compile CashScript co
 
 ## Writing a CashScript contract
 
-We have included two simple example contracts in the `contracts/` directory that can be used as a starting point to write your own contracts. The contracts demonstrate logs, require statements, transaction signatures, and BCH helper-function calls compiled via `OP_DEFINE` / `OP_INVOKE`.
+We have included example contracts in the `contracts/` directory that can be used as a starting point to write your own contracts. The `example.cash` and `transfer_with_timeout.cash` samples remain generic CashScript examples, while `internal_functions.cash` demonstrates BCH internal function calls compiled via `OP_DEFINE` / `OP_INVOKE`.
 
 ## Compiling the contracts
 

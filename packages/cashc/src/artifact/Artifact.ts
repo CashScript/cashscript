@@ -3,6 +3,7 @@ import {
 } from '@cashscript/utils';
 import { version } from '../index.js';
 import { Ast } from '../ast/AST.js';
+import { UnsupportedTargetError } from '../Errors.js';
 import { getPublicFunctions } from '../utils.js';
 
 function normaliseCompilerOptions(compilerOptions: CompilerOptions): CompilerOptions {
@@ -24,6 +25,21 @@ function inferCompilerTarget(bytecode: string): VmTarget | undefined {
   return requiresBch2026 ? 'BCH_2026_05' : undefined;
 }
 
+function resolveCompilerTarget(bytecode: string, compilerOptions: CompilerOptions): VmTarget | undefined {
+  const inferredTarget = inferCompilerTarget(bytecode);
+
+  if (
+    inferredTarget === 'BCH_2026_05'
+    && compilerOptions.target !== undefined
+    && compilerOptions.target !== 'BCH_2026_05'
+    && compilerOptions.target !== 'BCH_SPEC'
+  ) {
+    throw new UnsupportedTargetError(compilerOptions.target, inferredTarget);
+  }
+
+  return compilerOptions.target ?? inferredTarget;
+}
+
 export function generateArtifact(
   ast: Ast,
   script: Script,
@@ -37,7 +53,7 @@ export function generateArtifact(
   const constructorInputs = contract.parameters
     .map((parameter) => ({ name: parameter.name, type: parameter.type.toString() }));
 
-  const abi = getPublicFunctions(contract.functions, compilerOptions).map((func) => ({
+  const abi = getPublicFunctions(contract.functions).map((func) => ({
     name: func.name,
     inputs: func.parameters.map((parameter) => ({
       name: parameter.name,
@@ -46,6 +62,7 @@ export function generateArtifact(
   }));
 
   const bytecode = scriptToAsm(script);
+  const compilerTarget = resolveCompilerTarget(bytecode, compilerOptions);
 
   return {
     contractName: contract.name,
@@ -58,11 +75,7 @@ export function generateArtifact(
     compiler: {
       name: 'cashc',
       version,
-      ...(compilerOptions.target !== undefined
-        ? { target: compilerOptions.target }
-        : inferCompilerTarget(bytecode) !== undefined
-          ? { target: inferCompilerTarget(bytecode) }
-          : {}),
+      ...(compilerTarget !== undefined ? { target: compilerTarget } : {}),
       options: normaliseCompilerOptions(compilerOptions),
     },
     updatedAt: new Date().toISOString(),

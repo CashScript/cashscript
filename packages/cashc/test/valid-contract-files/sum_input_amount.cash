@@ -1,5 +1,5 @@
 contract Loopy() {
-    function doLoop() {
+    function doLoop() public {
         int sum = 0;
         int i = 0;
 

@@ -1,5 +1,5 @@
 import { Type, PrimitiveType, BytesType } from '@cashscript/utils';
-import { TimeOp } from './Globals.js';
+import { FunctionVisibility, TimeOp } from './Globals.js';
 import AstVisitor from './AstVisitor.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator.js';
 import { Location } from './Location.js';
@@ -58,6 +58,7 @@ export class FunctionDefinitionNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
+    public visibility: FunctionVisibility = FunctionVisibility.PUBLIC,
   ) {
     super();
   }

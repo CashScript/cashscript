@@ -297,7 +297,7 @@ LINE_COMMENT
 ```
 
 :::note
-User-defined function calls compile to BCH function opcodes. Functions whose names end with `_` are treated as internal helpers and are excluded from the public ABI.
+User-defined function calls compile to BCH function opcodes. Functions declared `internal` are excluded from the public ABI.
 :::
 
 For the full compilation model, see [BCH Functions (beta)](/docs/compiler/bch-functions).

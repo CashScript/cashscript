@@ -1,0 +1,10 @@
+contract InternalFunctions() {
+  function test(int value) public {
+    require(validateValue(value));
+  }
+
+  function validateValue(int value) internal {
+    console.log(value, "internal");
+    require(value == 1, "Wrong value passed");
+  }
+}

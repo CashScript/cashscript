@@ -62,15 +62,14 @@ interface RequireStatement {
 
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean; // Enforce function parameter types (default: true)
-  internalFunctionPrefix?: string; // Optional custom prefix used to mark helper functions as internal
-  target?: 'BCH_2023_05' | 'BCH_2025_05' | 'BCH_2026_05' | 'BCH_SPEC'; // Optional explicit VM target override recorded in the artifact metadata
+  target?: 'BCH_2023_05' | 'BCH_2025_05' | 'BCH_2026_05' | 'BCH_SPEC'; // Optional explicit VM target recorded in the artifact metadata
 }
 ```
 
 :::note
-By default, functions whose names end with `_` are excluded from the artifact ABI. They can still be called by other CashScript functions, but they are not exposed as public SDK entrypoints.
+Functions declared `internal` are excluded from the artifact ABI. They can still be called by other CashScript functions, but they are not exposed as public SDK entrypoints.
 :::
 
 :::note
-Artifacts using BCH function opcodes record `compiler.target: 'BCH_2026_05'`. SDK integrations can use this to validate that their runtime/debug environment matches the contract's required VM semantics.
+Artifacts using BCH function opcodes record a compatible target of at least `BCH_2026_05`. The compiler rejects lower explicit targets for contracts that require `OP_DEFINE` or `OP_INVOKE`. SDK integrations can use this to validate that their runtime/debug environment matches the contract's required VM semantics.
 :::

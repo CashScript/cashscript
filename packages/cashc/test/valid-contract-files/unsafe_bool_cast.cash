@@ -1,5 +1,5 @@
 contract Test(int x) {
-    function test() {
+    function test() public {
         require(unsafe_bool(x));
     }
 }

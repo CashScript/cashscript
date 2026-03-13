@@ -1,5 +1,5 @@
 contract Num2Bin() {
-    function spend(int size) {
+    function spend(int size) public {
         bytes byte_ = toPaddedBytes(10, size);
         require(int(byte_) == 10);
     }

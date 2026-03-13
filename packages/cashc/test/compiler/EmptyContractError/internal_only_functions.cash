@@ -1,5 +1,5 @@
 contract Test() {
-    function only_() {
+    function only() internal {
         require(true);
     }
 }

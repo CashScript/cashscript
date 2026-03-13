@@ -268,6 +268,16 @@ export class CircularFunctionDependencyError extends CashScriptError {
   }
 }
 
+export class UnsupportedTargetError extends Error {
+  constructor(
+    public actual: string,
+    public required: string,
+  ) {
+    super(`Compiler target ${actual} is incompatible with this contract; at least ${required} is required`);
+    this.name = this.constructor.name;
+  }
+}
+
 export class IndexOutOfBoundsError extends CashScriptError {
   constructor(
     node: TupleIndexOpNode | BinaryOpNode | SliceNode,

@@ -1,5 +1,5 @@
 contract Test() {
-    function split() {
+    function split() public {
         string s1 = "hello";
         string s2 = "there";
         string hello, string there = (s1+s2).split(5);

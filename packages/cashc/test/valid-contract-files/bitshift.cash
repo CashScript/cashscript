@@ -1,5 +1,5 @@
 contract Bitshift() {
-    function spend() {
+    function spend() public {
         bytes8 x = 0x1122334455667788;
         bytes8 y = x << 4 >> 4;
 

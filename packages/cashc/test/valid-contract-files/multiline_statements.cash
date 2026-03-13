@@ -5,7 +5,7 @@ contract MultilineStatements(
     function spend(
         int a,
         string b
-    ) {
+    ) public {
         if (a == x - 2
          && b == y) {
             require(false);

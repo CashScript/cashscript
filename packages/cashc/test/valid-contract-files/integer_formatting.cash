@@ -1,5 +1,5 @@
 contract IntegerFormatting() {
-    function test() {
+    function test() public {
         int scientific1 = 1e12;
         int scientific2 = 1E12;
         int underscores = 1_000_000_000_000;

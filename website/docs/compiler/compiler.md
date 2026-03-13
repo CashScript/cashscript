@@ -104,7 +104,6 @@ const P2PKH = compileString(source);
 ```ts
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
-  internalFunctionPrefix?: string;
   target?: 'BCH_2023_05' | 'BCH_2025_05' | 'BCH_2026_05' | 'BCH_SPEC';
 }
 ```
@@ -115,6 +114,6 @@ If set to `false`, the compiler will not enforce function parameter types. This 
 
 This option is useful if you are certain that passing in incorrect function parameter types will not cause runtime vulnerabilities, and you want to save on the extra opcodes that are added to the script to enforce the types.
 
-The `internalFunctionPrefix` option can be used to customize how the compiler detects internal helper functions. If set, functions using that prefix are excluded from the public ABI and are only callable from other CashScript functions. By default, CashScript uses the `foo_()` convention for internal helpers.
+The `target` option can be used to explicitly record a required VM target in the artifact metadata. In most cases this is inferred automatically when the compiled contract uses BCH function opcodes such as `OP_DEFINE` and `OP_INVOKE`. If your contract requires those opcodes, the compiler will reject explicit targets below `BCH_2026_05`.
 
-The `target` option can be used to explicitly record a required VM target in the artifact metadata. In most cases this is inferred automatically when the compiled contract uses BCH function opcodes such as `OP_DEFINE` and `OP_INVOKE`.
+Function visibility is part of the source syntax. During the current transition, omitted visibility still defaults to `public` and produces a compiler warning.

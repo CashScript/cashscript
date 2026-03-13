@@ -1,9 +1,9 @@
 contract Test() {
-    function spend(int value) {
-        require(loop_(value));
+    function spend(int value) public {
+        require(loop(value));
     }
 
-    function loop_(int value) {
-        require(loop_(value));
+    function loop(int value) internal {
+        require(loop(value));
     }
 }

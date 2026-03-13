@@ -1,5 +1,5 @@
 contract Test() {
-    function spend() {
+    function spend() public {
         bytes4 x = 0x00000000;
         bytes4 y = ~x;
 

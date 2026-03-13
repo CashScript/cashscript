@@ -5,7 +5,7 @@
 
 contract Test(int x) {
     // Line comments are a thing
-    function hello(sig s, pubkey pk) {
+    function hello(sig s, pubkey pk) public {
         int i = 400 + x;
         bytes b = 0x07364897987fe87 + bytes(x);
 

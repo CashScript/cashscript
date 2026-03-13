@@ -1,5 +1,5 @@
 contract Test() {
-    function hello(int a, int b) {
+    function hello(int a, int b) public {
         if (a == b - 2 minutes) {
             require(false);
         } else if (b == 2 weeks)

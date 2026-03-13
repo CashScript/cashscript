@@ -1,5 +1,5 @@
 contract Test() {
-    function split(bytes32 b) {
+    function split(bytes32 b) public {
         bytes16 x, bytes16 y =  b.split(16);
         require(x == y);
     }

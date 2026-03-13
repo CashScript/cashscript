@@ -52,5 +52,25 @@ describe('AST Builder', () => {
         expect(rerunOutput).toEqual(initialOutput);
       });
     });
+
+    it('should preserve explicit function visibility in AST source output', () => {
+      const input = `
+contract Test() {
+  function spend(int value) public {
+    require(validate(value));
+  }
+
+  function validate(int value) internal {
+    require(value == 1);
+  }
+}`;
+
+      const { sourceOutput: initialOutput } = setup(input);
+      const { sourceOutput: rerunOutput } = setup(initialOutput);
+
+      expect(initialOutput).toContain('function spend(int value) public');
+      expect(initialOutput).toContain('function validate(int value) internal');
+      expect(rerunOutput).toEqual(initialOutput);
+    });
   });
 });

@@ -1,3 +1,5 @@
+import { LocationI } from './types.js';
+
 export type VmTarget =
   | 'BCH_2023_05'
   | 'BCH_2025_05'
@@ -6,7 +8,6 @@ export type VmTarget =
 
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
-  internalFunctionPrefix?: string;
   target?: VmTarget;
   enforceLocktimeGuard?: boolean;
 }
@@ -33,6 +34,7 @@ export interface LogEntry {
   ip: number; // instruction pointer
   line: number; // line in the source code
   data: readonly LogData[]; // data to be logged
+  frameBytecode?: string; // active bytecode frame in which this log executes
 }
 
 export interface StackItem {
@@ -42,6 +44,7 @@ export interface StackItem {
   stackIndex: number;
   // Instruction pointer at which we can access the logged variable
   ip: number;
+  frameBytecode?: string; // active bytecode frame in which this stack item is available
   // Operations to apply to the debug state at the specified instruction pointer to make sure that the variable is
   // on the correct position on the stack. This is used when we're optimising bytecode where the logged variable is
   // an intermediate result that existed in the unoptimised bytecode, but no longer exists in the optimised bytecode.
@@ -54,6 +57,8 @@ export interface RequireStatement {
   ip: number; // instruction pointer
   line: number; // line in the source code
   message?: string; // custom message for failing `require` statement
+  frameBytecode?: string; // active bytecode frame in which this require executes
+  location?: LocationI; // source location of the full require statement
 }
 
 export interface Artifact {

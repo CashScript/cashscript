@@ -402,7 +402,7 @@ export class TransactionBuilder {
       .map((input) => 'contract' in input.unlocker ? input.unlocker.contract.artifact.compiler.version : null)
       .filter((version) => version !== null);
 
-    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0'))) {
+    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0', { includePrerelease: true }))) {
       console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
     }
 

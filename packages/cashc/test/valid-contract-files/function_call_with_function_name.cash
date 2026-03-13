@@ -1,9 +1,9 @@
 contract Test(int x) {
-    function hello() {
+    function hello() public {
         require(world(x));
     }
 
-    function world(int a) {
+    function world(int a) public {
         require(a + 5 == 10);
     }
 }
