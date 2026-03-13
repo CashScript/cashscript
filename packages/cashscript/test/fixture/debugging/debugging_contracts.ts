@@ -2,44 +2,44 @@ import { compileString } from 'cashc';
 
 const CONTRACT_TEST_REQUIRES = `
 contract Test() {
-  function test_logs() {
+  function test_logs() public {
     console.log("Hello World");
     require(1 == 2);
   }
 
-  function test_no_logs() {
+  function test_no_logs() public {
     require(1 == 2);
   }
 
-  function test_require() {
+  function test_require() public {
     require(1 == 2, "1 should equal 2");
   }
 
-  function test_require_no_failure() {
+  function test_require_no_failure() public {
     require(1 == 1, "1 should equal 1");
   }
 
-  function test_multiple_require_statements() {
+  function test_multiple_require_statements() public {
     require(1 == 2, "1 should equal 2");
     require(1 == 1, "1 should equal 1");
   }
 
-  function test_multiple_require_statements_final_fails() {
+  function test_multiple_require_statements_final_fails() public {
     require(1 == 1, "1 should equal 1");
     require(1 == 2, "1 should equal 2");
   }
 
-  function test_multiple_require_statements_no_message_final() {
+  function test_multiple_require_statements_no_message_final() public {
     require(1 == 1, "1 should equal 1");
     require(1 == 2);
   }
 
-  function test_timeops_as_final_require() {
+  function test_timeops_as_final_require() public {
     require(1 == 1, "1 should equal 1");
     require(tx.time >= 100000000, "time should be HUGE");
   }
 
-  function test_final_require_in_if_statement(int switch) {
+  function test_final_require_in_if_statement(int switch) public {
     if (switch == 1) {
       int a = 2;
       require(1 == a, "1 should equal 2");
@@ -52,7 +52,7 @@ contract Test() {
     }
   }
 
-  function test_final_require_in_if_statement_with_deep_reassignment() {
+  function test_final_require_in_if_statement_with_deep_reassignment() public {
     int a = 0;
     int b = 1;
     int c = 2;
@@ -65,30 +65,30 @@ contract Test() {
     }
   }
 
-  function test_invalid_split_range() {
+  function test_invalid_split_range() public {
     bytes test = 0x1234;
     bytes test2 = test.split(4)[0];
     require(test2 == 0x1234);
   }
 
-  function test_invalid_input_index() {
+  function test_invalid_input_index() public {
     require(tx.inputs[5].value == 1000);
   }
 
-  function test_fail_checksig(sig s, pubkey pk) {
+  function test_fail_checksig(sig s, pubkey pk) public {
     require(checkSig(s, pk), "Signatures do not match");
     require(1 == 2, "1 should equal 2");
   }
 
-  function test_fail_checksig_final_verify(sig s, pubkey pk) {
+  function test_fail_checksig_final_verify(sig s, pubkey pk) public {
     require(checkSig(s, pk), "Signatures do not match");
   }
 
-  function test_fail_checkdatasig(datasig s, bytes message, pubkey pk) {
+  function test_fail_checkdatasig(datasig s, bytes message, pubkey pk) public {
     require(checkDataSig(s, message, pk), "Data Signatures do not match");
   }
 
-  function test_fail_checkmultisig(sig s1, pubkey pk1, sig s2, pubkey pk2) {
+  function test_fail_checkmultisig(sig s1, pubkey pk1, sig s2, pubkey pk2) public {
     require(checkMultiSig([s1, s2], [pk1, pk2]), "Multi Signatures do not match");
   }
 }
@@ -96,7 +96,7 @@ contract Test() {
 
 const CONTRACT_TEST_REQUIRE_INSIDE_LOOP = `
 contract Test() {
-  function test_require_inside_loop() {
+  function test_require_inside_loop() public {
     int i = 0;
     do {
       i = i + 1;
@@ -104,7 +104,7 @@ contract Test() {
     } while (i < 10);
   }
 
-  function test_require_inside_while_loop() {
+  function test_require_inside_while_loop() public {
     int i = 0;
 
     while (i < 10) {
@@ -115,7 +115,7 @@ contract Test() {
     require(i == 10);
   }
 
-  function test_require_inside_for_loop() {
+  function test_require_inside_for_loop() public {
     int i = 0;
 
     for (i = 0; i < 4; i = i + 1) {
@@ -125,7 +125,7 @@ contract Test() {
     require(i == 4);
   }
 
-  function test_require_inside_loop_complex() {
+  function test_require_inside_loop_complex() public {
     int i = 0;
 
     do {
@@ -147,7 +147,7 @@ contract Test() {
 
 const CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION = `
 contract Test() {
-  function test_require_single_function() {
+  function test_require_single_function() public {
     require(tx.outputs.length == 1, "should have 1 output");
   }
 }`;
@@ -155,7 +155,7 @@ contract Test() {
 const CONTRACT_TEST_MULTILINE_REQUIRES = `
 contract Test() {
   // We test this because the cleanup looks different and the final OP_VERIFY isn't removed for these kinds of functions
-  function test_fail_large_cleanup() {
+  function test_fail_large_cleanup() public {
     int a = 1;
     int b = 2;
     int c = 3;
@@ -176,7 +176,7 @@ contract Test() {
     require(1 == 2, "1 should equal 2");
   }
 
-  function test_fail_multiline_require() {
+  function test_fail_multiline_require() public {
     require(
       1 == 2,
       "1 should equal 2"
@@ -185,14 +185,14 @@ contract Test() {
     require(1 == 1);
   }
 
-  function test_fail_multiline_final_require() {
+  function test_fail_multiline_final_require() public {
     require(
       1 == 2,
       "1 should equal 2"
     );
   }
 
-  function test_multiline_non_require_error() {
+  function test_multiline_non_require_error() public {
     int x =
       tx.outputs[
         5
@@ -201,7 +201,7 @@ contract Test() {
     require(x == 1000);
   }
 
-  function test_multiline_require_with_unary_op() {
+  function test_multiline_require_with_unary_op() public {
     require(
       !(
         0x000000
@@ -219,7 +219,7 @@ contract Test() {
     require(1 == 1);
   }
 
-  function test_multiline_require_with_instantiation() {
+  function test_multiline_require_with_instantiation() public {
     require(
       new LockingBytecodeP2PKH(
         hash160(0x000000)
@@ -238,7 +238,7 @@ contract Test() {
 
 const CONTRACT_TEST_ZERO_HANDLING = `
 contract Test(int a) {
-  function test_zero_handling(int b) {
+  function test_zero_handling(int b) public {
     require(a == 0, "a should be 0");
     require(b == 0, "b should be 0");
     require(a == b, "a should equal b");
@@ -248,7 +248,7 @@ contract Test(int a) {
 
 const CONTRACT_TEST_LOGS = `
 contract Test(pubkey owner) {
-  function transfer(sig ownerSig, int num) {
+  function transfer(sig ownerSig, int num) public {
     console.log('Hello First Function');
     require(checkSig(ownerSig, owner));
 
@@ -260,12 +260,12 @@ contract Test(pubkey owner) {
     require(num == 1000);
   }
 
-  function secondFunction() {
+  function secondFunction() public {
     console.log("Hello Second Function");
     require(1 == 1);
   }
 
-  function functionWithIfStatement(int a) {
+  function functionWithIfStatement(int a) public {
     int b = 0;
 
     if (a == 1) {
@@ -282,11 +282,11 @@ contract Test(pubkey owner) {
     require(1 == 1);
   }
 
-  function noLogs() {
+  function noLogs() public {
     require(1 == 1);
   }
 
-  function test_log_intermediate_result() {
+  function test_log_intermediate_result() public {
     bytes32 singleHash = sha256(owner);
     console.log(singleHash);
 
@@ -295,7 +295,7 @@ contract Test(pubkey owner) {
     require(doubleHash.length == 32, "doubleHash should be 32 bytes");
   }
 
-  function test_log_inside_notif_statement(bool isLastScriptHash) {
+  function test_log_inside_notif_statement(bool isLastScriptHash) public {
     int inputValue = tx.inputs[this.activeInputIndex].value;
     console.log('before:', inputValue);
     if (!isLastScriptHash) {
@@ -308,7 +308,7 @@ contract Test(pubkey owner) {
 
 const CONTRACT_TEST_LOG_INSIDE_LOOP = `
 contract Test() {
-  function test_log_inside_loop() {
+  function test_log_inside_loop() public {
     int i = 0;
     do {
       console.log('i:', i);
@@ -318,7 +318,7 @@ contract Test() {
     require(i == 10);
   }
 
-  function test_log_inside_while_loop() {
+  function test_log_inside_while_loop() public {
     int i = 0;
 
     while (i < 3) {
@@ -329,7 +329,7 @@ contract Test() {
     require(i == 3);
   }
 
-  function test_log_inside_for_loop() {
+  function test_log_inside_for_loop() public {
     int sum = 0;
 
     for (int i = 0; i < 3; i = i + 1) {
@@ -340,7 +340,7 @@ contract Test() {
     require(sum == 3);
   }
 
-  function test_log_inside_loop_complex() {
+  function test_log_inside_loop_complex() public {
     int i = 0;
 
     int l = 5;
@@ -371,7 +371,7 @@ contract Test() {
 
 const CONTRACT_TEST_CONSECUTIVE_LOGS = `
 contract Test(pubkey owner) {
-  function transfer(sig ownerSig, int num) {
+  function transfer(sig ownerSig, int num) public {
     require(checkSig(ownerSig, owner));
 
     bytes2 beef = 0xbeef;
@@ -387,7 +387,7 @@ contract Test(pubkey owner) {
 
 const CONTRACT_TEST_MULTIPLE_LOGS = `
 contract Test(pubkey owner) {
-  function transfer(sig ownerSig, int num) {
+  function transfer(sig ownerSig, int num) public {
     require(checkSig(ownerSig, owner));
 
     console.log(ownerSig, owner, num);
@@ -404,7 +404,7 @@ contract Test(pubkey owner) {
 
 const CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS = `
 contract Test(pubkey owner, int num, int num2, int num3, int num4, int num5) {
-  function transfer(sig ownerSig) {
+  function transfer(sig ownerSig) public {
     console.log('Hello First Function');
     require(checkSig(ownerSig, owner));
 
@@ -420,9 +420,30 @@ contract Test(pubkey owner, int num, int num2, int num3, int num4, int num5) {
     require(num5 == 5000);
   }
 
-  function secondFunction() {
+  function secondFunction() public {
     console.log("Hello Second Function");
     require(1 == 1);
+  }
+}
+`;
+
+const CONTRACT_TEST_INTERNAL_FUNCTIONS = `
+contract Test() {
+  function test_internal_logs(int value) public {
+    require(runInternalLog(value));
+  }
+
+  function test_internal_require(int value) public {
+    require(runInternalRequire(value));
+  }
+
+  function runInternalLog(int value) internal {
+    console.log('internal value:', value);
+    require(value >= 0, 'value should be non-negative');
+  }
+
+  function runInternalRequire(int value) internal {
+    require(value == 1, 'internal value should be 1');
   }
 }
 `;
@@ -437,3 +458,4 @@ export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTIPLE_LOG
 export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS);
 export const artifactTestRequireInsideLoop = compileString(CONTRACT_TEST_REQUIRE_INSIDE_LOOP);
 export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_LOOP);
+export const artifactTestInternalFunctions = compileString(CONTRACT_TEST_INTERNAL_FUNCTIONS);

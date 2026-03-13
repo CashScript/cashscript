@@ -1,5 +1,5 @@
 contract Loopy() {
-    function doLoop() {
+    function doLoop() public {
         int i = 0;
 
         while (i < tx.inputs.length) {

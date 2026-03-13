@@ -83,6 +83,7 @@ import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
 import {
   NumberUnit,
+  FunctionVisibility,
   TimeOp,
 } from './Globals.js';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma.js';
@@ -92,7 +93,12 @@ import { ParseError, VersionError } from '../Errors.js';
 export default class AstBuilder
   extends ParseTreeVisitor<Node>
   implements CashScriptVisitor<Node> {
-  constructor(private tree: ParseTree) {
+  private functionVisibilityIndex = 0;
+
+  constructor(
+    private tree: ParseTree,
+    private functionVisibilities: FunctionVisibility[] = [],
+  ) {
     super();
   }
 
@@ -146,8 +152,10 @@ export default class AstBuilder
     const statements = ctx.statement_list().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
+    const visibility = this.functionVisibilities[this.functionVisibilityIndex] ?? FunctionVisibility.PUBLIC;
+    this.functionVisibilityIndex += 1;
 
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, block);
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, block, visibility);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }

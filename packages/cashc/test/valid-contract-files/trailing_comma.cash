@@ -6,7 +6,7 @@ contract Contract(
         sig ownerSig,
         datasig oracleMsgSig,
         sig oracleTxSig,
-    ) {
+    ) public {
         bytes oracleMessage = bytes('Spend') + bytes(12,);
         require(checkDataSig(
             oracleMsgSig,

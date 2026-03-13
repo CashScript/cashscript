@@ -1,5 +1,5 @@
 contract DebugMessages() {
-  function spend(int value) {
+  function spend(int value) public {
     require(value == 1, "Wrong value passed");
     console.log(value, "test");
     console.log(value, "test2");

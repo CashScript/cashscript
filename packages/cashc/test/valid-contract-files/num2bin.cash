@@ -1,5 +1,5 @@
 contract Test() {
-    function hello() {
+    function hello() public {
         bytes2 byte_ = toPaddedBytes(10, 2);
         require(int(byte_) == 10);
     }

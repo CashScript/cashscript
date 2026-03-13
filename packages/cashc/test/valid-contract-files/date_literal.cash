@@ -1,7 +1,7 @@
 pragma cashscript >=0.8.0;
 
 contract Test() {
-    function test() {
+    function test() public {
         int d = date("2021-02-17T01:30:00"); //YYYY-MM-DDThh:mm:ss
         require(d == 0);
     }

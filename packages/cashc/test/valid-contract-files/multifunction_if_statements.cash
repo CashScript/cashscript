@@ -1,5 +1,5 @@
 contract MultiFunctionIfStatements(int x, int y) {
-    function transfer(int a, int b) {
+    function transfer(int a, int b) public {
         int d = a + b;
         d = d - a;
         if (d == x && bool(x)) {
@@ -13,7 +13,7 @@ contract MultiFunctionIfStatements(int x, int y) {
         require(d == y);
     }
 
-    function timeout(int b) {
+    function timeout(int b) public {
         int d = b;
         d = d + 2;
         if (d == x) {

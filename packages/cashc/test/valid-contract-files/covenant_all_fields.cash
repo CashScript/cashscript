@@ -1,5 +1,5 @@
 contract Covenant() {
-    function spend() {
+    function spend() public {
         require(tx.version == 2);
         require(tx.locktime == 0);
         require(tx.inputs.length == 1);

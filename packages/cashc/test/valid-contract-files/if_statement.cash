@@ -1,5 +1,5 @@
 contract IfStatement(int x, int y) {
-    function hello(int a, int b) {
+    function hello(int a, int b) public {
         int d = a + b;
         d = d - a;
         if (d == x - 2) {

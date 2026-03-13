@@ -1,4 +1,3 @@
-import { CompilerOptions } from '@cashscript/utils';
 import {
   ContractNode,
   ParameterNode,
@@ -17,15 +16,11 @@ import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } fr
 import { getPublicFunctions } from '../utils.js';
 
 export default class EnsureFinalRequireTraversal extends AstTraversal {
-  constructor(private compilerOptions: CompilerOptions = {}) {
-    super();
-  }
-
   visitContract(node: ContractNode): ContractNode {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
 
-    if (getPublicFunctions(node.functions, this.compilerOptions).length === 0) {
+    if (getPublicFunctions(node.functions).length === 0) {
       throw new EmptyContractError(node);
     }
 

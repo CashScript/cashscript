@@ -25,11 +25,11 @@ import boundedBytesArtifact from './fixture/bounded_bytes.artifact.js';
 
 const helperFunctionArtifact = compileString(`
 contract HelperFunctions() {
-  function spend(int value) {
-    require(isAtLeastSeven_(value));
+  function spend(int value) public {
+    require(isAtLeastSeven(value));
   }
 
-  function isAtLeastSeven_(int value) {
+  function isAtLeastSeven(int value) internal {
     require(value >= 7);
   }
 }
@@ -37,28 +37,28 @@ contract HelperFunctions() {
 
 const nestedHelperFunctionArtifact = compileString(`
 contract NestedHelperFunctions() {
-  function spend(int value) {
-    require(isPositiveAndEven_(value));
+  function spend(int value) public {
+    require(isPositiveAndEven(value));
   }
 
-  function spendPlusOne(int value) {
-    require(isPositiveAndEven_(value + 1));
+  function spendPlusOne(int value) public {
+    require(isPositiveAndEven(value + 1));
   }
 
-  function isPositiveAndEven_(int value) {
-    require(isPositive_(value));
-    require(isEven_(value));
+  function isPositiveAndEven(int value) internal {
+    require(isPositive(value));
+    require(isEven(value));
   }
 
-  function isPositive_(int value) {
+  function isPositive(int value) internal {
     require(value > 0);
   }
 
-  function isEven_(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 
-  function unused_(int value) {
+  function unused(int value) internal {
     require(value == 42);
   }
 }
@@ -74,11 +74,11 @@ const oldHelperFunctionArtifact = {
 
 const zeroArgHelperArtifact = compileString(`
 contract ZeroArgHelper() {
-  function spend() {
-    require(exactlyOneOutput_());
+  function spend() public {
+    require(exactlyOneOutput());
   }
 
-  function exactlyOneOutput_() {
+  function exactlyOneOutput() internal {
     require(tx.outputs.length == 1);
   }
 }
@@ -86,11 +86,11 @@ contract ZeroArgHelper() {
 
 const publicFunctionCallArtifact = compileString(`
 contract PublicFunctionCalls() {
-  function spend(int value) {
+  function spend(int value) public {
     require(validate(value));
   }
 
-  function validate(int value) {
+  function validate(int value) public {
     require(value == 7);
   }
 }
@@ -272,7 +272,7 @@ describe('Contract', () => {
     });
   });
 
-  describe('helper functions', () => {
+  describe('internal functions', () => {
     it('exposes only public functions in the ABI and generated unlockers', () => {
       const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
       const instance = new Contract(helperFunctionArtifact, [], { provider });
@@ -282,10 +282,10 @@ describe('Contract', () => {
       expect(helperFunctionArtifact.bytecode).toContain('OP_DEFINE');
       expect(helperFunctionArtifact.bytecode).toContain('OP_INVOKE');
       expect(typeof instance.unlock.spend).toBe('function');
-      expect((instance.unlock as Record<string, unknown>).isAtLeastSeven_).toBeUndefined();
+      expect((instance.unlock as Record<string, unknown>).isAtLeastSeven).toBeUndefined();
     });
 
-    it('generates unlockers for helper-function contracts under BCH_2026_05', () => {
+    it('generates unlockers for internal-function contracts under BCH_2026_05', () => {
       const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
       const instance = new Contract(helperFunctionArtifact, [], { provider });
 
@@ -301,7 +301,7 @@ describe('Contract', () => {
         .supported[0]).toBe(VmTarget.BCH_2026_05);
     });
 
-    it('can execute a helper-function contract on BCH_2026_05', async () => {
+    it('can execute an internal-function contract on BCH_2026_05', async () => {
       const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
       const instance = new Contract(helperFunctionArtifact, [], { provider });
       const utxo = randomUtxo();
@@ -323,15 +323,15 @@ describe('Contract', () => {
       await expect(failingTransaction.send()).rejects.toThrow();
     });
 
-    it('supports nested helper calls shared across multiple public functions', async () => {
+    it('supports nested internal calls shared across multiple public functions', async () => {
       const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
       const instance = new Contract(nestedHelperFunctionArtifact, [], { provider });
 
       expect(nestedHelperFunctionArtifact.abi.map((func) => func.name)).toEqual(['spend', 'spendPlusOne']);
       expect(nestedHelperFunctionArtifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(3);
       expect(nestedHelperFunctionArtifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(2);
-      expect((instance.unlock as Record<string, unknown>).isPositiveAndEven_).toBeUndefined();
-      expect((instance.unlock as Record<string, unknown>).unused_).toBeUndefined();
+      expect((instance.unlock as Record<string, unknown>).isPositiveAndEven).toBeUndefined();
+      expect((instance.unlock as Record<string, unknown>).unused).toBeUndefined();
 
       const successUtxo = randomUtxo();
       provider.addUtxo(instance.address, successUtxo);
@@ -354,7 +354,7 @@ describe('Contract', () => {
       ).resolves.toBeDefined();
     });
 
-    it('supports zero-argument helper functions', async () => {
+    it('supports zero-argument internal functions', async () => {
       const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
       const instance = new Contract(zeroArgHelperArtifact, [], { provider });
       const utxo = randomUtxo();
@@ -385,7 +385,7 @@ describe('Contract', () => {
       ).resolves.toBeDefined();
     });
 
-    it('fails nested helper validation through the SDK when helper requirements are not met', async () => {
+    it('fails nested internal-function validation through the SDK when requirements are not met', async () => {
       const provider = new MockNetworkProvider({ vmTarget: VmTarget.BCH_2026_05 });
       const instance = new Contract(nestedHelperFunctionArtifact, [], { provider });
       const utxo = randomUtxo();

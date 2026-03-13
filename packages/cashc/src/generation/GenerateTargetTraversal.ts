@@ -1,4 +1,4 @@
-import { hexToBin } from '@bitauth/libauth';
+import { binToHex, hexToBin } from '@bitauth/libauth';
 import {
   asmToScript,
   encodeBool,
@@ -147,7 +147,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
-    const publicFunctions = getPublicFunctions(node.functions, this.compilerOptions);
+    const publicFunctions = getPublicFunctions(node.functions);
 
     // Keep track of constructor parameter count for instructor pointer calculation
     this.constructorParameterCount = node.parameters.length;
@@ -238,10 +238,31 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private generateFunctionBytecode(node: FunctionDefinitionNode): Uint8Array {
     const traversal = new GenerateTargetTraversalWithLocation(this.compilerOptions);
     traversal.functionIndices = new Map(this.functionIndices);
-    traversal.constructorParameterCount = this.constructorParameterCount;
+    traversal.constructorParameterCount = 0;
     node.accept(traversal);
     traversal.output = asmToScript(scriptToAsm(traversal.output));
-    return scriptToBytecode(traversal.output);
+    const frameBytecode = scriptToBytecode(traversal.output);
+    const frameBytecodeHex = binToHex(frameBytecode);
+    traversal.annotateFrameDebugMetadata(frameBytecodeHex);
+    this.consoleLogs.push(...traversal.consoleLogs);
+    this.requires.push(...traversal.requires);
+    return frameBytecode;
+  }
+
+  annotateFrameDebugMetadata(frameBytecode: string): void {
+    this.finalStackUsage = Object.fromEntries(
+      Object.entries(this.finalStackUsage).map(([name, usage]) => [name, { ...usage, frameBytecode }]),
+    );
+
+    this.consoleLogs = this.consoleLogs.map((log) => ({
+      ...log,
+      frameBytecode,
+      data: log.data.map((entry) => (
+        typeof entry === 'string' ? entry : { ...entry, frameBytecode }
+      )),
+    }));
+
+    this.requires = this.requires.map((require) => ({ ...require, frameBytecode }));
   }
 
   removeFinalVerifyFromFunction(functionBodyNode: Node): void {
@@ -386,6 +407,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       ip: this.getMostRecentInstructionPointer() - 1,
       line: node.location.start.line,
       message: node.message,
+      location: node.location,
     });
 
     this.popFromStack();
@@ -401,6 +423,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       ip: this.getMostRecentInstructionPointer(),
       line: node.location.start.line,
       message: node.message,
+      location: node.location,
     });
 
     this.popFromStack();

@@ -1,9 +1,5 @@
 contract Example() {
   function test(int value) {
-    require(validateValue_(value));
-  }
-
-  function validateValue_(int value) {
     console.log(value, "test");
     require(value == 1, "Wrong value passed");
   }

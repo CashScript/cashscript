@@ -1,5 +1,5 @@
 contract ForLoopBasic() {
-    function spend() {
+    function spend() public {
         int sum = 0;
         int a = 1;
         int b = 1;

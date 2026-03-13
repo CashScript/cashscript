@@ -1,5 +1,5 @@
 contract DeepReplace() {
-    function hello() {
+    function hello() public {
         int a = 1;
         int b = 2;
         int c = 3;

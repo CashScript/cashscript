@@ -1,5 +1,5 @@
 contract WhileLoopBasic() {
-    function spend() {
+    function spend() public {
         int i = 0;
 
         while (i < 3) {

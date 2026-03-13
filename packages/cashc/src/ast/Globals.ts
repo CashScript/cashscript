@@ -46,6 +46,11 @@ export enum Modifier {
   CONSTANT = 'constant',
 }
 
+export enum FunctionVisibility {
+  PUBLIC = 'public',
+  INTERNAL = 'internal',
+}
+
 export const GLOBAL_SYMBOL_TABLE = new SymbolTable();
 
 // Classes

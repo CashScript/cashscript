@@ -14,6 +14,7 @@ import {
   artifactTestZeroHandling,
   artifactTestRequireInsideLoop,
   artifactTestLogInsideLoop,
+  artifactTestInternalFunctions,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
@@ -28,6 +29,9 @@ describe('Debugging tests', () => {
     const contractTestLogInsideLoop = new Contract(artifactTestLogInsideLoop, [], { provider });
     const contractTestLogInsideLoopUtxo = randomUtxo();
     provider.addUtxo(contractTestLogInsideLoop.address, contractTestLogInsideLoopUtxo);
+    const contractTestInternalFunctions = new Contract(artifactTestInternalFunctions, [], { provider });
+    const contractTestInternalFunctionsUtxo = randomUtxo();
+    provider.addUtxo(contractTestInternalFunctions.address, contractTestInternalFunctionsUtxo);
 
     it('should log correct values', async () => {
       const transaction = new TransactionBuilder({ provider })
@@ -213,6 +217,14 @@ describe('Debugging tests', () => {
     });
 
     it.todo('should log intermediate results that get optimised out inside a loop');
+
+    it('should log from an internal function with the correct source line', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestInternalFunctionsUtxo, contractTestInternalFunctions.unlock.test_internal_logs(2n))
+        .addOutput({ to: contractTestInternalFunctions.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:12 internal value: 2$'));
+    });
   });
 
   describe('require statements', () => {
@@ -228,6 +240,9 @@ describe('Debugging tests', () => {
     const contractTestRequireInsideLoop = new Contract(artifactTestRequireInsideLoop, [], { provider });
     const contractTestRequireInsideLoopUtxo = randomUtxo();
     provider.addUtxo(contractTestRequireInsideLoop.address, contractTestRequireInsideLoopUtxo);
+    const contractTestInternalFunctions = new Contract(artifactTestInternalFunctions, [], { provider });
+    const contractTestInternalFunctionsUtxo = randomUtxo();
+    provider.addUtxo(contractTestInternalFunctions.address, contractTestInternalFunctionsUtxo);
 
     // test_require
     it('should fail with error message when require statement fails in a multi-function contract', async () => {
@@ -263,6 +278,15 @@ describe('Debugging tests', () => {
       expect(transaction).toFailRequireWith('Test.cash:21 Require statement failed at input 0 in contract Test.cash at line 21 with the following message: 1 should equal 2.');
       expect(transaction).toFailRequireWith('Failing statement: require(1 == 2, "1 should equal 2")');
       expect(transaction).not.toFailRequireWith(/1 should equal 1/);
+    });
+
+    it('should fail with the internal function require message and statement', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractTestInternalFunctionsUtxo, contractTestInternalFunctions.unlock.test_internal_require(0n))
+        .addOutput({ to: contractTestInternalFunctions.address, amount: 1000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:17 Require statement failed at input 0 in contract Test.cash at line 17 with the following message: internal value should be 1.');
+      expect(transaction).toFailRequireWith('Failing statement: require(value == 1, \'internal value should be 1\')');
     });
 
     // test_multiple_require_statements_final_fails

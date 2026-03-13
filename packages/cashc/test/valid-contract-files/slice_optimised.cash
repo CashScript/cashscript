@@ -1,5 +1,5 @@
 contract Slice(bytes32 data) {
-    function spend() {
+    function spend() public {
         bytes20 pkh = data.slice(0, 20);
         require(pkh == toPaddedBytes(0, 20));
     }

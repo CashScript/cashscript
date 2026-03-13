@@ -1,5 +1,5 @@
 contract Test() {
-    function covenant() {
+    function covenant() public {
         require(tx.version == 2);
     }
 }

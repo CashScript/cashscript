@@ -29,7 +29,7 @@ const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
 ```
 
 :::note
-If your contract artifact records `compiler.target` metadata, such as helper-function contracts using BCH `OP_DEFINE` / `OP_INVOKE`, configure your testing provider for the same VM target. Otherwise the SDK will fail fast on target mismatches.
+If your contract artifact records `compiler.target` metadata, such as contracts using internal functions compiled to BCH `OP_DEFINE` / `OP_INVOKE`, configure your testing provider for the same VM target. Otherwise the SDK will fail fast on target mismatches.
 :::
 
 :::note

@@ -1,9 +1,9 @@
 contract Test(int threshold) {
-    function spend(int value) {
-        require(isAboveThreshold_(value));
+    function spend(int value) public {
+        require(isAboveThreshold(value));
     }
 
-    function isAboveThreshold_(int value) {
+    function isAboveThreshold(int value) internal {
         require(value > threshold);
     }
 }

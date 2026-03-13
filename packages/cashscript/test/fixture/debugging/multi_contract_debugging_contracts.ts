@@ -2,7 +2,7 @@ import { compileString } from 'cashc';
 
 const SAME_NAME_DIFFERENT_PATH = `
 contract SameNameDifferentPath(int a) {
-  function function_1(int b) {
+  function function_1(int b) public {
     if (a == 0) {
       console.log("a is 0");
       require(b == 0, "b should be 0");
@@ -16,7 +16,7 @@ contract SameNameDifferentPath(int a) {
 
 const NAME_COLLISION = `
 contract NameCollision(int a) {
-  function name_collision(int b) {
+  function name_collision(int b) public {
     require(a == 0, "a should be 0");
     require(b == 0, "b should be 0");
   }
@@ -25,7 +25,7 @@ contract NameCollision(int a) {
 
 const CONTRACT_NAME_COLLISION = `
 contract NameCollision(int a) {
-  function name_collision(int b) {
+  function name_collision(int b) public {
     require(b == 1, "b should be 1");
     require(a == 1, "a should be 1");
   }
@@ -34,7 +34,7 @@ contract NameCollision(int a) {
 
 const FUNCTION_NAME_COLLISION = `
 contract FunctionNameCollision(int a) {
-  function name_collision(int b) {
+  function name_collision(int b) public {
     require(b == 1, "b should be 1");
     require(a == 1, "a should be 1");
   }

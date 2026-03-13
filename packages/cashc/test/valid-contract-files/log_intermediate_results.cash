@@ -1,5 +1,5 @@
 contract LogIntermediateResults(pubkey owner) {
-    function test_log_intermediate_result() {
+    function test_log_intermediate_result() public {
         bytes32 singleHash = sha256(owner);
         console.log(singleHash);
         bytes32 doubleHash = sha256(singleHash);

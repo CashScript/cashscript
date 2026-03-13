@@ -3,11 +3,11 @@ contract MultiFunction(
     pubkey recipient,
     int timeout
 ) {
-    function transfer(sig recipientSig) {
+    function transfer(sig recipientSig) public {
         require(checkSig(recipientSig, recipient));
     }
 
-    function timeout(sig senderSig) {
+    function timeout(sig senderSig) public {
         require(checkSig(senderSig, sender));
         require(tx.time >= timeout);
     }

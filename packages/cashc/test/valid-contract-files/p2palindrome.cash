@@ -1,5 +1,5 @@
 contract P2Palindrome() {
-    function spend(string palindrome) {
+    function spend(string palindrome) public {
         require(palindrome.reverse() == palindrome);
     }
 }

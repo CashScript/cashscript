@@ -1,9 +1,9 @@
 contract Test() {
-    function hello(sig s, pubkey pk) {
+    function hello(sig s, pubkey pk) public {
         require(world(s, pk));
     }
 
-    function world(sig s, pubkey pk) {
+    function world(sig s, pubkey pk) internal {
         require(checkSig(s, pk));
     }
 }

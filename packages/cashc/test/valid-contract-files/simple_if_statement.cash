@@ -1,5 +1,5 @@
 contract Test(int x, string y) {
-    function hello(int a, string b) {
+    function hello(int a, string b) public {
         if (a == x - 2) {
             require(false);
         } else if (b == "Hello " + y)

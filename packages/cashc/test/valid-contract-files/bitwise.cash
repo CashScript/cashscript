@@ -1,5 +1,5 @@
 contract Test(bytes8 x, bytes8 y) {
-    function hello() {
+    function hello() public {
         require((x | y) == y);
     }
 }

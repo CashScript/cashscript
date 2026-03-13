@@ -1,9 +1,9 @@
 contract InternalHelperFunctions() {
-    function spend(int x) {
-        require(isTen_(x));
+    function spend(int x) public {
+        require(isTen(x));
     }
 
-    function isTen_(int value) {
+    function isTen(int value) internal {
         require(value == 10);
     }
 }

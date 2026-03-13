@@ -71,7 +71,9 @@ export class FailedRequireError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
-    const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+    const { statement, lineNumber } = requireStatement.location
+      ? getLocationDataForLocation(artifact, requireStatement.location)
+      : getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
 
     const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
@@ -104,4 +106,19 @@ const getLocationDataForInstructionPointer = (
   const lineNumber = location.start.line;
 
   return { statement, lineNumber };
+};
+
+const getLocationDataForLocation = (
+  artifact: Artifact,
+  location: NonNullable<RequireStatement['location']>,
+): { lineNumber: number, statement: string } => {
+  const failingLines = artifact.source.split('\n').slice(location.start.line - 1, location.end.line);
+
+  failingLines[failingLines.length - 1] = failingLines[failingLines.length - 1].slice(0, location.end.column);
+  failingLines[0] = failingLines[0].slice(location.start.column);
+
+  return {
+    lineNumber: location.start.line,
+    statement: failingLines.join('\n'),
+  };
 };

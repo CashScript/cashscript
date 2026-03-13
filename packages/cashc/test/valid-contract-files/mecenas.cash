@@ -1,5 +1,5 @@
 contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
-    function receive() {
+    function receive() public {
         require(this.age >= period);
 
         // Check that the first output sends to the recipient
@@ -20,7 +20,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
         }
     }
 
-    function reclaim(pubkey pk, sig s) {
+    function reclaim(pubkey pk, sig s) public {
         require(hash160(pk) == funder);
         require(checkSig(s, pk));
     }

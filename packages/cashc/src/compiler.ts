@@ -13,21 +13,30 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 import EnsureInvokedFunctionsSafeTraversal from './semantic/EnsureInvokedFunctionsSafeTraversal.js';
+import { FunctionVisibility } from './ast/Globals.js';
 
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
 };
 
+type PreprocessedVisibilityResult = {
+  code: string;
+  functionVisibilities: FunctionVisibility[];
+  omittedPublicFunctions: Array<{ name: string; line: number; column: number }>;
+};
+
 export function compileString(code: string, compilerOptions: CompilerOptions = {}): Artifact {
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions };
+  const preprocessed = preprocessFunctionVisibility(code);
+  emitVisibilityWarnings(preprocessed.omittedPublicFunctions);
 
   // Lexing + parsing
-  let ast = parseCode(code);
+  let ast = parseCodeFromPreprocessed(preprocessed);
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
-  ast = ast.accept(new EnsureFinalRequireTraversal(mergedCompilerOptions)) as Ast;
+  ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
   ast = ast.accept(new EnsureInvokedFunctionsSafeTraversal()) as Ast;
 
   // Code generation
@@ -55,11 +64,23 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
 
   // Attach debug information
   const sourceTags = generateSourceTags(optimisationResult.sourceTags);
+  const rootFrameBytecode = binToHex(scriptToBytecode(optimisationResult.script));
   const debug = {
-    bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
+    bytecode: rootFrameBytecode,
     sourceMap: generateSourceMap(optimisationResult.locationData),
-    logs: optimisationResult.logs,
-    requires: optimisationResult.requires,
+    logs: optimisationResult.logs.map((log) => ({
+      ...log,
+      frameBytecode: log.frameBytecode ?? rootFrameBytecode,
+      data: log.data.map((entry) => (
+        typeof entry === 'string'
+          ? entry
+          : { ...entry, frameBytecode: entry.frameBytecode ?? log.frameBytecode ?? rootFrameBytecode }
+      )),
+    })),
+    requires: optimisationResult.requires.map((require) => ({
+      ...require,
+      frameBytecode: require.frameBytecode ?? rootFrameBytecode,
+    })),
     ...(sourceTags ? { sourceTags } : {}),
   };
 
@@ -72,8 +93,13 @@ export function compileFile(codeFile: PathLike, compilerOptions: CompilerOptions
 }
 
 export function parseCode(code: string): Ast {
+  const preprocessed = preprocessFunctionVisibility(code);
+  return parseCodeFromPreprocessed(preprocessed);
+}
+
+function parseCodeFromPreprocessed(preprocessed: PreprocessedVisibilityResult): Ast {
   // Lexing (throwing on errors)
-  const inputStream = new CharStream(code);
+  const inputStream = new CharStream(preprocessed.code);
   const lexer = new CashScriptLexer(inputStream);
   lexer.removeErrorListeners();
   lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
@@ -86,7 +112,65 @@ export function parseCode(code: string): Ast {
   const parseTree = parser.sourceFile();
 
   // AST building
-  const ast = new AstBuilder(parseTree).build() as Ast;
+  const ast = new AstBuilder(parseTree, preprocessed.functionVisibilities).build() as Ast;
 
   return ast;
+}
+
+function preprocessFunctionVisibility(code: string): PreprocessedVisibilityResult {
+  const inputStream = new CharStream(code);
+  const lexer = new CashScriptLexer(inputStream);
+  const tokenStream = new CommonTokenStream(lexer);
+  tokenStream.fill();
+
+  const visibleTokens = tokenStream.tokens.filter((token) => token.channel === 0 && token.type !== -1);
+  const mutableCode = code.split('');
+  const functionVisibilities: FunctionVisibility[] = [];
+  const omittedPublicFunctions: Array<{ name: string; line: number; column: number }> = [];
+
+  for (let i = 0; i < visibleTokens.length; i += 1) {
+    if (visibleTokens[i].text !== 'function') continue;
+
+    let cursor = i + 1;
+    if (!visibleTokens[cursor] || !visibleTokens[cursor + 1] || visibleTokens[cursor + 1].text !== '(') continue;
+    const functionNameToken = visibleTokens[cursor];
+
+    cursor += 2;
+    let depth = 1;
+    while (cursor < visibleTokens.length && depth > 0) {
+      if (visibleTokens[cursor].text === '(') depth += 1;
+      if (visibleTokens[cursor].text === ')') depth -= 1;
+      cursor += 1;
+    }
+
+    const visibilityToken = visibleTokens[cursor];
+    if (visibilityToken?.text === FunctionVisibility.INTERNAL || visibilityToken?.text === FunctionVisibility.PUBLIC) {
+      functionVisibilities.push(visibilityToken.text as FunctionVisibility);
+      for (let index = visibilityToken.start; index <= visibilityToken.stop; index += 1) {
+        mutableCode[index] = ' ';
+      }
+      continue;
+    }
+
+    functionVisibilities.push(FunctionVisibility.PUBLIC);
+    omittedPublicFunctions.push({
+      name: functionNameToken.text!,
+      line: functionNameToken.line,
+      column: functionNameToken.column,
+    });
+  }
+
+  return { code: mutableCode.join(''), functionVisibilities, omittedPublicFunctions };
+}
+
+function emitVisibilityWarnings(omittedPublicFunctions: Array<{ name: string; line: number; column: number }>): void {
+  if (omittedPublicFunctions.length === 0) return;
+
+  const summary = omittedPublicFunctions
+    .map(({ name, line, column }) => `${name} (Line ${line}, Column ${column})`)
+    .join(', ');
+
+  console.warn(
+    `Warning: ${omittedPublicFunctions.length} function(s) omit visibility and default to public: ${summary}.`,
+  );
 }

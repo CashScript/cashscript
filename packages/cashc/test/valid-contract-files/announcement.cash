@@ -5,7 +5,7 @@ pragma cashscript >=0.8.0;
  * remainder of contract funds back to the contract.
  */
 contract Announcement() {
-    function announce() {
+    function announce() public {
         // Create the memo.cash announcement output
         bytes announcement = new LockingBytecodeNullData([
             0x6d02,

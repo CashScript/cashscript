@@ -2,7 +2,7 @@
 title: Global Functions
 ---
 
-This page documents CashScript's built-in functions. In addition to these built-ins, contract functions can now call other user-defined functions in the same contract. For public vs internal helper function behavior, helper-function restrictions, and how CashScript compiles these calls to BCH `OP_DEFINE` / `OP_INVOKE`, see the [contract structure documentation](/docs/language/contracts#internal-helper-functions) and [BCH Functions (beta)](/docs/compiler/bch-functions).
+This page documents CashScript's built-in functions. In addition to these built-ins, contract functions can now call other user-defined internal functions in the same contract. For public vs internal function behavior, current visibility rules, restrictions, and how CashScript compiles these calls to BCH `OP_DEFINE` / `OP_INVOKE`, see the [contract structure documentation](/docs/language/contracts#internal-functions-beta) and [BCH Internal Functions (beta)](/docs/compiler/bch-functions).
 
 ## Arithmetic functions
 ### abs()

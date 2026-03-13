@@ -1,24 +1,24 @@
 pragma cashscript ^0.13.0;
 
 contract HelperFunctions() {
-    function spend(int value) {
-        require(isPositiveEven_(value));
+    function spend(int value) public {
+        require(isPositiveEven(value));
     }
 
-    function spendPlusOne(int value) {
-        require(isPositiveEven_(value + 1));
+    function spendPlusOne(int value) public {
+        require(isPositiveEven(value + 1));
     }
 
-    function isPositiveEven_(int value) {
-        require(isPositive_(value));
-        require(isEven_(value));
+    function isPositiveEven(int value) internal {
+        require(isPositive(value));
+        require(isEven(value));
     }
 
-    function isPositive_(int value) {
+    function isPositive(int value) internal {
         require(value > 0);
     }
 
-    function isEven_(int value) {
+    function isEven(int value) internal {
         require(value % 2 == 0);
     }
 }

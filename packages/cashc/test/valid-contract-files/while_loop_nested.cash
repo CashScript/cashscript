@@ -1,5 +1,5 @@
 contract WhileLoopNested() {
-    function spend() {
+    function spend() public {
         int i = 0;
         int total = 0;
 

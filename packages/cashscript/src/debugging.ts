@@ -67,6 +67,7 @@ const debugSingleScenario = (
   template: WalletTemplate, artifact: Artifact | undefined, unlockingScriptId: string, scenarioId: string,
 ): DebugResult => {
   const { vm, program } = createProgram(template, unlockingScriptId, scenarioId);
+  const frameBytecodeCache = new WeakMap<AuthenticationInstruction[], string>();
 
   const fullDebugSteps = vm.debug(program);
   const lockingScriptStartIndex = getLockingScriptStartIndex(fullDebugSteps, artifact);
@@ -92,14 +93,17 @@ const debugSingleScenario = (
     // Also note that multiple log statements may exist for the same ip, so we need to handle all of them
     const executedLogs = executedDebugSteps
       .flatMap((debugStep, index) => {
-        const logEntries = artifact.debug?.logs?.filter((log) => log.ip === debugStep.ip);
+        const logEntries = artifact.debug?.logs?.filter((log) => (
+          log.ip === debugStep.ip
+          && matchesFrameBytecode(debugStep, log.frameBytecode, frameBytecodeCache)
+        ));
         if (!logEntries || logEntries.length === 0) return [];
 
         const reversedPriorDebugSteps = executedDebugSteps.slice(0, index + 1).reverse();
 
         return logEntries.map((logEntry) => {
           const decodedLogData = logEntry.data
-            .map((dataEntry) => decodeLogDataEntry(dataEntry, reversedPriorDebugSteps, vm));
+            .map((dataEntry) => decodeLogDataEntry(dataEntry, reversedPriorDebugSteps, vm, logEntry.frameBytecode, frameBytecodeCache));
           return { logEntry, decodedLogData };
         });
       });
@@ -139,7 +143,10 @@ const debugSingleScenario = (
     }
 
     const requireStatement = (artifact.debug?.requires ?? [])
-      .find((statement) => statement.ip === requireStatementIp);
+      .find((statement) => (
+        statement.ip === requireStatementIp
+        && matchesFrameBytecode(lastExecutedDebugStep, statement.frameBytecode, frameBytecodeCache)
+      ));
 
     if (requireStatement) {
       // Note that we use failingIp here rather than requireStatementIp, see comment above
@@ -179,11 +186,30 @@ const debugSingleScenario = (
     }
 
     const requireStatement = (artifact.debug?.requires ?? [])
-      .find((message) => message.ip === finalExecutedVerifyIp);
+      .find((message) => (
+        message.ip === finalExecutedVerifyIp
+        && matchesFrameBytecode(lastExecutedDebugStep, message.frameBytecode, frameBytecodeCache)
+      ));
 
     if (requireStatement) {
       throw new FailedRequireError(
         artifact, sourcemapInstructionPointer, requireStatement, inputIndex, getBitauthUri(template),
+      );
+    }
+
+    const nestedRequireStatement = findMostRecentExecutedRequireStatement(
+      executedDebugSteps,
+      artifact,
+      frameBytecodeCache,
+    );
+
+    if (nestedRequireStatement) {
+      throw new FailedRequireError(
+        artifact,
+        nestedRequireStatement.ip,
+        nestedRequireStatement,
+        inputIndex,
+        getBitauthUri(template),
       );
     }
 
@@ -279,10 +305,15 @@ const decodeLogDataEntry = (
   dataEntry: LogData,
   reversedPriorDebugSteps: AuthenticationProgramStateCommon[],
   vm: VM,
+  fallbackFrameBytecode: string | undefined,
+  frameBytecodeCache: WeakMap<AuthenticationInstruction[], string>,
 ): string | bigint | boolean => {
   if (typeof dataEntry === 'string') return dataEntry;
 
-  const dataEntryDebugStep = reversedPriorDebugSteps.find((step) => step.ip === dataEntry.ip);
+  const dataEntryDebugStep = reversedPriorDebugSteps.find((step) => (
+    step.ip === dataEntry.ip
+    && matchesFrameBytecode(step, dataEntry.frameBytecode ?? fallbackFrameBytecode, frameBytecodeCache)
+  ));
 
   if (!dataEntryDebugStep) {
     throw new Error(`Should not happen: corresponding data entry debug step not found for entry at ip ${dataEntry.ip}`);
@@ -290,6 +321,78 @@ const decodeLogDataEntry = (
 
   const transformedDebugStep = applyStackItemTransformations(dataEntry, dataEntryDebugStep, vm);
   return decodeStackItem(dataEntry, transformedDebugStep.stack);
+};
+
+const matchesFrameBytecode = (
+  debugStep: AuthenticationProgramStateCommon,
+  expectedFrameBytecode: string | undefined,
+  cache: WeakMap<AuthenticationInstruction[], string>,
+): boolean => {
+  if (!expectedFrameBytecode) return true;
+
+  let actualFrameBytecode = cache.get(debugStep.instructions);
+  if (!actualFrameBytecode) {
+    actualFrameBytecode = instructionsToBytecodeHex(debugStep.instructions);
+    cache.set(debugStep.instructions, actualFrameBytecode);
+  }
+
+  return actualFrameBytecode === expectedFrameBytecode || actualFrameBytecode.endsWith(expectedFrameBytecode);
+};
+
+const findMostRecentExecutedRequireStatement = (
+  executedDebugSteps: AuthenticationProgramStateCommon[],
+  artifact: Artifact,
+  frameBytecodeCache: WeakMap<AuthenticationInstruction[], string>,
+) => {
+  const matchingRequireStatements = executedDebugSteps
+  .slice()
+  .reverse()
+  .flatMap((debugStep) => (
+    (artifact.debug?.requires ?? []).filter((requireStatement) => (
+      requireStatement.ip === debugStep.ip
+      && matchesFrameBytecode(debugStep, requireStatement.frameBytecode, frameBytecodeCache)
+    ))
+  ));
+
+  const nestedRequireStatement = matchingRequireStatements.find((requireStatement) => (
+    requireStatement.frameBytecode !== undefined
+    && requireStatement.frameBytecode !== artifact.debug?.bytecode
+  ));
+
+  if (nestedRequireStatement) {
+    return nestedRequireStatement;
+  }
+
+  const nestedFrameBytecode = executedDebugSteps
+    .slice()
+    .reverse()
+    .map((debugStep) => getFrameBytecode(debugStep, frameBytecodeCache))
+    .find((frameBytecode) => frameBytecode !== artifact.debug?.bytecode);
+
+  if (nestedFrameBytecode) {
+    const nestedFrameRequireStatement = (artifact.debug?.requires ?? [])
+      .filter((requireStatement) => requireStatement.frameBytecode === nestedFrameBytecode)
+      .at(-1);
+
+    if (nestedFrameRequireStatement) {
+      return nestedFrameRequireStatement;
+    }
+  }
+
+  return matchingRequireStatements.at(0);
+};
+
+const getFrameBytecode = (
+  debugStep: AuthenticationProgramStateCommon,
+  cache: WeakMap<AuthenticationInstruction[], string>,
+): string => {
+  let actualFrameBytecode = cache.get(debugStep.instructions);
+  if (!actualFrameBytecode) {
+    actualFrameBytecode = instructionsToBytecodeHex(debugStep.instructions);
+    cache.set(debugStep.instructions, actualFrameBytecode);
+  }
+
+  return actualFrameBytecode;
 };
 
 const applyStackItemTransformations = (
