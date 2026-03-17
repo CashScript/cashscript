@@ -41,12 +41,11 @@ import { addHexPrefixExceptEmpty, DEFAULT_VM_TARGET, formatBytecodeForDebugging,
 
 export const getLibauthTemplate = (
   transactionBuilder: TransactionBuilder,
+  libauthTransaction: TransactionBch,
 ): WalletTemplate => {
   if (transactionBuilder.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
     throw new Error('Cannot use debugging functionality with a transaction that contains custom unlockers');
   }
-
-  const libauthTransaction = transactionBuilder.buildLibauthTransaction();
 
   const vmTarget = transactionBuilder.provider instanceof MockNetworkProvider
     ? transactionBuilder.provider.vmTarget
