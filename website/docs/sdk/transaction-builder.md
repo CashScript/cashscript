@@ -165,6 +165,19 @@ Adds an OP_RETURN output to the transaction with the provided data chunks in str
 transactionBuilder.addOpReturnOutput(['0x6d02', 'Hello World!']);
 ```
 
+### addBchChangeOutputIfNeeded()
+```ts
+transactionBuilder.addBchChangeOutputIfNeeded(changeOutputOptions: BchChangeOutputOptions): this
+```
+
+Adds a change output to the transaction if the transaction has enough funds to cover the transaction fee rate. The `changeOutputOptions` object can be used to specify the fee rate for the change output. Note that this is only for BCH change. Make sure to add any token change outputs manually if needed.
+
+```ts
+interface BchChangeOutputOptions {
+  to: string | Uint8Array;
+  feeRate: number;
+}
+```
 
 ### setLocktime()
 ```ts

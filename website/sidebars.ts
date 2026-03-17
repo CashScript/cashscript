@@ -40,6 +40,7 @@ const sidebars: SidebarsConfig = {
         'sdk/typescript-sdk',
         'sdk/instantiation',
         'sdk/transaction-builder',
+        'sdk/transaction-utilities',
         {
           type: 'category',
           label: 'Network Providers',
