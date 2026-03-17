@@ -123,6 +123,7 @@ const config: Config = {
           { from: ['/docs', '/docs/about', '/docs/basics'], to: '/docs/basics/about' },
           { from: '/docs/language', to: '/docs/language/contracts' },
           { from: '/docs/sdk', to: '/docs/sdk/instantiation' },
+          { from: '/docs/sdk/transactions', to: '/docs/sdk/legacy-transaction-builder' },
           { from: '/docs/sdk/transactions-advanced', to: '/docs/sdk/transaction-builder' },
           { from: '/docs/guides', to: '/docs/guides/covenants' },
           { from: '/docs/guides/syntax-highlighting', to: '/docs/language/syntax-highlighting' },
