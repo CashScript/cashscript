@@ -21,3 +21,4 @@ export {
 } from './network/index.js';
 export { randomUtxo, randomToken, randomNFT } from './utils.js';
 export * from './walletconnect-utils.js';
+export { gatherBchUtxos, gatherFungibleTokenUtxos, type GatherUtxosResult } from './transaction-utils.js';
