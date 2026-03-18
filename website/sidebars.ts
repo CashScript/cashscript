@@ -62,6 +62,7 @@ const sidebars: SidebarsConfig = {
         'guides/covenants',
         'guides/lifecycle',
         'guides/cashtokens',
+        'guides/deployment',
         'guides/infrastructure',
         'guides/walletconnect',
         'guides/debugging',
