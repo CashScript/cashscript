@@ -35,7 +35,7 @@ This means you can reconstruct a contract's address at any time, on any machine,
 
 Some constructor arguments are straightforward constants (block heights, timelocks). Others require preparation before deployment:
 
-- **Token IDs from other categories** — in complex systems with multiple token categories, contracts often reference each other's token IDs as constructor arguments. Note that token IDs must be byte-reversed when passed as constructor arguments, because the Bitcoin Cash VM uses little-endian byte order internally while token IDs are displayed in big-endian (the same applies to txids).
+- **Token IDs from other categories** — in complex systems with multiple token categories, contracts often reference each other's token IDs as constructor arguments. Note that token IDs must be byte-reversed when passed as constructor arguments, because the Bitcoin Cash VM uses little-endian byte order internally while token IDs are displayed in big-endian (the same applies to transaction IDs).
 - **Locking bytecodes from other contracts** — in multi-contract systems, one contract may reference another by locking bytecode. This creates a dependency chain: you must instantiate the referenced contract first, extract its locking bytecode, and pass it as a constructor argument to the dependent contract.
 - **Public keys** — for contracts that validate signed messages (e.g. from an oracle provider), you need the signer's public key. For owner authentication, you need to derive the public key hash from a keypair ahead of time.
 
@@ -77,7 +77,7 @@ Once you have the vout0 UTXO, its txid (the future token ID) is already known be
 
 ### Setup Wallet
 
-To create vout0 UTXOs and broadcast the genesis transaction, you need a funded wallet. This is typically a standard P2PKH wallet derived from a WIF private key or an HD seedphrase, with enough BCH to fund all contract outputs (each needs at least dust amount, typically 1000 sats).
+To create vout0 UTXOs and broadcast the genesis transaction, you need a funded wallet. This is typically a standard P2PKH wallet derived from a WIF private key or an HD seed phrase, with enough BCH to fund all contract outputs (each needs at least dust amount, typically 1000 sats).
 
 The setup wallet may already have UTXOs at vout 0, but usually you need to prepare them. You can do this by sending BCH from the setup wallet back to itself as the sole output of a transaction. Since it's the only output, it will be at index 0.
 
@@ -122,7 +122,7 @@ The genesis transaction creates the CashToken category and distributes the initi
 
 - **Fungible tokens** — the initial token supply distributed to contract addresses
 - **NFTs with minting capability** — for contracts that need to create new NFTs during operation
-- **NFTs with mutable capability** — for contracts that store updateable state in the NFT commitment
+- **NFTs with mutable capability** — for contracts that store updatable state in the NFT commitment
 - **NFTs with no capability (immutable)** — for contracts that carry fixed identifying data
 
 :::info
@@ -163,7 +163,7 @@ Use `@bitauth/libauth` to encode values into commitment bytes. This ensures valu
 ```ts
 import { binToHex, bigIntToVmNumber, padMinimallyEncodedVmNumber } from '@bitauth/libauth';
 
-// Encode a bigint as a fixed-length VM number (matching OP_NUM2BIN behavior)
+// Encode a bigint as a fixed-length VM number (matching OP_NUM2BIN behaviour)
 function bigIntToFixedBytes(value: bigint, byteLength: number): string {
   const minimal = bigIntToVmNumber(value);
   if (minimal.length > byteLength) throw new Error('value exceeds the requested byteLength');
