@@ -61,6 +61,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'guides/covenants',
         'guides/lifecycle',
+        'guides/concurrency',
         'guides/cashtokens',
         'guides/deployment',
         'guides/infrastructure',
