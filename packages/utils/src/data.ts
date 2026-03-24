@@ -4,6 +4,7 @@ import {
   binToUtf8,
   vmNumberToBigInt,
   isVmNumberError,
+  padMinimallyEncodedVmNumber,
 } from '@bitauth/libauth';
 
 export function encodeBool(bool: boolean): Uint8Array {
@@ -24,6 +25,12 @@ export function decodeBool(encodedBool: Uint8Array): boolean {
 
 export function encodeInt(int: bigint): Uint8Array {
   return bigIntToVmNumber(int);
+}
+
+export function encodeIntAsFixedBytes(int: bigint, byteLength: number): Uint8Array {
+  const minimal = encodeInt(int);
+  if (minimal.length > byteLength) throw new Error('value exceeds the requested byteLength');
+  return padMinimallyEncodedVmNumber(minimal, byteLength);
 }
 
 export function decodeInt(encodedInt: Uint8Array, maxLength: number = Infinity): bigint {
