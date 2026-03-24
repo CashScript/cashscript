@@ -5,7 +5,7 @@ import type { Options as ClassicPresetOptions } from '@docusaurus/preset-classic
 const config: Config = {
   title: 'CashScript',
   tagline: 'Smart contracts for Bitcoin Cash',
-  url: 'https://cashscript.org',
+  url: process.env.NEXT ? 'https://next.cashscript.org' : 'https://cashscript.org',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
   organizationName: 'CashScript',
@@ -25,7 +25,7 @@ const config: Config = {
       items: [
         { to: '/docs/basics/about', label: 'Docs', position: 'right' },
         {
-          href: 'https://playground.cashscript.org',
+          href: process.env.NEXT ? 'https://next.playground.cashscript.org' : 'https://playground.cashscript.org',
           label: 'Playground',
           position: 'right',
         },
