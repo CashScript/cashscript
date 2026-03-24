@@ -14,13 +14,27 @@ User A ─── tx spending UTXO #1 ──→ ✓ Accepted (first-seen)
 User B ─── tx spending UTXO #1 ──→ ✗ Rejected (conflict)
 ```
 
-This means a single-UTXO contract can only process one interaction per block at worst, or one per few seconds if users build [unconfirmed transaction chains](/docs/guides/lifecycle#unconfirmed-transaction-chains). For any contract with public usage, this creates a serious bottleneck.
+This means a single-UTXO contract can only process one interaction every few seconds without running into conflicts. For any contract with public usage, this can degrade the user experience.
 
 :::tip
 As covered in the [Transaction Lifecycle](/docs/guides/lifecycle) guide, Bitcoin Cash supports unlimited unconfirmed transaction chains. In theory, users could take turns chaining transactions on the same UTXO. In practice, coordinating this is fragile and doesn't scale.
 :::
 
-## The Solution: Multi-Threaded Contracts
+## Solution: Peer-to-Peer Contracts
+
+The simplest way to avoid UTXO contention is to avoid shared UTXOs entirely. In a **peer-to-peer contract**, each contract instance is created between specific participants with predetermined terms. Only those participants can spend the UTXO, so there is no public competition for it and no concurrency problem.
+
+Many common contract types are naturally peer-to-peer: escrows, vaults, multisig wallets, and derivatives contracts. These don't need threading — each instance is independent by design. For example, [AnyHedge][anyhedge] is a derivatives protocol where two parties agree on terms, lock BCH into a shared contract UTXO, and settle based on an oracle price at maturity — thousands of these contracts can exist simultaneously without any contention because each is a private UTXO between two specific parties.
+
+Peer-to-peer contracts are the right choice when:
+
+- The contract involves a **fixed set of participants** known at creation time.
+- There is **no shared resource** (like a liquidity pool) that many users need to access concurrently.
+- The contract's terms are **predetermined** — users agree on parameters before funding.
+
+When a contract *does* need to serve arbitrary public users against shared state, peer-to-peer design won't work and you need the threading patterns described below.
+
+## Solution: Multi-Threaded Contracts
 
 The key insight is to create **multiple identical contract UTXOs**, each acting as an independent "thread". Users interact with different threads in parallel without conflicts.
 
@@ -36,11 +50,11 @@ Each thread is a separate UTXO locked to the same contract. Because they are ind
 
 ### Stateless vs Stateful Threads
 
-How you design threads depends on whether your contract carries state.
+How you design threads depends on whether your contract carries state. As is common when working with concurrency, it is easier to leverage it when you have a stateless system. Most of the complexity in concurrent systems comes from the stateful parts.
 
-**Stateless threads** are the simplest case. The contract enforces rules but doesn't track any evolving state. You create multiple identical UTXOs and any of them can service any request. Examples: escrow contracts, multisig wallets, utility functions in a multi-contract system.
+**Stateless threads** are the simplest case. The contract enforces rules but doesn't track any evolving state. You create multiple identical UTXOs and any of them can service any request.
 
-**Stateful threads** carry state in the NFT commitment field. Each thread tracks its own state independently. The state across threads may drift and the system must be designed to tolerate this — see [Managing State Drift](#designing-for-state-drift) below.
+**Stateful threads** carry state in the NFT commitment field. Each thread tracks its own state independently. The state across threads may drift and the system must be designed to tolerate this — see [Managing State Drift](#managing-state-drift) below.
 
 Thread UTXOs are created during the [genesis transaction](/docs/guides/deployment). Each thread gets its own UTXO (and optionally an NFT with distinct state in its commitment field), all created in one atomic transaction. See the [Contract Deployment](/docs/guides/deployment) guide for details on setting up genesis transactions with multiple outputs.
 
@@ -69,34 +83,9 @@ Random selection is the simplest approach and works well for client-side applica
 
 ### Handling Collisions
 
-Even with random selection, collisions will occasionally happen. When they do, the network provider returns an error indicating the selected UTXO was already spent by another transaction. Your application needs to detect this specific error and distinguish it from other failures like insufficient fees or invalid transactions.
+Even with random selection, collisions will occasionally happen. When they do, the network provider returns an error indicating the selected UTXO was already spent by another transaction. Your application needs to detect this specific error and distinguish it from other failures like insufficient fees or invalid transactions, in order to retry the transaction. The key detail is that the entire transaction must be rebuilt on retry — re-fetching UTXOs from the network gives you a fresh set where the conflicting UTXO is no longer available.
 
-A basic retry strategy is to re-fetch UTXOs and re-select a different thread:
-
-```ts
-async function sendWithRetry(buildTransaction: () => Promise<TransactionDetails>, maxRetries = 3) {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await buildTransaction();
-    } catch (error) {
-      const isMempoolConflict = error instanceof Error
-        && error.message.includes('txn-mempool-conflict');
-      if (!isMempoolConflict || attempt === maxRetries - 1) throw error;
-      // Re-fetching UTXOs inside buildTransaction will naturally exclude the spent UTXO
-    }
-  }
-}
-```
-
-:::note
-The `txn-mempool-conflict` error string is specific to the `ElectrumNetworkProvider`. Other network providers may return different error messages for the same situation — check your provider's error format when implementing collision detection.
-:::
-
-The key detail is that the entire transaction must be rebuilt on retry — re-fetching UTXOs from the network gives you a fresh set where the conflicting UTXO is no longer available.
-
-:::note
 This retry pattern applies when the dapp or server broadcasts the transaction directly. In a [WalletConnect](/docs/guides/walletconnect) setup with `broadcast: true`, the user's wallet handles broadcasting and will encounter the mempool conflict error instead. The dapp cannot catch and retry automatically — the user would need to retry the action, at which point the dapp should re-fetch UTXOs and select a new thread.
-:::
 
 ## Modular Contract Functions
 
@@ -116,7 +105,9 @@ Consider these factors when deciding:
 - **Stateful contracts** benefit from fewer threads, since each thread evolves its state independently and users or the application must keep them in sync.
 - **Contracts with shared resources** like a liquidity pool present a trade-off: splitting into persistent threads fragments the resource across them.
 
-For contracts with shared resources, this fragmentation can be significant — for example, a DEX pool split into 4 threads means each thread holds roughly 1/4 of the liquidity, resulting in worse price execution per trade. This is a key motivation for the [accumulate-and-merge](#accumulate-and-merge-threading) model, which avoids permanent fragmentation by periodically merging threads back together. Alternatively, keep shared-state contracts as a single UTXO and offload logic to parallel function contracts.
+For contracts with shared resources, this fragmentation can be significant. [Cauldron][cauldron], a BCH DEX, illustrates the tension well: each liquidity provider creates their own independent contract UTXO ("micro-pool"), which looks like natural threading. But to get good price execution, a swap transaction needs to aggregate many of these micro-pools as inputs in a single transaction — so two concurrent swaps will still conflict on shared inputs, and the separate UTXOs don't actually help with concurrency.
+
+This is a fundamental trade-off for DEX designs: combining liquidity for better execution works against splitting UTXOs for concurrency. The [accumulate-and-merge](#accumulate-and-merge-threading) model is one approach that addresses this by periodically merging threads back together for batch settlement.
 
 :::caution
 Depending on your contract design, the number of threads may be fixed at deployment and cannot be changed later. Plan your thread count carefully based on realistic usage estimates before deploying.
@@ -180,9 +171,11 @@ Users ── select  ──→  ├─── Thread 2 ───┤    independen
                       └─── Thread 4 ───┘
 ```
 
-These patterns have been proven in production systems handling thousands of concurrent interactions on Bitcoin Cash. The UTXO model's explicit state makes reasoning about concurrency straightforward: if two transactions don't share any inputs, they cannot conflict.
+These patterns have been proven in production systems handling concurrent interactions on Bitcoin Cash. The UTXO model's explicit state makes reasoning about concurrency straightforward: if two transactions don't share any inputs, they cannot conflict.
 
 For adversarial considerations around multi-threaded systems — such as intentional double-spends or targeted contention attacks — see the [Adversarial Analysis](/docs/guides/adversarial) guide.
 
+[anyhedge]: https://anyhedge.com
+[cauldron]: https://www.cauldron.quest
 [jedex]: https://github.com/bitjson/jedex
 [cashninjas-mint]: https://github.com/cashninjas/minting-contract
