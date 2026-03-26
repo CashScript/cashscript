@@ -42,6 +42,9 @@ import {
   OutputTokenAmountTooSmallError,
   TokensToNonTokenAddressError,
   UndefinedInputError,
+  OutputAddressNetworkMismatchError,
+  OutputTokenCategoryInvalidError,
+  OutputTokenCommitmentInvalidError,
 } from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
@@ -51,8 +54,8 @@ export function validateInput(utxo: Utxo): void {
   }
 }
 
-export function validateOutput(output: Output): void {
-  if (typeof output.to !== 'string') return;
+export function validateOutput(output: Output, network: Network): void {
+  if (isOpReturnOutput(output)) return;
 
   const minimumAmount = calculateDust(output);
   if (output.amount < minimumAmount) {
@@ -60,14 +63,35 @@ export function validateOutput(output: Output): void {
   }
 
   if (output.token) {
-    if (!isTokenAddress(output.to)) {
-      throw new TokensToNonTokenAddressError(output.to);
-    }
-
     if (output.token.amount < 0n) {
       throw new OutputTokenAmountTooSmallError(output.token.amount);
     }
+
+    if (typeof output.token.category !== 'string' || !isHex(output.token.category)) {
+      throw new OutputTokenCategoryInvalidError(output.token.category);
+    }
+
+    if (output.token.nft && (typeof output.token.nft.commitment !== 'string' || !isHex(output.token.nft.commitment))) {
+      throw new OutputTokenCommitmentInvalidError(output.token.nft.commitment);
+    }
   }
+
+  // If the output is not an address (so it is P2S), then we don't need to do any address validation
+  if (typeof output.to !== 'string') return;
+
+  if (output.token && !isTokenAddress(output.to)) {
+    throw new TokensToNonTokenAddressError(output.to);
+  }
+
+  const addressPrefix = getNetworkPrefixForAddress(output.to);
+  const networkPrefix = getNetworkPrefix(network);
+  if (addressPrefix !== networkPrefix) {
+    throw new OutputAddressNetworkMismatchError(output.to, networkPrefix);
+  }
+}
+
+export function isOpReturnOutput(output: Output): boolean {
+  return typeof output.to !== 'string' && output.to[0] === Op.OP_RETURN;
 }
 
 export function calculateDust(output: Output): number {
@@ -87,16 +111,6 @@ export function encodeOutput(output: Output): Uint8Array {
 }
 
 export function cashScriptOutputToLibauthOutput(output: Output): LibauthOutput {
-  if (output.token) {
-    if (typeof output.token.category !== 'string' || !isHex(output.token.category)) {
-      throw new Error(`Provided token category ${output.token?.category} is not a hex string`);
-    }
-
-    if (output.token.nft && (typeof output.token.nft.commitment !== 'string' || !isHex(output.token.nft.commitment))) {
-      throw new Error(`Provided token commitment ${output.token.nft?.commitment} is not a hex string`);
-    }
-  }
-
   return {
     lockingBytecode: typeof output.to === 'string' ? addressToLockScript(output.to) : output.to,
     valueSatoshis: output.amount,
@@ -148,6 +162,12 @@ function isTokenAddress(address: string): boolean {
   if (typeof result === 'string') throw new Error(result);
   const supportsTokens = (result.type === 'p2pkhWithTokens' || result.type === 'p2shWithTokens');
   return supportsTokens;
+}
+
+function getNetworkPrefixForAddress(address: string): string {
+  const result = decodeCashAddress(address);
+  if (typeof result === 'string') throw new Error(result);
+  return result.prefix;
 }
 
 // ////////// SIZE CALCULATIONS ///////////////////////////////////////////////

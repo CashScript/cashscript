@@ -96,7 +96,7 @@ export class TransactionBuilder {
   }
 
   addOutputs(outputs: Output[]): this {
-    outputs.forEach(validateOutput);
+    outputs.forEach((output) => validateOutput(output, this.provider.network));
     this.outputs = this.outputs.concat(outputs);
     return this;
   }
