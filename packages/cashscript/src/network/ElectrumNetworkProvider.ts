@@ -8,6 +8,13 @@ import {
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
+import {
+  NetworkProviderMissingInputsError,
+  NetworkProviderMempoolConflictError,
+  NetworkProviderTransactionAlreadySubmittedError,
+  NetworkProviderAbsoluteTimelockError,
+  NetworkProviderRelativeTimelockError,
+} from './errors.js';
 
 
 interface OptionsBase {
@@ -94,7 +101,12 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   async sendRawTransaction(txHex: string): Promise<string> {
-    return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
+    try {
+      return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
+    } catch (e: any) {
+      const errorMessage = e.message ?? String(e);
+      throw classifyNetworkProviderError(errorMessage);
+    }
   }
 
   async connect(): Promise<void> {
@@ -173,6 +185,54 @@ interface ElectrumUtxo {
 interface BlockHeader {
   height: number;
   hex: string;
+}
+
+const MISSING_INPUTS_PATTERNS = [
+  'Missing inputs',
+  'bad-txns-inputs-missingorspent',
+  'bad-txns-inputs-spent',
+];
+
+const MEMPOOL_CONFLICT_PATTERNS = [
+  'txn-mempool-conflict',
+];
+
+const ALREADY_SUBMITTED_PATTERNS = [
+  'transaction already in block chain',
+  'txn-already-known',
+  'txn-already-in-mempool',
+];
+
+const ABSOLUTE_TIMELOCK_PATTERNS = [
+  'bad-txns-nonfinal',
+];
+
+const RELATIVE_TIMELOCK_PATTERNS = [
+  'non-BIP68-final',
+];
+
+function classifyNetworkProviderError(errorMessage: string): Error {
+  if (MISSING_INPUTS_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderMissingInputsError(errorMessage);
+  }
+
+  if (MEMPOOL_CONFLICT_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderMempoolConflictError(errorMessage);
+  }
+
+  if (ALREADY_SUBMITTED_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderTransactionAlreadySubmittedError(errorMessage);
+  }
+
+  if (ABSOLUTE_TIMELOCK_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderAbsoluteTimelockError(errorMessage);
+  }
+
+  if (RELATIVE_TIMELOCK_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderRelativeTimelockError(errorMessage);
+  }
+
+  return new Error(errorMessage);
 }
 
 function lockingBytecodeToElectrumScriptHash(lockingBytecode: Uint8Array): string {

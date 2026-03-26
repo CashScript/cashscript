@@ -12,6 +12,7 @@ export type { Artifact, AbiFunction, AbiInput } from '@cashscript/utils';
 export * as utils from '@cashscript/utils';
 export * from './interfaces.js';
 export * from './Errors.js';
+export * from './network/errors.js';
 export {
   type NetworkProvider,
   BitcoinRpcNetworkProvider,
