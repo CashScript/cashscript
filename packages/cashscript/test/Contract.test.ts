@@ -1,4 +1,4 @@
-import { hexToBin } from '@bitauth/libauth';
+import { decodeTransactionUnsafe, hexToBin } from '@bitauth/libauth';
 import { placeholder } from '@cashscript/utils';
 import { compileString } from 'cashc';
 import {
@@ -264,7 +264,7 @@ describe('Contract', () => {
         .addInput(utxo, unlocker)
         .addOutput({ to: aliceAddress, amount: 1000n });
 
-      const transaction = transactionBuilder.buildLibauthTransaction();
+      const transaction = decodeTransactionUnsafe(hexToBin(transactionBuilder.build()));
       const sourceOutputs = generateLibauthSourceOutputs(transactionBuilder.inputs);
 
       expect(unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex: 0 }))

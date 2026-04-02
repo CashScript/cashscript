@@ -34,7 +34,6 @@ import SignatureTemplate from '../SignatureTemplate.js';
 import { addressToLockScript, extendedStringify, zip } from '../utils.js';
 import { TransactionBuilder } from '../TransactionBuilder.js';
 import { zlibSync } from 'fflate';
-import MockNetworkProvider from '../network/MockNetworkProvider.js';
 import { addHexPrefixExceptEmpty, DEFAULT_VM_TARGET, formatBytecodeForDebugging, formatParametersForDebugging, getLockScriptName, getSignatureAndPubkeyFromP2PKHInput, getUnlockScriptName, serialiseTokenDetails } from './utils.js';
 import { VmTarget } from '../interfaces.js';
 
@@ -42,12 +41,12 @@ import { VmTarget } from '../interfaces.js';
 
 export const getLibauthTemplate = (
   transactionBuilder: TransactionBuilder,
+  libauthTransaction: TransactionBch,
 ): WalletTemplate => {
   if (transactionBuilder.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
     throw new Error('Cannot use debugging functionality with a transaction that contains custom unlockers');
   }
 
-  const libauthTransaction = transactionBuilder.buildLibauthTransaction();
   const requiredArtifactVmTargets = Array.from(new Set(
     transactionBuilder.inputs
       .flatMap((input) => isContractUnlocker(input.unlocker)
@@ -61,9 +60,7 @@ export const getLibauthTemplate = (
   }
 
   const requiredArtifactVmTarget = requiredArtifactVmTargets[0];
-  const providerVmTarget = transactionBuilder.provider instanceof MockNetworkProvider
-    ? transactionBuilder.provider.vmTarget
-    : undefined;
+  const providerVmTarget = transactionBuilder.provider.vmTarget;
 
   if (
     requiredArtifactVmTarget

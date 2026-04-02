@@ -185,3 +185,17 @@ await electrum.connect();
 ```
 
 [electrum-cash]: https://www.npmjs.com/package/@electrum-cash/network
+
+## Error Handling
+
+The `ElectrumNetworkProvider` can throw the following errors when broadcasting a transaction:
+
+| Error | Description |
+|---|---|
+| `NetworkProviderMissingInputsError` | Transaction inputs are missing or already spent |
+| `NetworkProviderMempoolConflictError` | Transaction conflicts with an unconfirmed transaction in the mempool |
+| `NetworkProviderTransactionAlreadySubmittedError` | Transaction has already been submitted |
+| `NetworkProviderAbsoluteTimelockError` | Transaction is not yet final (nLockTime not satisfied) |
+| `NetworkProviderRelativeTimelockError` | BIP68 sequence lock not satisfied |
+| `NetworkProviderError` | Generic fallback network provider error |
+

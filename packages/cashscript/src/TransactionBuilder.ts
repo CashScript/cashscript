@@ -19,13 +19,16 @@ import {
   StandardUnlockableUtxo,
   VmResourceUsage,
   isContractUnlocker,
+  BchChangeOutputOptions,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
+  calculateDust,
   cashScriptOutputToLibauthOutput,
   createOpReturnOutput,
   delay,
   generateLibauthSourceOutputs,
+  getOutputSize,
   validateInput,
   validateOutput,
 } from './utils.js';
@@ -93,7 +96,7 @@ export class TransactionBuilder {
   }
 
   addOutputs(outputs: Output[]): this {
-    outputs.forEach(validateOutput);
+    outputs.forEach((output) => validateOutput(output, this.provider.network));
     this.outputs = this.outputs.concat(outputs);
     return this;
   }
@@ -102,6 +105,44 @@ export class TransactionBuilder {
   addOpReturnOutput(chunks: string[]): this {
     this.outputs.push(createOpReturnOutput(chunks));
     return this;
+  }
+
+  addBchChangeOutputIfNeeded(changeOutputOptions: BchChangeOutputOptions): this {
+    const totalBchInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
+    const totalBchOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
+
+    const tentativeSurplus = totalBchInputAmount - totalBchOutputAmount;
+    const tentativeTransactionSize = this.getTransactionSize();
+    const tentativeFee = BigInt(Math.ceil(changeOutputOptions.feeRate * Number(tentativeTransactionSize)));
+    const tentativeChangeAmount = tentativeSurplus - tentativeFee;
+
+    if (tentativeChangeAmount < 0n) {
+      throw new Error(`Transaction does not have enough funds to cover the transaction fee rate of ${changeOutputOptions.feeRate} even without adding a change output. Current surplus: ${tentativeSurplus}, current fee: ${tentativeFee}, current change amount: ${tentativeChangeAmount}`);
+    }
+
+    const changeOutputSize = getOutputSize({
+      to: changeOutputOptions.to,
+      amount: tentativeSurplus,
+    });
+
+    const transactionSize = tentativeTransactionSize + BigInt(changeOutputSize);
+    const calculatedFee = BigInt(Math.ceil(changeOutputOptions.feeRate * Number(transactionSize)));
+
+    const changeAmount = tentativeSurplus - calculatedFee;
+    const changeOutput = { to: changeOutputOptions.to, amount: changeAmount };
+
+    const changeOutputDust = calculateDust(changeOutput);
+    if (changeAmount < changeOutputDust) {
+      return this;
+    }
+
+    this.outputs.push(changeOutput);
+    return this;
+  }
+
+  getTransactionSize(): bigint {
+    const transaction = this.buildLibauthTransaction(true);
+    return BigInt(encodeTransaction(transaction).byteLength);
   }
 
   setLocktime(locktime: number): this {
@@ -153,8 +194,10 @@ export class TransactionBuilder {
     }
   }
 
-  buildLibauthTransaction(): LibauthTransaction {
-    this.checkFungibleTokenBurn();
+  private buildLibauthTransaction(skipChecks: boolean = false): LibauthTransaction {
+    if (!skipChecks) {
+      this.checkFungibleTokenBurn();
+    }
 
     const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
@@ -183,7 +226,9 @@ export class TransactionBuilder {
       transaction.inputs[i].unlockingBytecode = script;
     });
 
-    this.checkMaxFee(transaction);
+    if (!skipChecks) {
+      this.checkMaxFee(transaction);
+    }
 
     return transaction;
   }
@@ -253,7 +298,8 @@ export class TransactionBuilder {
   }
 
   getLibauthTemplate(): WalletTemplate {
-    return getLibauthTemplate(this);
+    const libauthTransaction = this.buildLibauthTransaction();
+    return getLibauthTemplate(this, libauthTransaction);
   }
 
   async send(): Promise<TransactionDetails>;

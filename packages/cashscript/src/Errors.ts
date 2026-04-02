@@ -24,9 +24,27 @@ export class OutputTokenAmountTooSmallError extends Error {
   }
 }
 
+export class OutputTokenCategoryInvalidError extends Error {
+  constructor(category: string) {
+    super(`Provided token category ${category} is not a hex string`);
+  }
+}
+
+export class OutputTokenCommitmentInvalidError extends Error {
+  constructor(commitment: string) {
+    super(`Provided token commitment ${commitment} is not a hex string`);
+  }
+}
+
 export class TokensToNonTokenAddressError extends Error {
   constructor(address: string) {
     super(`Tried to send tokens to an address without token support, ${address}.`);
+  }
+}
+
+export class OutputAddressNetworkMismatchError extends Error {
+  constructor(address: string, expectedNetworkPrefix: string) {
+    super(`Tried to add an output to an address on the wrong network, ${address}. Expected network prefix: ${expectedNetworkPrefix}.`);
   }
 }
 

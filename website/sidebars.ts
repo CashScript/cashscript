@@ -40,6 +40,7 @@ const sidebars: SidebarsConfig = {
         'sdk/typescript-sdk',
         'sdk/instantiation',
         'sdk/transaction-builder',
+        'sdk/transaction-utilities',
         {
           type: 'category',
           label: 'Network Providers',
@@ -61,7 +62,9 @@ const sidebars: SidebarsConfig = {
         'guides/covenants',
         'guides/lifecycle',
         'guides/cashtokens',
+        'guides/deployment',
         'guides/infrastructure',
+        'guides/concurrency',
         'guides/walletconnect',
         'guides/debugging',
         'guides/optimization',

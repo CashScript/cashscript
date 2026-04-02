@@ -116,6 +116,19 @@ A big strength of the NetworkProvider setup is that it allows you to implement c
 
 You can create a PR to add your custom `NetworkProvider` to the CashScript codebase to share this functionality with others. It is required to have basic automated tests for any new `NetworkProvider`.
 
+### Error Handling
+
+A custom `NetworkProvider` should throw the following error types when an error occurs while broadcasting a transaction:
+
+| Error | Description |
+|---|---|
+| `NetworkProviderMissingInputsError` | Transaction inputs are missing or already spent |
+| `NetworkProviderMempoolConflictError` | Transaction conflicts with an unconfirmed transaction in the mempool |
+| `NetworkProviderTransactionAlreadySubmittedError` | Transaction has already been submitted |
+| `NetworkProviderAbsoluteTimelockError` | Transaction is not yet final (nLockTime not satisfied) |
+| `NetworkProviderRelativeTimelockError` | BIP68 sequence lock not satisfied |
+| `NetworkProviderError` | Generic fallback network provider error |
+
 ## Provider-Specific functionality
 
 Beyond the standardized `NetworkProvider` interface each provider can have its own provider-specific functionality. This can either be done by extending the `NetworkProvider` interface or by providing a more full-featured networking client to create the `NetworkProvider`.

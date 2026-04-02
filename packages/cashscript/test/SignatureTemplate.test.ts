@@ -1,7 +1,7 @@
 import { generateLibauthSourceOutputs } from 'cashscript/dist/utils.js';
 import { HashType, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
 import { aliceAddress, alicePriv, alicePub, aliceWif } from './fixture/vars.js';
-import { binToHex, hexToBin } from '@bitauth/libauth';
+import { binToHex, decodeTransactionUnsafe, hexToBin } from '@bitauth/libauth';
 
 describe('SignatureTemplate', () => {
   describe('constructor', () => {
@@ -86,7 +86,7 @@ describe('SignatureTemplate', () => {
         .addInput(utxo, unlocker)
         .addOutput({ to: aliceAddress, amount: 1000n });
 
-      const transaction = transactionBuilder.buildLibauthTransaction();
+      const transaction = decodeTransactionUnsafe(hexToBin(transactionBuilder.build()));
       const sourceOutputs = generateLibauthSourceOutputs(transactionBuilder.inputs);
 
       expect(unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex: 0 }))

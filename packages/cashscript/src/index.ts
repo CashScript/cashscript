@@ -12,6 +12,7 @@ export type { Artifact, AbiFunction, AbiInput } from '@cashscript/utils';
 export * as utils from '@cashscript/utils';
 export * from './interfaces.js';
 export * from './Errors.js';
+export * from './network/errors.js';
 export {
   type NetworkProvider,
   BitcoinRpcNetworkProvider,
@@ -21,3 +22,4 @@ export {
 } from './network/index.js';
 export { randomUtxo, randomToken, randomNFT } from './utils.js';
 export * from './walletconnect-utils.js';
+export { gatherBchUtxos, gatherFungibleTokenUtxos, type GatherUtxosResult } from './transaction-utils.js';
