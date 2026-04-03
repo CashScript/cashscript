@@ -12,13 +12,13 @@ See the awesome contracts and applications that people are building with CashScr
 
 AnyHedge is the first DeFi project built on top of Bitcoin Cash in the form of a synthetic derivatives platform. AnyHedge allows any two parties to enter into a smart contract together and speculate on the future price of an asset. One of the parties wishes to protect themselves against price fluctuations and takes the *hedge* position, while the other party wishes to speculate and takes a leveraged *long* position.
 
-## Tapswap
+## ParyonUSD
 
-<div style={{textAlign: 'center', width: '40%', margin: 'auto', marginBottom: '20px'}}>
-    <a href="https://tapswap.cash/" target="_blank"><img src="/img/tapswap.png" /></a>
+<div style={{textAlign: 'center', width: '35%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://paryonusd.com/" target="_blank"><img src="/img/paryonusd.svg" /></a>
 </div>
 
-Tapswap is the first non-custodial marketplace to trade CashTokens, both fungible token & NFTs, on Bitcoin Cash. Tapswap uses CashScript for its non-custodial token-sale offer contracts. It uses BCH WalletConnect to allow users to list tokens for sale right from their own wallet.
+ParyonUSD is a decentralized stablecoin protocol on Bitcoin Cash that issues PUSD through over-collateralized debt positions (CDPs). The protocol consists of 26 CashScript contracts covering loans, loan keys, redemptions, a stability pool and price oracle. The [contracts are open source](https://github.com/ParyonUSD/contracts) for anyone to inspect and verify.
 
 ## Moria
 
@@ -27,6 +27,14 @@ Tapswap is the first non-custodial marketplace to trade CashTokens, both fungibl
 </div>
 
 Moria is a decentralized stablecoin and borrowing protocol on Bitcoin Cash using CashTokens. The Moria protocol works with collateralized debt positions (CDPs) where stablecoins are issued by creating over-collateralized loans. The Moria protocol uses multiple smart contracts, all written in CashScript.
+
+## Tapswap
+
+<div style={{textAlign: 'center', width: '40%', margin: 'auto', marginBottom: '20px'}}>
+    <a href="https://tapswap.cash/" target="_blank"><img src="/img/tapswap.png" /></a>
+</div>
+
+Tapswap is the first non-custodial marketplace to trade CashTokens, both fungible token & NFTs, on Bitcoin Cash. Tapswap uses CashScript for its non-custodial token-sale offer contracts. It uses BCH WalletConnect to allow users to list tokens for sale right from their own wallet.
 
 ## Bitcats Heroes
 
