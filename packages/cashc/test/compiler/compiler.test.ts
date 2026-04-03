@@ -340,5 +340,96 @@ library CoreHelpers {
         },
       })).toThrow(Errors.InvalidLibraryImportError);
     });
+
+    it('should reject duplicate import aliases', () => {
+      expect(() => compileString(`
+import "./math.cash" as Helpers;
+import "./bits.cash" as Helpers;
+
+contract UsesLibraries() {
+  function spend(int value) public {
+    require(Helpers.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: () => `
+library Helpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`,
+      })).toThrow(Errors.InvalidImportDirectiveError);
+    });
+
+    it('should reject calls to missing imported library functions', () => {
+      expect(() => compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isOdd(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: () => `
+library MathHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`,
+      })).toThrow(Errors.InvalidImportDirectiveError);
+    });
+
+    it('should reject imported libraries that attempt namespaced external helper calls', () => {
+      expect(() => compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: () => `
+library MathHelpers {
+  function isEven(int value) {
+    require(Other.check(value));
+  }
+}
+`,
+      })).toThrow(Errors.InvalidLibraryImportError);
+    });
+
+    it('should not rewrite imported helper references inside comments or strings', () => {
+      const artifact = compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    console.log("Math.isEven(value) should stay literal");
+    // Math.isEven(value) should stay in the comment too
+    require(Math.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: () => `
+library MathHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`,
+      });
+
+      expect(artifact.abi).toEqual([
+        { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
+      ]);
+    });
   });
 });

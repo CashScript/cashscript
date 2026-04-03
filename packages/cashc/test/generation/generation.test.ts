@@ -325,4 +325,78 @@ library MathHelpers {
     expect(artifact.bytecode).toContain('OP_INVOKE');
     expect(artifact.compiler.target).toBe('BCH_2026_05');
   });
+
+  it('should support multiple imported libraries with overlapping helper names', () => {
+    const artifact = compileString(`
+import "./math.cash" as Math;
+import "./bits.cash" as Bits;
+
+contract UsesLibraries() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+    require(Bits.isEven(value));
+  }
+}
+`, {
+      sourcePath: '/contracts/main.cash',
+      resolveImport: (specifier) => {
+        if (specifier === './math.cash') {
+          return `
+library MathHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`;
+        }
+
+        return `
+library BitHelpers {
+  function isEven(int value) {
+    require((value % 4) == 0 || (value % 4) == 2);
+  }
+}
+`;
+      },
+    });
+
+    expect(artifact.abi).toEqual([
+      { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
+    ]);
+    expect(artifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(2);
+    expect(artifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(2);
+    expect(artifact.compiler.target).toBe('BCH_2026_05');
+  });
+
+  it('should emit only reachable imported helper call chains', () => {
+    const artifact = compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+      sourcePath: '/contracts/main.cash',
+      resolveImport: () => `
+library MathHelpers {
+  function isEven(int value) {
+    require(checkParity(value));
+  }
+
+  function checkParity(int value) {
+    require(value % 2 == 0);
+  }
+
+  function unused(int value) {
+    require(value == 123);
+  }
+}
+`,
+    });
+
+    expect(artifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(2);
+    expect(artifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(1);
+  });
 });
