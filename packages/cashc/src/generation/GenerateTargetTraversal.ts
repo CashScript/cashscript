@@ -160,7 +160,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     }
 
     if (publicFunctions.length === 1) {
-      publicFunctions[0] = this.visit(publicFunctions[0]) as FunctionDefinitionNode;
+      publicFunctions[0] = this.emitPublicFunctionDispatch(publicFunctions[0]) as FunctionDefinitionNode;
     } else {
       this.pushToStack('$$', true);
       publicFunctions.forEach((f, i) => {
@@ -187,7 +187,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
           this.emit(Op.OP_VERIFY, locationData);
         }
 
-        this.visit(f);
+        this.emitPublicFunctionDispatch(f);
 
         if (i < publicFunctions.length - 1) {
           this.emit(Op.OP_ELSE, { ...locationData, positionHint: PositionHint.END });
@@ -202,6 +202,28 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     }
 
     return node;
+  }
+
+  private emitPublicFunctionDispatch(node: FunctionDefinitionNode): Node {
+    if (this.functionIndices.has(node.name)) {
+      node.parameters = this.visitList(node.parameters) as ParameterNode[];
+
+      if (this.compilerOptions.enforceFunctionParameterTypes) {
+        this.enforceFunctionParameterTypes(node);
+      }
+
+      this.emit(
+        encodeInt(BigInt(this.functionIndices.get(node.name)!)),
+        { location: node.location, positionHint: PositionHint.START },
+      );
+      this.pushToStack('(value)');
+      this.emit(Op.OP_INVOKE, { location: node.location, positionHint: PositionHint.END });
+      this.popFromStack(node.parameters.length + 1);
+      this.pushToStack('(value)');
+      return node;
+    }
+
+    return this.visit(node);
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {

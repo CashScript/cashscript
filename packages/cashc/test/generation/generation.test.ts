@@ -164,7 +164,7 @@ contract PublicCalls() {
       { name: 'validate', inputs: [{ name: 'value', type: 'int' }] },
     ]);
     expect(artifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(1);
-    expect(artifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(1);
+    expect(artifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(2);
     expect(artifact.compiler.target).toBe('BCH_2026_05');
   });
 
@@ -185,8 +185,34 @@ contract LiteralNames() {
       { name: 'spend', inputs: [{ name: 'x', type: 'int' }] },
       { name: 'helper_check', inputs: [{ name: 'value', type: 'int' }] },
     ]);
-    expect(artifact.bytecode).toContain('OP_DEFINE');
-    expect(artifact.bytecode).toContain('OP_INVOKE');
+    expect(artifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(1);
+    expect(artifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(2);
+  });
+
+  it('should reuse a shared frame when an internal helper invokes a public function', () => {
+    const artifact = compileString(`
+contract InternalCallsPublic() {
+  function spend(int x) public {
+    require(route(x));
+  }
+
+  function route(int value) internal {
+    require(validate(value));
+  }
+
+  function validate(int value) public {
+    require(value == 11);
+  }
+}
+`);
+
+    expect(artifact.abi).toEqual([
+      { name: 'spend', inputs: [{ name: 'x', type: 'int' }] },
+      { name: 'validate', inputs: [{ name: 'value', type: 'int' }] },
+    ]);
+    expect(artifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(2);
+    expect(artifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(2);
+    expect(artifact.compiler.target).toBe('BCH_2026_05');
   });
 
   it('should reject explicit pre-2026 targets when internal-function opcodes are required', () => {
