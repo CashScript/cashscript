@@ -201,6 +201,7 @@ export interface LocationI {
     line: number,
     column: number
   };
+  sourceFile?: string;
 }
 
 export type SingleLocationData = {

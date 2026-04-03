@@ -1,4 +1,4 @@
-import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
+import { Artifact, DebugFrame, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -80,12 +80,19 @@ export class FailedTransactionEvaluationError extends FailedTransactionError {
     public inputIndex: number,
     public bitauthUri: string,
     public libauthErrorMessage: string,
+    public frameId?: string,
+    public frameBytecode?: string,
   ) {
     let message = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.\nReason: ${libauthErrorMessage}`;
 
     if (artifact.debug) {
-      const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
-      message = `${artifact.contractName}.cash:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
+      const { statement, lineNumber, sourceName } = getLocationDataForInstructionPointer(
+        artifact,
+        failingInstructionPointer,
+        frameId,
+        frameBytecode,
+      );
+      message = `${sourceName}:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
     }
 
     super(message, bitauthUri);
@@ -101,11 +108,22 @@ export class FailedRequireError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage?: string,
   ) {
-    const { statement, lineNumber } = requireStatement.location
-      ? getLocationDataForLocation(artifact, requireStatement.location)
-      : getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+    const { statement, lineNumber, sourceName } = requireStatement.location
+      ? getLocationDataForLocation(
+        artifact,
+        requireStatement.location,
+        requireStatement.frameId,
+        requireStatement.frameBytecode,
+        requireStatement.sourceFile,
+      )
+      : getLocationDataForInstructionPointer(
+        artifact,
+        failingInstructionPointer,
+        requireStatement.frameId,
+        requireStatement.frameBytecode,
+      );
 
-    const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
+    const baseMessage = `${sourceName}:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
     const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
 
@@ -120,33 +138,38 @@ export class FailedRequireError extends FailedTransactionError {
 const getLocationDataForInstructionPointer = (
   artifact: Artifact,
   instructionPointer: number,
-): { lineNumber: number, statement: string } => {
-  const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
-
-  // We subtract the constructor inputs because these are present in the evaluation (and thus the instruction pointer)
-  // but they are not present in the source code (and thus the location data)
-  const modifiedInstructionPointer = instructionPointer - artifact.constructorInputs.length;
+  frameId?: string,
+  frameBytecode?: string,
+): { lineNumber: number; statement: string; sourceName: string } => {
+  const frame = getDebugFrame(artifact, frameId, frameBytecode);
+  const locationData = sourceMapToLocationData(frame.sourceMap);
+  const modifiedInstructionPointer = instructionPointer - (
+    frame.id === '__root__' ? artifact.constructorInputs.length : 0
+  );
 
   const { location } = locationData[modifiedInstructionPointer];
+  const source = frame.source;
+  const failingLines = source.split('\n').slice(location.start.line - 1, location.end.line);
 
-  const failingLines = artifact.source.split('\n').slice(location.start.line - 1, location.end.line);
-
-  // Slice off the start and end of the statement's start and end lines to only return the failing part
-  // Note that we first slice off the end, to avoid shifting the end column index
   failingLines[failingLines.length - 1] = failingLines[failingLines.length - 1].slice(0, location.end.column);
   failingLines[0] = failingLines[0].slice(location.start.column);
 
-  const statement = failingLines.join('\n');
-  const lineNumber = location.start.line;
-
-  return { statement, lineNumber };
+  return {
+    statement: failingLines.join('\n'),
+    lineNumber: location.start.line,
+    sourceName: getSourceName(frame.sourceFile, artifact),
+  };
 };
 
 const getLocationDataForLocation = (
   artifact: Artifact,
   location: NonNullable<RequireStatement['location']>,
-): { lineNumber: number, statement: string } => {
-  const failingLines = artifact.source.split('\n').slice(location.start.line - 1, location.end.line);
+  frameId?: string,
+  frameBytecode?: string,
+  sourceFile?: string,
+): { lineNumber: number; statement: string; sourceName: string } => {
+  const frame = getDebugFrame(artifact, frameId, frameBytecode, sourceFile);
+  const failingLines = frame.source.split('\n').slice(location.start.line - 1, location.end.line);
 
   failingLines[failingLines.length - 1] = failingLines[failingLines.length - 1].slice(0, location.end.column);
   failingLines[0] = failingLines[0].slice(location.start.column);
@@ -154,5 +177,51 @@ const getLocationDataForLocation = (
   return {
     lineNumber: location.start.line,
     statement: failingLines.join('\n'),
+    sourceName: getSourceName(sourceFile ?? frame.sourceFile, artifact),
   };
 };
+
+function getDebugFrame(
+  artifact: Artifact,
+  frameId?: string,
+  frameBytecode?: string,
+  sourceFile?: string,
+): DebugFrame {
+  const rootFrame: DebugFrame = {
+    id: '__root__',
+    bytecode: artifact.debug!.bytecode,
+    sourceMap: artifact.debug!.sourceMap,
+    source: artifact.source,
+  };
+
+  const frames = artifact.debug?.frames ?? [];
+
+  if (frameId) {
+    const matchingFrame = frames.find((frame) => frame.id === frameId);
+    if (matchingFrame) return matchingFrame;
+    if (frameId === '__root__') return rootFrame;
+  }
+
+  if (frameBytecode) {
+    const matchingFrame = frames.find((frame) => (
+      frame.bytecode === frameBytecode || frame.bytecode.endsWith(frameBytecode)
+    ));
+    if (matchingFrame) return matchingFrame;
+    if (rootFrame.bytecode === frameBytecode || rootFrame.bytecode.endsWith(frameBytecode)) return rootFrame;
+  }
+
+  if (sourceFile) {
+    const matchingFrame = frames.find((frame) => frame.sourceFile === sourceFile);
+    if (matchingFrame) return matchingFrame;
+  }
+
+  return rootFrame;
+}
+
+function getSourceName(sourceFile: string | undefined, artifact: Artifact): string {
+  return sourceFile ? basename(sourceFile) : `${artifact.contractName}.cash`;
+}
+
+function basename(sourceFile: string): string {
+  return sourceFile.split(/[/\\]/).at(-1) ?? sourceFile;
+}

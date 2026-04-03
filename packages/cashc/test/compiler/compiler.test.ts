@@ -177,7 +177,7 @@ contract Test() {
     it('should parse top-level libraries as non-spendable helper containers', () => {
       const ast = parseCode(`
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 }
@@ -191,7 +191,7 @@ library MathHelpers {
     it('should reject compiling a top-level library to an artifact', () => {
       expect(() => compileString(`
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 }
@@ -205,7 +205,17 @@ library BadHelpers {
     require(value % 2 == 0);
   }
 }
-`)).toThrow(Errors.LibraryPublicFunctionError);
+`)).toThrow(Errors.ParseError);
+    });
+
+    it('should require internal functions inside a library', () => {
+      expect(() => compileString(`
+library BadHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`)).toThrow(Errors.ParseError);
     });
 
     it('should compile contracts that import helper libraries', () => {
@@ -257,8 +267,8 @@ contract Other() {
       })).toThrow(Errors.InvalidLibraryImportError);
     });
 
-    it('should treat omitted library visibility as helper-only when importing libraries', () => {
-      const artifact = compileString(`
+    it('should reject imported libraries with omitted visibility', () => {
+      expect(() => compileString(`
 import "./math.cash" as Math;
 
 contract UsesLibrary() {
@@ -275,11 +285,7 @@ library MathHelpers {
   }
 }
 `,
-      });
-
-      expect(artifact.abi).toEqual([
-        { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
-      ]);
+      })).toThrow(Errors.InvalidLibraryImportError);
     });
 
     it('should reject imported libraries that reference non-library local functions', () => {
@@ -303,7 +309,52 @@ library MathHelpers {
       })).toThrow(Errors.InvalidLibraryImportError);
     });
 
-    it('should reject nested library imports in the current MVP', () => {
+    it('should support transitive library imports', () => {
+      const artifact = compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: (specifier) => {
+          if (specifier === './math.cash') {
+            return {
+              path: '/contracts/math.cash',
+              source: `
+import "./core.cash" as Core;
+
+library MathHelpers {
+  function isEven(int value) internal {
+    require(Core.isZero(value % 2));
+  }
+}
+`,
+            };
+          }
+
+          return {
+            path: '/contracts/core.cash',
+            source: `
+library CoreHelpers {
+  function isZero(int value) internal {
+    require(value == 0);
+  }
+}
+`,
+          };
+        },
+      });
+
+      expect(artifact.abi).toEqual([
+        { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
+      ]);
+    });
+
+    it('should reject circular transitive library imports', () => {
       expect(() => compileString(`
 import "./math.cash" as Math;
 
@@ -330,13 +381,18 @@ library MathHelpers {
             };
           }
 
-          return `
+          return {
+            path: '/contracts/core.cash',
+            source: `
+import "./math.cash" as Math;
+
 library CoreHelpers {
   function isZero(int value) internal {
-    require(value == 0);
+    require(Math.isEven(value));
   }
 }
-`;
+`,
+          };
         },
       })).toThrow(Errors.InvalidLibraryImportError);
     });
@@ -355,7 +411,7 @@ contract UsesLibraries() {
         sourcePath: '/contracts/main.cash',
         resolveImport: () => `
 library Helpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 }
@@ -376,7 +432,7 @@ contract UsesLibrary() {
         sourcePath: '/contracts/main.cash',
         resolveImport: () => `
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 }
@@ -397,7 +453,7 @@ contract UsesLibrary() {
         sourcePath: '/contracts/main.cash',
         resolveImport: () => `
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(Other.check(value));
   }
 }
@@ -420,11 +476,73 @@ contract UsesLibrary() {
         sourcePath: '/contracts/main.cash',
         resolveImport: () => `
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 }
 `,
+      });
+
+      expect(artifact.abi).toEqual([
+        { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
+      ]);
+    });
+
+    it('should canonicalise shared transitive libraries by resolved file identity', () => {
+      const artifact = compileString(`
+import "./math.cash" as Math;
+import "./bits.cash" as Bits;
+
+contract UsesLibraries() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+    require(Bits.isOdd(value + 1));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: (specifier) => {
+          if (specifier === './math.cash') {
+            return {
+              path: '/contracts/math.cash',
+              source: `
+import "./shared.cash" as Shared;
+
+library MathHelpers {
+  function isEven(int value) internal {
+    require(Shared.isParity(value, 0));
+  }
+}
+`,
+            };
+          }
+
+          if (specifier === './bits.cash') {
+            return {
+              path: '/contracts/bits.cash',
+              source: `
+import "./shared.cash" as Shared;
+
+library BitHelpers {
+  function isOdd(int value) internal {
+    require(Shared.isParity(value, 1));
+  }
+}
+`,
+            };
+          }
+
+          return {
+            path: '/contracts/shared.cash',
+            source: `
+library SharedHelpers {
+  function isParity(int value, int parity) internal {
+    require(value % 2 == parity);
+  }
+}
+`,
+          };
+        },
       });
 
       expect(artifact.abi).toEqual([

@@ -21,24 +21,49 @@ const stripFrameBytecodeFromLogData = (entry: LogData): LogData => {
   return stackItem;
 };
 
-const stripExtendedDebugMetadata = (artifact: Artifact): Artifact => ({
-  ...artifact,
-  ...(artifact.debug ? {
-    debug: {
-      ...artifact.debug,
-      logs: artifact.debug.logs.map((log): LogEntry => ({
-        ip: log.ip,
-        line: log.line,
-        data: log.data.map(stripFrameBytecodeFromLogData),
-      })),
-      requires: artifact.debug.requires.map((requireStatement): RequireStatement => ({
-        ip: requireStatement.ip,
-        line: requireStatement.line,
-        ...(requireStatement.message ? { message: requireStatement.message } : {}),
-      })),
-    },
-  } : {}),
-});
+const stripFrameMetadataFromArtifact = (artifact: Artifact): Artifact => {
+  if (!artifact.debug) {
+    return artifact;
+  }
+
+  const debugWithoutFrames = Object.fromEntries(
+    Object.entries(artifact.debug).filter(([key]) => key !== 'frames'),
+  ) as typeof artifact.debug;
+  const strippedDebug = {
+    ...debugWithoutFrames,
+    logs: artifact.debug.logs.map((log): LogEntry => ({
+      ip: log.ip,
+      line: log.line,
+      data: log.data.map(stripFrameBytecodeFromLogData),
+    })),
+    requires: artifact.debug.requires.map((requireStatement): RequireStatement => ({
+      ip: requireStatement.ip,
+      line: requireStatement.line,
+      ...(requireStatement.message ? { message: requireStatement.message } : {}),
+    })),
+  };
+
+  return {
+    ...artifact,
+    debug: strippedDebug,
+  };
+};
+
+const stripExtendedDebugMetadata = (artifact: Artifact): Artifact => {
+  const strippedArtifact = stripFrameMetadataFromArtifact(artifact);
+  return {
+    ...strippedArtifact,
+    ...(strippedArtifact.debug ? {
+      debug: {
+        ...strippedArtifact.debug,
+        bytecode: strippedArtifact.debug.bytecode,
+        sourceMap: strippedArtifact.debug.sourceMap,
+        logs: strippedArtifact.debug.logs,
+        requires: strippedArtifact.debug.requires,
+      },
+    } : {}),
+  };
+};
 
 describe('Code generation & target code optimisation', () => {
   fixtures.forEach((fixture) => {
@@ -326,6 +351,89 @@ library MathHelpers {
     expect(artifact.compiler.target).toBe('BCH_2026_05');
   });
 
+  it('should lower transitive imported library helpers without duplicating shared leaves', () => {
+    const artifact = compileString(`
+import "./math.cash" as Math;
+import "./bits.cash" as Bits;
+
+contract UsesLibraries() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+    require(Bits.isOdd(value + 1));
+  }
+}
+`, {
+      sourcePath: '/contracts/main.cash',
+      resolveImport: (specifier) => {
+        if (specifier === './math.cash') {
+          return {
+            path: '/contracts/math.cash',
+            source: `
+import "./shared.cash" as Shared;
+
+library MathHelpers {
+  function isEven(int value) internal {
+    require(Shared.isParity(value, 0));
+  }
+}
+`,
+          };
+        }
+
+        if (specifier === './bits.cash') {
+          return {
+            path: '/contracts/bits.cash',
+            source: `
+import "./shared.cash" as Shared;
+
+library BitHelpers {
+  function isOdd(int value) internal {
+    require(Shared.isParity(value, 1));
+  }
+}
+`,
+          };
+        }
+
+        return {
+          path: '/contracts/shared.cash',
+          source: `
+library SharedHelpers {
+  function isParity(int value, int parity) internal {
+    require(value % 2 == parity);
+  }
+}
+`,
+        };
+      },
+    });
+
+    expect(artifact.bytecode.match(/OP_DEFINE/g)).toHaveLength(3);
+    expect(artifact.bytecode.match(/OP_INVOKE/g)).toHaveLength(2);
+  });
+
+  it('should reject contracts whose helper frames would have ambiguous identical bytecode', () => {
+    expect(() => compileString(`
+contract AmbiguousHelpers() {
+  function spendA() public {
+    require(checkA());
+  }
+
+  function spendB() public {
+    require(checkB());
+  }
+
+  function checkA() internal {
+    require(true);
+  }
+
+  function checkB() internal {
+    require(true);
+  }
+}
+`)).toThrow(/identical helper bytecode/);
+  });
+
   it('should support multiple imported libraries with overlapping helper names', () => {
     const artifact = compileString(`
 import "./math.cash" as Math;
@@ -343,7 +451,7 @@ contract UsesLibraries() {
         if (specifier === './math.cash') {
           return `
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 }
@@ -352,7 +460,7 @@ library MathHelpers {
 
         return `
 library BitHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require((value % 4) == 0 || (value % 4) == 2);
   }
 }
@@ -381,15 +489,15 @@ contract UsesLibrary() {
       sourcePath: '/contracts/main.cash',
       resolveImport: () => `
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(checkParity(value));
   }
 
-  function checkParity(int value) {
+  function checkParity(int value) internal {
     require(value % 2 == 0);
   }
 
-  function unused(int value) {
+  function unused(int value) internal {
     require(value == 123);
   }
 }

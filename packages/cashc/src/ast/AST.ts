@@ -37,6 +37,8 @@ export class SourceFileNode extends Node {
 
 export class ContractNode extends Node implements Named {
   symbolTable?: SymbolTable;
+  sourceCode?: string;
+  sourceFile?: string;
 
   constructor(
     public name: string,
@@ -56,6 +58,8 @@ export class FunctionDefinitionNode extends Node implements Named {
   symbolTable?: SymbolTable;
   opRolls: Map<string, IdentifierNode> = new Map();
   calledFunctions: Set<string> = new Set();
+  sourceCode?: string;
+  sourceFile?: string;
 
   constructor(
     public name: string,

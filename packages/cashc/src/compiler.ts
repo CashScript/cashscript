@@ -1,11 +1,12 @@
-import { CharStream, CommonTokenStream } from 'antlr4';
+import { CharStream, CommonTokenStream, Token } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
 import { Artifact, CompilerOptions, computeBytecodeFingerprintWithConstructorArgs, generateSourceMap, generateSourceTags, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { fileURLToPath } from 'url';
 import { generateArtifact } from './artifact/Artifact.js';
-import { Ast } from './ast/AST.js';
+import { Ast, ContractNode, FunctionDefinitionNode, Node } from './ast/AST.js';
 import AstBuilder from './ast/AstBuilder.js';
+import AstTraversal from './ast/AstTraversal.js';
 import ThrowingErrorListener from './ast/ThrowingErrorListener.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import CashScriptLexer from './grammar/CashScriptLexer.js';
@@ -18,7 +19,8 @@ import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversa
 import EnsureContainerSemanticsTraversal from './semantic/EnsureContainerSemanticsTraversal.js';
 import { FunctionVisibility } from './ast/Globals.js';
 import { ParseError } from './Errors.js';
-import { ImportResolver, preprocessImports } from './imports.js';
+import { Point } from './ast/Location.js';
+import { ImportResolver, ImportedFunctionProvenance, preprocessImports } from './imports.js';
 
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
@@ -43,11 +45,15 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   const { sourcePath, resolveImport, ...serialisableCompilerOptions } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...serialisableCompilerOptions };
   const importedCode = preprocessImports(code, { sourcePath, resolveImport });
-  const preprocessed = preprocessFunctionVisibility(importedCode.code);
+  const preprocessed = preprocessFunctionVisibility(importedCode.code, mergedCompilerOptions);
   emitVisibilityWarnings(preprocessed.omittedPublicFunctions);
 
   // Lexing + parsing
   let ast = parseCodeFromPreprocessed(preprocessed);
+  ast = applySourceProvenance(ast, importedCode.functionProvenance, {
+    source: code,
+    ...(sourcePath ? { sourceFile: normaliseSourcePath(sourcePath) } : {}),
+  });
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
@@ -62,6 +68,7 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   // Code generation
   const traversal = new GenerateTargetTraversal(mergedCompilerOptions);
   ast = ast.accept(traversal) as Ast;
+  assertDistinctHelperFrameBytecode(traversal);
 
   const constructorParamLength = ast.contract.parameters.length;
 
@@ -91,16 +98,34 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
     logs: optimisationResult.logs.map((log) => ({
       ...log,
       frameBytecode: log.frameBytecode ?? rootFrameBytecode,
+      frameId: log.frameId ?? '__root__',
+      sourceFile: log.sourceFile ?? ast.contract.sourceFile,
       data: log.data.map((entry) => (
         typeof entry === 'string'
           ? entry
-          : { ...entry, frameBytecode: entry.frameBytecode ?? log.frameBytecode ?? rootFrameBytecode }
+          : {
+            ...entry,
+            frameBytecode: entry.frameBytecode ?? log.frameBytecode ?? rootFrameBytecode,
+            frameId: entry.frameId ?? log.frameId ?? '__root__',
+          }
       )),
     })),
     requires: optimisationResult.requires.map((require) => ({
       ...require,
       frameBytecode: require.frameBytecode ?? rootFrameBytecode,
+      frameId: require.frameId ?? '__root__',
+      sourceFile: require.sourceFile ?? ast.contract.sourceFile,
     })),
+    frames: [
+      {
+        id: '__root__',
+        bytecode: rootFrameBytecode,
+        sourceMap: generateSourceMap(optimisationResult.locationData),
+        source: ast.contract.sourceCode ?? code,
+        ...(ast.contract.sourceFile ? { sourceFile: ast.contract.sourceFile } : {}),
+      },
+      ...traversal.frames,
+    ],
     ...(sourceTags ? { sourceTags } : {}),
   };
 
@@ -125,7 +150,10 @@ export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions 
 export function parseCode(code: string, compilerOptions: Pick<CompileOptions, 'sourcePath' | 'resolveImport'> = {}): Ast {
   const importedCode = preprocessImports(code, compilerOptions);
   const preprocessed = preprocessFunctionVisibility(importedCode.code);
-  return parseCodeFromPreprocessed(preprocessed);
+  return applySourceProvenance(parseCodeFromPreprocessed(preprocessed), importedCode.functionProvenance, {
+    source: code,
+    ...(compilerOptions.sourcePath ? { sourceFile: normaliseSourcePath(compilerOptions.sourcePath) } : {}),
+  });
 }
 
 function parseCodeFromPreprocessed(preprocessed: PreprocessedVisibilityResult): Ast {
@@ -148,7 +176,7 @@ function parseCodeFromPreprocessed(preprocessed: PreprocessedVisibilityResult): 
   return ast;
 }
 
-function preprocessFunctionVisibility(code: string): PreprocessedVisibilityResult {
+function preprocessFunctionVisibility(code: string, compilerOptions: CompilerOptions = {}): PreprocessedVisibilityResult {
   const containerKind = getTopLevelContainerKind(code);
   const inputStream = new CharStream(code);
   const lexer = new CashScriptLexer(inputStream);
@@ -177,6 +205,13 @@ function preprocessFunctionVisibility(code: string): PreprocessedVisibilityResul
 
     const visibilityToken = visibleTokens[cursor];
     if (visibilityToken?.text === FunctionVisibility.INTERNAL || visibilityToken?.text === FunctionVisibility.PUBLIC) {
+      if (containerKind === 'library' && visibilityToken.text === FunctionVisibility.PUBLIC) {
+        throw new ParseError(
+          `Library function '${functionNameToken.text}' must declare internal visibility`,
+          new Point(visibilityToken.line, visibilityToken.column),
+        );
+      }
+
       functionVisibilities.push(visibilityToken.text as FunctionVisibility);
       for (let index = visibilityToken.start; index <= visibilityToken.stop; index += 1) {
         mutableCode[index] = ' ';
@@ -184,7 +219,21 @@ function preprocessFunctionVisibility(code: string): PreprocessedVisibilityResul
       continue;
     }
 
-    const defaultVisibility = containerKind === 'library' ? FunctionVisibility.INTERNAL : FunctionVisibility.PUBLIC;
+    if (containerKind === 'library') {
+      throw new ParseError(
+        `Library function '${functionNameToken.text}' must declare internal visibility`,
+        new Point(functionNameToken.line, functionNameToken.column),
+      );
+    }
+
+    if (compilerOptions.requireExplicitFunctionVisibility) {
+      throw new ParseError(
+        `Function '${functionNameToken.text}' must declare explicit visibility (public or internal)`,
+        new Point(functionNameToken.line, functionNameToken.column),
+      );
+    }
+
+    const defaultVisibility = FunctionVisibility.PUBLIC;
     functionVisibilities.push(defaultVisibility);
     if (defaultVisibility === FunctionVisibility.PUBLIC) {
       omittedPublicFunctions.push({
@@ -234,7 +283,84 @@ function emitVisibilityWarnings(omittedPublicFunctions: Array<{ name: string; li
   );
 }
 
-function getVisibleTokens(code: string) {
+class SourceProvenanceTraversal extends AstTraversal {
+  private currentSource = this.rootSource;
+  private currentLineDelta = 0;
+  private currentColumnDelta = 0;
+
+  constructor(
+    private functionProvenance: Map<string, ImportedFunctionProvenance>,
+    private rootSource: { source: string; sourceFile?: string },
+  ) {
+    super();
+  }
+
+  visit(node: Node): Node {
+    if (node.location) {
+      node.location.start.line += this.currentLineDelta;
+      node.location.end.line += this.currentLineDelta;
+      node.location.start.column += this.currentColumnDelta;
+      node.location.end.column += this.currentColumnDelta;
+      node.location.sourceFile = this.currentSource.sourceFile;
+    }
+
+    return super.visit(node);
+  }
+
+  visitContract(node: ContractNode): Node {
+    node.sourceCode = this.rootSource.source;
+    node.sourceFile = this.rootSource.sourceFile;
+    return super.visitContract(node);
+  }
+
+  visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    const previousSource = this.currentSource;
+    const previousLineDelta = this.currentLineDelta;
+    const previousColumnDelta = this.currentColumnDelta;
+    const provenance = this.functionProvenance.get(node.name);
+
+    this.currentSource = provenance
+      ? { source: provenance.source, sourceFile: provenance.sourceFile }
+      : this.rootSource;
+    this.currentLineDelta = provenance ? provenance.originalStartLine - node.location.start.line : 0;
+    this.currentColumnDelta = provenance ? provenance.originalStartColumn - provenance.generatedStartColumn : 0;
+    node.sourceCode = this.currentSource.source;
+    node.sourceFile = this.currentSource.sourceFile;
+
+    const result = super.visitFunctionDefinition(node);
+
+    this.currentSource = previousSource;
+    this.currentLineDelta = previousLineDelta;
+    this.currentColumnDelta = previousColumnDelta;
+    return result;
+  }
+}
+
+function applySourceProvenance(
+  ast: Ast,
+  functionProvenance: ImportedFunctionProvenance[],
+  rootSource: { source: string; sourceFile?: string },
+): Ast {
+  const provenanceMap = new Map(functionProvenance.map((entry) => [entry.mangledName, entry]));
+  return ast.accept(new SourceProvenanceTraversal(provenanceMap, rootSource)) as Ast;
+}
+
+function assertDistinctHelperFrameBytecode(traversal: GenerateTargetTraversal): void {
+  const frameIdsByBytecode = new Map<string, string>();
+
+  traversal.frames.forEach((frame) => {
+    const previousFrameId = frameIdsByBytecode.get(frame.bytecode);
+    if (previousFrameId && previousFrameId !== frame.id) {
+      throw new Error(
+        `Cannot compile helper functions '${previousFrameId}' and '${frame.id}' because they produce identical helper bytecode, which would make runtime debugging ambiguous.`,
+      );
+    }
+
+    frameIdsByBytecode.set(frame.bytecode, frame.id);
+  });
+}
+
+function getVisibleTokens(code: string): Token[] {
   const inputStream = new CharStream(code);
   const lexer = new CashScriptLexer(inputStream);
   const tokenStream = new CommonTokenStream(lexer);
