@@ -99,6 +99,7 @@ export default class AstBuilder
   constructor(
     private tree: ParseTree,
     private functionVisibilities: FunctionVisibility[] = [],
+    private containerKind: 'contract' | 'library' = 'contract',
   ) {
     super();
   }
@@ -142,7 +143,7 @@ export default class AstBuilder
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
     const functions = ctx.functionDefinition_list().map((f) => this.visit(f) as FunctionDefinitionNode);
-    const contract = new ContractNode(name, parameters, functions);
+    const contract = new ContractNode(name, parameters, functions, this.containerKind);
     contract.location = Location.fromCtx(ctx);
     return contract;
   }

@@ -59,6 +59,27 @@ export class ParseError extends Error {
   }
 }
 
+export class ImportResolutionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
+export class InvalidImportDirectiveError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
+export class InvalidLibraryImportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
 export class UndefinedReferenceError extends CashScriptError {
   constructor(
     public node: IdentifierNode,
@@ -107,6 +128,30 @@ export class EmptyContractError extends CashScriptError {
     public node: ContractNode,
   ) {
     super(node, `Contract ${node.name} contains no functions`);
+  }
+}
+
+export class LibraryParameterError extends CashScriptError {
+  constructor(
+    public node: ContractNode,
+  ) {
+    super(node, `Library ${node.name} cannot declare constructor parameters`);
+  }
+}
+
+export class LibraryPublicFunctionError extends CashScriptError {
+  constructor(
+    public node: FunctionDefinitionNode,
+  ) {
+    super(node, `Library functions cannot be public: ${node.name}`);
+  }
+}
+
+export class NonSpendableCompilationError extends CashScriptError {
+  constructor(
+    public node: ContractNode,
+  ) {
+    super(node, `Library ${node.name} cannot be compiled as a spendable artifact; import it into a contract instead`);
   }
 }
 

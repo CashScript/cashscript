@@ -2,6 +2,7 @@ import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
 import { Artifact, CompilerOptions, computeBytecodeFingerprintWithConstructorArgs, generateSourceMap, generateSourceTags, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
+import { fileURLToPath } from 'url';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
 import AstBuilder from './ast/AstBuilder.js';
@@ -14,29 +15,40 @@ import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 import EnsureInvokedFunctionsSafeTraversal from './semantic/EnsureInvokedFunctionsSafeTraversal.js';
 import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
+import EnsureContainerSemanticsTraversal from './semantic/EnsureContainerSemanticsTraversal.js';
 import { FunctionVisibility } from './ast/Globals.js';
+import { ParseError } from './Errors.js';
+import { ImportResolver, preprocessImports } from './imports.js';
 
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
   enforceLocktimeGuard: true,
 };
 
-/**
- * Compile a CashScript source string to an {@link Artifact}.
- *
- * @param code - The CashScript source code to compile.
- * @param compilerOptions - Optional compiler options that override the defaults.
- * @returns The compiled CashScript artifact, including ABI, bytecode and debug information.
- * @throws If the source code contains a syntax, semantic, or type error.
- */
+export interface CompileOptions extends CompilerOptions {
+  sourcePath?: string;
+  resolveImport?: ImportResolver;
+}
+
+type ContainerKind = 'contract' | 'library';
+
+type PreprocessedContainerResult = {
+  code: string;
+  containerKind: ContainerKind;
+};
+
 type PreprocessedVisibilityResult = {
   code: string;
+  containerKind: ContainerKind;
   functionVisibilities: FunctionVisibility[];
   omittedPublicFunctions: Array<{ name: string; line: number; column: number }>;
 };
-export function compileString(code: string, compilerOptions: CompilerOptions = {}): Artifact {
-  const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions };
-  const preprocessed = preprocessFunctionVisibility(code);
+
+export function compileString(code: string, compilerOptions: CompileOptions = {}): Artifact {
+  const { sourcePath, resolveImport, ...serialisableCompilerOptions } = compilerOptions;
+  const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...serialisableCompilerOptions };
+  const importedCode = preprocessImports(code, { sourcePath, resolveImport });
+  const preprocessed = preprocessFunctionVisibility(preprocessTopLevelContainer(importedCode.code));
   emitVisibilityWarnings(preprocessed.omittedPublicFunctions);
 
   // Lexing + parsing
@@ -45,6 +57,7 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
+  ast = ast.accept(new EnsureContainerSemanticsTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
   ast = ast.accept(new EnsureInvokedFunctionsSafeTraversal()) as Ast;
   if (mergedCompilerOptions.enforceLocktimeGuard) {
@@ -98,7 +111,7 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
 
   const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);
 
-  return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions, fingerprint);
+  return generateArtifact(ast, optimisationResult.script, importedCode.code, debug, mergedCompilerOptions, fingerprint);
 }
 
 /**
@@ -109,13 +122,14 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
  * @returns The compiled CashScript artifact.
  * @throws If the file cannot be read, or if the source contains a compilation error.
  */
-export function compileFile(codeFile: PathLike, compilerOptions: CompilerOptions = {}): Artifact {
+export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions = {}): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
-  return compileString(code, compilerOptions);
+  return compileString(code, { ...compilerOptions, sourcePath: normaliseSourcePath(codeFile) });
 }
 
-export function parseCode(code: string): Ast {
-  const preprocessed = preprocessFunctionVisibility(code);
+export function parseCode(code: string, compilerOptions: Pick<CompileOptions, 'sourcePath' | 'resolveImport'> = {}): Ast {
+  const importedCode = preprocessImports(code, compilerOptions);
+  const preprocessed = preprocessFunctionVisibility(preprocessTopLevelContainer(importedCode.code));
   return parseCodeFromPreprocessed(preprocessed);
 }
 
@@ -134,12 +148,46 @@ function parseCodeFromPreprocessed(preprocessed: PreprocessedVisibilityResult): 
   const parseTree = parser.sourceFile();
 
   // AST building
-  const ast = new AstBuilder(parseTree, preprocessed.functionVisibilities).build() as Ast;
+  const ast = new AstBuilder(parseTree, preprocessed.functionVisibilities, preprocessed.containerKind).build() as Ast;
 
   return ast;
 }
 
-function preprocessFunctionVisibility(code: string): PreprocessedVisibilityResult {
+function preprocessTopLevelContainer(code: string): PreprocessedContainerResult {
+  const tokens = getVisibleTokens(code);
+  let cursor = 0;
+
+  while (cursor < tokens.length && tokens[cursor].text === 'pragma') {
+    cursor = advanceToSemicolon(tokens, cursor + 1);
+  }
+
+  const rootToken = tokens[cursor];
+  if (!rootToken) {
+    throw new ParseError('Expected a root contract or library definition');
+  }
+
+  if (rootToken.text === 'contract') {
+    return { code, containerKind: 'contract' };
+  }
+
+  if (rootToken.text !== 'library') {
+    throw new ParseError(`Expected a root contract or library definition, found '${rootToken.text}'`);
+  }
+
+  const nameToken = tokens[cursor + 1];
+  const nextToken = tokens[cursor + 2];
+  if (!nameToken?.text || nextToken?.text !== '{') {
+    throw new ParseError('Library definitions must use the form library Name { ... }');
+  }
+
+  return {
+    code: `${code.slice(0, rootToken.start)}contract${code.slice(rootToken.stop + 1, nextToken.start)}()${code.slice(nextToken.start)}`,
+    containerKind: 'library',
+  };
+}
+
+function preprocessFunctionVisibility(preprocessedContainer: PreprocessedContainerResult): PreprocessedVisibilityResult {
+  const { code, containerKind } = preprocessedContainer;
   const inputStream = new CharStream(code);
   const lexer = new CashScriptLexer(inputStream);
   const tokenStream = new CommonTokenStream(lexer);
@@ -174,15 +222,18 @@ function preprocessFunctionVisibility(code: string): PreprocessedVisibilityResul
       continue;
     }
 
-    functionVisibilities.push(FunctionVisibility.PUBLIC);
-    omittedPublicFunctions.push({
-      name: functionNameToken.text!,
-      line: functionNameToken.line,
-      column: functionNameToken.column,
-    });
+    const defaultVisibility = containerKind === 'library' ? FunctionVisibility.INTERNAL : FunctionVisibility.PUBLIC;
+    functionVisibilities.push(defaultVisibility);
+    if (defaultVisibility === FunctionVisibility.PUBLIC) {
+      omittedPublicFunctions.push({
+        name: functionNameToken.text!,
+        line: functionNameToken.line,
+        column: functionNameToken.column,
+      });
+    }
   }
 
-  return { code: mutableCode.join(''), functionVisibilities, omittedPublicFunctions };
+  return { code: mutableCode.join(''), containerKind, functionVisibilities, omittedPublicFunctions };
 }
 
 function emitVisibilityWarnings(omittedPublicFunctions: Array<{ name: string; line: number; column: number }>): void {
@@ -195,4 +246,38 @@ function emitVisibilityWarnings(omittedPublicFunctions: Array<{ name: string; li
   console.warn(
     `Warning: ${omittedPublicFunctions.length} function(s) omit visibility and default to public: ${summary}.`,
   );
+}
+
+function getVisibleTokens(code: string) {
+  const inputStream = new CharStream(code);
+  const lexer = new CashScriptLexer(inputStream);
+  const tokenStream = new CommonTokenStream(lexer);
+  tokenStream.fill();
+
+  return tokenStream.tokens.filter((token) => token.channel === 0 && token.type !== -1);
+}
+
+function advanceToSemicolon(tokens: ReturnType<typeof getVisibleTokens>, cursor: number): number {
+  while (cursor < tokens.length && tokens[cursor].text !== ';') {
+    cursor += 1;
+  }
+
+  if (tokens[cursor]?.text !== ';') {
+    throw new ParseError('Expected semicolon while parsing pragmas');
+  }
+
+  return cursor + 1;
+}
+
+function normaliseSourcePath(codeFile: PathLike): string {
+  if (codeFile instanceof URL) {
+    return fileURLToPath(codeFile);
+  }
+
+  const sourcePath = String(codeFile);
+  if (sourcePath.startsWith('file://')) {
+    return fileURLToPath(sourcePath);
+  }
+
+  return sourcePath;
 }

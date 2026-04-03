@@ -20,7 +20,7 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
 
-    if (getPublicFunctions(node.functions).length === 0) {
+    if (node.kind !== 'library' && getPublicFunctions(node.functions).length === 0) {
       throw new EmptyContractError(node);
     }
 

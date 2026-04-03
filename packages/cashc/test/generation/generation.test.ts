@@ -271,4 +271,32 @@ contract DebugMetadata() {
       end: { line: 9, column: 48 },
     });
   });
+
+  it('should lower imported library helpers to BCH function opcodes without exposing them in the ABI', () => {
+    const artifact = compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+      sourcePath: '/contracts/main.cash',
+      resolveImport: () => `
+library MathHelpers {
+  function isEven(int value) internal {
+    require(value % 2 == 0);
+  }
+}
+`,
+    });
+
+    expect(artifact.abi).toEqual([
+      { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
+    ]);
+    expect(artifact.bytecode).toContain('OP_DEFINE');
+    expect(artifact.bytecode).toContain('OP_INVOKE');
+    expect(artifact.compiler.target).toBe('BCH_2026_05');
+  });
 });
