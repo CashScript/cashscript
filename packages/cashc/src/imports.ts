@@ -362,6 +362,18 @@ function validateLibraryCalls(tokens: Token[], localFunctions: Set<string>, libr
     const nextToken = tokens[index + 1];
     const previousToken = tokens[index - 1];
 
+    if (
+      token.text?.match(IDENTIFIER_PATTERN)
+      && nextToken?.text === '.'
+      && tokens[index + 2]?.text?.match(IDENTIFIER_PATTERN)
+      && tokens[index + 3]?.text === '('
+      && previousToken?.text !== '.'
+    ) {
+      throw new InvalidLibraryImportError(
+        `Library '${libraryName}' references external helper '${token.text}.${tokens[index + 2]!.text}'. Imported libraries may only call their own functions or built-ins.`,
+      );
+    }
+
     if (!token.text?.match(IDENTIFIER_PATTERN) || nextToken?.text !== '(') continue;
     if (previousToken?.text === 'function' || previousToken?.text === 'new' || previousToken?.text === '.') continue;
 

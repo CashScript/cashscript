@@ -72,5 +72,26 @@ contract Test() {
       expect(initialOutput).toContain('function validate(int value) internal');
       expect(rerunOutput).toEqual(initialOutput);
     });
+
+    it('should preserve library containers in AST source output', () => {
+      const input = `
+library MathHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+
+  function checkParity(int value) internal {
+    require(isEven(value));
+  }
+}`;
+
+      const { sourceOutput: initialOutput } = setup(input);
+      const { sourceOutput: rerunOutput } = setup(initialOutput);
+
+      expect(initialOutput).toContain('library MathHelpers {');
+      expect(initialOutput).toContain('function isEven(int value) internal');
+      expect(initialOutput).toContain('function checkParity(int value) internal');
+      expect(rerunOutput).toEqual(initialOutput);
+    });
   });
 });
