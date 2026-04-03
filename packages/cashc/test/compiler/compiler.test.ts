@@ -172,4 +172,169 @@ contract Test() {
       warnSpy.mockRestore();
     });
   });
+
+  describe('Libraries', () => {
+    it('should parse top-level libraries as non-spendable helper containers', () => {
+      const ast = parseCode(`
+library MathHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`);
+
+      expect(ast.contract.kind).toBe('library');
+      expect(ast.contract.parameters).toEqual([]);
+      expect(ast.contract.functions[0]?.visibility).toBe(FunctionVisibility.INTERNAL);
+    });
+
+    it('should reject compiling a top-level library to an artifact', () => {
+      expect(() => compileString(`
+library MathHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`)).toThrow(Errors.NonSpendableCompilationError);
+    });
+
+    it('should reject public functions inside a library', () => {
+      expect(() => compileString(`
+library BadHelpers {
+  function isEven(int value) public {
+    require(value % 2 == 0);
+  }
+}
+`)).toThrow(Errors.LibraryPublicFunctionError);
+    });
+
+    it('should compile contracts that import helper libraries', () => {
+      const artifact = compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: (specifier) => {
+          expect(specifier).toBe('./math.cash');
+          return `
+library MathHelpers {
+  function isEven(int value) internal {
+    require(value % 2 == 0);
+  }
+}
+`;
+        },
+      });
+
+      expect(artifact.abi).toEqual([
+        { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
+      ]);
+    });
+
+    it('should reject importing a spendable contract as a helper library', () => {
+      expect(() => compileString(`
+import "./other.cash" as Other;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Other.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: () => `
+contract Other() {
+  function isEven(int value) public {
+    require(value % 2 == 0);
+  }
+}
+`,
+      })).toThrow(Errors.InvalidLibraryImportError);
+    });
+
+    it('should reject imported library functions that omit explicit internal visibility', () => {
+      expect(() => compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: () => `
+library MathHelpers {
+  function isEven(int value) {
+    require(value % 2 == 0);
+  }
+}
+`,
+      })).toThrow(Errors.InvalidLibraryImportError);
+    });
+
+    it('should reject imported libraries that reference non-library local functions', () => {
+      expect(() => compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: () => `
+library MathHelpers {
+  function isEven(int value) internal {
+    require(check(value));
+  }
+}
+`,
+      })).toThrow(Errors.InvalidLibraryImportError);
+    });
+
+    it('should reject nested library imports in the current MVP', () => {
+      expect(() => compileString(`
+import "./math.cash" as Math;
+
+contract UsesLibrary() {
+  function spend(int value) public {
+    require(Math.isEven(value));
+  }
+}
+`, {
+        sourcePath: '/contracts/main.cash',
+        resolveImport: (specifier) => {
+          if (specifier === './math.cash') {
+            return {
+              path: '/contracts/math.cash',
+              source: `
+import "./core.cash" as Core;
+
+library MathHelpers {
+  function isEven(int value) internal {
+    require(Core.isZero(value % 2));
+  }
+}
+`,
+            };
+          }
+
+          return `
+library CoreHelpers {
+  function isZero(int value) internal {
+    require(value == 0);
+  }
+}
+`;
+        },
+      })).toThrow(Errors.InvalidLibraryImportError);
+    });
+  });
 });

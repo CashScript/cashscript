@@ -21,6 +21,8 @@ export interface Typed {
   type: Type;
 }
 
+export type ContainerKind = 'contract' | 'library';
+
 export class SourceFileNode extends Node {
   constructor(
     public contract: ContractNode,
@@ -40,6 +42,7 @@ export class ContractNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public functions: FunctionDefinitionNode[],
+    public kind: ContainerKind = 'contract',
   ) {
     super();
   }
