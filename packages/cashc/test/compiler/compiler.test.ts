@@ -257,8 +257,8 @@ contract Other() {
       })).toThrow(Errors.InvalidLibraryImportError);
     });
 
-    it('should reject imported library functions that omit explicit internal visibility', () => {
-      expect(() => compileString(`
+    it('should treat omitted library visibility as helper-only when importing libraries', () => {
+      const artifact = compileString(`
 import "./math.cash" as Math;
 
 contract UsesLibrary() {
@@ -275,7 +275,11 @@ library MathHelpers {
   }
 }
 `,
-      })).toThrow(Errors.InvalidLibraryImportError);
+      });
+
+      expect(artifact.abi).toEqual([
+        { name: 'spend', inputs: [{ name: 'value', type: 'int' }] },
+      ]);
     });
 
     it('should reject imported libraries that reference non-library local functions', () => {

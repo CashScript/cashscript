@@ -1,7 +1,12 @@
 grammar CashScript;
 
 sourceFile
-    : pragmaDirective* contractDefinition EOF
+    : pragmaDirective* topLevelDefinition EOF
+    ;
+
+topLevelDefinition
+    : contractDefinition
+    | libraryDefinition
     ;
 
 pragmaDirective
@@ -26,6 +31,10 @@ versionOperator
 
 contractDefinition
     : 'contract' Identifier parameterList '{' functionDefinition* '}'
+    ;
+
+libraryDefinition
+    : 'library' Identifier '{' functionDefinition* '}'
     ;
 
 functionDefinition

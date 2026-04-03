@@ -267,17 +267,17 @@ function transformLibrary(
   usedMangledNames: Set<string>,
 ): LibraryTransformResult {
   const tokens = getVisibleTokens(library.body);
-  const functionNames = collectFunctionDefinitions(tokens);
+  const functionDefinitions = collectFunctionDefinitions(tokens);
 
-  if (functionNames.length === 0) {
+  if (functionDefinitions.length === 0) {
     throw new InvalidLibraryImportError(`Library '${library.name}' does not define any functions.`);
   }
 
-  const localFunctions = new Set(functionNames.map((definition) => definition.name));
+  const localFunctions = new Set(functionDefinitions.map((definition) => definition.name));
   const mangledNames = new Map<string, string>();
   const replacements: Replacement[] = [];
 
-  functionNames.forEach(({ name, token }) => {
+  functionDefinitions.forEach(({ name, nameToken, openBraceToken, visibility }) => {
     const mangledName = `${alias}_${name}`;
     if (usedMangledNames.has(mangledName)) {
       throw new InvalidLibraryImportError(
@@ -287,7 +287,11 @@ function transformLibrary(
 
     usedMangledNames.add(mangledName);
     mangledNames.set(name, mangledName);
-    replacements.push({ start: token.start, stop: token.stop, text: mangledName });
+    replacements.push({ start: nameToken.start, stop: nameToken.stop, text: mangledName });
+
+    if (visibility === 'omitted') {
+      replacements.push({ start: openBraceToken.start, stop: openBraceToken.stop, text: ' internal {' });
+    }
   });
 
   validateLibraryCalls(tokens, localFunctions, library.name);
@@ -295,12 +299,22 @@ function transformLibrary(
 
   return {
     body: applyReplacements(library.body, replacements).trim(),
-    functions: new Set(functionNames.map((definition) => definition.name)),
+    functions: new Set(functionDefinitions.map((definition) => definition.name)),
   };
 }
 
-function collectFunctionDefinitions(tokens: Token[]): Array<{ name: string; token: Token }> {
-  const definitions: Array<{ name: string; token: Token }> = [];
+function collectFunctionDefinitions(tokens: Token[]): Array<{
+  name: string;
+  nameToken: Token;
+  openBraceToken: Token;
+  visibility: FunctionVisibility.INTERNAL | 'omitted';
+}> {
+  const definitions: Array<{
+    name: string;
+    nameToken: Token;
+    openBraceToken: Token;
+    visibility: FunctionVisibility.INTERNAL | 'omitted';
+  }> = [];
 
   for (let index = 0; index < tokens.length; index += 1) {
     if (tokens[index].text !== 'function') continue;
@@ -320,13 +334,23 @@ function collectFunctionDefinitions(tokens: Token[]): Array<{ name: string; toke
     }
 
     const visibilityToken = tokens[cursor];
-    if (visibilityToken?.text !== FunctionVisibility.INTERNAL) {
+    if (visibilityToken?.text === FunctionVisibility.PUBLIC) {
       throw new InvalidLibraryImportError(
-        `Imported library functions must be declared explicit internal. Offending function: '${nameToken.text}'.`,
+        `Imported library functions cannot be public. Offending function: '${nameToken.text}'.`,
       );
     }
 
-    definitions.push({ name: nameToken.text, token: nameToken });
+    const openBraceToken = visibilityToken?.text === FunctionVisibility.INTERNAL ? tokens[cursor + 1] : visibilityToken;
+    if (openBraceToken?.text !== '{') {
+      throw new InvalidLibraryImportError('Invalid function definition in imported library.');
+    }
+
+    definitions.push({
+      name: nameToken.text,
+      nameToken,
+      openBraceToken,
+      visibility: visibilityToken?.text === FunctionVisibility.INTERNAL ? FunctionVisibility.INTERNAL : 'omitted',
+    });
   }
 
   return definitions;

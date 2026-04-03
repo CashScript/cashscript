@@ -41,6 +41,7 @@ import {
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
   ContractDefinitionContext,
+  LibraryDefinitionContext,
   FunctionDefinitionContext,
   VariableDefinitionContext,
   TupleAssignmentContext,
@@ -51,6 +52,7 @@ import type {
   CastContext,
   LiteralContext,
   SourceFileContext,
+  TopLevelDefinitionContext,
   BlockContext,
   TimeOpStatementContext,
   ArrayContext,
@@ -99,7 +101,6 @@ export default class AstBuilder
   constructor(
     private tree: ParseTree,
     private functionVisibilities: FunctionVisibility[] = [],
-    private containerKind: 'contract' | 'library' = 'contract',
   ) {
     super();
   }
@@ -117,10 +118,18 @@ export default class AstBuilder
       this.processPragma(pragma);
     });
 
-    const contract = this.visit(ctx.contractDefinition()) as ContractNode;
+    const contract = this.visit(ctx.topLevelDefinition()) as ContractNode;
     const sourceFileNode = new SourceFileNode(contract);
     sourceFileNode.location = Location.fromCtx(ctx);
     return sourceFileNode;
+  }
+
+  visitTopLevelDefinition(ctx: TopLevelDefinitionContext): ContractNode {
+    if (ctx.contractDefinition()) {
+      return this.visit(ctx.contractDefinition()) as ContractNode;
+    }
+
+    return this.visit(ctx.libraryDefinition()!) as ContractNode;
   }
 
   processPragma(ctx: PragmaDirectiveContext): void {
@@ -143,7 +152,15 @@ export default class AstBuilder
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
     const functions = ctx.functionDefinition_list().map((f) => this.visit(f) as FunctionDefinitionNode);
-    const contract = new ContractNode(name, parameters, functions, this.containerKind);
+    const contract = new ContractNode(name, parameters, functions, 'contract');
+    contract.location = Location.fromCtx(ctx);
+    return contract;
+  }
+
+  visitLibraryDefinition(ctx: LibraryDefinitionContext): ContractNode {
+    const name = ctx.Identifier().getText();
+    const functions = ctx.functionDefinition_list().map((f) => this.visit(f) as FunctionDefinitionNode);
+    const contract = new ContractNode(name, [], functions, 'library');
     contract.location = Location.fromCtx(ctx);
     return contract;
   }
