@@ -1,4 +1,5 @@
 import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
+import { compileString } from 'cashc';
 import { DEFAULT_VM_TARGET } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import { randomUtxo } from '../src/utils.js';
@@ -287,6 +288,33 @@ describe('Debugging tests', () => {
 
       expect(transaction).toFailRequireWith('Test.cash:17 Require statement failed at input 0 in contract Test.cash at line 17 with the following message: internal value should be 1.');
       expect(transaction).toFailRequireWith('Failing statement: require(value == 1, \'internal value should be 1\')');
+    });
+
+    it('should not misattribute a nested non-require helper failure to an earlier helper require', async () => {
+      const artifact = compileString(`
+contract Test() {
+  function trigger() public {
+    require(runInternalFailure());
+  }
+
+  function runInternalFailure() internal {
+    require(true, 'earlier require should not be reported');
+    int value = tx.inputs[5].value;
+    require(value == 1);
+  }
+}
+`);
+      const contract = new Contract(artifact, [], { provider });
+      const utxo = randomUtxo();
+      provider.addUtxo(contract.address, utxo);
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, contract.unlock.trigger())
+        .addOutput({ to: contract.address, amount: 1000n });
+
+      expect(() => transaction.debug()).toThrow(`Reason: ${AuthenticationErrorCommon.invalidTransactionUtxoIndex}`);
+      expect(() => transaction.debug()).toThrow('Failing statement: tx.inputs[5].value');
+      expect(() => transaction.debug()).not.toThrow(/earlier require should not be reported/);
     });
 
     // test_multiple_require_statements_final_fails

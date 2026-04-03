@@ -1,0 +1,13 @@
+pragma cashscript ^0.13.0;
+
+import "./math-helpers.cash" as Math;
+
+contract ImportedHelperFunctions() {
+    function spend(int value) public {
+        require(Math.isPositiveEven(value));
+    }
+
+    function spendPlusTwo(int value) public {
+        require(Math.isPositiveEven(value + 2));
+    }
+}

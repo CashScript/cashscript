@@ -53,37 +53,7 @@ The practical implication is:
 
 ## Findings
 
-### 1. Omitted visibility defaults to `public`
-
-Severity: High
-
-Relevant code:
-
-- `packages/cashc/src/compiler.ts`
-- `packages/cashc/test/compiler/compiler.test.ts`
-
-The current preprocessing logic treats omitted visibility as `public` and only emits a warning.
-
-That is much riskier now that helper functions exist. A developer who forgets to mark a helper as `internal` accidentally creates a new externally callable entrypoint.
-
-Why this matters:
-
-- the helper may bypass assumptions enforced only in the intended top-level function
-- the helper may become a user-spend path even though it was written as support logic
-- warnings are too weak for consensus-critical contract code
-
-Current design decision:
-
-- do not force an immediate explicit-visibility migration for all older contracts
-- instead, use first-class `library` containers as the stronger boundary for imported helper files
-
-Recommendation:
-
-- keep this as a known hardening issue for normal contracts
-- do not rely on omitted-visibility behavior for imported helper code
-- consider a stricter compiler mode later for contracts that want explicit visibility guarantees
-
-### 2. Nested-frame debugging is still incomplete for non-`require` failures
+### 1. Nested-frame debugging is still incomplete for non-`require` failures
 
 Severity: Medium
 
@@ -108,7 +78,7 @@ Recommendation:
 - add frame-aware source resolution rather than only frame-aware `require`/log matching
 - add tests for internal helper failures that are not ordinary `require(...)` failures
 
-### 3. Locking-script start detection in debugging is brittle
+### 2. Locking-script start detection in debugging is brittle
 
 Severity: Medium
 
@@ -132,7 +102,7 @@ Recommendation:
 - keep the heuristic fallback only as a last resort
 - add tests where nested invoked frames also begin at `ip === 0`
 
-### 4. Public-to-public invocation duplicates function bodies
+### 3. Public-to-public invocation duplicates function bodies
 
 Severity: Medium
 

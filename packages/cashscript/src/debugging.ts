@@ -1,5 +1,5 @@
 import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
-import { Artifact, LogData, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
+import { Artifact, LogData, LogEntry, Op, PrimitiveType, RequireStatement, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { getBitauthUri } from './libauth-template/LibauthTemplate.js';
@@ -95,7 +95,7 @@ const debugSingleScenario = (
       .flatMap((debugStep, index) => {
         const logEntries = artifact.debug?.logs?.filter((log) => (
           log.ip === debugStep.ip
-          && matchesFrameBytecode(debugStep, log.frameBytecode, frameBytecodeCache)
+          && matchesDebugFrame(debugStep, log.frameId, log.frameBytecode, frameBytecodeCache)
         ));
         if (!logEntries || logEntries.length === 0) return [];
 
@@ -103,14 +103,21 @@ const debugSingleScenario = (
 
         return logEntries.map((logEntry) => {
           const decodedLogData = logEntry.data
-            .map((dataEntry) => decodeLogDataEntry(dataEntry, reversedPriorDebugSteps, vm, logEntry.frameBytecode, frameBytecodeCache));
+            .map((dataEntry) => decodeLogDataEntry(
+              dataEntry,
+              reversedPriorDebugSteps,
+              vm,
+              logEntry.frameId,
+              logEntry.frameBytecode,
+              frameBytecodeCache,
+            ));
           return { logEntry, decodedLogData };
         });
       });
 
     for (const { logEntry, decodedLogData } of executedLogs) {
       const inputIndex = extractInputIndexFromScenario(scenarioId);
-      logConsoleLogStatement(logEntry, decodedLogData, artifact.contractName, inputIndex);
+      logConsoleLogStatement(logEntry, decodedLogData, artifact, inputIndex);
     }
   }
 
@@ -145,7 +152,7 @@ const debugSingleScenario = (
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((statement) => (
         statement.ip === requireStatementIp
-        && matchesFrameBytecode(lastExecutedDebugStep, statement.frameBytecode, frameBytecodeCache)
+        && matchesDebugFrame(lastExecutedDebugStep, statement.frameId, statement.frameBytecode, frameBytecodeCache)
       ));
 
     if (requireStatement) {
@@ -157,7 +164,13 @@ const debugSingleScenario = (
 
     // Note that we use failingIp here rather than requireStatementIp, see comment above
     throw new FailedTransactionEvaluationError(
-      artifact, failingIp, inputIndex, getBitauthUri(template), error,
+      artifact,
+      failingIp,
+      inputIndex,
+      getBitauthUri(template),
+      error,
+      getFrameId(lastExecutedDebugStep),
+      getFrameBytecode(lastExecutedDebugStep, frameBytecodeCache),
     );
   }
 
@@ -188,7 +201,7 @@ const debugSingleScenario = (
     const requireStatement = (artifact.debug?.requires ?? [])
       .find((message) => (
         message.ip === finalExecutedVerifyIp
-        && matchesFrameBytecode(lastExecutedDebugStep, message.frameBytecode, frameBytecodeCache)
+        && matchesDebugFrame(lastExecutedDebugStep, message.frameId, message.frameBytecode, frameBytecodeCache)
       ));
 
     if (requireStatement) {
@@ -197,16 +210,16 @@ const debugSingleScenario = (
       );
     }
 
-    const nestedRequireStatement = findMostRecentExecutedRequireStatement(
+    const nestedRequireStatement = findNestedFinalRequireBeforeFinalVerify(
       executedDebugSteps,
-      artifact,
+      artifact.debug?.requires ?? [],
       frameBytecodeCache,
     );
 
     if (nestedRequireStatement) {
       throw new FailedRequireError(
         artifact,
-        nestedRequireStatement.ip,
+        sourcemapInstructionPointer,
         nestedRequireStatement,
         inputIndex,
         getBitauthUri(template),
@@ -214,7 +227,13 @@ const debugSingleScenario = (
     }
 
     throw new FailedTransactionEvaluationError(
-      artifact, sourcemapInstructionPointer, inputIndex, getBitauthUri(template), evaluationResult,
+      artifact,
+      sourcemapInstructionPointer,
+      inputIndex,
+      getBitauthUri(template),
+      evaluationResult,
+      getFrameId(lastExecutedDebugStep),
+      getFrameBytecode(lastExecutedDebugStep, frameBytecodeCache),
     );
   }
 
@@ -295,16 +314,20 @@ const createProgram = (template: WalletTemplate, unlockingScriptId: string, scen
 const logConsoleLogStatement = (
   log: LogEntry,
   decodedLogData: Array<string | bigint | boolean>,
-  contractName: string,
+  artifact: Artifact,
   inputIndex: number,
 ): void => {
-  console.log(`[Input #${inputIndex}] ${contractName}.cash:${log.line} ${decodedLogData.join(' ')}`);
+  const sourceName = log.sourceFile
+    ? basename(log.sourceFile)
+    : getFrameSourceName(artifact, log.frameId, log.frameBytecode);
+  console.log(`[Input #${inputIndex}] ${sourceName}:${log.line} ${decodedLogData.join(' ')}`);
 };
 
 const decodeLogDataEntry = (
   dataEntry: LogData,
   reversedPriorDebugSteps: AuthenticationProgramStateCommon[],
   vm: VM,
+  fallbackFrameId: string | undefined,
   fallbackFrameBytecode: string | undefined,
   frameBytecodeCache: WeakMap<AuthenticationInstruction[], string>,
 ): string | bigint | boolean => {
@@ -312,7 +335,12 @@ const decodeLogDataEntry = (
 
   const dataEntryDebugStep = reversedPriorDebugSteps.find((step) => (
     step.ip === dataEntry.ip
-    && matchesFrameBytecode(step, dataEntry.frameBytecode ?? fallbackFrameBytecode, frameBytecodeCache)
+    && matchesDebugFrame(
+      step,
+      dataEntry.frameId ?? fallbackFrameId,
+      dataEntry.frameBytecode ?? fallbackFrameBytecode,
+      frameBytecodeCache,
+    )
   ));
 
   if (!dataEntryDebugStep) {
@@ -323,63 +351,20 @@ const decodeLogDataEntry = (
   return decodeStackItem(dataEntry, transformedDebugStep.stack);
 };
 
-const matchesFrameBytecode = (
+const matchesDebugFrame = (
   debugStep: AuthenticationProgramStateCommon,
+  expectedFrameId: string | undefined,
   expectedFrameBytecode: string | undefined,
   cache: WeakMap<AuthenticationInstruction[], string>,
 ): boolean => {
+  if (expectedFrameId && !expectedFrameBytecode) {
+    return getFrameId(debugStep) === expectedFrameId;
+  }
+
+  const actualFrameBytecode = getFrameBytecode(debugStep, cache);
   if (!expectedFrameBytecode) return true;
 
-  let actualFrameBytecode = cache.get(debugStep.instructions);
-  if (!actualFrameBytecode) {
-    actualFrameBytecode = instructionsToBytecodeHex(debugStep.instructions);
-    cache.set(debugStep.instructions, actualFrameBytecode);
-  }
-
   return actualFrameBytecode === expectedFrameBytecode || actualFrameBytecode.endsWith(expectedFrameBytecode);
-};
-
-const findMostRecentExecutedRequireStatement = (
-  executedDebugSteps: AuthenticationProgramStateCommon[],
-  artifact: Artifact,
-  frameBytecodeCache: WeakMap<AuthenticationInstruction[], string>,
-) => {
-  const matchingRequireStatements = executedDebugSteps
-  .slice()
-  .reverse()
-  .flatMap((debugStep) => (
-    (artifact.debug?.requires ?? []).filter((requireStatement) => (
-      requireStatement.ip === debugStep.ip
-      && matchesFrameBytecode(debugStep, requireStatement.frameBytecode, frameBytecodeCache)
-    ))
-  ));
-
-  const nestedRequireStatement = matchingRequireStatements.find((requireStatement) => (
-    requireStatement.frameBytecode !== undefined
-    && requireStatement.frameBytecode !== artifact.debug?.bytecode
-  ));
-
-  if (nestedRequireStatement) {
-    return nestedRequireStatement;
-  }
-
-  const nestedFrameBytecode = executedDebugSteps
-    .slice()
-    .reverse()
-    .map((debugStep) => getFrameBytecode(debugStep, frameBytecodeCache))
-    .find((frameBytecode) => frameBytecode !== artifact.debug?.bytecode);
-
-  if (nestedFrameBytecode) {
-    const nestedFrameRequireStatement = (artifact.debug?.requires ?? [])
-      .filter((requireStatement) => requireStatement.frameBytecode === nestedFrameBytecode)
-      .at(-1);
-
-    if (nestedFrameRequireStatement) {
-      return nestedFrameRequireStatement;
-    }
-  }
-
-  return matchingRequireStatements.at(0);
 };
 
 const getFrameBytecode = (
@@ -394,6 +379,66 @@ const getFrameBytecode = (
 
   return actualFrameBytecode;
 };
+
+const getFrameId = (debugStep: AuthenticationProgramStateCommon): string => {
+  const activeBytecode = binToHex(Uint8Array.from(debugStep.instructions.flatMap((instruction) => (
+    Array.from(encodeAuthenticationInstruction(instruction))
+  ))));
+  const matchingEntry = Object.entries(debugStep.functionTable ?? {}).find(([, functionBody]) => (
+    binToHex(functionBody) === activeBytecode
+  ));
+
+  return matchingEntry ? `fn:${matchingEntry[0]}` : '__root__';
+};
+
+const findNestedFinalRequireBeforeFinalVerify = (
+  executedDebugSteps: AuthenticationProgramStateCommon[],
+  requireStatements: readonly RequireStatement[],
+  cache: WeakMap<AuthenticationInstruction[], string>,
+): RequireStatement | undefined => {
+  const finalStep = executedDebugSteps[executedDebugSteps.length - 1];
+  if (!finalStep) return undefined;
+
+  const finalFrameId = getFrameId(finalStep);
+  const finalFrameBytecode = getFrameBytecode(finalStep, cache);
+
+  for (let index = executedDebugSteps.length - 2; index >= 0; index -= 1) {
+    const step = executedDebugSteps[index]!;
+    if (matchesDebugFrame(step, finalFrameId, finalFrameBytecode, cache)) continue;
+
+    const matchingRequire = requireStatements.find((statement) => (
+      (statement.ip === step.ip || statement.ip === step.ip + 1)
+      && matchesDebugFrame(step, statement.frameId, statement.frameBytecode, cache)
+    ));
+
+    if (!matchingRequire) continue;
+
+    const returnedToFinalFrameOnly = executedDebugSteps
+      .slice(index + 1)
+      .every((laterStep) => matchesDebugFrame(laterStep, finalFrameId, finalFrameBytecode, cache));
+
+    if (returnedToFinalFrameOnly) {
+      return matchingRequire;
+    }
+  }
+
+  return undefined;
+};
+
+const getFrameSourceName = (artifact: Artifact, frameId?: string, frameBytecode?: string): string => {
+  const matchingFrame = artifact.debug?.frames?.find((frame) => (
+    (frameId && frame.id === frameId)
+    || (frameBytecode && (frame.bytecode === frameBytecode || frame.bytecode.endsWith(frameBytecode)))
+  ));
+
+  if (matchingFrame?.sourceFile) {
+    return basename(matchingFrame.sourceFile);
+  }
+
+  return `${artifact.contractName}.cash`;
+};
+
+const basename = (sourceFile: string): string => sourceFile.split(/[/\\]/).at(-1) ?? sourceFile;
 
 const applyStackItemTransformations = (
   element: StackItem,

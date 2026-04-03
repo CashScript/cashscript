@@ -75,6 +75,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   stack: string[] = [];
   consoleLogs: LogEntry[] = [];
   requires: RequireStatement[] = [];
+  frames: Array<{ id: string; bytecode: string; sourceMap: string; source: string; sourceFile?: string }> = [];
   sourceTags: SourceTagEntry[] = [];
   finalStackUsage: Record<string, StackItem> = {};
 
@@ -265,26 +266,46 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     traversal.output = asmToScript(scriptToAsm(traversal.output));
     const frameBytecode = scriptToBytecode(traversal.output);
     const frameBytecodeHex = binToHex(frameBytecode);
-    traversal.annotateFrameDebugMetadata(frameBytecodeHex);
+    const frameId = `fn:${this.functionIndices.get(node.name)!}`;
+    traversal.annotateFrameDebugMetadata(frameBytecodeHex, frameId, node.sourceFile);
+    this.frames.push(...traversal.frames);
+    this.frames.push({
+      id: frameId,
+      bytecode: frameBytecodeHex,
+      sourceMap: generateSourceMap(traversal.locationData),
+      source: node.sourceCode ?? '',
+      ...(node.sourceFile ? { sourceFile: node.sourceFile } : {}),
+    });
     this.consoleLogs.push(...traversal.consoleLogs);
     this.requires.push(...traversal.requires);
     return frameBytecode;
   }
 
-  annotateFrameDebugMetadata(frameBytecode: string): void {
+  annotateFrameDebugMetadata(frameBytecode: string, frameId: string, sourceFile?: string): void {
     this.finalStackUsage = Object.fromEntries(
-      Object.entries(this.finalStackUsage).map(([name, usage]) => [name, { ...usage, frameBytecode }]),
+      Object.entries(this.finalStackUsage).map(([name, usage]) => [name, {
+        ...usage,
+        frameBytecode,
+        frameId,
+      }]),
     );
 
     this.consoleLogs = this.consoleLogs.map((log) => ({
       ...log,
       frameBytecode,
+      frameId,
+      ...(sourceFile ? { sourceFile } : {}),
       data: log.data.map((entry) => (
-        typeof entry === 'string' ? entry : { ...entry, frameBytecode }
+        typeof entry === 'string' ? entry : { ...entry, frameBytecode, frameId }
       )),
     }));
 
-    this.requires = this.requires.map((require) => ({ ...require, frameBytecode }));
+    this.requires = this.requires.map((require) => ({
+      ...require,
+      frameBytecode,
+      frameId,
+      ...(sourceFile ? { sourceFile } : {}),
+    }));
   }
 
   removeFinalVerifyFromFunction(functionBodyNode: Node): void {
@@ -430,6 +451,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       line: node.location.start.line,
       message: node.message,
       location: node.location,
+      ...(this.currentFunction.sourceFile ? { sourceFile: this.currentFunction.sourceFile } : {}),
     });
 
     this.popFromStack();
@@ -446,6 +468,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       line: node.location.start.line,
       message: node.message,
       location: node.location,
+      ...(this.currentFunction.sourceFile ? { sourceFile: this.currentFunction.sourceFile } : {}),
     });
 
     this.popFromStack();
@@ -479,7 +502,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       return parameter.toString();
     });
 
-    this.consoleLogs.push({ ip, line, data });
+    this.consoleLogs.push({
+      ip,
+      line,
+      data,
+      ...(this.currentFunction.sourceFile ? { sourceFile: this.currentFunction.sourceFile } : {}),
+    });
 
     return node;
   }
@@ -628,7 +656,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.parameters = this.visitList(node.parameters);
 
     if (node.identifier.definition?.definition instanceof FunctionDefinitionNode) {
-      this.emit(encodeInt(BigInt(this.functionIndices.get(node.identifier.name)!)), { location: node.location, positionHint: PositionHint.START });
+      this.emit(
+        encodeInt(BigInt(this.functionIndices.get(node.identifier.name)!)),
+        { location: node.location, positionHint: PositionHint.START },
+      );
       this.pushToStack('(value)');
       this.emit(Op.OP_INVOKE, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack(node.parameters.length + 1);

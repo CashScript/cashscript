@@ -76,7 +76,7 @@ contract Test() {
     it('should preserve library containers in AST source output', () => {
       const input = `
 library MathHelpers {
-  function isEven(int value) {
+  function isEven(int value) internal {
     require(value % 2 == 0);
   }
 

@@ -8,6 +8,7 @@ export type VmTarget =
 
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
+  requireExplicitFunctionVisibility?: boolean;
   target?: VmTarget;
 }
 
@@ -26,7 +27,16 @@ export interface DebugInformation {
   sourceMap: string; // see documentation for `generateSourceMap`
   logs: readonly LogEntry[]; // log entries generated from `console.log` statements
   requires: readonly RequireStatement[]; // messages for failing `require` statements
+  frames?: readonly DebugFrame[]; // source/provenance details for the root frame and helper frames
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
+}
+
+export interface DebugFrame {
+  id: string;
+  bytecode: string;
+  sourceMap: string;
+  source: string;
+  sourceFile?: string;
 }
 
 export interface LogEntry {
@@ -34,6 +44,8 @@ export interface LogEntry {
   line: number; // line in the source code
   data: readonly LogData[]; // data to be logged
   frameBytecode?: string; // active bytecode frame in which this log executes
+  frameId?: string; // compiler-assigned helper/root frame identifier
+  sourceFile?: string; // source file in which this log executes
 }
 
 export interface StackItem {
@@ -44,6 +56,7 @@ export interface StackItem {
   // Instruction pointer at which we can access the logged variable
   ip: number;
   frameBytecode?: string; // active bytecode frame in which this stack item is available
+  frameId?: string; // compiler-assigned helper/root frame identifier
   // Operations to apply to the debug state at the specified instruction pointer to make sure that the variable is
   // on the correct position on the stack. This is used when we're optimising bytecode where the logged variable is
   // an intermediate result that existed in the unoptimised bytecode, but no longer exists in the optimised bytecode.
@@ -57,7 +70,9 @@ export interface RequireStatement {
   line: number; // line in the source code
   message?: string; // custom message for failing `require` statement
   frameBytecode?: string; // active bytecode frame in which this require executes
+  frameId?: string; // compiler-assigned helper/root frame identifier
   location?: LocationI; // source location of the full require statement
+  sourceFile?: string; // source file in which this require executes
 }
 
 export interface Artifact {

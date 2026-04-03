@@ -25,8 +25,20 @@ export interface ImportPreprocessOptions {
   resolveImport?: ImportResolver;
 }
 
+export interface ImportedFunctionProvenance {
+  mangledName: string;
+  generatedStartLine: number;
+  originalStartLine: number;
+  generatedStartColumn: number;
+  originalStartColumn: number;
+  source: string;
+  sourceFile?: string;
+}
+
 export interface ImportPreprocessResult {
   code: string;
+  sources: Array<{ source: string; sourceFile?: string }>;
+  functionProvenance: ImportedFunctionProvenance[];
 }
 
 interface ImportDirective {
@@ -39,14 +51,13 @@ interface ImportDirective {
 interface LibraryDefinition {
   name: string;
   body: string;
-}
-
-interface LibraryTransformResult {
-  body: string;
-  functions: Set<string>;
+  bodyStartLine: number;
+  source: string;
+  sourceFile?: string;
 }
 
 interface ParsedLibraryFile {
+  imports: ImportDirective[];
   library: LibraryDefinition;
   pragmaConstraints: string[];
 }
@@ -61,6 +72,22 @@ interface Replacement {
   text: string;
 }
 
+interface CanonicalLibraryRecord {
+  sourceId: string;
+  mangledPrefix: string;
+  body: string;
+  functions: Set<string>;
+  provenance: ImportedFunctionProvenance[];
+  sources: Array<{ source: string; sourceFile?: string }>;
+}
+
+interface ImportContext {
+  orderedLibraries: CanonicalLibraryRecord[];
+  canonicalLibraries: Map<string, CanonicalLibraryRecord>;
+  usedMangledNames: Set<string>;
+  nextLibraryId: number;
+}
+
 const IDENTIFIER_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]*$/;
 const BUILT_IN_STATEMENTS = new Set(['require']);
 const GLOBAL_FUNCTIONS = new Set(
@@ -72,17 +99,27 @@ const GLOBAL_CLASSES = new Set(Object.values(Class));
 
 export function preprocessImports(code: string, options: ImportPreprocessOptions = {}): ImportPreprocessResult {
   const importDirectives = parseTopLevelImports(code);
+  const rootSourceFile = options.sourcePath ? normaliseFilesystemPath(options.sourcePath) : undefined;
+
   if (importDirectives.length === 0) {
-    return { code };
+    return {
+      code,
+      sources: [{ source: code, ...(rootSourceFile ? { sourceFile: rootSourceFile } : {}) }],
+      functionProvenance: [],
+    };
   }
 
   const mutableCode = code.split('');
-  const transformedLibraries: string[] = [];
   const rootFunctionNames = collectFunctionNames(code);
   const usedAliases = new Set<string>();
-  const usedMangledNames = new Set<string>(rootFunctionNames);
-  const transformedLibrariesByAlias = new Map<string, LibraryTransformResult>();
+  const context: ImportContext = {
+    orderedLibraries: [],
+    canonicalLibraries: new Map(),
+    usedMangledNames: new Set(rootFunctionNames),
+    nextLibraryId: 0,
+  };
 
+  const transformedLibrariesByAlias = new Map<string, CanonicalLibraryRecord>();
   for (const directive of importDirectives) {
     if (usedAliases.has(directive.alias)) {
       throw new InvalidImportDirectiveError(`Duplicate import alias '${directive.alias}' is not allowed.`);
@@ -94,39 +131,108 @@ export function preprocessImports(code: string, options: ImportPreprocessOptions
     const transformedLibrary = preprocessImportedLibrary(
       directive,
       options,
-      usedMangledNames,
+      context,
       options.sourcePath,
+      [],
     );
     transformedLibrariesByAlias.set(directive.alias, transformedLibrary);
-    transformedLibraries.push(
-      `\n  // Imported from ${JSON.stringify(directive.specifier)} as ${directive.alias}\n${indentLibraryBody(transformedLibrary.body)}\n`,
-    );
   }
 
   let flattenedCode = mutableCode.join('');
   transformedLibrariesByAlias.forEach((library, alias) => {
-    flattenedCode = rewriteNamespacedCalls(flattenedCode, alias, library.functions);
+    flattenedCode = rewriteNamespacedCalls(flattenedCode, alias, library.functions, library.mangledPrefix);
   });
 
   const contractCloseIndex = findRootCloseIndex(flattenedCode);
-  const injectedCode = transformedLibraries.join('\n');
+  const injectedSections = context.orderedLibraries.map((library) => `\n${indentLibraryBody(library.body)}\n`);
+  const insertionBaseLine = countLines(flattenedCode.slice(0, contractCloseIndex));
+
+  let injectedLineOffset = 0;
+  const functionProvenance = context.orderedLibraries.flatMap((library, index) => {
+    const section = injectedSections[index]!;
+    const resolved = library.provenance.map((entry) => ({
+      ...entry,
+      generatedStartLine: insertionBaseLine + injectedLineOffset + getFunctionGeneratedLine(entry.mangledName, section),
+    }));
+    injectedLineOffset += countLineBreaks(section) + 1;
+    return resolved;
+  });
+
+  const sources = dedupeSources([
+    { source: code, ...(rootSourceFile ? { sourceFile: rootSourceFile } : {}) },
+    ...context.orderedLibraries.flatMap((library) => library.sources),
+  ]);
 
   return {
-    code: `${flattenedCode.slice(0, contractCloseIndex)}${injectedCode}${flattenedCode.slice(contractCloseIndex)}`,
+    code: `${flattenedCode.slice(0, contractCloseIndex)}${injectedSections.join('\n')}${flattenedCode.slice(contractCloseIndex)}`,
+    sources,
+    functionProvenance,
   };
 }
 
 function preprocessImportedLibrary(
   directive: ImportDirective,
   options: ImportPreprocessOptions,
-  usedMangledNames: Set<string>,
+  context: ImportContext,
   fromPath?: string,
-): LibraryTransformResult {
+  ancestry: string[] = [],
+): CanonicalLibraryRecord {
   const resolvedImport = resolveImportSource(directive.specifier, options, fromPath);
+  const sourceId = getImportIdentity(resolvedImport, directive.specifier, fromPath);
+  if (ancestry.includes(sourceId)) {
+    throw new InvalidLibraryImportError(
+      `Circular library import detected: ${[...ancestry, sourceId].join(' -> ')}`,
+    );
+  }
+
+  const cached = context.canonicalLibraries.get(sourceId);
+  if (cached) {
+    return cached;
+  }
+
   const parsedLibrary = parseLibraryFileWithPragmas(resolvedImport.source, resolvedImport.path ?? directive.specifier);
   validateLibraryPragmas(parsedLibrary.pragmaConstraints);
 
-  return transformLibrary(parsedLibrary.library, directive.alias, usedMangledNames);
+  const nestedLibrariesByAlias = new Map<string, CanonicalLibraryRecord>();
+  const usedNestedAliases = new Set<string>();
+  for (const nestedImport of parsedLibrary.imports) {
+    if (usedNestedAliases.has(nestedImport.alias)) {
+      throw new InvalidImportDirectiveError(`Duplicate import alias '${nestedImport.alias}' is not allowed.`);
+    }
+    usedNestedAliases.add(nestedImport.alias);
+    nestedLibrariesByAlias.set(
+      nestedImport.alias,
+      preprocessImportedLibrary(
+        nestedImport,
+        options,
+        context,
+        resolvedImport.path ?? fromPath,
+        [...ancestry, sourceId],
+      ),
+    );
+  }
+
+  const mangledPrefix = `lib${context.nextLibraryId}`;
+  context.nextLibraryId += 1;
+  const transformed = transformLibrary(
+    parsedLibrary.library,
+    mangledPrefix,
+    context.usedMangledNames,
+    nestedLibrariesByAlias,
+  );
+
+  const record: CanonicalLibraryRecord = {
+    sourceId,
+    mangledPrefix,
+    body: transformed.body,
+    functions: transformed.functions,
+    provenance: transformed.provenance,
+    sources: transformed.sources,
+  };
+
+  context.canonicalLibraries.set(sourceId, record);
+  context.orderedLibraries.push(record);
+  return record;
 }
 
 function resolveImportSource(specifier: string, options: ImportPreprocessOptions, fromPath?: string): ResolvedImport {
@@ -183,8 +289,13 @@ function parseTopLevelImports(code: string): ImportDirective[] {
       const aliasToken = tokens[cursor + 3];
       const semicolonToken = tokens[cursor + 4];
 
-      if (!specifierToken?.text || !isStringLiteral(specifierToken.text) || asToken?.text !== 'as'
-        || !aliasToken?.text?.match(IDENTIFIER_PATTERN) || semicolonToken?.text !== ';') {
+      if (
+        !specifierToken?.text
+        || !isStringLiteral(specifierToken.text)
+        || asToken?.text !== 'as'
+        || !aliasToken?.text?.match(IDENTIFIER_PATTERN)
+        || semicolonToken?.text !== ';'
+      ) {
         throw new InvalidImportDirectiveError(
           'Import directives must use the form import "./helpers.cash" as Helpers;',
         );
@@ -227,10 +338,8 @@ function parseLibraryFileWithPragmas(code: string, sourceLabel: string): ParsedL
   }
 
   const nestedImports = parseTopLevelImports(code);
-  if (nestedImports.length > 0) {
-    throw new InvalidLibraryImportError(
-      `Imported library '${sourceLabel}' may not import other libraries in the current MVP.`,
-    );
+  while (cursor < tokens.length && tokens[cursor].text === 'import') {
+    cursor = advanceToSemicolon(tokens, cursor + 1);
   }
 
   const libraryToken = tokens[cursor];
@@ -253,9 +362,13 @@ function parseLibraryFileWithPragmas(code: string, sourceLabel: string): ParsedL
   }
 
   return {
+    imports: nestedImports,
     library: {
       name: nameToken.text,
       body: code.slice(openBraceToken.stop + 1, closeBraceToken.start),
+      bodyStartLine: openBraceToken.line,
+      source: code,
+      ...(sourceLabel ? { sourceFile: sourceLabel } : {}),
     },
     pragmaConstraints,
   };
@@ -263,10 +376,32 @@ function parseLibraryFileWithPragmas(code: string, sourceLabel: string): ParsedL
 
 function transformLibrary(
   library: LibraryDefinition,
-  alias: string,
+  mangledPrefix: string,
   usedMangledNames: Set<string>,
-): LibraryTransformResult {
-  const tokens = getVisibleTokens(library.body);
+  nestedLibrariesByAlias: Map<string, CanonicalLibraryRecord>,
+): {
+    body: string;
+    functions: Set<string>;
+    provenance: ImportedFunctionProvenance[];
+    sources: Array<{ source: string; sourceFile?: string }>;
+  } {
+  let rewrittenBody = library.body;
+  const nestedAccessibleFunctions = new Set<string>();
+
+  nestedLibrariesByAlias.forEach((nestedLibrary, nestedAlias) => {
+    rewrittenBody = rewriteNamespacedCalls(
+      rewrittenBody,
+      nestedAlias,
+      nestedLibrary.functions,
+      nestedLibrary.mangledPrefix,
+    );
+
+    nestedLibrary.functions.forEach((functionName) => {
+      nestedAccessibleFunctions.add(`${nestedLibrary.mangledPrefix}_${functionName}`);
+    });
+  });
+
+  const tokens = getVisibleTokens(rewrittenBody);
   const functionDefinitions = collectFunctionDefinitions(tokens);
 
   if (functionDefinitions.length === 0) {
@@ -277,43 +412,52 @@ function transformLibrary(
   const mangledNames = new Map<string, string>();
   const replacements: Replacement[] = [];
 
-  functionDefinitions.forEach(({ name, nameToken, openBraceToken, visibility }) => {
-    const mangledName = `${alias}_${name}`;
+  functionDefinitions.forEach(({ name, nameToken }) => {
+    const mangledName = `${mangledPrefix}_${name}`;
     if (usedMangledNames.has(mangledName)) {
       throw new InvalidLibraryImportError(
-        `Imported function '${alias}.${name}' conflicts with an existing function named '${mangledName}'.`,
+        `Imported function '${library.name}.${name}' conflicts with an existing function named '${mangledName}'.`,
       );
     }
 
     usedMangledNames.add(mangledName);
     mangledNames.set(name, mangledName);
     replacements.push({ start: nameToken.start, stop: nameToken.stop, text: mangledName });
-
-    if (visibility === 'omitted') {
-      replacements.push({ start: openBraceToken.start, stop: openBraceToken.stop, text: ' internal {' });
-    }
   });
 
-  validateLibraryCalls(tokens, localFunctions, library.name);
+  validateLibraryCalls(tokens, new Set([...localFunctions, ...nestedAccessibleFunctions]), library.name);
   replacements.push(...collectLocalFunctionCallReplacements(tokens, mangledNames));
 
+  const body = applyReplacements(rewrittenBody, replacements).trim();
   return {
-    body: applyReplacements(library.body, replacements).trim(),
+    body,
     functions: new Set(functionDefinitions.map((definition) => definition.name)),
+    provenance: functionDefinitions.map((definition) => ({
+      mangledName: mangledNames.get(definition.name)!,
+      generatedStartLine: 0,
+      originalStartLine: library.bodyStartLine + definition.line - 1,
+      generatedStartColumn: definition.functionToken.column + 2,
+      originalStartColumn: definition.functionToken.column,
+      source: library.source,
+      ...(library.sourceFile ? { sourceFile: library.sourceFile } : {}),
+    })),
+    sources: [{ source: library.source, ...(library.sourceFile ? { sourceFile: library.sourceFile } : {}) }],
   };
 }
 
 function collectFunctionDefinitions(tokens: Token[]): Array<{
+  functionToken: Token;
   name: string;
   nameToken: Token;
-  openBraceToken: Token;
-  visibility: FunctionVisibility.INTERNAL | 'omitted';
+  visibility: FunctionVisibility.INTERNAL;
+  line: number;
 }> {
   const definitions: Array<{
+    functionToken: Token;
     name: string;
     nameToken: Token;
-    openBraceToken: Token;
-    visibility: FunctionVisibility.INTERNAL | 'omitted';
+    visibility: FunctionVisibility.INTERNAL;
+    line: number;
   }> = [];
 
   for (let index = 0; index < tokens.length; index += 1) {
@@ -334,29 +478,30 @@ function collectFunctionDefinitions(tokens: Token[]): Array<{
     }
 
     const visibilityToken = tokens[cursor];
-    if (visibilityToken?.text === FunctionVisibility.PUBLIC) {
+    if (visibilityToken?.text !== FunctionVisibility.INTERNAL) {
       throw new InvalidLibraryImportError(
-        `Imported library functions cannot be public. Offending function: '${nameToken.text}'.`,
+        `Imported library functions must declare internal visibility. Offending function: '${nameToken.text}'.`,
       );
     }
 
-    const openBraceToken = visibilityToken?.text === FunctionVisibility.INTERNAL ? tokens[cursor + 1] : visibilityToken;
+    const openBraceToken = tokens[cursor + 1];
     if (openBraceToken?.text !== '{') {
       throw new InvalidLibraryImportError('Invalid function definition in imported library.');
     }
 
     definitions.push({
+      functionToken: tokens[index],
       name: nameToken.text,
       nameToken,
-      openBraceToken,
-      visibility: visibilityToken?.text === FunctionVisibility.INTERNAL ? FunctionVisibility.INTERNAL : 'omitted',
+      visibility: FunctionVisibility.INTERNAL,
+      line: nameToken.line,
     });
   }
 
   return definitions;
 }
 
-function validateLibraryCalls(tokens: Token[], localFunctions: Set<string>, libraryName: string): void {
+function validateLibraryCalls(tokens: Token[], accessibleFunctions: Set<string>, libraryName: string): void {
   for (let index = 0; index < tokens.length - 1; index += 1) {
     const token = tokens[index];
     const nextToken = tokens[index + 1];
@@ -370,7 +515,7 @@ function validateLibraryCalls(tokens: Token[], localFunctions: Set<string>, libr
       && previousToken?.text !== '.'
     ) {
       throw new InvalidLibraryImportError(
-        `Library '${libraryName}' references external helper '${token.text}.${tokens[index + 2]!.text}'. Imported libraries may only call their own functions or built-ins.`,
+        `Library '${libraryName}' references external helper '${token.text}.${tokens[index + 2]!.text}'. Imported libraries may only call imported or local helper functions.`,
       );
     }
 
@@ -378,7 +523,7 @@ function validateLibraryCalls(tokens: Token[], localFunctions: Set<string>, libr
     if (previousToken?.text === 'function' || previousToken?.text === 'new' || previousToken?.text === '.') continue;
 
     if (
-      localFunctions.has(token.text)
+      accessibleFunctions.has(token.text)
       || GLOBAL_FUNCTIONS.has(token.text)
       || GLOBAL_CLASSES.has(token.text as Class)
       || BUILT_IN_STATEMENTS.has(token.text)
@@ -387,7 +532,7 @@ function validateLibraryCalls(tokens: Token[], localFunctions: Set<string>, libr
     }
 
     throw new InvalidLibraryImportError(
-      `Library '${libraryName}' references non-library function '${token.text}'. Imported libraries may only call their own functions or built-ins.`,
+      `Library '${libraryName}' references non-library function '${token.text}'. Imported libraries may only call imported or local helper functions.`,
     );
   }
 }
@@ -493,6 +638,40 @@ function indentLibraryBody(body: string): string {
     .split('\n')
     .map((line) => (line.length === 0 ? line : `  ${line}`))
     .join('\n');
+}
+
+function countLineBreaks(text: string): number {
+  return (text.match(/\n/g) ?? []).length;
+}
+
+function countLines(text: string): number {
+  return countLineBreaks(text) + 1;
+}
+
+function getFunctionGeneratedLine(mangledName: string, section: string): number {
+  const index = section.indexOf(mangledName);
+  if (index === -1) {
+    throw new InvalidLibraryImportError(`Could not map imported helper '${mangledName}' back to generated source.`);
+  }
+
+  return countLineBreaks(section.slice(0, index)) + 1;
+}
+
+function dedupeSources(
+  sources: Array<{ source: string; sourceFile?: string }>,
+): Array<{ source: string; sourceFile?: string }> {
+  const seen = new Set<string>();
+  return sources.filter((entry) => {
+    const key = `${entry.sourceFile ?? ''}\u0000${entry.source}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getImportIdentity(resolvedImport: ResolvedImport, specifier: string, fromPath?: string): string {
+  if (resolvedImport.path) return normaliseFilesystemPath(resolvedImport.path);
+  return `${fromPath ?? '<root>'}::${specifier}`;
 }
 
 function findMatchingBrace(tokens: Token[], openBraceIndex: number): number {
@@ -612,87 +791,81 @@ function findLineCommentEnd(code: string, index: number): number {
 }
 
 function findBlockCommentEnd(code: string, index: number): number {
-  const closingIndex = code.indexOf('*/', index + 2);
-  return closingIndex === -1 ? code.length : closingIndex + 2;
+  let cursor = index + 2;
+  while (cursor < code.length && !(code[cursor] === '*' && code[cursor + 1] === '/')) {
+    cursor += 1;
+  }
+  return cursor < code.length ? cursor + 2 : code.length;
 }
 
 function findStringEnd(code: string, index: number): number {
   const quote = code[index];
   let cursor = index + 1;
-
   while (cursor < code.length) {
     if (code[cursor] === '\\') {
       cursor += 2;
       continue;
     }
-
     if (code[cursor] === quote) {
       return cursor + 1;
     }
-
     cursor += 1;
   }
-
   return code.length;
 }
 
-function isIdentifierBoundary(character: string | undefined): boolean {
-  return !character || !/[a-zA-Z0-9_]/.test(character);
+function isIdentifierBoundary(char: string | undefined): boolean {
+  return char === undefined || !/[a-zA-Z0-9_]/.test(char);
 }
 
-function isStringLiteral(text: string): boolean {
-  return (text.startsWith('"') && text.endsWith('"')) || (text.startsWith('\'') && text.endsWith('\''));
+function isStringLiteral(value: string): boolean {
+  return (value.startsWith('"') && value.endsWith('"')) || (value.startsWith('\'') && value.endsWith('\''));
 }
 
-function parseStringLiteral(text: string): string {
-  return text.slice(1, -1);
+function parseStringLiteral(value: string): string {
+  return JSON.parse(value.replace(/^'/, '"').replace(/'$/, '"'));
 }
 
 function readPragmaConstraints(tokens: Token[], pragmaIndex: number, sourceLabel: string): string[] {
-  const pragmaName = tokens[pragmaIndex + 1];
-  if (pragmaName?.text !== 'cashscript') {
-    throw new InvalidLibraryImportError(
-      `Imported library '${sourceLabel}' uses unsupported pragma '${pragmaName?.text ?? ''}'.`,
-    );
+  const nameToken = tokens[pragmaIndex + 1];
+  if (nameToken?.text !== 'cashscript') {
+    throw new VersionError(sourceLabel, 'pragma cashscript ...');
   }
 
   const constraints: string[] = [];
   let cursor = pragmaIndex + 2;
-  while (cursor < tokens.length && tokens[cursor].text !== ';') {
-    const current = tokens[cursor];
-    const next = tokens[cursor + 1];
+  while (tokens[cursor]?.text !== ';') {
+    const operator = tokens[cursor]?.text?.match(/^[\^~><=]+$/) ? tokens[cursor]!.text : '';
+    if (operator) cursor += 1;
 
-    if (!current?.text) break;
-
-    if (/^[\^~><=]/.test(current.text) && next?.text && semver.valid(next.text)) {
-      constraints.push(`${current.text}${next.text}`);
-      cursor += 2;
-      continue;
+    const versionToken = tokens[cursor];
+    if (!versionToken?.text) {
+      throw new VersionError(sourceLabel, 'valid pragma cashscript version constraint');
     }
 
-    if (semver.valid(current.text)) {
-      constraints.push(current.text);
-      cursor += 1;
-      continue;
-    }
-
-    throw new InvalidLibraryImportError(
-      `Imported library '${sourceLabel}' has an invalid pragma constraint near '${current.text}'.`,
-    );
+    constraints.push(`${operator}${versionToken.text}`);
+    cursor += 1;
   }
 
   return constraints;
 }
 
-function validateLibraryPragmas(pragmaConstraints: string[]): void {
-  const actualVersion = version.replace(/-.*/g, '');
-  pragmaConstraints.forEach((constraint) => {
-    if (!semver.satisfies(actualVersion, constraint)) {
-      throw new VersionError(actualVersion, constraint);
+function validateLibraryPragmas(constraints: string[]): void {
+  constraints.forEach((constraint) => {
+    if (!semver.satisfies(version, constraint, { includePrerelease: true })) {
+      throw new VersionError(version, constraint);
     }
   });
 }
 
-function normaliseFilesystemPath(sourcePath: string): string {
-  return sourcePath.startsWith('file://') ? fileURLToPath(sourcePath) : sourcePath;
+function normaliseFilesystemPath(codeFile: string | URL): string {
+  if (codeFile instanceof URL) {
+    return fileURLToPath(codeFile);
+  }
+
+  if (codeFile.startsWith('file://')) {
+    return fileURLToPath(codeFile);
+  }
+
+  return codeFile;
 }

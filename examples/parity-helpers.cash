@@ -1,0 +1,7 @@
+pragma cashscript ^0.13.0;
+
+library ParityHelpers {
+    function isEven(int value) internal {
+        require(value % 2 == 0);
+    }
+}
