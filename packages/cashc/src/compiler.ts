@@ -30,11 +30,6 @@ export interface CompileOptions extends CompilerOptions {
 
 type ContainerKind = 'contract' | 'library';
 
-type PreprocessedContainerResult = {
-  code: string;
-  containerKind: ContainerKind;
-};
-
 type PreprocessedVisibilityResult = {
   code: string;
   containerKind: ContainerKind;
@@ -46,7 +41,7 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   const { sourcePath, resolveImport, ...serialisableCompilerOptions } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...serialisableCompilerOptions };
   const importedCode = preprocessImports(code, { sourcePath, resolveImport });
-  const preprocessed = preprocessFunctionVisibility(preprocessTopLevelContainer(importedCode.code));
+  const preprocessed = preprocessFunctionVisibility(importedCode.code);
   emitVisibilityWarnings(preprocessed.omittedPublicFunctions);
 
   // Lexing + parsing
@@ -118,7 +113,7 @@ export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions 
 
 export function parseCode(code: string, compilerOptions: Pick<CompileOptions, 'sourcePath' | 'resolveImport'> = {}): Ast {
   const importedCode = preprocessImports(code, compilerOptions);
-  const preprocessed = preprocessFunctionVisibility(preprocessTopLevelContainer(importedCode.code));
+  const preprocessed = preprocessFunctionVisibility(importedCode.code);
   return parseCodeFromPreprocessed(preprocessed);
 }
 
@@ -137,46 +132,13 @@ function parseCodeFromPreprocessed(preprocessed: PreprocessedVisibilityResult): 
   const parseTree = parser.sourceFile();
 
   // AST building
-  const ast = new AstBuilder(parseTree, preprocessed.functionVisibilities, preprocessed.containerKind).build() as Ast;
+  const ast = new AstBuilder(parseTree, preprocessed.functionVisibilities).build() as Ast;
 
   return ast;
 }
 
-function preprocessTopLevelContainer(code: string): PreprocessedContainerResult {
-  const tokens = getVisibleTokens(code);
-  let cursor = 0;
-
-  while (cursor < tokens.length && tokens[cursor].text === 'pragma') {
-    cursor = advanceToSemicolon(tokens, cursor + 1);
-  }
-
-  const rootToken = tokens[cursor];
-  if (!rootToken) {
-    throw new ParseError('Expected a root contract or library definition');
-  }
-
-  if (rootToken.text === 'contract') {
-    return { code, containerKind: 'contract' };
-  }
-
-  if (rootToken.text !== 'library') {
-    throw new ParseError(`Expected a root contract or library definition, found '${rootToken.text}'`);
-  }
-
-  const nameToken = tokens[cursor + 1];
-  const nextToken = tokens[cursor + 2];
-  if (!nameToken?.text || nextToken?.text !== '{') {
-    throw new ParseError('Library definitions must use the form library Name { ... }');
-  }
-
-  return {
-    code: `${code.slice(0, rootToken.start)}contract${code.slice(rootToken.stop + 1, nextToken.start)}()${code.slice(nextToken.start)}`,
-    containerKind: 'library',
-  };
-}
-
-function preprocessFunctionVisibility(preprocessedContainer: PreprocessedContainerResult): PreprocessedVisibilityResult {
-  const { code, containerKind } = preprocessedContainer;
+function preprocessFunctionVisibility(code: string): PreprocessedVisibilityResult {
+  const containerKind = getTopLevelContainerKind(code);
   const inputStream = new CharStream(code);
   const lexer = new CashScriptLexer(inputStream);
   const tokenStream = new CommonTokenStream(lexer);
@@ -223,6 +185,30 @@ function preprocessFunctionVisibility(preprocessedContainer: PreprocessedContain
   }
 
   return { code: mutableCode.join(''), containerKind, functionVisibilities, omittedPublicFunctions };
+}
+
+function getTopLevelContainerKind(code: string): ContainerKind {
+  const tokens = getVisibleTokens(code);
+  let cursor = 0;
+
+  while (cursor < tokens.length && tokens[cursor].text === 'pragma') {
+    cursor = advanceToSemicolon(tokens, cursor + 1);
+  }
+
+  while (cursor < tokens.length && tokens[cursor].text === 'import') {
+    cursor = advanceToSemicolon(tokens, cursor + 1);
+  }
+
+  const rootToken = tokens[cursor];
+  if (!rootToken) {
+    throw new ParseError('Expected a root contract or library definition');
+  }
+
+  if (rootToken.text === 'contract' || rootToken.text === 'library') {
+    return rootToken.text;
+  }
+
+  throw new ParseError(`Expected a root contract or library definition, found '${rootToken.text}'`);
 }
 
 function emitVisibilityWarnings(omittedPublicFunctions: Array<{ name: string; line: number; column: number }>): void {
