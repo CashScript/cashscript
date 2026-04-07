@@ -17,6 +17,9 @@ const config: Config = {
       additionalLanguages: ['solidity', 'antlr4'],
     },
     image: 'img/logo.svg',
+    metadata: [
+      { name: 'algolia-site-verification', content: '434B800C3E7E420F' },
+    ],
     navbar: {
       logo: {
         alt: 'CashScript',
@@ -98,7 +101,7 @@ const config: Config = {
     algolia: {
       apiKey: 'd1e059f9bd6bf56667612a41a5115c6b',
       appId: 'XBVJRKV38F',
-      indexName: 'cashscript'
+      indexName: process.env.NEXT ? 'next_cashscript' : 'cashscript'
     },
   },
   presets: [
