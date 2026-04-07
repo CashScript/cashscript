@@ -99,7 +99,7 @@ const config: Config = {
       copyright: `<b>Donations:</b> bitcoincash:qz6uftqp7dyc4ca9e94d7wsle06u0z2ccc223dkpl8`,
     },
     algolia: {
-      apiKey: 'd1e059f9bd6bf56667612a41a5115c6b',
+      apiKey: '8b4fca20b2070c3e69e3110dde8ada71',
       appId: 'XBVJRKV38F',
       indexName: process.env.NEXT ? 'next_cashscript' : 'cashscript'
     },
