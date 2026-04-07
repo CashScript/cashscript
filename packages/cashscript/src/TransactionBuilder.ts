@@ -318,7 +318,7 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw new FailedTransactionError(reason, this.getBitauthUri());
+      throw new FailedTransactionError(reason, getBitauthUri(this.getLibauthTemplate()));
     }
   }
 
