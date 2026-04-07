@@ -15,9 +15,7 @@ export * from './Errors.js';
 export * from './network/errors.js';
 export {
   type NetworkProvider,
-  BitcoinRpcNetworkProvider,
   ElectrumNetworkProvider,
-  FullStackNetworkProvider,
   MockNetworkProvider,
 } from './network/index.js';
 export { randomUtxo, randomToken, randomNFT } from './utils.js';

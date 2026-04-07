@@ -87,6 +87,18 @@ If you are using a custom network provider, you will need to update the code for
   getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
 ```
 
+### FullStackNetworkProvider & BitcoinRpcNetworkProvider
+
+The `FullStackNetworkProvider` and `BitcoinRpcNetworkProvider` have been removed from the SDK. If you were using these providers, you will need to update your code to use a different network provider.
+
+```ts
+// Before: FullStackNetworkProvider
+const provider = new FullStackNetworkProvider('mainnet', bchjs);
+
+// After: ElectrumNetworkProvider
+const provider = new ElectrumNetworkProvider('mainnet');
+```
+
 ## v0.11 to v0.12
 
 There are several breaking changes to the SDK in this release.

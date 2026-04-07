@@ -71,7 +71,7 @@ The compiler uses the **visitor pattern** throughout — AST nodes accept traver
 
 - `Contract` — loads compiled artifacts, instantiates with constructor args
 - `TransactionBuilder` — builds and signs Bitcoin Cash transactions
-- Network providers: `ElectrumNetworkProvider`, `BitcoinRpcNetworkProvider`, `MockNetworkProvider`, `FullStackNetworkProvider`
+- Network providers: `ElectrumNetworkProvider`, `MockNetworkProvider`
 - `src/libauth-template/` — integrates with `@bitauth/libauth` for transaction evaluation and debugging
 
 ### Utils (`@cashscript/utils`)
