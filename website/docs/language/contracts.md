@@ -149,13 +149,9 @@ contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
 }
 ```
 
-### Loops (beta)
+### Loops
 
-Currently, CashScript supports `for`, `while` and `do-while` loops in the `0.13.0-next` pre-release.
-
-:::caution
-Loops in CashScript are currently in beta and may not fully behave as expected with debugging and console.log statements. The syntax for loops may change in the future.
-:::
+CashScript supports `for`, `while` and `do-while` loops. It currently does not support `break` and `continue` statements.
 
 #### for loop
 
