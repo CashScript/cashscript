@@ -57,6 +57,13 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Community SDKs',
+      items: [
+        'community-sdks/python-sdk',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Guides',
       items: [
         'guides/covenants',
