@@ -31,11 +31,23 @@ interface CustomElectrumOptions extends OptionsBase {
 
 type Options = OptionsBase | CustomHostNameOptions | CustomElectrumOptions;
 
+/**
+ * A `NetworkProvider` implementation backed by an Electrum Cash server. By default it manages
+ * its own connection lifecycle, connecting on demand and disconnecting when idle; for long-lived
+ * clients, pass `manualConnectionManagement: true` and call `connect` / `disconnect` explicitly.
+ */
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumClient<ElectrumClientEvents>;
   private concurrentRequests: number = 0;
   private manualConnectionManagement: boolean;
 
+  /**
+   * Create a new ElectrumNetworkProvider.
+   *
+   * @param network - The BCH network to connect to. Defaults to `Network.MAINNET`.
+   * @param options - Optional hostname, pre-configured `ElectrumClient`, and/or
+   *   `manualConnectionManagement` flag.
+   */
   constructor(public network: Network = Network.MAINNET, options: Options = {}) {
     this.electrum = this.instantiateElectrumClient(network, options);
     this.manualConnectionManagement = options?.manualConnectionManagement ?? false;
@@ -109,6 +121,12 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     }
   }
 
+  /**
+   * Manually open the underlying Electrum connection. Only allowed when the provider was created
+   * with `manualConnectionManagement: true`.
+   *
+   * @throws If manual connection management is disabled.
+   */
   async connect(): Promise<void> {
     if (!this.manualConnectionManagement) {
       throw new Error('Manual connection management is disabled');
@@ -117,6 +135,13 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return this.electrum.connect();
   }
 
+  /**
+   * Manually close the underlying Electrum connection. Only allowed when the provider was created
+   * with `manualConnectionManagement: true`.
+   *
+   * @throws If manual connection management is disabled.
+   * @returns Whether the connection was disconnected successfully.
+   */
   async disconnect(): Promise<boolean> {
     if (!this.manualConnectionManagement) {
       throw new Error('Manual connection management is disabled');
@@ -125,6 +150,14 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return this.electrum.disconnect();
   }
 
+  /**
+   * Perform an arbitrary Electrum JSON-RPC request against the underlying server. Automatically
+   * manages the connection lifecycle unless `manualConnectionManagement` was set.
+   *
+   * @param name - The Electrum method name (e.g. `blockchain.transaction.get`).
+   * @param parameters - Parameters passed to the method.
+   * @returns The raw Electrum server response.
+   */
   async performRequest(
     name: string,
     ...parameters: (string | number | boolean)[]

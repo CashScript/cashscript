@@ -328,6 +328,13 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
 
 const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
 
+/**
+ * Generate a random `Utxo` for use with `MockNetworkProvider.addUtxo` in tests and examples.
+ * Fields can be overridden by passing a `defaults` object.
+ *
+ * @param defaults - Values that override the randomly generated fields.
+ * @returns A synthetic UTXO with random `txid`, `vout`, and `satoshis`.
+ */
 export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
   ...{
     txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
@@ -337,6 +344,13 @@ export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
   ...defaults,
 });
 
+/**
+ * Generate random fungible `TokenDetails` for use in tests and examples. Fields can be overridden
+ * by passing a `defaults` object.
+ *
+ * @param defaults - Values that override the randomly generated fields.
+ * @returns Synthetic token details (no NFT commitment) with a random category and amount.
+ */
 export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => ({
   ...{
     category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
@@ -345,6 +359,13 @@ export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => (
   ...defaults,
 });
 
+/**
+ * Generate random NFT `TokenDetails` (`amount: 0n`, random commitment, `none` capability) for
+ * use in tests and examples. Fields can be overridden by passing a `defaults` object.
+ *
+ * @param defaults - Values that override the randomly generated fields.
+ * @returns Synthetic NFT token details.
+ */
 export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => ({
   ...{
     category: binToHex(sha256(bigIntToVmNumber(randomInt()))),

@@ -17,6 +17,14 @@ export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
 };
 
+/**
+ * Compile a CashScript source string to an {@link Artifact}.
+ *
+ * @param code - The CashScript source code to compile.
+ * @param compilerOptions - Optional compiler options that override the defaults.
+ * @returns The compiled CashScript artifact, including ABI, bytecode and debug information.
+ * @throws If the source code contains a syntax, semantic, or type error.
+ */
 export function compileString(code: string, compilerOptions: CompilerOptions = {}): Artifact {
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions };
 
@@ -64,6 +72,14 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
   return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions);
 }
 
+/**
+ * Read a `.cash` source file from disk and compile it to an `Artifact`.
+ *
+ * @param codeFile - The path to the `.cash` source file.
+ * @param compilerOptions - Optional compiler options that override the defaults.
+ * @returns The compiled CashScript artifact.
+ * @throws If the file cannot be read, or if the source contains a compilation error.
+ */
 export function compileFile(codeFile: PathLike, compilerOptions: CompilerOptions = {}): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
   return compileString(code, compilerOptions);

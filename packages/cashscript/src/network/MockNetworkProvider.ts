@@ -5,11 +5,25 @@ import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript, libauthTokenDetailsToCashScriptTokenDetails } from '../utils.js';
 import { DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
 
+/**
+ * Options accepted by the `MockNetworkProvider` constructor.
+ */
 export interface MockNetworkProviderOptions {
+  /**
+   * When `true` (default), broadcasting a transaction via `sendRawTransaction` updates the
+   * in-memory UTXO set: input UTXOs are removed and output UTXOs are added. Set to `false` to
+   * keep the UTXO set static.
+   */
   updateUtxoSet?: boolean;
+  /** The BCH VM target used for local debugging. Defaults to the current stable VM. */
   vmTarget?: VmTarget;
 }
 
+/**
+ * An in-memory `NetworkProvider` useful for tests and examples. It does not connect to any
+ * external server; instead UTXOs are manually added via `addUtxo` and transactions are tracked
+ * in memory.
+ */
 export default class MockNetworkProvider implements NetworkProvider {
   // we use lockingBytecode hex as the key for utxoMap to make cash addresses and token addresses interchangeable
   private utxoSet: Array<[string, Utxo]> = [];
@@ -19,6 +33,12 @@ export default class MockNetworkProvider implements NetworkProvider {
   public options: MockNetworkProviderOptions;
   public vmTarget: VmTarget;
 
+  /**
+   * Create a new MockNetworkProvider.
+   *
+   * @param options - Optional settings controlling UTXO-set updating and the VM target used by
+   *   `TransactionBuilder.debug`.
+   */
   constructor(options?: Partial<MockNetworkProviderOptions>) {
     this.options = { updateUtxoSet: true, ...options };
     this.vmTarget = this.options.vmTarget ?? DEFAULT_VM_TARGET;
@@ -34,6 +54,11 @@ export default class MockNetworkProvider implements NetworkProvider {
     return this.utxoSet.filter(([key]) => key === lockingBytecodeHex).map(([, utxo]) => utxo);
   }
 
+  /**
+   * Override the current block height returned by `getBlockHeight`.
+   *
+   * @param newBlockHeight - The block height to report for subsequent queries.
+   */
   setBlockHeight(newBlockHeight: number): void {
     this.blockHeight = newBlockHeight;
   }
@@ -90,6 +115,13 @@ export default class MockNetworkProvider implements NetworkProvider {
   // Note: the user can technically add the same UTXO multiple times (txid + vout), to the same or different addresses
   // but we don't check for this in the sendRawTransaction method. We might want to prevent duplicates from being added
   // in the first place.
+  /**
+   * Add a UTXO to the in-memory set so that it becomes spendable by the specified address or
+   * locking bytecode.
+   *
+   * @param addressOrLockingBytecode - Either a CashAddress or a hex-encoded locking bytecode.
+   * @param utxo - The UTXO to make spendable.
+   */
   addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void {
     const lockingBytecode = isHex(addressOrLockingBytecode) ?
       addressOrLockingBytecode : binToHex(addressToLockScript(addressOrLockingBytecode));
@@ -97,6 +129,9 @@ export default class MockNetworkProvider implements NetworkProvider {
     this.utxoSet.push([lockingBytecode, utxo]);
   }
 
+  /**
+   * Clear the in-memory UTXO set and transaction history. Block height is preserved.
+   */
   reset(): void {
     this.utxoSet = [];
     this.transactionMap = {};

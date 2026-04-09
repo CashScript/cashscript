@@ -33,29 +33,97 @@ type DefaultResolved<TArtifact extends Artifact> = {
   unlock: AbiToFunctionMap<TArtifact['abi'], Unlocker>;
 };
 
+// Non-generic base class holding the public API whose types do not depend on the Contract's
+// generic parameters. Declaring these members here (rather than on `ContractInternal<...>`) keeps
+// IDE hovers clean — tooltips show `ContractBase.name` instead of the fully resolved generic
+// `ContractInternal<{ readonly contractName: ...; readonly abi: ...; ... }, ...>.name`.
+class ContractBase {
+  /** The contract name as defined in the source CashScript code. */
+  name: string;
+
+  /** The CashAddress of the contract. Not available for `p2s` contracts. */
+  address: string;
+
+  /** The token-aware CashAddress of the contract. Not available for `p2s` contracts. */
+  tokenAddress: string;
+
+  /** Hex-encoded locking bytecode of the contract. */
+  lockingBytecode: string;
+
+  /** Hex-encoded redeem bytecode of the contract (constructor args prepended to the compiled script). */
+  bytecode: string;
+
+  /** Size of the contract bytecode in bytes. */
+  bytesize: number;
+
+  /** Number of opcodes in the contract bytecode. */
+  opcount: number;
+
+  /** The network provider used to query UTXOs for this contract and get network information. */
+  provider: NetworkProvider;
+
+  /** The address type of this contract: `p2sh20`, `p2sh32`, or `p2s`. */
+  contractType: ContractType;
+
+  /** Encoded constructor arguments in the order expected by the contract's constructor. */
+  encodedConstructorArgs: Uint8Array[];
+
+  /**
+   * Retrieve the total BCH balance of the contract by summing the satoshis of all UTXOs at the
+   * contract's address.
+   *
+   * @returns The total balance in satoshis.
+   */
+  async getBalance(): Promise<bigint> {
+    const utxos = await this.getUtxos();
+    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, 0n);
+  }
+
+  /**
+   * Retrieve all UTXOs (confirmed and unconfirmed) locked at the contract's address.
+   *
+   * @returns A list of UTXOs spendable by this contract.
+   */
+  async getUtxos(): Promise<Utxo[]> {
+    if (this.contractType === 'p2s') {
+      return this.provider.getUtxosForLockingBytecode(this.bytecode);
+    }
+
+    return this.provider.getUtxos(this.address);
+  }
+}
+
 class ContractInternal<
   TArtifact extends Artifact,
   TResolved extends ResolvedConstraint,
   TContractType extends ContractType,
-> {
-  name: string;
-  address: string;
-  tokenAddress: string;
-  lockingBytecode: string;
-  bytecode: string;
-  bytesize: number;
-  opcount: number;
+> extends ContractBase {
+  // Narrow the base class's `contractType` to the generic parameter. `declare` only refines the
+  // type; no new field is emitted, so the runtime assignment in the constructor still applies.
+  declare contractType: TContractType;
+
+  /**
+   * Call a contract function to spend a UTXO locked by this contract. Use as
+   * `contract.unlock.<functionName>(...args)` — the returned value is passed as the `unlocker`
+   * argument of `transactionBuilder.addInput(utxo, unlocker)`.
+   */
   unlock: TResolved['unlock'];
-  provider: NetworkProvider;
-  contractType: TContractType;
 
-  encodedConstructorArgs: Uint8Array[];
-
+  /**
+   * Instantiate a contract from a compiled CashScript artifact.
+   *
+   * @param artifact - The compiled contract artifact produced by `cashc`.
+   * @param constructorArgs - Constructor arguments in the order defined in the contract source.
+   * @param options - Contract options including the network provider and (optional) address type.
+   * @throws If the artifact is missing required properties, was compiled with an unsupported
+   *   compiler version, or if the number or types of constructor arguments does not match the artifact.
+   */
   constructor(
     public artifact: TArtifact,
     constructorArgs: TResolved['constructorInputs'],
     private options: ContractOptions<TContractType>,
   ) {
+    super();
     this.provider = this.options.provider;
 
     // Note: technically, it is possible to instantiate a Contract like this, which breaks the type safety,
@@ -107,19 +175,6 @@ class ContractInternal<
     this.lockingBytecode = this.contractType === 'p2s' ? this.bytecode : binToHex(addressToLockScript(this.address));
     this.bytesize = calculateBytesize(contractBytecodeScript);
     this.opcount = countOpcodes(contractBytecodeScript);
-  }
-
-  async getBalance(): Promise<bigint> {
-    const utxos = await this.getUtxos();
-    return utxos.reduce((acc, utxo) => acc + utxo.satoshis, 0n);
-  }
-
-  async getUtxos(): Promise<Utxo[]> {
-    if (this.contractType === 'p2s') {
-      return this.provider.getUtxosForLockingBytecode(this.bytecode);
-    }
-
-    return this.provider.getUtxos(this.address);
   }
 
   private createUnlocker(abiFunction: AbiFunction, selector?: number): ContractFunctionUnlocker {
