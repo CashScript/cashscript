@@ -660,6 +660,13 @@ export const fixtures: Fixture[] = [
               ),
               new RequireNode(
                 new BinaryOpNode(
+                  new NullaryOpNode(NullaryOperator.INPUT_COUNT),
+                  BinaryOperator.EQ,
+                  new IntLiteralNode(1n),
+                ),
+              ),
+              new RequireNode(
+                new BinaryOpNode(
                   new UnaryOpNode(
                     UnaryOperator.OUTPUT_LOCKING_BYTECODE,
                     new IntLiteralNode(0n),
