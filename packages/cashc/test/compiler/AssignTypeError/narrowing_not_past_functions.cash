@@ -1,0 +1,12 @@
+contract Test(bytes data) {
+    function one() {
+        require(data.length == 20);
+        bytes20 narrowed = data;
+        require(narrowed == data);
+    }
+
+    function two() {
+        bytes20 narrowed = data;
+        require(narrowed == data);
+    }
+}

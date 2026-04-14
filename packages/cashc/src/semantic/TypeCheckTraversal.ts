@@ -31,6 +31,9 @@ import {
   DoWhileNode,
   WhileNode,
   ForNode,
+  BlockNode,
+  StatementNode,
+  ExpressionNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import {
@@ -47,6 +50,7 @@ import {
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
+import { Symbol } from '../ast/SymbolTable.js';
 import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
@@ -92,9 +96,34 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
+  visitBlock(node: BlockNode): Node {
+    // Mutates the statements in place, so no need to re-assign the result.
+    this.visitStatementsRecursively(node.statements ?? []);
+    return node;
+  }
+
+  // Visits statements sequentially, narrowing bytes types after require(x.length == N) checks.
+  // Remaining statements are visited inside applyNarrowings so the narrowed types are
+  // automatically restored when recursion unwinds.
+  private visitStatementsRecursively(statements: StatementNode[], index: number = 0): void {
+    if (index >= statements.length) return;
+
+    statements[index] = this.visit(statements[index]) as StatementNode;
+
+    if (statements[index] instanceof RequireNode) {
+      const narrowings = extractBytesNarrowings((statements[index] as RequireNode).expression);
+      executeWithNarrowedTypes(narrowings, () => this.visitStatementsRecursively(statements, index + 1));
+    } else {
+      this.visitStatementsRecursively(statements, index + 1);
+    }
+  }
+
   visitBranch(node: BranchNode): Node {
     node.condition = this.visit(node.condition);
-    node.ifBlock = this.visit(node.ifBlock);
+
+    const narrowings = extractBytesNarrowings(node.condition);
+    executeWithNarrowedTypes(narrowings, () => { node.ifBlock = this.visit(node.ifBlock); });
+
     node.elseBlock = this.visitOptional(node.elseBlock);
 
     if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
@@ -523,3 +552,66 @@ const inferPaddedBytesType = (node: FunctionCallNode): Type => {
 
   return new BytesType();
 };
+
+type Narrowing = { symbol: Symbol, bound: number };
+
+// Temporarily narrows each symbol's type to BytesType(bound), calls fn, then restores.
+// Recurses through the list so each narrowing is restored in reverse order as the stack unwinds.
+function executeWithNarrowedTypes(narrowings: Narrowing[], fn: () => void): void {
+  if (narrowings.length === 0) return fn();
+
+  const [{ symbol, bound }, ...rest] = narrowings;
+  const originalType = symbol.type;
+  symbol.type = new BytesType(bound);
+  executeWithNarrowedTypes(rest, fn);
+  symbol.type = originalType;
+}
+
+// Extracts type narrowings from expressions like x.length == 20, including through && chains.
+function extractBytesNarrowings(expr: ExpressionNode): Narrowing[] {
+  if (!(expr instanceof BinaryOpNode)) return [];
+
+  // Both sides of && must be true, so all narrowings apply
+  if (expr.operator === BinaryOperator.AND) {
+    return [...extractBytesNarrowings(expr.left), ...extractBytesNarrowings(expr.right)];
+  }
+
+  const narrowing = extractSingleBytesNarrowing(expr);
+  return narrowing ? [narrowing] : [];
+}
+
+// Matches x.length == N or N == x.length where x is an unbounded bytes variable.
+function extractSingleBytesNarrowing(expr: BinaryOpNode): Narrowing | undefined {
+  if (expr.operator !== BinaryOperator.EQ) return undefined;
+
+  const match = matchSizeLiteral(expr);
+  if (!match) return undefined;
+
+  const { sizeNode, literalNode } = match;
+  if (!(sizeNode.expression instanceof IdentifierNode)) return undefined;
+
+  const { definition } = sizeNode.expression;
+  if (!definition || !(definition.type instanceof BytesType) || definition.type.bound !== undefined) return undefined;
+
+  const bound = Number(literalNode.value);
+  if (bound <= 0) return undefined;
+
+  return { symbol: definition, bound };
+}
+
+// Matches expr.length <op> N or N <op> expr.length, returning the SIZE node and int literal.
+function matchSizeLiteral(expr: BinaryOpNode): { sizeNode: UnaryOpNode, literalNode: IntLiteralNode } | undefined {
+  if (isSizeOp(expr.left) && expr.right instanceof IntLiteralNode) {
+    return { sizeNode: expr.left, literalNode: expr.right };
+  }
+
+  if (isSizeOp(expr.right) && expr.left instanceof IntLiteralNode) {
+    return { sizeNode: expr.right, literalNode: expr.left };
+  }
+
+  return undefined;
+}
+
+const isSizeOp = (node: ExpressionNode): node is UnaryOpNode => (
+  node instanceof UnaryOpNode && node.operator === UnaryOperator.SIZE
+);
