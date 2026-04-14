@@ -3,9 +3,7 @@ import {
   hexToBin,
   Transaction,
   binToHex,
-  encodeCashAddress,
 } from '@bitauth/libauth';
-import { hash160 } from '@cashscript/utils';
 import PQueue from 'p-queue';
 import pRetry from 'p-retry';
 import { Output, Network, Utxo } from '../src/interfaces.js';
@@ -44,10 +42,16 @@ export function getLargestUtxo(utxos: Utxo[]): Utxo {
   return [...utxos].sort(utxoComparator).reverse()[0];
 }
 
+// concurrency: 1 serializes calls so they don't race on funder UTXOs.
+// intervalCap/interval rate-limits starts so the electrum server has time to index each
+// transaction before the next one tries to spend the funder's change UTXO.
+const liveAddUtxoQueue = new PQueue({ concurrency: 1, interval: 3000, intervalCap: 1, strict: true });
+
+
 // Adds a UTXO to the given address on any network provider:
 // - On MockNetworkProvider, the UTXO is inserted directly into the mock UTXO set.
 // - On live providers (e.g. ElectrumNetworkProvider for chipnet), a real transaction is
-//   constructed and broadcast from the `funderWif` exported by `fixture/vars.ts`, creating
+//   constructed and broadcast from the `funderPriv` exported by `fixture/vars.ts`, creating
 //   the UTXO on-chain. The returned UTXO contains the real txid/vout from the broadcast
 //   transaction.
 // Token UTXOs are only supported on MockNetworkProvider.
@@ -67,11 +71,11 @@ export async function addUtxo(
 
   // Serialize all live addUtxo calls through a single-slot queue. Parallel calls would
   // otherwise race to fetch and spend the same funder UTXO, causing txn-mempool-conflict.
-  // As a fallback, p-retry retries up to 3 times on mempool conflicts if one still slips
+  // As a fallback, p-retry retries up to 10 times on mempool conflicts if one still slips
   // through (e.g. the electrum server hadn't yet indexed the previous change UTXO).
   const result = await liveAddUtxoQueue.add(() => pRetry(
     () => sendLiveAddUtxo(provider, address, utxo),
-    { retries: 10, shouldRetry: ({ error }) => isMempoolConflictError(error) },
+    { shouldRetry: ({ error }) => isMempoolConflictError(error) },
   ));
   if (!result) throw new Error('addUtxo: live queue returned no result');
   return result;
@@ -81,11 +85,6 @@ function isMempoolConflictError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return message.includes('txn-mempool-conflict') || message.includes('mempool conflict');
 }
-
-// concurrency: 1 serializes calls so they don't race on funder UTXOs.
-// intervalCap/interval rate-limits starts so the electrum server has time to index each
-// transaction before the next one tries to spend the funder's change UTXO.
-const liveAddUtxoQueue = new PQueue({ concurrency: 1, interval: 3000, intervalCap: 1, strict: true });
 
 async function sendLiveAddUtxo(
   provider: NetworkProvider,

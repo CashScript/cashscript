@@ -169,6 +169,7 @@
         "segwit",
         "setup",
         "sig",
+        "sigchecks",
         "sighash",
         "signable",
         "sigs",
