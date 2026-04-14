@@ -13,6 +13,7 @@ import {
   aliceAddress,
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
+import { addUtxo } from './test-util.js';
 import { generateLibauthSourceOutputs } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
@@ -115,7 +116,7 @@ describe('Contract', () => {
     // Not very robust, as this depends on the example P2PKH contract having balance
     it('should return balance for existing contract', async () => {
       const instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
-      (provider as any).addUtxo?.(instance.address, randomUtxo());
+      await addUtxo(provider, instance.address, randomUtxo());
 
       expect(await instance.getBalance()).toBeGreaterThan(0n);
     });

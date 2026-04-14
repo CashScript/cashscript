@@ -1,5 +1,5 @@
 import { Contract, ElectrumNetworkProvider, MockNetworkProvider, Network, TransactionBuilder } from '../../src/index.js';
-import { getLargestUtxo, getTxOutputs } from '../test-util.js';
+import { addUtxo, getLargestUtxo, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import { createOpReturnOutput, randomUtxo } from '../../src/utils.js';
 import { aliceAddress } from '../fixture/vars.js';
@@ -13,9 +13,9 @@ describe('Announcement', () => {
   const announcement = new Contract(artifact, [], { provider });
   const minerFee = 1000n;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     console.log(announcement.address);
-    (provider as any).addUtxo?.(announcement.address, randomUtxo());
+    await addUtxo(provider, announcement.address, randomUtxo());
   });
 
   describe('send', () => {

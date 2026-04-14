@@ -51,6 +51,8 @@
     "@types/semver": "^7.5.8",
     "@vitest/coverage-v8": "^4.0.15",
     "eslint": "^8.54.0",
+    "p-queue": "^9.1.2",
+    "p-retry": "^8.0.0",
     "typescript": "^5.9.2",
     "vitest": "^4.0.15"
   },

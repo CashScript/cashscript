@@ -4,6 +4,7 @@ import {
   TransactionBuilder,
 } from '../../src/index.js';
 import { Network } from '../../src/interfaces.js';
+import { addUtxo } from '../test-util.js';
 import artifact from '../fixture/token_category_comparison.artifact.js';
 
 describe('TokenCategoryCheck', () => {
@@ -13,12 +14,13 @@ describe('TokenCategoryCheck', () => {
 
   const checkTokenCategoryContract = new Contract(artifact, [], { provider });
 
-  beforeAll(() => {
+  beforeAll(async () => {
     console.log(checkTokenCategoryContract.tokenAddress);
-    (provider as any).addUtxo?.(checkTokenCategoryContract.address, randomUtxo({ satoshis: 1000n, token: randomToken() }));
-    (provider as any).addUtxo?.(checkTokenCategoryContract.address, randomUtxo());
-    (provider as any).addUtxo?.(checkTokenCategoryContract.address, randomUtxo());
-    (provider as any).addUtxo?.(checkTokenCategoryContract.address, randomUtxo());
+    const contractAddress = checkTokenCategoryContract.address;
+    await addUtxo(provider, contractAddress, randomUtxo({ satoshis: 1000n, token: randomToken() }));
+    await addUtxo(provider, contractAddress, randomUtxo());
+    await addUtxo(provider, contractAddress, randomUtxo());
+    await addUtxo(provider, contractAddress, randomUtxo());
   });
 
   describe('send', () => {

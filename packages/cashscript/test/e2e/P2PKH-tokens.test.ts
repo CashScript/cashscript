@@ -9,7 +9,7 @@ import {
   alicePub,
   alicePriv,
 } from '../fixture/vars.js';
-import { getTxOutputs } from '../test-util.js';
+import { addUtxo, getTxOutputs } from '../test-util.js';
 import { Network, TokenDetails, Utxo } from '../../src/interfaces.js';
 import artifact from '../fixture/p2pkh.artifact.js';
 
@@ -17,37 +17,37 @@ describe('P2PKH-tokens', () => {
   let p2pkhInstance: Contract<typeof artifact>;
   let provider: NetworkProvider;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     provider = process.env.TESTS_USE_CHIPNET
       ? new ElectrumNetworkProvider(Network.CHIPNET)
       : new MockNetworkProvider();
 
     p2pkhInstance = new Contract(artifact, [alicePkh], { provider });
     console.log(p2pkhInstance.tokenAddress);
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ vout: 0 }));
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo());
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo());
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({ vout: 0 }));
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({
       satoshis: 1000n,
       token: randomToken(),
     }));
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({
       satoshis: 1000n,
       token: randomToken(),
     }));
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({
       satoshis: 1000n,
       token: randomNFT(),
     }));
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({
       satoshis: 1000n,
       token: randomNFT(),
     }));
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({
       satoshis: 1000n,
       token: { ...randomNFT(), ...randomToken() },
     }));
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({
       satoshis: 1000n,
       token: { ...randomToken(), ...randomNFT() },
     }));

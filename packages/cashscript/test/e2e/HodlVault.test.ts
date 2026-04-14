@@ -14,7 +14,7 @@ import {
   oracle,
   oraclePub,
 } from '../fixture/vars.js';
-import { gatherUtxos, getTxOutputs } from '../test-util.js';
+import { addUtxo, gatherUtxos, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.artifact.js';
 import artifactUnenforcedTypes from '../fixture/hodl_vault-unenforced-types.artifact.js';
@@ -28,9 +28,9 @@ describe('HodlVault', () => {
 
   const hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
 
-  beforeAll(() => {
+  beforeAll(async () => {
     console.log(hodlVault.address);
-    (provider as any).addUtxo?.(hodlVault.address, randomUtxo());
+    await addUtxo(provider, hodlVault.address, randomUtxo());
   });
 
   describe('send', () => {

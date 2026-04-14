@@ -17,7 +17,7 @@ import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo,
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
-import { getTxOutputs } from './test-util.js';
+import { addUtxo, getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
 
 describe('Transaction Builder', () => {
@@ -28,23 +28,23 @@ describe('Transaction Builder', () => {
   let p2pkhInstance: Contract<typeof p2pkhArtifact>;
   let twtInstance: Contract<typeof twtArtifact>;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     // Note: We instantiate the contract with carolPkh to avoid mempool conflicts with other (P2PKH) tests
     p2pkhInstance = new Contract(p2pkhArtifact, [carolPkh], { provider });
     twtInstance = new Contract(twtArtifact, [bobPub, carolPub, 100000n], { provider });
     console.log(p2pkhInstance.tokenAddress);
     console.log(twtInstance.tokenAddress);
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(p2pkhInstance.address, randomUtxo({ token: randomToken() }));
-    (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(twtInstance.address, randomUtxo());
-    (provider as any).addUtxo?.(aliceAddress, randomUtxo());
-    (provider as any).addUtxo?.(aliceAddress, randomUtxo());
-    (provider as any).addUtxo?.(bobAddress, randomUtxo());
-    (provider as any).addUtxo?.(bobAddress, randomUtxo());
-    (provider as any).addUtxo?.(carolAddress, randomUtxo());
-    (provider as any).addUtxo?.(carolAddress, randomUtxo());
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo());
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo());
+    await addUtxo(provider, p2pkhInstance.address, randomUtxo({ token: randomToken() }));
+    await addUtxo(provider, twtInstance.address, randomUtxo());
+    await addUtxo(provider, twtInstance.address, randomUtxo());
+    await addUtxo(provider, aliceAddress, randomUtxo());
+    await addUtxo(provider, aliceAddress, randomUtxo());
+    await addUtxo(provider, bobAddress, randomUtxo());
+    await addUtxo(provider, bobAddress, randomUtxo());
+    await addUtxo(provider, carolAddress, randomUtxo());
+    await addUtxo(provider, carolAddress, randomUtxo());
   });
 
   describe('test TransactionBuilder.build', () => {

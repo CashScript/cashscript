@@ -10,7 +10,7 @@ import {
 import {
   alicePriv, alicePub, bobPriv, bobPub,
 } from '../fixture/vars.js';
-import { gatherUtxos, getTxOutputs } from '../test-util.js';
+import { addUtxo, gatherUtxos, getTxOutputs } from '../test-util.js';
 import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 
@@ -22,12 +22,12 @@ describe('TransferWithTimeout', () => {
   const twtInstancePast = new Contract(twtArtifact, [alicePub, bobPub, 100000n], { provider });
   const twtInstanceFuture = new Contract(twtArtifact, [alicePub, bobPub, 2000000n], { provider });
 
-  beforeAll(() => {
+  beforeAll(async () => {
     console.log(twtInstancePast.address);
     console.log(twtInstanceFuture.address);
 
-    (provider as any).addUtxo?.(twtInstancePast.address, randomUtxo());
-    (provider as any).addUtxo?.(twtInstanceFuture.address, randomUtxo());
+    await addUtxo(provider, twtInstancePast.address, randomUtxo());
+    await addUtxo(provider, twtInstanceFuture.address, randomUtxo());
   });
 
   describe('send', () => {

@@ -19,9 +19,11 @@ const baseDerivationPath = "m/44'/145'/0'/0";
 const aliceNode = deriveHdPath(rootNode, `${baseDerivationPath}/0`);
 const bobNode = deriveHdPath(rootNode, `${baseDerivationPath}/1`);
 const carolNode = deriveHdPath(rootNode, `${baseDerivationPath}/2`);
+const funderNode = deriveHdPath(rootNode, `${baseDerivationPath}/3`);
 if (typeof aliceNode === 'string') throw new Error();
 if (typeof bobNode === 'string') throw new Error();
 if (typeof carolNode === 'string') throw new Error();
+if (typeof funderNode === 'string') throw new Error();
 
 export const alicePriv = aliceNode.privateKey;
 export const aliceWif = encodePrivateKeyWif(alicePriv, 'testnet');
@@ -47,4 +49,11 @@ export const carolTokenAddress = encodeCashAddress({ prefix: 'bchtest', type: 'p
 export const oracle = new PriceOracle(bobPriv);
 export const oraclePub = bobPub;
 
+// On chipnet, addUtxo() needs a funder WIF to create real UTXOs on-chain.
+// It must be pre-funded with enough BCH to cover the amounts requested across all tests in a single run.
+export const funderPriv = funderNode.privateKey;
+export const funderPkh = hash160(secp256k1.derivePublicKeyCompressed(funderPriv) as Uint8Array);
+export const funderAddress = encodeCashAddress({ prefix: 'bchtest', type: 'p2pkh', payload: funderPkh, throwErrors: true }).address;
+
+console.log('Funder address:', funderAddress);
 console.log(aliceAddress, bobAddress, carolAddress);

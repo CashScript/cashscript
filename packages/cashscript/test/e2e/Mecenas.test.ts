@@ -5,7 +5,7 @@ import {
   aliceAddress,
   bobAddress,
 } from '../fixture/vars.js';
-import { getLargestUtxo, getTxOutputs } from '../test-util.js';
+import { addUtxo, getLargestUtxo, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/mecenas.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
@@ -20,9 +20,9 @@ describe('Mecenas', () => {
   const mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider });
   const minerFee = 1000n;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     console.log(mecenas.address);
-    (provider as any).addUtxo?.(mecenas.address, randomUtxo());
+    await addUtxo(provider, mecenas.address, randomUtxo());
   });
 
   describe('send', () => {

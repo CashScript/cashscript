@@ -39,8 +39,8 @@ describe('Multi-Contract-Debugging tests', () => {
       const sameNameDifferentPathContractUtxo = randomUtxo();
       const siblingIntrospectionUtxo = randomUtxo();
 
-      (provider as any).addUtxo?.(sameNameDifferentPathContract.address, sameNameDifferentPathContractUtxo);
-      (provider as any).addUtxo?.(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+      provider.addUtxo(sameNameDifferentPathContract.address, sameNameDifferentPathContractUtxo);
+      provider.addUtxo(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
 
       it('should log correct data in all executed console.log statements across all contracts in the correct order by input index', () => {
         const tx = new TransactionBuilder({ provider })
@@ -78,8 +78,8 @@ describe('Multi-Contract-Debugging tests', () => {
       const sameNameDifferentPathContract1Utxo = randomUtxo();
       const sameNameDifferentPathContract2Utxo = randomUtxo();
 
-      (provider as any)?.addUtxo(sameNameDifferentPathContract1.address, sameNameDifferentPathContract1Utxo);
-      (provider as any)?.addUtxo(sameNameDifferentPathContract2.address, sameNameDifferentPathContract2Utxo);
+      provider.addUtxo(sameNameDifferentPathContract1.address, sameNameDifferentPathContract1Utxo);
+      provider.addUtxo(sameNameDifferentPathContract2.address, sameNameDifferentPathContract2Utxo);
 
       const tx = new TransactionBuilder({ provider })
         .addInput(sameNameDifferentPathContract1Utxo, sameNameDifferentPathContract1.unlock.function_1(0n))
@@ -98,9 +98,9 @@ describe('Multi-Contract-Debugging tests', () => {
 
       const MAX_INT64 = BigInt('9223372036854775807');
 
-      (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bobAddress, randomUtxo());
+      provider.addUtxo(p2pkhContract.address, randomUtxo());
+      provider.addUtxo(bigintContract.address, randomUtxo());
+      provider.addUtxo(bobAddress, randomUtxo());
 
       const to = p2pkhContract.address;
       const amount = 10000n;
@@ -124,9 +124,9 @@ describe('Multi-Contract-Debugging tests', () => {
 
       const MAX_INT64 = BigInt('9223372036854775807');
 
-      (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bobAddress, randomUtxo());
+      provider.addUtxo(p2pkhContract.address, randomUtxo());
+      provider.addUtxo(bigintContract.address, randomUtxo());
+      provider.addUtxo(bobAddress, randomUtxo());
 
       const to = p2pkhContract.address;
       const amount = 10000n;
@@ -151,9 +151,9 @@ describe('Multi-Contract-Debugging tests', () => {
       const p2pkhContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
       const bigintContract = new Contract(bigintArtifact, [], { provider });
 
-      (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bobAddress, randomUtxo());
+      provider.addUtxo(p2pkhContract.address, randomUtxo());
+      provider.addUtxo(bigintContract.address, randomUtxo());
+      provider.addUtxo(bobAddress, randomUtxo());
 
       const to = p2pkhContract.address;
       const amount = 10000n;
@@ -179,9 +179,9 @@ describe('Multi-Contract-Debugging tests', () => {
 
       const MAX_INT64 = BigInt('9223372036854775807');
 
-      (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bobAddress, randomUtxo());
+      provider.addUtxo(p2pkhContract.address, randomUtxo());
+      provider.addUtxo(bigintContract.address, randomUtxo());
+      provider.addUtxo(bobAddress, randomUtxo());
 
       const to = p2pkhContract.address;
       const amount = 10000n;
@@ -207,9 +207,9 @@ describe('Multi-Contract-Debugging tests', () => {
 
       const MAX_INT64 = BigInt('9223372036854775807');
 
-      (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
-      (provider as any).addUtxo?.(bobAddress, randomUtxo());
+      provider.addUtxo(p2pkhContract.address, randomUtxo());
+      provider.addUtxo(bigintContract.address, randomUtxo());
+      provider.addUtxo(bobAddress, randomUtxo());
 
       const to = p2pkhContract.address;
       const amount = 10000n;
@@ -244,9 +244,9 @@ describe('Multi-Contract-Debugging tests', () => {
       const incorrectContractUtxo = randomUtxo();
       const siblingIntrospectionUtxo = randomUtxo();
 
-      (provider as any).addUtxo?.(correctContract.address, correctContractUtxo);
-      (provider as any).addUtxo?.(incorrectContract.address, incorrectContractUtxo);
-      (provider as any).addUtxo?.(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+      provider.addUtxo(correctContract.address, correctContractUtxo);
+      provider.addUtxo(incorrectContract.address, incorrectContractUtxo);
+      provider.addUtxo(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
 
       it('should not throw fail any require statements when introspecting correct sibling UTXOs', () => {
         const tx = new TransactionBuilder({ provider })

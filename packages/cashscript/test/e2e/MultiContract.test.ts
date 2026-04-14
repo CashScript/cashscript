@@ -18,11 +18,11 @@ import {
   carolPriv,
   carolPub,
 } from '../fixture/vars.js';
-import { Network } from '../../src/interfaces.js';
+import { Network, Utxo } from '../../src/interfaces.js';
 import { addressToLockScript, randomUtxo } from '../../src/utils.js';
 import p2pkhArtifact from '../fixture/p2pkh.artifact.js';
 import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
-import { getTxOutputs } from '../test-util.js';
+import { addUtxo, getTxOutputs } from '../test-util.js';
 import SiblingIntrospectionArtifact from '../fixture/SiblingIntrospection.artifact.js';
 
 describe('Multi Contract', () => {
@@ -38,16 +38,16 @@ describe('Multi Contract', () => {
     const p2pkhInstance1 = new Contract(p2pkhArtifact, [bobPkh], { provider });
     const p2pkhInstance2 = new Contract(p2pkhArtifact, [carolPkh], { provider });
 
-    beforeAll(() => {
+    beforeAll(async () => {
       // Note: We instantiate the contract with carolPkh to avoid mempool conflicts with other (P2PKH) tests
       console.log(p2pkhInstance1.tokenAddress);
       console.log(p2pkhInstance2.tokenAddress);
-      (provider as any).addUtxo?.(p2pkhInstance1.address, randomUtxo());
-      (provider as any).addUtxo?.(p2pkhInstance1.address, randomUtxo());
-      (provider as any).addUtxo?.(p2pkhInstance2.address, randomUtxo());
-      (provider as any).addUtxo?.(p2pkhInstance2.address, randomUtxo());
-      (provider as any).addUtxo?.(bobAddress, randomUtxo());
-      (provider as any).addUtxo?.(bobAddress, randomUtxo());
+      await addUtxo(provider, p2pkhInstance1.address, randomUtxo());
+      await addUtxo(provider, p2pkhInstance1.address, randomUtxo());
+      await addUtxo(provider, p2pkhInstance2.address, randomUtxo());
+      await addUtxo(provider, p2pkhInstance2.address, randomUtxo());
+      await addUtxo(provider, bobAddress, randomUtxo());
+      await addUtxo(provider, bobAddress, randomUtxo());
     });
 
     it('should fail with correct errors when using incorrect unlocker for p2pkhInstance1', async () => {
@@ -126,14 +126,14 @@ describe('Multi Contract', () => {
 
   describe('Different contracts', () => {
     const p2pkhContract = new Contract(p2pkhArtifact, [bobPkh], { provider });
-    const twtContract = new Contract(twtArtifact, [bobPub, carolPub, 100000n], { provider });
+    const twtContract = new Contract(twtArtifact, [bobPub, carolPub, 100_000n], { provider });
 
-    beforeAll(() => {
+    beforeAll(async () => {
       console.log(p2pkhContract.tokenAddress);
       console.log(twtContract.tokenAddress);
 
-      (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo());
-      (provider as any).addUtxo?.(twtContract.address, randomUtxo());
+      await addUtxo(provider, p2pkhContract.address, randomUtxo());
+      await addUtxo(provider, twtContract.address, randomUtxo());
     });
 
     it('should fail with correct errors when using incorrect unlocker for p2pkhContract', async () => {
@@ -198,7 +198,7 @@ describe('Multi Contract', () => {
         .addInput(twtContractUtxos[0], twtContract.unlock.timeout(bobSignatureTemplate))
         .addInput(bobAddressUtxos[0], bobSignatureTemplate.unlockP2PKH())
         .addOutput({ to, amount })
-        .setLocktime(1000000)
+        .setLocktime(100_000)
         .send();
 
       // then
@@ -214,13 +214,15 @@ describe('Multi Contract', () => {
     const correctLockingBytecode = addressToLockScript(correctContract.address);
     const siblingIntrospectionContract = new Contract(SiblingIntrospectionArtifact, [correctLockingBytecode], { provider });
 
-    const correctContractUtxo = randomUtxo();
-    const incorrectContractUtxo = randomUtxo();
-    const siblingIntrospectionUtxo = randomUtxo();
+    let correctContractUtxo: Utxo;
+    let incorrectContractUtxo: Utxo;
+    let siblingIntrospectionUtxo: Utxo;
 
-    (provider as any).addUtxo?.(correctContract.address, correctContractUtxo);
-    (provider as any).addUtxo?.(incorrectContract.address, incorrectContractUtxo);
-    (provider as any).addUtxo?.(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+    beforeAll(async () => {
+      correctContractUtxo = await addUtxo(provider, correctContract.address, randomUtxo());
+      incorrectContractUtxo = await addUtxo(provider, incorrectContract.address, randomUtxo());
+      siblingIntrospectionUtxo = await addUtxo(provider, siblingIntrospectionContract.address, randomUtxo());
+    });
 
     it('should succeed when introspecting correct sibling UTXOs', async () => {
       // given
