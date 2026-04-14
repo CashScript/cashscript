@@ -155,8 +155,7 @@ Besides these wasted days it can also be inconvenient to claim at set intervals,
 
 ```solidity
 // Mutable NFT Commitment contract state
-// bytes8 latestLockTime
-
+// bytes8 blockHeightPreviousPledge
 contract StreamingMecenas(
     bytes20 recipient,
     bytes20 funder,
@@ -169,8 +168,7 @@ contract StreamingMecenas(
 
         // Read the block height of the previous pledge, kept in the NFT commitment
         require(tx.inputs.length == 1);
-        bytes localState = tx.inputs[0].nftCommitment;
-        int blockHeightPreviousPledge = int(localState);
+        int blockHeightPreviousPledge = int(tx.inputs[0].nftCommitment);
 
         // Check that time has passed and that time locks are enabled
         require(tx.time >= blockHeightPreviousPledge);
@@ -184,10 +182,10 @@ contract StreamingMecenas(
         int currentValue = tx.inputs[0].value;
         int changeValue = currentValue - pledge - minerFee;
 
-        // If there is not enough left for *another* pledge after this one,
+        // If there is not enough left for *another* block after this one,
         // we send the remainder to the recipient. Otherwise we send the
         // remainder to the recipient and the change back to the contract
-        if (changeValue <= pledge + minerFee) {
+        if (changeValue <= pledgePerBlock + minerFee) {
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             // Check that the outputs send the correct amounts
@@ -198,8 +196,7 @@ contract StreamingMecenas(
             require(tx.outputs[1].lockingBytecode == tx.inputs[0].lockingBytecode);
 
             // Update the block height of the previous pledge, kept in the NFT commitment
-            bytes blockHeightNewPledge = toPaddedBytes(tx.locktime, 8);
-            require(tx.outputs[1].nftCommitment == blockHeightNewPledge);
+            require(tx.outputs[1].nftCommitment == toPaddedBytes(tx.locktime, 8));
         }
     }
 
