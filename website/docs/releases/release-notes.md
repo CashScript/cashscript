@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.13.0-next.6
+## v0.13.0-next.7
 
 This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
@@ -10,6 +10,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add support for `for`, `while` and `do-while` loops.
 - :sparkles: Add support for bitwise and arithmetic shift operators (`<<`, `>>`) and bitwise inversion (`~`).
 - :sparkles: Add `unsafe_bool()` and `unsafe_int()` casting for semantic-only casts.
+- :sparkles: Add support for narrowing bytes types after `x.length == N` and checks in require or if statements.
 - :hammer_and_wrench: **BREAKING**: Function parameter types are now strictly enforced (bounded bytes and boolean values).
 - :hammer_and_wrench: Add compiler option to `cashc` (programmatic and CLI compilation) to allow for opting out of function parameter type enforcement.
 - :bug: Fix issue where casting bytes larger than `bytes8` to `int` was not allowed.
@@ -27,11 +28,14 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add `getUtxosForLockingBytecode()` method to `ElectrumNetworkProvider` class and `MockNetworkProvider` interface.
 - :sparkles: In the `MockNetworkProvider`, `addUtxo()` now also allows UTXOs to be added by locking bytecode.
 - :sparkles: Add `gatherBchUtxos()` and `gatherFungibleTokenUtxos()` functions to the SDK for gathering UTXOs.
+- :sparkles: Add specific network error classes to standardise error handling in network providers.
+- :sparkles: Add TSDoc strings for all public classes and methods.
 - :boom: **BREAKING**: Remove `BitcoinRpcNetworkProvider` and `FullStackNetworkProvider` from the SDK.
 - :hammer_and_wrench: **BREAKING**: Rename `addressType` option on `Contract` constructor to `contractType`.
 - :hammer_and_wrench: **BREAKING**: Remove undocumented `redeemScript` property from `Contract` class.
 - :hammer_and_wrench: **BREAKING**: Remove undocumented `buildLibauthTransaction()` method from `TransactionBuilder` class.
 - :hammer_and_wrench: Update default VM target to `BCH_2026_05`.
+- :hammer_and_wrench: Improve validation when adding outputs to a transaction.
 - :hammer_and_wrench: Improve package size by tidying up dependencies.
 
 #### Testing Suite
