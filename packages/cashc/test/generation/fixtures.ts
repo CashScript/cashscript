@@ -1022,7 +1022,7 @@ export const fixtures: Fixture[] = [
       bytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2DUP OP_ADD OP_ROT OP_DROP OP_SWAP OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_3 OP_NUMEQUAL',
       debug: {
         bytecode: '00006576539f766b636e937b757c768b77686c916675539c',
-        sourceMap: '3:18:3:19;5:21:5:22;:8:7:9;:24:5:25;:28::29;:24:::1;;;:42:7:9:0;6:18:6:25;::::1;:12::26;;;5:35:5:36:0;:::40:1;:31;:42:7:9;;:8;;;9:23:9:24:0;:8::26:1',
+        sourceMap: '3:18:3:19;5:21:5:22;:8:7:9;:24:5:25;:28::29;:24:::1;;;:36:7:9:0;6:18:6:25;::::1;:12::26;;;5:31:5:32:0;:::34:1;;:36:7:9;;:8;;;9:23:9:24:0;:8::26:1',
         logs: [],
         requires: [
           { ip: 24, line: 9 },
@@ -1049,7 +1049,7 @@ export const fixtures: Fixture[] = [
       bytecode: 'OP_0 OP_1 OP_1 OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_3 OP_PICK OP_OVER OP_ADD OP_4 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_FROMALTSTACK OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_ROT OP_3 OP_NUMEQUALVERIFY OP_SWAP OP_1 OP_NUMEQUALVERIFY OP_1 OP_NUMEQUAL',
       debug: {
         bytecode: '005151006576539f766b6353797893547a757c6b7c6b7c6c6c768b77686c9166757b539d7c519d519c',
-        sourceMap: '3:18:3:19;4:16:4:17;5::5;7:21:7:22;:8:9:9;:24:7:25;:28::29;:24:::1;;;:42:9:9:0;8:18:8:21;;:24::25;:18:::1;:12::26;;;;;;;;;;7:35:7:36:0;:::40:1;:31;:42:9:9;;:8;;;11:16:11:19:0;:23::24;:8::26:1;12:16:12:17:0;:21::22;:8::24:1;13:21:13:22:0;:8::24:1',
+        sourceMap: '3:18:3:19;4:16:4:17;5::5;7:21:7:22;:8:9:9;:24:7:25;:28::29;:24:::1;;;:39:9:9:0;8:18:8:21;;:24::25;:18:::1;:12::26;;;;;;;;;;7:31:7:32:0;:::37:1;;:39:9:9;;:8;;;11:16:11:19:0;:23::24;:8::26:1;12:16:12:17:0;:21::22;:8::24:1;13:21:13:22:0;:8::24:1',
         logs: [],
         requires: [
           { ip: 35, line: 11 },

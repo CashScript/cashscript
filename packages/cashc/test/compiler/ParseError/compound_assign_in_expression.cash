@@ -1,0 +1,7 @@
+contract CompoundAssignInExpression() {
+    function spend() {
+        int i = 0;
+        int x = i++;
+        require(x == 0);
+    }
+}

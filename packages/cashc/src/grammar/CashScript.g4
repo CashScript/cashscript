@@ -73,7 +73,8 @@ tupleAssignment
     ;
 
 assignStatement
-    : Identifier '=' expression
+    : Identifier op=('=' | '+=' | '-=') expression
+    | Identifier op=('++' | '--')
     ;
 
 timeOpStatement

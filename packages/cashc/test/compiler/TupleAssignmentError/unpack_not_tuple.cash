@@ -3,6 +3,6 @@ contract Test() {
         string x, string y = s.split(5)[0];
         string a, string b = s + "hello";
         require(x == y);
-        require(a -- b);
+        require(a == b);
     }
 }

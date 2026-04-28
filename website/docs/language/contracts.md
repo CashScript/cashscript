@@ -113,13 +113,18 @@ string constant myString = 'Bitcoin Cash';
 ```
 
 ### Variable assignment
-After their initial declaration, any variable can be reassigned later on. However, CashScript lacks any compound assignment operators such as `+=` or `-=`.
+After their initial declaration, any variable can be reassigned later on. CashScript supports regular assignment with `=`, the compound assignment operators `+=` and `-=`, and the increment and decrement operators `++` and `--`. The compound and increment/decrement operators are only valid on `int` variables.
 
 #### Example
 ```solidity
 i = i + 1;
 hashedValue = sha256(hashedValue);
 myString = 'Cash';
+
+counter += 2;
+counter -= 1;
+counter++;
+counter--;
 ```
 
 ### If statements
@@ -163,10 +168,8 @@ pragma cashscript ^0.13.0;
 
 contract NoTokensAllowed() {
     function spend() {
-        int inputIndex = 0;
-
         // Loop over all inputs (variable length), and make sure that none of them contain tokens
-        for (int inputIndex = 0; inputIndex < tx.inputs.length; inputIndex = inputIndex + 1) {
+        for (int inputIndex = 0; inputIndex < tx.inputs.length; inputIndex++) {
             require(tx.inputs[inputIndex].tokenCategory == 0x);
         }
     }
@@ -188,7 +191,7 @@ contract NoTokensAllowed() {
         // Loop over all inputs (variable length), and make sure that none of them contain tokens
         while (inputIndex < tx.inputs.length) {
             require(tx.inputs[inputIndex].tokenCategory == 0x);
-            inputIndex = inputIndex + 1;
+            inputIndex++;
         }
     }
 }
@@ -209,7 +212,7 @@ contract NoTokensAllowed() {
         // Loop over all inputs (variable length), and make sure that none of them contain tokens
         do {
             require(tx.inputs[inputIndex].tokenCategory == 0x);
-            inputIndex = inputIndex + 1;
+            inputIndex++;
         } while (inputIndex < tx.inputs.length);
     }
 }

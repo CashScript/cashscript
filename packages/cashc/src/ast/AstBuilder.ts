@@ -207,10 +207,35 @@ export default class AstBuilder
     const identifier = new IdentifierNode(ctx.Identifier().getText());
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
 
-    const expression = this.visit(ctx.expression());
+    const expression = this.createAssignExpression(ctx);
     const assign = new AssignNode(identifier, expression);
     assign.location = Location.fromCtx(ctx);
     return assign;
+  }
+
+  // Builds the right-hand side expression for an assignStatement, rewriting compound
+  // forms (+=, -=, ++, --) as: identifier (+|-) rhs
+  private createAssignExpression(ctx: AssignStatementContext): ExpressionNode {
+    const op = ctx._op.text;
+
+    if (op === '=') return this.visit(ctx.expression()) as ExpressionNode;
+
+    const leftIdentifier = new IdentifierNode(ctx.Identifier().getText());
+    leftIdentifier.location = Location.fromToken(ctx.Identifier().symbol);
+
+    const binaryOperator = (op === '+=' || op === '++') ? BinaryOperator.PLUS : BinaryOperator.MINUS;
+
+    let right: ExpressionNode;
+    if (op === '++' || op === '--') {
+      right = new IntLiteralNode(1n);
+      right.location = Location.fromCtx(ctx);
+    } else {
+      right = this.visit(ctx.expression()) as ExpressionNode;
+    }
+
+    const binaryOp = new BinaryOpNode(leftIdentifier, binaryOperator, right);
+    binaryOp.location = Location.fromCtx(ctx);
+    return binaryOp;
   }
 
   visitTimeOpStatement(ctx: TimeOpStatementContext): TimeOpNode {
