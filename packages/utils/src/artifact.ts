@@ -60,6 +60,7 @@ export interface Artifact {
     options?: CompilerOptions;
   }
   updatedAt: string;
+  fingerprint?: string; // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
 }
 
 export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): string {

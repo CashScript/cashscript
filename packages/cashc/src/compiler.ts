@@ -1,6 +1,6 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, CompilerOptions, generateSourceMap, generateSourceTags, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
+import { Artifact, CompilerOptions, computeBytecodeFingerprintWithConstructorArgs, generateSourceMap, generateSourceTags, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -69,7 +69,9 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
     ...(sourceTags ? { sourceTags } : {}),
   };
 
-  return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions);
+  const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);
+
+  return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions, fingerprint);
 }
 
 /**

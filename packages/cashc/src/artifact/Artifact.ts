@@ -10,6 +10,7 @@ export function generateArtifact(
   source: string,
   debug: DebugInformation,
   compilerOptions: CompilerOptions,
+  fingerprint: string,
 ): Artifact {
   const { contract } = ast;
 
@@ -39,6 +40,7 @@ export function generateArtifact(
       options: compilerOptions,
     },
     updatedAt: new Date().toISOString(),
+    fingerprint,
   };
 }
 

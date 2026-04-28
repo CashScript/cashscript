@@ -39,6 +39,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '07f5c2c2cf10439f063f3b92b9420b110614fb57b5c5015120bfca2688fedcc7',
     },
   },
   {
@@ -82,6 +83,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '7dfcd01f0ecb5e1dec3d2fb363b5af79eb84a15395e1b57fe9c383cb3861d634',
     },
   },
   {
@@ -131,6 +133,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'b5f6c8b6bd5a7e4bfa2a596b5639fac59338e9cbf93673abc8c32fd4565f2846',
     },
   },
   {
@@ -174,6 +177,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '4367893ec13aecfe4624b6d5b12681b9782de30dd657d1313eed269faba937e4',
     },
   },
   {
@@ -249,6 +253,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'f57b39c9be272a31d1aedd678087b7dd327095fde647570149d237fb34401469',
     },
   },
   {
@@ -275,6 +280,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'd06a42627510906395fa927195c1aa420b9adf7da407d71b793fc5d550b57a39',
     },
   },
   {
@@ -308,6 +314,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '49d50376d8aa76534f29c049b987238d577ce332202a2f0da0cb74d94a027b79',
     },
   },
   {
@@ -339,6 +346,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'bbf25f5a4cfbc9380707afca6d1f14a29c7971f589949d284859225508f4bad6',
     },
   },
   {
@@ -401,6 +409,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '10bb7c68d352b3fd852ce3346f8b72062ed77a42c876261f1d1d862370210271',
     },
   },
   {
@@ -436,6 +445,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '5ec5f2a100dc5c29c95f58ed51e4da469b74e5932b070e38f3c30c3405f40005',
     },
   },
   {
@@ -464,6 +474,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '1534c07d4972c49c395973d4aaa6f7d8f00d8152f2875270310b256947b58bc2',
     },
   },
   {
@@ -500,6 +511,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '1fd180f7d78e9670d7b2ae95e7af1f7cc533fc42c3cfdc7872619ec5810487d2',
     },
   },
   {
@@ -585,6 +597,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '4c5cc76d20725fb28c264ff2f55b2af0a0aa2383638d02a86a98fff026077ee2',
     },
   },
   {
@@ -665,6 +678,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '82af4e70abe6257185f9fa2b9b65377949794a7f3f862a65eb3c61ec6bbff28a',
     },
   },
   {
@@ -718,6 +732,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '542596767034cea0f3a5933a1efa49bb9aa569ec70c5f0261afd36ea845fa746',
     },
   },
   {
@@ -744,6 +759,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '4e9480ee14cf131a78be8da27e585e3d62c0e9cfa75d8338f2d51a67d84df0c7',
     },
   },
   {
@@ -770,6 +786,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '7ebb008689b080dce1061a508173a617c58b68202899cfd17a32f1a5decd4bb6',
     },
   },
   {
@@ -799,6 +816,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '2a4f5039ce0a481742e5b1712388a879ec8c5b617c4d4a8d676cc28d029c604f',
     },
   },
   {
@@ -825,6 +843,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '0b4ca541ca3bfd698bda9798bc6ce5565513848fe325360248ec00266d84c874',
     },
   },
   {
@@ -853,6 +872,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'd2aa37425c07883d3c7df823103f88a6a061d3efca1e6317b9e72e0ad4bd3611',
     },
   },
   {
@@ -896,6 +916,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '47bb8f4ee4f62d7ecefc7f43fd7b61d2da71767df35d3dfd90149719287a0860',
     },
   },
   {
@@ -925,6 +946,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'd8574d80ab674df33841526cf2767c09a9dc02d2faea91746465e22e3b81ae3a',
     },
   },
   {
@@ -955,6 +977,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'd8574d80ab674df33841526cf2767c09a9dc02d2faea91746465e22e3b81ae3a',
     },
   },
   {
@@ -985,6 +1008,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '779b8278e2831727686ad5c96b85bb01bab5f2692edd34d703b9d437da77ac03',
     },
   },
   {
@@ -1011,6 +1035,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '5a456e72142ae6beb6f64a3af7edfe9e14295b17724c4dfec0d84940c545d457',
     },
   },
   {
@@ -1038,6 +1063,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '9e52dba656b0743057d4eda76f051c8a1f4460a2becf8f372c690b1901512b4e',
     },
   },
   {
@@ -1067,6 +1093,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '05430d75d110ff5d4525f7e34bbf2c86b8d22f4e5758f2e109180b801b21b8ec',
     },
   },
   {
@@ -1107,6 +1134,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '9eb2ec48e103cb2b0d75a326b533756d8f5edb49b2ea43a5578f5ceebde8c2ce',
     },
   },
   {
@@ -1135,6 +1163,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '00fc9253e439b8a2f39ba60d1d173ff4d19f557802b40b750eb6df5f92b1001e',
     },
   },
   {
@@ -1164,6 +1193,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: 'fa36d9b24d49525e027ba3cf3accd349e9f84d0c1bbd1141e98d6894173a1a2a',
     },
   },
   {
@@ -1192,6 +1222,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '39b67bb19440620390b83e3bc1e638ea6827998f4a14c2d6e29c2afa9815b2fd',
     },
   },
   {
@@ -1219,6 +1250,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '2c9d2ddcd53c6f4e28320acf336260ece7958753802381a2528ddfa1840eb88a',
     },
   },
   {
@@ -1269,6 +1301,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '2bd7271df295fae41b9eccd065b96b6ed7e5aa67be6935d2e2174fa7325f3018',
     },
   },
   {
@@ -1319,6 +1352,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
+      fingerprint: '606e540c38f161868964b683aeb0ddf93094dc36607397ef9b9f507f9028bc37',
     },
   },
 ];
