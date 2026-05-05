@@ -57,7 +57,7 @@ The `allowImplicitFungibleTokenBurn` option is used to specify whether implicit 
 transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
 ```
 
-Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input.
+Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input. The default sequence number is `0xfffffffe` (non-final sequence number).
 
 :::note
 It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases however are covered by the `SignatureTemplate` and `Contract` classes.
@@ -87,7 +87,7 @@ interface UnlockableUtxo extends Utxo {
 }
 ```
 
-Adds a list of input UTXOs, either with a single shared unlocker or with individual unlockers for each UTXO. The `InputOptions` object can be used to specify the sequence number of the inputs.
+Adds a list of input UTXOs, either with a single shared unlocker or with individual unlockers for each UTXO. The `InputOptions` object can be used to specify the sequence number of the inputs. The default sequence number is `0xfffffffe` (non-final sequence number).
 
 #### Example
 ```ts

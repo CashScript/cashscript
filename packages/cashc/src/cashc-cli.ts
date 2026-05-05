@@ -26,6 +26,7 @@ program
   .option('-c, --opcount', 'Display the number of opcodes in the compiled bytecode.')
   .option('-s, --size', 'Display the size in bytes of the compiled bytecode.')
   .option('-S, --skip-enforce-function-parameter-types', 'Do not enforce function parameter types.')
+  .option('-L, --skip-enforce-locktime-guard', 'Do not inject a tx.time guard when tx.locktime is used.')
   .addOption(
     new Option('-f, --format <format>', 'Specify the format of the output.')
       .choices(['json', 'ts'])
@@ -51,6 +52,7 @@ function run(): void {
 
   const compilerOptions: CompilerOptions = {
     enforceFunctionParameterTypes: !opts.skipEnforceFunctionParameterTypes,
+    enforceLocktimeGuard: !opts.skipEnforceLocktimeGuard,
   };
 
   try {

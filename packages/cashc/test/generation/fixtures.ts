@@ -36,6 +36,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -80,6 +81,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -130,6 +132,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -174,6 +177,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -250,6 +254,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -277,6 +282,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -311,6 +317,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -343,6 +350,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -406,6 +414,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -442,6 +451,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -471,6 +481,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -508,6 +519,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -521,8 +533,10 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [] }],
       bytecode:
+        // injected by InjectLocktimeGuardTraversal because tx.locktime is used
+        'OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP '
         // require(tx.version == 2)
-        'OP_TXVERSION OP_2 OP_NUMEQUALVERIFY '
+        + 'OP_TXVERSION OP_2 OP_NUMEQUALVERIFY '
         // require(tx.locktime == 0)
         + 'OP_TXLOCKTIME OP_0 OP_NUMEQUALVERIFY '
         // require(tx.inputs.length == 1)
@@ -562,31 +576,36 @@ export const fixtures: Fixture[] = [
         // require(tx.outputs[0].tokenAmount == 100);
         + 'OP_0 OP_OUTPUTTOKENAMOUNT 64 OP_NUMEQUAL',
       debug: {
-        bytecode: 'c2529dc5009dc3519dc4519dc0009dc18277022c019d00c60210279d00c782770210279d00c82000000000000000000000000000000000000000000000000000000000000000008800c9009d00ca827701649d00cb009d00cc0210279d00cd827701649d00ce2000000000000000000000000000000000000000000000000000000000000000008800cf01008800d001649d00d12000000000000000000000000000000000000000000000000000000000000000008800d201008800d301649c',
+        bytecode: 'c5b175c2529dc5009dc3519dc4519dc0009dc18277022c019d00c60210279d00c782770210279d00c82000000000000000000000000000000000000000000000000000000000000000008800c9009d00ca827701649d00cb009d00cc0210279d00cd827701649d00ce2000000000000000000000000000000000000000000000000000000000000000008800cf01008800d001649d00d12000000000000000000000000000000000000000000000000000000000000000008800d201008800d301649c',
         logs: [],
         requires: [
-          { ip: 2, line: 3 },
-          { ip: 5, line: 4 },
-          { ip: 8, line: 5 },
-          { ip: 11, line: 6 },
-          { ip: 14, line: 7 },
-          { ip: 19, line: 8 },
-          { ip: 23, line: 9 },
-          { ip: 29, line: 10 },
-          { ip: 33, line: 11 },
-          { ip: 37, line: 12 },
-          { ip: 43, line: 13 },
-          { ip: 47, line: 14 },
-          { ip: 51, line: 15 },
-          { ip: 57, line: 16 },
-          { ip: 61, line: 17 },
-          { ip: 65, line: 18 },
-          { ip: 69, line: 19 },
-          { ip: 73, line: 20 },
-          { ip: 77, line: 21 },
-          { ip: 82, line: 22 },
+          {
+            ip: 1,
+            line: 2,
+            message: 'Using tx.locktime requires a non-final sequence number on the spending input.',
+          },
+          { ip: 5, line: 3 },
+          { ip: 8, line: 4 },
+          { ip: 11, line: 5 },
+          { ip: 14, line: 6 },
+          { ip: 17, line: 7 },
+          { ip: 22, line: 8 },
+          { ip: 26, line: 9 },
+          { ip: 32, line: 10 },
+          { ip: 36, line: 11 },
+          { ip: 40, line: 12 },
+          { ip: 46, line: 13 },
+          { ip: 50, line: 14 },
+          { ip: 54, line: 15 },
+          { ip: 60, line: 16 },
+          { ip: 64, line: 17 },
+          { ip: 68, line: 18 },
+          { ip: 72, line: 19 },
+          { ip: 76, line: 20 },
+          { ip: 80, line: 21 },
+          { ip: 85, line: 22 },
         ],
-        sourceMap: '3:16:3:26;:30::31;:8::33:1;4:16:4:27:0;:31::32;:8::34:1;5:16:5:32:0;:36::37;:8::39:1;6:16:6:33:0;:37::38;:8::40:1;7:16:7:37:0;:41::42;:8::44:1;8:16:8:35:0;:::42:1;;:46::49:0;:8::51:1;9:26:9:27:0;:16::34:1;:38::43:0;:8::45:1;10:26:10:27:0;:16::44:1;:::51;;:55::60:0;:8::62:1;11:26:11:27:0;:16::52:1;:56::121:0;:8::123:1;12:26:12:27:0;:16::42:1;:46::47:0;:8::49:1;13:26:13:27:0;:16::46:1;:::53;;:57::60:0;:8::62:1;14:26:14:27:0;:16::43:1;:47::48:0;:8::50:1;15:27:15:28:0;:16::35:1;:39::44:0;:8::46:1;16:27:16:28:0;:16::45:1;:::52;;:56::59:0;:8::61:1;17:26:17:27:0;:16::42:1;:46::111:0;:8::113:1;18:26:18:27:0;:16::42:1;:46::50:0;:8::52:1;19:26:19:27:0;:16::40:1;:44::47:0;:8::49:1;20:27:20:28:0;:16::43:1;:47::112:0;:8::114:1;21:27:21:28:0;:16::43:1;:47::51:0;:8::53:1;22:27:22:28:0;:16::41:1;:45::48:0;:8::50:1',
+        sourceMap: '2:4:23:5;::::1;;3:16:3:26:0;:30::31;:8::33:1;4:16:4:27:0;:31::32;:8::34:1;5:16:5:32:0;:36::37;:8::39:1;6:16:6:33:0;:37::38;:8::40:1;7:16:7:37:0;:41::42;:8::44:1;8:16:8:35:0;:::42:1;;:46::49:0;:8::51:1;9:26:9:27:0;:16::34:1;:38::43:0;:8::45:1;10:26:10:27:0;:16::44:1;:::51;;:55::60:0;:8::62:1;11:26:11:27:0;:16::52:1;:56::121:0;:8::123:1;12:26:12:27:0;:16::42:1;:46::47:0;:8::49:1;13:26:13:27:0;:16::46:1;:::53;;:57::60:0;:8::62:1;14:26:14:27:0;:16::43:1;:47::48:0;:8::50:1;15:27:15:28:0;:16::35:1;:39::44:0;:8::46:1;16:27:16:28:0;:16::45:1;:::52;;:56::59:0;:8::61:1;17:26:17:27:0;:16::42:1;:46::111:0;:8::113:1;18:26:18:27:0;:16::42:1;:46::50:0;:8::52:1;19:26:19:27:0;:16::40:1;:44::47:0;:8::49:1;20:27:20:28:0;:16::43:1;:47::112:0;:8::114:1;21:27:21:28:0;:16::43:1;:47::51:0;:8::53:1;22:27:22:28:0;:16::41:1;:45::48:0;:8::50:1',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/covenant_all_fields.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -594,10 +613,11 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
-      fingerprint: '4c5cc76d20725fb28c264ff2f55b2af0a0aa2383638d02a86a98fff026077ee2',
+      fingerprint: '371d30dbd28672395a164baee67b27ad86454fa53daccdb7a770a7916902f607',
     },
   },
   {
@@ -675,6 +695,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -729,6 +750,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -756,6 +778,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -783,6 +806,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -813,6 +837,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -840,6 +865,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -869,6 +895,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -913,6 +940,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -943,6 +971,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -974,6 +1003,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1005,6 +1035,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1032,6 +1063,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1060,6 +1092,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1090,6 +1123,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1131,6 +1165,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1160,6 +1195,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1190,6 +1226,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1219,6 +1256,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1247,6 +1285,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1298,6 +1337,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',
@@ -1349,6 +1389,7 @@ export const fixtures: Fixture[] = [
         version,
         options: {
           enforceFunctionParameterTypes: false,
+          enforceLocktimeGuard: true,
         },
       },
       updatedAt: '',

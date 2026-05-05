@@ -1,5 +1,6 @@
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
+  enforceLocktimeGuard?: boolean;
 }
 
 export interface AbiInput {
