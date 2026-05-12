@@ -2,18 +2,22 @@
 title: Release Notes
 ---
 
-## v0.13.0-next.7
+## v0.13.0-next.8
 
 This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### cashc compiler
 - :sparkles: Add support for `for`, `while` and `do-while` loops.
+- :sparkles: Add support for compound assignment operators (`+=`, `-=`) and increment/decrement operators (`++`, `--`).
 - :sparkles: Add support for bitwise and arithmetic shift operators (`<<`, `>>`) and bitwise inversion (`~`).
+- :sparkles: Add `fingerprint` field to artifact to allow for fingerprinting of the contract bytecode.
 - :sparkles: Add `unsafe_bool()` and `unsafe_int()` casting for semantic-only casts.
 - :sparkles: Add support for narrowing bytes types after `x.length == N` and checks in require or if statements.
+- :hammer_and_wrench: **BREAKING**: Automatically inject `require(tx.time >= tx.locktime)` when a function uses `tx.locktime` without a `tx.time` check in scope, ensuring the spending input is non-final so `nLockTime` is enforced. This can be disabled with the `enforceLocktimeGuard: false` compiler option (CLI: `--skip-enforce-locktime-guard`).
 - :hammer_and_wrench: **BREAKING**: Function parameter types are now strictly enforced (bounded bytes and boolean values).
 - :hammer_and_wrench: Add compiler option to `cashc` (programmatic and CLI compilation) to allow for opting out of function parameter type enforcement.
 - :bug: Fix issue where casting bytes larger than `bytes8` to `int` was not allowed.
+- :bug: Fix issue where empty bytecode contracts were not properly compiled.
 - :bug: **BREAKING**: Fix issue where `bool()` casting did not change the value of the argument.
 - :boom: **BREAKING**: Rename `bytes4(int)` and `bytes(int, 4)` to `toPaddedBytes(int, 4)`.
 - :boom: **BREAKING**: Rename `bytes4(bytes)` to `unsafe_bytes4(bytes)`.
@@ -24,12 +28,14 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add support for loops in debug tooling.
 - :sparkles: Add support for `p2s` contract type.
 - :sparkles: Add `addBchChangeOutputIfNeeded()` method to `TransactionBuilder` class.
+- :sparkles: Add `addTokenChangeOutputIfNeeded()` method to `TransactionBuilder` class for adding a fungible token change output for a specific category.
 - :sparkles: Add `lockingBytecode` property to `Contract` class.
 - :sparkles: Add `getUtxosForLockingBytecode()` method to `ElectrumNetworkProvider` class and `MockNetworkProvider` interface.
 - :sparkles: In the `MockNetworkProvider`, `addUtxo()` now also allows UTXOs to be added by locking bytecode.
 - :sparkles: Add `gatherBchUtxos()` and `gatherFungibleTokenUtxos()` functions to the SDK for gathering UTXOs.
 - :sparkles: Add specific network error classes to standardise error handling in network providers.
 - :sparkles: Add TSDoc strings for all public classes and methods.
+- :bug: Fix issue where `FailedTransactionError` would not show underlying error if BitAuth URI generation failed.
 - :boom: **BREAKING**: Remove `BitcoinRpcNetworkProvider` and `FullStackNetworkProvider` from the SDK.
 - :hammer_and_wrench: **BREAKING**: Rename `addressType` option on `Contract` constructor to `contractType`.
 - :hammer_and_wrench: **BREAKING**: Remove undocumented `redeemScript` property from `Contract` class.

@@ -62,6 +62,10 @@ Now, the compiler adds extra opcodes to the script to enforce the correct types.
 
 We added no extra checks for `int` values, because any numeric operations on a non-numeric value will automatically fail the entire transaction.
 
+#### Locktime guard enforcement
+
+The `enforceLocktimeGuard` option has been added to the compiler options. This option controls whether the compiler should inject a `require(tx.time >= tx.locktime)` check when `tx.locktime` is used without a `require(tx.time >= ...)` check in scope. By default, this is enabled. If you want to opt out of this behaviour, you can set the `enforceLocktimeGuard` option to `false` in the compiler options when compiling programmatically, or use the `--skip-enforce-locktime-guard` flag when using the CLI.
+
 ### CashScript SDK
 
 The `addressType` option on the `Contract` constructor has been renamed to `contractType`.
