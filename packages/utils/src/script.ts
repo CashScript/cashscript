@@ -65,6 +65,8 @@ export function asmToBytecode(asm: string): Uint8Array {
   // Remove any duplicate whitespace
   asm = asm.replace(/\s+/g, ' ').trim();
 
+  if (asm === '') return new Uint8Array();
+
   // Convert the ASM tokens to AuthenticationInstructions
   const instructions = asm.split(' ').map((token) => {
     // Even though the OpcodesBch type allows for { [key: number]: string }, we know that the keys are always the opcodes
