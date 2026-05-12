@@ -467,7 +467,13 @@ export class TransactionBuilder {
       return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-      throw new FailedTransactionError(reason, getBitauthUri(this.getLibauthTemplate()));
+      try {
+        const bitauthUri = getBitauthUri(this.getLibauthTemplate());
+        throw new FailedTransactionError(reason, bitauthUri);
+      } catch {
+        // Preserve the original broadcast failure reason if URI generation fails
+        throw new FailedTransactionError(reason, 'Bitauth URI generation failed');
+      }
     }
   }
 
