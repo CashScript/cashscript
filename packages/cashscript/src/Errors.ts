@@ -36,6 +36,18 @@ export class OutputTokenCommitmentInvalidError extends Error {
   }
 }
 
+export class OutputBchChangeLockedError extends Error {
+  constructor() {
+    super('Tried to add a BCH input or output after a BCH change output was already added');
+  }
+}
+
+export class OutputTokenChangeLockedError extends Error {
+  constructor(category: string) {
+    super(`Tried to add a token input or output with category ${category} after a change output with the same category was already added`);
+  }
+}
+
 export class TokensToNonTokenAddressError extends Error {
   constructor(address: string) {
     super(`Tried to send tokens to an address without token support, ${address}.`);

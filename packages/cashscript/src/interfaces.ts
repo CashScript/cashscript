@@ -93,6 +93,11 @@ export interface BchChangeOutputOptions {
   feeRate: number;
 }
 
+export interface TokenChangeOutputOptions {
+  category: string;
+  to: string | Uint8Array;
+}
+
 export interface TokenDetails {
   amount: bigint;
   category: string;

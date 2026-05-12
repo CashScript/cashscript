@@ -10,6 +10,8 @@ import {
   carolPriv,
   bobTokenAddress,
   aliceAddress,
+  aliceTokenAddress,
+  carolTokenAddress,
   alicePriv,
 } from './fixture/vars.js';
 import { Network } from '../src/interfaces.js';
@@ -19,6 +21,11 @@ import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
 import { addUtxo, getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
+import {
+  OutputBchChangeLockedError,
+  OutputTokenChangeLockedError,
+  TokensToNonTokenAddressError,
+} from '../src/Errors.js';
 
 describe('Transaction Builder', () => {
   const provider = process.env.TESTS_USE_CHIPNET
@@ -291,5 +298,138 @@ describe('Transaction Builder', () => {
       .addOutput({ to: aliceAddress, amount: change });
 
     await expect(transaction.send()).rejects.toThrow();
+  });
+
+  describe('change output management', () => {
+    const carolUnlocker = (): ReturnType<typeof p2pkhInstance.unlock.spend> => (
+      p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv))
+    );
+
+    describe('BCH change lock', () => {
+      it('should prevent further inputs or outputs after a BCH change output was added', () => {
+        const builder = new TransactionBuilder({ provider })
+          .addInput(randomUtxo(), carolUnlocker())
+          .addOutput({ to: bobAddress, amount: 1000n })
+          .addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1.0 });
+
+        expect(() => builder.addInput(randomUtxo(), carolUnlocker())).toThrow(OutputBchChangeLockedError);
+        expect(() => builder.addOutput({ to: bobAddress, amount: 1000n })).toThrow(OutputBchChangeLockedError);
+        expect(() => builder.addOpReturnOutput(['hello'])).toThrow(OutputBchChangeLockedError);
+      });
+
+      it('should still lock when no change output was added because the surplus would be dust', () => {
+        // Output leaves only a few satoshis of surplus, well below dust — no change output is added
+        const builder = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ satoshis: 2_000n }), carolUnlocker())
+          .addOutput({ to: bobAddress, amount: 1_500n });
+        const outputCountBefore = builder.outputs.length;
+        builder.addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1.0 });
+
+        expect(builder.outputs.length).toBe(outputCountBefore);
+        expect(() => builder.addOpReturnOutput(['hello'])).toThrow(OutputBchChangeLockedError);
+      });
+    });
+
+    describe('token change lock', () => {
+      it('should prevent further inputs or outputs of the same category after a token change output was added', () => {
+        const token = randomToken();
+        const builder = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ token }), carolUnlocker())
+          .addTokenChangeOutputIfNeeded({ category: token.category, to: aliceTokenAddress });
+
+        expect(() => builder.addInput(randomUtxo({ token }), carolUnlocker())).toThrow(OutputTokenChangeLockedError);
+        expect(() => builder.addOutput({
+          to: bobTokenAddress, amount: 1000n, token: { amount: 100n, category: token.category },
+        })).toThrow(OutputTokenChangeLockedError);
+      });
+
+      it('should leave other categories and non-token inputs/outputs unaffected', () => {
+        const tokenA = randomToken();
+        const tokenB = randomToken();
+        const builder = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ token: tokenA }), carolUnlocker())
+          .addTokenChangeOutputIfNeeded({ category: tokenA.category, to: aliceTokenAddress });
+
+        expect(() => {
+          builder.addInput(randomUtxo({ token: tokenB }), carolUnlocker());
+          builder.addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 100n, category: tokenB.category } });
+          builder.addInput(randomUtxo(), carolUnlocker());
+          builder.addOutput({ to: bobAddress, amount: 1000n });
+          builder.addOpReturnOutput(['hello']);
+        }).not.toThrow();
+      });
+    });
+
+    describe('addTokenChangeOutputIfNeeded', () => {
+      it('should add a token change output for the surplus of a single fungible category', () => {
+        const token = randomToken({ amount: 1000n });
+
+        const tx = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ token }), carolUnlocker())
+          .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 400n, category: token.category } })
+          .addTokenChangeOutputIfNeeded({ category: token.category, to: aliceTokenAddress })
+          .build();
+
+        const txOutputs = getTxOutputs(decodeTransactionUnsafe(hexToBin(tx)));
+        const changeOutput = txOutputs.find((o) => o.to === aliceTokenAddress);
+        expect(changeOutput).toBeDefined();
+        expect(changeOutput!.token).toEqual({ amount: 600n, category: token.category });
+        expect(changeOutput!.amount).toBeGreaterThan(0n);
+      });
+
+      it('should lock the category without adding an output when no change is needed', () => {
+        const token = randomToken({ amount: 1000n });
+        const builder = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ token }), carolUnlocker())
+          // Match input amount with an explicit output so there's no surplus
+          .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 1000n, category: token.category } });
+
+        const outputCountBefore = builder.outputs.length;
+        builder.addTokenChangeOutputIfNeeded({ category: token.category, to: aliceTokenAddress });
+        expect(builder.outputs.length).toBe(outputCountBefore);
+        expect(() => builder.addInput(randomUtxo({ token }), carolUnlocker())).toThrow(OutputTokenChangeLockedError);
+      });
+
+      it('should scope the change output to the configured category across multiple invocations', () => {
+        const tokenA = randomToken({ amount: 1000n });
+        const tokenB = randomToken({ amount: 5000n });
+
+        const tx = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ token: tokenA }), carolUnlocker())
+          .addInput(randomUtxo({ token: tokenB }), carolUnlocker())
+          .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 700n, category: tokenA.category } })
+          .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 2000n, category: tokenB.category } })
+          .addTokenChangeOutputIfNeeded({ category: tokenA.category, to: aliceTokenAddress })
+          .addTokenChangeOutputIfNeeded({ category: tokenB.category, to: carolTokenAddress })
+          .build();
+
+        const txOutputs = getTxOutputs(decodeTransactionUnsafe(hexToBin(tx)));
+        const aliceChange = txOutputs.find((o) => o.to === aliceTokenAddress);
+        const carolChange = txOutputs.find((o) => o.to === carolTokenAddress);
+        expect(aliceChange!.token).toEqual({ amount: 300n, category: tokenA.category });
+        expect(carolChange!.token).toEqual({ amount: 3000n, category: tokenB.category });
+      });
+
+      it('should fail when the change address does not support tokens', () => {
+        const token = randomToken();
+        const builder = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ token }), carolUnlocker());
+
+        expect(() => {
+          builder.addTokenChangeOutputIfNeeded({ category: token.category, to: aliceAddress });
+        }).toThrow(TokensToNonTokenAddressError);
+      });
+
+      it('should fail when a BCH change output was already added', () => {
+        const token = randomToken();
+        const builder = new TransactionBuilder({ provider })
+          .addInput(randomUtxo({ token }), carolUnlocker())
+          .addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1.0 });
+
+        expect(() => {
+          builder.addTokenChangeOutputIfNeeded({ category: token.category, to: aliceTokenAddress });
+        }).toThrow(OutputBchChangeLockedError);
+      });
+    });
   });
 });

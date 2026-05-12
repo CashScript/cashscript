@@ -20,6 +20,7 @@ import {
   VmResourceUsage,
   isContractUnlocker,
   BchChangeOutputOptions,
+  TokenChangeOutputOptions,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -69,6 +70,8 @@ export class TransactionBuilder {
 
   public locktime: number = 0;
   public options: TransactionBuilderOptions;
+
+  private changeLocks: Record<string, boolean> = {};
 
   /**
    * Create a new TransactionBuilder.
@@ -120,7 +123,7 @@ export class TransactionBuilder {
   addInputs(utxos: UnlockableUtxo[]): this;
 
   addInputs(utxos: Utxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
-    utxos.forEach(validateInput);
+    utxos.forEach((utxo) => validateInput(utxo, this.changeLocks));
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
@@ -157,7 +160,7 @@ export class TransactionBuilder {
    * @throws If any output is invalid.
    */
   addOutputs(outputs: Output[]): this {
-    outputs.forEach((output) => validateOutput(output, this.provider.network));
+    outputs.forEach((output) => validateOutput(output, this.provider.network, this.changeLocks));
     this.outputs = this.outputs.concat(outputs);
     return this;
   }
@@ -171,7 +174,7 @@ export class TransactionBuilder {
    * @returns This builder for chaining.
    */
   addOpReturnOutput(chunks: string[]): this {
-    this.outputs.push(createOpReturnOutput(chunks));
+    this.addOutput(createOpReturnOutput(chunks));
     return this;
   }
 
@@ -180,9 +183,12 @@ export class TransactionBuilder {
    * fee is computed from the transaction size at the configured fee rate; dust-sized change is
    * simply absorbed into the fee.
    *
+   * Should be called *after* all explicit inputs and outputs are added.
+   *
    * @param changeOutputOptions - The destination address and the fee rate (in sats/byte) to use.
    * @returns This builder for chaining.
-   * @throws If the available surplus is insufficient to cover the fee for the configured rate.
+   * @throws If the available surplus is insufficient to cover the fee for the configured rate or
+   * if a BCH change output was already added.
    */
   addBchChangeOutputIfNeeded(changeOutputOptions: BchChangeOutputOptions): this {
     const totalBchInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
@@ -210,10 +216,54 @@ export class TransactionBuilder {
 
     const changeOutputDust = calculateDust(changeOutput);
     if (changeAmount < changeOutputDust) {
+      this.changeLocks.BCH = true;
       return this;
     }
 
-    this.outputs.push(changeOutput);
+    this.addOutput(changeOutput);
+    this.changeLocks.BCH = true;
+    return this;
+  }
+
+  /**
+   * Add a fungible token change output for the configured category if the transaction's inputs
+   * contain more tokens of that category than its outputs. The change output is sent to the
+   * provided token address and carries the dust-minimum BCH amount.
+   *
+   * Should be called *after* all explicit token outputs for the category are added and *before*
+   * `addBchChangeOutputIfNeeded`.
+   *
+   * @param changeOutputOptions - The token category to handle and the destination token address.
+   * @returns This builder for chaining.
+   * @throws If the destination is not a token-supporting address, or if a corresponding change output
+   * or BCH change output was already added.
+   */
+  addTokenChangeOutputIfNeeded(changeOutputOptions: TokenChangeOutputOptions): this {
+    const { category, to } = changeOutputOptions;
+
+    const inputAmount = this.inputs
+      .filter((input) => input.token?.category === category)
+      .reduce((total, input) => total + input.token!.amount, 0n);
+
+    const outputAmount = this.outputs
+      .filter((output) => output.token?.category === category)
+      .reduce((total, output) => total + output.token!.amount, 0n);
+
+    const changeAmount = inputAmount - outputAmount;
+    if (changeAmount <= 0n) {
+      this.changeLocks[category] = true;
+      return this;
+    }
+
+    const changeOutput: Output = {
+      to,
+      amount: 0n,
+      token: { amount: changeAmount, category },
+    };
+    changeOutput.amount = BigInt(calculateDust(changeOutput));
+
+    this.addOutput(changeOutput);
+    this.changeLocks[category] = true;
     return this;
   }
 

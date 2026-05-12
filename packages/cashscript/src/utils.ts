@@ -45,16 +45,22 @@ import {
   OutputAddressNetworkMismatchError,
   OutputTokenCategoryInvalidError,
   OutputTokenCommitmentInvalidError,
+  OutputBchChangeLockedError,
+  OutputTokenChangeLockedError,
 } from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
-export function validateInput(utxo: Utxo): void {
+export function validateInput(utxo: Utxo, changeLocks: Record<string, boolean>): void {
   if (!utxo) {
     throw new UndefinedInputError();
   }
+
+  validateChangeLocks(changeLocks, utxo.token?.category);
 }
 
-export function validateOutput(output: Output, network: Network): void {
+export function validateOutput(output: Output, network: Network, changeLocks: Record<string, boolean>): void {
+  validateChangeLocks(changeLocks, output.token?.category);
+
   if (isOpReturnOutput(output)) return;
 
   const minimumAmount = calculateDust(output);
@@ -87,6 +93,16 @@ export function validateOutput(output: Output, network: Network): void {
   const networkPrefix = getNetworkPrefix(network);
   if (addressPrefix !== networkPrefix) {
     throw new OutputAddressNetworkMismatchError(output.to, networkPrefix);
+  }
+}
+
+function validateChangeLocks(changeLocks: Record<string, boolean>, category?: string): void {
+  if (changeLocks.BCH) {
+    throw new OutputBchChangeLockedError();
+  }
+
+  if (category && changeLocks[category]) {
+    throw new OutputTokenChangeLockedError(category);
   }
 }
 

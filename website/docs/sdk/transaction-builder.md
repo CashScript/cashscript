@@ -170,12 +170,30 @@ transactionBuilder.addOpReturnOutput(['0x6d02', 'Hello World!']);
 transactionBuilder.addBchChangeOutputIfNeeded(changeOutputOptions: BchChangeOutputOptions): this
 ```
 
-Adds a change output to the transaction if the transaction has enough funds to cover the transaction fee rate. The `changeOutputOptions` object can be used to specify the fee rate for the change output. Note that this is only for BCH change. Make sure to add any token change outputs manually if needed.
+Adds a change output to the transaction if the transaction has enough funds to cover the transaction fee rate. The `changeOutputOptions` object can be used to specify the fee rate for the change output. Note that this is only for BCH change. Use `addTokenChangeOutputIfNeeded()` to add a fungible token change output.
+
+After a BCH change output has been added, no more inputs or outputs can be added to the transaction. This is enforced by the SDK to prevent accidentally invalidating the change calculation.
 
 ```ts
 interface BchChangeOutputOptions {
   to: string | Uint8Array;
   feeRate: number;
+}
+```
+
+### addTokenChangeOutputIfNeeded()
+```ts
+transactionBuilder.addTokenChangeOutputIfNeeded(changeOutputOptions: TokenChangeOutputOptions): this
+```
+
+For the configured fungible token category, appends a single change output for the surplus (input amount minus output amount) to the configured token address. The change output is given the dust-minimum BCH amount, so this method should be called before `addBchChangeOutputIfNeeded()` so the BCH consumed by the token change output is accounted for in the BCH change calculation. If the transaction has more than one category that needs a change output, call this method once per category. NFT inputs are not handled by this method; if you need to keep an NFT, add an explicit output for it.
+
+After a token change output for a category has been added, no more inputs or outputs with that token category can be added to the transaction. This is enforced by the SDK to prevent accidentally invalidating the change calculation.
+
+```ts
+interface TokenChangeOutputOptions {
+  category: string;
+  to: string | Uint8Array;
 }
 ```
 
