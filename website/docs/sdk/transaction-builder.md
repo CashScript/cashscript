@@ -186,7 +186,7 @@ interface BchChangeOutputOptions {
 transactionBuilder.addTokenChangeOutputIfNeeded(changeOutputOptions: TokenChangeOutputOptions): this
 ```
 
-For the configured fungible token category, appends a single change output for the surplus (input amount minus output amount) to the configured token address. The change output is given the dust-minimum BCH amount, so this method should be called before `addBchChangeOutputIfNeeded()` so the BCH consumed by the token change output is accounted for in the BCH change calculation. If the transaction has more than one category that needs a change output, call this method once per category. NFT inputs are not handled by this method; if you need to keep an NFT, add an explicit output for it.
+For the configured fungible token category, adds a single change output to the configured token address. The change output is given the dust-minimum BCH amount, so this method should be called before `addBchChangeOutputIfNeeded()`. NFT inputs are not handled by this method; if you need to keep an NFT, add an explicit output for it.
 
 After a token change output for a category has been added, no more inputs or outputs with that token category can be added to the transaction. This is enforced by the SDK to prevent accidentally invalidating the change calculation.
 
