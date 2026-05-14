@@ -206,7 +206,7 @@ class ContractInternal<
         return unlockingBytecode;
       };
 
-      const generateLockingBytecode = (): Uint8Array => addressToLockScript(this.address);
+      const generateLockingBytecode = (): Uint8Array => hexToBin(this.lockingBytecode);
 
       return { generateUnlockingBytecode, generateLockingBytecode, contract: this, params: args, abiFunction };
     };

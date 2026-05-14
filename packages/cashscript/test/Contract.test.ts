@@ -141,6 +141,16 @@ describe('Contract', () => {
       expect(utxos).toHaveLength(1);
       expect(utxos).toEqual(utxosFromProvider);
     });
+
+    it('should return utxos for existing p2s contract on mocknet', async () => {
+      const provider = new MockNetworkProvider();
+      const instance = new Contract(p2pkhArtifact, [alicePkh], { provider, contractType: 'p2s' });
+      const utxo = randomUtxo();
+
+      provider.addUtxo(instance.lockingBytecode, utxo);
+
+      expect(await instance.getUtxos()).toEqual([utxo]);
+    });
   });
 
   describe('Contract unlockers', () => {
@@ -176,6 +186,18 @@ describe('Contract', () => {
     it('generates correct locking bytecode', () => {
       expect(instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)).generateLockingBytecode())
         .toEqual(hexToBin('aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587'));
+    });
+
+    it('can spend from a p2s contract', async () => {
+      const p2sInstance = new Contract(p2pkhArtifact, [alicePkh], { provider, contractType: 'p2s' });
+      const utxo = randomUtxo({ satoshis: 100_000n });
+      provider.addUtxo(p2sInstance.lockingBytecode, utxo);
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, p2sInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+        .addOutput({ to: aliceAddress, amount: 1_000n });
+
+      await expect(transaction.send()).resolves.toBeDefined();
     });
 
     it('generates correct unlocking bytecode', () => {

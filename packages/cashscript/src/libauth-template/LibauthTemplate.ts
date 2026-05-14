@@ -135,8 +135,7 @@ const generateLockingBytecodeParamsMapping = (
     if (isContractUnlocker(input.unlocker)) {
       const lockScriptName = getLockScriptName(input.unlocker.contract);
       const lockingScriptParams = generateLockingScriptParams(input.unlocker.contract, input, lockScriptName);
-      const lockingBytecode = binToHex(addressToLockScript(input.unlocker.contract.address));
-      mapping[lockingBytecode] = lockingScriptParams;
+      mapping[input.unlocker.contract.lockingBytecode] = lockingScriptParams;
     }
   }
 
@@ -608,7 +607,7 @@ const generateTemplateScenarioTransactionOutputLockingBytecode = (
   if (lockingBytecodeParams) return lockingBytecodeParams;
 
   if (csOutput.to instanceof Uint8Array) return binToHex(csOutput.to);
-  if (contract && [contract.address, contract.tokenAddress].includes(csOutput.to)) return {};
+  if (contract && contract.contractType !== 'p2s' && [contract.address, contract.tokenAddress].includes(csOutput.to)) return {};
   return binToHex(addressToLockScript(csOutput.to));
 };
 

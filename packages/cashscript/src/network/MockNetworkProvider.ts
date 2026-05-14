@@ -137,3 +137,9 @@ export default class MockNetworkProvider implements NetworkProvider {
     this.transactionMap = {};
   }
 }
+
+export class FailingMockNetworkProvider extends MockNetworkProvider {
+  async sendRawTransaction(_txHex: string): Promise<string> {
+    throw new Error('broadcast failed');
+  }
+}

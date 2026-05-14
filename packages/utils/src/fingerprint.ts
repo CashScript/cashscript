@@ -25,7 +25,7 @@ function groupByPushRun(opcodes: Op[]): Op[][] {
   return opcodes.reduce<Op[][]>((opcodeRuns, opcode) => {
     const lastOpcodeRun = opcodeRuns.at(-1);
 
-    // If ther are no runs yet, start a new run with the current opcode
+    // If there are no runs yet, start a new run with the current opcode
     if (!lastOpcodeRun) return [[opcode]];
 
     // If the last run is the same type of opcode as the current opcode, add the current opcode to the last run

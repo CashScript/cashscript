@@ -26,6 +26,7 @@ import {
   OutputTokenChangeLockedError,
   TokensToNonTokenAddressError,
 } from '../src/Errors.js';
+import { FailingMockNetworkProvider } from '../src/network/MockNetworkProvider.js';
 
 describe('Transaction Builder', () => {
   const provider = process.env.TESTS_USE_CHIPNET
@@ -263,6 +264,21 @@ describe('Transaction Builder', () => {
       .addOutput({ to: aliceAddress, amount: change });
 
     await expect(transaction.send()).resolves.not.toThrow();
+  });
+
+  it('should preserve the Bitauth URI when broadcast fails', async () => {
+    const failingProvider = new FailingMockNetworkProvider();
+    const contract = new Contract(p2pkhArtifact, [carolPkh], { provider: failingProvider });
+    const utxo = randomUtxo({ satoshis: 100_000n });
+
+    const transaction = new TransactionBuilder({ provider: failingProvider })
+      .addInput(utxo, contract.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: carolAddress, amount: 1_000n });
+
+    await expect(transaction.send()).rejects.toMatchObject({
+      reason: 'broadcast failed',
+      bitauthUri: expect.stringMatching(/^https:\/\/ide\.bitauth\.com\/import-template\//),
+    });
   });
 
   // TODO: Currently, P2PKH inputs are not evaluated at all
