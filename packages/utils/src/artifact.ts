@@ -66,46 +66,97 @@ export interface Artifact {
 
 export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): string {
   if (format === 'ts') {
-    // We remove any undefined values to make the artifact serializable using stringifyAsTs
+    // We remove any undefined values to make the artifact serializable
     const normalisedArtifact = JSON.parse(JSON.stringify(artifact));
-    return `export default ${stringifyAsTs(normalisedArtifact)} as const;\n`;
+    return `export default ${stringify(normalisedArtifact, 'ts')} as const;\n`;
   }
 
-  return JSON.stringify(artifact, null, 2);
+  return stringify(artifact, 'json');
 }
 
 const indent = (level: number): string => '  '.repeat(level);
 
-function stringifyAsTs(obj: any, indentationLevel: number = 1): string {
-  // For strings we use JSON.stringify to handle escaping, but we want to use single quotes instead of double quotes
-  // around string values inside objects, to match regular TS style
-  if (typeof obj === 'string') {
-    return `'${JSON.stringify(obj).replace(/'/g, "\\'").replace(/\\"/g, '"').slice(1, -1)}'`;
-  }
+// Objects with this many or more properties are always expanded onto multiple lines, to keep
+// generated `.artifact.ts` files compliant with the `object-curly-newline` lint rule (minProperties: 4)
+const MAX_INLINE_OBJECT_PROPERTIES = 3;
 
-  // Numbers and booleans are just converted to strings
-  if (typeof obj === 'number' || typeof obj === 'boolean') {
+// Recursively serialises an artifact to JSON or TS. Small records that are elements of an array
+// (e.g. `requires`, `constructorInputs`, `abi` inputs) are kept on a single line so list-like data
+// stays compact, while standalone objects assigned to a property (e.g. `compiler.options`) keep
+// their values expanded one per line.
+function stringify(
+  obj: any,
+  format: 'json' | 'ts',
+  indentationLevel: number = 1,
+  isArrayElement: boolean = false,
+): string {
+  if (typeof obj === 'string') return formatString(obj, format);
+
+  // Numbers, booleans and null are represented identically in JSON and TS
+  if (obj === null || typeof obj === 'number' || typeof obj === 'boolean') {
     return JSON.stringify(obj);
   }
 
-  // Arrays are recursively formatted with indentation
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) return '[]';
-    const formattedItems = obj.map((item) => `${indent(indentationLevel)}${stringifyAsTs(item, indentationLevel + 1)}`);
-    return `[\n${formattedItems.join(',\n')},\n${indent(indentationLevel - 1)}]`;
-  }
+  if (Array.isArray(obj)) return formatArray(obj, format, indentationLevel, isArrayElement);
 
-  // Objects are recursively formatted with indentation
-  if (typeof obj === 'object') {
-    const entries = Object.entries(obj);
-
-    if (entries.length === 0) return '{}';
-
-    const formattedEntries = entries.map(([key, value]) => (
-      `${indent(indentationLevel)}${key}: ${stringifyAsTs(value, indentationLevel + 1)}`
-    ));
-    return `{\n${formattedEntries.join(',\n')},\n${indent(indentationLevel - 1)}}`;
-  }
+  if (typeof obj === 'object') return formatObject(obj, format, indentationLevel, isArrayElement);
 
   throw new Error(`Unsupported type: ${typeof obj}`);
+}
+
+function formatString(value: string, format: 'json' | 'ts'): string {
+  // JSON strings use standard double-quoted escaping
+  if (format === 'json') return JSON.stringify(value);
+
+  // TS strings use single quotes instead of double quotes around string values, to match regular TS style
+  return `'${JSON.stringify(value).replace(/'/g, "\\'").replace(/\\"/g, '"').slice(1, -1)}'`;
+}
+
+function formatArray(
+  array: readonly any[],
+  format: 'json' | 'ts',
+  indentationLevel: number,
+  isArrayElement: boolean,
+): string {
+  if (array.length === 0) return '[]';
+
+  const items = array.map((item) => stringify(item, format, indentationLevel + 1, true));
+
+  if (isArrayElement && canInline(array)) return `[${items.join(', ')}]`;
+
+  const lines = items.map((item) => `${indent(indentationLevel)}${item}`).join(',\n');
+  const trailingComma = format === 'ts' ? ',' : '';
+  return `[\n${lines}${trailingComma}\n${indent(indentationLevel - 1)}]`;
+}
+
+function formatObject(
+  obj: any,
+  format: 'json' | 'ts',
+  indentationLevel: number,
+  isArrayElement: boolean,
+): string {
+  const entries = Object.entries(obj).filter(([, value]) => value !== undefined);
+
+  if (entries.length === 0) return '{}';
+
+  const formatKey = (key: string): string => (format === 'json' ? JSON.stringify(key) : key);
+  const formatted = entries.map(
+    ([key, value]) => `${formatKey(key)}: ${stringify(value, format, indentationLevel + 1)}`,
+  );
+
+  if (isArrayElement && entries.length <= MAX_INLINE_OBJECT_PROPERTIES && canInline(obj)) {
+    return `{ ${formatted.join(', ')} }`;
+  }
+
+  const lines = formatted.map((entry) => `${indent(indentationLevel)}${entry}`).join(',\n');
+  const trailingComma = format === 'ts' ? ',' : '';
+  return `{\n${lines}${trailingComma}\n${indent(indentationLevel - 1)}}`;
+}
+
+// A container can be inlined when none of its values are themselves a non-empty object or array
+function canInline(container: any): boolean {
+  const values = Array.isArray(container) ? container : Object.values(container);
+  return values.every((value) => (
+    value === undefined || value === null || typeof value !== 'object' || Object.keys(value).length === 0
+  ));
 }

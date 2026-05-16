@@ -40,8 +40,8 @@ Options:
   -c, --opcount                                Display the number of opcodes in the compiled bytecode.
   -s, --size                                   Display the size in bytes of the compiled bytecode.
   -S, --skip-enforce-function-parameter-types  Do not enforce function parameter types.
-  -f, --format <format>                        Specify the format of the output. (choices: "json", "ts", default:
-                                               "json")
+  -L, --skip-enforce-locktime-guard            Do not inject a tx.time guard when tx.locktime is used.
+  -f, --format <format>                        Specify the format of the output. (choices: "json", "ts", default: "json")
   -?, --help                                   Display help
 ```
 

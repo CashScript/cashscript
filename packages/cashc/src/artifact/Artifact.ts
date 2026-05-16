@@ -33,6 +33,7 @@ export function generateArtifact(
     abi,
     bytecode,
     source,
+    fingerprint,
     debug,
     compiler: {
       name: 'cashc',
@@ -40,7 +41,6 @@ export function generateArtifact(
       options: compilerOptions,
     },
     updatedAt: new Date().toISOString(),
-    fingerprint,
   };
 }
 

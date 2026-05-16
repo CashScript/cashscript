@@ -1,69 +1,34 @@
 export default {
   contractName: 'HodlVault',
   constructorInputs: [
-    {
-      name: 'ownerPk',
-      type: 'pubkey',
-    },
-    {
-      name: 'oraclePk',
-      type: 'pubkey',
-    },
-    {
-      name: 'minBlock',
-      type: 'int',
-    },
-    {
-      name: 'priceTarget',
-      type: 'int',
-    },
+    { name: 'ownerPk', type: 'pubkey' },
+    { name: 'oraclePk', type: 'pubkey' },
+    { name: 'minBlock', type: 'int' },
+    { name: 'priceTarget', type: 'int' },
   ],
   abi: [
     {
       name: 'spend',
       inputs: [
-        {
-          name: 'ownerSig',
-          type: 'sig',
-        },
-        {
-          name: 'oracleSig',
-          type: 'datasig',
-        },
-        {
-          name: 'oracleMessage',
-          type: 'bytes8',
-        },
+        { name: 'ownerSig', type: 'sig' },
+        { name: 'oracleSig', type: 'datasig' },
+        { name: 'oracleMessage', type: 'bytes8' },
       ],
     },
   ],
   bytecode: 'OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_6 OP_PICK OP_4 OP_SPLIT OP_SWAP OP_BIN2NUM OP_SWAP OP_BIN2NUM OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY OP_CHECKSIG',
   source: '// This contract forces HODLing until a certain price target has been reached\n// A minimum block is provided to ensure that oracle price entries from before this block are disregarded\n// i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used.\n// Instead, a message with a block number and price from after the minBlock needs to be passed.\n// This contract serves as a simple example for checkDataSig-based contracts.\ncontract HodlVault(\n    pubkey ownerPk,\n    pubkey oraclePk,\n    int minBlock,\n    int priceTarget\n) {\n    function spend(\n        sig ownerSig,\n        datasig oracleSig,\n        bytes8 oracleMessage\n    ) {\n        // message: { blockHeight, price }\n        bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);\n        int blockHeight = int(blockHeightBin);\n        int price = int(priceBin);\n\n        // Check that blockHeight is after minBlock and not in the future\n        require(blockHeight >= minBlock);\n        require(tx.time >= blockHeight);\n\n        // Check that current price is at least priceTarget\n        require(price >= priceTarget);\n\n        // Handle necessary signature checks\n        require(checkDataSig(oracleSig, oracleMessage, oraclePk));\n        require(checkSig(ownerSig, ownerPk));\n    }\n}\n',
+  fingerprint: '10bb7c68d352b3fd852ce3346f8b72062ed77a42c876261f1d1d862370210271',
   debug: {
     bytecode: '5679825888755679547f7c817c8178557aa2697cb175537aa269537a547a537abbac',
     sourceMap: '15:8:15:28;;;;;;18:49:18:62;;:69::70;:49::71:1;19:30:19:44:0;:26::45:1;20:24:20:32:0;:20::33:1;23:16:23:27:0;:31::39;;:16:::1;:8::41;24:27:24:38:0;:8::40:1;;27:25:27:36:0;;:16:::1;:8::38;30:29:30::0;;:40::53;;:55::63;;:8::66:1;31::31:45',
     logs: [],
     requires: [
-      {
-        ip: 22,
-        line: 23,
-      },
-      {
-        ip: 24,
-        line: 24,
-      },
-      {
-        ip: 29,
-        line: 27,
-      },
-      {
-        ip: 36,
-        line: 30,
-      },
-      {
-        ip: 38,
-        line: 31,
-      },
+      { ip: 22, line: 23 },
+      { ip: 24, line: 24 },
+      { ip: 29, line: 27 },
+      { ip: 36, line: 30 },
+      { ip: 38, line: 31 },
     ],
   },
   compiler: {
@@ -74,6 +39,5 @@ export default {
       enforceLocktimeGuard: true,
     },
   },
-  updatedAt: '2026-05-16T11:22:38.802Z',
-  fingerprint: '10bb7c68d352b3fd852ce3346f8b72062ed77a42c876261f1d1d862370210271',
+  updatedAt: '2026-05-16T17:36:03.881Z',
 } as const;
