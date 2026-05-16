@@ -57,10 +57,12 @@ export default {
   },
   compiler: {
     name: 'cashc',
-    version: '0.13.0-next.3',
+    version: '0.13.0',
     options: {
       enforceFunctionParameterTypes: true,
+      enforceLocktimeGuard: true,
     },
   },
-  updatedAt: '2026-02-03T11:06:41.243Z',
+  updatedAt: '2026-05-16T11:22:40.181Z',
+  fingerprint: '4367893ec13aecfe4624b6d5b12681b9782de30dd657d1313eed269faba937e4',
 } as const;

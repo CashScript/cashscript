@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.13.0-next.8
+## v0.13.0
 
 This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
