@@ -1,0 +1,7 @@
+pragma cashscript ^0.13.0;
+
+contract LocktimeGuard() {
+    function send() {
+        require(tx.locktime >= 1);
+    }
+}

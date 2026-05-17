@@ -105,7 +105,11 @@ export class FailedRequireError extends FailedTransactionError {
 
     const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
-    const fullMessage = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.\nFailing statement: ${statement}`;
+    const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
+
+    // Compiler-injected guards (e.g. the tx.locktime guard) have no user-written source, so the
+    // extracted statement is empty — the require message fully describes the failure on its own.
+    const fullMessage = statement.trim() ? `${headline}\nFailing statement: ${statement}` : headline;
 
     super(fullMessage, bitauthUri);
   }

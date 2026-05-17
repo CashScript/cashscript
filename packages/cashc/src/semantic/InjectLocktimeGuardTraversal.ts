@@ -8,6 +8,7 @@ import {
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { TimeOp } from '../ast/Globals.js';
+import { Location } from '../ast/Location.js';
 import { NullaryOperator } from '../ast/Operator.js';
 
 // Per BCH consensus, `tx.locktime` is only protocol-enforced if at least one input has a
@@ -57,12 +58,14 @@ function isLocktimeCheck(statement: Node): boolean {
 }
 
 function createLocktimeGuard(funcNode: FunctionDefinitionNode): TimeOpNode {
+  const guardLocation = new Location(funcNode.location.start, funcNode.location.start);
+
   const expression = new NullaryOpNode(NullaryOperator.LOCKTIME);
   expression.type = PrimitiveType.INT;
-  expression.location = funcNode.location;
+  expression.location = guardLocation;
 
-  const message = 'Using tx.locktime requires a non-final sequence number on the spending input.';
+  const message = 'Using tx.locktime requires a non-final sequence number on the spending input';
   const guard = new TimeOpNode(TimeOp.CHECK_LOCKTIME, expression, message);
-  guard.location = funcNode.location;
+  guard.location = guardLocation;
   return guard;
 }
