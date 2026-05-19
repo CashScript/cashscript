@@ -261,6 +261,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   enforceFunctionParameterType(node: ParameterNode): void {
     if (!this.shouldEnforceFunctionParameterType(node)) return;
 
+    const tagStartIndex = this.output.length;
     const stackIndex = this.getStackIndex(node.name);
     this.emit(encodeInt(BigInt(stackIndex)), { location: node.location, positionHint: PositionHint.START });
 
@@ -284,6 +285,14 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
       // We don't perform any stack operations, because these ops leave the original stack unchanged
     }
+
+    // These checks are compiler-injected (no user source); tag them so the debug reconstruction
+    // gives them their own annotation line positioned by bytecode order.
+    this.sourceTags.push({
+      startIndex: tagStartIndex,
+      endIndex: this.output.length - 1,
+      kind: SourceTagKind.PARAMETER_VALIDATION,
+    });
   }
 
   shouldEnforceFunctionParameterType(node: ParameterNode): boolean {
@@ -344,7 +353,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitTimeOp(node: TimeOpNode): Node {
-    // const countBefore = this.output.length;
+    const tagStartIndex = this.output.length;
     node.expression = this.visit(node.expression);
     this.emit(compileTimeOp(node.timeOp), { location: node.location, positionHint: PositionHint.END });
 
@@ -355,6 +364,16 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       line: node.location.start.line,
       message: node.message,
     });
+
+    // The auto-injected tx.locktime guard is emitted after the parameter prologue but has no
+    // user source; tag it so the debug reconstruction positions it by bytecode order.
+    if (node.isGuard) {
+      this.sourceTags.push({
+        startIndex: tagStartIndex,
+        endIndex: this.output.length - 1,
+        kind: SourceTagKind.LOCKTIME_GUARD,
+      });
+    }
 
     this.popFromStack();
     return node;

@@ -221,10 +221,11 @@ export enum PositionHint {
   END = 1,
 }
 
-// Semantic tags for opcodes that need special treatment in debugging output (e.g. synthetic labels).
-// Currently used for loop constructs where opcode order diverges from source line order.
+// Semantic tags for compiler-injected opcodes that have no (or misleading) user source
 export enum SourceTagKind {
   FOR_UPDATE = 'fu',
+  LOCKTIME_GUARD = 'lg',
+  PARAMETER_VALIDATION = 'pv',
 }
 
 export interface SourceTagEntry {

@@ -15,6 +15,7 @@ export default {
       { ip: 1, line: 4, message: 'Using tx.locktime requires a non-final sequence number on the spending input' },
       { ip: 6, line: 5 },
     ],
+    sourceTags: '0:2:lg',
   },
   compiler: {
     name: 'cashc',
@@ -24,5 +25,5 @@ export default {
       enforceLocktimeGuard: true,
     },
   },
-  updatedAt: '2026-05-19T09:14:32.613Z',
+  updatedAt: '2026-05-19T10:21:15.336Z',
 } as const;

@@ -29,7 +29,8 @@
       { "ip": 29, "line": 27 },
       { "ip": 36, "line": 30 },
       { "ip": 38, "line": 31 }
-    ]
+    ],
+    "sourceTags": "0:5:pv"
   },
   "compiler": {
     "name": "cashc",
@@ -39,5 +40,5 @@
       "enforceLocktimeGuard": true
     }
   },
-  "updatedAt": "2026-05-19T09:14:29.773Z"
+  "updatedAt": "2026-05-19T10:21:12.606Z"
 }

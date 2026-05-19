@@ -67,5 +67,6 @@ function createLocktimeGuard(funcNode: FunctionDefinitionNode): TimeOpNode {
   const message = 'Using tx.locktime requires a non-final sequence number on the spending input';
   const guard = new TimeOpNode(TimeOp.CHECK_LOCKTIME, expression, message);
   guard.location = guardLocation;
+  guard.isGuard = true;
   return guard;
 }

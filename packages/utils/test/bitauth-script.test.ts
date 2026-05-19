@@ -12,6 +12,7 @@ describe('Libauth Script formatting', () => {
       it('should generate a correct source map and bytecode from freshly compiled source code', () => {
         const artifact = compileString(fixture.sourceCode);
         expect(artifact.debug?.sourceMap).toEqual(fixture.sourceMap);
+        expect(artifact.debug?.sourceTags).toEqual(fixture.sourceTags);
         expect(artifact.bytecode).toEqual(fixture.asmBytecode);
       });
 

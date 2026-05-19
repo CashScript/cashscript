@@ -1,7 +1,7 @@
 import { range } from './data.js';
 import { Script, scriptToBitAuthAsm } from './script.js';
 import { parseSourceTags, sourceMapToLocationData } from './source-map.js';
-import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry } from './types.js';
+import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
 
 export type LineToOpcodesMap = Record<string, Script>;
 export type LineToAsmMap = Record<string, string>;
@@ -74,6 +74,18 @@ interface Insertion {
   endIndex: number;
 }
 
+// Where a synthetic annotation line is spliced, and the indentation it's rendered with.
+interface Anchor {
+  insertAfterLine: number;
+  indent: string;
+}
+
+// Compiler-injected prologue checks: emitted before the function body but executing at its top.
+const PROLOGUE_KINDS = [
+  SourceTagKind.LOCKTIME_GUARD,
+  SourceTagKind.PARAMETER_VALIDATION,
+];
+
 function buildInsertions(
   locationData: FullLocationData,
   sourceLines: string[],
@@ -82,10 +94,38 @@ function buildInsertions(
   const tags = (sourceTags ? parseSourceTags(sourceTags) : []);
 
   return tags.map((tag) => {
-    const annotation = deriveTagLabel(tag, locationData, sourceLines);
-    const insertAfterLine = getDisplayLine(locationData[Math.max(tag.startIndex - 1, 0)]);
+    const { insertAfterLine, indent } = deriveAnchor(tag, tags, locationData, sourceLines);
+    const annotation = `${indent}${tagDescription(tag, locationData, sourceLines)}`;
     return { insertAfterLine, annotation, startIndex: tag.startIndex, endIndex: tag.endIndex };
   });
+}
+
+function deriveAnchor(
+  tag: SourceTagEntry,
+  tags: SourceTagEntry[],
+  locationData: FullLocationData,
+  sourceLines: string[],
+): Anchor {
+  if (PROLOGUE_KINDS.includes(tag.kind)) {
+    const prologueTags = tags.filter((t) => PROLOGUE_KINDS.includes(t.kind));
+
+    // The prologue is one contiguous opcode block at the function's start
+    const lastPrologueOpcode = Math.max(...prologueTags.map((t) => t.endIndex));
+    const firstBodyOpcode = lastPrologueOpcode + 1;
+    const firstBodyLine = getDisplayLine(locationData[firstBodyOpcode]);
+
+    return {
+      // `insertAfterLine` splices *after* a line, so `firstBodyLine - 1` lands all the prologue
+      // annotations directly above the first body statement, at its indentation.
+      insertAfterLine: firstBodyLine - 1,
+      indent: lineIndent(sourceLines, firstBodyLine),
+    };
+  }
+
+  return {
+    insertAfterLine: getDisplayLine(locationData[Math.max(tag.startIndex - 1, 0)]),
+    indent: deriveIndent(getDisplayLine(locationData[tag.startIndex]), sourceLines),
+  };
 }
 
 function spliceSyntheticSourceLines(sourceLines: string[], insertions: Insertion[]): string[] {
@@ -122,22 +162,39 @@ const getUpdatedLineNumber = (currentLineNumber: number, insertion: Insertion, o
   return currentLineNumber;
 };
 
-/** Derive the annotation text (e.g. ">>> for-loop update (i = i + 1)") for a source tag. */
-function deriveTagLabel(tag: SourceTagEntry, locationData: FullLocationData, sourceLines: string[]): string {
-  const headerLine = getDisplayLine(locationData[tag.startIndex]);
+// e.g. ">>> for-loop update (i = i + 1)"
+function tagDescription(tag: SourceTagEntry, locationData: FullLocationData, sourceLines: string[]): string {
+  switch (tag.kind) {
+    case SourceTagKind.LOCKTIME_GUARD:
+      return '>>> tx.locktime guard (auto-injected)';
+    case SourceTagKind.PARAMETER_VALIDATION: {
+      const parameter = deriveSourceText(tag, locationData, sourceLines);
+      return `>>> parameter type check${parameter ? ` (${parameter})` : ''}`;
+    }
+    case SourceTagKind.FOR_UPDATE:
+    default:
+      return `>>> for-loop update (${deriveSourceText(tag, locationData, sourceLines)})`;
+  }
+}
 
-  // Find the column span of the update expression using single-line locations in the tag range
+function deriveIndent(headerLine: number, sourceLines: string[]): string {
+  const bodyLine = sourceLines.slice(headerLine).find((l) => l.trim().length > 0);
+  return bodyLine?.match(/^(\s*)/)?.[1] ?? '';
+}
+
+function lineIndent(sourceLines: string[], line: number): string {
+  return sourceLines[line - 1]?.match(/^(\s*)/)?.[1] ?? '';
+}
+
+function deriveSourceText(tag: SourceTagEntry, locationData: FullLocationData, sourceLines: string[]): string {
+  const headerLine = getDisplayLine(locationData[tag.startIndex]);
   const singleLineLocations = range(tag.startIndex, tag.endIndex)
     .map((idx) => locationData[idx].location)
-    .filter((loc) => loc.start.line === loc.end.line);
+    .filter((loc) => loc.start.line === loc.end.line && loc.start.column !== loc.end.column);
+
+  if (singleLineLocations.length === 0) return '';
 
   const startCol = Math.min(...singleLineLocations.map((loc) => loc.start.column));
   const endCol = Math.max(...singleLineLocations.map((loc) => loc.end.column));
-  const expression = sourceLines[headerLine - 1].substring(startCol, endCol);
-
-  // Indentation: use first non-empty line after header
-  const bodyLine = sourceLines.slice(headerLine).find((l) => l.trim().length > 0);
-  const indent = bodyLine?.match(/^(\s*)/)?.[1] ?? '';
-
-  return `${indent}>>> for-loop update (${expression})`;
+  return sourceLines[headerLine - 1].substring(startCol, endCol).trim();
 }

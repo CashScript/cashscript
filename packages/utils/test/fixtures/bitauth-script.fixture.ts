@@ -203,6 +203,7 @@ contract HodlVault(
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
     asmBytecode: 'OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_6 OP_PICK OP_4 OP_SPLIT OP_SWAP OP_BIN2NUM OP_SWAP OP_BIN2NUM OP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP OP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY OP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY OP_CHECKSIG',
     sourceMap: '15:8:15:28;;;;;;18:49:18:62;;:69::70;:49::71:1;19:30:19:44:0;:26::45:1;20:24:20:32:0;:20::33:1;23:16:23:27:0;:31::39;;:16:::1;:8::41;24:27:24:38:0;:8::40:1;;27:25:27:36:0;;:16:::1;:8::38;30:29:30::0;;:40::53;;:55::63;;:8::66:1;31::31:45',
+    sourceTags: '0:5:pv',
     expectedLineToAsmMap: {
       15: 'OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP',
       18: 'OP_6 OP_PICK OP_4 OP_SPLIT',
@@ -229,9 +230,10 @@ contract HodlVault(
                                                              /*     function spend(                                                                                                    */
                                                              /*         sig ownerSig,                                                                                                  */
                                                              /*         datasig oracleSig,                                                                                             */
-OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP             /*         bytes8 oracleMessage                                                                                           */
+                                                             /*         bytes8 oracleMessage                                                                                           */
                                                              /*     ) {                                                                                                                */
                                                              /*         // message: { blockHeight, price }                                                                             */
+OP_6 OP_PICK OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP             /*         >>> parameter type check (bytes8 oracleMessage)                                                                */
 OP_6 OP_PICK OP_4 OP_SPLIT                                   /*         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);                                               */
 OP_SWAP OP_BIN2NUM                                           /*         int blockHeight = int(blockHeightBin);                                                                         */
 OP_SWAP OP_BIN2NUM                                           /*         int price = int(priceBin);                                                                                     */
@@ -379,18 +381,20 @@ OP_ADD OP_12 OP_NUMEQUAL                                                        
 }`,
     asmBytecode: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_SIZE OP_NIP OP_8 OP_NUMEQUAL',
     sourceMap: '3:8:3:18;;;;;5:16:5:26:1;;:30::31:0;:8::33:1',
+    sourceTags: '0:4:pv',
     expectedLineToAsmMap: {
       3: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP',
       5: 'OP_SIZE OP_NIP OP_8 OP_NUMEQUAL',
     },
     expectedBitAuthScript: `
-                                           /* contract ParameterCheck() {       */
-                                           /*     function spend(               */
-OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP /*         bytes8 tag,               */
-                                           /*     ) {                           */
-OP_SIZE OP_NIP OP_8 OP_NUMEQUAL            /*         require(tag.length == 8); */
-                                           /*     }                             */
-                                           /* }                                 */
+                                           /* contract ParameterCheck() {                   */
+                                           /*     function spend(                           */
+                                           /*         bytes8 tag,                           */
+                                           /*     ) {                                       */
+OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP /*         >>> parameter type check (bytes8 tag) */
+OP_SIZE OP_NIP OP_8 OP_NUMEQUAL            /*         require(tag.length == 8);             */
+                                           /*     }                                         */
+                                           /* }                                             */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {
@@ -402,16 +406,18 @@ OP_SIZE OP_NIP OP_8 OP_NUMEQUAL            /*         require(tag.length == 8); 
 }`,
     asmBytecode: 'OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
     sourceMap: '2:21:2:21;::::1;;3:16:3:27:0;:31::32;:8::34:1',
+    sourceTags: '0:2:lg',
     expectedLineToAsmMap: {
       2: 'OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP',
       3: 'OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
     },
     expectedBitAuthScript: `
-                                             /* contract LocktimeGuard() {         */
-OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP /*     function spend() {             */
-OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL     /*         require(tx.locktime >= 1); */
-                                             /*     }                              */
-                                             /* }                                  */
+                                             /* contract LocktimeGuard() {                    */
+                                             /*     function spend() {                        */
+OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP /*         >>> tx.locktime guard (auto-injected) */
+OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL     /*         require(tx.locktime >= 1);            */
+                                             /*     }                                         */
+                                             /* }                                             */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {
@@ -424,18 +430,21 @@ OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL     /*         require(tx.locktime >= 1
 }`,
     asmBytecode: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
     sourceMap: '2:19:2:29;;;;;:31::31;::::1;;3:16:3:26;;:30::31:0;:8::33:1;4:16:4:27:0;:31::32;:8::34:1',
+    sourceTags: '0:4:pv;5:7:lg',
     expectedLineToAsmMap: {
       2: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP',
       3: 'OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY',
       4: 'OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
     },
     expectedBitAuthScript: `
-                                                                                        /* contract ParameterLocktimeGuard() { */
-OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP /*     function spend(bytes8 tag) {    */
-OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY                                                   /*         require(tag.length == 8);   */
-OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL                                                /*         require(tx.locktime >= 1);  */
-                                                                                        /*     }                               */
-                                                                                        /* }                                   */
+                                             /* contract ParameterLocktimeGuard() {           */
+                                             /*     function spend(bytes8 tag) {              */
+OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP   /*         >>> parameter type check (bytes8 tag) */
+OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP /*         >>> tx.locktime guard (auto-injected) */
+OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY        /*         require(tag.length == 8);             */
+OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL     /*         require(tx.locktime >= 1);            */
+                                             /*     }                                         */
+                                             /* }                                             */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
 ];

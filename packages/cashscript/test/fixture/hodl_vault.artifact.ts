@@ -30,6 +30,7 @@ export default {
       { ip: 36, line: 30 },
       { ip: 38, line: 31 },
     ],
+    sourceTags: '0:5:pv',
   },
   compiler: {
     name: 'cashc',
@@ -39,5 +40,5 @@ export default {
       enforceLocktimeGuard: true,
     },
   },
-  updatedAt: '2026-05-19T09:14:30.034Z',
+  updatedAt: '2026-05-19T10:21:12.864Z',
 } as const;

@@ -127,6 +127,9 @@ export class AssignNode extends NonControlStatementNode {
 }
 
 export class TimeOpNode extends NonControlStatementNode {
+  // True for the compiler-injected `tx.locktime` guard (no user source); see InjectLocktimeGuardTraversal.
+  isGuard = false;
+
   constructor(
     public timeOp: TimeOp,
     public expression: ExpressionNode,
