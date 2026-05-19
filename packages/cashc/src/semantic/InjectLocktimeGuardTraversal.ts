@@ -58,7 +58,7 @@ function isLocktimeCheck(statement: Node): boolean {
 }
 
 function createLocktimeGuard(funcNode: FunctionDefinitionNode): TimeOpNode {
-  const guardLocation = new Location(funcNode.location.start, funcNode.location.start);
+  const guardLocation = new Location(funcNode.body.location.start, funcNode.body.location.start);
 
   const expression = new NullaryOpNode(NullaryOperator.LOCKTIME);
   expression.type = PrimitiveType.INT;

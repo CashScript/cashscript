@@ -31,7 +31,7 @@ contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeou
   }
 }`,
     asmBytecode: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL OP_NIP OP_NIP OP_NIP OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_DUP deadbeef OP_EQUALVERIFY OP_2 OP_PICK OP_3 OP_PICK OP_NUMEQUALVERIFY OP_4 OP_PICK OP_5 OP_PICK OP_EQUALVERIFY OP_3 OP_PICK OP_4 OP_PICK OP_EQUALVERIFY OP_4 OP_ROLL OP_4 OP_PICK OP_CHECKSIGVERIFY OP_3 OP_ROLL OP_HASH160 OP_EQUALVERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 OP_ENDIF',
-    sourceMap: '3:2:6:3;;;;;4:21:4:22;;:24::33;;:4::36:1;5:20:5:29:0;;:12::30:1;:34::46:0;:4::48:1;3:2:6:3;;;;8::16::0;;;;9:12:9:21;:25::35;:4::37:1;10:12:10:19:0;;:23::30;;:4::32:1;11:12:11:13:0;;:17::18;;:4::20:1;12:12:12:21:0;;:25::34;;:4::36:1;13:21:13:22:0;;:24::33;;:4::36:1;14:20:14:29:0;;:12::30:1;:4::45;15:23:15:30:0;:4::32:1;8:2:16:3;;2:0:17:1',
+    sourceMap: '3:2:6:3;;;;;4:21:4:22;;:24::33;;:4::36:1;5:20:5:29:0;;:12::30:1;:34::46:0;:4::48:1;3:45:6:3;;;:2;8::16::0;;;;9:12:9:21;:25::35;:4::37:1;10:12:10:19:0;;:23::30;;:4::32:1;11:12:11:13:0;;:17::18;;:4::20:1;12:12:12:21:0;;:25::34;;:4::36:1;13:21:13:22:0;;:24::33;;:4::36:1;14:20:14:29:0;;:12::30:1;:4::45;15:23:15:30:0;:4::32:1;8:44:16:3;;2:0:17:1',
     expectedLineToAsmMap: {
       3: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF',
       4: 'OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY',
@@ -106,7 +106,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */)
     }
 }`.replace(/^\n+/, '').replace(/\n+$/, ''),
     asmBytecode: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_0 OP_OUTPUTBYTECODE 76a914 OP_ROT OP_CAT 88ac OP_CAT OP_EQUALVERIFY e803 OP_INPUTINDEX OP_UTXOVALUE OP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB OP_DUP OP_5 OP_PICK OP_4 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF OP_0 OP_OUTPUTVALUE OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY OP_ELSE OP_0 OP_OUTPUTVALUE OP_5 OP_PICK OP_NUMEQUALVERIFY OP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUALVERIFY OP_1 OP_OUTPUTVALUE OP_OVER OP_NUMEQUALVERIFY OP_ENDIF OP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY OP_2SWAP OP_CHECKSIG OP_NIP OP_NIP OP_ENDIF',
-    sourceMap: '9:4:28:5;;;;;13:27:13:28;:16::45:1;:49::84:0;:74::83;:49::84:1;;;:8::86;15:23:15:27:0;16:37:16:58;:27::65:1;17:26:17:38:0;:41::47;;:26:::1;:50::58:0;;:26:::1;21:12:21:23:0;:27::33;;:36::44;;:27:::1;:12;:46:23:9:0;22:31:22:32;:20::39:1;:43::66:0;;::::1;:12::68;23:15:27:9:0;24:31:24:32;:20::39:1;:43::49:0;;:12::51:1;25:31:25:32:0;:20::49:1;:63::84:0;:53::101:1;:12::103;26:31:26:32:0;:20::39:1;:43::54:0;:12::56:1;23:15:27:9;9:4:28:5;;;;;30::33::0;;;;31:24:31:26;;:16::27:1;:31::37:0;:8::39:1;32:25:32:30:0;:8::33:1;30:4:33:5;;8:0:34:1',
+    sourceMap: '9:4:28:5;;;;;13:27:13:28;:16::45:1;:49::84:0;:74::83;:49::84:1;;;:8::86;15:23:15:27:0;16:37:16:58;:27::65:1;17:26:17:38:0;:41::47;;:26:::1;:50::58:0;;:26:::1;21:12:21:23:0;:27::33;;:36::44;;:27:::1;:12;:46:23:9:0;22:31:22:32;:20::39:1;:43::66:0;;::::1;:12::68;23:15:27:9:0;24:31:24:32;:20::39:1;:43::49:0;;:12::51:1;25:31:25:32:0;:20::49:1;:63::84:0;:53::101:1;:12::103;26:31:26:32:0;:20::39:1;:43::54:0;:12::56:1;23:15:27:9;9:23:28:5;;;;:4;30::33::0;;;;31:24:31:26;;:16::27:1;:31::37:0;:8::39:1;32:25:32:30:0;:8::33:1;30:39:33:5;;8:0:34:1',
     expectedLineToAsmMap: {
       9: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF',
       13: 'OP_0 OP_OUTPUTBYTECODE <0x76a914> OP_ROT OP_CAT <0x88ac> OP_CAT OP_EQUALVERIFY',
@@ -366,6 +366,76 @@ OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL                                      
 OP_ADD OP_12 OP_NUMEQUAL                                                                                           /*         require(total + count == 12);           */
                                                                                                                    /*     }                                           */
                                                                                                                    /* }                                               */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    name: 'ParameterCheck (parameter type check)',
+    sourceCode: `contract ParameterCheck() {
+    function spend(
+        bytes8 tag,
+    ) {
+        require(tag.length == 8);
+    }
+}`,
+    asmBytecode: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_SIZE OP_NIP OP_8 OP_NUMEQUAL',
+    sourceMap: '3:8:3:18;;;;;5:16:5:26:1;;:30::31:0;:8::33:1',
+    expectedLineToAsmMap: {
+      3: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP',
+      5: 'OP_SIZE OP_NIP OP_8 OP_NUMEQUAL',
+    },
+    expectedBitAuthScript: `
+                                           /* contract ParameterCheck() {       */
+                                           /*     function spend(               */
+OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP /*         bytes8 tag,               */
+                                           /*     ) {                           */
+OP_SIZE OP_NIP OP_8 OP_NUMEQUAL            /*         require(tag.length == 8); */
+                                           /*     }                             */
+                                           /* }                                 */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    name: 'OnlyLocktimeGuard (injected locktime guard)',
+    sourceCode: `contract LocktimeGuard() {
+    function spend() {
+        require(tx.locktime >= 1);
+    }
+}`,
+    asmBytecode: 'OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
+    sourceMap: '2:21:2:21;::::1;;3:16:3:27:0;:31::32;:8::34:1',
+    expectedLineToAsmMap: {
+      2: 'OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP',
+      3: 'OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
+    },
+    expectedBitAuthScript: `
+                                             /* contract LocktimeGuard() {         */
+OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP /*     function spend() {             */
+OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL     /*         require(tx.locktime >= 1); */
+                                             /*     }                              */
+                                             /* }                                  */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    name: 'ParameterLocktimeGuard (parameter type check + injected locktime guard)',
+    sourceCode: `contract ParameterLocktimeGuard() {
+    function spend(bytes8 tag) {
+        require(tag.length == 8);
+        require(tx.locktime >= 1);
+    }
+}`,
+    asmBytecode: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
+    sourceMap: '2:19:2:29;;;;;:31::31;::::1;;3:16:3:26;;:30::31:0;:8::33:1;4:16:4:27:0;:31::32;:8::34:1',
+    expectedLineToAsmMap: {
+      2: 'OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP',
+      3: 'OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY',
+      4: 'OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL',
+    },
+    expectedBitAuthScript: `
+                                                                                        /* contract ParameterLocktimeGuard() { */
+OP_DUP OP_SIZE OP_8 OP_EQUALVERIFY OP_DROP OP_TXLOCKTIME OP_CHECKLOCKTIMEVERIFY OP_DROP /*     function spend(bytes8 tag) {    */
+OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY                                                   /*         require(tag.length == 8);   */
+OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL                                                /*         require(tx.locktime >= 1);  */
+                                                                                        /*     }                               */
+                                                                                        /* }                                   */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
 ];

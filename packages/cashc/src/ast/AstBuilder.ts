@@ -78,6 +78,7 @@ import type {
   WhileStatementContext,
   ForStatementContext,
   ForInitContext,
+  FunctionBodyContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -143,13 +144,17 @@ export default class AstBuilder
   visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
+    const body = this.visit(ctx.functionBody());
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, body);
+    functionDefinition.location = Location.fromCtx(ctx);
+    return functionDefinition;
+  }
+
+  visitFunctionBody(ctx: FunctionBodyContext): BlockNode {
     const statements = ctx.statement_list().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
-
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, block);
-    functionDefinition.location = Location.fromCtx(ctx);
-    return functionDefinition;
+    return block;
   }
 
   visitParameter(ctx: ParameterContext): ParameterNode {

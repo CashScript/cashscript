@@ -29,7 +29,11 @@ contractDefinition
     ;
 
 functionDefinition
-    : 'function' Identifier parameterList '{' statement* '}'
+    : 'function' Identifier parameterList functionBody
+    ;
+
+functionBody
+    : '{' statement* '}'
     ;
 
 parameterList

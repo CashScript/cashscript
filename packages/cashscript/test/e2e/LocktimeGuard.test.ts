@@ -1,5 +1,7 @@
-import { Contract, MockNetworkProvider, ElectrumNetworkProvider, TransactionBuilder } from '../../src/index.js';
-import { bobAddress } from '../fixture/vars.js';
+import { hexToBin } from '@bitauth/libauth';
+import { compileString } from 'cashc';
+import { Contract, MockNetworkProvider, ElectrumNetworkProvider, SignatureTemplate, TransactionBuilder } from '../../src/index.js';
+import { bobAddress, bobPriv } from '../fixture/vars.js';
 import { addUtxo } from '../test-util.js';
 import { Network } from '../../src/interfaces.js';
 import { randomUtxo } from '../../src/utils.js';
@@ -48,5 +50,44 @@ describe('Locktime Guard', () => {
       // The guard is compiler-injected and has no user source, so there must be no (empty) failing statement line
       expect(transaction).not.toFailRequireWith('Failing statement:');
     });
+  });
+});
+
+// Regression test to ensure that synthetically added parameter checks and locktime guards
+// are properly ordered in the source map
+describe('Locktime Guard with function parameters', () => {
+  const provider = new MockNetworkProvider();
+
+  const artifactWithParameter = compileString(`
+    pragma cashscript ^0.13.0;
+
+    contract ParameterizedLocktimeGuard() {
+        function spend(
+            bytes8 tag,
+        ) {
+            require(tag.length == 8);
+            require(tx.locktime >= 1);
+        }
+    }
+  `);
+  const contract = new Contract(artifactWithParameter, [], { provider });
+
+  beforeAll(async () => {
+    await addUtxo(provider, contract.address, randomUtxo({ satoshis: 100_000n }));
+    await addUtxo(provider, bobAddress, randomUtxo({ satoshis: 100_000n }));
+  });
+
+  it('should not false-fail debug() when the guarded function has a parameter', async () => {
+    const [contractUtxo] = await provider.getUtxos(contract.address);
+    const [funderUtxo] = await provider.getUtxos(bobAddress);
+
+    const builder = new TransactionBuilder({ provider })
+      .setLocktime(1_000_000)
+      .addInput(contractUtxo, contract.unlock.spend(hexToBin('0000000000000000')))
+      .addInput(funderUtxo, new SignatureTemplate(bobPriv).unlockP2PKH())
+      .addBchChangeOutputIfNeeded({ to: bobAddress, feeRate: 1.0 });
+
+    expect(() => builder.build()).not.toThrow();
+    expect(() => builder.debug()).not.toThrow();
   });
 });

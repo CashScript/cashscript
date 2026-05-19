@@ -11,6 +11,7 @@ import { VersionConstraintContext } from "./CashScriptParser.js";
 import { VersionOperatorContext } from "./CashScriptParser.js";
 import { ContractDefinitionContext } from "./CashScriptParser.js";
 import { FunctionDefinitionContext } from "./CashScriptParser.js";
+import { FunctionBodyContext } from "./CashScriptParser.js";
 import { ParameterListContext } from "./CashScriptParser.js";
 import { ParameterContext } from "./CashScriptParser.js";
 import { BlockContext } from "./CashScriptParser.js";
@@ -110,6 +111,12 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitFunctionDefinition?: (ctx: FunctionDefinitionContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.functionBody`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFunctionBody?: (ctx: FunctionBodyContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.parameterList`.
 	 * @param ctx the parse tree
