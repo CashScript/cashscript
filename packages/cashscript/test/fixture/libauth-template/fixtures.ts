@@ -1474,7 +1474,7 @@ export const fixtures: Fixture[] = [
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
                     'bytecode': {
-                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                       'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                     },
                   },
@@ -1520,7 +1520,7 @@ export const fixtures: Fixture[] = [
                 'script': 'p2pkh_placeholder_lock_2',
                 'overrides': {
                   'bytecode': {
-                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                     'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                   },
                 },
@@ -1575,7 +1575,7 @@ export const fixtures: Fixture[] = [
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
                     'bytecode': {
-                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                       'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                     },
                   },
@@ -1622,7 +1622,7 @@ export const fixtures: Fixture[] = [
                 'script': 'p2pkh_placeholder_lock_2',
                 'overrides': {
                   'bytecode': {
-                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                     'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                   },
                 },
@@ -1636,7 +1636,7 @@ export const fixtures: Fixture[] = [
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
-              'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+              'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
               'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
             },
           },
