@@ -210,6 +210,19 @@ Sets the locktime for the transaction to set a transaction-level absolute timelo
 transactionBuilder.setLocktime(((Date.now() / 1000) + 24 * 60 * 60) * 1000);
 ```
 
+### getTransactionSize()
+```ts
+transactionBuilder.getTransactionSize(): bigint
+```
+
+Returns the size of the transaction in bytes.
+
+#### Example
+```ts
+const transactionSize = transactionBuilder.getTransactionSize();
+console.log(`Transaction size: ${transactionSize} bytes`);
+```
+
 ## Completing the Transaction
 ### send()
 ```ts

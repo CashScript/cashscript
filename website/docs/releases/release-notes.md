@@ -29,6 +29,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add support for `p2s` contract type.
 - :sparkles: Add `addBchChangeOutputIfNeeded()` method to `TransactionBuilder` class.
 - :sparkles: Add `addTokenChangeOutputIfNeeded()` method to `TransactionBuilder` class for adding a fungible token change output for a specific category.
+- :sparkles: Add `getTransactionSize` method to `TransactionBuilder` class.
 - :sparkles: Add `lockingBytecode` property to `Contract` class.
 - :sparkles: Add `getUtxosForLockingBytecode()` method to `ElectrumNetworkProvider` class and `MockNetworkProvider` interface.
 - :sparkles: In the `MockNetworkProvider`, `addUtxo()` now also allows UTXOs to be added by locking bytecode.

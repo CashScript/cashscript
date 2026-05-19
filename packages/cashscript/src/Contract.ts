@@ -183,14 +183,14 @@ class ContractInternal<
         throw new Error(`Incorrect number of arguments passed to function ${abiFunction.name}. Expected ${abiFunction.inputs.length} arguments (${abiFunction.inputs.map((input) => input.type)}) but got ${args.length}`);
       }
 
-      const bytecode = hexToBin(this.bytecode);
-
       const encodedArgs = args
         .map((arg, i) => encodeFunctionArgument(arg, abiFunction.inputs[i].type));
 
       const generateUnlockingBytecode = (
         { transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions,
       ): Uint8Array => {
+        const bytecode = hexToBin(this.bytecode);
+
         const completeArgs = encodedArgs.map((arg) => {
           if (!(arg instanceof SignatureTemplate)) return arg;
 
@@ -200,9 +200,7 @@ class ContractInternal<
           return arg.generateSignature(sighash);
         });
 
-        const unlockingBytecode = createUnlockingBytecode(
-          this.contractType, hexToBin(this.bytecode), completeArgs, selector,
-        );
+        const unlockingBytecode = createUnlockingBytecode(this.contractType, bytecode, completeArgs, selector);
         return unlockingBytecode;
       };
 
