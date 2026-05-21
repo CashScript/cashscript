@@ -14,8 +14,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add `unsafe_bool()` and `unsafe_int()` casting for semantic-only casts.
 - :sparkles: Add support for narrowing bytes types after `x.length == N` and checks in require or if statements.
 - :hammer_and_wrench: **BREAKING**: Automatically inject `require(tx.time >= tx.locktime)` when a function uses `tx.locktime` without a `tx.time` check in scope, ensuring the spending input is non-final so `nLockTime` is enforced. This can be disabled with the `enforceLocktimeGuard: false` compiler option (CLI: `--skip-enforce-locktime-guard`).
-- :hammer_and_wrench: **BREAKING**: Function parameter types are now strictly enforced (bounded bytes and boolean values).
-- :hammer_and_wrench: Add compiler option to `cashc` (programmatic and CLI compilation) to allow for opting out of function parameter type enforcement.
+- :hammer_and_wrench: **BREAKING**: Function parameter types are now strictly enforced (bounded bytes and boolean values). This can be disabled with the `enforceFunctionParameterTypes: false` compiler option (CLI: `--skip-enforce-function-parameter-types`).
 - :bug: Fix issue where casting bytes larger than `bytes8` to `int` was not allowed.
 - :bug: Fix issue where empty bytecode contracts were not properly compiled.
 - :bug: **BREAKING**: Fix issue where `bool()` casting did not change the value of the argument.
