@@ -178,42 +178,48 @@ contract NoTokensAllowed() {
 
 #### while loop
 
-While loops are similar to for loops, but the initialization and update are not specified, so it it loops as long as the condition is true. The condition is checked *before* each iteration of the loop (unlike do-while loops).
+While loops execute their body as long as the condition holds, checking the condition before each iteration. They're useful when the number of iterations depends on values that change inside the body, so a for-style counter doesn't fit.
 
 #### Example
 ```solidity
 pragma cashscript ^0.13.0;
 
-contract NoTokensAllowed() {
+contract PartialFill(int minPayout) {
     function spend() {
-        int inputIndex = 0;
+        int totalPaid = 0;
+        int i = 0;
 
-        // Loop over all inputs (variable length), and make sure that none of them contain tokens
-        while (inputIndex < tx.inputs.length) {
-            require(tx.inputs[inputIndex].tokenCategory == 0x);
-            inputIndex++;
+        // Sum output values until the minimum payout is met. The number of outputs
+        // needed depends on the values themselves, so it's not known up-front.
+        while (totalPaid < minPayout) {
+            totalPaid = totalPaid + tx.outputs[i].value;
+            i = i + 1;
         }
+
+        require(totalPaid >= minPayout);
     }
 }
 ```
 
 #### do-while loop
 
-Do-while loops are similar to while loops, but the condition is checked *after* the block of code within the loop is executed. This means that the block of code within the loop will be executed at least once, even if the condition is initially `false`.
+Do-while loops execute their body first, then check the condition. The body is guaranteed to run at least once even if the condition is initially false. This is useful when a step needs to happen unconditionally before deciding whether to continue.
 
 #### Example
 ```solidity
 pragma cashscript ^0.13.0;
 
-contract NoTokensAllowed() {
-    function spend() {
-        int inputIndex = 0;
+contract HashChainLock(bytes32 hashLock) {
+    function spend(bytes32 preimage) {
+        bytes32 current = preimage;
 
-        // Loop over all inputs (variable length), and make sure that none of them contain tokens
+        // Hash at least once before checking. Using a while loop would let anyone
+        // unlock the contract by passing hashLock itself as the preimage.
         do {
-            require(tx.inputs[inputIndex].tokenCategory == 0x);
-            inputIndex++;
-        } while (inputIndex < tx.inputs.length);
+            current = hash256(current);
+        } while (current != hashLock);
+
+        require(current == hashLock);
     }
 }
 ```
