@@ -66,7 +66,7 @@ Function arguments are provided by the user in the unlocking script of the trans
 Because the arguments are provided by the user when spending from the contract, these are 'untrusted arguments'. This means that these arguments can be crafted in a specific way by anyone to see if they can exploit the contract logic.
 
 :::note
-Function parameters are passed in the reversed order of their declaration. This can be important when debugging, optimizing or when creating transactions manually.
+Function parameters are passed in the reversed order of their declaration, but may be reordered by the compiler when enforcing function parameter types. This can be important when debugging, optimizing or when creating transactions manually.
 :::
 
 In CashScript the types for the function arguments are **not** enforced automatically at the contract level. This can be especially relevant for types like `bool`, `bytesX` and other semantic bytes types. Instead this type information is only used by the SDK to check whether these arguments match the expected type during transaction building.

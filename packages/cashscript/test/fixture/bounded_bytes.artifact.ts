@@ -10,16 +10,17 @@ export default {
       ],
     },
   ],
-  bytecode: 'OP_DUP OP_SIZE OP_4 OP_EQUALVERIFY OP_DROP OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
+  bytecode: 'OP_SIZE OP_4 OP_EQUALVERIFY OP_SWAP OP_4 OP_NUM2BIN OP_EQUAL',
   source: 'contract BoundedBytes() {\n    function spend(bytes4 b, int i) {\n        require(b == toPaddedBytes(i, 4));\n    }\n}\n',
-  fingerprint: '1534c07d4972c49c395973d4aaa6f7d8f00d8152f2875270310b256947b58bc2',
+  fingerprint: 'b6381ead9be56fd0f9aa43b986ae8c3ba6aae2276596cdbd8268628397391064',
   debug: {
-    bytecode: '76825488757c548087',
-    sourceMap: '2:19:2:27;;;;;3:35:3:36;:38::39;:21::40:1;:8::42',
+    bytecode: '8254887c548087',
+    sourceMap: '2:19:2:27;;;3:35:3:36;:38::39;:21::40:1;:8::42',
     logs: [],
     requires: [
-      { ip: 9, line: 3 },
+      { ip: 7, line: 3 },
     ],
+    sourceTags: '0:2:pv',
   },
   compiler: {
     name: 'cashc',
@@ -29,5 +30,5 @@ export default {
       enforceLocktimeGuard: true,
     },
   },
-  updatedAt: '2026-05-19T09:14:31.055Z',
+  updatedAt: '2026-05-21T08:46:58.276Z',
 } as const;

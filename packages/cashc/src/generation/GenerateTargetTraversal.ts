@@ -263,27 +263,25 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     const tagStartIndex = this.output.length;
     const stackIndex = this.getStackIndex(node.name);
+
+    // We take the parameter from the stack and roll it to the top
     this.emit(encodeInt(BigInt(stackIndex)), { location: node.location, positionHint: PositionHint.START });
+    this.emit(Op.OP_ROLL, { location: node.location, positionHint: PositionHint.START });
 
+    // We remove the original stack value and push the new value to the top of the stack
+    this.removeFromStack(stackIndex);
+    this.pushToStack(node.name);
+
+    // For booleans, we force-convert it to a boolean using OP_0NOTEQUAL
     if (node.type === PrimitiveType.BOOL) {
-      // For booleans, we take it from the stack and force-convert it to a boolean using OP_0NOTEQUAL
-      this.emit(Op.OP_ROLL, { location: node.location, positionHint: PositionHint.START });
       this.emit(Op.OP_0NOTEQUAL, { location: node.location, positionHint: PositionHint.START });
-
-      // We remove the original stack value and push the new boolean value to the top of the stack
-      this.removeFromStack(stackIndex);
-      this.pushToStack(node.name);
     }
 
+    // For bounded bytes, we *check* that it is the correct size using OP_SIZE and OP_EQUALVERIFY
     if (node.type instanceof BytesType && node.type.bound !== undefined) {
-      // For bounded bytes, we copy it from the stack and *check* that it is the correct size
-      this.emit(Op.OP_PICK, { location: node.location, positionHint: PositionHint.START });
       this.emit(Op.OP_SIZE, { location: node.location, positionHint: PositionHint.START });
       this.emit(encodeInt(BigInt(node.type.bound)), { location: node.location, positionHint: PositionHint.START });
       this.emit(Op.OP_EQUALVERIFY, { location: node.location, positionHint: PositionHint.START });
-      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.START });
-
-      // We don't perform any stack operations, because these ops leave the original stack unchanged
     }
 
     // These checks are compiler-injected (no user source); tag them so the debug reconstruction
