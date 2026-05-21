@@ -178,6 +178,30 @@ describe('InjectLocktimeGuardTraversal', () => {
     expect(bytecode.startsWith(GUARD_PREFIX)).toBe(true);
   });
 
+  it('does not inject when require(this.age >= LITERAL) uses a literal below 2^31', () => {
+    const src = `
+      contract T() {
+        function spend() {
+          require(this.age >= 100);
+          int x = tx.locktime;
+          require(x >= 100);
+        }
+      }`;
+    expect(compileString(src).bytecode.startsWith(GUARD_PREFIX)).toBe(false);
+  });
+
+  it('still injects when require(this.age >= ...) uses a non-literal operand', () => {
+    const src = `
+      contract T() {
+        function spend(int minAge) {
+          require(this.age >= minAge);
+          int x = tx.locktime;
+          require(x >= 100);
+        }
+      }`;
+    expect(compileString(src).bytecode.startsWith(GUARD_PREFIX)).toBe(true);
+  });
+
   it('does not inject when enforceLocktimeGuard is disabled', () => {
     const src = `
       contract T() {

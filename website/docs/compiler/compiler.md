@@ -101,11 +101,20 @@ const P2PKH = compileString(source);
 ```ts
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
+  enforceLocktimeGuard?: boolean;
 }
 ```
+
+#### enforceFunctionParameterTypes
 
 The `enforceFunctionParameterTypes` option is used to enforce function parameter types, such as byte length of `bytes20` or `bytes32` types and `bool` values. By default, it is set to `true`.
 
 If set to `false`, the compiler will not enforce function parameter types. This means that it is possible for `bytes20` values to have a different length at runtime than the expected 20 bytes. Or that `bool` values are not actually booleans, but integers.
 
 This option is useful if you are certain that passing in incorrect function parameter types will not cause runtime vulnerabilities, and you want to save on the extra opcodes that are added to the script to enforce the types.
+
+#### enforceLocktimeGuard
+
+The `enforceLocktimeGuard` option controls whether the compiler injects a `require(tx.time >= tx.locktime)` check when `tx.locktime` is used in a function without a `require(tx.time >= ...)` (or in some cases, `require(this.age >= ...)`) check already in scope. By default, it is set to `true`.
+
+If set to `false`, the compiler will not inject this guard. Without a guard, the value of `tx.locktime` is not guaranteed to be enforced by the network, which makes any comparison against `tx.locktime` meaningless and can bypass time-based restrictions in the contract.
