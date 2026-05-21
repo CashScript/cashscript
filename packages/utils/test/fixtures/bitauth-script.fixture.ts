@@ -21,7 +21,7 @@ contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeou
   }
 
   function timeout(pubkey signingPk, sig s) {
-    require(senderPkh == 0xdeadbeef);
+    require(senderPkh == 0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef);
     require(timeout == timeout);
     require(s == s);
     require(signingPk == signingPk);
@@ -30,15 +30,15 @@ contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeou
     require(tx.time >= timeout);
   }
 }`,
-    asmBytecode: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL OP_NIP OP_NIP OP_NIP OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_DUP deadbeef OP_EQUALVERIFY OP_2 OP_PICK OP_3 OP_PICK OP_NUMEQUALVERIFY OP_4 OP_PICK OP_5 OP_PICK OP_EQUALVERIFY OP_3 OP_PICK OP_4 OP_PICK OP_EQUALVERIFY OP_4 OP_ROLL OP_4 OP_PICK OP_CHECKSIGVERIFY OP_3 OP_ROLL OP_HASH160 OP_EQUALVERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 OP_ENDIF',
-    sourceMap: '3:2:6:3;;;;;4:21:4:22;;:24::33;;:4::36:1;5:20:5:29:0;;:12::30:1;:34::46:0;:4::48:1;3:45:6:3;;;:2;8::16::0;;;;9:12:9:21;:25::35;:4::37:1;10:12:10:19:0;;:23::30;;:4::32:1;11:12:11:13:0;;:17::18;;:4::20:1;12:12:12:21:0;;:25::34;;:4::36:1;13:21:13:22:0;;:24::33;;:4::36:1;14:20:14:29:0;;:12::30:1;:4::45;15:23:15:30:0;:4::32:1;8:44:16:3;;2:0:17:1',
+    asmBytecode: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL OP_NIP OP_NIP OP_NIP OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_DUP deadbeefdeadbeefdeadbeefdeadbeefdeadbeef OP_EQUALVERIFY OP_2 OP_PICK OP_3 OP_PICK OP_NUMEQUALVERIFY OP_4 OP_PICK OP_5 OP_PICK OP_EQUALVERIFY OP_3 OP_PICK OP_4 OP_PICK OP_EQUALVERIFY OP_4 OP_ROLL OP_4 OP_PICK OP_CHECKSIGVERIFY OP_3 OP_ROLL OP_HASH160 OP_EQUALVERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 OP_ENDIF',
+    sourceMap: '3:2:6:3;;;;;4:21:4:22;;:24::33;;:4::36:1;5:20:5:29:0;;:12::30:1;:34::46:0;:4::48:1;3:45:6:3;;;:2;8::16::0;;;;9:12:9:21;:25::67;:4::69:1;10:12:10:19:0;;:23::30;;:4::32:1;11:12:11:13:0;;:17::18;;:4::20:1;12:12:12:21:0;;:25::34;;:4::36:1;13:21:13:22:0;;:24::33;;:4::36:1;14:20:14:29:0;;:12::30:1;:4::45;15:23:15:30:0;:4::32:1;8:44:16:3;;2:0:17:1',
     expectedLineToAsmMap: {
       3: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF',
       4: 'OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY',
       5: 'OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL',
       6: 'OP_NIP OP_NIP OP_NIP OP_ELSE',
       8: 'OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY',
-      9: 'OP_DUP <0xdeadbeef> OP_EQUALVERIFY',
+      9: 'OP_DUP <0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef> OP_EQUALVERIFY',
       10: 'OP_2 OP_PICK OP_3 OP_PICK OP_NUMEQUALVERIFY',
       11: 'OP_4 OP_PICK OP_5 OP_PICK OP_EQUALVERIFY',
       12: 'OP_3 OP_PICK OP_4 OP_PICK OP_EQUALVERIFY',
@@ -49,23 +49,23 @@ contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeou
       17: 'OP_ENDIF',
     },
     expectedBitAuthScript: `
-                                            /*                                                                                      */
-                                            /* contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeout) { */
-OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF         /*   function transfer(pubkey signingPk, sig s) {                                       */
-OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY /*     require(checkSig(s, signingPk));                                                 */
-OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL     /*     require(hash160(signingPk) == recipientPkh);                                     */
-OP_NIP OP_NIP OP_NIP OP_ELSE                /*   }                                                                                  */
-                                            /*                                                                                      */
-OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY         /*   function timeout(pubkey signingPk, sig s) {                                        */
-OP_DUP <0xdeadbeef> OP_EQUALVERIFY          /*     require(senderPkh == 0xdeadbeef);                                                */
-OP_2 OP_PICK OP_3 OP_PICK OP_NUMEQUALVERIFY /*     require(timeout == timeout);                                                     */
-OP_4 OP_PICK OP_5 OP_PICK OP_EQUALVERIFY    /*     require(s == s);                                                                 */
-OP_3 OP_PICK OP_4 OP_PICK OP_EQUALVERIFY    /*     require(signingPk == signingPk);                                                 */
-OP_4 OP_ROLL OP_4 OP_PICK OP_CHECKSIGVERIFY /*     require(checkSig(s, signingPk));                                                 */
-OP_3 OP_ROLL OP_HASH160 OP_EQUALVERIFY      /*     require(hash160(signingPk) == senderPkh);                                        */
-OP_SWAP OP_CHECKLOCKTIMEVERIFY              /*     require(tx.time >= timeout);                                                     */
-OP_2DROP OP_1                               /*   }                                                                                  */
-OP_ENDIF                                    /* }                                                                                    */
+                                                                   /*                                                                                      */
+                                                                   /* contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeout) { */
+OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF                                /*   function transfer(pubkey signingPk, sig s) {                                       */
+OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY                        /*     require(checkSig(s, signingPk));                                                 */
+OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL                            /*     require(hash160(signingPk) == recipientPkh);                                     */
+OP_NIP OP_NIP OP_NIP OP_ELSE                                       /*   }                                                                                  */
+                                                                   /*                                                                                      */
+OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY                                /*   function timeout(pubkey signingPk, sig s) {                                        */
+OP_DUP <0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef> OP_EQUALVERIFY /*     require(senderPkh == 0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef);                */
+OP_2 OP_PICK OP_3 OP_PICK OP_NUMEQUALVERIFY                        /*     require(timeout == timeout);                                                     */
+OP_4 OP_PICK OP_5 OP_PICK OP_EQUALVERIFY                           /*     require(s == s);                                                                 */
+OP_3 OP_PICK OP_4 OP_PICK OP_EQUALVERIFY                           /*     require(signingPk == signingPk);                                                 */
+OP_4 OP_ROLL OP_4 OP_PICK OP_CHECKSIGVERIFY                        /*     require(checkSig(s, signingPk));                                                 */
+OP_3 OP_ROLL OP_HASH160 OP_EQUALVERIFY                             /*     require(hash160(signingPk) == senderPkh);                                        */
+OP_SWAP OP_CHECKLOCKTIMEVERIFY                                     /*     require(tx.time >= timeout);                                                     */
+OP_2DROP OP_1                                                      /*   }                                                                                  */
+OP_ENDIF                                                           /* }                                                                                    */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {

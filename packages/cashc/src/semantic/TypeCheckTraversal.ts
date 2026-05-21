@@ -283,6 +283,7 @@ export default class TypeCheckTraversal extends AstTraversal {
         return node;
       case BinaryOperator.EQ:
       case BinaryOperator.NE:
+        expectCompatibleBytesBounds(node, node.left.type, node.right.type);
         node.type = PrimitiveType.BOOL;
         return node;
       case BinaryOperator.AND:
@@ -438,6 +439,14 @@ function expectSameSizeBytes(node: BinaryOpNode, left?: Type, right?: Type): voi
   if (left.bound !== right.bound) {
     throw new UnequalTypeError(node);
   }
+}
+
+// Two bounded bytes types are only comparable when their bounds match. Unbounded sides are
+// allowed since they can match any size at runtime (and narrowing may refine them later).
+function expectCompatibleBytesBounds(node: BinaryOpNode, left?: Type, right?: Type): void {
+  if (!(left instanceof BytesType) || !(right instanceof BytesType)) return;
+  if (left.bound === undefined || right.bound === undefined) return;
+  if (left.bound !== right.bound) throw new UnequalTypeError(node);
 }
 
 function expectTuple(node: ExpectedNode, actual?: Type): void {
