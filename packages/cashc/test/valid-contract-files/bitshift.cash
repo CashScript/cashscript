@@ -8,6 +8,6 @@ contract Bitshift() {
         int a = 8;
         int b = a >> 2 << 1;
 
-        require (b == 16);
+        require (b == 4);
     }
 }
