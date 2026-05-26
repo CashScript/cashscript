@@ -40,6 +40,7 @@ const sidebars: SidebarsConfig = {
         'sdk/typescript-sdk',
         'sdk/instantiation',
         'sdk/transaction-builder',
+        'sdk/transaction-utilities',
         {
           type: 'category',
           label: 'Network Providers',
@@ -56,12 +57,21 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Community SDKs',
+      items: [
+        'community-sdks/python-sdk',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Guides',
       items: [
         'guides/covenants',
         'guides/lifecycle',
         'guides/cashtokens',
+        'guides/deployment',
         'guides/infrastructure',
+        'guides/concurrency',
         'guides/walletconnect',
         'guides/debugging',
         'guides/optimization',

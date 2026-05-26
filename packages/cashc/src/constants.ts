@@ -1,1 +1,1 @@
-export const MAX_INPUT_BYTESIZE = 1650;
+export const MAX_INPUT_BYTESIZE = 10_000;

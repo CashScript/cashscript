@@ -1,0 +1,7 @@
+contract ForLoopUpdateDefinition() {
+    function spend() {
+        for (int i = 0; i < 3; int j = 0) {
+            require(i < 3);
+        }
+    }
+}

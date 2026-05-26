@@ -1,0 +1,10 @@
+contract Loopy() {
+    function doLoop() {
+        int i = 0;
+        require(i < 1);
+
+        if (i < 1) {
+
+        }
+    }
+}

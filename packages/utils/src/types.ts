@@ -93,8 +93,8 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
   }
 
   if (from instanceof BytesType) {
-    // Can cast unbounded bytes or <=4 bytes to int
-    if (to === PrimitiveType.INT) return !from.bound || from.bound <= 8;
+    // Can cast any bytes to int
+    if (to === PrimitiveType.INT) return true;
     // Can't cast bytes to bool or string
     if (to === PrimitiveType.BOOL) return false;
     if (to === PrimitiveType.STRING) return false;
@@ -155,10 +155,9 @@ export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   return actual === expected;
 }
 
-export function resultingType(
-  left?: Type,
-  right?: Type,
-): Type | undefined {
+function resultingTypeForArrayElements(left: Type | undefined, right: Type | undefined): Type | undefined {
+  if (!left || !right) return undefined;
+
   if (implicitlyCastable(left, right)) return right;
   if (implicitlyCastable(right, left)) return left;
   if (left instanceof BytesType && right instanceof BytesType) {
@@ -171,7 +170,7 @@ export function arrayType(types: Type[]): Type | undefined {
   if (types.length === 0) return undefined;
   let resType: Type | undefined = types[0];
   types.forEach((t) => {
-    resType = resultingType(resType, t) as Type;
+    resType = resultingTypeForArrayElements(resType, t) as Type;
   });
   return resType;
 }
@@ -220,4 +219,17 @@ export type FullLocationData = Array<SingleLocationData>;
 export enum PositionHint {
   START = 0,
   END = 1,
+}
+
+// Semantic tags for compiler-injected opcodes that have no (or misleading) user source
+export enum SourceTagKind {
+  FOR_UPDATE = 'fu',
+  LOCKTIME_GUARD = 'lg',
+  PARAMETER_VALIDATION = 'pv',
+}
+
+export interface SourceTagEntry {
+  startIndex: number; // first opcode index (inclusive)
+  endIndex: number; // last opcode index (inclusive)
+  kind: SourceTagKind;
 }

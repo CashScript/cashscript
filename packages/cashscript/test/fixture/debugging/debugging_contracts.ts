@@ -94,6 +94,57 @@ contract Test() {
 }
 `;
 
+const CONTRACT_TEST_REQUIRE_INSIDE_LOOP = `
+contract Test() {
+  function test_require_inside_loop() {
+    int i = 0;
+    do {
+      i = i + 1;
+      require(i < 6, 'i should be less than 6');
+    } while (i < 10);
+  }
+
+  function test_require_inside_while_loop() {
+    int i = 0;
+
+    while (i < 10) {
+      i = i + 1;
+      require(i < 6, 'while i should be less than 6');
+    }
+
+    require(i == 10);
+  }
+
+  function test_require_inside_for_loop() {
+    int i = 0;
+
+    for (i = 0; i < 4; i = i + 1) {
+      require(i < 2, 'for i should be less than 2');
+    }
+
+    require(i == 4);
+  }
+
+  function test_require_inside_loop_complex() {
+    int i = 0;
+
+    do {
+      int j = 0;
+
+      while (j < 3) {
+        j = j + 1;
+        int k = i + j;
+        require(k < 2, 'k should be less than 2');
+      }
+
+      i = i + 1;
+    } while (i < 3);
+
+    require(i == 3);
+  }
+}
+`;
+
 const CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION = `
 contract Test() {
   function test_require_single_function() {
@@ -255,6 +306,69 @@ contract Test(pubkey owner) {
 }
 `;
 
+const CONTRACT_TEST_LOG_INSIDE_LOOP = `
+contract Test() {
+  function test_log_inside_loop() {
+    int i = 0;
+    do {
+      console.log('i:', i);
+      i = i + 1;
+    } while (i < 10);
+
+    require(i == 10);
+  }
+
+  function test_log_inside_while_loop() {
+    int i = 0;
+
+    while (i < 3) {
+      console.log('while i:', i);
+      i = i + 1;
+    }
+
+    require(i == 3);
+  }
+
+  function test_log_inside_for_loop() {
+    int sum = 0;
+
+    for (int i = 0; i < 3; i = i + 1) {
+      sum = sum + i;
+      console.log('for i:', i, 'sum:', sum);
+    }
+
+    require(sum == 3);
+  }
+
+  function test_log_inside_loop_complex() {
+    int i = 0;
+
+    int l = 5;
+    require(l < 10);
+
+    do {
+      int j = 0;
+
+      int m = 10;
+      require(m < 20);
+
+      while (j < 2) {
+        int k = i + j;
+        require(k < 100);
+        console.log('inner loop', 'i:', i, 'j:', j, 'k:', k, 'l:', l, 'm:', m);
+        j = j + 1;
+      }
+
+      console.log('outer loop', 'i:', i);
+
+      i = i + 1;
+    } while (i < 2);
+
+    require(i == 2);
+  }
+}
+`;
+
 const CONTRACT_TEST_CONSECUTIVE_LOGS = `
 contract Test(pubkey owner) {
   function transfer(sig ownerSig, int num) {
@@ -321,3 +435,5 @@ export const artifactTestLogs = compileString(CONTRACT_TEST_LOGS);
 export const artifactTestConsecutiveLogs = compileString(CONTRACT_TEST_CONSECUTIVE_LOGS);
 export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTIPLE_LOGS);
 export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS);
+export const artifactTestRequireInsideLoop = compileString(CONTRACT_TEST_REQUIRE_INSIDE_LOOP);
+export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_LOOP);

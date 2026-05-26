@@ -202,14 +202,6 @@ export class CastTypeError extends TypeError {
   }
 }
 
-export class CastSizeError extends CashScriptError {
-  constructor(
-    node: CastNode,
-  ) {
-    super(node, 'Unexpected cast size argument found');
-  }
-}
-
 export class AssignTypeError extends TypeError {
   constructor(
     node: AssignNode | VariableDefinitionNode,
@@ -270,6 +262,15 @@ export class IndexOutOfBoundsError extends CashScriptError {
     } else {
       super(node, 'Index out of bounds');
     }
+  }
+}
+
+export class BitshiftBitcountNegativeError extends CashScriptError {
+  constructor(
+    node: BinaryOpNode,
+    bitcount: number,
+  ) {
+    super(node, `Bitshift bitcount cannot be negative: ${bitcount}`);
   }
 }
 

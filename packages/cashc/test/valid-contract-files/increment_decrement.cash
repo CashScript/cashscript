@@ -1,0 +1,10 @@
+contract IncrementDecrement() {
+    function spend() {
+        int x = 5;
+        x++;
+        require(x == 6);
+
+        x--;
+        require(x == 5);
+    }
+}

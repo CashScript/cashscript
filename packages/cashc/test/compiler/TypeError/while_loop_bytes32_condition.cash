@@ -1,0 +1,11 @@
+contract WhileLoopConditionTypeError() {
+    function spend() {
+        int i = 0;
+
+        while (tx.inputs[0].outpointTransactionHash) {
+            i = i + 1;
+        }
+
+        require(i > 0);
+    }
+}

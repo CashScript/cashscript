@@ -4,7 +4,7 @@
     "module": "esnext",
     "declaration": true,
     "lib": [
-      "es2022",
+      "es2023",
       "dom"
     ],
     "types": [
@@ -23,5 +23,6 @@
   "exclude": [
     "node_modules",
     "dist",
+    "website",
   ],
 }

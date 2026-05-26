@@ -14,14 +14,14 @@ new Contract(
   constructorArgs: ConstructorArgument[],
   options : {
     provider: NetworkProvider,
-    addressType?: 'p2sh20' | 'p2sh32',
+    contractType?: 'p2sh20' | 'p2sh32' | 'p2s',
   }
 )
 ```
 
-A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `addressType`.
+A CashScript contract can be instantiated by providing an `Artifact` object, a list of constructor arguments, and optionally an options object configuring `NetworkProvider` and `contractType`.
 
-An `Artifact` object is the result of compiling a CashScript contract. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)). 
+An `Artifact` object is the result of compiling a CashScript contract. Compilation can be done using the standalone [`cashc` CLI](/docs/compiler) or programmatically with the `cashc` NPM package (see [CashScript Compiler](/docs/compiler#javascript-compilation)).
 
 :::tip
 If compilation is done using the `cashc` CLI with the <span style={{ display: 'inline-block' }}>`--format ts`</span> option to output TypeScript Artifacts, you will get explicit types and type checking for the constructor arguments and function arguments of the `Contract` class.
@@ -29,7 +29,7 @@ If compilation is done using the `cashc` CLI with the <span style={{ display: 'i
 
 The `NetworkProvider` option is used to manage network operations for the CashScript contract. By default, a mainnet `ElectrumNetworkProvider` is used, but the network providers can be configured. See the docs on [NetworkProvider](/docs/sdk/network-provider).
 
-The `addressType` option is used to choose between a `p2sh20` and `p2sh32` address type for the CashScript contract. By default `p2sh32` is used because it has increased cryptographic security — but it is not yet supported by all wallets.
+The `contractType` option is used to choose between a `p2sh20`, `p2sh32` or `p2s` contract type for the CashScript contract. By default `p2sh32` is used because it has increased cryptographic security over `p2sh20` — but it is not yet supported by all wallets. `p2s` is a new contract type where the contract code is not hidden behind a hash. This has some benefits for public visibility of the contract code.
 
 :::caution
 p2sh32 was introduced because p2sh20 is cryptographically insecure for a large subset of smart contracts. For contracts holding large sums of BCH this provides an incentive to find a hash collision and hack the contract.
@@ -49,7 +49,7 @@ const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 const contractArguments = [alicePkh]
 
 const provider = new ElectrumNetworkProvider('chipnet');
-const options = { provider, addressType: 'p2sh20' }
+const options = { provider, contractType: 'p2sh20' }
 const contract = new Contract(P2PKH, contractArguments, options);
 ```
 
@@ -66,6 +66,10 @@ A contract's regular address (without token-support) can be retrieved through th
 Wallets will not allow you to send CashTokens to this address. For that you must use the [tokenAddress](#tokenaddress) below. Wallets which have not upgraded might not recognize this new address type.
 :::
 
+:::info
+If you are using a `p2s` contract, the `address` member field does not exist on the contract object.
+:::
+
 #### Example
 ```ts
 console.log(contract.address)
@@ -78,9 +82,25 @@ contract.tokenAddress: string
 
 A contract's token-supporting address can be retrieved through the `tokenAddress` member field.
 
+:::info
+If you are using a `p2s` contract, the `tokenAddress` member field does not exist on the contract object.
+:::
+
 #### Example
 ```ts
 console.log(contract.tokenAddress)
+```
+
+### lockingBytecode
+```ts
+contract.lockingBytecode: string
+```
+
+Returns the contract's locking bytecode encoded as a hex string. This exists for all contract types, including `p2s`.
+
+#### Example
+```ts
+console.log(contract.lockingBytecode)
 ```
 
 ### bytecode
@@ -88,7 +108,7 @@ console.log(contract.tokenAddress)
 contract.bytecode: string
 ```
 
-Returns the contract's redeem script encoded as a hex string.
+Returns the contract's bytecode encoded as a hex string.
 
 #### Example
 ```ts
@@ -100,9 +120,9 @@ console.log(contract.bytecode)
 contract.bytesize: number
 ```
 
-The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 1,650 bytes at most.
+The size of the contract's bytecode in bytes can be retrieved through the `bytesize` member field. This is useful to ensure that the contract is not too big, since Bitcoin Cash smart contracts can be 10,000 bytes at most for P2SH contracts and 201 bytes for P2S contracts. See the [Script & Transaction Limits](/docs/compiler/script-limits) page for more information.
 
-:::tip
+:::info
 Using `contract.bytesize` is the best way to get the size of contract bytecode, as it includes the constructor arguments.
 The size outputs of the `cashc` compiler are based on the bytecode without constructor arguments so are always an underestimate.
 :::
@@ -110,7 +130,7 @@ The size outputs of the `cashc` compiler are based on the bytecode without const
 #### Example
 ```ts
 // make sure the contract bytesize is within standardness limits
-assert(contract.bytesize <= 1650)
+assert(contract.bytesize <= 10_000)
 ```
 
 ### opcount

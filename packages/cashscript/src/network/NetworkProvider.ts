@@ -14,6 +14,13 @@ export default interface NetworkProvider {
   getUtxos(address: string): Promise<Utxo[]>;
 
   /**
+   * Retrieve all UTXOs (confirmed and unconfirmed) for a given locking bytecode.
+   * @param lockingBytecode The locking bytecode for which we wish to retrieve UTXOs.
+   * @returns List of UTXOs spendable by the provided locking bytecode.
+   */
+  getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+
+  /**
    * @returns The current block height.
    */
   getBlockHeight(): Promise<number>;

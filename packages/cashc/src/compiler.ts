@@ -1,6 +1,6 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, generateSourceMap, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
+import { Artifact, CompilerOptions, computeBytecodeFingerprintWithConstructorArgs, generateSourceMap, generateSourceTags, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
@@ -12,8 +12,24 @@ import CashScriptParser from './grammar/CashScriptParser.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
+import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
 
-export function compileString(code: string): Artifact {
+export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
+  enforceFunctionParameterTypes: true,
+  enforceLocktimeGuard: true,
+};
+
+/**
+ * Compile a CashScript source string to an {@link Artifact}.
+ *
+ * @param code - The CashScript source code to compile.
+ * @param compilerOptions - Optional compiler options that override the defaults.
+ * @returns The compiled CashScript artifact, including ABI, bytecode and debug information.
+ * @throws If the source code contains a syntax, semantic, or type error.
+ */
+export function compileString(code: string, compilerOptions: CompilerOptions = {}): Artifact {
+  const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions };
+
   // Lexing + parsing
   let ast = parseCode(code);
 
@@ -21,9 +37,12 @@ export function compileString(code: string): Artifact {
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
+  if (mergedCompilerOptions.enforceLocktimeGuard) {
+    ast = ast.accept(new InjectLocktimeGuardTraversal()) as Ast;
+  }
 
   // Code generation
-  const traversal = new GenerateTargetTraversal();
+  const traversal = new GenerateTargetTraversal(mergedCompilerOptions);
   ast = ast.accept(traversal) as Ast;
 
   const constructorParamLength = ast.contract.parameters.length;
@@ -35,6 +54,7 @@ export function compileString(code: string): Artifact {
     sourceMapToLocationData(traversal.sourceMap),
     traversal.consoleLogs,
     traversal.requires,
+    traversal.sourceTags,
     constructorParamLength,
   );
 
@@ -45,19 +65,31 @@ export function compileString(code: string): Artifact {
   }
 
   // Attach debug information
+  const sourceTags = generateSourceTags(optimisationResult.sourceTags);
   const debug = {
     bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
     sourceMap: generateSourceMap(optimisationResult.locationData),
     logs: optimisationResult.logs,
     requires: optimisationResult.requires,
+    ...(sourceTags ? { sourceTags } : {}),
   };
 
-  return generateArtifact(ast, optimisationResult.script, code, debug);
+  const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);
+
+  return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions, fingerprint);
 }
 
-export function compileFile(codeFile: PathLike): Artifact {
+/**
+ * Read a `.cash` source file from disk and compile it to an `Artifact`.
+ *
+ * @param codeFile - The path to the `.cash` source file.
+ * @param compilerOptions - Optional compiler options that override the defaults.
+ * @returns The compiled CashScript artifact.
+ * @throws If the file cannot be read, or if the source contains a compilation error.
+ */
+export function compileFile(codeFile: PathLike, compilerOptions: CompilerOptions = {}): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
-  return compileString(code);
+  return compileString(code, compilerOptions);
 }
 
 export function parseCode(code: string): Ast {

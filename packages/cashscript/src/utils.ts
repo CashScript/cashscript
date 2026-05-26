@@ -34,6 +34,7 @@ import {
   AddressType,
   UnlockableUtxo,
   LibauthTokenDetails,
+  ContractType,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -41,17 +42,26 @@ import {
   OutputTokenAmountTooSmallError,
   TokensToNonTokenAddressError,
   UndefinedInputError,
+  OutputAddressNetworkMismatchError,
+  OutputTokenCategoryInvalidError,
+  OutputTokenCommitmentInvalidError,
+  OutputBchChangeLockedError,
+  OutputTokenChangeLockedError,
 } from './Errors.js';
 
 // ////////// PARAMETER VALIDATION ////////////////////////////////////////////
-export function validateInput(utxo: Utxo): void {
+export function validateInput(utxo: Utxo, changeLocks: Record<string, boolean>): void {
   if (!utxo) {
     throw new UndefinedInputError();
   }
+
+  validateChangeLocks(changeLocks, utxo.token?.category);
 }
 
-export function validateOutput(output: Output): void {
-  if (typeof output.to !== 'string') return;
+export function validateOutput(output: Output, network: Network, changeLocks: Record<string, boolean>): void {
+  validateChangeLocks(changeLocks, output.token?.category);
+
+  if (isOpReturnOutput(output)) return;
 
   const minimumAmount = calculateDust(output);
   if (output.amount < minimumAmount) {
@@ -59,14 +69,45 @@ export function validateOutput(output: Output): void {
   }
 
   if (output.token) {
-    if (!isTokenAddress(output.to)) {
-      throw new TokensToNonTokenAddressError(output.to);
-    }
-
     if (output.token.amount < 0n) {
       throw new OutputTokenAmountTooSmallError(output.token.amount);
     }
+
+    if (typeof output.token.category !== 'string' || !isHex(output.token.category)) {
+      throw new OutputTokenCategoryInvalidError(output.token.category);
+    }
+
+    if (output.token.nft && (typeof output.token.nft.commitment !== 'string' || !isHex(output.token.nft.commitment))) {
+      throw new OutputTokenCommitmentInvalidError(output.token.nft.commitment);
+    }
   }
+
+  // If the output is not an address (so it is P2S), then we don't need to do any address validation
+  if (typeof output.to !== 'string') return;
+
+  if (output.token && !isTokenAddress(output.to)) {
+    throw new TokensToNonTokenAddressError(output.to);
+  }
+
+  const addressPrefix = getNetworkPrefixForAddress(output.to);
+  const networkPrefix = getNetworkPrefix(network);
+  if (addressPrefix !== networkPrefix) {
+    throw new OutputAddressNetworkMismatchError(output.to, networkPrefix);
+  }
+}
+
+function validateChangeLocks(changeLocks: Record<string, boolean>, category?: string): void {
+  if (changeLocks.BCH) {
+    throw new OutputBchChangeLockedError();
+  }
+
+  if (category && changeLocks[category]) {
+    throw new OutputTokenChangeLockedError(category);
+  }
+}
+
+export function isOpReturnOutput(output: Output): boolean {
+  return typeof output.to !== 'string' && output.to[0] === Op.OP_RETURN;
 }
 
 export function calculateDust(output: Output): number {
@@ -86,16 +127,6 @@ export function encodeOutput(output: Output): Uint8Array {
 }
 
 export function cashScriptOutputToLibauthOutput(output: Output): LibauthOutput {
-  if (output.token) {
-    if (typeof output.token.category !== 'string' || !isHex(output.token.category)) {
-      throw new Error(`Provided token category ${output.token?.category} is not a hex string`);
-    }
-
-    if (output.token.nft && (typeof output.token.nft.commitment !== 'string' || !isHex(output.token.nft.commitment))) {
-      throw new Error(`Provided token commitment ${output.token.nft?.commitment} is not a hex string`);
-    }
-  }
-
   return {
     lockingBytecode: typeof output.to === 'string' ? addressToLockScript(output.to) : output.to,
     valueSatoshis: output.amount,
@@ -149,6 +180,12 @@ function isTokenAddress(address: string): boolean {
   return supportsTokens;
 }
 
+function getNetworkPrefixForAddress(address: string): string {
+  const result = decodeCashAddress(address);
+  if (typeof result === 'string') throw new Error(result);
+  return result.prefix;
+}
+
 // ////////// SIZE CALCULATIONS ///////////////////////////////////////////////
 export function getInputSize(inputScript: Uint8Array): number {
   const scriptSize = inputScript.byteLength;
@@ -181,17 +218,20 @@ export function getTxSizeWithoutInputs(outputs: Output[]): number {
 }
 
 // ////////// BUILD OBJECTS ///////////////////////////////////////////////////
-export function createInputScript(
-  redeemScript: Script,
+export function createUnlockingBytecode(
+  contractType: ContractType,
+  contractBytecode: Uint8Array,
   encodedArgs: Uint8Array[],
   selector?: number,
 ): Uint8Array {
-  // Create unlock script / redeemScriptSig (add potential selector)
   const unlockScript = [...encodedArgs].reverse();
   if (selector !== undefined) unlockScript.push(encodeInt(BigInt(selector)));
 
+  // P2S inputs do not need to provide the redeem script
+  if (contractType === 'p2s') return scriptToBytecode(unlockScript);
+
   // Create input script and compile it to bytecode
-  const inputScript = [...unlockScript, scriptToBytecode(redeemScript)];
+  const inputScript = [...unlockScript, contractBytecode];
   return scriptToBytecode(inputScript);
 }
 
@@ -234,7 +274,7 @@ export function toRegExp(reasons: string[]): RegExp {
 export function scriptToAddress(
   script: Script, network: string, addressType: AddressType, tokenSupport: boolean,
 ): string {
-  const bytecode = scriptToLockingBytecode(script, addressType);
+  const bytecode = scriptToP2SHLockingBytecode(script, addressType);
   const prefix = getNetworkPrefix(network);
 
   const result = lockingBytecodeToCashAddress({ bytecode, prefix, tokenSupport });
@@ -243,7 +283,7 @@ export function scriptToAddress(
   return result.address;
 }
 
-export function scriptToLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
+export function scriptToP2SHLockingBytecode(script: Script, addressType: AddressType): Uint8Array {
   const scriptBytecode = scriptToBytecode(script);
   const scriptHash = (addressType === 'p2sh20') ? hash160(scriptBytecode) : hash256(scriptBytecode);
   const addressContents = { payload: scriptHash, type: LockingBytecodeType[addressType] };
@@ -304,6 +344,13 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
 
 const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
 
+/**
+ * Generate a random `Utxo` for use with `MockNetworkProvider.addUtxo` in tests and examples.
+ * Fields can be overridden by passing a `defaults` object.
+ *
+ * @param defaults - Values that override the randomly generated fields.
+ * @returns A synthetic UTXO with random `txid`, `vout`, and `satoshis`.
+ */
 export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
   ...{
     txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
@@ -313,6 +360,13 @@ export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
   ...defaults,
 });
 
+/**
+ * Generate random fungible `TokenDetails` for use in tests and examples. Fields can be overridden
+ * by passing a `defaults` object.
+ *
+ * @param defaults - Values that override the randomly generated fields.
+ * @returns Synthetic token details (no NFT commitment) with a random category and amount.
+ */
 export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => ({
   ...{
     category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
@@ -321,6 +375,13 @@ export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => (
   ...defaults,
 });
 
+/**
+ * Generate random NFT `TokenDetails` (`amount: 0n`, random commitment, `none` capability) for
+ * use in tests and examples. Fields can be overridden by passing a `defaults` object.
+ *
+ * @param defaults - Values that override the randomly generated fields.
+ * @returns Synthetic NFT token details.
+ */
 export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => ({
   ...{
     category: binToHex(sha256(bigIntToVmNumber(randomInt()))),

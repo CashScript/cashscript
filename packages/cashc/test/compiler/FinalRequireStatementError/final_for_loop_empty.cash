@@ -1,0 +1,10 @@
+contract Loopy() {
+    function doLoop() {
+        int x = 0;
+        require(x < 1);
+
+        for (int i = 0; i < tx.inputs.length; i++) {
+
+        }
+    }
+}

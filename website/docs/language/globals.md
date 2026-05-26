@@ -74,6 +74,12 @@ Represents the `nLocktime` field of the transaction. This is similar to the [`tx
  The use case for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/guides/covenants#keeping-local-state-in-nfts).
 :::
 
+Using `tx.locktime` in a contract requires a non-final sequence number on the spending input. A `require(tx.time >= ...)` check enforces a non-final sequence number. As a safety measure, the CashScript compiler automatically injects a check for this when no such check is present.
+
+:::info
+The automatically injected check uses a synthetic `require(tx.time >= tx.locktime, "Using tx.locktime requires a non-final sequence number on the spending input.")`. This automatically enforces a non-final sequence number when `tx.locktime` is used.
+:::
+
 ### tx.inputs
 Represents the list of inputs of the evaluated transaction. This is an array, and cannot be used on itself. You need to access an input with a specific index and specify the properties you want to access.
 

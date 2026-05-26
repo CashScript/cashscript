@@ -1,5 +1,5 @@
 import { asmToScript } from '../src/script.js';
-import { buildLineToOpcodesMap, buildLineToAsmMap, formatBitAuthScript } from '../src/bitauth-script.js';
+import { buildLineToAsmMap, formatBitAuthScript } from '../src/bitauth-script.js';
 import { fixtures } from './fixtures/bitauth-script.fixture.js';
 import { compileString } from 'cashc';
 
@@ -12,11 +12,8 @@ describe('Libauth Script formatting', () => {
       it('should generate a correct source map and bytecode from freshly compiled source code', () => {
         const artifact = compileString(fixture.sourceCode);
         expect(artifact.debug?.sourceMap).toEqual(fixture.sourceMap);
+        expect(artifact.debug?.sourceTags).toEqual(fixture.sourceTags);
         expect(artifact.bytecode).toEqual(fixture.asmBytecode);
-      });
-
-      it('should build a line-to-opcodes map', () => {
-        expect(buildLineToOpcodesMap(scriptBytecode, fixture.sourceMap)).toEqual(fixture.expectedLineToOpcodeMap);
       });
 
       it('should build a line-to-asm map', () => {
@@ -25,7 +22,10 @@ describe('Libauth Script formatting', () => {
 
       it('should format script as debugging output for BitAuth IDE', () => {
         const expectedBitAuthScript = fixture.expectedBitAuthScript.replace(/^\n+/, '').replace(/\n+$/, '');
-        expect(formatBitAuthScript(scriptBytecode, fixture.sourceMap, fixture.sourceCode)).toBe(expectedBitAuthScript);
+        const formattedBitAuthScript = formatBitAuthScript(
+          scriptBytecode, fixture.sourceMap, fixture.sourceCode, fixture.sourceTags,
+        );
+        expect(formattedBitAuthScript).toBe(expectedBitAuthScript);
       });
     });
   });

@@ -1,29 +1,34 @@
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
-// This is an experimental contract for a more "streaming" Mecenas experience
+// This is an experimental contract for a streaming Mecenas experience
 // Completely untested, just a concept
-contract Mecenas(
+//
+// Mutable NFT Commitment contract state
+// bytes8 blockHeightPreviousPledge
+contract StreamingMecenas(
     bytes20 recipient,
     bytes20 funder,
     int pledgePerBlock,
-    bytes8 initialBlock,
 ) {
     function receive() {
         // Check that the first output sends to the recipient
         bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
         require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
 
+        // Read the block height of the previous pledge, kept in the NFT commitment
+        require(tx.inputs.length == 1);
+        int blockHeightPreviousPledge = int(tx.inputs[0].nftCommitment);
+
         // Check that time has passed and that time locks are enabled
-        int initial = int(initialBlock);
-        require(tx.time >= initial);
+        require(tx.time >= blockHeightPreviousPledge);
 
         // Calculate the amount that has accrued since last claim
-        int passedBlocks = tx.locktime - initial;
+        int passedBlocks = tx.locktime - blockHeightPreviousPledge;
         int pledge = passedBlocks * pledgePerBlock;
 
         // Calculate the leftover amount
         int minerFee = 1000;
-        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int currentValue = tx.inputs[0].value;
         int changeValue = currentValue - pledge - minerFee;
 
         // If there is not enough left for *another* block after this one,
@@ -36,16 +41,11 @@ contract Mecenas(
             require(tx.outputs[0].value == pledge);
             require(tx.outputs[1].value == changeValue);
 
-            // Cut out old initialBlock (OP_PUSHBYTES_8 <initialBlock>)
-            // Insert new initialBlock (OP_PUSHBYTES_8 <tx.locktime>)
-            // Note that constructor parameters are added in reverse order,
-            // so initialBlock is the first statement in the contract bytecode.
-            bytes newContract = 0x08 + bytes8(tx.locktime) + this.activeBytecode.split(9)[1];
+            // Send the change value back to the same smart contract locking bytecode
+            require(tx.outputs[1].lockingBytecode == tx.inputs[0].lockingBytecode);
 
-            // Create the locking bytecode for the new contract and check that
-            // the change output sends to that contract
-            bytes23 newContractLock = new LockingBytecodeP2SH20(hash160(newContract));
-            require(tx.outputs[1].lockingBytecode == newContractLock);
+            // Update the block height of the previous pledge, kept in the NFT commitment
+            require(tx.outputs[1].nftCommitment == toPaddedBytes(tx.locktime, 8));
         }
     }
 

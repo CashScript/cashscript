@@ -28,6 +28,9 @@ import {
   ConsoleStatementNode,
   ConsoleParameterNode,
   SliceNode,
+  DoWhileNode,
+  WhileNode,
+  ForNode,
 } from './AST.js';
 import AstVisitor from './AstVisitor.js';
 
@@ -79,10 +82,35 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
+  visitConsoleStatement(node: ConsoleStatementNode): Node {
+    node.parameters = this.visitList(node.parameters) as ConsoleParameterNode[];
+    return node;
+  }
+
   visitBranch(node: BranchNode): Node {
     node.condition = this.visit(node.condition);
     node.ifBlock = this.visit(node.ifBlock) as StatementNode;
     node.elseBlock = this.visitOptional(node.elseBlock) as StatementNode;
+    return node;
+  }
+
+  visitDoWhile(node: DoWhileNode): Node {
+    node.condition = this.visit(node.condition);
+    node.block = this.visit(node.block) as StatementNode;
+    return node;
+  }
+
+  visitWhile(node: WhileNode): Node {
+    node.condition = this.visit(node.condition);
+    node.block = this.visit(node.block) as BlockNode;
+    return node;
+  }
+
+  visitFor(node: ForNode): Node {
+    node.init = this.visit(node.init) as VariableDefinitionNode | AssignNode;
+    node.condition = this.visit(node.condition);
+    node.update = this.visit(node.update) as AssignNode;
+    node.block = this.visit(node.block) as BlockNode;
     return node;
   }
 
@@ -93,7 +121,6 @@ export default class AstTraversal extends AstVisitor<Node> {
 
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
-    node.size = this.visitOptional(node.size);
     return node;
   }
 
@@ -158,11 +185,6 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitHexLiteral(node: HexLiteralNode): Node {
-    return node;
-  }
-
-  visitConsoleStatement(node: ConsoleStatementNode): Node {
-    node.parameters = this.visitList(node.parameters) as ConsoleParameterNode[];
     return node;
   }
 }

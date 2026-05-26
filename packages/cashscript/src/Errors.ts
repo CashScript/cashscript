@@ -24,9 +24,39 @@ export class OutputTokenAmountTooSmallError extends Error {
   }
 }
 
+export class OutputTokenCategoryInvalidError extends Error {
+  constructor(category: string) {
+    super(`Provided token category ${category} is not a hex string`);
+  }
+}
+
+export class OutputTokenCommitmentInvalidError extends Error {
+  constructor(commitment: string) {
+    super(`Provided token commitment ${commitment} is not a hex string`);
+  }
+}
+
+export class OutputBchChangeLockedError extends Error {
+  constructor() {
+    super('Tried to add a BCH input or output after a BCH change output was already added');
+  }
+}
+
+export class OutputTokenChangeLockedError extends Error {
+  constructor(category: string) {
+    super(`Tried to add a token input or output with category ${category} after a change output with the same category was already added`);
+  }
+}
+
 export class TokensToNonTokenAddressError extends Error {
   constructor(address: string) {
     super(`Tried to send tokens to an address without token support, ${address}.`);
+  }
+}
+
+export class OutputAddressNetworkMismatchError extends Error {
+  constructor(address: string, expectedNetworkPrefix: string) {
+    super(`Tried to add an output to an address on the wrong network, ${address}. Expected network prefix: ${expectedNetworkPrefix}.`);
   }
 }
 
@@ -75,7 +105,11 @@ export class FailedRequireError extends FailedTransactionError {
 
     const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
-    const fullMessage = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.\nFailing statement: ${statement}`;
+    const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
+
+    // Compiler-injected guards (e.g. the tx.locktime guard) have no user-written source, so the
+    // extracted statement is empty — the require message fully describes the failure on its own.
+    const fullMessage = statement.trim() ? `${headline}\nFailing statement: ${statement}` : headline;
 
     super(fullMessage, bitauthUri);
   }

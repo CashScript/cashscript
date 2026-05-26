@@ -33,7 +33,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -165,7 +165,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -301,7 +301,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -309,7 +309,7 @@ export const fixtures: Fixture[] = [
           'description': 'Contract creation and function parameters',
           'name': 'Mecenas (input #0)',
           'scripts': [
-            'Mecenas_9c6c87b192226fa02ed3834607a94a6ea040acc59df983c49a648406c695816b_lock',
+            'Mecenas_f76405ac460685333f8d3df74f4fc4b4288555913ba382aed6ba77961c5ca217_lock',
             'Mecenas_receive_input0_unlock',
           ],
           'variables': {
@@ -343,12 +343,12 @@ export const fixtures: Fixture[] = [
           ],
           'name': 'receive (input #0)',
           'script': '// "receive" function parameters\n// none\n\n// function index in contract\n<function_index> // int = <0>\n',
-          'unlocks': 'Mecenas_9c6c87b192226fa02ed3834607a94a6ea040acc59df983c49a648406c695816b_lock',
+          'unlocks': 'Mecenas_f76405ac460685333f8d3df74f4fc4b4288555913ba382aed6ba77961c5ca217_lock',
         },
-        'Mecenas_9c6c87b192226fa02ed3834607a94a6ea040acc59df983c49a648406c695816b_lock': {
+        'Mecenas_f76405ac460685333f8d3df74f4fc4b4288555913ba382aed6ba77961c5ca217_lock': {
           'lockingType': 'p2sh32',
           'name': 'Mecenas',
-          'script': "// \"Mecenas\" contract constructor parameters\n<pledge> // int = <0x1027>\n<funder> // bytes20 = <0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0>\n<recipient> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                                               /* pragma cashscript >=0.8.0;                                                                                         */\n                                                                               /*                                                                                                                    */\n                                                                               /* \\/* This is an unofficial CashScript port of Licho's Mecenas contract. It is                                       */\n                                                                               /*  * not compatible with Licho's EC plugin, but rather meant as a demonstration                                      */\n                                                                               /*  * of covenants in CashScript.                                                                                     */\n                                                                               /*  * The time checking has been removed so it can be tested without time requirements.                               */\n                                                                               /*  *\\/                                                                                                               */\n                                                                               /* contract Mecenas(bytes20 recipient, bytes20 funder, int pledge\\/*, int period *\\/) {                               */\nOP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF                                            /*     function receive() {                                                                                           */\n                                                                               /*         // require(this.age >= period);                                                                            */\n                                                                               /*                                                                                                                    */\n                                                                               /*         // Check that the first output sends to the recipient                                                      */\nOP_0 OP_OUTPUTBYTECODE <0x76a914> OP_ROT OP_CAT <0x88ac> OP_CAT OP_EQUALVERIFY /*         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));                             */\n                                                                               /*                                                                                                                    */\n<0xe803>                                                                       /*         int minerFee = 1000;                                                                                       */\nOP_INPUTINDEX OP_UTXOVALUE                                                     /*         int currentValue = tx.inputs[this.activeInputIndex].value;                                                 */\nOP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB                                 /*         int changeValue = currentValue - pledge - minerFee;                                                        */\n                                                                               /*                                                                                                                    */\n                                                                               /*         // If there is not enough left for *another* pledge after this one, we send the remainder to the recipient */\n                                                                               /*         // Otherwise we send the remainder to the recipient and the change back to the contract                    */\nOP_DUP OP_5 OP_PICK OP_4 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF               /*         if (changeValue <= pledge + minerFee) {                                                                    */\nOP_0 OP_OUTPUTVALUE OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY                  /*             require(tx.outputs[0].value == currentValue - minerFee);                                               */\nOP_ELSE                                                                        /*         } else {                                                                                                   */\nOP_0 OP_OUTPUTVALUE OP_5 OP_PICK OP_NUMEQUALVERIFY                             /*             require(tx.outputs[0].value == pledge);                                                                */\nOP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUALVERIFY            /*             require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);            */\nOP_1 OP_OUTPUTVALUE OP_OVER OP_NUMEQUALVERIFY                                  /*             require(tx.outputs[1].value == changeValue);                                                           */\nOP_ENDIF                                                                       /*         }                                                                                                          */\nOP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE                                        /*     }                                                                                                              */\n                                                                               /*                                                                                                                    */\nOP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY                                            /*     function reclaim(pubkey pk, sig s) {                                                                           */\nOP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY                                  /*         require(hash160(pk) == funder);                                                                            */\nOP_2SWAP OP_CHECKSIG                                                           /*         require(checkSig(s, pk));                                                                                  */\nOP_NIP OP_NIP                                                                  /*     }                                                                                                              */\nOP_ENDIF                                                                       /* }                                                                                                                  */\n                                                                               /*                                                                                                                    */",
+          'script': "// \"Mecenas\" contract constructor parameters\n<pledge> // int = <0x1027>\n<funder> // bytes20 = <0xb40a2013337edb0dfe307f0a57d5dec5bfe60dd0>\n<recipient> // bytes20 = <0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970>\n\n// bytecode\n                                                                               /* pragma cashscript >=0.8.0;                                                                                         */\n                                                                               /*                                                                                                                    */\n                                                                               /* \\/* This is an unofficial CashScript port of Licho's Mecenas contract. It is                                       */\n                                                                               /*  * not compatible with Licho's EC plugin, but rather meant as a demonstration                                      */\n                                                                               /*  * of covenants in CashScript.                                                                                     */\n                                                                               /*  * The time checking has been removed so it can be tested without time requirements.                               */\n                                                                               /*  *\\/                                                                                                               */\n                                                                               /* contract Mecenas(bytes20 recipient, bytes20 funder, int pledge\\/*, int period *\\/) {                               */\nOP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF                                            /*     function receive() {                                                                                           */\n                                                                               /*         // require(this.age >= period);                                                                            */\n                                                                               /*                                                                                                                    */\n                                                                               /*         // Require that there is only a single contract input to prevent                                           */\n                                                                               /*         // multiple contract UTXOs being claimed in a single transaction                                           */\nOP_TXINPUTCOUNT OP_1 OP_NUMEQUALVERIFY                                         /*         require(tx.inputs.length == 1);                                                                            */\n                                                                               /*                                                                                                                    */\n                                                                               /*         // Check that the first output sends to the recipient                                                      */\nOP_0 OP_OUTPUTBYTECODE <0x76a914> OP_ROT OP_CAT <0x88ac> OP_CAT OP_EQUALVERIFY /*         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));                             */\n                                                                               /*                                                                                                                    */\n<0xe803>                                                                       /*         int minerFee = 1000;                                                                                       */\nOP_INPUTINDEX OP_UTXOVALUE                                                     /*         int currentValue = tx.inputs[this.activeInputIndex].value;                                                 */\nOP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB                                 /*         int changeValue = currentValue - pledge - minerFee;                                                        */\n                                                                               /*                                                                                                                    */\n                                                                               /*         // If there is not enough left for *another* pledge after this one, we send the remainder to the recipient */\n                                                                               /*         // Otherwise we send the remainder to the recipient and the change back to the contract                    */\nOP_DUP OP_5 OP_PICK OP_4 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF               /*         if (changeValue <= pledge + minerFee) {                                                                    */\nOP_0 OP_OUTPUTVALUE OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY                  /*             require(tx.outputs[0].value == currentValue - minerFee);                                               */\nOP_ELSE                                                                        /*         } else {                                                                                                   */\nOP_0 OP_OUTPUTVALUE OP_5 OP_PICK OP_NUMEQUALVERIFY                             /*             require(tx.outputs[0].value == pledge);                                                                */\nOP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUALVERIFY            /*             require(tx.outputs[1].lockingBytecode == tx.inputs[this.activeInputIndex].lockingBytecode);            */\nOP_1 OP_OUTPUTVALUE OP_OVER OP_NUMEQUALVERIFY                                  /*             require(tx.outputs[1].value == changeValue);                                                           */\nOP_ENDIF                                                                       /*         }                                                                                                          */\nOP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE                                        /*     }                                                                                                              */\n                                                                               /*                                                                                                                    */\nOP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY                                            /*     function reclaim(pubkey pk, sig s) {                                                                           */\nOP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY                                  /*         require(hash160(pk) == funder);                                                                            */\nOP_2SWAP OP_CHECKSIG                                                           /*         require(checkSig(s, pk));                                                                                  */\nOP_NIP OP_NIP                                                                  /*     }                                                                                                              */\nOP_ENDIF                                                                       /* }                                                                                                                  */\n                                                                               /*                                                                                                                    */",
         },
       },
       'scenarios': {
@@ -385,7 +385,7 @@ export const fixtures: Fixture[] = [
               },
               {
                 'lockingBytecode': {
-                  'script': 'Mecenas_9c6c87b192226fa02ed3834607a94a6ea040acc59df983c49a648406c695816b_lock',
+                  'script': 'Mecenas_f76405ac460685333f8d3df74f4fc4b4288555913ba382aed6ba77961c5ca217_lock',
                   'overrides': {
                     'bytecode': {
                       'recipient': '0x512dbb2c8c02efbac8d92431aa0ac33f6b0bf970',
@@ -435,7 +435,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -716,7 +716,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -838,7 +838,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -1139,7 +1139,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -1147,7 +1147,7 @@ export const fixtures: Fixture[] = [
           'description': 'Contract creation and function parameters',
           'name': 'HodlVault (input #0)',
           'scripts': [
-            'HodlVault_2b9369ac73606fc710cb756d82807e45e283bbf2a642df014bfce7a1c749c5e0_lock',
+            'HodlVault_a17f029b3506eaead613a74fea0fadbbfa60be32063df12775d7e62c887a6966_lock',
             'HodlVault_spend_input0_unlock',
           ],
           'variables': {
@@ -1196,12 +1196,12 @@ export const fixtures: Fixture[] = [
           ],
           'name': 'spend (input #0)',
           'script': '// "spend" function parameters\n<oracleMessage> // bytes8 = <0xa086010030750000>\n<oracleSig> // datasig = <0x569e137142ebdb96127b727787d605e427a858e8b17dc0605092d0019e5fc9d58810ee74c8ba9f9a5605268c9913e50f780f4c3780e06aea7f50766829895b4b>\n<ownerSig.schnorr_signature.all_outputs_all_utxos> // sig\n',
-          'unlocks': 'HodlVault_2b9369ac73606fc710cb756d82807e45e283bbf2a642df014bfce7a1c749c5e0_lock',
+          'unlocks': 'HodlVault_a17f029b3506eaead613a74fea0fadbbfa60be32063df12775d7e62c887a6966_lock',
         },
-        'HodlVault_2b9369ac73606fc710cb756d82807e45e283bbf2a642df014bfce7a1c749c5e0_lock': {
+        'HodlVault_a17f029b3506eaead613a74fea0fadbbfa60be32063df12775d7e62c887a6966_lock': {
           'lockingType': 'p2sh32',
           'name': 'HodlVault',
-          'script': '// "HodlVault" contract constructor parameters\n<priceTarget> // int = <0x3075>\n<minBlock> // int = <0xb88201>\n<oraclePk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n<ownerPk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// bytecode\n                                                             /* // This contract forces HODLing until a certain price target has been reached                                          */\n                                                             /* // A minimum block is provided to ensure that oracle price entries from before this block are disregarded              */\n                                                             /* // i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used. */\n                                                             /* // Instead, a message with a block number and price from after the minBlock needs to be passed.                        */\n                                                             /* // This contract serves as a simple example for checkDataSig-based contracts.                                          */\n                                                             /* contract HodlVault(                                                                                                    */\n                                                             /*     pubkey ownerPk,                                                                                                    */\n                                                             /*     pubkey oraclePk,                                                                                                   */\n                                                             /*     int minBlock,                                                                                                      */\n                                                             /*     int priceTarget                                                                                                    */\n                                                             /* ) {                                                                                                                    */\n                                                             /*     function spend(sig ownerSig, datasig oracleSig, bytes8 oracleMessage) {                                            */\n                                                             /*         // message: { blockHeight, price }                                                                             */\nOP_6 OP_PICK OP_4 OP_SPLIT                                   /*         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);                                               */\nOP_SWAP OP_BIN2NUM                                           /*         int blockHeight = int(blockHeightBin);                                                                         */\nOP_SWAP OP_BIN2NUM                                           /*         int price = int(priceBin);                                                                                     */\n                                                             /*                                                                                                                        */\n                                                             /*         // Check that blockHeight is after minBlock and not in the future                                              */\nOP_OVER OP_5 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY         /*         require(blockHeight >= minBlock);                                                                              */\nOP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP                       /*         require(tx.time >= blockHeight);                                                                               */\n                                                             /*                                                                                                                        */\n                                                             /*         // Check that current price is at least priceTarget                                                            */\nOP_3 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY                 /*         require(price >= priceTarget);                                                                                 */\n                                                             /*                                                                                                                        */\n                                                             /*         // Handle necessary signature checks                                                                           */\nOP_3 OP_ROLL OP_4 OP_ROLL OP_3 OP_ROLL OP_CHECKDATASIGVERIFY /*         require(checkDataSig(oracleSig, oracleMessage, oraclePk));                                                     */\nOP_CHECKSIG                                                  /*         require(checkSig(ownerSig, ownerPk));                                                                          */\n                                                             /*     }                                                                                                                  */\n                                                             /* }                                                                                                                      */\n                                                             /*                                                                                                                        */',
+          'script': '// \"HodlVault\" contract constructor parameters\n<priceTarget> // int = <0x3075>\n<minBlock> // int = <0xb88201>\n<oraclePk> // pubkey = <0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38>\n<ownerPk> // pubkey = <0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088>\n\n// bytecode\n                                                        /* // This contract forces HODLing until a certain price target has been reached                                          */\n                                                        /* // A minimum block is provided to ensure that oracle price entries from before this block are disregarded              */\n                                                        /* // i.e. when the BCH price was $1000 in the past, an oracle entry with the old block number and price can not be used. */\n                                                        /* // Instead, a message with a block number and price from after the minBlock needs to be passed.                        */\n                                                        /* // This contract serves as a simple example for checkDataSig-based contracts.                                          */\n                                                        /* contract HodlVault(                                                                                                    */\n                                                        /*     pubkey ownerPk,                                                                                                    */\n                                                        /*     pubkey oraclePk,                                                                                                   */\n                                                        /*     int minBlock,                                                                                                      */\n                                                        /*     int priceTarget                                                                                                    */\n                                                        /* ) {                                                                                                                    */\n                                                        /*     function spend(                                                                                                    */\n                                                        /*         sig ownerSig,                                                                                                  */\n                                                        /*         datasig oracleSig,                                                                                             */\n                                                        /*         bytes8 oracleMessage                                                                                           */\n                                                        /*     ) {                                                                                                                */\n                                                        /*         // message: { blockHeight, price }                                                                             */\nOP_6 OP_ROLL OP_SIZE OP_8 OP_EQUALVERIFY                /*         >>> parameter type check (bytes8 oracleMessage)                                                                */\nOP_DUP OP_4 OP_SPLIT                                    /*         bytes4 blockHeightBin, bytes4 priceBin = oracleMessage.split(4);                                               */\nOP_SWAP OP_BIN2NUM                                      /*         int blockHeight = int(blockHeightBin);                                                                         */\nOP_SWAP OP_BIN2NUM                                      /*         int price = int(priceBin);                                                                                     */\n                                                        /*                                                                                                                        */\n                                                        /*         // Check that blockHeight is after minBlock and not in the future                                              */\nOP_OVER OP_6 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY    /*         require(blockHeight >= minBlock);                                                                              */\nOP_SWAP OP_CHECKLOCKTIMEVERIFY OP_DROP                  /*         require(tx.time >= blockHeight);                                                                               */\n                                                        /*                                                                                                                        */\n                                                        /*         // Check that current price is at least priceTarget                                                            */\nOP_4 OP_ROLL OP_GREATERTHANOREQUAL OP_VERIFY            /*         require(price >= priceTarget);                                                                                 */\n                                                        /*                                                                                                                        */\n                                                        /*         // Handle necessary signature checks                                                                           */\nOP_4 OP_ROLL OP_SWAP OP_3 OP_ROLL OP_CHECKDATASIGVERIFY /*         require(checkDataSig(oracleSig, oracleMessage, oraclePk));                                                     */\nOP_CHECKSIG                                             /*         require(checkSig(ownerSig, ownerPk));                                                                          */\n                                                        /*     }                                                                                                                  */\n                                                        /* }                                                                                                                      */\n                                                        /*                                                                                                                        */',
         },
       },
       'scenarios': {
@@ -1238,7 +1238,7 @@ export const fixtures: Fixture[] = [
             'outputs': [
               {
                 'lockingBytecode': {
-                  'script': 'HodlVault_2b9369ac73606fc710cb756d82807e45e283bbf2a642df014bfce7a1c749c5e0_lock',
+                  'script': 'HodlVault_a17f029b3506eaead613a74fea0fadbbfa60be32063df12775d7e62c887a6966_lock',
                   'overrides': {
                     'bytecode': {
                       'ownerPk': '0x0373cc07b54c22da627b572a387a20ea190c9382e5e6d48c1d5b89c5cea2c4c088',
@@ -1289,7 +1289,7 @@ export const fixtures: Fixture[] = [
   {
     name: 'P2PKH (with P2PKH inputs & P2SH20 address type & ECDSA signature algorithm)',
     transaction: (() => {
-      const contract = new Contract(P2PKH, [alicePkh], { provider, addressType: 'p2sh20' });
+      const contract = new Contract(P2PKH, [alicePkh], { provider, contractType: 'p2sh20' });
       const contractUtxo = randomUtxo();
       provider.addUtxo(contract.address, contractUtxo);
 
@@ -1316,7 +1316,7 @@ export const fixtures: Fixture[] = [
       'description': 'Imported from cashscript',
       'name': 'CashScript Generated Debugging Template',
       'supported': [
-        'BCH_2025_05',
+        'BCH_2026_05',
       ],
       'version': 0,
       'entities': {
@@ -1474,7 +1474,7 @@ export const fixtures: Fixture[] = [
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
                     'bytecode': {
-                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                       'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                     },
                   },
@@ -1520,7 +1520,7 @@ export const fixtures: Fixture[] = [
                 'script': 'p2pkh_placeholder_lock_2',
                 'overrides': {
                   'bytecode': {
-                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                     'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                   },
                 },
@@ -1575,7 +1575,7 @@ export const fixtures: Fixture[] = [
                   'script': 'p2pkh_placeholder_unlock_2',
                   'overrides': {
                     'bytecode': {
-                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                      'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                       'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                     },
                   },
@@ -1622,7 +1622,7 @@ export const fixtures: Fixture[] = [
                 'script': 'p2pkh_placeholder_lock_2',
                 'overrides': {
                   'bytecode': {
-                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+                    'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
                     'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
                   },
                 },
@@ -1636,7 +1636,7 @@ export const fixtures: Fixture[] = [
           'description': 'An example evaluation where this script execution passes.',
           'data': {
             'bytecode': {
-              'signature_2': expect.stringMatching(/^0x[0-9a-f]{142,146}$/),
+              'signature_2': expect.stringMatching(/^0x[0-9a-f]{140,146}$/),
               'public_key_2': '0x028f1219c918234d6bb06b4782354ff0759bd73036f3c849b88020c79fe013cd38',
             },
           },

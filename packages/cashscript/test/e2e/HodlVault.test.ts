@@ -14,9 +14,10 @@ import {
   oracle,
   oraclePub,
 } from '../fixture/vars.js';
-import { gatherUtxos, getTxOutputs } from '../test-util.js';
+import { addUtxo, gatherUtxos, getTxOutputs } from '../test-util.js';
 import { FailedRequireError } from '../../src/Errors.js';
 import artifact from '../fixture/hodl_vault.artifact.js';
+import artifactUnenforcedTypes from '../fixture/hodl_vault-unenforced-types.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
 import { placeholder } from '@cashscript/utils';
 
@@ -27,9 +28,9 @@ describe('HodlVault', () => {
 
   const hodlVault = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider });
 
-  beforeAll(() => {
+  beforeAll(async () => {
     console.log(hodlVault.address);
-    (provider as any).addUtxo?.(hodlVault.address, randomUtxo());
+    await addUtxo(provider, hodlVault.address, randomUtxo());
   });
 
   describe('send', () => {
@@ -52,7 +53,7 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('HodlVault.cash:26 Require statement failed at input 0 in contract HodlVault.cash at line 26.');
+      await expect(txPromise).rejects.toThrow('HodlVault.cash:30 Require statement failed at input 0 in contract HodlVault.cash at line 30.');
       await expect(txPromise).rejects.toThrow('Failing statement: require(checkDataSig(oracleSig, oracleMessage, oraclePk))');
     });
 
@@ -74,7 +75,7 @@ describe('HodlVault', () => {
 
       // then
       await expect(txPromise).rejects.toThrow(FailedRequireError);
-      await expect(txPromise).rejects.toThrow('HodlVault.cash:23 Require statement failed at input 0 in contract HodlVault.cash at line 23.');
+      await expect(txPromise).rejects.toThrow('HodlVault.cash:27 Require statement failed at input 0 in contract HodlVault.cash at line 27.');
       await expect(txPromise).rejects.toThrow('Failing statement: require(price >= priceTarget)');
     });
 
@@ -125,7 +126,9 @@ describe('HodlVault', () => {
     it.skipIf(process.env.TESTS_USE_CHIPNET)('should succeed with precomputed ECDSA signature', async () => {
       // given
       const cleanProvider = new MockNetworkProvider();
-      const contract = new Contract(artifact, [alicePub, oraclePub, 99000n, 30000n], { provider: cleanProvider });
+      const contract = new Contract(
+        artifactUnenforcedTypes, [alicePub, oraclePub, 99000n, 30000n], { provider: cleanProvider },
+      );
       cleanProvider.addUtxo(contract.address, {
         satoshis: 100000n,
         txid: '11'.repeat(32),
@@ -170,7 +173,7 @@ describe('HodlVault', () => {
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
-        .send()).rejects.toThrow('HodlVault.cash:27 Error in transaction at input 0 in contract HodlVault.cash at line 27');
+        .send()).rejects.toThrow('HodlVault.cash:31 Error in transaction at input 0 in contract HodlVault.cash at line 31');
 
       // sig: unlocker should not throw when given an empty byte array, but transaction should fail on require statement
       // Note that this fails with "FailedRequireError" because a zero-length signature IS a failed require statement
@@ -179,7 +182,7 @@ describe('HodlVault', () => {
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
-        .send()).rejects.toThrow('HodlVault.cash:27 Require statement failed at input 0 in contract HodlVault.cash at line 27');
+        .send()).rejects.toThrow('HodlVault.cash:31 Require statement failed at input 0 in contract HodlVault.cash at line 31');
 
       // datasig: unlocker should throw when given an improper length
       const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
@@ -192,7 +195,7 @@ describe('HodlVault', () => {
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
-        .send()).rejects.toThrow('HodlVault.cash:26 Require statement failed at input 0 in contract HodlVault.cash at line 26');
+        .send()).rejects.toThrow('HodlVault.cash:30 Require statement failed at input 0 in contract HodlVault.cash at line 30');
 
       // datasig: unlocker should not throw when given an empty byte array, but transaction should fail on require statement
       // Note that this fails with "FailedRequireError" because a zero-length signature IS a failed require statement
@@ -201,7 +204,7 @@ describe('HodlVault', () => {
         .addOutput({ to: to, amount: amount })
         .addOutput({ to: to, amount: changeAmount })
         .setLocktime(100_000)
-        .send()).rejects.toThrow('HodlVault.cash:26 Require statement failed at input 0 in contract HodlVault.cash at line 26');
+        .send()).rejects.toThrow('HodlVault.cash:30 Require statement failed at input 0 in contract HodlVault.cash at line 30');
     });
   });
 });

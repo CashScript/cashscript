@@ -1,0 +1,5 @@
+contract Test(bytes4 x) {
+    function test() {
+        require(unsafe_bool(x));
+    }
+}

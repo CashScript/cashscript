@@ -8,7 +8,7 @@ import {
 } from '../../src/index.js';
 import artifact from '../fixture/bigint.artifact.js';
 import { randomUtxo } from '../../src/utils.js';
-import { gatherUtxos } from '../test-util.js';
+import { addUtxo, gatherUtxos } from '../test-util.js';
 
 describe('BigInt', () => {
   const provider = process.env.TESTS_USE_CHIPNET
@@ -18,9 +18,9 @@ describe('BigInt', () => {
   const bigintContract = new Contract(artifact, [], { provider });
   const MAX_INT64 = BigInt('9223372036854775807');
 
-  beforeAll(() => {
+  beforeAll(async () => {
     console.log(bigintContract.address);
-    (provider as any).addUtxo?.(bigintContract.address, randomUtxo());
+    await addUtxo(provider, bigintContract.address, randomUtxo());
   });
 
   describe('proofOfBigInt', () => {

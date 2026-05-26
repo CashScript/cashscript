@@ -1,0 +1,49 @@
+contract BytesTypeNarrowing() {
+    function requireNarrowing(bytes data) {
+        require(data.length == 20);
+        bytes20 narrowed = data;
+        require(narrowed == data);
+        require(new LockingBytecodeP2SH20(data).length > 20);
+    }
+
+    function ifNarrowing(bytes data, int x) {
+        if (data.length == 20) {
+            bytes20 narrowed = data;
+            require(narrowed == data);
+        }
+        require(x > 0);
+    }
+
+    function reversedComparison(bytes data) {
+        require(20 == data.length);
+        bytes20 narrowed = data;
+        require(narrowed == data);
+    }
+
+    function ifNarrowingAnd(bytes data, int x) {
+        if (data.length == 20 && x > 0) {
+            bytes20 narrowed = data;
+            require(narrowed == data);
+        }
+        require(x > 0);
+    }
+
+    function requireNarrowingMultiple(bytes data1, bytes data2) {
+        require(data1.length == 20 && data2.length == 10);
+        bytes20 narrowed1 = data1;
+        bytes10 narrowed2 = data2;
+        require(narrowed1 == data1);
+        require(narrowed2 == data2);
+        require(new LockingBytecodeP2SH20(data1).length > 20);
+    }
+
+    function ifNarrowingMultiple(bytes data1, bytes data2, int x) {
+        if (data1.length == 20 && data2.length == 10) {
+            bytes20 narrowed1 = data1;
+            bytes10 narrowed2 = data2;
+            require(narrowed1 == data1);
+            require(narrowed2 == data2);
+        }
+        require(x > 0);
+    }
+}

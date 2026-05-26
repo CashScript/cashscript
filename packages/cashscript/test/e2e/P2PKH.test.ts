@@ -13,7 +13,7 @@ import {
   alicePub,
   aliceAddress,
 } from '../fixture/vars.js';
-import { gatherUtxos, getTxOutputs } from '../test-util.js';
+import { addUtxo, gatherUtxos, getTxOutputs } from '../test-util.js';
 import { Network } from '../../src/interfaces.js';
 import {
   createOpReturnOutput, randomUtxo,
@@ -28,13 +28,13 @@ describe('P2PKH-no-tokens', () => {
   // define contract in the describe block so artifact typings aren't lost
   const p2pkhContract = new Contract(artifact, [bobPkh], { provider });
 
-  beforeAll(() => {
+  beforeAll(async () => {
     // Note: We instantiate the contract with bobPkh to avoid mempool conflicts with other (P2PKH tokens) tests
     console.log(p2pkhContract.tokenAddress);
-    (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo({ satoshis: 10000000n }));
-    (provider as any).addUtxo?.(p2pkhContract.address, randomUtxo({ satoshis: 10000000n }));
-    (provider as any).addUtxo?.(bobAddress, randomUtxo());
-    (provider as any).addUtxo?.(bobAddress, randomUtxo());
+    await addUtxo(provider, p2pkhContract.address, randomUtxo());
+    await addUtxo(provider, p2pkhContract.address, randomUtxo());
+    await addUtxo(provider, bobAddress, randomUtxo());
+    await addUtxo(provider, bobAddress, randomUtxo());
   });
 
   describe('send', () => {

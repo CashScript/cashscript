@@ -3,10 +3,13 @@ import {
   ParameterNode,
   FunctionDefinitionNode,
   RequireNode,
-  StatementNode,
   TimeOpNode,
   BranchNode,
   ConsoleStatementNode,
+  DoWhileNode,
+  WhileNode,
+  ForNode,
+  BlockNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } from '../Errors.js';
@@ -31,27 +34,35 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
       throw new EmptyFunctionError(node);
     }
 
-    ensureFinalStatementIsRequire(node.body.statements);
+    ensureFinalStatementIsRequire(node.body);
 
     return node;
   }
 }
 
-function ensureFinalStatementIsRequire(statements: StatementNode[] = []): void {
-  const statementsWithoutLogs = statements.filter((statement) => !(statement instanceof ConsoleStatementNode));
-  const finalStatement = statementsWithoutLogs[statements.length - 1];
-
-  if (!finalStatement) return;
+function ensureFinalStatementIsRequire(block: BlockNode): void {
+  const statementsWithoutLogs = (block.statements ?? []).filter((statement) => !(statement instanceof ConsoleStatementNode));
+  const finalStatement = statementsWithoutLogs[statementsWithoutLogs.length - 1];
 
   // If the final statement is a branch node, then both branches need to end with a require()
   if (finalStatement instanceof BranchNode) {
-    ensureFinalStatementIsRequire(finalStatement.ifBlock.statements);
-    ensureFinalStatementIsRequire(finalStatement.elseBlock?.statements);
+    ensureFinalStatementIsRequire(finalStatement.ifBlock);
+    finalStatement.elseBlock && ensureFinalStatementIsRequire(finalStatement.elseBlock);
+    return;
+  }
+
+  if (
+    finalStatement instanceof DoWhileNode
+    || finalStatement instanceof WhileNode
+    || finalStatement instanceof ForNode
+  ) {
+    ensureFinalStatementIsRequire(finalStatement.block);
     return;
   }
 
   // The final statement needs to be a require()
   if (!(finalStatement instanceof RequireNode || finalStatement instanceof TimeOpNode)) {
-    throw new FinalRequireStatementError(finalStatement);
+    // If no statements are present, we use the block node as the statement node for location data
+    throw new FinalRequireStatementError(finalStatement ?? block);
   }
 }

@@ -2,6 +2,107 @@
 title: Migration Notes
 ---
 
+## v0.12 to v0.13
+
+### cashc compiler
+
+#### bounded bytes casting
+
+To indicate that `bytes4(bytes)` casting is purely semantic (and does not offer any type safety), we have renamed it to `unsafe_bytes4(bytes)`. We have also disallowed `bytes4(int)` casting (see section *int to padded bytes casting*).
+
+```solidity
+bytes x = 0x12345678;
+
+// before
+bytes4(x); // => 0x12345678 (correct semantic cast)
+bytes5(x); // => 0x12345678 (incorrect semantic cast)
+
+// after
+// marked as unsafe to indicate that this is a purely semantic cast
+unsafe_bytes4(x); // => 0x12345678 (correct semantic cast)
+unsafe_bytes5(x); // => 0x12345678 (incorrect semantic cast)
+```
+
+#### int to padded bytes casting
+
+In the past, `bytes4(int)` or `bytes(int, 4)` would perform a `NUM2BIN` operation, padding the value to 4 bytes, while `bytes4(bytes)` was a purely semantic type cast. This caused confusion, so instead you can now use the `toPaddedBytes(int, length)` function to perform the same padding (`NUM2BIN`) operation.
+
+```solidity
+// before
+bytes4(5); // => 0x05000000
+bytes(5, 4); // => 0x05000000
+
+// after
+toPaddedBytes(5, 4); // => 0x05000000
+```
+
+#### bool casting
+
+The `bool()` casting function now correctly changes the value of the argument to `true` for non-zero values and `false` for zero values, instead of only semantically treating the value as a boolean. This worked correctly when using the boolean directly inside `require` or `if` statements, but not when using it in a comparison.
+
+```solidity
+// before
+require(bool(5)); // => true
+require(bool(5) == true); // => false || compiles to 0x05 0x01 OP_NUMEQUALVERIFY
+
+// after
+require(bool(5)); // => still true
+require(bool(5) == true); // => true || compiles to 0x05 OP_0NOTEQUAL 0x01 OP_NUMEQUALVERIFY
+```
+
+If you want to keep the old behaviour (without added opcodes), you can use the `unsafe_bool()` casting function instead.
+
+#### Function parameter type enforcement
+
+Function parameter types are now strictly enforced by default. Previously, no length checks were performed on bounded bytes types like `bytes20` and `bytes32` and no value checks were performed on boolean values. That meant that you could pass arguments to functions that were not of the correct type, which could lead to runtime vulnerabilities.
+
+We made this the new compiler default because it is more secure and more explicit. If you want to opt out of this behaviour, you can set the `enforceFunctionParameterTypes` option to `false` in the compiler options when compiling programmatically, or use the `--skip-enforce-function-parameter-types` flag when using the CLI.
+
+Now, the compiler adds extra opcodes to the script to enforce the correct types. If you pass a byte string of an incorrect length to a function that expects e.g. a `bytes20`, the transaction will fail. If you pass in a numeric non-boolean value to a function that expects a `bool`, it will be converted to a boolean value using the `OP_0NOTEQUAL` opcode. If you pass in a non-numeric value to a function that expects a `bool`, the transaction will fail.
+
+We added no extra checks for `int` values, because any numeric operations on a non-numeric value will automatically fail the entire transaction.
+
+#### Locktime guard enforcement
+
+The `enforceLocktimeGuard` option has been added to the compiler options. This option controls whether the compiler should inject a `require(tx.time >= tx.locktime)` check when `tx.locktime` is used without a `require(tx.time >= ...)` check in scope. By default, this is enabled. If you want to opt out of this behaviour, you can set the `enforceLocktimeGuard` option to `false` in the compiler options when compiling programmatically, or use the `--skip-enforce-locktime-guard` flag when using the CLI.
+
+### CashScript SDK
+
+The `addressType` option on the `Contract` constructor has been renamed to `contractType`.
+
+```ts
+// Before: addressType option
+const contract = new Contract(artifact, constructorArgs, { addressType: 'p2sh32' });
+
+// After: contractType option
+const contract = new Contract(artifact, constructorArgs, { contractType: 'p2sh32' });
+```
+
+### Network Provider
+
+If you are using a custom network provider, you will need to update the code for the custom provider to implement the new `getUtxosForLockingBytecode()` method to be compatible with the new `NetworkProvider` interface.
+
+```ts
+  /**
+   * Retrieve all UTXOs (confirmed and unconfirmed) for a given locking bytecode.
+   * @param lockingBytecode The locking bytecode for which we wish to retrieve UTXOs.
+   * @returns List of UTXOs spendable by the provided locking bytecode.
+   */
+  getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+```
+
+### FullStackNetworkProvider & BitcoinRpcNetworkProvider
+
+The `FullStackNetworkProvider` and `BitcoinRpcNetworkProvider` have been removed from the SDK. If you were using these providers, you will need to update your code to use a different network provider.
+
+```ts
+// Before: FullStackNetworkProvider
+const provider = new FullStackNetworkProvider('mainnet', bchjs);
+
+// After: ElectrumNetworkProvider
+const provider = new ElectrumNetworkProvider('mainnet');
+```
+
 ## v0.11 to v0.12
 
 There are several breaking changes to the SDK in this release.

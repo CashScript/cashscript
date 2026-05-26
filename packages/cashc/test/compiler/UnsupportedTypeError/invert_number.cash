@@ -1,0 +1,7 @@
+contract Test() {
+    function spend() {
+        int x = 16;
+        int y = ~x;
+        require(y == -17);
+    }
+}

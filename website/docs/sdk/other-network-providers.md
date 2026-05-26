@@ -19,6 +19,22 @@ interface MockNetworkProviderOptions {
   updateUtxoSet?: boolean;
   vmTarget?: VmTarget;
 }
+
+interface MockNetworkProvider extends NetworkProvider {
+  options: MockNetworkProviderOptions;
+  vmTarget: VmTarget;
+
+  constructor(options?: Partial<MockNetworkProviderOptions>) {}
+
+  // Hardcode the block height
+  setBlockHeight(newBlockHeight: number): void;
+
+  // Add a UTXO to the UTXO set of the mock network
+  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void;
+
+  // Reset the UTXO set and transaction list of the mock network
+  reset(): void;
+}
 ```
 
 The `updateUtxoSet` option is used to determine whether the UTXO set should be updated after a transaction is sent. If `updateUtxoSet` is `true` (default), the UTXO set will be updated to reflect the new state of the mock network. If `updateUtxoSet` is `false`, the UTXO set will not be updated.
@@ -36,51 +52,4 @@ The network type of the `MockNetworkProvider` is `'mocknet'`.
 
 ## Other NetworkProviders
 
-There are two alternative network providers implemented. Currently neither supports CashTokens, so it is recommended to use the `ElectrumNetworkProvider`.
-
-### FullStackNetworkProvider
-
-```ts
-new FullStackNetworkProvider(network: Network, bchjs: BCHJS)
-```
-
-The `FullStackNetworkProvider` uses [FullStack.cash][fullstack]' infrastructure to connect to the BCH network. FullStack.cash' offers dedicated infrastructure and support plans for larger projects. Both `network` and `bchjs` parameters are mandatory, where `bchjs` is an instance of FullStack.cash' [BCHJS][bchjs].
-
-:::caution
-The `FullStackNetworkProvider` does not currently support CashTokens. If you want to use CashTokens, please use the `ElectrumNetworkProvider` instead.
-:::
-
-#### Example
-
-```js
-import BCHJS from '@psf/bch-js';
-import { FullStackNetworkProvider } from 'cashscript';
-
-const restURL = 'https://api.fullstack.cash/v3/';
-const apiToken = 'eyJhbGciO...'; // Your JWT token here.
-const bchjs = new BCHJS({ restURL, apiToken });
-
-const provider = new FullStackNetworkProvider('mainnet', bchjs);
-```
-
-### BitcoinRpcNetworkProvider
-
-```ts
-new BitcoinRpcNetworkProvider(network: Network, url: string, options?: any)
-```
-
-The `BitcoinRpcNetworkProvider` uses a direct connection to a BCH node. Note that a regular node does not have indexing, so any address of interest (e.g. the contract address) need to be registered by the node *before* sending any funds to those addresses. Because of this it is recommended to use a different network provider unless you have a specific reason to use the RPC provider.
-
-:::caution
-The `BitcoinRpcNetworkProvider` does not currently support CashTokens. If you want to use CashTokens, use the `ElectrumNetworkProvider` instead.
-:::
-
-#### Example
-```js
-import { BitcoinRpcNetworkProvider } from 'cashscript';
-
-const provider = new BitcoinRpcNetworkProvider('mainnet', 'http://localhost:8332');
-```
-
-[fullstack]: https://fullstack.cash/
-[bchjs]: https://bchjs.fullstack.cash/
+Third parties can implement their own alternative network providers by implementing the `NetworkProvider` interface and publishing them as a package.

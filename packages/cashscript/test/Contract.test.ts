@@ -1,4 +1,4 @@
-import { hexToBin } from '@bitauth/libauth';
+import { decodeTransactionUnsafe, hexToBin } from '@bitauth/libauth';
 import { placeholder } from '@cashscript/utils';
 import {
   Contract,
@@ -13,6 +13,7 @@ import {
   aliceAddress,
   alicePkh, alicePriv, alicePub, bobPriv,
 } from './fixture/vars.js';
+import { addUtxo } from './test-util.js';
 import { generateLibauthSourceOutputs } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
@@ -97,8 +98,8 @@ describe('Contract', () => {
 
     it('should create a P2SH20 contract when specified in the constructor arguments', () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
-      const p2sh20Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, addressType: 'p2sh20' });
-      const p2sh32Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, addressType: 'p2sh32' });
+      const p2sh20Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, contractType: 'p2sh20' });
+      const p2sh32Instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider, contractType: 'p2sh32' });
 
       const P2SH20_ADDRESS_SIZE = 42;
       const P2SH32_ADDRESS_SIZE = 61;
@@ -108,16 +109,19 @@ describe('Contract', () => {
   });
 
   describe('getBalance', () => {
+    const provider = process.env.TESTS_USE_CHIPNET
+      ? new ElectrumNetworkProvider(Network.CHIPNET)
+      : new MockNetworkProvider();
+
     // Not very robust, as this depends on the example P2PKH contract having balance
     it('should return balance for existing contract', async () => {
-      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const instance = new Contract(p2pkhArtifact, [alicePkh], { provider });
+      await addUtxo(provider, instance.address, randomUtxo());
 
       expect(await instance.getBalance()).toBeGreaterThan(0n);
     });
 
     it('should return zero balance for new contract', async () => {
-      const provider = new ElectrumNetworkProvider(Network.CHIPNET);
       const instance = new Contract(p2pkhArtifact, [placeholder(20)], { provider });
 
       expect(await instance.getBalance()).toBe(0n);
@@ -136,6 +140,16 @@ describe('Contract', () => {
 
       expect(utxos).toHaveLength(1);
       expect(utxos).toEqual(utxosFromProvider);
+    });
+
+    it('should return utxos for existing p2s contract on mocknet', async () => {
+      const provider = new MockNetworkProvider();
+      const instance = new Contract(p2pkhArtifact, [alicePkh], { provider, contractType: 'p2s' });
+      const utxo = randomUtxo();
+
+      provider.addUtxo(instance.lockingBytecode, utxo);
+
+      expect(await instance.getUtxos()).toEqual([utxo]);
     });
   });
 
@@ -174,6 +188,18 @@ describe('Contract', () => {
         .toEqual(hexToBin('aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587'));
     });
 
+    it('can spend from a p2s contract', async () => {
+      const p2sInstance = new Contract(p2pkhArtifact, [alicePkh], { provider, contractType: 'p2s' });
+      const utxo = randomUtxo({ satoshis: 100_000n });
+      provider.addUtxo(p2sInstance.lockingBytecode, utxo);
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, p2sInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
+        .addOutput({ to: aliceAddress, amount: 1_000n });
+
+      await expect(transaction.send()).resolves.toBeDefined();
+    });
+
     it('generates correct unlocking bytecode', () => {
       const utxo = {
         txid: 'e5ac1aa9730d7514b541895e466c987327a4b0c57fcbbd50fc73788f5c0f65d9',
@@ -186,7 +212,7 @@ describe('Contract', () => {
         .addInput(utxo, unlocker)
         .addOutput({ to: aliceAddress, amount: 1000n });
 
-      const transaction = transactionBuilder.buildLibauthTransaction();
+      const transaction = decodeTransactionUnsafe(hexToBin(transactionBuilder.build()));
       const sourceOutputs = generateLibauthSourceOutputs(transactionBuilder.inputs);
 
       expect(unlocker.generateUnlockingBytecode({ transaction, sourceOutputs, inputIndex: 0 }))

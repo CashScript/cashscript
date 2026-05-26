@@ -1,0 +1,15 @@
+contract ForLoopBasic() {
+    function spend() {
+        int sum = 0;
+        int a = 1;
+        int b = 1;
+
+        for (int i = 0; i < 3; i += 1) {
+            sum = sum + i;
+        }
+
+        require(sum == 3);
+        require(a == 1);
+        require(b == 1);
+    }
+}

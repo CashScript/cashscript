@@ -1,4 +1,4 @@
-import { binToHex } from '@bitauth/libauth';
+import { binToHex, hexToBin, isHex } from '@bitauth/libauth';
 import { sha256 } from '@cashscript/utils';
 import {
   ElectrumClient,
@@ -8,6 +8,13 @@ import {
 import { Utxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
+import {
+  NetworkProviderMissingInputsError,
+  NetworkProviderMempoolConflictError,
+  NetworkProviderTransactionAlreadySubmittedError,
+  NetworkProviderAbsoluteTimelockError,
+  NetworkProviderRelativeTimelockError,
+} from './errors.js';
 
 
 interface OptionsBase {
@@ -24,11 +31,23 @@ interface CustomElectrumOptions extends OptionsBase {
 
 type Options = OptionsBase | CustomHostNameOptions | CustomElectrumOptions;
 
+/**
+ * A `NetworkProvider` implementation backed by an Electrum Cash server. By default it manages
+ * its own connection lifecycle, connecting on demand and disconnecting when idle; for long-lived
+ * clients, pass `manualConnectionManagement: true` and call `connect` / `disconnect` explicitly.
+ */
 export default class ElectrumNetworkProvider implements NetworkProvider {
   private electrum: ElectrumClient<ElectrumClientEvents>;
   private concurrentRequests: number = 0;
   private manualConnectionManagement: boolean;
 
+  /**
+   * Create a new ElectrumNetworkProvider.
+   *
+   * @param network - The BCH network to connect to. Defaults to `Network.MAINNET`.
+   * @param options - Optional hostname, pre-configured `ElectrumClient`, and/or
+   *   `manualConnectionManagement` flag.
+   */
   constructor(public network: Network = Network.MAINNET, options: Options = {}) {
     this.electrum = this.instantiateElectrumClient(network, options);
     this.manualConnectionManagement = options?.manualConnectionManagement ?? false;
@@ -57,10 +76,19 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   async getUtxos(address: string): Promise<Utxo[]> {
-    const scripthash = addressToElectrumScriptHash(address);
+    const lockingBytecode = addressToLockScript(address);
+    return this.getUtxosForLockingBytecode(lockingBytecode);
+  }
 
+  async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]> {
+    if (typeof lockingBytecode === 'string' && !isHex(lockingBytecode)) {
+      throw new Error(`Invalid locking bytecode: ${lockingBytecode} is not a valid hex string`);
+    }
+
+    const lockingBytecodeBin = typeof lockingBytecode === 'string' ? hexToBin(lockingBytecode) : lockingBytecode;
+    const scriptHash = lockingBytecodeToElectrumScriptHash(lockingBytecodeBin);
     const filteringOption = 'include_tokens';
-    const result = await this.performRequest('blockchain.scripthash.listunspent', scripthash, filteringOption) as ElectrumUtxo[];
+    const result = await this.performRequest('blockchain.scripthash.listunspent', scriptHash, filteringOption) as ElectrumUtxo[];
 
     const utxos = result.map((utxo) => ({
       txid: utxo.tx_hash,
@@ -85,9 +113,20 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   async sendRawTransaction(txHex: string): Promise<string> {
-    return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
+    try {
+      return await this.performRequest('blockchain.transaction.broadcast', txHex) as string;
+    } catch (e: any) {
+      const errorMessage = e.message ?? String(e);
+      throw classifyNetworkProviderError(errorMessage);
+    }
   }
 
+  /**
+   * Manually open the underlying Electrum connection. Only allowed when the provider was created
+   * with `manualConnectionManagement: true`.
+   *
+   * @throws If manual connection management is disabled.
+   */
   async connect(): Promise<void> {
     if (!this.manualConnectionManagement) {
       throw new Error('Manual connection management is disabled');
@@ -96,6 +135,13 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return this.electrum.connect();
   }
 
+  /**
+   * Manually close the underlying Electrum connection. Only allowed when the provider was created
+   * with `manualConnectionManagement: true`.
+   *
+   * @throws If manual connection management is disabled.
+   * @returns Whether the connection was disconnected successfully.
+   */
   async disconnect(): Promise<boolean> {
     if (!this.manualConnectionManagement) {
       throw new Error('Manual connection management is disabled');
@@ -104,6 +150,14 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     return this.electrum.disconnect();
   }
 
+  /**
+   * Perform an arbitrary Electrum JSON-RPC request against the underlying server. Automatically
+   * manages the connection lifecycle unless `manualConnectionManagement` was set.
+   *
+   * @param name - The Electrum method name (e.g. `blockchain.transaction.get`).
+   * @param parameters - Parameters passed to the method.
+   * @returns The raw Electrum server response.
+   */
   async performRequest(
     name: string,
     ...parameters: (string | number | boolean)[]
@@ -166,25 +220,56 @@ interface BlockHeader {
   hex: string;
 }
 
-/**
- * Helper function to convert an address to an electrum-cash compatible scripthash.
- * This is necessary to support electrum versions lower than 1.4.3, which do not
- * support addresses, only script hashes.
- *
- * @param address Address to convert to an electrum scripthash
- *
- * @returns The corresponding script hash in an electrum-cash compatible format
- */
-function addressToElectrumScriptHash(address: string): string {
-  // Retrieve locking script
-  const lockScript = addressToLockScript(address);
+const MISSING_INPUTS_PATTERNS = [
+  'Missing inputs',
+  'bad-txns-inputs-missingorspent',
+  'bad-txns-inputs-spent',
+];
 
-  // Hash locking script
-  const scriptHash = sha256(lockScript);
+const MEMPOOL_CONFLICT_PATTERNS = [
+  'txn-mempool-conflict',
+];
 
-  // Reverse scripthash
+const ALREADY_SUBMITTED_PATTERNS = [
+  'transaction already in block chain',
+  'txn-already-known',
+  'txn-already-in-mempool',
+];
+
+const ABSOLUTE_TIMELOCK_PATTERNS = [
+  'bad-txns-nonfinal',
+];
+
+const RELATIVE_TIMELOCK_PATTERNS = [
+  'non-BIP68-final',
+];
+
+function classifyNetworkProviderError(errorMessage: string): Error {
+  if (MISSING_INPUTS_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderMissingInputsError(errorMessage);
+  }
+
+  if (MEMPOOL_CONFLICT_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderMempoolConflictError(errorMessage);
+  }
+
+  if (ALREADY_SUBMITTED_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderTransactionAlreadySubmittedError(errorMessage);
+  }
+
+  if (ABSOLUTE_TIMELOCK_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderAbsoluteTimelockError(errorMessage);
+  }
+
+  if (RELATIVE_TIMELOCK_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
+    return new NetworkProviderRelativeTimelockError(errorMessage);
+  }
+
+  return new Error(errorMessage);
+}
+
+function lockingBytecodeToElectrumScriptHash(lockingBytecode: Uint8Array): string {
+  const scriptHash = sha256(lockingBytecode);
   scriptHash.reverse();
-
-  // Return scripthash as a hex string
   return binToHex(scriptHash);
 }

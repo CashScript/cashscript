@@ -1,5 +1,5 @@
 contract Test() {
     function hello() {
-        require(LockingBytecodeP2PKH == bytes34(0));
+        require(LockingBytecodeP2PKH == toPaddedBytes(0, 34));
     }
 }

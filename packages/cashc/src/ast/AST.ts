@@ -80,8 +80,10 @@ export class ParameterNode extends Node implements Named, Typed {
 }
 
 export abstract class StatementNode extends Node { }
+export abstract class ControlStatementNode extends StatementNode { }
+export abstract class NonControlStatementNode extends StatementNode { }
 
-export class VariableDefinitionNode extends StatementNode implements Named, Typed {
+export class VariableDefinitionNode extends NonControlStatementNode implements Named, Typed {
   constructor(
     public type: Type,
     public modifier: string[],
@@ -96,7 +98,7 @@ export class VariableDefinitionNode extends StatementNode implements Named, Type
   }
 }
 
-export class TupleAssignmentNode extends StatementNode {
+export class TupleAssignmentNode extends NonControlStatementNode {
   constructor(
     // TODO: Use an IdentifierNode instead of a custom type
     public left: { name: string, type: Type },
@@ -111,7 +113,7 @@ export class TupleAssignmentNode extends StatementNode {
   }
 }
 
-export class AssignNode extends StatementNode {
+export class AssignNode extends NonControlStatementNode {
   constructor(
     public identifier: IdentifierNode,
     public expression: ExpressionNode,
@@ -124,7 +126,10 @@ export class AssignNode extends StatementNode {
   }
 }
 
-export class TimeOpNode extends StatementNode {
+export class TimeOpNode extends NonControlStatementNode {
+  // True for the compiler-injected `tx.locktime` guard (no user source); see InjectLocktimeGuardTraversal.
+  isGuard = false;
+
   constructor(
     public timeOp: TimeOp,
     public expression: ExpressionNode,
@@ -138,7 +143,7 @@ export class TimeOpNode extends StatementNode {
   }
 }
 
-export class RequireNode extends StatementNode {
+export class RequireNode extends NonControlStatementNode {
   constructor(
     public expression: ExpressionNode,
     public message?: string,
@@ -151,7 +156,19 @@ export class RequireNode extends StatementNode {
   }
 }
 
-export class BranchNode extends StatementNode {
+export class ConsoleStatementNode extends NonControlStatementNode {
+  constructor(
+    public parameters: ConsoleParameterNode[],
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitConsoleStatement(this);
+  }
+}
+
+export class BranchNode extends ControlStatementNode {
   constructor(
     public condition: ExpressionNode,
     public ifBlock: BlockNode,
@@ -162,6 +179,49 @@ export class BranchNode extends StatementNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitBranch(this);
+  }
+}
+
+export class DoWhileNode extends ControlStatementNode {
+  constructor(
+    public condition: ExpressionNode,
+    public block: BlockNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitDoWhile(this);
+  }
+}
+
+export class WhileNode extends ControlStatementNode {
+  constructor(
+    public condition: ExpressionNode,
+    public block: BlockNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitWhile(this);
+  }
+}
+
+export class ForNode extends ControlStatementNode {
+  symbolTable?: SymbolTable;
+
+  constructor(
+    public init: VariableDefinitionNode | AssignNode,
+    public condition: ExpressionNode,
+    public update: AssignNode,
+    public block: BlockNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitFor(this);
   }
 }
 
@@ -187,7 +247,7 @@ export class CastNode extends ExpressionNode implements Typed {
   constructor(
     public type: Type,
     public expression: ExpressionNode,
-    public size?: ExpressionNode,
+    public isUnsafe: boolean,
   ) {
     super();
   }
@@ -377,18 +437,6 @@ export class HexLiteralNode extends LiteralNode<Uint8Array> {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitHexLiteral(this);
-  }
-}
-
-export class ConsoleStatementNode extends Node {
-  constructor(
-    public parameters: ConsoleParameterNode[],
-  ) {
-    super();
-  }
-
-  accept<T>(visitor: AstVisitor<T>): T {
-    return visitor.visitConsoleStatement(this);
   }
 }
 

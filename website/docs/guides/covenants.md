@@ -104,6 +104,10 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge, int period) {
     function receive() {
         require(this.age >= period);
 
+        // Require that there is only a single contract input to prevent
+        // multiple contract UTXOs being claimed in a single transaction
+        require(tx.inputs.length == 1);
+
         // Check that the first output sends to the recipient
         bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
         require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
@@ -143,7 +147,11 @@ Smart contracts which persist for multiple transactions might want to keep data 
 Covenants can also use 'simulated state', where state is kept in the contract script and the contract enforces a new P2SH locking bytecode of the contract with a different state update. This method causes the contract address to change with each state update.
 :::
 
-### Keeping local State in NFTs
+### Keeping local state in NFTs
+
+When we want to share local state between multiple transactions or contracts, we can use the NFT commitment field in an NFT. This state is accessible in any transaction that includes the NFT.
+
+#### Example: Streaming Mecenas
 
 To demonstrate the concept of 'local state' we consider the Mecenas contract again, and focus on a drawback of this contract: you have to claim the funds at exactly the right moment or you're leaving money on the table. Every time you claim money from the contract, the `this.age` counter is reset, so the next claim is possible 30 days after the previous claim. So if we wait a few days to claim, **these days are basically wasted**.
 
@@ -151,8 +159,7 @@ Besides these wasted days it can also be inconvenient to claim at set intervals,
 
 ```solidity
 // Mutable NFT Commitment contract state
-// bytes8 latestLockTime
-
+// bytes8 blockHeightPreviousPledge
 contract StreamingMecenas(
     bytes20 recipient,
     bytes20 funder,
@@ -165,8 +172,7 @@ contract StreamingMecenas(
 
         // Read the block height of the previous pledge, kept in the NFT commitment
         require(tx.inputs.length == 1);
-        bytes localState = tx.inputs[0].nftCommitment;
-        int blockHeightPreviousPledge = int(localState);
+        int blockHeightPreviousPledge = int(tx.inputs[0].nftCommitment);
 
         // Check that time has passed and that time locks are enabled
         require(tx.time >= blockHeightPreviousPledge);
@@ -180,10 +186,10 @@ contract StreamingMecenas(
         int currentValue = tx.inputs[0].value;
         int changeValue = currentValue - pledge - minerFee;
 
-        // If there is not enough left for *another* pledge after this one,
+        // If there is not enough left for *another* block after this one,
         // we send the remainder to the recipient. Otherwise we send the
         // remainder to the recipient and the change back to the contract
-        if (changeValue <= pledge + minerFee) {
+        if (changeValue <= pledgePerBlock + minerFee) {
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             // Check that the outputs send the correct amounts
@@ -194,8 +200,7 @@ contract StreamingMecenas(
             require(tx.outputs[1].lockingBytecode == tx.inputs[0].lockingBytecode);
 
             // Update the block height of the previous pledge, kept in the NFT commitment
-            bytes blockHeightNewPledge = bytes8(tx.locktime);
-            require(tx.outputs[1].nftCommitment == blockHeightNewPledge);
+            require(tx.outputs[1].nftCommitment == toPaddedBytes(tx.locktime, 8));
         }
     }
 
@@ -210,6 +215,21 @@ Instead of having a pledge per 30 day period, we define a pledge per block. At a
 
 :::tip
 We use `tx.locktime` to introspect the value of the timelock, and to write the value to the contract local state: the NFT commitment field.
+:::
+
+#### Integer padding for local state
+
+Padding an integer to a fixed-size byte-length is a very important when storing local state in an nftCommitment. We can use the `toPaddedBytes(int, length)` function to pad the integer to the desired length. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each individual case depending on the integer range. Below we add a table with info on the maximum integer size for common cases:
+
+| Integer Type    | Max integer value                  | Max Byte Size in Script Number Format  |
+| --------------  | -----------------------------------| ---------------------------------------|
+| Satoshis        | 2.1 quadrillion (21,000,000 BCH)   | 7 bytes                                |
+| CashTokens      | 9.2 quintillion (`2^63 - 1`)       | 8 bytes for max supply token           |
+| Locktime        | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
+| SequenceNumber  | 4 bytes uInt (`2^32 - 1`)          | 5 bytes                                |
+
+:::info
+VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number to bytes or the reverse, it's recommended to use helper functions for these conversions from libraries like Libauth.
 :::
 
 ### Issuing NFTs as receipts
@@ -251,12 +271,12 @@ contract PooledFunds(
         if (amountTokensAdded > 0) {
             // Require 1000 sats to pay for future withdrawal fee
             require(amountSatsAdded == 1000);
-            receiptCommitment = 0x01 + bytes8(amountTokensAdded);
+            receiptCommitment = 0x01 + toPaddedBytes(amountTokensAdded, 8);
         } else {
             // Place a minimum on the amount of funds that can be added
             // Implicitly requires tx.outputs[0].value > tx.inputs[0].value
             require(amountSatsAdded > 10000);
-            receiptCommitment = 0x00 + bytes8(amountSatsAdded);
+            receiptCommitment = 0x00 + toPaddedBytes(amountSatsAdded, 8);
         }
 
         // Require there to be at most three outputs so no additional NFTs can be minted

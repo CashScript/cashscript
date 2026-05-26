@@ -26,6 +26,9 @@ import {
   NullaryOpNode,
   ConsoleStatementNode,
   SliceNode,
+  DoWhileNode,
+  WhileNode,
+  ForNode,
 } from './AST.js';
 
 export default abstract class AstVisitor<T> {
@@ -38,7 +41,11 @@ export default abstract class AstVisitor<T> {
   abstract visitAssign(node: AssignNode): T;
   abstract visitTimeOp(node: TimeOpNode): T;
   abstract visitRequire(node: RequireNode): T;
+  abstract visitConsoleStatement(node: ConsoleStatementNode): T;
   abstract visitBranch(node: BranchNode): T;
+  abstract visitDoWhile(node: DoWhileNode): T;
+  abstract visitWhile(node: WhileNode): T;
+  abstract visitFor(node: ForNode): T;
   abstract visitBlock(node: BlockNode): T;
   abstract visitCast(node: CastNode): T;
   abstract visitFunctionCall(node: FunctionCallNode): T;
@@ -54,7 +61,6 @@ export default abstract class AstVisitor<T> {
   abstract visitIntLiteral(node: IntLiteralNode): T;
   abstract visitStringLiteral(node: StringLiteralNode): T;
   abstract visitHexLiteral(node: HexLiteralNode): T;
-  abstract visitConsoleStatement(node: ConsoleStatementNode): T;
 
   visit(node: Node): T {
     return node.accept(this);

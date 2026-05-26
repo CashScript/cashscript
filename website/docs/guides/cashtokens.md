@@ -38,7 +38,7 @@ The maximum size for a fungible token `amount` is the max signed 64-bit integer 
 
 ### Non-Fungible Tokens
 
-The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT which can is allowed to be up to 40 bytes.
+The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT which can is allowed to be up to 128 bytes.
 
 Capability `none` then refers to an immutable NFT where the commitment cannot be changed. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
 

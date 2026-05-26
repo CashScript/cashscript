@@ -1,0 +1,6 @@
+contract ChainedIncrement() {
+    function spend() {
+        int x = 1;
+        int y = x++ * 2;
+    }
+}

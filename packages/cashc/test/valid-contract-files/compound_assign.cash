@@ -1,0 +1,10 @@
+contract CompoundAssign() {
+    function spend() {
+        int x = 10;
+        x += 5;
+        require(x == 15);
+
+        x -= 3;
+        require(x == 12);
+    }
+}

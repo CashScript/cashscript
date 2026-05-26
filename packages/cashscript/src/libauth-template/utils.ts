@@ -1,12 +1,18 @@
-import { AbiFunction, AbiInput, Artifact, bytecodeToScript, formatBitAuthScript } from '@cashscript/utils';
-import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails } from '../interfaces.js';
-import { hexToBin, binToHex, isHex, decodeCashAddress, type WalletTemplateScenarioBytecode, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
+import { AbiFunction, AbiInput, Artifact, bytecodeToScript, formatBitAuthScript, sha256 } from '@cashscript/utils';
+import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
+import { hexToBin, binToHex, isHex, decodeCashAddress, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
 import { EncodedFunctionArgument } from '../Argument.js';
 import { zip } from '../utils.js';
 import SignatureTemplate from '../SignatureTemplate.js';
 import { Contract } from '../Contract.js';
 
+export const DEFAULT_VM_TARGET = VmTarget.BCH_2026_05;
+
 export const getLockScriptName = (contract: Contract): string => {
+  if (contract.contractType === 'p2s') {
+    return `${contract.artifact.contractName}_${binToHex(sha256(hexToBin(contract.lockingBytecode)))}_lock`;
+  }
+
   const result = decodeCashAddress(contract.address);
   if (typeof result === 'string') throw new Error(result);
 
@@ -82,6 +88,7 @@ export const formatBytecodeForDebugging = (artifact: Artifact): string => {
     bytecodeToScript(hexToBin(artifact.debug.bytecode)),
     artifact.debug.sourceMap,
     artifact.source,
+    artifact.debug.sourceTags,
   );
 };
 
@@ -108,10 +115,6 @@ interface LibauthTemplateTokenDetails {
     commitment: string;
   };
 }
-
-export const lockingBytecodeIsSetToSlot = (lockingBytecode?: WalletTemplateScenarioBytecode | ['slot']): boolean => {
-  return Array.isArray(lockingBytecode) && lockingBytecode.length === 1 && lockingBytecode[0] === 'slot';
-};
 
 export const getSignatureAndPubkeyFromP2PKHInput = (
   libauthInput: Input,

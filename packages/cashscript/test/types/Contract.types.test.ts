@@ -245,3 +245,53 @@ const provider = new MockNetworkProvider();
     contract.unlock.timeout();
   }
 }
+
+// describe('P2S contract')
+{
+  // describe('with inline contractType')
+  {
+    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n], { provider, contractType: 'p2s' });
+
+    // it('should give type errors when accessing address and tokenAddress')
+    // @ts-expect-error
+    console.log(contract.address);
+    // @ts-expect-error
+    console.log(contract.tokenAddress);
+
+    // it('should give type errors when trying to compare contractType to p2sh32)
+    // @ts-expect-error
+    console.log(contract.contractType == 'p2sh32');
+  }
+
+  // describe('with options object')
+  {
+    const options = { provider, contractType: 'p2s' } as const;
+    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n], options);
+
+    // it('should give type errors when accessing address and tokenAddress')
+    // @ts-expect-error
+    console.log(contract.address);
+    // @ts-expect-error
+    console.log(contract.tokenAddress);
+
+    // it('should give type errors when trying to compare contractType to p2sh32)
+    // @ts-expect-error
+    console.log(contract.contractType == 'p2sh32');
+  }
+
+  // describe('without passed contractType')
+  {
+    const contract = new Contract(transferWithTimeoutArtifact, [alicePub, bobPub, 100_000n], { provider });
+
+    // it('should NOT give type errors when accessing address and tokenAddress (default contractType is p2sh32)')
+    console.log(contract.address);
+    console.log(contract.tokenAddress);
+
+    // it('should NOT give type errors when trying to compare contractType to p2sh32)
+    console.log(contract.contractType == 'p2sh32');
+
+    // it('should give type errors when trying to compare contractType to p2s)
+    // @ts-expect-error
+    console.log(contract.contractType == 'p2s');
+  }
+}

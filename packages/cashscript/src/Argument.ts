@@ -20,6 +20,22 @@ export type EncodedFunctionArgument = Uint8Array | SignatureTemplate;
 
 export type EncodeFunction = (arg: FunctionArgument, typeStr: string) => EncodedFunctionArgument;
 
+/**
+ * Encode a single CashScript function argument to its on-stack byte representation.
+ *
+ * The encoding is chosen based on `typeStr`:
+ * - `bool`, `int`, `string` → encoded via their CashScript primitive encoders.
+ * - `sig` passed as a `SignatureTemplate` → returned as-is so the transaction builder can
+ *   produce the signature at build time.
+ * - `sig` / `datasig` / `bytes[N]` passed as a `Uint8Array` or hex string → byte-checked and
+ *   returned as bytes.
+ *
+ * @param argument - The runtime argument value provided by the caller.
+ * @param typeStr - The CashScript type string from the contract ABI (e.g. `int`, `bytes20`, `sig`).
+ * @returns The encoded argument, ready for inclusion in an unlocking script.
+ * @throws A `TypeError` when the JS type does not match the expected CashScript type, or when a
+ *   bounded bytes type receives a value of the wrong length.
+ */
 export function encodeFunctionArgument(argument: FunctionArgument, typeStr: string): EncodedFunctionArgument {
   let type = parseType(typeStr);
 

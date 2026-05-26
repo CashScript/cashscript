@@ -1,6 +1,6 @@
 contract Bytes1EqualsByte() {
     function hello(int a, byte b) {
-        bytes1 c = byte(a);
+        bytes1 c = toPaddedBytes(a, 1);
         require(b == c);
     }
 }

@@ -137,6 +137,18 @@ const unprovableOptimisations = [
   // CashProof can't prove bitwise operators
   ['OP_DUP OP_AND', ''],
   ['OP_DUP OP_OR', ''],
+
+  // These are new optimisations that we cannot prove since CashProof doesn't work any more
+  // //////////////////////////////////////////////////////////////////////////////////////
+
+  // TODO: Enable this optimisation when we overhaul the type system
+  // (right now bool(4) == true => false, but !!bool(4) == true => true) so can't replace OP_NOT OP_NOT with ''
+  // ['OP_NOT OP_NOT', '']
+
+  ['OP_LESSTHAN OP_NOT', 'OP_GREATERTHANOREQUAL'],
+  ['OP_GREATERTHAN OP_NOT', 'OP_LESSTHANOREQUAL'],
+  ['OP_LESSTHANOREQUAL OP_NOT', 'OP_GREATERTHAN'],
+  ['OP_GREATERTHANOREQUAL OP_NOT', 'OP_LESSTHAN'],
 ] as [string, string][];
 
 // Note: we moved these optimisations into a single file, but kept the exact same order as before,

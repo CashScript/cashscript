@@ -57,7 +57,7 @@ The `allowImplicitFungibleTokenBurn` option is used to specify whether implicit 
 transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
 ```
 
-Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input.
+Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input. The default sequence number is `0xfffffffe` (non-final sequence number).
 
 :::note
 It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases however are covered by the `SignatureTemplate` and `Contract` classes.
@@ -87,7 +87,7 @@ interface UnlockableUtxo extends Utxo {
 }
 ```
 
-Adds a list of input UTXOs, either with a single shared unlocker or with individual unlockers for each UTXO. The `InputOptions` object can be used to specify the sequence number of the inputs.
+Adds a list of input UTXOs, either with a single shared unlocker or with individual unlockers for each UTXO. The `InputOptions` object can be used to specify the sequence number of the inputs. The default sequence number is `0xfffffffe` (non-final sequence number).
 
 #### Example
 ```ts
@@ -114,7 +114,7 @@ transactionBuilder.addOutput(output: Output): this
 transactionBuilder.addOutputs(outputs: Output[]): this
 ```
 
-Adds a single output or a list of outputs to the transaction.
+Adds a single output or a list of outputs to the transaction. The `to` field in an output can be a string representing a cash address, or a `Uint8Array` representing a locking bytecode. For `P2PKH`, `P2SH20` and `P2SH32` outputs, it is easiest to use the cash address string. For `P2S` outputs, you need to use the locking bytecode.
 
 ```ts
 interface Output {
@@ -165,6 +165,37 @@ Adds an OP_RETURN output to the transaction with the provided data chunks in str
 transactionBuilder.addOpReturnOutput(['0x6d02', 'Hello World!']);
 ```
 
+### addBchChangeOutputIfNeeded()
+```ts
+transactionBuilder.addBchChangeOutputIfNeeded(changeOutputOptions: BchChangeOutputOptions): this
+```
+
+Adds a change output to the transaction if the transaction has enough funds to cover the transaction fee rate. The `changeOutputOptions` object can be used to specify the fee rate for the change output. Note that this is only for BCH change. Use `addTokenChangeOutputIfNeeded()` to add a fungible token change output.
+
+After a BCH change output has been added, no more inputs or outputs can be added to the transaction. This is enforced by the SDK to prevent accidentally invalidating the change calculation.
+
+```ts
+interface BchChangeOutputOptions {
+  to: string | Uint8Array;
+  feeRate: number;
+}
+```
+
+### addTokenChangeOutputIfNeeded()
+```ts
+transactionBuilder.addTokenChangeOutputIfNeeded(changeOutputOptions: TokenChangeOutputOptions): this
+```
+
+For the configured fungible token category, adds a single change output to the configured token address. The change output is given the dust-minimum BCH amount, so this method should be called before `addBchChangeOutputIfNeeded()`. NFT inputs are not handled by this method; if you need to keep an NFT, add an explicit output for it.
+
+After a token change output for a category has been added, no more inputs or outputs with that token category can be added to the transaction. This is enforced by the SDK to prevent accidentally invalidating the change calculation.
+
+```ts
+interface TokenChangeOutputOptions {
+  category: string;
+  to: string | Uint8Array;
+}
+```
 
 ### setLocktime()
 ```ts
@@ -177,6 +208,19 @@ Sets the locktime for the transaction to set a transaction-level absolute timelo
 ```ts
 // Set locktime one day from now
 transactionBuilder.setLocktime(((Date.now() / 1000) + 24 * 60 * 60) * 1000);
+```
+
+### getTransactionSize()
+```ts
+transactionBuilder.getTransactionSize(): bigint
+```
+
+Returns the size of the transaction in bytes.
+
+#### Example
+```ts
+const transactionSize = transactionBuilder.getTransactionSize();
+console.log(`Transaction size: ${transactionSize} bytes`);
 ```
 
 ## Completing the Transaction
@@ -256,6 +300,40 @@ You can read more about debugging transactions on the [debugging page](/docs/gui
 It is unsafe to debug transactions on mainnet using the BitAuth IDE as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
 
+### getVmResourceUsage()
+```ts
+transaction.getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage>
+```
+
+The `getVmResourceUsage()` function allows you to get the VM resource usage for the transaction. This can be useful for debugging and optimization. The VM resource usage is calculated for each input individually so the result is an array of `VmResourceUsage` results corresponding to each of the transaction inputs.
+
+```ts
+interface VmResourceUsage {
+  arithmeticCost: number;
+  definedFunctions: number;
+  hashDigestIterations: number;
+  maximumOperationCost: number;
+  maximumHashDigestIterations: number;
+  maximumSignatureCheckCount: number;
+  densityControlLength: number;
+  operationCost: number;
+  signatureCheckCount: number;
+}
+```
+
+The verbose mode also logs the VM resource usage for each input as a table to the console.
+
+```
+VM Resource usage by inputs:
+┌─────────┬─────────────────────────────────────────────────┬─────┬──────────────────────────┬───────────┬──────────┐
+│ (index) │ Contract - Function                             │ Ops │ Op Cost Budget Usage     │ SigChecks │ Hashes   │
+├─────────┼─────────────────────────────────────────────────┼─────┼──────────────────────────┼───────────┼──────────┤
+│ 0       │ 'SingleFunction - test_require_single_function' │ 7   │ '1,155 / 36,000 (3%)'    │ '0 / 1'   │ '2 / 22' │
+│ 1       │ 'ZeroHandling - test_zero_handling'             │ 13  │ '1,760 / 40,800 (4%)'    │ '0 / 1'   │ '2 / 25' │
+│ 2       │ 'P2PKH Input'                                   │ 7   │ '28,217 / 112,800 (25%)' │ '1 / 3'   │ '7 / 70' │
+└─────────┴─────────────────────────────────────────────────┴─────┴──────────────────────────┴───────────┴──────────┘
+```
+
 ### generateWcTransactionObject()
 ```ts
 transactionBuilder.generateWcTransactionObject(options?: WcTransactionOptions): WcTransactionObject
@@ -325,9 +403,19 @@ const signResult = await signWcTransaction(wcTransactionObj);
 
 ## Transaction errors
 
-Transactions can fail for a number of reasons. Refer to the [Transaction Errors][transactions-simple-errors] section of the simplified transaction builder documentation for more information. Note that the transaction builder does not yet support the `FailedRequireError` mentioned in the simplified transaction builder documentation so any error will be of type `FailedTransactionError` and include any of the mentioned error reasons in its message.
+When sending a transaction, the CashScript SDK will throw an error if the transaction fails. If you are using an artifact compiled with `cashc@0.10.0` or later, the error will be of the type `FailedRequireError` or `FailedTransactionEvaluationError`. In case of a `FailedRequireError`, the error will refer to the corresponding `require` statement in the contract code so you know where your contract failed. If you want more information about the underlying error, you can check the `libauthErrorMessage` property of the error.
+
+```ts
+interface FailedRequireError {
+  message: string;
+  contractName: string;
+  requireStatement: { ip: number, line: number, message: string };
+  inputIndex: number,
+  libauthErrorMessage?: string,
+  bitauthUri?: string;
+}
+```
+
+If you are using an artifact compiled with an older version of `cashc`, the error will always be of the type `FailedTransactionError`. In this case, you can use the `reason` property of the error to determine the reason for the failure.
 
 [bitcoin-wiki-timelocks]: https://en.bitcoin.it/wiki/Timelock
-
-[transactions-simple]: /docs/sdk/transactions
-[transactions-simple-errors]: /docs/sdk/transactions#transaction-errors

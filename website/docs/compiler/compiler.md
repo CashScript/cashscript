@@ -24,17 +24,22 @@ npm install -g cashc
 The `cashc` CLI tool can be used to compile `.cash` files to JSON (or `.ts`) artifact files.
 
 ```bash
-Usage: cashc [options] [source_file]
+Usage: cashc [options] <source_file>
+
+Arguments:
+  source_file                                  The source file to compile.
 
 Options:
-  -V, --version          Output the version number.
-  -o, --output <path>    Specify a file to output the generated artifact.
-  -h, --hex              Compile the contract to hex format rather than a full artifact.
-  -A, --asm              Compile the contract to ASM format rather than a full artifact.
-  -c, --opcount          Display the number of opcodes in the compiled bytecode.
-  -s, --size             Display the size in bytes of the compiled bytecode.
-  -f, --format <format>  Specify the format of the output. (choices: "json", "ts", default: "json")
-  -?, --help             Display help
+  -V, --version                                Output the version number.
+  -o, --output <path>                          Specify a file to output the generated artifact.
+  -h, --hex                                    Compile the contract to hex format rather than a full artifact.
+  -A, --asm                                    Compile the contract to ASM format rather than a full artifact.
+  -c, --opcount                                Display the number of opcodes in the compiled bytecode.
+  -s, --size                                   Display the size in bytes of the compiled bytecode.
+  -S, --skip-enforce-function-parameter-types  Do not enforce function parameter types.
+  -L, --skip-enforce-locktime-guard            Do not inject a tx.time guard when tx.locktime is used.
+  -f, --format <format>                        Specify the format of the output. (choices: "json", "ts", default: "json")
+  -?, --help                                   Display help
 ```
 
 :::tip
@@ -63,7 +68,7 @@ npm install cashc
 
 ### compileFile()
 ```ts
-compileFile(sourceFile: PathLike): Artifact
+compileFile(sourceFile: PathLike, compilerOptions?: CompilerOptions): Artifact
 ```
 
 Compiles a CashScript contract from a source file. This compile method is handy when using Node.js with the contract source file available but you are doing quick compilations (for example for contract size comparisons) and you don't need the contract artifact file to be generated.
@@ -79,7 +84,7 @@ const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 
 ### compileString()
 ```ts
-compileString(sourceCode: string): Artifact
+compileString(sourceCode: string, compilerOptions?: CompilerOptions): Artifact
 ```
 
 Compiles a CashScript contract from a source code string. This compile method is handy in a browser compilation setting like the [CashScript Playground](https://playground.cashscript.org/) where testing contracts can be quickly compiled and discarded. The method is also useful if no source file is locally available (e.g. the source code is retrieved with a REST API).
@@ -91,3 +96,25 @@ const source = await result.text();
 
 const P2PKH = compileString(source);
 ```
+
+### Compiler Options
+```ts
+interface CompilerOptions {
+  enforceFunctionParameterTypes?: boolean;
+  enforceLocktimeGuard?: boolean;
+}
+```
+
+#### enforceFunctionParameterTypes
+
+The `enforceFunctionParameterTypes` option is used to enforce function parameter types, such as byte length of `bytes20` or `bytes32` types and `bool` values. By default, it is set to `true`.
+
+If set to `false`, the compiler will not enforce function parameter types. This means that it is possible for `bytes20` values to have a different length at runtime than the expected 20 bytes. Or that `bool` values are not actually booleans, but integers.
+
+This option is useful if you are certain that passing in incorrect function parameter types will not cause runtime vulnerabilities, and you want to save on the extra opcodes that are added to the script to enforce the types.
+
+#### enforceLocktimeGuard
+
+The `enforceLocktimeGuard` option controls whether the compiler injects a `require(tx.time >= tx.locktime)` check when `tx.locktime` is used in a function without a `require(tx.time >= ...)` (or in some cases, `require(this.age >= ...)`) check already in scope. By default, it is set to `true`.
+
+If set to `false`, the compiler will not inject this guard. Without a guard, the value of `tx.locktime` is not guaranteed to be enforced by the network, which makes any comparison against `tx.locktime` meaningless and can bypass time-based restrictions in the contract.

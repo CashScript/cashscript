@@ -3,7 +3,6 @@ import {
   explicitlyCastable,
   implicitlyCastable,
   implicitlyCastableSignature,
-  resultingType,
   arrayType,
   ArrayType,
   TupleType,
@@ -29,6 +28,12 @@ import {
   NullaryOpNode,
   SliceNode,
   IntLiteralNode,
+  DoWhileNode,
+  WhileNode,
+  ForNode,
+  BlockNode,
+  StatementNode,
+  ExpressionNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import {
@@ -40,11 +45,13 @@ import {
   AssignTypeError,
   ArrayElementError,
   IndexOutOfBoundsError,
-  CastSizeError,
   TupleAssignmentError,
+  BitshiftBitcountNegativeError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
+import { Symbol } from '../ast/SymbolTable.js';
+import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
@@ -89,13 +96,73 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
+  visitBlock(node: BlockNode): Node {
+    // Mutates the statements in place, so no need to re-assign the result.
+    this.visitStatementsRecursively(node.statements ?? []);
+    return node;
+  }
+
+  // Visits statements sequentially, narrowing bytes types after require(x.length == N) checks.
+  // Remaining statements are visited inside applyNarrowings so the narrowed types are
+  // automatically restored when recursion unwinds.
+  private visitStatementsRecursively(statements: StatementNode[], index: number = 0): void {
+    if (index >= statements.length) return;
+
+    statements[index] = this.visit(statements[index]) as StatementNode;
+
+    if (statements[index] instanceof RequireNode) {
+      const narrowings = extractBytesNarrowings((statements[index] as RequireNode).expression);
+      executeWithNarrowedTypes(narrowings, () => this.visitStatementsRecursively(statements, index + 1));
+    } else {
+      this.visitStatementsRecursively(statements, index + 1);
+    }
+  }
+
   visitBranch(node: BranchNode): Node {
     node.condition = this.visit(node.condition);
-    node.ifBlock = this.visit(node.ifBlock);
+
+    const narrowings = extractBytesNarrowings(node.condition);
+    executeWithNarrowedTypes(narrowings, () => { node.ifBlock = this.visit(node.ifBlock); });
+
     node.elseBlock = this.visitOptional(node.elseBlock);
 
     if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
-      throw new TypeError(node, node.condition.type, PrimitiveType.BOOL);
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
+    }
+
+    return node;
+  }
+
+  visitDoWhile(node: DoWhileNode): Node {
+    node.condition = this.visit(node.condition);
+    node.block = this.visit(node.block);
+
+    if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
+    }
+
+    return node;
+  }
+
+  visitWhile(node: WhileNode): Node {
+    node.condition = this.visit(node.condition);
+    node.block = this.visit(node.block);
+
+    if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
+    }
+
+    return node;
+  }
+
+  visitFor(node: ForNode): Node {
+    node.init = this.visit(node.init) as AssignNode | VariableDefinitionNode;
+    node.condition = this.visit(node.condition);
+    node.update = this.visit(node.update) as AssignNode;
+    node.block = this.visit(node.block);
+
+    if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
     }
 
     return node;
@@ -103,17 +170,9 @@ export default class TypeCheckTraversal extends AstTraversal {
 
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
-    node.size = this.visitOptional(node.size);
 
     if (!explicitlyCastable(node.expression.type, node.type)) {
       throw new CastTypeError(node);
-    }
-
-    // Variable size cast is only possible from INT to unbounded BYTES
-    if (node.size) {
-      if (node.expression.type !== PrimitiveType.INT || node.type.toString() !== 'bytes') {
-        throw new CastSizeError(node);
-      }
     }
 
     return node;
@@ -126,7 +185,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // already checked in symbol table
 
-    const parameterTypes = node.parameters.map((p) => p.type as Type);
+    const parameterTypes = node.parameters.map((p) => p.type!);
     expectParameters(node, parameterTypes, definition.parameters);
 
     // Additional array length check for checkMultiSig
@@ -139,6 +198,12 @@ export default class TypeCheckTraversal extends AstTraversal {
     }
 
     node.type = type;
+
+    // Infer the type of the toPaddedBytes function (depends on the second parameter)
+    if (node.identifier.name === GlobalFunction.TO_PADDED_BYTES) {
+      node.type = inferPaddedBytesType(node);
+    }
+
     return node;
   }
 
@@ -149,7 +214,7 @@ export default class TypeCheckTraversal extends AstTraversal {
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // already checked in symbol table
 
-    const parameterTypes = node.parameters.map((p) => p.type as Type);
+    const parameterTypes = node.parameters.map((p) => p.type!);
     expectParameters(node, parameterTypes, definition.parameters);
 
     node.type = type;
@@ -186,8 +251,8 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
 
-    const resType = resultingType(node.left.type, node.right.type);
-    if (!resType && !node.operator.startsWith('.')) {
+    const resType = resultingTypeForBinaryOp(node.operator, node.left.type!, node.right.type!);
+    if (!resType) {
       throw new UnequalTypeError(node);
     }
 
@@ -218,6 +283,7 @@ export default class TypeCheckTraversal extends AstTraversal {
         return node;
       case BinaryOperator.EQ:
       case BinaryOperator.NE:
+        expectCompatibleBytesBounds(node, node.left.type, node.right.type);
         node.type = PrimitiveType.BOOL;
         return node;
       case BinaryOperator.AND:
@@ -229,6 +295,15 @@ export default class TypeCheckTraversal extends AstTraversal {
       case BinaryOperator.BIT_OR:
       case BinaryOperator.BIT_XOR:
         expectSameSizeBytes(node, node.left.type, node.right.type);
+        node.type = node.left.type;
+        return node;
+      case BinaryOperator.SHIFT_LEFT:
+      case BinaryOperator.SHIFT_RIGHT:
+        expectAnyOfTypes(node, node.left.type, [new BytesType(), PrimitiveType.INT]);
+        expectInt(node, node.right.type);
+        if (node.right instanceof IntLiteralNode && Number(node.right.value) < 0) {
+          throw new BitshiftBitcountNegativeError(node, Number(node.right.value));
+        }
         node.type = node.left.type;
         return node;
       case BinaryOperator.SPLIT:
@@ -252,6 +327,10 @@ export default class TypeCheckTraversal extends AstTraversal {
       case UnaryOperator.NEGATE:
         expectInt(node, node.expression.type);
         node.type = PrimitiveType.INT;
+        return node;
+      case UnaryOperator.INVERT:
+        expectBytes(node, node.expression.type);
+        node.type = node.expression.type;
         return node;
       case UnaryOperator.SIZE:
         expectAnyOfTypes(node, node.expression.type, [new BytesType(), PrimitiveType.STRING]);
@@ -348,6 +427,10 @@ function expectInt(node: ExpectedNode, actual?: Type): void {
   expectAnyOfTypes(node, actual, [PrimitiveType.INT]);
 }
 
+function expectBytes(node: ExpectedNode, actual?: Type): void {
+  expectAnyOfTypes(node, actual, [new BytesType()]);
+}
+
 function expectSameSizeBytes(node: BinaryOpNode, left?: Type, right?: Type): void {
   if (!(left instanceof BytesType) || !(right instanceof BytesType)) {
     throw new UnsupportedTypeError(node, left, new BytesType());
@@ -356,6 +439,14 @@ function expectSameSizeBytes(node: BinaryOpNode, left?: Type, right?: Type): voi
   if (left.bound !== right.bound) {
     throw new UnequalTypeError(node);
   }
+}
+
+// Two bounded bytes types are only comparable when their bounds match. Unbounded sides are
+// allowed since they can match any size at runtime (and narrowing may refine them later).
+function expectCompatibleBytesBounds(node: BinaryOpNode, left?: Type, right?: Type): void {
+  if (!(left instanceof BytesType) || !(right instanceof BytesType)) return;
+  if (left.bound === undefined || right.bound === undefined) return;
+  if (left.bound !== right.bound) throw new UnequalTypeError(node);
 }
 
 function expectTuple(node: ExpectedNode, actual?: Type): void {
@@ -462,3 +553,74 @@ function inferSliceType(node: SliceNode): Type {
   // bytes.slice(NumberLiteral start, NumberLiteral end) -> bytes(end - start)
   return new BytesType(end - start);
 }
+
+const inferPaddedBytesType = (node: FunctionCallNode): Type => {
+  if (node.parameters[1] instanceof IntLiteralNode) {
+    return new BytesType(Number(node.parameters[1].value));
+  }
+
+  return new BytesType();
+};
+
+type Narrowing = { symbol: Symbol, bound: number };
+
+// Temporarily narrows each symbol's type to BytesType(bound), calls fn, then restores.
+// Recurses through the list so each narrowing is restored in reverse order as the stack unwinds.
+function executeWithNarrowedTypes(narrowings: Narrowing[], fn: () => void): void {
+  if (narrowings.length === 0) return fn();
+
+  const [{ symbol, bound }, ...rest] = narrowings;
+  const originalType = symbol.type;
+  symbol.type = new BytesType(bound);
+  executeWithNarrowedTypes(rest, fn);
+  symbol.type = originalType;
+}
+
+// Extracts type narrowings from expressions like x.length == 20, including through && chains.
+function extractBytesNarrowings(expr: ExpressionNode): Narrowing[] {
+  if (!(expr instanceof BinaryOpNode)) return [];
+
+  // Both sides of && must be true, so all narrowings apply
+  if (expr.operator === BinaryOperator.AND) {
+    return [...extractBytesNarrowings(expr.left), ...extractBytesNarrowings(expr.right)];
+  }
+
+  const narrowing = extractSingleBytesNarrowing(expr);
+  return narrowing ? [narrowing] : [];
+}
+
+// Matches x.length == N or N == x.length where x is an unbounded bytes variable.
+function extractSingleBytesNarrowing(expr: BinaryOpNode): Narrowing | undefined {
+  if (expr.operator !== BinaryOperator.EQ) return undefined;
+
+  const match = matchSizeLiteral(expr);
+  if (!match) return undefined;
+
+  const { sizeNode, literalNode } = match;
+  if (!(sizeNode.expression instanceof IdentifierNode)) return undefined;
+
+  const { definition } = sizeNode.expression;
+  if (!definition || !(definition.type instanceof BytesType) || definition.type.bound !== undefined) return undefined;
+
+  const bound = Number(literalNode.value);
+  if (bound <= 0) return undefined;
+
+  return { symbol: definition, bound };
+}
+
+// Matches expr.length <op> N or N <op> expr.length, returning the SIZE node and int literal.
+function matchSizeLiteral(expr: BinaryOpNode): { sizeNode: UnaryOpNode, literalNode: IntLiteralNode } | undefined {
+  if (isSizeOp(expr.left) && expr.right instanceof IntLiteralNode) {
+    return { sizeNode: expr.left, literalNode: expr.right };
+  }
+
+  if (isSizeOp(expr.right) && expr.left instanceof IntLiteralNode) {
+    return { sizeNode: expr.right, literalNode: expr.left };
+  }
+
+  return undefined;
+}
+
+const isSizeOp = (node: ExpressionNode): node is UnaryOpNode => (
+  node instanceof UnaryOpNode && node.operator === UnaryOperator.SIZE
+);

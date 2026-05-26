@@ -13,7 +13,7 @@ Contract authors should be careful when allowing a range of versions to check th
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 pragma cashscript >= 0.7.0 < 0.9.3;
 ```
 
@@ -22,7 +22,7 @@ A CashScript constructor works slightly differently than what you might be used 
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract HTLC(pubkey sender, pubkey recipient, int expiration, bytes32 hash) {
     ...
@@ -46,7 +46,7 @@ The main construct in a CashScript contract is the function. A contract can cont
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
     function transfer(sig recipientSig) {
@@ -66,13 +66,13 @@ Function arguments are provided by the user in the unlocking script of the trans
 Because the arguments are provided by the user when spending from the contract, these are 'untrusted arguments'. This means that these arguments can be crafted in a specific way by anyone to see if they can exploit the contract logic.
 
 :::note
-Function parameters are passed in the reversed order of their declaration. This can be important when debugging, optimizing or when creating transactions manually.
+Function parameters are passed in the reversed order of their declaration, but may be reordered by the compiler when enforcing function parameter types. This can be important when debugging, optimizing or when creating transactions manually.
 :::
 
 In CashScript the types for the function arguments are **not** enforced automatically at the contract level. This can be especially relevant for types like `bool`, `bytesX` and other semantic bytes types. Instead this type information is only used by the SDK to check whether these arguments match the expected type during transaction building.
 
-:::caution
-The typings for the function arguments are only semantic, this means the length of bounded bytes types like `bytes20` are **not** contract enforced automatically. Instead add an explicit length check `require(item.length == 20)`.
+:::info
+The typings for function arguments are enforced by default for boolean values and bounded bytes types such as `bytes20` and `bytes32`.
 :::
 
 ## Statements
@@ -89,7 +89,7 @@ The error message in a `require` statement is only available in debug evaluation
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {
@@ -113,17 +113,22 @@ string constant myString = 'Bitcoin Cash';
 ```
 
 ### Variable assignment
-After their initial declaration, any variable can be reassigned later on. However, CashScript lacks any compound assignment operators such as `+=` or `-=`.
+After their initial declaration, any variable can be reassigned later on. CashScript supports regular assignment with `=`, the compound assignment operators `+=` and `-=`, and the increment and decrement operators `++` and `--`. The compound and increment/decrement operators are only valid on `int` variables.
 
 #### Example
 ```solidity
 i = i + 1;
 hashedValue = sha256(hashedValue);
 myString = 'Cash';
+
+counter += 2;
+counter -= 1;
+counter++;
+counter--;
 ```
 
-### Control structures
-The only control structures in CashScript are `if...else` statements. This is due to limitations in the underlying Bitcoin Script which prevents loops, recursion, and `return` statements. If-else statements follow usual semantics known from languages like C or JavaScript.
+### If statements
+If and if-else statements follow usual semantics known from languages like C or JavaScript. If the condition within the `if` statement evaluates to `true`, the block of code within the `if` statement is executed. If the condition evaluates to `false`, the block of code within the optional `else` statement is executed.
 
 :::note
 There is no implicit type conversion from non-boolean to boolean types. So `if (1) { ... }` is not valid CashScript and should instead be written as `if (bool(1)) { ... }`
@@ -131,7 +136,7 @@ There is no implicit type conversion from non-boolean to boolean types. So `if (
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
     function spend(pubkey pk, sig s, bytes message) {
@@ -149,6 +154,76 @@ contract OneOfTwo(bytes20 pkh1, bytes32 hash1, bytes20 pkh2, bytes32 hash2) {
 }
 ```
 
+### Loops
+
+CashScript supports `for`, `while` and `do-while` loops. It currently does not support `break` and `continue` statements.
+
+#### for loop
+
+For loops are the main loop construct in CashScript and has a similar syntax to languages like JavaScript or C. The loop header consists of three parts: the initialization, the condition and the update. The initialization is executed only once before the loop starts. The condition is checked before each iteration of the loop. The update is executed after each iteration of the loop.
+
+#### Example
+```solidity
+pragma cashscript ^0.13.0;
+
+contract NoTokensAllowed() {
+    function spend() {
+        // Loop over all inputs (variable length), and make sure that none of them contain tokens
+        for (int inputIndex = 0; inputIndex < tx.inputs.length; inputIndex++) {
+            require(tx.inputs[inputIndex].tokenCategory == 0x);
+        }
+    }
+}
+```
+
+#### while loop
+
+While loops execute their body as long as the condition holds, checking the condition before each iteration. They're useful when the number of iterations depends on values that change inside the body, so a for-style counter doesn't fit.
+
+#### Example
+```solidity
+pragma cashscript ^0.13.0;
+
+contract PartialFill(int minPayout) {
+    function spend() {
+        int totalPaid = 0;
+        int i = 0;
+
+        // Sum output values until the minimum payout is met. The number of outputs
+        // needed depends on the values themselves, so it's not known up-front.
+        while (totalPaid < minPayout) {
+            totalPaid = totalPaid + tx.outputs[i].value;
+            i = i + 1;
+        }
+
+        require(totalPaid >= minPayout);
+    }
+}
+```
+
+#### do-while loop
+
+Do-while loops execute their body first, then check the condition. The body is guaranteed to run at least once even if the condition is initially false. This is useful when a step needs to happen unconditionally before deciding whether to continue.
+
+#### Example
+```solidity
+pragma cashscript ^0.13.0;
+
+contract HashChainLock(bytes32 hashLock) {
+    function spend(bytes32 preimage) {
+        bytes32 current = preimage;
+
+        // Hash at least once before checking. Using a while loop would let anyone
+        // unlock the contract by passing hashLock itself as the preimage.
+        do {
+            current = hash256(current);
+        } while (current != hashLock);
+
+        require(current == hashLock);
+    }
+}
+```
+
 ### console.log()
 The `console.log` statement can be used to log values during debug evaluation of a transaction. Any variables or primitive values (such as ints, strings, bytes, etc) can be logged. You can read more about debugging in the [debugging guide](/docs/guides/debugging).
 
@@ -158,7 +233,7 @@ Logging is only available in debug evaluation of a transaction, but has no impac
 
 #### Example
 ```solidity
-pragma cashscript ^0.12.0;
+pragma cashscript ^0.13.0;
 
 contract P2PKH(bytes20 pkh) {
     function spend(pubkey pk, sig s) {

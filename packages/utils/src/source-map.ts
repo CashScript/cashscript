@@ -1,4 +1,4 @@
-import { FullLocationData, PositionHint, SingleLocationData } from './types.js';
+import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
 
 /*
  * The source mappings for the bytecode use the following notation (similar to Solidity):
@@ -119,3 +119,25 @@ const parsePositionHint = (hint: string): PositionHint | undefined => {
   if (hint === '0') return PositionHint.START;
   return undefined;
 };
+
+const SOURCE_TAG_KIND_VALUES = new Set<string>(Object.values(SourceTagKind));
+
+/*
+ * Format: "startIndex:endIndex:kind;..." e.g. "14:16:fu;38:42:fu"
+ * (currently only `fu` (For-Update) is supported as source tag kind)
+ */
+export function parseSourceTags(sourceTags: string): SourceTagEntry[] {
+  if (!sourceTags) return [];
+  return sourceTags.split(';').map((segment) => {
+    const [startStr, endStr, kindStr] = segment.split(':');
+    if (!SOURCE_TAG_KIND_VALUES.has(kindStr)) {
+      throw new Error(`Unknown source tag kind: ${kindStr}`);
+    }
+    return { startIndex: Number(startStr), endIndex: Number(endStr), kind: kindStr as SourceTagKind };
+  });
+}
+
+export function generateSourceTags(entries: SourceTagEntry[]): string {
+  if (entries.length === 0) return '';
+  return entries.map((entry) => `${entry.startIndex}:${entry.endIndex}:${entry.kind}`).join(';');
+}

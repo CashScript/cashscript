@@ -51,6 +51,17 @@ interface TokenDetails {
 const userUtxos = await provider.getUtxos(userAddress)
 ```
 
+### getUtxosForLockingBytecode()
+```ts
+async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+```
+Returns all UTXOs for a specific locking bytecode. Both confirmed and unconfirmed UTXOs are included.
+
+#### Example
+```ts
+const utxos = await provider.getUtxosForLockingBytecode(lockingBytecode)
+```
+
 ### getBlockHeight()
 ```ts
 async provider.getBlockHeight(): Promise<number>;
@@ -90,6 +101,19 @@ const txId = await provider.sendRawTransaction(txHex)
 A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if you want to use a new or different BCH indexer for network information, it is simple to add support for it by creating your own `NetworkProvider` adapter by implementing the [NetworkProvider interface](https://github.com/CashScript/cashscript/blob/master/packages/cashscript/src/network/NetworkProvider.ts).
 
 You can create a PR to add your custom `NetworkProvider` to the CashScript codebase to share this functionality with others. It is required to have basic automated tests for any new `NetworkProvider`.
+
+### Error Handling
+
+A custom `NetworkProvider` should throw the following error types when an error occurs while broadcasting a transaction:
+
+| Error | Description |
+|---|---|
+| `NetworkProviderMissingInputsError` | Transaction inputs are missing or already spent |
+| `NetworkProviderMempoolConflictError` | Transaction conflicts with an unconfirmed transaction in the mempool |
+| `NetworkProviderTransactionAlreadySubmittedError` | Transaction has already been submitted |
+| `NetworkProviderAbsoluteTimelockError` | Transaction is not yet final (nLockTime not satisfied) |
+| `NetworkProviderRelativeTimelockError` | BIP68 sequence lock not satisfied |
+| `NetworkProviderError` | Generic fallback network provider error |
 
 ## Provider-Specific functionality
 

@@ -1,0 +1,6 @@
+contract IntToByte() {
+    function hello(bytes2 b) {
+        byte c = 0x01;
+        require(b == c);
+    }
+}

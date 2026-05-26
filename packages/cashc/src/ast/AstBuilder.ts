@@ -34,6 +34,9 @@ import {
   ConsoleStatementNode,
   ConsoleParameterNode,
   SliceNode,
+  DoWhileNode,
+  WhileNode,
+  ForNode,
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
@@ -66,8 +69,16 @@ import type {
   ConsoleStatementContext,
   ConsoleParameterContext,
   StatementContext,
+  NonControlStatementContext,
+  ControlStatementContext,
   RequireMessageContext,
   SliceContext,
+  DoWhileStatementContext,
+  LoopStatementContext,
+  WhileStatementContext,
+  ForStatementContext,
+  ForInitContext,
+  FunctionBodyContext,
 } from '../grammar/CashScriptParser.js';
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
@@ -133,13 +144,17 @@ export default class AstBuilder
   visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
+    const body = this.visit(ctx.functionBody());
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, body);
+    functionDefinition.location = Location.fromCtx(ctx);
+    return functionDefinition;
+  }
+
+  visitFunctionBody(ctx: FunctionBodyContext): BlockNode {
     const statements = ctx.statement_list().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
     block.location = Location.fromCtx(ctx);
-
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, block);
-    functionDefinition.location = Location.fromCtx(ctx);
-    return functionDefinition;
+    return block;
   }
 
   visitParameter(ctx: ParameterContext): ParameterNode {
@@ -151,7 +166,22 @@ export default class AstBuilder
   }
 
   visitStatement(ctx: StatementContext): StatementNode {
-    // Statement nodes only have a single child, so we can just visit that child
+    // Non-control statements include a trailing semicolon at the statement level.
+    // Preserve legacy source-map behavior by assigning location from this wrapper rule.
+    const statement = this.visit(ctx.getChild(0)) as StatementNode;
+
+    if (ctx.nonControlStatement()) {
+      statement.location = Location.fromCtx(ctx);
+    }
+
+    return statement;
+  }
+
+  visitNonControlStatement(ctx: NonControlStatementContext): StatementNode {
+    return this.visit(ctx.getChild(0));
+  }
+
+  visitControlStatement(ctx: ControlStatementContext): StatementNode {
     return this.visit(ctx.getChild(0));
   }
 
@@ -182,10 +212,35 @@ export default class AstBuilder
     const identifier = new IdentifierNode(ctx.Identifier().getText());
     identifier.location = Location.fromToken(ctx.Identifier().symbol);
 
-    const expression = this.visit(ctx.expression());
+    const expression = this.createAssignExpression(ctx);
     const assign = new AssignNode(identifier, expression);
     assign.location = Location.fromCtx(ctx);
     return assign;
+  }
+
+  // Builds the right-hand side expression for an assignStatement, rewriting compound
+  // forms (+=, -=, ++, --) as: identifier (+|-) rhs
+  private createAssignExpression(ctx: AssignStatementContext): ExpressionNode {
+    const op = ctx._op.text;
+
+    if (op === '=') return this.visit(ctx.expression()) as ExpressionNode;
+
+    const leftIdentifier = new IdentifierNode(ctx.Identifier().getText());
+    leftIdentifier.location = Location.fromToken(ctx.Identifier().symbol);
+
+    const binaryOperator = (op === '+=' || op === '++') ? BinaryOperator.PLUS : BinaryOperator.MINUS;
+
+    let right: ExpressionNode;
+    if (op === '++' || op === '--') {
+      right = new IntLiteralNode(1n);
+      right.location = Location.fromCtx(ctx);
+    } else {
+      right = this.visit(ctx.expression()) as ExpressionNode;
+    }
+
+    const binaryOp = new BinaryOpNode(leftIdentifier, binaryOperator, right);
+    binaryOp.location = Location.fromCtx(ctx);
+    return binaryOp;
   }
 
   visitTimeOpStatement(ctx: TimeOpStatementContext): TimeOpNode {
@@ -214,6 +269,51 @@ export default class AstBuilder
     return branch;
   }
 
+  visitLoopStatement(ctx: LoopStatementContext): StatementNode {
+    if (ctx.doWhileStatement()) return this.visit(ctx.doWhileStatement()) as DoWhileNode;
+    if (ctx.whileStatement()) return this.visit(ctx.whileStatement()) as WhileNode;
+    if (ctx.forStatement()) return this.visit(ctx.forStatement()) as ForNode;
+    throw new Error('Invalid loop statement');
+  }
+
+  visitDoWhileStatement(ctx: DoWhileStatementContext): DoWhileNode {
+    const condition = this.visit(ctx.expression());
+    const block = this.visit(ctx.block()) as BlockNode;
+    const doWhile = new DoWhileNode(condition, block);
+    doWhile.location = Location.fromCtx(ctx);
+    return doWhile;
+  }
+
+  visitWhileStatement(ctx: WhileStatementContext): WhileNode {
+    const condition = this.visit(ctx.expression());
+    const block = this.visit(ctx.block()) as BlockNode;
+    const whileStatement = new WhileNode(condition, block);
+    whileStatement.location = Location.fromCtx(ctx);
+    return whileStatement;
+  }
+
+  visitForStatement(ctx: ForStatementContext): ForNode {
+    const init = this.visit(ctx.forInit()) as VariableDefinitionNode | AssignNode;
+    const condition = this.visit(ctx.expression());
+    const update = this.visit(ctx.assignStatement()) as AssignNode;
+    const block = this.visit(ctx.block()) as BlockNode;
+    const forStatement = new ForNode(init, condition, update, block);
+    forStatement.location = Location.fromCtx(ctx);
+    return forStatement;
+  }
+
+  visitForInit(ctx: ForInitContext): VariableDefinitionNode | AssignNode {
+    if (ctx.variableDefinition()) {
+      return this.visit(ctx.variableDefinition()) as VariableDefinitionNode;
+    }
+
+    if (ctx.assignStatement()) {
+      return this.visit(ctx.assignStatement()) as AssignNode;
+    }
+
+    throw new Error('Invalid for-loop init statement');
+  }
+
   visitBlock(ctx: BlockContext): BlockNode {
     const statements = ctx.statement_list().map((s) => this.visit(s) as StatementNode);
     const block = new BlockNode(statements);
@@ -226,10 +326,11 @@ export default class AstBuilder
   }
 
   visitCast(ctx: CastContext): CastNode {
-    const type = parseType(ctx.typeName().getText());
+    const rawType = ctx.typeCast().getText();
+    const type = parseType(rawType.replace('unsafe_', ''));
+    const isUnsafe = rawType.startsWith('unsafe_');
     const expression = this.visit(ctx._castable);
-    const size = ctx._size && this.visit(ctx._size);
-    const cast = new CastNode(type, expression, size);
+    const cast = new CastNode(type, expression, isUnsafe);
     cast.location = Location.fromCtx(ctx);
     return cast;
   }

@@ -91,8 +91,13 @@ export const generateWcTransactionObjectFixture = {
           },
           'compiler': {
             'name': 'cashc',
-            'version': '0.11.0',
+            'version': expect.any(String),
+            'options': {
+              'enforceFunctionParameterTypes': true,
+              'enforceLocktimeGuard': true,
+            },
           },
+          'fingerprint': '07f5c2c2cf10439f063f3b92b9420b110614fb57b5c5015120bfca2688fedcc7',
           'updatedAt': expect.any(String),
         },
       },
@@ -107,4 +112,4 @@ export const generateWcTransactionObjectFixture = {
     },
   ],
 }
-;
+  ;

@@ -1,0 +1,6 @@
+contract IntToByte() {
+    function hello(string a, bytes2 b) {
+        bytes2 c = toPaddedBytes(a, 2);
+        require(b == c);
+    }
+}

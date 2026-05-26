@@ -1,0 +1,9 @@
+contract Test() {
+    function hello(bytes data, int x) {
+        if (x > 0) {
+            require(data.length == 20);
+        }
+        bytes20 narrowed = data;
+        require(narrowed == data);
+    }
+}

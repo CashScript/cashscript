@@ -5,29 +5,28 @@ export default {
     {
       name: 'spend',
       inputs: [
-        {
-          name: 'palindrome',
-          type: 'string',
-        },
+        { name: 'palindrome', type: 'string' },
       ],
     },
   ],
   bytecode: 'OP_DUP OP_REVERSEBYTES OP_EQUAL',
   source: 'contract P2Palindrome() {\n    function spend(string palindrome) {\n        require(palindrome.reverse() == palindrome);\n    }\n}\n',
+  fingerprint: '4e9480ee14cf131a78be8da27e585e3d62c0e9cfa75d8338f2d51a67d84df0c7',
   debug: {
     bytecode: '76bc87',
     sourceMap: '3:16:3:26;:::36:1;:8::52',
     logs: [],
     requires: [
-      {
-        ip: 3,
-        line: 3,
-      },
+      { ip: 3, line: 3 },
     ],
   },
   compiler: {
     name: 'cashc',
-    version: '0.11.0',
+    version: '0.13.0',
+    options: {
+      enforceFunctionParameterTypes: true,
+      enforceLocktimeGuard: true,
+    },
   },
-  updatedAt: '2025-06-16T15:05:55.718Z',
+  updatedAt: '2026-05-19T09:14:30.517Z',
 } as const;

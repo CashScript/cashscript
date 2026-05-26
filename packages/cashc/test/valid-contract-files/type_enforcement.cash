@@ -1,0 +1,16 @@
+contract TypeEnforcement() {
+    function spend(
+        int nonEnforcedInt,
+        bool enforcedBool,
+        bytes4 enforcedBytes,
+        bytes nonEnforcedBytes
+    ) {
+        if (enforcedBool == true) {
+            require(nonEnforcedInt > 6);
+        }
+
+        if (enforcedBool == false) {
+            require(enforcedBytes == nonEnforcedBytes);
+        }
+    }
+}

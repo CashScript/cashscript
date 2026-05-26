@@ -3,6 +3,7 @@ import { binToHex } from '@bitauth/libauth';
 import {
   asmToScript,
   calculateBytesize,
+  CompilerOptions,
   countOpcodes,
   formatArtifact,
   scriptToAsm,
@@ -24,6 +25,8 @@ program
   .option('-A, --asm', 'Compile the contract to ASM format rather than a full artifact.')
   .option('-c, --opcount', 'Display the number of opcodes in the compiled bytecode.')
   .option('-s, --size', 'Display the size in bytes of the compiled bytecode.')
+  .option('-S, --skip-enforce-function-parameter-types', 'Do not enforce function parameter types.')
+  .option('-L, --skip-enforce-locktime-guard', 'Do not inject a tx.time guard when tx.locktime is used.')
   .addOption(
     new Option('-f, --format <format>', 'Specify the format of the output.')
       .choices(['json', 'ts'])
@@ -47,8 +50,13 @@ function run(): void {
 
   const outputFile = opts.output && opts.output !== '-' && path.resolve(opts.output);
 
+  const compilerOptions: CompilerOptions = {
+    enforceFunctionParameterTypes: !opts.skipEnforceFunctionParameterTypes,
+    enforceLocktimeGuard: !opts.skipEnforceLocktimeGuard,
+  };
+
   try {
-    const artifact = compileFile(sourceFile);
+    const artifact = compileFile(sourceFile, compilerOptions);
     const script = asmToScript(artifact.bytecode);
 
     const opcount = countOpcodes(script);

@@ -31,6 +31,7 @@ module.exports = {
       'error',
       { allowShortCircuit: true }
     ],
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }], // Ignore unused variables that start with an underscore
     'import/prefer-default-export': 0, // Useful when creating util files that may get expanded
     'import/no-extraneous-dependencies': 0, // This gives weird errors
     'no-bitwise': 0, // Need to use bitwise operators

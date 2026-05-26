@@ -1,5 +1,0 @@
-contract Test(int y) {
-    function hello() {
-        require(bytes2(y, 2) == 0x0000);
-    }
-}

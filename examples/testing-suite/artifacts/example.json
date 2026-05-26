@@ -41,7 +41,12 @@
   },
   "compiler": {
     "name": "cashc",
-    "version": "0.12.0"
+    "version": "0.13.0",
+    "options": {
+      "enforceFunctionParameterTypes": true,
+      "enforceLocktimeGuard": true
+    }
   },
-  "updatedAt": "2025-12-09T10:19:09.338Z"
+  "updatedAt": "2026-05-16T11:32:10.968Z",
+  "fingerprint": "fa9e7ae1cf47ba86e0c490d22034b0f3006b74c4164855e54e1b709313dd3dbe"
 }

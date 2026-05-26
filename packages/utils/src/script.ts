@@ -1,18 +1,19 @@
 import {
-  OpcodesBch2023,
   encodeDataPush,
   hexToBin,
   disassembleBytecodeBch,
   flattenBinArray,
   encodeAuthenticationInstructions,
   decodeAuthenticationInstructions,
+  OpcodesBch,
+  AuthenticationInstruction,
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
 import { optimisationReplacements } from './optimisations.js';
-import { FullLocationData, PositionHint, SingleLocationData } from './types.js';
+import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry } from './types.js';
 import { LogEntry, RequireStatement } from './artifact.js';
 
-export const Op = OpcodesBch2023;
+export const Op = OpcodesBch;
 export type Op = number;
 export type OpOrData = Op | Uint8Array;
 export type Script = OpOrData[];
@@ -64,10 +65,14 @@ export function asmToBytecode(asm: string): Uint8Array {
   // Remove any duplicate whitespace
   asm = asm.replace(/\s+/g, ' ').trim();
 
+  if (asm === '') return new Uint8Array();
+
   // Convert the ASM tokens to AuthenticationInstructions
   const instructions = asm.split(' ').map((token) => {
+    // Even though the OpcodesBch type allows for { [key: number]: string }, we know that the keys are always the opcodes
+    // so we can safely cast to the AuthenticationInstruction type
     if (token.startsWith('OP_')) {
-      return { opcode: Op[token as keyof typeof Op] };
+      return { opcode: Op[token as keyof typeof Op] } as AuthenticationInstruction;
     }
 
     const data = token.replace(/<|>/g, '').replace(/^0x/, '');
@@ -144,7 +149,7 @@ function getPushDataOpcode(data: Uint8Array): Uint8Array {
   throw Error('Pushdata too large');
 }
 
-export function generateRedeemScript(baseScript: Script, encodedConstructorArgs: Script): Script {
+export function generateContractBytecodeScript(baseScript: Script, encodedConstructorArgs: Script): Script {
   return [...encodedConstructorArgs.slice().reverse(), ...baseScript];
 }
 
@@ -153,6 +158,7 @@ interface OptimiseBytecodeResult {
   locationData: FullLocationData;
   logs: LogEntry[];
   requires: RequireStatement[];
+  sourceTags: SourceTagEntry[];
 }
 
 export function optimiseBytecode(
@@ -160,6 +166,7 @@ export function optimiseBytecode(
   locationData: FullLocationData,
   logs: LogEntry[],
   requires: RequireStatement[],
+  sourceTags: SourceTagEntry[],
   constructorParamLength: number,
   runs: number = 1000,
 ): OptimiseBytecodeResult {
@@ -170,7 +177,8 @@ export function optimiseBytecode(
       locationData: newLocationData,
       logs: newLogs,
       requires: newRequires,
-    } = replaceOps(script, locationData, logs, requires, constructorParamLength, optimisationReplacements);
+      sourceTags: newSourceTags,
+    } = replaceOps(script, locationData, logs, requires, sourceTags, constructorParamLength, optimisationReplacements);
 
     // Break on fixed point
     if (scriptToAsm(oldScript) === scriptToAsm(newScript)) break;
@@ -179,9 +187,10 @@ export function optimiseBytecode(
     locationData = newLocationData;
     logs = newLogs;
     requires = newRequires;
+    sourceTags = newSourceTags;
   }
 
-  return { script, locationData, logs, requires };
+  return { script, locationData, logs, requires, sourceTags };
 }
 
 export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script {
@@ -240,6 +249,7 @@ interface ReplaceOpsResult {
   locationData: FullLocationData;
   logs: LogEntry[];
   requires: RequireStatement[];
+  sourceTags: SourceTagEntry[];
 }
 
 function replaceOps(
@@ -247,6 +257,7 @@ function replaceOps(
   locationData: FullLocationData,
   logs: LogEntry[],
   requires: RequireStatement[],
+  sourceTags: SourceTagEntry[],
   constructorParamLength: number,
   optimisations: string[][],
 ): ReplaceOpsResult {
@@ -254,6 +265,7 @@ function replaceOps(
   let newLocationData = [...locationData];
   let newLogs = [...logs];
   let newRequires = [...requires];
+  let newSourceTags = [...sourceTags];
 
   optimisations.forEach(([pattern, replacement]) => {
     let processedAsm = '';
@@ -354,6 +366,13 @@ function replaceOps(
         };
       });
 
+      // Source tags use raw script indices (no constructor offset), so we adjust using scriptIndex directly
+      newSourceTags = newSourceTags.map((tag) => ({
+        ...tag,
+        startIndex: tag.startIndex >= scriptIndex ? Math.max(scriptIndex, tag.startIndex - lengthDiff) : tag.startIndex,
+        endIndex: tag.endIndex >= scriptIndex ? Math.max(scriptIndex, tag.endIndex - lengthDiff) : tag.endIndex,
+      }));
+
       // We add the replacement to the processed asm
       processedAsm = mergeAsm(processedAsm, replacement);
 
@@ -378,6 +397,7 @@ function replaceOps(
     locationData: newLocationData,
     logs: newLogs,
     requires: newRequires,
+    sourceTags: newSourceTags,
   };
 }
 

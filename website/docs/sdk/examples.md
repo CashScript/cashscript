@@ -14,7 +14,8 @@ We will break up the development of the smart contract application in 4 manageab
 
 ### Creating the keypairs
 
-To put the `HodlVault.cash` contract to use in a TypeScript application, we have to use the CashScript SDK in combination with a BCH library such as [Libauth][libauth], [Mainnetjs][mainnetjs] or [BCHJS][bchjs]. These libraries are used to generate public/private keys for the contract participants.
+To put the `HodlVault.cash` contract to use in a TypeScript application, we have to use the CashScript SDK in combination with a BCH library such as [Libauth][libauth] or [Mainnetjs][mainnetjs]. These libraries are used to generate public/private keys for the contract participants.
+
 In this example we'll use [Libauth][libauth] to generate the keys `alicePriv`, `alicePub`, `oracle` & `oraclePub`. Then we can use these keys to create the smart contract.
 
 :::caution
@@ -57,11 +58,11 @@ export const oracleAddress = encodeCashAddress('bchtest', 'p2pkhWithTokens', ora
 
 ### Generating a Contract
 
-For the networkprovider, we'll use the `ElectrumNetworkProvider` from the SDK and for `Simple Transaction Builder` for this example. Once you have a smart contract address you can send funds to it. To spend the Bitcoin cash locked in the contract you will have to satisfy the spending conditions on the contract.
+For development purposes, we'll use the `MockNetworkProvider` so you can simulate transactions in a 'mock' network environment. To do proper testing, you also need to add "mock" UTXOs to the `MockNetworkProvider`.
 
 ```ts title="hodl_vault.ts"
 import { stringify } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { Contract, SignatureTemplate, MockNetworkProvider, randomUtxo } from 'cashscript';
 import { compileFile } from 'cashc';
 import { URL } from 'url';
 
@@ -74,13 +75,16 @@ import {
 // Compile the HodlVault contract to an artifact object
 const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
 
-// Initialise a network provider for network operations on CHIPNET
-const provider = new ElectrumNetworkProvider('chipnet');
+// Initialise a network provider for network operations on MockNet
+const provider = new MockNetworkProvider();
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters
 const parameters = [alicePub, oraclePub, 100000n, 30000n];
 const contract = new Contract(artifact, parameters, { provider });
+
+// Add a mock UTXO to the network provider
+provider.addUtxo(contract.address, randomUtxo());
 
 // Get contract balance & output address + balance
 console.log('contract address:', contract.address);
@@ -121,7 +125,7 @@ Finally, we can put all of this together to create a working smart contract appl
 
 ```ts title="hodl_vault.ts"
 import { stringify } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
+import { Contract, SignatureTemplate, MockNetworkProvider } from 'cashscript';
 import { compileFile } from 'cashc';
 import { URL } from 'url';
 
@@ -136,13 +140,16 @@ import {
 // Compile the HodlVault contract to an artifact object
 const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
 
-// Initialise a network provider for network operations on CHIPNET
-const provider = new ElectrumNetworkProvider('chipnet');
+// Initialise a network provider for network operations on MockNet
+const provider = new MockNetworkProvider();
 
 // Instantiate a new contract using the compiled artifact and network provider
 // AND providing the constructor parameters
 const parameters = [alicePub, oraclePub, 100000n, 30000n];
 const contract = new Contract(artifact, parameters, { provider });
+
+// Add a mock UTXO to the network provider
+provider.addUtxo(contract.address, randomUtxo());
 
 // Fetch contract utxos
 const contractUtxos = await contract.getUtxos();
@@ -177,7 +184,6 @@ const transferDetails = await new TransactionBuilder({ provider })
 console.log(transferDetails);
 ```
 
-[bchjs]: https://bchjs.fullstack.cash/
 [mainnetjs]: https://mainnet.cash/
 [libauth]: https://libauth.org/
 [github-examples]: https://github.com/CashScript/cashscript/tree/master/examples

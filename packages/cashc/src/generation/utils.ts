@@ -18,12 +18,18 @@ export function compileTimeOp(op: TimeOp): Script {
   return mapping[op];
 }
 
-export function compileCast(from: Type, to: Type): Script {
+export function compileCast(from: Type, to: Type, isUnsafe: boolean): Script {
+  if (isUnsafe) return [];
+
   if (from === PrimitiveType.INT && to instanceof BytesType && to.bound !== undefined) {
     return [encodeInt(BigInt(to.bound)), Op.OP_NUM2BIN];
   }
 
-  if (from !== PrimitiveType.INT && to === PrimitiveType.INT) {
+  if (from === PrimitiveType.INT && to === PrimitiveType.BOOL) {
+    return [Op.OP_0NOTEQUAL];
+  }
+
+  if (from instanceof BytesType && to === PrimitiveType.INT) {
     return [Op.OP_BIN2NUM];
   }
 
@@ -44,6 +50,7 @@ export function compileGlobalFunction(fn: GlobalFunction): Script {
     [GlobalFunction.HASH160]: [Op.OP_HASH160],
     [GlobalFunction.HASH256]: [Op.OP_HASH256],
     [GlobalFunction.WITHIN]: [Op.OP_WITHIN],
+    [GlobalFunction.TO_PADDED_BYTES]: [Op.OP_NUM2BIN],
   };
 
   return mapping[fn];
@@ -56,6 +63,11 @@ export function compileBinaryOp(op: BinaryOperator, numeric: boolean = false): S
     [BinaryOperator.MOD]: [Op.OP_MOD],
     [BinaryOperator.PLUS]: [Op.OP_CAT],
     [BinaryOperator.MINUS]: [Op.OP_SUB],
+    [BinaryOperator.SHIFT_LEFT]: [Op.OP_LSHIFTBIN],
+    [BinaryOperator.SHIFT_RIGHT]: [Op.OP_RSHIFTBIN],
+    [BinaryOperator.BIT_AND]: [Op.OP_AND],
+    [BinaryOperator.BIT_OR]: [Op.OP_OR],
+    [BinaryOperator.BIT_XOR]: [Op.OP_XOR],
     [BinaryOperator.LT]: [Op.OP_LESSTHAN],
     [BinaryOperator.LE]: [Op.OP_LESSTHANOREQUAL],
     [BinaryOperator.GT]: [Op.OP_GREATERTHAN],
@@ -64,9 +76,6 @@ export function compileBinaryOp(op: BinaryOperator, numeric: boolean = false): S
     [BinaryOperator.NE]: [Op.OP_EQUAL, Op.OP_NOT],
     [BinaryOperator.AND]: [Op.OP_BOOLAND],
     [BinaryOperator.OR]: [Op.OP_BOOLOR],
-    [BinaryOperator.BIT_AND]: [Op.OP_AND],
-    [BinaryOperator.BIT_OR]: [Op.OP_OR],
-    [BinaryOperator.BIT_XOR]: [Op.OP_XOR],
     [BinaryOperator.SPLIT]: [Op.OP_SPLIT],
   };
 
@@ -74,6 +83,8 @@ export function compileBinaryOp(op: BinaryOperator, numeric: boolean = false): S
     mapping[BinaryOperator.PLUS] = [Op.OP_ADD];
     mapping[BinaryOperator.EQ] = [Op.OP_NUMEQUAL];
     mapping[BinaryOperator.NE] = [Op.OP_NUMNOTEQUAL];
+    mapping[BinaryOperator.SHIFT_LEFT] = [Op.OP_LSHIFTNUM];
+    mapping[BinaryOperator.SHIFT_RIGHT] = [Op.OP_RSHIFTNUM];
   }
 
   return mapping[op];
@@ -83,6 +94,7 @@ export function compileUnaryOp(op: UnaryOperator): Op[] {
   const mapping = {
     [UnaryOperator.NOT]: [Op.OP_NOT],
     [UnaryOperator.NEGATE]: [Op.OP_NEGATE],
+    [UnaryOperator.INVERT]: [Op.OP_INVERT],
     [UnaryOperator.SIZE]: [Op.OP_SIZE, Op.OP_NIP],
     [UnaryOperator.REVERSE]: [Op.OP_REVERSEBYTES],
     [UnaryOperator.INPUT_VALUE]: [Op.OP_UTXOVALUE],

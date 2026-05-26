@@ -12,6 +12,14 @@ export interface Fixture {
 
 export const fixtures: Fixture[] = [
   {
+    name: 'empty script',
+    script: [],
+    asm: '',
+    bytecode: hexToBin(''),
+    bytesize: 0,
+    opcount: 0,
+  },
+  {
     name: 'simple addition',
     script: [Op.OP_1, Op.OP_1, Op.OP_ADD],
     asm: 'OP_1 OP_1 OP_ADD',

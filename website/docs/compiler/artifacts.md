@@ -19,6 +19,7 @@ interface Artifact {
   compiler: {
     name: string // Compiler used to compile this contract
     version: string // Compiler version used to compile this contract
+    options?: CompilerOptions // Compiler options used to compile this contract
   }
   debug?: {
     bytecode: string // unlike `bytecode` property above, this is a hex-encoded binary string
@@ -56,5 +57,9 @@ interface RequireStatement {
   ip: number; // instruction pointer
   line: number; // line in the source code
   message: string; // custom message for failing `require` statement
+}
+
+interface CompilerOptions {
+  enforceFunctionParameterTypes?: boolean; // Enforce function parameter types (default: true)
 }
 ```

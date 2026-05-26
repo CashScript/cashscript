@@ -9,6 +9,10 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */)
     function receive() {
         // require(this.age >= period);
 
+        // Require that there is only a single contract input to prevent
+        // multiple contract UTXOs being claimed in a single transaction
+        require(tx.inputs.length == 1);
+
         // Check that the first output sends to the recipient
         require(tx.outputs[0].lockingBytecode == new LockingBytecodeP2PKH(recipient));
 

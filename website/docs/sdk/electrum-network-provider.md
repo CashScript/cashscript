@@ -52,7 +52,6 @@ const provider = new ElectrumNetworkProvider('chipnet', { hostname });
 
 ## ElectrumNetworkProvider Methods
 
-
 ### getUtxos()
 ```ts
 async provider.getUtxos(address: string): Promise<Utxo[]>;
@@ -80,6 +79,16 @@ interface TokenDetails {
 #### Example
 ```ts
 const userUtxos = await provider.getUtxos(userAddress)
+```
+### getUtxosForLockingBytecode()
+```ts
+async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+```
+Returns all UTXOs for a specific locking bytecode. Both confirmed and unconfirmed UTXOs are included.
+
+#### Example
+```ts
+const utxos = await provider.getUtxosForLockingBytecode(lockingBytecode)
 ```
 
 ### getBlockHeight()
@@ -176,3 +185,17 @@ await electrum.connect();
 ```
 
 [electrum-cash]: https://www.npmjs.com/package/@electrum-cash/network
+
+## Error Handling
+
+The `ElectrumNetworkProvider` can throw the following errors when broadcasting a transaction:
+
+| Error | Description |
+|---|---|
+| `NetworkProviderMissingInputsError` | Transaction inputs are missing or already spent |
+| `NetworkProviderMempoolConflictError` | Transaction conflicts with an unconfirmed transaction in the mempool |
+| `NetworkProviderTransactionAlreadySubmittedError` | Transaction has already been submitted |
+| `NetworkProviderAbsoluteTimelockError` | Transaction is not yet final (nLockTime not satisfied) |
+| `NetworkProviderRelativeTimelockError` | BIP68 sequence lock not satisfied |
+| `NetworkProviderError` | Generic fallback network provider error |
+

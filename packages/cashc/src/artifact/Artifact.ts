@@ -1,10 +1,17 @@
 import {
-  Artifact, DebugInformation, Script, scriptToAsm,
+  Artifact, CompilerOptions, DebugInformation, Script, scriptToAsm,
 } from '@cashscript/utils';
 import { version } from '../index.js';
 import { Ast } from '../ast/AST.js';
 
-export function generateArtifact(ast: Ast, script: Script, source: string, debug: DebugInformation): Artifact {
+export function generateArtifact(
+  ast: Ast,
+  script: Script,
+  source: string,
+  debug: DebugInformation,
+  compilerOptions: CompilerOptions,
+  fingerprint: string,
+): Artifact {
   const { contract } = ast;
 
   const constructorInputs = contract.parameters
@@ -26,10 +33,12 @@ export function generateArtifact(ast: Ast, script: Script, source: string, debug
     abi,
     bytecode,
     source,
+    fingerprint,
     debug,
     compiler: {
       name: 'cashc',
       version,
+      options: compilerOptions,
     },
     updatedAt: new Date().toISOString(),
   };

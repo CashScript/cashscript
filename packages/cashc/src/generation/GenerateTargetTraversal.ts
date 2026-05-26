@@ -7,7 +7,6 @@ import {
   Op,
   OpOrData,
   PrimitiveType,
-  resultingType,
   Script,
   scriptToAsm,
   generateSourceMap,
@@ -17,6 +16,10 @@ import {
   PositionHint,
   SingleLocationData,
   StackItem,
+  BytesType,
+  CompilerOptions,
+  SourceTagEntry,
+  SourceTagKind,
 } from '@cashscript/utils';
 import {
   ContractNode,
@@ -47,6 +50,9 @@ import {
   ConsoleParameterNode,
   ConsoleStatementNode,
   SliceNode,
+  DoWhileNode,
+  WhileNode,
+  ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
@@ -59,6 +65,7 @@ import {
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
+import { isNumericType } from '../utils.js';
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -67,11 +74,16 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   stack: string[] = [];
   consoleLogs: LogEntry[] = [];
   requires: RequireStatement[] = [];
+  sourceTags: SourceTagEntry[] = [];
   finalStackUsage: Record<string, StackItem> = {};
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+
+  constructor(private compilerOptions: CompilerOptions) {
+    super();
+  }
 
   private emit(op: OpOrData | OpOrData[], locationData: SingleLocationData): void {
     if (Array.isArray(op)) {
@@ -187,6 +199,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.currentFunction = node;
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+
+    if (this.compilerOptions.enforceFunctionParameterTypes) {
+      this.enforceFunctionParameterTypes(node);
+    }
+
     node.body = this.visit(node.body) as BlockNode;
 
     this.removeFinalVerifyFromFunction(node.body);
@@ -197,7 +214,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   removeFinalVerifyFromFunction(functionBodyNode: Node): void {
     // After EnsureFinalRequireTraversal, we know that the final opcodes are either
-    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP" or "OP_ENDIF"
+    // "OP_VERIFY", "OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP", "OP_ENDIF" or "OP_UNTIL"
 
     const finalOp = this.output.pop() as Op;
     const { location, positionHint } = this.locationData.pop()!;
@@ -219,7 +236,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(finalOp, { location, positionHint: PositionHint.END });
 
       // At this point there is no verification value left on the stack:
-      //  - scoped stack is cleared inside branch ended by OP_ENDIF
+      //  - scoped stack is cleared inside block ended by OP_ENDIF or OP_UNTIL
       //  - OP_CHECK{LOCKTIME|SEQUENCE}VERIFY OP_DROP does not leave a verification value
       //  - OP_VERIFY does not leave a verification value
       // so we add OP_1 to the script (indicating success)
@@ -235,6 +252,51 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
       this.nipFromStack();
     }
+  }
+
+  enforceFunctionParameterTypes(node: FunctionDefinitionNode): void {
+    node.parameters.forEach((parameter) => this.enforceFunctionParameterType(parameter));
+  }
+
+  enforceFunctionParameterType(node: ParameterNode): void {
+    if (!this.shouldEnforceFunctionParameterType(node)) return;
+
+    const tagStartIndex = this.output.length;
+    const stackIndex = this.getStackIndex(node.name);
+
+    // We take the parameter from the stack and roll it to the top
+    this.emit(encodeInt(BigInt(stackIndex)), { location: node.location, positionHint: PositionHint.START });
+    this.emit(Op.OP_ROLL, { location: node.location, positionHint: PositionHint.START });
+
+    // We remove the original stack value and push the new value to the top of the stack
+    this.removeFromStack(stackIndex);
+    this.pushToStack(node.name);
+
+    // For booleans, we force-convert it to a boolean using OP_0NOTEQUAL
+    if (node.type === PrimitiveType.BOOL) {
+      this.emit(Op.OP_0NOTEQUAL, { location: node.location, positionHint: PositionHint.START });
+    }
+
+    // For bounded bytes, we *check* that it is the correct size using OP_SIZE and OP_EQUALVERIFY
+    if (node.type instanceof BytesType && node.type.bound !== undefined) {
+      this.emit(Op.OP_SIZE, { location: node.location, positionHint: PositionHint.START });
+      this.emit(encodeInt(BigInt(node.type.bound)), { location: node.location, positionHint: PositionHint.START });
+      this.emit(Op.OP_EQUALVERIFY, { location: node.location, positionHint: PositionHint.START });
+    }
+
+    // These checks are compiler-injected (no user source); tag them so the debug reconstruction
+    // gives them their own annotation line positioned by bytecode order.
+    this.sourceTags.push({
+      startIndex: tagStartIndex,
+      endIndex: this.output.length - 1,
+      kind: SourceTagKind.PARAMETER_VALIDATION,
+    });
+  }
+
+  shouldEnforceFunctionParameterType(node: ParameterNode): boolean {
+    if (node.type === PrimitiveType.BOOL) return true;
+    if (node.type instanceof BytesType && node.type.bound !== undefined) return true;
+    return false;
   }
 
   visitParameter(node: ParameterNode): Node {
@@ -289,7 +351,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitTimeOp(node: TimeOpNode): Node {
-    // const countBefore = this.output.length;
+    const tagStartIndex = this.output.length;
     node.expression = this.visit(node.expression);
     this.emit(compileTimeOp(node.timeOp), { location: node.location, positionHint: PositionHint.END });
 
@@ -300,6 +362,16 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       line: node.location.start.line,
       message: node.message,
     });
+
+    // The auto-injected tx.locktime guard is emitted after the parameter prologue but has no
+    // user source; tag it so the debug reconstruction positions it by bytecode order.
+    if (node.isGuard) {
+      this.sourceTags.push({
+        startIndex: tagStartIndex,
+        endIndex: this.output.length - 1,
+        kind: SourceTagKind.LOCKTIME_GUARD,
+      });
+    }
 
     this.popFromStack();
     return node;
@@ -381,6 +453,93 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return node;
   }
 
+  visitDoWhile(node: DoWhileNode): Node {
+    this.scopeDepth += 1;
+    this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
+
+    const stackDepth = this.stack.length;
+    node.block = this.visit(node.block);
+    this.removeScopedVariables(stackDepth, node.block);
+
+    node.condition = this.visit(node.condition);
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.scopeDepth -= 1;
+
+    return node;
+  }
+
+  visitWhile(node: WhileNode): Node {
+    this.scopeDepth += 1;
+    this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
+
+    node.condition = this.visit(node.condition);
+    this.emit(Op.OP_DUP, { location: node.condition.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_TOALTSTACK, { location: node.condition.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.popFromStack();
+    this.emit(Op.OP_IF, { location: node.block.location, positionHint: PositionHint.START });
+
+    const bodyStackDepth = this.stack.length;
+    node.block = this.visit(node.block) as BlockNode;
+    this.removeScopedVariables(bodyStackDepth, node.block);
+
+    this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_FROMALTSTACK, { location: node.block.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.scopeDepth -= 1;
+
+    return node;
+  }
+
+  visitFor(node: ForNode): Node {
+    const forScopeStackDepth = this.stack.length;
+    node.init = this.visit(node.init) as VariableDefinitionNode | AssignNode;
+
+    this.scopeDepth += 1;
+    this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
+
+    node.condition = this.visit(node.condition);
+    this.emit(Op.OP_DUP, { location: node.condition.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_TOALTSTACK, { location: node.condition.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.popFromStack();
+    this.emit(Op.OP_IF, { location: node.block.location, positionHint: PositionHint.START });
+
+    const bodyStackDepth = this.stack.length;
+    node.block = this.visit(node.block) as BlockNode;
+
+    const updateStartIndex = this.output.length;
+    node.update = this.visit(node.update) as AssignNode;
+    const updateEndIndex = this.output.length - 1;
+    this.sourceTags.push({ startIndex: updateStartIndex, endIndex: updateEndIndex, kind: SourceTagKind.FOR_UPDATE });
+
+    this.removeScopedVariables(bodyStackDepth, node.block);
+
+    this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_FROMALTSTACK, { location: node.block.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
+
+    this.scopeDepth -= 1;
+    this.removeScopedVariables(forScopeStackDepth, node);
+
+    return node;
+  }
+
   removeScopedVariables(depthBeforeScope: number, node: Node): void {
     const dropCount = this.stack.length - depthBeforeScope;
     for (let i = 0; i < dropCount; i += 1) {
@@ -392,15 +551,8 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitCast(node: CastNode): Node {
     node.expression = this.visit(node.expression);
 
-    // Special case for sized bytes cast, since it has another node to traverse
-    if (node.size) {
-      node.size = this.visit(node.size);
-      this.emit(Op.OP_NUM2BIN, { location: node.location, positionHint: PositionHint.END });
-      this.popFromStack();
-    }
-
     this.emit(
-      compileCast(node.expression.type as PrimitiveType, node.type),
+      compileCast(node.expression.type as PrimitiveType, node.type, node.isUnsafe),
       { location: node.location, positionHint: PositionHint.END },
     );
     this.popFromStack();
@@ -439,7 +591,6 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitInstantiation(node: InstantiationNode): Node {
-
     if (node.identifier.name === Class.LOCKING_BYTECODE_P2PKH) {
       // OP_DUP OP_HASH160 OP_PUSH<20>
       this.emit(hexToBin('76a914'), { location: node.location, positionHint: PositionHint.START });
@@ -562,8 +713,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
-    const isNumeric = resultingType(node.left.type, node.right.type) === PrimitiveType.INT;
-    this.emit(compileBinaryOp(node.operator, isNumeric), { location: node.location, positionHint: PositionHint.END });
+    const bothOperandsAreNumeric = isNumericType(node.left.type) && isNumericType(node.right.type);
+    this.emit(
+      compileBinaryOp(node.operator, bothOperandsAreNumeric),
+      { location: node.location, positionHint: PositionHint.END },
+    );
     this.popFromStack(2);
     this.pushToStack('(value)');
     if (node.operator === BinaryOperator.SPLIT) this.pushToStack('(value)');

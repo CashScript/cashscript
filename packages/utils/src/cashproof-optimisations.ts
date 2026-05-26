@@ -125,4 +125,12 @@ OP_2 OP_PICK OP_SWAP OP_2 OP_PICK OP_NIP <=> OP_DROP OP_2DUP;
 # .slice(0, x) optimisation & .slice(x, y.length) optimisation
 OP_0 OP_SPLIT OP_NIP                   <=> ;
 OP_SIZE OP_SPLIT OP_DROP               <=> ;
+
+# These are new optimisations that we cannot prove since CashProof doesn't work any more
+# //////////////////////////////////////////////////////////////////////////////////////
+
+OP_LESSTHAN OP_NOT                     <=> OP_GREATERTHANOREQUAL;
+OP_GREATERTHAN OP_NOT                  <=> OP_LESSTHANOREQUAL;
+OP_LESSTHANOREQUAL OP_NOT              <=> OP_GREATERTHAN;
+OP_GREATERTHANOREQUAL OP_NOT           <=> OP_LESSTHAN;
 `;

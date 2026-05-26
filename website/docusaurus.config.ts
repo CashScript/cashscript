@@ -5,7 +5,7 @@ import type { Options as ClassicPresetOptions } from '@docusaurus/preset-classic
 const config: Config = {
   title: 'CashScript',
   tagline: 'Smart contracts for Bitcoin Cash',
-  url: 'https://cashscript.org',
+  url: process.env.NEXT ? 'https://next.cashscript.org' : 'https://cashscript.org',
   baseUrl: '/',
   favicon: 'img/favicon.ico',
   organizationName: 'CashScript',
@@ -17,6 +17,9 @@ const config: Config = {
       additionalLanguages: ['solidity', 'antlr4'],
     },
     image: 'img/logo.svg',
+    metadata: [
+      { name: 'algolia-site-verification', content: '434B800C3E7E420F' },
+    ],
     navbar: {
       logo: {
         alt: 'CashScript',
@@ -25,7 +28,7 @@ const config: Config = {
       items: [
         { to: '/docs/basics/about', label: 'Docs', position: 'right' },
         {
-          href: 'https://playground.cashscript.org',
+          href: process.env.NEXT ? 'https://next.playground.cashscript.org' : 'https://playground.cashscript.org',
           label: 'Playground',
           position: 'right',
         },
@@ -96,9 +99,9 @@ const config: Config = {
       copyright: `<b>Donations:</b> bitcoincash:qz6uftqp7dyc4ca9e94d7wsle06u0z2ccc223dkpl8`,
     },
     algolia: {
-      apiKey: 'd1e059f9bd6bf56667612a41a5115c6b',
+      apiKey: '8b4fca20b2070c3e69e3110dde8ada71',
       appId: 'XBVJRKV38F',
-      indexName: 'cashscript'
+      indexName: process.env.NEXT ? 'next_cashscript' : 'cashscript'
     },
   },
   presets: [
@@ -123,6 +126,7 @@ const config: Config = {
           { from: ['/docs', '/docs/about', '/docs/basics'], to: '/docs/basics/about' },
           { from: '/docs/language', to: '/docs/language/contracts' },
           { from: '/docs/sdk', to: '/docs/sdk/instantiation' },
+          { from: '/docs/sdk/transactions', to: '/docs/sdk/legacy-transaction-builder' },
           { from: '/docs/sdk/transactions-advanced', to: '/docs/sdk/transaction-builder' },
           { from: '/docs/guides', to: '/docs/guides/covenants' },
           { from: '/docs/guides/syntax-highlighting', to: '/docs/language/syntax-highlighting' },
