@@ -30,6 +30,10 @@ Operators:
 
 Note the lack of the `**` (exponentiation).
 
+#### Arithmetic Shift
+
+The shift operators `<<` and `>>` when applied to `int` are arithmetic shifts, which means that the value is multiplied or divided by `2^n` where `n` is the number of bits to shift. See [Bitshift and arithmetic shift](#bitshift-and-arithmetic-shift) for more details.
+
 #### Number Formatting
 
 Underscores can be used to separate the digits of a numeric literal to aid readability, e.g. `1_000_000`. Numbers can also be formatted in scientific notation, e.g. `1e6` or `1E6`. These can also be combined, e.g. `1_000e6`.
@@ -106,6 +110,10 @@ bytes noCapability = 0x;
 
 bytes2 data = 0x12345678.slice(1, 3); // 0x3456
 ```
+
+#### Bitshift
+
+The shift operators `<<` and `>>` when applied to `bytes` are bitwise shifts, which means that the value is shifted by `n` bits, and the bits that are shifted off the end are dropped. So that means that the byte size of the result is the same as the byte size of the input. See [Bitshift and arithmetic shift](#bitshift-and-arithmetic-shift) for more details.
 
 ## Bytes types with semantic meaning
 Some byte sequences hold specific meanings inside Bitcoin Cash contracts. These have been granted their own types, separate from the regular `bytes` type.
@@ -238,3 +246,30 @@ An overview of all supported operators and their precedence is included below. N
 | 16         | Logical AND                         | `&&`                     |
 | 17         | Logical OR                          | `\|\|`                   |
 | 18         | Assignment                          | `=`                      |
+
+### Bitshift and arithmetic shift
+
+The shifting operators `<<` and `>>` are available for both `int` and `bytes` types, but they are different operations based on the type.
+
+When applied to `int`, the operation is an arithmetic shift, which means that the value is multiplied or divided by `2^n` where `n` is the number of bits to shift.
+
+When applied to `bytes`, the operation is a bitwise shift, which means that the value is shifted by `n` bits, and the bits that are shifted off the left end are dropped. So that means that the byte size of the result is the same as the byte size of the input.
+:::caution
+Be mindful what the type of the input is when using the shift operators, so you know which of these operations is being performed. On the same underlying value (but different types), arithmetic and bitwise shift will produce different results.
+:::
+
+**Arithmetic shift (`int`)** — the value is multiplied (`<<`) or divided (`>>`) by `2^n`:
+
+| Expression | Result | Equivalent value          |
+| ---------- | ------ | ------------------------- |
+| `3 << 4`   | `48`   | `3 * 2^4`                 |
+| `100 >> 4` | `6`    | `100 / 2^4` (rounds down) |
+
+**Bitwise shift (`bytes`)** — the bits move within a fixed-width buffer and any bits shifted past either end fall off. Note that the result keeps the same byte length as the input:
+
+| Expression    | Input bits          | Result bits         | Result   |
+| ------------- | ------------------- | ------------------- | -------- |
+| `0x0102 << 1` | `00000001 00000010` | `00000010 00000100` | `0x0204` |
+| `0x0102 << 8` | `00000001 00000010` | `00000010 00000000` | `0x0200` |
+| `0x0102 >> 1` | `00000001 00000010` | `00000000 10000001` | `0x0081` |
+| `0x0102 >> 8` | `00000001 00000010` | `00000000 00000001` | `0x0001` |
