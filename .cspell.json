@@ -63,6 +63,7 @@
         "eval",
         "fallback",
         "firefox",
+        "flipstarter",
         "forkid",
         "fromaltstack",
         "gitattributes",
@@ -299,6 +300,7 @@
         "**/grammar/**",
         // Do not spellcheck vendor code
         "**/node_modules/**",
+        "**/supporters.tsx",
     ],
     "ignoreRegExpList": [
         "bitcoincash:.*",
