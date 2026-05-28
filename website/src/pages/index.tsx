@@ -45,7 +45,7 @@ const features: FeatureItem[] = [
     title: 'Advanced Debug Tooling',
     description: (
       <>
-        To offer the best developer experience for debugging and automated testing easy for developers,
+        To offer the best developer experience for debugging and automated testing,
         CashScript has extensive debug tooling built-in.
         This makes it possible to develop robust contract testing suites, and to debug your contracts with the Bitauth-IDE.
       </>

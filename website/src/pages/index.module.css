@@ -33,3 +33,133 @@
   height: 150px;
   width: 250px;
 }
+
+/* Supporters section */
+.supporters {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* Header band: a distinct surface-coloured banner for the title, intro and link. */
+.supportersHeader {
+  background-color: var(--ifm-background-surface-color);
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.supportersHeader h1 {
+  font-size: 2rem;
+  margin-bottom: 0.6rem;
+}
+
+.supportersSubtitle {
+  max-width: 640px;
+  margin: 0 auto 0.85rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--ifm-color-emphasis-700);
+}
+
+.supportersLink {
+  display: inline-block;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+/* Body: the cards sit on the default page background, distinct from the header band. */
+.supportersBody {
+  flex: 1;
+  padding: 2.5rem 2rem 3.5rem;
+  background-color: var(--ifm-background-color);
+}
+
+/* Constrain the cards grid width while the body background stays full-width. */
+.supporterCards {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.supporterTier {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.supporterTier:last-child {
+  margin-bottom: 0;
+}
+
+.tierTop {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.tierMid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.tierRest {
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+}
+
+.supporterCard {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  text-align: center;
+}
+
+.tierTop .supporterCard {
+  padding: 1.5rem;
+  border: 2px solid var(--ifm-color-primary);
+}
+
+.tierMid .supporterCard {
+  padding: 1.1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ifm-color-primary) 25%, var(--ifm-color-emphasis-200));
+}
+
+.supporterName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ifm-heading-color);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.tierTop .supporterName {
+  font-size: 1.3rem;
+}
+
+.tierMid .supporterName {
+  font-size: 1.1rem;
+}
+
+.supporterMessage {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--ifm-color-emphasis-700);
+  font-style: italic;
+}
+
+.tierTop .supporterMessage {
+  margin-top: 0.6rem;
+  font-size: 0.95rem;
+}
+
+@media screen and (max-width: 768px) {
+  .supportersHeader {
+    padding: 2.5rem 1rem;
+  }
+  .supportersBody {
+    padding: 2rem 1rem 3rem;
+  }
+  .tierTop {
+    grid-template-columns: 1fr;
+  }
+}

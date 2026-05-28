@@ -1,6 +1,7 @@
 import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type { Options as ClassicPresetOptions } from '@docusaurus/preset-classic';
+import { FLIPSTARTER_URL, GITHUB_URL, KALIS_URL, TELEGRAM_URL, TWITTER_URL } from './src/constants';
 
 const config: Config = {
   title: 'CashScript',
@@ -33,7 +34,7 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://github.com/CashScript/cashscript',
+          href: GITHUB_URL,
           label: 'GitHub',
           position: 'right',
         },
@@ -61,7 +62,7 @@ const config: Config = {
           items: [
             {
               label: 'Telegram',
-              href: 'https://t.me/CashScriptBCH',
+              href: TELEGRAM_URL,
             },
             {
               label: 'Showcase',
@@ -74,24 +75,24 @@ const config: Config = {
           items: [
             {
               label: 'Kalis.me',
-              href: 'https://kalis.me',
+              href: KALIS_URL,
             },
             {
               label: 'Twitter',
-              href: 'https://twitter.com/CashScriptBCH',
+              href: TWITTER_URL,
             },
           ],
         },
         {
-          title: 'Sponsors',
+          title: 'Supporters',
           items: [
             {
-              html: `
-                <a href="https://generalprotocols.com" target="_blank">
-                  <img src="/img/general-protocols.png" alt="General Protocols"
-                       style="border-radius: 5px; max-height: 55px" />
-                </a>
-              `,
+              to: '/supporters',
+              label: 'Supporters',
+            },
+            {
+              label: 'Flipstarter',
+              href: FLIPSTARTER_URL,
             },
           ],
         },
