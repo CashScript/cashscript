@@ -18,7 +18,7 @@ import EnsureInvokedFunctionsSafeTraversal from './semantic/EnsureInvokedFunctio
 import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
 import EnsureContainerSemanticsTraversal from './semantic/EnsureContainerSemanticsTraversal.js';
 import { FunctionVisibility } from './ast/Globals.js';
-import { ParseError } from './Errors.js';
+import { NonSpendableCompilationError, ParseError } from './Errors.js';
 import { Point } from './ast/Location.js';
 import { ImportResolver, ImportedFunctionProvenance, preprocessImports } from './imports.js';
 
@@ -54,6 +54,9 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
     source: code,
     ...(sourcePath ? { sourceFile: normaliseSourcePath(sourcePath) } : {}),
   });
+  if (ast.contract.kind === 'library') {
+    throw new NonSpendableCompilationError(ast.contract);
+  }
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
