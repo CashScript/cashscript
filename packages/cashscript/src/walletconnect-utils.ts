@@ -1,4 +1,11 @@
-import { type LibauthOutput, isContractUnlocker, type PlaceholderP2PKHUnlocker, type UnlockableUtxo } from './interfaces.js';
+import {
+  type LibauthOutput,
+  isContractUnlocker,
+  type PlaceholderP2PKHUnlockerConfig,
+  type PlaceholderP2PKHUnlocker,
+  type PlaceholderP2PKHUnlockerOptions,
+  type UnlockableUtxo,
+} from './interfaces.js';
 import { type AbiFunction, type Artifact } from '@cashscript/utils';
 import { cashAddressToLockingBytecode, hexToBin, type Input, type TransactionCommon } from '@bitauth/libauth';
 
@@ -15,6 +22,13 @@ export interface WcTransactionObject {
   sourceOutputs: WcSourceOutput[];
   broadcast?: boolean;
   userPrompt?: string;
+}
+
+export type WizardConnectInputPath = [inputIndex: number, pathName: string, addressIndex: number];
+
+export interface WizardConnectTransactionObject {
+  transaction: WcTransactionObject;
+  inputPaths: WizardConnectInputPath[];
 }
 
 export type WcSourceOutput = Input & LibauthOutput & WcContractInfo;
@@ -69,11 +83,25 @@ export const placeholderPublicKey = (): Uint8Array => Uint8Array.from(Array(33))
  * when building a transaction object for WalletConnect signing where the final signing is
  * performed by the connected wallet.
  *
- * @param userAddress - The user's CashAddress that will eventually sign the input.
+ * @param userAddress - The user's CashAddress that will eventually sign the input, or an object
+ * containing the address and signing metadata.
+ * @param options - Optional signing metadata, such as HD path information for WizardConnect.
  * @returns A placeholder unlocker that can be passed to `TransactionBuilder.addInput`.
  * @throws If `userAddress` is not a valid CashAddress.
  */
-export const placeholderP2PKHUnlocker = (userAddress: string): PlaceholderP2PKHUnlocker => {
+export function placeholderP2PKHUnlocker(
+  userAddress: string,
+  options?: PlaceholderP2PKHUnlockerOptions,
+): PlaceholderP2PKHUnlocker;
+export function placeholderP2PKHUnlocker(options: PlaceholderP2PKHUnlockerConfig): PlaceholderP2PKHUnlocker;
+export function placeholderP2PKHUnlocker(
+  userAddressOrOptions: string | PlaceholderP2PKHUnlockerConfig,
+  options: PlaceholderP2PKHUnlockerOptions = {},
+): PlaceholderP2PKHUnlocker {
+  const userAddress = typeof userAddressOrOptions === 'string'
+    ? userAddressOrOptions
+    : userAddressOrOptions.address;
+  const unlockerOptions = typeof userAddressOrOptions === 'string' ? options : userAddressOrOptions;
   const decodeAddressResult = cashAddressToLockingBytecode(userAddress);
 
   if (typeof decodeAddressResult === 'string') {
@@ -85,5 +113,7 @@ export const placeholderP2PKHUnlocker = (userAddress: string): PlaceholderP2PKHU
     generateLockingBytecode: () => lockingBytecode,
     generateUnlockingBytecode: () => Uint8Array.from(Array(0)),
     placeholder: true,
+    address: userAddress,
+    ...unlockerOptions,
   };
-};
+}

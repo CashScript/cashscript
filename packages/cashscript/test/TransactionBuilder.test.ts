@@ -250,6 +250,56 @@ describe('Transaction Builder', () => {
     });
   });
 
+  describe('test TransactionBuilder.generateWizardConnectTransactionObject', () => {
+    it('should generate input paths for placeholder P2PKH inputs with HD path metadata', async () => {
+      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
+      const contractUtxo = p2pkhUtxos[0];
+      const bobUtxos = await provider.getUtxos(bobAddress);
+      const carolUtxos = await provider.getUtxos(carolAddress);
+
+      const placeholderPubKey = placeholderPublicKey();
+      const placeholderSig = placeholderSignature();
+
+      const transactionBuilder = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, p2pkhInstance.unlock.spend(placeholderPubKey, placeholderSig))
+        .addInput(bobUtxos[0], placeholderP2PKHUnlocker(bobAddress, {
+          hdPath: { name: 'receive', addressIndex: 5 },
+        }))
+        .addInput(carolUtxos[0], placeholderP2PKHUnlocker({
+          address: carolAddress,
+          hdPath: { name: 'change', addressIndex: 2 },
+        }))
+        .addOutput({ to: bobAddress, amount: 100_000n });
+
+      const wizardConnectTransactionObj = transactionBuilder.generateWizardConnectTransactionObject({
+        broadcast: false,
+        userPrompt: 'Example WizardConnect transaction',
+      });
+
+      expect(wizardConnectTransactionObj.transaction).toMatchObject({
+        broadcast: false,
+        userPrompt: 'Example WizardConnect transaction',
+      });
+      expect(wizardConnectTransactionObj.transaction.sourceOutputs).toHaveLength(3);
+      expect(wizardConnectTransactionObj.inputPaths).toEqual([
+        [1, 'receive', 5],
+        [2, 'change', 2],
+      ]);
+    });
+
+    it('should fail when a placeholder P2PKH input is missing HD path metadata', async () => {
+      const bobUtxos = await provider.getUtxos(bobAddress);
+
+      const transactionBuilder = new TransactionBuilder({ provider })
+        .addInput(bobUtxos[0], placeholderP2PKHUnlocker(bobAddress))
+        .addOutput({ to: bobAddress, amount: 100_000n });
+
+      expect(() => transactionBuilder.generateWizardConnectTransactionObject()).toThrow(
+        'Placeholder P2PKH input 0 is missing WizardConnect HD path metadata',
+      );
+    });
+  });
+
   it('should not fail when validly spending from only P2PKH inputs', async () => {
     const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
     const sigTemplate = new SignatureTemplate(alicePriv);

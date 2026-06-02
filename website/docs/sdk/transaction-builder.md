@@ -401,6 +401,45 @@ const wcTransactionObj = transactionBuilder.generateWcTransactionObject({
 const signResult = await signWcTransaction(wcTransactionObj);
 ```
 
+### generateWizardConnectTransactionObject()
+```ts
+transactionBuilder.generateWizardConnectTransactionObject(options?: WcTransactionOptions): WizardConnectTransactionObject
+```
+
+Generates a `WizardConnectTransactionObject` that can be used to sign a transaction with a WizardConnect client. It accepts the same optional `WcTransactionOptions` object as `generateWcTransactionObject()`.
+
+WizardConnect uses the normal BCH WalletConnect transaction object plus HD path metadata for each placeholder P2PKH input.
+
+```ts
+interface WizardConnectTransactionObject {
+  transaction: WcTransactionObject;
+  inputPaths: WizardConnectInputPath[];
+}
+
+type WizardConnectInputPath = [inputIndex: number, pathName: string, addressIndex: number];
+```
+
+To generate `inputPaths`, pass HD metadata to `placeholderP2PKHUnlocker()` when adding user inputs.
+
+#### Example
+```ts
+import { provider, signWizardTransaction } from './somewhere.js';
+import { TransactionBuilder, placeholderP2PKHUnlocker } from 'cashscript';
+
+const transactionBuilder = new TransactionBuilder({ provider })
+  .addInput(userUtxo, placeholderP2PKHUnlocker(userAddress, {
+    hdPath: { name: 'receive', addressIndex: 5 },
+  }))
+  .addOutput({ to: recipientAddress, amount: 100_000n });
+
+const wizardTransactionObj = transactionBuilder.generateWizardConnectTransactionObject({
+  broadcast: false,
+  userPrompt: 'Example WizardConnect transaction',
+});
+
+const signResult = await signWizardTransaction(wizardTransactionObj);
+```
+
 ## Transaction errors
 
 When sending a transaction, the CashScript SDK will throw an error if the transaction fails. If you are using an artifact compiled with `cashc@0.10.0` or later, the error will be of the type `FailedRequireError` or `FailedTransactionEvaluationError`. In case of a `FailedRequireError`, the error will refer to the corresponding `require` statement in the contract code so you know where your contract failed. If you want more information about the underlying error, you can check the `libauthErrorMessage` property of the error.

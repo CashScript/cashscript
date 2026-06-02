@@ -21,6 +21,7 @@ import {
   isContractUnlocker,
   BchChangeOutputOptions,
   TokenChangeOutputOptions,
+  isPlaceholderUnlocker,
 } from './interfaces.js';
 import { NetworkProvider } from './network/index.js';
 import {
@@ -36,7 +37,13 @@ import {
 import { FailedTransactionError } from './Errors.js';
 import { DebugResults } from './debugging.js';
 import { debugLibauthTemplate, getLibauthTemplate, getBitauthUri } from './libauth-template/LibauthTemplate.js';
-import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
+import {
+  getWcContractInfo,
+  WcSourceOutput,
+  WcTransactionOptions,
+  WizardConnectInputPath,
+  WizardConnectTransactionObject,
+} from './walletconnect-utils.js';
 import semver from 'semver';
 import { WcTransactionObject } from './walletconnect-utils.js';
 
@@ -574,5 +581,39 @@ export class TransactionBuilder {
       };
     });
     return { ...options, transaction, sourceOutputs };
+  }
+
+  /**
+   * Build the transaction and format it as a WizardConnect transaction request.
+   *
+   * WizardConnect uses the standard BCH WalletConnect transaction object plus HD path metadata for
+   * each placeholder P2PKH input that the wallet must sign.
+   *
+   * @param options - Optional WalletConnect options such as `broadcast` and `userPrompt`.
+   * @returns A WizardConnect transaction object ready to be sent to a WizardConnect wallet.
+   * @throws If the transaction cannot be built, or if a placeholder input is missing HD path metadata.
+   */
+  generateWizardConnectTransactionObject(options?: WcTransactionOptions): WizardConnectTransactionObject {
+    const transaction = this.generateWcTransactionObject(options);
+    const inputPaths = this.generateWizardConnectInputPaths();
+
+    return { transaction, inputPaths };
+  }
+
+  private generateWizardConnectInputPaths(): WizardConnectInputPath[] {
+    const inputPaths: WizardConnectInputPath[] = [];
+
+    this.inputs.forEach((input, inputIndex) => {
+      if (!isPlaceholderUnlocker(input.unlocker)) return;
+
+      const hdPath = input.unlocker.hdPath;
+      if (!hdPath) {
+        throw new Error(`Placeholder P2PKH input ${inputIndex} is missing WizardConnect HD path metadata`);
+      }
+
+      inputPaths.push([inputIndex, hdPath.name, hdPath.addressIndex]);
+    });
+
+    return inputPaths;
   }
 }

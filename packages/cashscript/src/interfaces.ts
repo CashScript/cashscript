@@ -56,7 +56,24 @@ export interface P2PKHUnlocker extends Unlocker {
 
 export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
 
-export type PlaceholderP2PKHUnlocker = Unlocker & { placeholder: true };
+export interface PlaceholderHdPath {
+  name: string;
+  addressIndex: number;
+}
+
+export interface PlaceholderP2PKHUnlockerOptions {
+  hdPath?: PlaceholderHdPath;
+}
+
+export interface PlaceholderP2PKHUnlockerConfig extends PlaceholderP2PKHUnlockerOptions {
+  address: string;
+}
+
+export interface PlaceholderP2PKHUnlocker extends Unlocker {
+  placeholder: true;
+  address: string;
+  hdPath?: PlaceholderHdPath;
+}
 
 export type ContractFunctionUnlocker = (...args: FunctionArgument[]) => ContractUnlocker;
 
