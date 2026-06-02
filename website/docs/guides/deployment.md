@@ -3,21 +3,21 @@ title: Contract Deployment
 sidebar_label: Contract Deployment
 ---
 
-## When Do You Need a Deployment?
+Not every CashScript contract needs a deployment transaction. In the UTXO model, many UTXOs can live on the same contract address and use the same spending rules. For contracts like multisig wallets, vaults, and escrows, you can compile the contract, share the address, and send funds to it. The contract is ready to use as soon as you know its address.
 
-In the UTXO model, multiple UTXOs can live on the same address and are spendable under the same conditions. Many contracts, like multisig wallets, vaults, or escrows, work exactly this way. You compile the contract, share the address, and anyone can send funds to it. There is no "deployment" step: the contract is ready to use the moment you know its address.
-
-Deployment becomes necessary when you're building **stateful contract systems**. In these systems, a unique CashToken category (token ID) identifies the contract and its state. The token ID is created through a special genesis transaction, and the contract UTXOs are initialized with the right tokens, capabilities, and state. This is what we mean by "deploying" a contract.
+Deployment is only needed for **stateful contract systems** where CashTokens authenticate contract state. In these systems, a genesis transaction creates one or more token categories and initializes the contract UTXOs with the right token amounts, NFT capabilities, and NFT commitments.
 
 :::tip
-If your contract simply enforces spending conditions, you don't need a deployment. Just use the contract address. Deployment is for systems where CashTokens authenticate and track contract state.
+If your contract only enforces spending conditions, use the contract address directly. Deployment is for systems where CashTokens identify and track contract state.
 :::
 
-## Before the Genesis Transaction
+## Preparing a Deployment
+
+Before constructing the genesis transaction, you need to know which constructor arguments, token IDs, setup UTXOs, initial state, and permanent addresses the deployment will use.
 
 ### Contract Addresses
 
-CashScript contract addresses are **deterministic**: they are derived from the contract's compiled bytecode combined with the constructor arguments. Given the same artifact and the same arguments, you will always get the same address.
+CashScript contract addresses are deterministic. They are derived from the compiled artifact and the constructor arguments. Given the same artifact and arguments, the SDK produces the same address every time.
 
 ```ts
 import { Contract } from 'cashscript';
@@ -25,93 +25,93 @@ import artifact from './my_contract.artifact.js';
 
 const constructorArgs = [oraclePublicKey, startBlockHeight] as const;
 const contract = new Contract(artifact, [...constructorArgs], { provider });
-console.log(contract.address);       // same inputs → same address every time
-console.log(contract.tokenAddress);   // CashToken-aware address
+
+console.log(contract.address);      // same inputs produce the same address
+console.log(contract.tokenAddress); // CashToken-aware address
 ```
 
-This means you can reconstruct a contract's address at any time, on any machine, without querying the blockchain, as long as you have the artifact and the constructor arguments. This property is essential for [verifying deployments](#verifying-a-deployment).
+This means you can reconstruct a contract address on any machine without querying the blockchain, as long as you have the artifact and constructor arguments. This property is essential for [verifying deployments](#verifying-a-deployment).
 
-### Preparing Constructor Arguments
+### Constructor Arguments
 
-Some constructor arguments are straightforward constants, others require preparation before deployment:
+Some constructor arguments are simple constants. Others need to be prepared before deployment:
 
-- **Token IDs from other categories** — in complex systems with multiple token categories, contracts often reference each other's token IDs as constructor arguments.
-- **Locking bytecodes from other contracts** — in multi-contract systems, one contract may reference another by locking bytecode. This creates a dependency chain: you must instantiate the referenced contract first, extract its locking bytecode, and pass it as a constructor argument to the dependent contract.
-- **Public keys** — for contracts that validate signed messages (e.g. from an oracle provider), you need the signer's public key. For owner authentication, you need to derive the public key hash from a keypair ahead of time.
+- **Token IDs from other categories**: multi-contract systems often pass other token category IDs as constructor arguments.
+- **Locking bytecodes from other contracts**: one contract may authenticate another by locking bytecode. Instantiate the referenced contract first, then pass its `lockingBytecode` to the dependent contract.
+- **Public keys**: oracle or owner checks often require a public key or public key hash that must be derived before deployment.
 
 ```ts
-import { binToHex, cashAddressToLockingBytecode } from '@bitauth/libauth';
+import { Contract } from 'cashscript';
 
-// Reverse byte order of a hex string (big-endian ↔ little-endian)
+// Reverse byte order of a hex string.
 function reverseHex(hex: string): string {
   return hex.match(/../g)!.reverse().join('');
 }
 
-// Token IDs must be byte-reversed for use as constructor args
+// Token IDs are often byte-reversed before being used in contract arguments.
 const argsA = [reverseHex(tokenIdX), reverseHex(tokenIdY)] as const;
 const contractA = new Contract(artifactA, [...argsA], { provider });
 
-// Extract locking bytecode to pass to a dependent contract
+// Pass contractA's locking bytecode to a dependent contract.
 const argsB = [contractA.lockingBytecode, oraclePublicKey, startBlockHeight] as const;
 const contractB = new Contract(artifactB, [...argsB], { provider });
 ```
 
 :::caution
-Double-check all arguments before deploying. Some parameters, like fee destination addresses, are permanent once deployed and cannot be changed. The wallets behind these addresses require proper creation, backup, and security before deployment.
+Double-check all constructor arguments before deploying. Some values, such as fee destination addresses or authority keys, may be permanent once the contract system is live.
 :::
 
-### Token IDs
+### Token IDs and vout0 UTXOs
 
-In Bitcoin Cash, a new token category can be created by spending a UTXO with `vout: 0`. The resulting token ID equals the txid of the UTXO with `vout: 0`. So if you already know which UTXO you will use for the genesis transaction, you already know what the token ID will be and can use it directly.
+On Bitcoin Cash, a new token category can be created by spending a UTXO at output index `0`. The token ID equals the txid of that UTXO. If you know which `vout: 0` UTXO will be used for the genesis transaction, you already know the token ID that transaction can create.
+
+For deployments with multiple token categories, prepare one `vout: 0` UTXO per token category. This lets you know every token ID before instantiating contracts that reference those IDs. Once the setup UTXOs are prepared, the genesis transactions can be broadcast in parallel if they do not spend from each other.
 
 ### Setup Wallet
 
-To create vout0 UTXOs and broadcast the genesis transaction, you need a funded wallet. This is typically a standard P2PKH wallet derived with enough BCH to fund all contract outputs (each needs at least dust amount, typically 1000 sats).
+Use a funded setup wallet to create the `vout: 0` UTXOs and broadcast the genesis transaction. Each contract output also needs enough BCH for dust, commonly 1000 sats.
 
-The setup wallet may already have UTXOs at vout 0, but usually you need to prepare them. You can do this by sending BCH from the setup wallet back to itself as the sole output of a transaction. Since it's the only output, it will be at index 0.
+The setup wallet may already have suitable `vout: 0` UTXOs. If not, send BCH from the setup wallet back to itself as the only output of a transaction. Since it is the only output, it will be at index `0`.
 
 ```ts
 import { TransactionBuilder, SignatureTemplate, ElectrumNetworkProvider } from 'cashscript';
 import type { Utxo } from 'cashscript';
 
-// Helper to create a vout0 UTXO by sending BCH to yourself
+// Create a vout0 UTXO by sending BCH to yourself.
 async function createVout0(
   provider: ElectrumNetworkProvider,
   address: string,
   utxos: Utxo[],
   template: SignatureTemplate,
-  amount: bigint,
 ): Promise<Utxo> {
-  // Pick a non-vout0 UTXO to avoid consuming an existing vout0
-  const selectedUtxo = utxos.find(utxo => utxo.satoshis > amount && utxo.vout !== 0 && !utxo.token);
+  const selectedUtxo = utxos.find(utxo => utxo.vout !== 0 && !utxo.token);
   if (!selectedUtxo) throw new Error('No eligible UTXO available');
 
+  const amount = selectedUtxo.satoshis - 500n;
   const txBuilder = new TransactionBuilder({ provider });
   txBuilder.addInput(selectedUtxo, template.unlockP2PKH());
-  txBuilder.addOutput({ to: address, amount: selectedUtxo.satoshis - 500n });
-  const txDetails = await txBuilder.send();
+  txBuilder.addOutput({ to: address, amount });
 
-  return { satoshis: selectedUtxo.satoshis - 500n, txid: txDetails.txid, vout: 0 };
+  const txDetails = await txBuilder.send();
+  return { satoshis: amount, txid: txDetails.txid, vout: 0 };
 }
 ```
 
-For deployments with multiple token categories, you need multiple vout0 UTXOs, one per token category you want to create. Since contracts may reference each other's token IDs as constructor arguments, it is recommended to prepare all vout0 UTXOs first so that every token ID is known before instantiating any contracts. The genesis transactions themselves can then be broadcast in parallel since they have no inter-transaction dependencies.
-
 :::tip
-Always test your full deployment flow on chipnet before mainnet. Validating your transaction structure, constructor arguments, and initial state encoding on chipnet first avoids costly mistakes.
+Test the full deployment flow on chipnet before mainnet. This validates your transaction structure, constructor arguments, and state encoding before anything has permanent value.
 :::
 
 ## Genesis Transaction
 
-The genesis transaction creates the CashToken category and distributes the initial tokens to contract addresses. This typically includes:
+The genesis transaction creates the CashToken category and sends the initial token outputs to the relevant contract addresses. It can include:
 
-- **Fungible tokens** — the initial token supply distributed to contract addresses
-- **NFTs with minting capability** — for contracts that need to create new NFTs during operation
-- **NFTs with mutable capability** — for contracts that store updatable state in the NFT commitment
-- **NFTs with no capability (immutable)** — for contracts that carry fixed identifying data
+- **Fungible tokens**: the initial token supply.
+- **Minting NFTs**: authority for contracts that need to create new NFTs later.
+- **Mutable NFTs**: updatable contract state stored in NFT commitments.
+- **Immutable NFTs**: fixed identifying data.
 
 :::info
-When fungible token supply will be locked inside covenants, it is common to mint the maximum possible amount (`9223372036854775807`). This is only safe when the covenants strictly enforce the actual circulating supply. Minting the max avoids needing to predict future supply needs.
+When fungible token supply will be locked inside covenants, it is common to mint the maximum possible amount (`9223372036854775807`). This is only safe when the covenants strictly enforce the actual circulating supply.
 :::
 
 ```ts
@@ -136,23 +136,23 @@ txBuilder.addOutput({
     nft: { capability: 'minting', commitment: initialStateHex },
   },
 });
-// ... add more outputs as needed
+// Add more outputs as needed.
 txBuilder.addBchChangeOutputIfNeeded({ to: changeAddress, feeRate: 1.0 });
 
 const txDetails = await txBuilder.send();
 ```
 
-### Initial State via NFT Commitments
+### Initial State
 
-NFT commitments are used to encode the initial state of a contract at deployment. For example, a contract might store a starting counter, a block height, or a configuration value in its NFT commitment. The commitment is a hex-encoded byte string that the contract's covenant logic knows how to read and update.
+NFT commitments are commonly used to encode the initial state of a contract at deployment. For example, a contract might store a starting counter, block height, or configuration value in the NFT commitment.
 
-Use `@bitauth/libauth` to encode values into commitment bytes. This ensures values follow the same VM number encoding that the Bitcoin Cash VM uses:
+Use the same encoding that your contract expects. For VM number values, use `@cashscript/utils` and `@bitauth/libauth` helpers to avoid mismatches.
 
 ```ts
 import { binToHex } from '@bitauth/libauth';
 import { encodeIntAsFixedBytes } from '@cashscript/utils';
 
-// Encode initial state as a commitment (e.g. 4-byte counter + 4-byte blockHeight)
+// Encode initial state as 4-byte counter + 4-byte block height.
 function encodeInitialState(counter: bigint, blockHeight: bigint): string {
   const encodedCounter = encodeIntAsFixedBytes(counter, 4);
   const encodedBlockHeight = encodeIntAsFixedBytes(blockHeight, 4);
@@ -160,9 +160,11 @@ function encodeInitialState(counter: bigint, blockHeight: bigint): string {
 }
 ```
 
-### UTXO Duplication
+### Duplicate Contract UTXOs
 
-For systems expecting [concurrent usage](/docs/guides/concurrency), you can create multiple identical contract UTXOs in the same genesis transaction. Each duplicate UTXO sits on the same contract address with the same token type, allowing independent transactions to spend different UTXOs without conflicting. When duplicating contract UTXOs that hold fungible tokens, the total supply should be evenly distributed across them. The last UTXO can absorb the remainder to ensure the total is exact:
+For systems expecting [concurrent usage](/docs/guides/concurrency), create multiple identical contract UTXOs in the genesis transaction. Each duplicate sits at the same contract address with the same token type, allowing independent transactions to spend different UTXOs without conflicting.
+
+When duplicating UTXOs that hold fungible tokens, distribute the total supply exactly across them:
 
 ```ts
 const supplyPerUtxo = MAX_TOKEN_SUPPLY / BigInt(numberOfDuplicates);
@@ -170,42 +172,35 @@ const remainder = MAX_TOKEN_SUPPLY % BigInt(numberOfDuplicates);
 const supplyLastUtxo = supplyPerUtxo + remainder;
 ```
 
-### BCMR Authchain
+### BCMR Metadata
 
-The [Bitcoin Cash Metadata Registry (BCMR)](https://cashtokens.org/docs/bcmr/chip/) is the standard for associating metadata (name, ticker, decimals, icon) with CashToken categories. The metadata is resolved through an authchain, a chain of transactions starting from a specific output in the genesis transaction.
+The [Bitcoin Cash Metadata Registry (BCMR)][bcmr] is the standard for associating metadata with CashToken categories, such as name, ticker, decimals, and icon. Wallets and indexers resolve this metadata through an authchain.
 
-To set up the authchain during deployment, include a dust output (e.g. 1000 sats) at output index 0 to a designated authchain address as part of the genesis transaction. This output becomes the starting point for metadata resolution. Wallets and indexers follow the authchain from this output to find the latest BCMR metadata.
+To start the authchain during deployment, include a dust output at index `0` to a designated authchain address. This output becomes the starting point for metadata resolution.
 
 ```ts
-// Include a dust output for the BCMR authchain
+// Include a dust output for the BCMR authchain.
 txBuilder.addOutput({ to: bcmrAuthchainAddress, amount: 1000n });
 ```
 
-Metadata can be published in the genesis transaction itself by including an OP_RETURN output with the BCMR protocol identifier, the SHA-256 hash of the registry JSON, and the registry URL. Alternatively, the metadata can be published in a later authchain transaction. This approach is simpler since you don't need to know the registry hash at genesis time. See the [CashTokens guide](/docs/guides/cashtokens#cashtokens-bcmr-metadata) for more on BCMR metadata and tooling.
+Metadata can be published in the genesis transaction with an `OP_RETURN` output containing the BCMR protocol identifier, registry hash, and registry URL. It can also be published later in an authchain transaction. See the [CashTokens guide](/docs/guides/cashtokens#cashtokens-bcmr-metadata) for more on BCMR metadata and tooling.
 
 :::note
-In a two-step deployment, you prepare the vout0 UTXOs first (learning the token IDs), publish the BCMR registry, then broadcast the genesis transaction with the registry hash in the OP_RETURN. This avoids needing a follow-up authchain update.
+A two-step deployment can avoid a follow-up authchain update: prepare the `vout: 0` UTXO first, publish the BCMR registry, then broadcast the genesis transaction with the registry hash in the `OP_RETURN`.
 :::
 
-## Post-Deployment
+## After Deployment
 
 Once the genesis transaction is broadcast:
 
-- **Save the deployment configuration** — persist the final [deployment config](#deployment-configuration) (token IDs, constructor args, network) so it can be referenced by application code, verification scripts, and future deployments.
-- **Verify BCMR indexing** — if you published BCMR metadata, check that a BCMR indexer has resolved your token metadata correctly. Wallets rely on this for displaying token names and icons.
-- **Verify the deployment** — if you built a standalone [verification script](#verifying-a-deployment), run it against the live deployment to confirm everything matches.
-- **Set up infrastructure** — see the [infrastructure guide](/docs/guides/infrastructure) for guidance on storing contract details and setting up transaction servers.
+- **Save the deployment configuration**: persist token IDs, constructor arguments, network, artifact version, and other parameters.
+- **Verify BCMR indexing**: check that a BCMR indexer resolves your token metadata correctly.
+- **Verify the deployment**: run a standalone verification script against the live deployment.
+- **Set up infrastructure**: see the [infrastructure guide](/docs/guides/infrastructure) for storing contract details and setting up transaction servers.
 
 ## Deployment Configuration
 
-After the genesis transaction, it's worth capturing all deployment parameters into a typed configuration object. This makes deployments reproducible and easy to reference in application code, verification scripts, and tests.
-
-A deployment configuration typically includes:
-
-- **Name and network** — a human-readable identifier and whether it targets `mainnet` or `chipnet`
-- **Contract version** — which version of the contract artifacts are being deployed
-- **Token IDs** — the CashToken category IDs created during genesis
-- **Contract parameters** — the constructor arguments used to instantiate the contracts
+Capture deployment parameters in a typed configuration object. This makes deployments reproducible and easy to reference from application code, verification scripts, and tests.
 
 ```ts
 interface MyDeployment {
@@ -218,35 +213,33 @@ interface MyDeployment {
   contractParams: {
     oraclePublicKey: string;
     startBlockHeight: bigint;
-    // ... other params
+    // Add other params here.
   };
 }
 ```
 
-Maintaining named deployment objects lets you keep multiple deployments side by side: production, staging, and testing variants with different parameters (e.g. testing oracles), so you can iterate quickly during development before committing to a mainnet deployment.
+Use your deployment configuration as the single source of truth for verification scripts, application code, and documentation.
 
 :::tip
-Use your deployment configuration as the single source of truth for verification scripts, application code, and documentation. If the deployment config is correct, everything downstream can be derived from it.
+Maintaining named deployment objects lets you keep production, staging, and testing deployments side by side. This makes it easy to use different parameters, such as testing oracles, while iterating before a mainnet deployment.
 :::
 
 ## Verifying a Deployment
 
-A contract system is only trustless if its deployment can be independently verified. Deployment scripts may not be open source, and even if they are, there is no guarantee the published script is what was actually used. Contract developers should provide standalone verification scripts so that security researchers and technical users can independently confirm a deployment's correctness.
+A contract system is only trustless if its deployment can be independently verified. Deployment scripts may not be open source, and even if they are, users still need a way to verify what exists on-chain.
 
-Since contract addresses are deterministic, verification works by reconstructing every expected address from the contract artifacts and deployment parameters, then comparing the result against what actually exists on-chain.
+Since contract addresses are deterministic, verification works by reconstructing every expected address from the artifacts and deployment parameters, then comparing the result against the genesis transaction outputs.
 
 ```ts
 import { Contract } from 'cashscript';
 import artifact from './my_contract.artifact.js';
 
-// Reconstruct all contract addresses from the deployment config
 const constructorArgs = [
   deployment.contractParams.oraclePublicKey,
   deployment.contractParams.startBlockHeight,
 ] as const;
-const contract = new Contract(artifact, [...constructorArgs], { provider });
 
-// This should match the address where tokens were sent
+const contract = new Contract(artifact, [...constructorArgs], { provider });
 const expectedAddress = contract.tokenAddress;
 ```
 
@@ -256,32 +249,31 @@ Provide verification scripts as part of your project, not bundled into the deplo
 
 ### What to Verify
 
-Verification should inspect every output of the genesis transaction, not just the ones you expect. If tokens are sent to an unexpected address, like a regular P2PKH, this could give full authority over the token category to the deployer. For example, a minting NFT on a personal address means the holder can mint unlimited tokens outside the contract's rules.
+Verification should inspect every output of the genesis transaction, not just the outputs you expect. If tokens are sent to an unexpected address, such as a regular P2PKH address, that address may hold authority over the token category.
 
-Build a list of all expected contract addresses, then iterate over all outputs and check:
+Check at least the following:
 
-1. **No unexpected token outputs** — every output carrying token data must go to a known contract address
-2. **Token category** — do the outputs carry the correct token ID?
-3. **NFT capability** — is it `minting`, `mutable`, or `none` as expected for each contract address?
-4. **NFT commitment** — does it contain the correct initial state?
-5. **Fungible token amount** — is the total supply distributed correctly? Fungible tokens should only appear on the expected contract addresses.
-6. **Genesis transaction inputs** — does the first input's previous txid match the expected token ID? This confirms the token was genuinely created in this transaction.
+1. **Token outputs**: every token output goes to a known contract address or expected authchain address.
+2. **Token category**: each token output uses the expected token ID.
+3. **NFT capability**: each NFT has the expected capability, such as `minting`, `mutable`, or `none`.
+4. **NFT commitment**: commitments contain the expected initial state.
+5. **Fungible token amount**: total supply is distributed correctly.
+6. **Genesis input**: the first input's previous txid matches the expected token ID.
 
 ```ts
-// Build the list of all expected contract addresses
 const expectedAddresses = new Set([
   contractA.tokenAddress,
   contractB.tokenAddress,
-  // ... all expected contract addresses
+  // Add all expected contract addresses.
 ]);
 
-// Iterate over ALL outputs of the genesis transaction
 for (const output of genesisTxOutputs) {
   if (output.tokenData && !expectedAddresses.has(output.address)) {
     throw new Error(`Unexpected token output to address: ${output.address}`);
   }
 
-  // Validate each known address has the right capability, commitment, and amount
+  // Validate capability, commitment, and amount for each known address.
 }
 ```
 
+[bcmr]: https://cashtokens.org/docs/bcmr/chip/
