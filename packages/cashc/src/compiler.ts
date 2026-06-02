@@ -1,11 +1,19 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, generateSourceMap, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
+import {
+  Artifact,
+  generateSourceMap,
+  optimiseBytecode,
+  optimiseBytecodeOld,
+  scriptToAsm,
+  scriptToBytecode,
+  sourceMapToLocationData,
+} from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
 import AstBuilder from './ast/AstBuilder.js';
-import ThrowingErrorListener from './ast/ThrowingErrorListener.js';
+import { CashScriptErrorListener, ForwardingErrorListener, ThrowingErrorListener } from './ast/error-listeners.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import CashScriptLexer from './grammar/CashScriptLexer.js';
 import CashScriptParser from './grammar/CashScriptParser.js';
@@ -13,9 +21,13 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 
-export function compileString(code: string): Artifact {
+export interface CompileOptions {
+  errorListener?: CashScriptErrorListener;
+}
+
+export function compileString(code: string, compilerOptions: CompileOptions = {}): Artifact {
   // Lexing + parsing
-  let ast = parseCode(code);
+  let ast = parseCode(code, compilerOptions.errorListener);
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
@@ -55,24 +67,30 @@ export function compileString(code: string): Artifact {
   return generateArtifact(ast, optimisationResult.script, code, debug);
 }
 
-export function compileFile(codeFile: PathLike): Artifact {
+export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions = {}): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
-  return compileString(code);
+  return compileString(code, compilerOptions);
 }
 
-export function parseCode(code: string): Ast {
+export function parseCode(
+  code: string,
+  errorListener: CashScriptErrorListener = ThrowingErrorListener.INSTANCE,
+): Ast {
+  const syntaxErrorListener = new ForwardingErrorListener(errorListener);
+
   // Lexing (throwing on errors)
   const inputStream = new CharStream(code);
   const lexer = new CashScriptLexer(inputStream);
   lexer.removeErrorListeners();
-  lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
+  lexer.addErrorListener(syntaxErrorListener);
   const tokenStream = new CommonTokenStream(lexer);
 
   // Parsing (throwing on errors)
   const parser = new CashScriptParser(tokenStream);
   parser.removeErrorListeners();
-  parser.addErrorListener(ThrowingErrorListener.INSTANCE);
+  parser.addErrorListener(syntaxErrorListener);
   const parseTree = parser.sourceFile();
+  syntaxErrorListener.throwFirstError();
 
   // AST building
   const ast = new AstBuilder(parseTree).build() as Ast;
