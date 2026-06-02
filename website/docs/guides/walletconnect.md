@@ -8,10 +8,10 @@ CashScript can prepare transactions for both BCH WalletConnect and WizardConnect
 
 The BCH WalletConnect spec lays out a BCH-specific API for how Bitcoin Cash dapps can communicate with BCH wallets. BCH WalletConnect uses the generic WalletConnect transport layer, but the messages being exchanged are Bitcoin Cash-specific.
 
-The standard is supported in multiple wallets and dapps. You can find a list of Bitcoin Cash dapps supporting WalletConnect on [Tokenaut.cash](https://tokenaut.cash/dapps?filter=walletconnect).
+The standard is supported in multiple wallets and dapps. You can find a list of Bitcoin Cash dapps supporting WalletConnect on [Tokenaut.cash].
 
 :::tip
-The specification is called [`wc2-bch-bcr`](https://github.com/mainnet-pat/wc2-bch-bcr) and has extra discussion on the [BCH research forum](https://bitcoincashresearch.org/t/wallet-connect-v2-support-for-bitcoincash/).
+The specification is called [`wc2-bch-bcr`][wc2-bch-bcr] and has extra discussion on the [BCH research forum].
 :::
 
 ### signTransaction Interface
@@ -118,7 +118,7 @@ async function unlockHodlVault() {
 
 To send the `WcTransactionObject` to the user's wallet, use `@walletconnect/sign-client`.
 
-See [the Hodl Vault source code](https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/store/store.ts#L60) for how to initialize the `signClient` and for details about the `connectedChain` and `session`.
+See [the Hodl Vault source code][hodl-vault-sign-client] for how to initialize the `signClient` and for details about the `connectedChain` and `session`.
 
 ```ts
 import SignClient from "@walletconnect/sign-client";
@@ -150,6 +150,10 @@ async function signWcTransaction(wcTransactionObj: WcTransactionObject): Promise
 ## WizardConnect
 
 WizardConnect is an HD-wallet-aware signing protocol. It uses the same BCH WalletConnect transaction object for the transaction itself, but also requires HD path metadata for each user input the wallet must sign.
+
+:::tip
+See the [WizardConnect documentation] and [WizardConnect GitLab repository] for the protocol details.
+:::
 
 CashScript `TransactionBuilder` has a `generateWizardConnectTransactionObject()` method for this flow. It builds the normal `WcTransactionObject` and adds `inputPaths` for placeholder P2PKH inputs.
 
@@ -250,3 +254,10 @@ async function signWizardTransaction(
   }
 }
 ```
+
+[Tokenaut.cash]: https://tokenaut.cash/dapps?filter=walletconnect
+[wc2-bch-bcr]: https://github.com/mainnet-pat/wc2-bch-bcr
+[BCH research forum]: https://bitcoincashresearch.org/t/wallet-connect-v2-support-for-bitcoincash/
+[hodl-vault-sign-client]: https://github.com/mr-zwets/bch-hodl-dapp/blob/main/src/store/store.ts#L60
+[WizardConnect documentation]: https://docs.riftenlabs.com/wizardconnect/
+[WizardConnect GitLab repository]: https://gitlab.com/riftenlabs/lib/wizardconnect
