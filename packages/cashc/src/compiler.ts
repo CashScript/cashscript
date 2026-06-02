@@ -1,11 +1,22 @@
 import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
-import { Artifact, CompilerOptions, computeBytecodeFingerprintWithConstructorArgs, generateSourceMap, generateSourceTags, optimiseBytecode, optimiseBytecodeOld, scriptToAsm, scriptToBytecode, sourceMapToLocationData } from '@cashscript/utils';
+import {
+  Artifact,
+  CompilerOptions,
+  computeBytecodeFingerprintWithConstructorArgs,
+  generateSourceMap,
+  generateSourceTags,
+  optimiseBytecode,
+  optimiseBytecodeOld,
+  scriptToAsm,
+  scriptToBytecode,
+  sourceMapToLocationData,
+} from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
 import AstBuilder from './ast/AstBuilder.js';
-import ThrowingErrorListener from './ast/ThrowingErrorListener.js';
+import { ThrowingErrorListener, CashScriptErrorListener, ForwardingErrorListener } from './ast/error-listeners.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import CashScriptLexer from './grammar/CashScriptLexer.js';
 import CashScriptParser from './grammar/CashScriptParser.js';
@@ -19,6 +30,10 @@ export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceLocktimeGuard: true,
 };
 
+export interface CompileOptions extends CompilerOptions {
+  errorListener?: CashScriptErrorListener;
+}
+
 /**
  * Compile a CashScript source string to an {@link Artifact}.
  *
@@ -27,11 +42,12 @@ export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
  * @returns The compiled CashScript artifact, including ABI, bytecode and debug information.
  * @throws If the source code contains a syntax, semantic, or type error.
  */
-export function compileString(code: string, compilerOptions: CompilerOptions = {}): Artifact {
-  const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...compilerOptions };
+export function compileString(code: string, compilerOptions: CompileOptions = {}): Artifact {
+  const { errorListener, ...artifactCompilerOptions } = compilerOptions;
+  const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
 
   // Lexing + parsing
-  let ast = parseCode(code);
+  let ast = parseCode(code, errorListener);
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
@@ -87,24 +103,30 @@ export function compileString(code: string, compilerOptions: CompilerOptions = {
  * @returns The compiled CashScript artifact.
  * @throws If the file cannot be read, or if the source contains a compilation error.
  */
-export function compileFile(codeFile: PathLike, compilerOptions: CompilerOptions = {}): Artifact {
+export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions = {}): Artifact {
   const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
   return compileString(code, compilerOptions);
 }
 
-export function parseCode(code: string): Ast {
+export function parseCode(
+  code: string,
+  errorListener: CashScriptErrorListener = ThrowingErrorListener.INSTANCE,
+): Ast {
+  const syntaxErrorListener = new ForwardingErrorListener(errorListener);
+
   // Lexing (throwing on errors)
   const inputStream = new CharStream(code);
   const lexer = new CashScriptLexer(inputStream);
   lexer.removeErrorListeners();
-  lexer.addErrorListener(ThrowingErrorListener.INSTANCE);
+  lexer.addErrorListener(syntaxErrorListener);
   const tokenStream = new CommonTokenStream(lexer);
 
   // Parsing (throwing on errors)
   const parser = new CashScriptParser(tokenStream);
   parser.removeErrorListeners();
-  parser.addErrorListener(ThrowingErrorListener.INSTANCE);
+  parser.addErrorListener(syntaxErrorListener);
   const parseTree = parser.sourceFile();
+  syntaxErrorListener.throwFirstError();
 
   // AST building
   const ast = new AstBuilder(parseTree).build() as Ast;
