@@ -65,10 +65,6 @@ export interface PlaceholderP2PKHUnlockerOptions {
   hdPath?: PlaceholderHdPath;
 }
 
-export interface PlaceholderP2PKHUnlockerConfig extends PlaceholderP2PKHUnlockerOptions {
-  address: string;
-}
-
 export interface PlaceholderP2PKHUnlocker extends Unlocker {
   placeholder: true;
   address: string;

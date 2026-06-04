@@ -39,13 +39,13 @@ import { DebugResults } from './debugging.js';
 import { debugLibauthTemplate, getLibauthTemplate, getBitauthUri } from './libauth-template/LibauthTemplate.js';
 import {
   getWcContractInfo,
-  WcSourceOutput,
-  WcTransactionOptions,
+  WalletConnectSourceOutput,
+  WalletConnectTransactionOptions,
   WizardConnectInputPath,
   WizardConnectTransactionObject,
 } from './walletconnect-utils.js';
 import semver from 'semver';
-import { WcTransactionObject } from './walletconnect-utils.js';
+import { WalletConnectTransactionObject } from './walletconnect-utils.js';
 
 /**
  * Options accepted by the `TransactionBuilder` constructor.
@@ -559,6 +559,13 @@ export class TransactionBuilder {
   }
 
   /**
+   * @deprecated Use `generateWalletConnectTransactionObject` instead.
+   */
+  generateWcTransactionObject(options?: WalletConnectTransactionOptions): WalletConnectTransactionObject {
+    return this.generateWalletConnectTransactionObject(options);
+  }
+
+  /**
    * Build the transaction and format it as a BCH WalletConnect transaction object suitable for
    * signing and broadcasting via a BCH WalletConnect-compatible Bitcoin Cash wallet.
    *
@@ -568,12 +575,12 @@ export class TransactionBuilder {
    * @returns A WalletConnect transaction object ready to be sent to a WalletConnect wallet.
    * @throws If the transaction cannot be built (fee exceeds limit or fungible tokens burned).
    */
-  generateWcTransactionObject(options?: WcTransactionOptions): WcTransactionObject {
+  generateWalletConnectTransactionObject(options?: WalletConnectTransactionOptions): WalletConnectTransactionObject {
     const encodedTransaction = this.build();
     const transaction = decodeTransactionUnsafe(hexToBin(encodedTransaction));
 
     const libauthSourceOutputs = generateLibauthSourceOutputs(this.inputs);
-    const sourceOutputs: WcSourceOutput[] = libauthSourceOutputs.map((sourceOutput, index) => {
+    const sourceOutputs: WalletConnectSourceOutput[] = libauthSourceOutputs.map((sourceOutput, index) => {
       return {
         ...sourceOutput,
         ...transaction.inputs[index],
@@ -593,8 +600,8 @@ export class TransactionBuilder {
    * @returns A WizardConnect transaction object ready to be sent to a WizardConnect wallet.
    * @throws If the transaction cannot be built, or if a placeholder input is missing HD path metadata.
    */
-  generateWizardConnectTransactionObject(options?: WcTransactionOptions): WizardConnectTransactionObject {
-    const transaction = this.generateWcTransactionObject(options);
+  generateWizardConnectTransactionObject(options?: WalletConnectTransactionOptions): WizardConnectTransactionObject {
+    const transaction = this.generateWalletConnectTransactionObject(options);
     const inputPaths = this.generateWizardConnectInputPaths();
 
     return { transaction, inputPaths };
