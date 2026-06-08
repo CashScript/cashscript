@@ -45,7 +45,7 @@ Whenever a transaction fails, there will be a link in the console to open your s
 It's also possible to export the transaction for step-by-step debugging in the BitAuth IDE without failure. To do so, you can call the `getBitauthUri()` function on the transaction. This will return a URI that can be opened in the BitAuth IDE.
 
 ```ts
-const uri = await transactionBuilder.getBitauthUri();
+const uri = transactionBuilder.getBitauthUri();
 ```
 
 :::caution

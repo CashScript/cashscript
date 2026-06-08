@@ -59,6 +59,10 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 }
 ```
 
+:::note
+The functions described here are top-level contract functions, which act as the entry points for spending from the contract. CashScript does not yet support user-defined reusable functions that can be called from within other functions. Callable functions are likely coming in CashScript v0.14, which would also allow function calls inside loops and loops inside reusable functions.
+:::
+
 ### Function Arguments
 
 Function arguments are provided by the user in the unlocking script of the transaction inputs when spending from the contract. Note that function arguments are variables and can be reassigned inside the function body.

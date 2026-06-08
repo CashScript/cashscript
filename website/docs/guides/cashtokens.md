@@ -38,7 +38,7 @@ The maximum size for a fungible token `amount` is the max signed 64-bit integer 
 
 ### Non-Fungible Tokens
 
-The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT which can is allowed to be up to 128 bytes.
+The `nft` info on a UTXO will only be present if the UTXO contains an NFT. The `nft` object has 2 properties: the `capability` and the `commitment`. The `commitment` is the data field for the NFT which is allowed to be up to 128 bytes.
 
 Capability `none` then refers to an immutable NFT where the commitment cannot be changed. The `mutable` capability means the `commitment` field can change over time, usually to contain smart contract state. Lastly the `minting` capability means that the NFT can create new NFTs from the same `category`.
 
@@ -91,7 +91,7 @@ bytes tx.inputs[i].tokenCategory
 
 When accessing the `tokenCategory` through introspection the result returns `0x` (empty byte string) when that specific item does not contain tokens. If the item does have tokens it returns the `bytes32 tokenCategory`. When the item contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
 
-If you want to check for an NFT using introspection, you have either split the `tokenCategory` from the `capability` or check the concatenation of the `tokenCategory` and `capability`.
+If you want to check for an NFT using introspection, you have to either split the `tokenCategory` from the `capability` or check the concatenation of the `tokenCategory` and `capability`.
 
 ```solidity
   // Constructor parameters: providedCategory
@@ -162,6 +162,11 @@ The easiest way to prevent issues with "junk" empty NFTs is to check that only N
 The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
 
 ```ts
+// Reverse byte order of a hex string.
+function reverseHex(hex: string): string {
+  return hex.match(/../g)!.reverse().join('');
+}
+
 // when using a standard encoded tokenId, reverse the hex before using it in your contract
 const contract = new Contract(artifact, [reverseHex(tokenId)], { provider })
 ```
@@ -186,7 +191,7 @@ Signing for CashTokens inputs is designed in such a way that pre-CashTokens wall
 
 ## CashTokens Genesis transactions
 
-A CashTokens genesis transaction is a transaction which creates a new `category` of CashTokens. To create a CashTokens genesis transaction you need a `vout0` UTXO because the txid of the UTXO will be you newly created `category`.
+A CashTokens genesis transaction is a transaction which creates a new `category` of CashTokens. To create a CashTokens genesis transaction you need a `vout0` UTXO because the txid of the UTXO will be your newly created `category`.
 
 The requirement for a `vout0` UTXO can mean that you might need to create a setup transaction "pre-genesis" which will create this output. The "pre-genesis" txid then is your token's `category`.
 

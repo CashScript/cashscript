@@ -23,7 +23,7 @@ Even if a miner sets a higher minimum fee for inclusion in his own blocks, 1 sat
 
 Before transactions are included in a block they are waiting for block inclusion in the mempool of the full nodes. Because transactions in the mempool are "seen" but not included in the blockchain yet, the latest state of the blockchain of who owns what is somewhat fuzzy.
 
-In a normal scenario it's only a matter of time before a BCH transaction in the mempool gets included in a block. Where things get more complex however is if there are **competing unconfirmed transactions**. In this scenario it is **not** necessarily the clear that a transaction is destined to be included in the blockchain. In other words, the latest state of the blockchain is still undecided.
+In a normal scenario it's only a matter of time before a BCH transaction in the mempool gets included in a block. Where things get more complex however is if there are **competing unconfirmed transactions**. In this scenario it is **not** necessarily clear that a transaction is destined to be included in the blockchain. In other words, the latest state of the blockchain is still undecided.
 
 :::tip
 This is why many BCH indexers will allow you to query UTXOs with the option to include or exclude unconfirmed transactions. By default indexers will include unconfirmed UTXOs/unconfirmed transactions in the query result.
