@@ -176,7 +176,7 @@ If you use hand-optimized `bytecode` in your Contract's artifact, the `debug` in
 :::
 
 :::tip
-You can create an `Artifact` for a fully hand-written contract so it becomes possible to use the contract with the nice features of the CashScript SDK! An example of this is [Cauldron_Swap_Test][Cauldron_Swap_Test] which uses `Artifact bytecode` not produced by `cashc` at all but still uses the CashScript SDK.
+You can create an `Artifact` for a fully hand-written contract so it becomes possible to use the contract with the nice features of the CashScript SDK! An example of this is the [unofficial Cauldron Swap SDK][Cauldron-Swap-SDK], which uses `Artifact bytecode` not produced by `cashc` at all but still uses the CashScript SDK.
 :::
 
 ### Method 2) Custom Unlockers
@@ -204,5 +204,5 @@ interface GenerateUnlockingBytecodeOptions {
 
 
 [BitauthIDE]: https://ide.bitauth.com
-[Cauldron_Swap_Test]: https://github.com/mr-zwets/Cauldron_Swap_Test
+[Cauldron-Swap-SDK]: https://github.com/mr-zwets/Cauldron-Swap-SDK
 [addInput()]: /docs/sdk/transaction-builder#addinput
