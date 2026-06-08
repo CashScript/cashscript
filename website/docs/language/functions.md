@@ -76,21 +76,21 @@ All signature checking functions must comply with the [NULLFAIL][bip146] rule wh
 
 #### Nullfail example
 
-The `NULLFAIL` rule means passing an invalid  signature to `checkSig()` does not return `false` — it fails the script. To safely return `false` on a signature check, use an empty `0x` signature instead, as shown below:
+The `NULLFAIL` rule means passing an invalid signature to `checkSig()` does not return `false` — it fails the script. To safely return `false` on a signature check, use an empty `0x` signature instead, as shown below:
 
 ```solidity
 // this script will immediately fail
 // because userSig will be invalid for either the 'seller' or the 'referee'
 require(checkSig(userSig, seller) || checkSig(userSig, referee));
 
-// instead, use 2 different  signatures
+// instead, use 2 different signatures
 // set the unused signature to 0x so 'checkSig' returns false
 require(checkSig(sellerSig, seller) || checkSig(userSig, referee));
 ```
 
 ### checkSig()
 ```solidity
-bool checksig(sig s, pubkey pk)
+bool checkSig(sig s, pubkey pk)
 ```
 
 Checks that transaction signature `s` is valid for the current transaction and matches with public key `pk`.

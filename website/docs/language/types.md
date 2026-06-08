@@ -180,7 +180,7 @@ bool b = bool(5); // true
 
 ### Casting Table
 
-See the following table for information on which types can be cast to other which other types.
+See the following table for information on which types can be cast to which other types.
 
 | Type    | Implicitly castable to | Explicitly castable to             |
 | ------- | ---------------------- | ---------------------------------- |

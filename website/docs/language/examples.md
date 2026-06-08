@@ -114,7 +114,7 @@ contract DexContract(bytes20 poolOwnerPkh) {
         // transaction format changes in the future.
         require(tx.version == 2);
 
-        // Verify that this contract lives on on the output with the same input as this contract.
+        // Verify that this contract lives on the output with the same input as this contract.
         bytes inputBytecode = tx.inputs[this.activeInputIndex].lockingBytecode;
         bytes outputBytecode = tx.outputs[this.activeInputIndex].lockingBytecode;
         require(inputBytecode == outputBytecode);
@@ -133,7 +133,7 @@ contract DexContract(bytes20 poolOwnerPkh) {
         require(effectiveOutputK >= targetK);
     }
     function withdrawal(pubkey poolOwnerPk, sig poolOwnerSig) {
-        require(hash160(poolOwnerPk) == poolOwner);
+        require(hash160(poolOwnerPk) == poolOwnerPkh);
         require(checkSig(poolOwnerSig, poolOwnerPk));
     }
 }

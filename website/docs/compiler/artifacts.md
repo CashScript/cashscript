@@ -26,8 +26,10 @@ interface Artifact {
     sourceMap: string // see documentation for `generateSourceMap`
     logs: LogEntry[] // log entries generated from `console.log` statements
     requires: RequireStatement[] // messages for failing `require` statements
+    sourceTags?: string // semantic tags for opcodes (e.g. loop update/condition ranges)
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
+  fingerprint?: string // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
 }
 
 interface AbiInput {
@@ -56,10 +58,11 @@ interface StackItem {
 interface RequireStatement {
   ip: number; // instruction pointer
   line: number; // line in the source code
-  message: string; // custom message for failing `require` statement
+  message?: string; // custom message for failing `require` statement
 }
 
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean; // Enforce function parameter types (default: true)
+  enforceLocktimeGuard?: boolean; // Enforce the tx.locktime guard (default: true)
 }
 ```

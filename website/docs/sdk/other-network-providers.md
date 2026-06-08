@@ -39,7 +39,7 @@ interface MockNetworkProvider extends NetworkProvider {
 
 The `updateUtxoSet` option is used to determine whether the UTXO set should be updated after a transaction is sent. If `updateUtxoSet` is `true` (default), the UTXO set will be updated to reflect the new state of the mock network. If `updateUtxoSet` is `false`, the UTXO set will not be updated.
 
-The `vmTarget` option defaults to the current VM of `BCH_2025_05`, but this can be changed to test your contract against different BCH virtual machine targets.
+The `vmTarget` option defaults to the current VM of `BCH_2026_05`, but this can be changed to test your contract against different BCH virtual machine targets.
 
 #### Example
 ```ts

@@ -13,9 +13,9 @@ To learn more about the Bitcoin Basics refer to the book ['Mastering Bitcoin'][M
 
 ## How BCH differs from BTC
 
-Although BCH and BTC share the same Bitcoin fundamentals, both projects have significantly diverged in some areas since 2017. For example, Bitcoin Cash does not have Segwit or Taproot, instead Bitcoin Cash has had multiple upgrades specifically focused on improving the smart contract capabilities. Bitcoin Cash has re-enabled many useful opcodes, has introduce native introspection, has added CashTokens, has reworked the script limits and introduced BigInts.
+Although BCH and BTC share the same Bitcoin fundamentals, both projects have significantly diverged in some areas since 2017. For example, Bitcoin Cash does not have Segwit or Taproot, instead Bitcoin Cash has had multiple upgrades specifically focused on improving the smart contract capabilities. Bitcoin Cash has re-enabled many useful opcodes, has introduced native introspection, has added CashTokens, has reworked the script limits and introduced BigInts.
 
-So part that **has** significantly diverged between BTC and BCH is the *virtual machine* (VM), the environment in which smart contracts are evaluated. The Bitcoin Cash VM is also referred to as the **CashVM**. The greatly improved VM specifically is what makes it possible to write powerful smart contracts on BCH in the first place! On the overview of [all the BCH network upgrades][BCH upgrades], you'll notice the recent years have been fully focused on VM improvements.
+So the part that **has** significantly diverged between BTC and BCH is the *virtual machine* (VM), the environment in which smart contracts are evaluated. The Bitcoin Cash VM is also referred to as the **CashVM**. The greatly improved VM specifically is what makes it possible to write powerful smart contracts on BCH in the first place! On the overview of [all the BCH network upgrades][BCH upgrades], you'll notice the recent years have been fully focused on VM improvements.
 
 ## UTXO model
 Bitcoin Cash transactions work with in- and outputs. All current balances are so called *Unspent Transaction Outputs (UTXOs)*, which simply means they can be used as inputs for future spending transactions.
@@ -44,7 +44,7 @@ The UTXO model where transactions only have access to the local transaction cont
 
 ### Bitcoin Cash Script
 
-The locking and unlocking scripts of regular transactions and smart contracts on Bitcoin Cash are written using Bitcoin Cash' transaction scripting language, referred to as BCH Script (or Bitcoin Cash Script in full). BCH Script is a stack based assembly-like language, because it is a low-level language and requires stack management it is hard to write complex smart contract in Script directly.
+The locking and unlocking scripts of regular transactions and smart contracts on Bitcoin Cash are written using Bitcoin Cash's transaction scripting language, referred to as BCH Script (or Bitcoin Cash Script in full). BCH Script is a stack based assembly-like language, because it is a low-level language and requires stack management it is hard to write complex smart contracts in Script directly.
 
 ### CashScript
 

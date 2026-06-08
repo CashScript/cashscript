@@ -39,7 +39,7 @@ The usage of the 4 classes in your code is as follows: before using the SDK you 
 
 For more complete examples of the SDK flow, refer to the [runnable examples][examples] in the Python SDK repository.
 
-#### example
+#### Example
 
 ```python
 from cashscript_py import Contract, ElectrumNetworkProvider, Output, SignatureTemplate, TransactionBuilder
