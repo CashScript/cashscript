@@ -3,7 +3,7 @@ title: Old Transaction Builder
 ---
 
 :::caution
-This is the documentation for the old and now deprecated 'Simple Transaction Builder' which operated on a single contract.
+This is the documentation for the old 'Simple Transaction Builder' which operated on a single contract. This API was **removed in v0.12** and is no longer available in the SDK.
 It is strongly recommended to migrate over to the new default transaction builder [using the migration notes](/docs/releases/migration-notes).
 :::
 

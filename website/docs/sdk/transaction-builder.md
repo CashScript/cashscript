@@ -207,7 +207,7 @@ Sets the locktime for the transaction to set a transaction-level absolute timelo
 #### Example
 ```ts
 // Set locktime one day from now
-transactionBuilder.setLocktime(((Date.now() / 1000) + 24 * 60 * 60) * 1000);
+transactionBuilder.setLocktime((Date.now() / 1000) + 24 * 60 * 60);
 ```
 
 ### getTransactionSize()
@@ -283,7 +283,7 @@ const txHex = new TransactionBuilder({ provider, maximumFeeSatoshis })
 
 ### debug()
 ```ts
-transactionBuilder.debug(): DebugResult
+transactionBuilder.debug(): DebugResults
 ```
 
 If you want to debug a transaction locally instead of sending it to the network, you can call the `debug()` function on the transaction. This will return intermediate values and the final result of the transaction. It will also show any logged values and `require` error messages.
@@ -302,7 +302,7 @@ It is unsafe to debug transactions on mainnet using the BitAuth IDE as private k
 
 ### getVmResourceUsage()
 ```ts
-transaction.getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage>
+transactionBuilder.getVmResourceUsage(verbose: boolean = false): Array<VmResourceUsage>
 ```
 
 The `getVmResourceUsage()` function allows you to get the VM resource usage for the transaction. This can be useful for debugging and optimization. The VM resource usage is calculated for each input individually so the result is an array of `VmResourceUsage` results corresponding to each of the transaction inputs.
@@ -351,7 +351,7 @@ interface WcTransactionOptions {
 }
 
 interface WcTransactionObject {
-  transaction: TransactionCommon | string;
+  transaction: TransactionCommon;
   sourceOutputs: WcSourceOutput[];
   broadcast?: boolean;
   userPrompt?: string;
@@ -408,11 +408,12 @@ When sending a transaction, the CashScript SDK will throw an error if the transa
 ```ts
 interface FailedRequireError {
   message: string;
-  contractName: string;
-  requireStatement: { ip: number, line: number, message: string };
-  inputIndex: number,
-  libauthErrorMessage?: string,
-  bitauthUri?: string;
+  artifact: Artifact;
+  failingInstructionPointer: number;
+  requireStatement: { ip: number, line: number, message?: string };
+  inputIndex: number;
+  bitauthUri: string;
+  libauthErrorMessage?: string;
 }
 ```
 

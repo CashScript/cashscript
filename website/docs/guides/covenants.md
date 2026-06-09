@@ -35,7 +35,7 @@ When using CashScript, you can access a lot of *introspection data* that can be 
 While we know the individual data fields, it's not immediately clear how this can be used to create useful smart contracts on Bitcoin Cash. However, there are several constraints that can be created using these fields — most important of which are constraints on the recipients of funds — so that is what we discuss.
 
 ### Restricting P2PKH recipients
-One interesting technique in Bitcoin Cash is called blind escrow, meaning that funds are placed in an escrow contract. This contract can only release the funds to one of the escrow participants, and has no other control over the funds. We can implement this blind escrow as a covenants by restricting the possible recipients (although there are other possible designs for escrows).
+One interesting technique in Bitcoin Cash is called blind escrow, meaning that funds are placed in an escrow contract. This contract can only release the funds to one of the escrow participants, and has no other control over the funds. We can implement this blind escrow as a covenant by restricting the possible recipients (although there are other possible designs for escrows).
 
 ```solidity
 contract Escrow(bytes20 arbiter, bytes20 buyer, bytes20 seller) {
@@ -219,7 +219,7 @@ We use `tx.locktime` to introspect the value of the timelock, and to write the v
 
 #### Integer padding for local state
 
-Padding an integer to a fixed-size byte-length is a very important when storing local state in an nftCommitment. We can use the `toPaddedBytes(int, length)` function to pad the integer to the desired length. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each individual case depending on the integer range. Below we add a table with info on the maximum integer size for common cases:
+Padding an integer to a fixed-size byte-length is very important when storing local state in an nftCommitment. We can use the `toPaddedBytes(int, length)` function to pad the integer to the desired length. When casting a script number to bytes, developers need to consider what the preferable fixed-size length is for each individual case depending on the integer range. Below we add a table with info on the maximum integer size for common cases:
 
 | Integer Type    | Max integer value                  | Max Byte Size in Script Number Format  |
 | --------------  | -----------------------------------| ---------------------------------------|
@@ -234,7 +234,7 @@ VM numbers follow Script Number format (A.K.A. CSCriptNum), to convert VM number
 
 ### Issuing NFTs as receipts
 
-A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. It would be incredibly hard continuously updating a data structure to keep track of which address contributed how much in the local state of the contract. A much better solution is to issue receipts each time funds are added to the pool! This way the contract does not have a 'global view' of who owns what at any time, but it can validate the receipts when invoking a withdrawal.
+A covenant that manages funds (BCH + fungible tokens of a certain category) which are pooled together from different people often wants to enable its participants to also exit the covenants with their funds. It would be incredibly hard to continuously update a data structure to keep track of which address contributed how much in the local state of the contract. A much better solution is to issue receipts each time funds are added to the pool! This way the contract does not have a 'global view' of who owns what at any time, but it can validate the receipts when invoking a withdrawal.
 
 Technically this happens by minting a new NFT, with in the commitment field the amount of satoshis or fungible tokens that were contributed to the pool, and sending this to the address of the contributor.
 
@@ -311,8 +311,8 @@ contract PooledFunds(
         require(tx.inputs[1].tokenCategory == tokenCategoryReceipt);
 
         // Read the amount that was contributed to the pool from the NFT commitment
-        bytes ntfCommitmentData = tx.inputs[1].nftCommitment;
-        bytes actionIdentifier, bytes amountToWithdrawBytes = ntfCommitmentData.split(1);
+        bytes nftCommitmentData = tx.inputs[1].nftCommitment;
+        bytes actionIdentifier, bytes amountToWithdrawBytes = nftCommitmentData.split(1);
         int amountToWithdraw = int(amountToWithdrawBytes);
 
         if (actionIdentifier == 0x01) {

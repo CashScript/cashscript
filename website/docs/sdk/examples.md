@@ -61,7 +61,6 @@ export const oracleAddress = encodeCashAddress('bchtest', 'p2pkhWithTokens', ora
 For development purposes, we'll use the `MockNetworkProvider` so you can simulate transactions in a 'mock' network environment. To do proper testing, you also need to add "mock" UTXOs to the `MockNetworkProvider`.
 
 ```ts title="hodl_vault.ts"
-import { stringify } from '@bitauth/libauth';
 import { Contract, SignatureTemplate, MockNetworkProvider, randomUtxo } from 'cashscript';
 import { compileFile } from 'cashc';
 import { URL } from 'url';
@@ -70,7 +69,7 @@ import { URL } from 'url';
 import {
   alicePub,
   oraclePub,
-} from './common.ts';
+} from './common.js';
 
 // Compile the HodlVault contract to an artifact object
 const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));
@@ -93,7 +92,7 @@ console.log('contract balance:', await contract.getBalance());
 
 ### Building the Oracle
 
-We need the create the functionality for generating and signing the oracle message to use in the HodlVault contract:
+We need to create the functionality for generating and signing the oracle message to use in the HodlVault contract:
 
 ```ts title="PriceOracle.ts"
 import { padMinimallyEncodedVmNumber, flattenBinArray } from '@bitauth/libauth';
@@ -121,11 +120,10 @@ export class PriceOracle {
 
 ### Sending a Transaction
 
-Finally, we can put all of this together to create a working smart contract application. We use the generated keys as a contract arguments directly or in a `SignatureTemplate` to create a transaction signature.
+Finally, we can put all of this together to create a working smart contract application. We use the generated keys as contract arguments directly or in a `SignatureTemplate` to create a transaction signature.
 
 ```ts title="hodl_vault.ts"
-import { stringify } from '@bitauth/libauth';
-import { Contract, SignatureTemplate, MockNetworkProvider } from 'cashscript';
+import { Contract, SignatureTemplate, MockNetworkProvider, TransactionBuilder, randomUtxo } from 'cashscript';
 import { compileFile } from 'cashc';
 import { URL } from 'url';
 
@@ -135,7 +133,7 @@ import {
   alicePub,
   oracle,
   oraclePub,
-} from './common.ts';
+} from './common.js';
 
 // Compile the HodlVault contract to an artifact object
 const artifact = compileFile(new URL('hodl_vault.cash', import.meta.url));

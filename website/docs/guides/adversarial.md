@@ -3,7 +3,7 @@ title: Adversarial Analysis
 sidebar_label: Adversarial Analysis
 ---
 
-In this guide we'll dive into "adversarial analysis" for smart contract systems. Adversarial analysis means to analyze your system from the point of a potential malicious 3rd party which might want to hamper or attack your system. This guide will build further on knowledge from the [the transaction lifecycle guide](/docs/guides/lifecycle).
+In this guide we'll dive into "adversarial analysis" for smart contract systems. Adversarial analysis means to analyze your system from the point of a potential malicious 3rd party which might want to hamper or attack your system. This guide will build further on knowledge from the [transaction lifecycle guide](/docs/guides/lifecycle).
 
 ## The Happy Case
 
@@ -21,7 +21,7 @@ The adversarial case is where 3rd parties intentionally double spend unconfirmed
 In an adversarial environment where double spends occur, user-created transactions interacting with public are not certain to be confirmed. This means waiting for block confirmations is required to be sure the transaction isn't cancelled.
 :::
 
-There is 2 categories to consider for adversarial double spends:
+There are 2 categories to consider for adversarial double spends:
 
 1) Race-condition double spends (no miner help required)
 
@@ -37,7 +37,7 @@ For an adversarial attack to pull off this time-sensitive attack, he would requi
 
 ### Late Double Spends
 
-In the case of a late double spend (which does not try to exploit a race condition) the adversarial actor need help from a miner.
+In the case of a late double spend (which does not try to exploit a race condition) the adversarial actor needs help from a miner.
 Either the adversarial actor needs to convince the miners to abandon their first seen rule or he needs to be mining himself to be able to construct his own block.
 
 :::caution
@@ -100,7 +100,7 @@ Adversarial analysis should take into account that "first-seen rule" is just a c
 ### Specialized Block-Builders
 
 
-As described in the section on "stale-state arbitrage" economic actors may be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain. Although miners are not specialized in the optimal construction of DeFi transactions in a block, miner would over time be likely to team up with teams/companies creating this type of software for them.
+As described in the section on "stale-state arbitrage" economic actors may be incentivized to strategically create a competing transaction chain which takes advantage of an older price state/ratio which has not yet been confirmed in the blockchain. Although miners are not specialized in the optimal construction of DeFi transactions in a block, miners would over time be likely to team up with teams/companies creating this type of software for them.
 
 :::note
 Ethereum with its large amount of MEV has already seen the emergence of specialized 'block builder' as a new class of relevant economic actors separate from the block proposer (who signs the block).
@@ -120,7 +120,7 @@ This strategy of batching same-block trades (or "joint-execution") is the key co
 
 ### Centralized Co-signing
 
-For contract systems relying on a continuously update on-chain oracle price feed, the problem of 'stale-state arbitrage' reappears.
+For contract systems relying on a continuously updated on-chain oracle price feed, the problem of 'stale-state arbitrage' reappears.
 However in this context the only known solution to adversarial actors exploiting stale state with a late double spend is to require centralized co-signing in the contract system.
 
 The drawback of this approach is that it introduces a central party to enforce honest, sequential actions to prevent late double spends. The approach introduces the need for interactivity and assumes that the central signing service does not collude or cannot be bribed, additionally it also introduces new possible security concerns.

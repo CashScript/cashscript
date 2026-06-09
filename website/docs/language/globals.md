@@ -9,7 +9,7 @@ It can be difficult to fully grasp the intricacies of time locks, so if you're s
 
 
 ### tx.time
-`tx.time` is used to create *absolute* time lock on the transaction. The value of `tx.time` can either represent the block number of the spending transaction or its timestamp. When comparing it with values below `500,000,000`, it is treated as a blocknumber, while higher values are treated as a timestamp.
+`tx.time` is used to create an *absolute* time lock on the transaction. The value of `tx.time` can either represent the block number of the spending transaction or its timestamp. When comparing it with values below `500,000,000`, it is treated as a blocknumber, while higher values are treated as a timestamp.
 
 `tx.time` corresponds to the `nLocktime` field of the current transaction using the `OP_CHECKLOCKTIMEVERIFY` opcode. Because of this `tx.time` can only be used in the following way:
 
@@ -24,7 +24,7 @@ To access the value of the `nLocktime` field for assignment, use the `tx.locktim
 Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done with the CashScript SDK by calling [`setLocktime()`][setLocktime()] on the `TransactionBuilder` instance.
 
 ### this.age
-`this.age` is used to create *relative* time lock on a UTXO. The value of `this.age` can either represent a number of blocks, or a number of *chunks*, which are 512 seconds. The corresponding *transaction level* time lock determines which of the two options is used.
+`this.age` is used to create a *relative* time lock on a UTXO. The value of `this.age` can either represent a number of blocks, or a number of *chunks*, which are 512 seconds. The corresponding *transaction level* time lock determines which of the two options is used.
 
 `this.age` corresponds to the `nSequence` field of the current evaluated *UTXO* using the `OP_CHECKSEQUENCEVERIFY` opcode. Because of this `this.age` can only be used in the following way:
 
@@ -181,9 +181,9 @@ bytes tx.outputs[i].lockingBytecode
 
 Represents the locking bytecode (`scriptPubKey`) of a specific output.
 
-#### tx.output[i].tokenCategory
+#### tx.outputs[i].tokenCategory
 ```solidity
-bytes tx.output[i].tokenCategory
+bytes tx.outputs[i].tokenCategory
 ```
 
 Represents the `tokenCategory` of a specific output. Returns `0x` when that specific output contains no tokens. When the output contains an NFT with a capability, the 32-byte `tokenCategory` is concatenated together with `0x01` for a mutable NFT and `0x02` for a minting NFT.
@@ -192,16 +192,16 @@ Represents the `tokenCategory` of a specific output. Returns `0x` when that spec
 The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
 :::
 
-#### tx.output[i].nftCommitment
+#### tx.outputs[i].nftCommitment
 ```solidity
-bytes tx.output[i].nftCommitment
+bytes tx.outputs[i].nftCommitment
 ```
 
 Represents the NFT commitment data of a specific output.
 
-#### tx.output[i].tokenAmount
+#### tx.outputs[i].tokenAmount
 ```solidity
-int tx.output[i].tokenAmount
+int tx.outputs[i].tokenAmount
 ```
 
 Represents the amount of fungible tokens of a specific output. Maximum size for a `tokenAmount` is a 64-bit integer.

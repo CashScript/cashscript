@@ -102,7 +102,7 @@ https://x.com/CashScriptBCH/status/1973692336782876974
 - :bug: Disallow incorrect bounded bytes typing when using `.split()`.
 
 #### CashScript SDK
-- :bug: Fix bug with where `ElectrumNetworkProvider` would disconnect in browser on visibility change of the page.
+- :bug: Fix bug where `ElectrumNetworkProvider` would disconnect in browser on visibility change of the page.
 
 ## v0.11.2
 
@@ -279,7 +279,7 @@ https://x.com/CashScriptBCH/status/1713928572677583023
 This release also contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### cashc compiler
-- :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`,`nftCommitment`and `tokenAmount`for both in- and outputs).
+- :sparkles: Add support for the new CashTokens introspection functionality (`tokenCategory`, `nftCommitment` and `tokenAmount` for both in- and outputs).
 - :sparkles: Add `LockingBytecodeP2SH32` to generate the new P2SH32 standard locking script.
 - :bug: Fix optimisation bug that caused `OP_0NOTEQUAL` to be applied to non-integer values.
 - :boom: **BREAKING**: Move to Pure ESM.
@@ -495,7 +495,7 @@ https://x.com/RoscoKalis/status/1267440143624884227
   - Remove the `TxOptions` argument and other arguments to the Transaction `send()` function.
   - Instead these parameters are passed in through fluent functions `from()`, `to()`, `withOpReturn()`, `withAge()`, `withTime()`, `withHardcodedFee()`, `withFeePerByte()` and `withMinChange()`.
   - After specifying at least one output with either `to()` or `withOpReturn()`the transaction is ready. From here the transaction can be sent to the network with the `send()` function, the transaction hex can be returned with the `build()` function, or the meep debugging command can be returned with the `meep()` function.
-- :boom: Remove `Contract.fromCashFile()` and `Contract.fromArtifact()` which were deprecated in favour or `Contract.compile()` and `Contract.import()` in v0.2.2.
+- :boom: Remove `Contract.fromCashFile()` and `Contract.fromArtifact()` which were deprecated in favour of `Contract.compile()` and `Contract.import()` in v0.2.2.
 
 #### Migration
 This update contains several breaking changes. See the [migration notes](/docs/releases/migration-notes#v03-to-v04) for a full migration guide.

@@ -22,20 +22,9 @@ To have the extension automatically suggested for any developer looking at your 
 Cursor and other VS Code forks can use the VS Code extension mentioned above. This extension should be findable in the extensions menu within the editor. If it is not, you can manually install it from the [Open VSX Registry](https://open-vsx.org/extension/CashScript/cashscript-vscode).
 
 ## Sublime Text
-The most popular Solidity plugin for Sublime Text 2/3 is [Ethereum](https://packagecontrol.io/packages/Ethereum). Install this plugin with [Package Control](https://packagecontrol.io/), open a `.cash` file and set Solidity as the syntax language in the Sublime menu bar:
+The most popular Solidity plugin for Sublime Text is [Ethereum](https://packagecontrol.io/packages/Ethereum). Install this plugin with [Package Control](https://packagecontrol.io/), open a `.cash` file and set Solidity as the syntax language in the Sublime menu bar:
 
 > View -> Syntax -> Open all with current extension as ... -> Solidity
-
-This associates `.cash` files with Solidity, and enables syntax highlighting for your CashScript files.
-
-## Atom
-The most popular Solidity plugin for Atom is [language-solidity](https://atom.io/packages/language-solidity). Install this plugin and add the following snippet to your Config file:
-
-```yaml title="&#126;/.atom/config.cson"
-core:
-  customFileTypes:
-    "source.solidity": ["cash"]
-```
 
 This associates `.cash` files with Solidity, and enables syntax highlighting for your CashScript files.
 

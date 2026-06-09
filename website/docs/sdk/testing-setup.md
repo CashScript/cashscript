@@ -12,7 +12,7 @@ For a quick start with a CashScript testing setup, check out the [example testin
 
 The `MockNetworkProvider` is a special network provider that allows you to evaluate transactions locally without interacting with the Bitcoin Cash network. This is useful when writing automated tests for your contracts, or when debugging your contract locally.
 
-To create a new virtual UTXO use `provider.addUtxo(address, utxo)`. You can use the helper functions `randomUtxo()`, `randomToken()` and `randomNFT()` to generate random partial Utxo info which you can be overwritten with custom values.
+To create a new virtual UTXO use `provider.addUtxo(address, utxo)`. You can use the helper functions `randomUtxo()`, `randomToken()` and `randomNFT()` to generate random partial Utxo info which can be overwritten with custom values.
 
 #### Example
 
@@ -20,9 +20,9 @@ To create a new virtual UTXO use `provider.addUtxo(address, utxo)`. You can use 
 import { MockNetworkProvider, randomUtxo, randomToken, randomNFT } from 'cashscript';
 
 const provider = new MockNetworkProvider();
-const contractUtxo = provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
+provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
 
-const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
+provider.addUtxo(aliceAddress, randomUtxo({
   satoshis: 1000n,
   token: { ...randomNFT(), ...randomToken() },
 }));
@@ -34,7 +34,7 @@ By default, the `MockNetworkProvider` evaluates transactions locally but does no
 
 ## Automated testing
 
-To make writing automated tests for CashScript contracts easier, we provide Vitest and Jest extensions that enables easy testing of `console.log` values and `require` error messages. To use the extension, you can import it from `cashscript/vitest` or `cashscript/jest`.
+To make writing automated tests for CashScript contracts easier, we provide Vitest and Jest extensions that enable easy testing of `console.log` values and `require` error messages. To use the extension, you can import it from `cashscript/vitest` or `cashscript/jest`.
 
 ```ts
 import 'cashscript/vitest';
@@ -94,7 +94,7 @@ describe('Example contract', () => {
 
   it('should pass require statement when correct parameter is passed', async () => {
     const transaction = new TransactionBuilder({ provider })
-      .addInput(contractUtxo, contract.unlock.exampleFunction(999n))
+      .addInput(contractUtxo, contract.unlock.exampleFunction(1000n))
       .addOutput({ to: contract.address, amount: 10000n })
     expect(transaction).not.toFailRequire();
   });

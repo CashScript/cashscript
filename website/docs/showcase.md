@@ -66,7 +66,7 @@ BCH Guru is a non-custodial price-prediction platform and a collectible NFT proj
     <a href="https://cashtokens.studio" target="_blank"><img style={{borderRadius: '100%'}} src="/img/cashtokens-studio.png" /></a>
 </div>
 
-The CashTokens Studio is an application for creating CashTokens and for their managing metadata updates and reserved supply. The CashTokens Studio uses CashScript to lock the AuthUTXO in an AuthGuard contract to prevent accidentally spending the authority to be able to update the token's metadata or release reserved supply.
+The CashTokens Studio is an application for creating CashTokens and for managing their metadata updates and reserved supply. The CashTokens Studio uses CashScript to lock the AuthUTXO in an AuthGuard contract to prevent accidentally spending the authority to be able to update the token's metadata or release reserved supply.
 
 ## FundMe.cash
 
