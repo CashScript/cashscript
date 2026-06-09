@@ -41,15 +41,11 @@ Some constructor arguments are simple constants. Others need to be prepared befo
 - **Public keys**: oracle or owner checks often require a public key or public key hash that must be derived before deployment.
 
 ```ts
+import { swapEndianness } from '@bitauth/libauth';
 import { Contract } from 'cashscript';
 
-// Reverse byte order of a hex string.
-function reverseHex(hex: string): string {
-  return hex.match(/../g)!.reverse().join('');
-}
-
-// Token IDs are often byte-reversed before being used in contract arguments.
-const argsA = [reverseHex(tokenIdX), reverseHex(tokenIdY)] as const;
+// when using a standard encoded tokenId, swap the endianness of the hex before using it in your contract
+const argsA = [swapEndianness(tokenIdX), swapEndianness(tokenIdY)] as const;
 const contractA = new Contract(artifactA, [...argsA], { provider });
 
 // Pass contractA's locking bytecode to a dependent contract.

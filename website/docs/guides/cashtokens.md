@@ -162,13 +162,11 @@ The easiest way to prevent issues with "junk" empty NFTs is to check that only N
 The `tokenCategory` introspection variable returns the tokenCategory in the original unreversed order, this is unlike wallets and explorers which use the reversed byte-order. So be careful about the byte-order of `tokenCategory` when working with BCH smart contracts.
 
 ```ts
-// Reverse byte order of a hex string.
-function reverseHex(hex: string): string {
-  return hex.match(/../g)!.reverse().join('');
-}
+import { swapEndianness } from '@bitauth/libauth';
+import { Contract } from 'cashscript';
 
-// when using a standard encoded tokenId, reverse the hex before using it in your contract
-const contract = new Contract(artifact, [reverseHex(tokenId)], { provider })
+// when using a standard encoded tokenId, swap the endianness of the hex before using it in your contract
+const contract = new Contract(artifact, [swapEndianness(tokenId)], { provider })
 ```
 
 #### Combined BCH + CashTokens UTXOs
