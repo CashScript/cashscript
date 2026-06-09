@@ -1,6 +1,7 @@
 {
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
+    "rootDir": ".",
     "target": "es2020",
     "lib": [
       "dom",
@@ -14,13 +15,12 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
   },
   "include": [
     "**/*.ts",

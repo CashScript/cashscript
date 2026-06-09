@@ -1,12 +1,17 @@
 {
   "extends": "./tsconfig.build.json",
-
   "compilerOptions": {
-    "baseUrl": "./packages",
+    "rootDir": ".",
     "paths": {
-      "cashc": ["cashc/src"],
-      "cashscript": ["cashscript/src"],
-      "@cashscript/utils": ["utils/src"],
+      "cashc": [
+        "./packages/cashc/src"
+      ],
+      "cashscript": [
+        "./packages/cashscript/src"
+      ],
+      "@cashscript/utils": [
+        "./packages/utils/src"
+      ],
     },
   },
 }

@@ -17,7 +17,7 @@
     "eslint-plugin-import": "^2.31.0",
     "lerna": "^3.22.1",
     "tsx": "^4.20.3",
-    "typescript": "^5.9.2"
+    "typescript": "^6.0.3"
   },
   "scripts": {
     "test": "lerna run test --ignore cashscript-examples --ignore testing-suite",
