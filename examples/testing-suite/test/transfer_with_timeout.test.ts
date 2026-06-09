@@ -8,8 +8,7 @@ describe('test example contract functions', () => {
   const contract = new Contract(artifact, [alicePub, bobPub, 100000n], { provider });
 
   // Create a contract Utxo
-  const contractUtxo = randomUtxo();
-  provider.addUtxo(contract.address, contractUtxo);
+  const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
   it('should succeed when timeout is called after timeout block', async () => {
     // given

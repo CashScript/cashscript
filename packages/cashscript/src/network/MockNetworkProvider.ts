@@ -121,12 +121,14 @@ export default class MockNetworkProvider implements NetworkProvider {
    *
    * @param addressOrLockingBytecode - Either a CashAddress or a hex-encoded locking bytecode.
    * @param utxo - The UTXO to make spendable.
+   * @returns The added UTXO.
    */
-  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void {
+  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): Utxo {
     const lockingBytecode = isHex(addressOrLockingBytecode) ?
       addressOrLockingBytecode : binToHex(addressToLockScript(addressOrLockingBytecode));
 
     this.utxoSet.push([lockingBytecode, utxo]);
+    return utxo;
   }
 
   /**

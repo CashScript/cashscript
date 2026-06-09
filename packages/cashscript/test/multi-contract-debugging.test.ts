@@ -36,11 +36,14 @@ describe('Multi-Contract-Debugging tests', () => {
         { provider },
       );
 
-      const sameNameDifferentPathContractUtxo = randomUtxo();
-      const siblingIntrospectionUtxo = randomUtxo();
-
-      provider.addUtxo(sameNameDifferentPathContract.address, sameNameDifferentPathContractUtxo);
-      provider.addUtxo(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+      const sameNameDifferentPathContractUtxo = provider.addUtxo(
+        sameNameDifferentPathContract.address,
+        randomUtxo(),
+      );
+      const siblingIntrospectionUtxo = provider.addUtxo(
+        siblingIntrospectionContract.address,
+        randomUtxo(),
+      );
 
       it('should log correct data in all executed console.log statements across all contracts in the correct order by input index', () => {
         const tx = new TransactionBuilder({ provider })
@@ -75,11 +78,14 @@ describe('Multi-Contract-Debugging tests', () => {
       const sameNameDifferentPathContract1 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [0n], { provider });
       const sameNameDifferentPathContract2 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [1n], { provider });
 
-      const sameNameDifferentPathContract1Utxo = randomUtxo();
-      const sameNameDifferentPathContract2Utxo = randomUtxo();
-
-      provider.addUtxo(sameNameDifferentPathContract1.address, sameNameDifferentPathContract1Utxo);
-      provider.addUtxo(sameNameDifferentPathContract2.address, sameNameDifferentPathContract2Utxo);
+      const sameNameDifferentPathContract1Utxo = provider.addUtxo(
+        sameNameDifferentPathContract1.address,
+        randomUtxo(),
+      );
+      const sameNameDifferentPathContract2Utxo = provider.addUtxo(
+        sameNameDifferentPathContract2.address,
+        randomUtxo(),
+      );
 
       const tx = new TransactionBuilder({ provider })
         .addInput(sameNameDifferentPathContract1Utxo, sameNameDifferentPathContract1.unlock.function_1(0n))
@@ -240,13 +246,12 @@ describe('Multi-Contract-Debugging tests', () => {
         { provider },
       );
 
-      const correctContractUtxo = randomUtxo();
-      const incorrectContractUtxo = randomUtxo();
-      const siblingIntrospectionUtxo = randomUtxo();
-
-      provider.addUtxo(correctContract.address, correctContractUtxo);
-      provider.addUtxo(incorrectContract.address, incorrectContractUtxo);
-      provider.addUtxo(siblingIntrospectionContract.address, siblingIntrospectionUtxo);
+      const correctContractUtxo = provider.addUtxo(correctContract.address, randomUtxo());
+      const incorrectContractUtxo = provider.addUtxo(incorrectContract.address, randomUtxo());
+      const siblingIntrospectionUtxo = provider.addUtxo(
+        siblingIntrospectionContract.address,
+        randomUtxo(),
+      );
 
       it('should not throw fail any require statements when introspecting correct sibling UTXOs', () => {
         const tx = new TransactionBuilder({ provider })
@@ -287,11 +292,8 @@ describe('Multi-Contract-Debugging tests', () => {
       const nameCollision = new Contract(ARTIFACT_NAME_COLLISION, [0n], { provider });
       const functionNameCollision = new Contract(ARTIFACT_FUNCTION_NAME_COLLISION, [1n], { provider });
 
-      const nameCollisionUtxo = randomUtxo();
-      const functionNameCollisionUtxo = randomUtxo();
-
-      provider.addUtxo(nameCollision.address, nameCollisionUtxo);
-      provider.addUtxo(functionNameCollision.address, functionNameCollisionUtxo);
+      const nameCollisionUtxo = provider.addUtxo(nameCollision.address, randomUtxo());
+      const functionNameCollisionUtxo = provider.addUtxo(functionNameCollision.address, randomUtxo());
 
       const transaction1 = new TransactionBuilder({ provider })
         .addInput(nameCollisionUtxo, nameCollision.unlock.name_collision(0n))
@@ -312,11 +314,8 @@ describe('Multi-Contract-Debugging tests', () => {
       const p2pkhContract1 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [0n], { provider });
       const p2pkhContract2 = new Contract(ARTIFACT_SAME_NAME_DIFFERENT_PATH, [1n], { provider });
 
-      const contract1Utxo = randomUtxo();
-      const contract2Utxo = randomUtxo();
-
-      provider.addUtxo(p2pkhContract1.address, contract1Utxo);
-      provider.addUtxo(p2pkhContract2.address, contract2Utxo);
+      const contract1Utxo = provider.addUtxo(p2pkhContract1.address, randomUtxo());
+      const contract2Utxo = provider.addUtxo(p2pkhContract2.address, randomUtxo());
 
       const transaction1 = new TransactionBuilder({ provider })
         .addInput(contract1Utxo, p2pkhContract1.unlock.function_1(0n))
@@ -339,11 +338,8 @@ describe('Multi-Contract-Debugging tests', () => {
       const nameCollision = new Contract(ARTIFACT_NAME_COLLISION, [0n], { provider });
       const contractNameCollision = new Contract(ARTIFACT_CONTRACT_NAME_COLLISION, [1n], { provider });
 
-      const nameCollisionUtxo = randomUtxo();
-      const contractNameCollisionUtxo = randomUtxo();
-
-      provider.addUtxo(nameCollision.address, nameCollisionUtxo);
-      provider.addUtxo(contractNameCollision.address, contractNameCollisionUtxo);
+      const nameCollisionUtxo = provider.addUtxo(nameCollision.address, randomUtxo());
+      const contractNameCollisionUtxo = provider.addUtxo(contractNameCollision.address, randomUtxo());
 
       const transaction = new TransactionBuilder({ provider })
         .addInput(nameCollisionUtxo, nameCollision.unlock.name_collision(0n))

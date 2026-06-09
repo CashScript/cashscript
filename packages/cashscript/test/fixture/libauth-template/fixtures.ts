@@ -19,8 +19,7 @@ export const fixtures: Fixture[] = [
     name: 'TransferWithTimeout (transfer function)',
     transaction: (() => {
       const contract = new Contract(TransferWithTimeout, [alicePub, bobPub, 100000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
       const tx = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contract.unlock.transfer(new SignatureTemplate(bobPriv)))
@@ -150,8 +149,7 @@ export const fixtures: Fixture[] = [
     name: 'TransferWithTimeout (timeout function)',
     transaction: (() => {
       const contract = new Contract(TransferWithTimeout, [alicePub, bobPub, 100000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
       const tx = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contract.unlock.timeout(new SignatureTemplate(alicePriv)))
@@ -282,8 +280,7 @@ export const fixtures: Fixture[] = [
     name: 'Mecenas',
     transaction: (() => {
       const contract = new Contract(Mecenas, [alicePkh, bobPkh, 10_000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
       const hardcodedFee = 1000n;
       const changeAmount = contractUtxo.satoshis - 10_000n - hardcodedFee;
@@ -416,10 +413,11 @@ export const fixtures: Fixture[] = [
     transaction: (() => {
       const contract = new Contract(P2PKH, [alicePkh], { provider });
 
-      const regularUtxo = randomUtxo();
-      const tokenUtxo = randomUtxo({ satoshis: 1000n, token: randomToken() });
-      provider.addUtxo(contract.address, regularUtxo);
-      provider.addUtxo(contract.address, tokenUtxo);
+      const regularUtxo = provider.addUtxo(contract.address, randomUtxo());
+      const tokenUtxo = provider.addUtxo(
+        contract.address,
+        randomUtxo({ satoshis: 1000n, token: randomToken() }),
+      );
 
       const to = contract.tokenAddress;
       const amount = 1000n;
@@ -698,8 +696,7 @@ export const fixtures: Fixture[] = [
     transaction: (() => {
       const contract = new Contract(P2PKH, [alicePkh], { provider });
 
-      const regularUtxo = randomUtxo();
-      provider.addUtxo(contract.address, regularUtxo);
+      const regularUtxo = provider.addUtxo(contract.address, randomUtxo());
 
       const to = contract.tokenAddress;
       const amount = 1000n;
@@ -819,10 +816,11 @@ export const fixtures: Fixture[] = [
     transaction: (() => {
       const contract = new Contract(P2PKH, [alicePkh], { provider });
 
-      const regularUtxo = randomUtxo();
-      const nftUtxo = randomUtxo({ satoshis: 1000n, token: randomNFT() });
-      provider.addUtxo(contract.address, regularUtxo);
-      provider.addUtxo(contract.address, nftUtxo);
+      const regularUtxo = provider.addUtxo(contract.address, randomUtxo());
+      const nftUtxo = provider.addUtxo(
+        contract.address,
+        randomUtxo({ satoshis: 1000n, token: randomNFT() }),
+      );
 
       const to = contract.tokenAddress;
       const amount = 1000n;
@@ -1116,8 +1114,7 @@ export const fixtures: Fixture[] = [
     name: 'HodlVault (datasig)',
     transaction: (() => {
       const contract = new Contract(HoldVault, [alicePub, oraclePub, 99000n, 30000n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
       // given
       const message = oracle.createMessage(100000n, 30000n);
@@ -1290,11 +1287,9 @@ export const fixtures: Fixture[] = [
     name: 'P2PKH (with P2PKH inputs & P2SH20 address type & ECDSA signature algorithm)',
     transaction: (() => {
       const contract = new Contract(P2PKH, [alicePkh], { provider, contractType: 'p2sh20' });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
-      const p2pkhUtxo = randomUtxo();
-      provider.addUtxo(aliceAddress, p2pkhUtxo);
+      const p2pkhUtxo = provider.addUtxo(aliceAddress, randomUtxo());
 
       const to = contract.tokenAddress;
       const amount = 1000n;

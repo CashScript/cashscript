@@ -145,9 +145,7 @@ describe('Contract', () => {
     it('should return utxos for existing p2s contract on mocknet', async () => {
       const provider = new MockNetworkProvider();
       const instance = new Contract(p2pkhArtifact, [alicePkh], { provider, contractType: 'p2s' });
-      const utxo = randomUtxo();
-
-      provider.addUtxo(instance.lockingBytecode, utxo);
+      const utxo = provider.addUtxo(instance.lockingBytecode, randomUtxo());
 
       expect(await instance.getUtxos()).toEqual([utxo]);
     });
@@ -190,8 +188,10 @@ describe('Contract', () => {
 
     it('can spend from a p2s contract', async () => {
       const p2sInstance = new Contract(p2pkhArtifact, [alicePkh], { provider, contractType: 'p2s' });
-      const utxo = randomUtxo({ satoshis: 100_000n });
-      provider.addUtxo(p2sInstance.lockingBytecode, utxo);
+      const utxo = provider.addUtxo(
+        p2sInstance.lockingBytecode,
+        randomUtxo({ satoshis: 100_000n }),
+      );
 
       const transaction = new TransactionBuilder({ provider })
         .addInput(utxo, p2sInstance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))

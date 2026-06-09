@@ -160,8 +160,7 @@ const contractArguments = [alicePub, bobPub, 100000n];
 const contract = new Contract(artifact, contractArguments, {provider});
 
 // Create a mocknet UTXO for testing
-const contractMockUtxo = randomUtxo()
-provider.addUtxo(contract.address, contractMockUtxo);
+const contractMockUtxo = provider.addUtxo(contract.address, randomUtxo());
 
 // Create the signatureTemplate for bob to sign the contract input
 const bobSignatureTemplate = new SignatureTemplate(bobPriv)

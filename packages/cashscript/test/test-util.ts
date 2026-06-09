@@ -61,8 +61,7 @@ export async function addUtxo(
   utxo: Utxo,
 ): Promise<Utxo> {
   if (provider instanceof MockNetworkProvider) {
-    provider.addUtxo(address, utxo);
-    return utxo;
+    return provider.addUtxo(address, utxo);
   }
 
   if (utxo.token) {

@@ -28,8 +28,7 @@ describe('Debugging tests - old artifacts', () => {
   it('should succeed when passing the correct parameters', () => {
     const provider = new MockNetworkProvider();
     const contractTestLogs = new Contract(artifact, [alicePkh], { provider });
-    const contractUtxo = randomUtxo();
-    provider.addUtxo(contractTestLogs.address, contractUtxo);
+    const contractUtxo = provider.addUtxo(contractTestLogs.address, randomUtxo());
 
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contractTestLogs.unlock.spend(alicePub, new SignatureTemplate(alicePriv)))
@@ -43,8 +42,7 @@ describe('Debugging tests - old artifacts', () => {
   it('should fail when passing the wrong parameters', () => {
     const provider = new MockNetworkProvider();
     const contractTestLogs = new Contract(artifact, [alicePkh], { provider });
-    const contractUtxo = randomUtxo();
-    provider.addUtxo(contractTestLogs.address, contractUtxo);
+    const contractUtxo = provider.addUtxo(contractTestLogs.address, randomUtxo());
 
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contractTestLogs.unlock.spend(alicePub, new SignatureTemplate(bobPriv)))

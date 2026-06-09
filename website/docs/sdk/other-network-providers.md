@@ -30,7 +30,7 @@ interface MockNetworkProvider extends NetworkProvider {
   setBlockHeight(newBlockHeight: number): void;
 
   // Add a UTXO to the UTXO set of the mock network
-  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): void;
+  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): Utxo;
 
   // Reset the UTXO set and transaction list of the mock network
   reset(): void;
@@ -44,8 +44,7 @@ The `vmTarget` option defaults to the current VM of `BCH_2026_05`, but this can 
 #### Example
 ```ts
 const provider = new MockNetworkProvider();
-const newUtxo = randomUtxo({satoshis: 10_000n})
-provider.addUtxo(contractAddress, newUtxo);
+const newUtxo = provider.addUtxo(contractAddress, randomUtxo({ satoshis: 10_000n }));
 ```
 
 The network type of the `MockNetworkProvider` is `'mocknet'`.

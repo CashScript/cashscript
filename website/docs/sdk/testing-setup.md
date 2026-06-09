@@ -20,16 +20,16 @@ To create a new virtual UTXO use `provider.addUtxo(address, utxo)`. You can use 
 import { MockNetworkProvider, randomUtxo, randomToken, randomNFT } from 'cashscript';
 
 const provider = new MockNetworkProvider();
-provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
+const contractUtxo = provider.addUtxo(contract.address, { vout: 0, txid: "ab...", satoshis: 10000n });
 
-provider.addUtxo(aliceAddress, randomUtxo({
+const aliceUtxo = provider.addUtxo(aliceAddress, randomUtxo({
   satoshis: 1000n,
   token: { ...randomNFT(), ...randomToken() },
 }));
 ```
 
 :::note
-By default, the `MockNetworkProvider` evaluates transactions locally but does not process the transaction updates. This means no UTXOs are consumed and no new UTXOs are created when mocking a transaction `send` using the provider. This can be configured by setting the `updateUtxoSet` option to `true`.
+By default, the `MockNetworkProvider` evaluates transactions locally and updates the in-memory UTXO set after a transaction is sent. This means spent UTXOs are consumed and new UTXOs are created when mocking a transaction `send` using the provider. This can be disabled by setting the `updateUtxoSet` option to `false`.
 :::
 
 ## Automated testing

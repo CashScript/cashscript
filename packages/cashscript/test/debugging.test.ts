@@ -22,12 +22,13 @@ describe('Debugging tests', () => {
     const provider = new MockNetworkProvider();
 
     const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
-    const contractUtxo = randomUtxo();
-    provider.addUtxo(contractTestLogs.address, contractUtxo);
+    const contractUtxo = provider.addUtxo(contractTestLogs.address, randomUtxo());
 
     const contractTestLogInsideLoop = new Contract(artifactTestLogInsideLoop, [], { provider });
-    const contractTestLogInsideLoopUtxo = randomUtxo();
-    provider.addUtxo(contractTestLogInsideLoop.address, contractTestLogInsideLoopUtxo);
+    const contractTestLogInsideLoopUtxo = provider.addUtxo(
+      contractTestLogInsideLoop.address,
+      randomUtxo(),
+    );
 
     it('should log correct values', async () => {
       const transaction = new TransactionBuilder({ provider })
@@ -76,8 +77,10 @@ describe('Debugging tests', () => {
         { provider },
       );
 
-      const utxo = randomUtxo();
-      provider.addUtxo(contractTestMultipleConstructorParameters.address, utxo);
+      const utxo = provider.addUtxo(
+        contractTestMultipleConstructorParameters.address,
+        randomUtxo(),
+      );
 
       const transaction = new TransactionBuilder({ provider })
         .addInput(utxo, contractTestMultipleConstructorParameters.unlock.secondFunction())
@@ -109,8 +112,7 @@ describe('Debugging tests', () => {
 
     it('should log multiple consecutive console.log statements on separate lines', async () => {
       const contractTestConsecutiveLogs = new Contract(artifactTestConsecutiveLogs, [alicePub], { provider });
-      const utxo = randomUtxo();
-      provider.addUtxo(contractTestConsecutiveLogs.address, utxo);
+      const utxo = provider.addUtxo(contractTestConsecutiveLogs.address, randomUtxo());
 
       const incorrectNum = 100n;
       const transaction = new TransactionBuilder({ provider })
@@ -125,8 +127,7 @@ describe('Debugging tests', () => {
 
     it('should log multiple console.log statements with other statements in between', async () => {
       const contractTestMultipleLogs = new Contract(artifactTestMultipleLogs, [alicePub], { provider });
-      const utxo = randomUtxo();
-      provider.addUtxo(contractTestMultipleLogs.address, utxo);
+      const utxo = provider.addUtxo(contractTestMultipleLogs.address, randomUtxo());
 
       const incorrectNum = 100n;
       const transaction = new TransactionBuilder({ provider })
@@ -218,16 +219,19 @@ describe('Debugging tests', () => {
   describe('require statements', () => {
     const provider = new MockNetworkProvider();
     const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
-    const contractTestRequiresUtxo = randomUtxo();
-    provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
+    const contractTestRequiresUtxo = provider.addUtxo(contractTestRequires.address, randomUtxo());
 
     const contractTestMultiLineRequires = new Contract(artifactTestMultilineRequires, [], { provider });
-    const contractTestMultiLineRequiresUtxo = randomUtxo();
-    provider.addUtxo(contractTestMultiLineRequires.address, contractTestMultiLineRequiresUtxo);
+    const contractTestMultiLineRequiresUtxo = provider.addUtxo(
+      contractTestMultiLineRequires.address,
+      randomUtxo(),
+    );
 
     const contractTestRequireInsideLoop = new Contract(artifactTestRequireInsideLoop, [], { provider });
-    const contractTestRequireInsideLoopUtxo = randomUtxo();
-    provider.addUtxo(contractTestRequireInsideLoop.address, contractTestRequireInsideLoopUtxo);
+    const contractTestRequireInsideLoopUtxo = provider.addUtxo(
+      contractTestRequireInsideLoop.address,
+      randomUtxo(),
+    );
 
     // test_require
     it('should fail with error message when require statement fails in a multi-function contract', async () => {
@@ -242,8 +246,10 @@ describe('Debugging tests', () => {
     // test_require_single_function
     it('should fail with error message when require statement fails in single function', async () => {
       const contractSingleFunction = new Contract(artifactTestSingleFunction, [], { provider });
-      const contractSingleFunctionUtxo = randomUtxo();
-      provider.addUtxo(contractSingleFunction.address, contractSingleFunctionUtxo);
+      const contractSingleFunctionUtxo = provider.addUtxo(
+        contractSingleFunction.address,
+        randomUtxo(),
+      );
 
       const transaction = new TransactionBuilder({ provider })
         .addInput(contractSingleFunctionUtxo, contractSingleFunction.unlock.test_require_single_function())
@@ -554,12 +560,13 @@ describe('Debugging tests', () => {
     const provider = new MockNetworkProvider();
 
     const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
-    const contractTestRequiresUtxo = randomUtxo();
-    provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
+    const contractTestRequiresUtxo = provider.addUtxo(contractTestRequires.address, randomUtxo());
 
     const contractTestMultiLineRequires = new Contract(artifactTestMultilineRequires, [], { provider });
-    const contractTestMultiLineRequiresUtxo = randomUtxo();
-    provider.addUtxo(contractTestMultiLineRequires.address, contractTestMultiLineRequiresUtxo);
+    const contractTestMultiLineRequiresUtxo = provider.addUtxo(
+      contractTestMultiLineRequires.address,
+      randomUtxo(),
+    );
 
     // test_invalid_split_range
     it('should fail with correct error message when an invalid OP_SPLIT range is used', async () => {
@@ -612,8 +619,7 @@ describe('Debugging tests', () => {
     // test_zero_handling
     it('should encode a locking and unlocking parameter of value 0 correctly and evaluate the execution', async () => {
       const contract = new Contract(artifactTestZeroHandling, [0n], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contract.address, contractUtxo);
+      const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
       const transaction = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contract.unlock.test_zero_handling(0n))
@@ -626,8 +632,7 @@ describe('Debugging tests', () => {
   describe('TestExtensions', () => {
     const provider = new MockNetworkProvider();
     const contractTestRequires = new Contract(artifactTestRequires, [], { provider });
-    const contractTestRequiresUtxo = randomUtxo();
-    provider.addUtxo(contractTestRequires.address, contractTestRequiresUtxo);
+    const contractTestRequiresUtxo = provider.addUtxo(contractTestRequires.address, randomUtxo());
 
     // Note: happy cases are implicitly tested by the "regular" debugging tests, since the use TestExtensions
 
@@ -761,8 +766,7 @@ describe('Debugging tests', () => {
     it.each(vmTargets)('should execute and log correctly with vmTarget %s', async (vmTarget) => {
       const provider = new MockNetworkProvider({ vmTarget });
       const contractTestLogs = new Contract(artifactTestLogs, [alicePub], { provider });
-      const contractUtxo = randomUtxo();
-      provider.addUtxo(contractTestLogs.address, contractUtxo);
+      const contractUtxo = provider.addUtxo(contractTestLogs.address, randomUtxo());
 
       const transaction = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contractTestLogs.unlock.transfer(new SignatureTemplate(alicePriv), 1000n))
