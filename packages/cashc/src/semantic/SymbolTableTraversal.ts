@@ -124,12 +124,15 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    [node.left, node.right].forEach(({ name, type }) => {
+    [node.left, node.right].forEach((variable) => {
+      const definition = createTupleVariableDefinition(node, variable);
+
+      const { name } = variable;
       if (this.symbolTables[0].get(name)) {
-        throw new VariableRedefinitionError(new VariableDefinitionNode(type, [], name, node.tuple));
+        throw new VariableRedefinitionError(definition);
       }
       this.symbolTables[0].set(
-        Symbol.variable(new VariableDefinitionNode(type, [], name, node.tuple)),
+        Symbol.variable(definition),
       );
     });
 
@@ -182,4 +185,13 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     return node;
   }
+}
+
+function createTupleVariableDefinition(
+  node: TupleAssignmentNode,
+  variable: TupleAssignmentNode['left'],
+): VariableDefinitionNode {
+  const definition = new VariableDefinitionNode(variable.type, [], variable.name, node.tuple);
+  definition.location = node.location;
+  return definition;
 }
