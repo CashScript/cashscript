@@ -2,6 +2,15 @@
 title: Release Notes
 ---
 
+## v0.13.1
+
+#### cashc compiler
+- :sparkles: Allow custom `CashScriptErrorListener` to be passed to the compiler.
+- :bug: Fix missing location data in tuple assignment errors.
+
+#### CashScript SDK
+- :sparkles: In the `MockNetworkProvider`, `addUtxo()` now returns the added UTXO.
+
 ## v0.13.0
 
 This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
@@ -50,6 +59,16 @@ This release contains several breaking changes, please refer to the [migration n
 - :hammer_and_wrench: Compile all contracts in the `contracts/` directory and save the artifacts in the `artifacts/` directory.
 - :hammer_and_wrench: Compile TS artifacts as well as JSON artifacts.
 - :hammer_and_wrench: Add key management utilities for testing.
+
+---
+
+https://x.com/CashScriptBCH/status/2059199869261095106
+
+## v0.12.2
+
+#### cashc compiler
+- :sparkles: Backport from v0.13.1: allow custom `CashScriptErrorListener` to be passed to the compiler.
+- :bug: Backport from v0.13.1: fix missing location data in tuple assignment errors.
 
 ## v0.12.1
 
