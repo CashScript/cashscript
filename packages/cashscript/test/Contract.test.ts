@@ -107,7 +107,7 @@ describe('Contract', () => {
     });
   });
 
-  describe('getBalance', () => {
+  describe.skip('getBalance', () => {
     // Not very robust, as this depends on the example P2PKH contract having balance
     it('should return balance for existing contract', async () => {
       const provider = new ElectrumNetworkProvider(Network.CHIPNET);
