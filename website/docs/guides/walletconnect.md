@@ -1,5 +1,5 @@
 ---
-title: WalletConnect
+title: WalletConnect & WizardConnect
 ---
 
 CashScript can prepare transactions for both BCH WalletConnect and WizardConnect. For smart contract dapps, the main differences are that BCH WalletConnect is a single-address wallet protocol with transaction and message signing, while WizardConnect is HD-wallet-aware and can support custom extensions but does not provide a generic message-signing method.
