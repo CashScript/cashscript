@@ -247,11 +247,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   cleanStack(functionBodyNode: Node): void {
     // Keep final verification value, OP_NIP the other stack values
+    const tagStartIndex = this.output.length;
     const stackSize = this.stack.length;
     for (let i = 0; i < stackSize - 1; i += 1) {
       this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
       this.nipFromStack();
     }
+    this.tagScopeCleanup(tagStartIndex);
   }
 
   enforceFunctionParameterTypes(node: FunctionDefinitionNode): void {
@@ -489,12 +491,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     node.block = this.visit(node.block) as BlockNode;
     this.removeScopedVariables(bodyStackDepth, node.block);
 
-    this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });
-    this.emit(Op.OP_FROMALTSTACK, { location: node.block.location, positionHint: PositionHint.END });
-    this.pushToStack('(value)');
-    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
-    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
-    this.popFromStack();
+    this.emitLoopCondition(node);
 
     this.scopeDepth -= 1;
 
@@ -527,12 +524,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     this.removeScopedVariables(bodyStackDepth, node.block);
 
-    this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });
-    this.emit(Op.OP_FROMALTSTACK, { location: node.block.location, positionHint: PositionHint.END });
-    this.pushToStack('(value)');
-    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
-    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
-    this.popFromStack();
+    this.emitLoopCondition(node);
 
     this.scopeDepth -= 1;
     this.removeScopedVariables(forScopeStackDepth, node);
@@ -540,12 +532,42 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return node;
   }
 
+  // Emits the loop-back epilogue shared by while- and for-loops: OP_ENDIF closes the body branch,
+  // then OP_FROMALTSTACK OP_NOT OP_UNTIL re-checks the saved condition and jumps back. These are
+  // compiler-injected and map to the closing brace; tag them so the debug reconstruction renders a
+  // ">>> loop condition check" annotation line (and the following loop-variable cleanup) before the brace.
+  private emitLoopCondition(node: WhileNode | ForNode): void {
+    const tagStartIndex = this.output.length;
+    this.emit(Op.OP_ENDIF, { location: node.block.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_FROMALTSTACK, { location: node.block.location, positionHint: PositionHint.END });
+    this.pushToStack('(value)');
+    this.emit(Op.OP_NOT, { location: node.location, positionHint: PositionHint.END });
+    this.emit(Op.OP_UNTIL, { location: node.location, positionHint: PositionHint.END });
+    this.popFromStack();
+    this.sourceTags.push({
+      startIndex: tagStartIndex,
+      endIndex: this.output.length - 1,
+      kind: SourceTagKind.LOOP_CONDITION,
+    });
+  }
+
   removeScopedVariables(depthBeforeScope: number, node: Node): void {
+    const tagStartIndex = this.output.length;
     const dropCount = this.stack.length - depthBeforeScope;
     for (let i = 0; i < dropCount; i += 1) {
       this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack();
     }
+    this.tagScopeCleanup(tagStartIndex);
+  }
+
+  private tagScopeCleanup(tagStartIndex: number): void {
+    if (this.output.length <= tagStartIndex) return;
+    this.sourceTags.push({
+      startIndex: tagStartIndex,
+      endIndex: this.output.length - 1,
+      kind: SourceTagKind.SCOPE_CLEANUP,
+    });
   }
 
   visitCast(node: CastNode): Node {

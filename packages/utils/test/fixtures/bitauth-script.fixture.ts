@@ -32,6 +32,7 @@ contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeou
 }`,
     asmBytecode: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL OP_NIP OP_NIP OP_NIP OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_DUP deadbeefdeadbeefdeadbeefdeadbeefdeadbeef OP_EQUALVERIFY OP_2 OP_PICK OP_3 OP_PICK OP_NUMEQUALVERIFY OP_4 OP_PICK OP_5 OP_PICK OP_EQUALVERIFY OP_3 OP_PICK OP_4 OP_PICK OP_EQUALVERIFY OP_4 OP_ROLL OP_4 OP_PICK OP_CHECKSIGVERIFY OP_3 OP_ROLL OP_HASH160 OP_EQUALVERIFY OP_SWAP OP_CHECKLOCKTIMEVERIFY OP_2DROP OP_1 OP_ENDIF',
     sourceMap: '3:2:6:3;;;;;4:21:4:22;;:24::33;;:4::36:1;5:20:5:29:0;;:12::30:1;:34::46:0;:4::48:1;3:45:6:3;;;:2;8::16::0;;;;9:12:9:21;:25::67;:4::69:1;10:12:10:19:0;;:23::30;;:4::32:1;11:12:11:13:0;;:17::18;;:4::20:1;12:12:12:21:0;;:25::34;;:4::36:1;13:21:13:22:0;;:24::33;;:4::36:1;14:20:14:29:0;;:12::30:1;:4::45;15:23:15:30:0;:4::32:1;8:44:16:3;;2:0:17:1',
+    sourceTags: '15:17:sc',
     expectedLineToAsmMap: {
       3: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF',
       4: 'OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY',
@@ -54,7 +55,8 @@ contract TransferWithTimeout(bytes20 senderPkh, bytes20 recipientPkh, int timeou
 OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF                                /*   function transfer(pubkey signingPk, sig s) {                                       */
 OP_5 OP_ROLL OP_5 OP_PICK OP_CHECKSIGVERIFY                        /*     require(checkSig(s, signingPk));                                                 */
 OP_4 OP_ROLL OP_HASH160 OP_ROT OP_EQUAL                            /*     require(hash160(signingPk) == recipientPkh);                                     */
-OP_NIP OP_NIP OP_NIP OP_ELSE                                       /*   }                                                                                  */
+OP_NIP OP_NIP OP_NIP                                               /*     >>> scope cleanup                                                                */
+OP_ELSE                                                            /*   }                                                                                  */
                                                                    /*                                                                                      */
 OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY                                /*   function timeout(pubkey signingPk, sig s) {                                        */
 OP_DUP <0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef> OP_EQUALVERIFY /*     require(senderPkh == 0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef);                */
@@ -107,6 +109,7 @@ contract Mecenas(bytes20 recipient, bytes20 funder, int pledge/*, int period */)
 }`.replace(/^\n+/, '').replace(/\n+$/, ''),
     asmBytecode: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF OP_0 OP_OUTPUTBYTECODE 76a914 OP_ROT OP_CAT 88ac OP_CAT OP_EQUALVERIFY e803 OP_INPUTINDEX OP_UTXOVALUE OP_DUP OP_4 OP_PICK OP_SUB OP_2 OP_PICK OP_SUB OP_DUP OP_5 OP_PICK OP_4 OP_PICK OP_ADD OP_LESSTHANOREQUAL OP_IF OP_0 OP_OUTPUTVALUE OP_2OVER OP_SWAP OP_SUB OP_NUMEQUALVERIFY OP_ELSE OP_0 OP_OUTPUTVALUE OP_5 OP_PICK OP_NUMEQUALVERIFY OP_1 OP_OUTPUTBYTECODE OP_INPUTINDEX OP_UTXOBYTECODE OP_EQUALVERIFY OP_1 OP_OUTPUTVALUE OP_OVER OP_NUMEQUALVERIFY OP_ENDIF OP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY OP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY OP_2SWAP OP_CHECKSIG OP_NIP OP_NIP OP_ENDIF',
     sourceMap: '9:4:28:5;;;;;13:27:13:28;:16::45:1;:49::84:0;:74::83;:49::84:1;;;:8::86;15:23:15:27:0;16:37:16:58;:27::65:1;17:26:17:38:0;:41::47;;:26:::1;:50::58:0;;:26:::1;21:12:21:23:0;:27::33;;:36::44;;:27:::1;:12;:46:23:9:0;22:31:22:32;:20::39:1;:43::66:0;;::::1;:12::68;23:15:27:9:0;24:31:24:32;:20::39:1;:43::49:0;;:12::51:1;25:31:25:32:0;:20::49:1;:63::84:0;:53::101:1;:12::103;26:31:26:32:0;:20::39:1;:43::54:0;:12::56:1;23:15:27:9;9:23:28:5;;;;:4;30::33::0;;;;31:24:31:26;;:16::27:1;:31::37:0;:8::39:1;32:25:32:30:0;:8::33:1;30:39:33:5;;8:0:34:1',
+    sourceTags: '69:70:sc',
     expectedLineToAsmMap: {
       9: 'OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF',
       13: 'OP_0 OP_OUTPUTBYTECODE <0x76a914> OP_ROT OP_CAT <0x88ac> OP_CAT OP_EQUALVERIFY',
@@ -160,7 +163,8 @@ OP_2DROP OP_2DROP OP_2DROP OP_1 OP_ELSE                                        /
 OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY                                            /*     function reclaim(pubkey pk, sig s) {                                                                           */
 OP_3 OP_PICK OP_HASH160 OP_ROT OP_EQUALVERIFY                                  /*         require(hash160(pk) == funder);                                                                            */
 OP_2SWAP OP_CHECKSIG                                                           /*         require(checkSig(s, pk));                                                                                  */
-OP_NIP OP_NIP                                                                  /*     }                                                                                                              */
+OP_NIP OP_NIP                                                                  /*         >>> scope cleanup                                                                                          */
+                                                                               /*     }                                                                                                              */
 OP_ENDIF                                                                       /* }                                                                                                                  */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
@@ -275,7 +279,7 @@ contract ForWhileNested() {
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
     asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_OVER OP_1ADD OP_ROT OP_DROP OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_4 OP_NUMEQUAL',
     sourceMap: '3:18:3:19;5:21:5:22;:8:13:9;:24:5:25;:28::29;:24:::1;;;:42:13:9:0;6:20:6:21;8:12:12:13;:19:8:20;:23::24;:19:::1;;;:26:12:13:0;9:22:9:25;;:28::29;;:22:::1;:32::33:0;:22:::1;:16::34;;;;;;;10:20:10:21:0;:::25:1;:16::26;8:26:12:13;;:12;;5:35:5:36:0;:::40:1;:31;;::13:9;:42;;:8;;;15:23:15:24:0;:8::26:1',
-    sourceTags: '38:42:fu',
+    sourceTags: '34:37:lc;38:42:fu;43:46:lc;47:47:sc',
     expectedLineToAsmMap: {
       3: 'OP_0',
       5: 'OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_OVER OP_1ADD OP_ROT OP_DROP',
@@ -299,9 +303,12 @@ OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                     
 OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK /*                 sum = sum + i + j;                          */
 OP_DUP OP_1ADD OP_NIP                                                                                              /*                 j = j + 1;                                  */
                                                                                                                    /*                 console.log("sum:", sum, "i:", i, "j:", j); */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*             }                                               */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*                 >>> loop condition check                    */
+                                                                                                                   /*             }                                               */
 OP_OVER OP_1ADD OP_ROT OP_DROP OP_NIP                                                                              /*             >>> for-loop update (i = i + 1)                 */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP                                                                   /*         }                                                   */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*             >>> loop condition check                        */
+OP_DROP                                                                                                            /*             >>> scope cleanup                               */
+                                                                                                                   /*         }                                                   */
                                                                                                                    /*                                                             */
 OP_4 OP_NUMEQUAL                                                                                                   /*         require(sum == 4);                                  */
                                                                                                                    /*     }                                                       */
@@ -331,7 +338,7 @@ OP_4 OP_NUMEQUAL                                                                
 }`,
     asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_0 OP_BEGIN OP_DUP OP_1ADD OP_NIP OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL OP_ADD OP_12 OP_NUMEQUAL',
     sourceMap: '3:20:3:21;5:21:5:22;:8:10:9;:24:5:25;:28::29;:24:::1;;;6:19:10:9:0;7:25:7:26;:12:9:13;:28:7:29;:32::33;:28:::1;;;:46:9:13:0;8:24:8:29;;:32::33;;:24:::1;:36::37:0;:24:::1;:16::38;;;;;;;7:39:7:40:0;:::44:1;:35;:46:9:13;;:12;;;6::6::0;:::17:1;5:31;6:19:10:9;;5:8;;;12:20:12:21:0;13:8:15:28;14:20:14:25;:::29:1;:12::30;15:17:15:22:0;:25::26;13:8::28:1;;17:16:17:29;:33::35:0;:8::37:1',
-    sourceTags: '31:33:fu;39:41:fu',
+    sourceTags: '31:33:fu;34:37:lc;38:38:sc;39:41:fu;42:45:lc;46:46:sc',
     expectedLineToAsmMap: {
       3: 'OP_0',
       5: 'OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK',
@@ -356,9 +363,13 @@ OP_IF                                                                           
 OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                                                   /*             for (int j = 0; j < 2; j = j + 1) { */
 OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK /*                 total = total + i + j;          */
 OP_DUP OP_1ADD OP_NIP                                                                                              /*                 >>> for-loop update (j = j + 1) */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP                                                                   /*             }                                   */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*                 >>> loop condition check        */
+OP_DROP                                                                                                            /*                 >>> scope cleanup               */
+                                                                                                                   /*             }                                   */
 OP_DUP OP_1ADD OP_NIP                                                                                              /*             >>> for-loop update (i + 1)         */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP                                                                   /*         }                                       */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*             >>> loop condition check            */
+OP_DROP                                                                                                            /*             >>> scope cleanup                   */
+                                                                                                                   /*         }                                       */
                                                                                                                    /*                                                 */
 OP_0                                                                                                               /*         int count = 0;                          */
 OP_BEGIN                                                                                                           /*         do {                                    */
@@ -445,6 +456,40 @@ OP_SIZE OP_NIP OP_8 OP_NUMEQUALVERIFY        /*         require(tag.length == 8)
 OP_TXLOCKTIME OP_1 OP_GREATERTHANOREQUAL     /*         require(tx.locktime >= 1);            */
                                              /*     }                                         */
                                              /* }                                             */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    name: 'ScopeCleanup (if-block local cleanup)',
+    sourceCode: `contract ScopeCleanup() {
+    function spend(int x) {
+        if (x > 0) {
+            int y = x + 1;
+            require(y > 0);
+        }
+        require(x > 0);
+    }
+}`,
+    asmBytecode: 'OP_DUP OP_0 OP_GREATERTHAN OP_IF OP_DUP OP_1ADD OP_DUP OP_0 OP_GREATERTHAN OP_VERIFY OP_DROP OP_ENDIF OP_0 OP_GREATERTHAN',
+    sourceMap: '3:12:3:13;:16::17;:12:::1;:19:6:9:0;4:20:4:21;:::25:1;5::5:21:0;:24::25;:20:::1;:12::27;3:19:6:9;;7:20:7:21:0;:8::23:1',
+    sourceTags: '10:10:sc',
+    expectedLineToAsmMap: {
+      3: 'OP_DUP OP_0 OP_GREATERTHAN OP_IF',
+      4: 'OP_DUP OP_1ADD',
+      5: 'OP_DUP OP_0 OP_GREATERTHAN OP_VERIFY',
+      6: 'OP_DROP OP_ENDIF',
+      7: 'OP_0 OP_GREATERTHAN',
+    },
+    expectedBitAuthScript: `
+                                     /* contract ScopeCleanup() {     */
+                                     /*     function spend(int x) {   */
+OP_DUP OP_0 OP_GREATERTHAN OP_IF     /*         if (x > 0) {          */
+OP_DUP OP_1ADD                       /*             int y = x + 1;    */
+OP_DUP OP_0 OP_GREATERTHAN OP_VERIFY /*             require(y > 0);   */
+OP_DROP                              /*             >>> scope cleanup */
+OP_ENDIF                             /*         }                     */
+OP_0 OP_GREATERTHAN                  /*         require(x > 0);       */
+                                     /*     }                         */
+                                     /* }                             */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
 ];

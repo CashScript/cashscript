@@ -226,6 +226,8 @@ export enum SourceTagKind {
   FOR_UPDATE = 'fu',
   LOCKTIME_GUARD = 'lg',
   PARAMETER_VALIDATION = 'pv',
+  SCOPE_CLEANUP = 'sc',
+  LOOP_CONDITION = 'lc',
 }
 
 export interface SourceTagEntry {

@@ -31,6 +31,7 @@ export default {
       { ip: 23, line: 13 },
       { ip: 25, line: 14 },
     ],
+    sourceTags: '9:11:sc',
   },
   compiler: {
     name: 'cashc',

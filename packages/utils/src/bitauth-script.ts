@@ -86,6 +86,12 @@ const PROLOGUE_KINDS = [
   SourceTagKind.PARAMETER_VALIDATION,
 ];
 
+// Compiler-injected epilogue checks: emitted after the function/loop body
+const EPILOGUE_KINDS = [
+  SourceTagKind.SCOPE_CLEANUP,
+  SourceTagKind.LOOP_CONDITION,
+];
+
 function buildInsertions(
   locationData: FullLocationData,
   sourceLines: string[],
@@ -119,6 +125,15 @@ function deriveAnchor(
       // annotations directly above the first body statement, at its indentation.
       insertAfterLine: firstBodyLine - 1,
       indent: lineIndent(sourceLines, firstBodyLine),
+    };
+  }
+
+  // Scope cleanup and loop-back condition tags always get inserted right before the scope's closing brace.
+  if (EPILOGUE_KINDS.includes(tag.kind)) {
+    const braceLine = getDisplayLine(locationData[tag.startIndex]);
+    return {
+      insertAfterLine: braceLine - 1,
+      indent: deriveIndent(locationData[tag.startIndex].location.start.line, sourceLines),
     };
   }
 
@@ -171,6 +186,10 @@ function tagDescription(tag: SourceTagEntry, locationData: FullLocationData, sou
       const parameter = deriveSourceText(tag, locationData, sourceLines);
       return `>>> parameter type check${parameter ? ` (${parameter})` : ''}`;
     }
+    case SourceTagKind.SCOPE_CLEANUP:
+      return '>>> scope cleanup';
+    case SourceTagKind.LOOP_CONDITION:
+      return '>>> loop condition check';
     case SourceTagKind.FOR_UPDATE:
     default:
       return `>>> for-loop update (${deriveSourceText(tag, locationData, sourceLines)})`;

@@ -74,6 +74,7 @@ export const fixtures: Fixture[] = [
           { ip: 25, line: 11 },
         ],
         sourceMap: '3:25:3:27;:30::31;:25:::1;4:30:4:32:0;:35::45;:48::49;:35:::1;:30;5:16:5:35;:8::37;7:20:7:33:0;8:13:8:15;:18::19;:13:::1;10:26:10:28:0;;:16::29:1;:43::45:0;:33::46:1;:8::48;11:25:11:26:0;:28::30;:8::33:1;2:37:12:5',
+        sourceTags: '23:23:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/reassignment.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -125,6 +126,7 @@ export const fixtures: Fixture[] = [
           { ip: 43, line: 13 },
         ],
         sourceMap: '3:16:3:21;::::1;4:12:4:13:0;:16::17;;:12:::1;5::5:13:0;:17::18;;:21::22;:17:::1;:12;:24:9:9:0;6:20:6:21;:24::25;;:20:::1;7:16:7:17:0;;:20::21;:16:::1;:12::22;;;8:20:8:25:0;::::1;:12::27;5:24:9:9;9:15:11::0;10:20:10:21;:25::26;;:12::28:1;9:15:11:9;12:12:12:13:0;:16::17;;:12:::1;13:21:13:22:0;;:8::24:1;2:33:14:5;;',
+        sourceTags: '27:27:sc;41:43:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/if_statement.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -170,6 +172,7 @@ export const fixtures: Fixture[] = [
           { ip: 25, line: 12 },
         ],
         sourceMap: '6:4:8:5;;;;;7:25:7:37;;:39::48;:8::51:1;6:40:8:5;;;:4;10::13::0;;;;11:25:11:34;;:36::42;:8::45:1;12:27:12:34:0;:8::36:1;10:36:13:5;;1:0:14:1',
+        sourceTags: '9:11:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/multifunction.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -247,6 +250,7 @@ export const fixtures: Fixture[] = [
           { ip: 85, line: 25 },
         ],
         sourceMap: '2:4:14:5;;;;;3:16:3:17;;:20::21;;:16:::1;4:12:4:13:0;:16::17;;:12:::1;5::5:13:0;:17::18;;:12:::1;:27::28:0;;:22::29:1;:12;:31:9:9:0;6:20:6:21;:24::25;;:20:::1;7:16:7:17:0;;:20::21;:16:::1;:12::22;;;8:20:8:25:0;::::1;:12::27;5:31:9:9;9:15:11::0;10:16:10:17;;:12::18:1;9:15:11:9;12:12:12:13:0;:16::17;;:12:::1;13:21:13:22:0;;:8::24:1;2:36:14:5;;;:4;16::26::0;;;17:16:17:17;;18:12:18:13;:16::17;:12:::1;19::19:13:0;:17::18;;:12:::1;:20:23:9:0;20::20:21;:24::25;;:20:::1;21:16:21:21:0;::::1;:12::22;;;22:20:22:25:0;::::1;:12::27;19:20:23:9;;24:12:25:22:0;25:8::24:1;16:28:26:5;;1:0:27:1',
+        sourceTags: '37:37:sc;79:79:sc;83:84:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/multifunction_if_statements.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -691,6 +695,7 @@ export const fixtures: Fixture[] = [
           { ip: 83, line: 29 },
         ],
         sourceMap: '2:4:25:5;;;;;3:28:3:34;;:8::36:1;;7:16:7:32:0;:36::37;:8::39:1;10:27:10:28:0;:16::45:1;:49::84:0;:74::83;:49::84:1;;;:8::86;12:23:12:27:0;13:37:13:58;:27::65:1;14:26:14:38:0;:41::47;;:26:::1;:50::58:0;;:26:::1;18:12:18:23:0;:27::33;;:36::44;;:27:::1;:12;:46:20:9:0;19:31:19:32;:20::39:1;:43::66:0;;::::1;:12::68;20:15:24:9:0;21:31:21:32;:20::39:1;:43::49:0;;:12::51:1;22:31:22:32:0;:20::49:1;:63::84:0;:53::101:1;:12::103;23:31:23:32:0;:20::39:1;:43::54:0;:12::56:1;20:15:24:9;2:23:25:5;;;;:4;27::30::0;;;;28:24:28:26;;:16::27:1;:31::37:0;:8::39:1;29:25:29:26:0;;:28::30;;:8::33:1;27:39:30:5;;;1:0:31:1',
+        sourceTags: '79:81:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/mecenas.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1059,6 +1064,7 @@ export const fixtures: Fixture[] = [
         requires: [
           { ip: 17, line: 9 },
         ],
+        sourceTags: '11:14:lc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/while_loop_basic.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1087,7 +1093,7 @@ export const fixtures: Fixture[] = [
         requires: [
           { ip: 24, line: 9 },
         ],
-        sourceTags: '14:16:fu',
+        sourceTags: '14:16:fu;17:20:lc;21:21:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/for_loop_basic.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1118,7 +1124,7 @@ export const fixtures: Fixture[] = [
           { ip: 38, line: 12 },
           { ip: 41, line: 13 },
         ],
-        sourceTags: '25:27:fu',
+        sourceTags: '25:27:fu;28:31:lc;32:32:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/for_loop_stack_items.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1160,7 +1166,7 @@ export const fixtures: Fixture[] = [
         requires: [
           { ip: 50, line: 15 },
         ],
-        sourceTags: '38:42:fu',
+        sourceTags: '34:37:lc;38:42:fu;43:46:lc;47:47:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/for_while_nested.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1191,6 +1197,7 @@ export const fixtures: Fixture[] = [
         requires: [
           { ip: 17, line: 10 },
         ],
+        sourceTags: '11:14:lc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/while_loop.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1222,6 +1229,7 @@ export const fixtures: Fixture[] = [
           { ip: 76, line: 28 },
           { ip: 80, line: 29 },
         ],
+        sourceTags: '69:69:sc;80:80:sc',
       },
       source: fs.readFileSync(new URL('../valid-contract-files/complex_loop.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {

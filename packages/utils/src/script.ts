@@ -10,7 +10,8 @@ import {
 } from '@bitauth/libauth';
 import OptimisationsEquivFile from './cashproof-optimisations.js';
 import { optimisationReplacements } from './optimisations.js';
-import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry } from './types.js';
+import { range } from './data.js';
+import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
 import { LogEntry, RequireStatement } from './artifact.js';
 
 export const Op = OpcodesBch;
@@ -190,7 +191,27 @@ export function optimiseBytecode(
     sourceTags = newSourceTags;
   }
 
-  return { script, locationData, logs, requires, sourceTags };
+  return { script, locationData, logs, requires, sourceTags: reconcileScopeCleanupTags(script, sourceTags) };
+}
+
+const SCOPE_CLEANUP_OPCODES = [Op.OP_DROP, Op.OP_NIP, Op.OP_2DROP];
+
+// Make sure that scope cleanup tags are only displayed if they did not merge with other tags or drift
+// due to compiler optimisations.
+function reconcileScopeCleanupTags(script: Script, sourceTags: SourceTagEntry[]): SourceTagEntry[] {
+  const otherTags = sourceTags.filter((tag) => tag.kind !== SourceTagKind.SCOPE_CLEANUP);
+
+  return sourceTags.filter((tag) => {
+    if (tag.kind !== SourceTagKind.SCOPE_CLEANUP) return true;
+
+    const isOnlyCleanupOpcodes = range(tag.startIndex, tag.endIndex)
+      .every((index) => SCOPE_CLEANUP_OPCODES.includes(script[index] as Op));
+    if (!isOnlyCleanupOpcodes) return false;
+
+    const overlapsOtherTag = otherTags
+      .some((other) => tag.startIndex <= other.endIndex && other.startIndex <= tag.endIndex);
+    return !overlapsOtherTag;
+  });
 }
 
 export function optimiseBytecodeOld(script: Script, runs: number = 1000): Script {

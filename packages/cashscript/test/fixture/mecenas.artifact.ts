@@ -32,6 +32,7 @@ export default {
       { ip: 72, line: 35 },
       { ip: 75, line: 36 },
     ],
+    sourceTags: '72:73:sc',
   },
   compiler: {
     name: 'cashc',
