@@ -36,6 +36,18 @@ export class OutputTokenCommitmentInvalidError extends Error {
   }
 }
 
+export class OutputTokenCommitmentTooLongError extends Error {
+  constructor(commitment: string, maximumSize: number) {
+    super(`Provided token commitment ${commitment} is longer than the maximum size of ${maximumSize} bytes`);
+  }
+}
+
+export class OpReturnSizeTooLargeError extends Error {
+  constructor(size: number, maximumSize: number) {
+    super(`OP_RETURN output size of ${size} is greater than the maximum size of ${maximumSize}`);
+  }
+}
+
 export class OutputBchChangeLockedError extends Error {
   constructor() {
     super('Tried to add a BCH input or output after a BCH change output was already added');
@@ -57,6 +69,48 @@ export class TokensToNonTokenAddressError extends Error {
 export class OutputAddressNetworkMismatchError extends Error {
   constructor(address: string, expectedNetworkPrefix: string) {
     super(`Tried to add an output to an address on the wrong network, ${address}. Expected network prefix: ${expectedNetworkPrefix}.`);
+  }
+}
+
+export class TransactionInputsRequiredError extends Error {
+  constructor() {
+    super('Transaction must have at least one input');
+  }
+}
+
+export class TransactionOutputsRequiredError extends Error {
+  constructor() {
+    super('Transaction must have at least one output');
+  }
+}
+
+export class UnlockingBytecodeTooLargeError extends Error {
+  constructor(size: number, maximumSize: number) {
+    super(`Unlocking bytecode size of ${size} is greater than the maximum size of ${maximumSize}`);
+  }
+}
+
+export class TransactionTooLargeError extends Error {
+  constructor(size: number, maximumSize: number) {
+    super(`Transaction size of ${size} is greater than the maximum standard transaction size of ${maximumSize}`);
+  }
+}
+
+export class TransactionFeeTooHighError extends Error {
+  constructor(fee: bigint, maximumFee: bigint) {
+    super(`Transaction fee of ${fee} is higher than max fee of ${maximumFee}`);
+  }
+}
+
+export class TransactionFeePerByteTooHighError extends Error {
+  constructor(feePerByte: number, maximumFeePerByte: number) {
+    super(`Transaction fee per byte of ${feePerByte} is higher than max fee per byte of ${maximumFeePerByte}`);
+  }
+}
+
+export class TransactionFeePerByteTooLowError extends Error {
+  constructor(feePerByte: number, minimumFeePerByte: number) {
+    super(`Transaction fee per byte of ${feePerByte} is lower than the standard minimum fee per byte of ${minimumFeePerByte}`);
   }
 }
 

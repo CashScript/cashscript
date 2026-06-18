@@ -94,7 +94,7 @@ describe('P2PKH-tokens', () => {
       const to = p2pkhInstance.tokenAddress;
       const amount = 1000n;
       const fee = 1000n;
-      const fullBchBalance = nftUtxo1.satoshis + nftUtxo2.satoshis + nonTokenUtxos.reduce(
+      const fullBchBalance = nonTokenUtxos.reduce(
         (total, utxo) => total + utxo.satoshis, 0n,
       );
       const changeAmount = fullBchBalance - fee - amount;

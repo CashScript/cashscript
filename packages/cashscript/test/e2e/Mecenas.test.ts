@@ -16,7 +16,7 @@ describe('Mecenas', () => {
     ? new ElectrumNetworkProvider(Network.CHIPNET)
     : new MockNetworkProvider();
 
-  const pledge = 10000n;
+  const pledge = 10_000n;
   const mecenas = new Contract(artifact, [alicePkh, bobPkh, pledge], { provider });
   const minerFee = 1000n;
 
@@ -31,7 +31,7 @@ describe('Mecenas', () => {
       const recipient = aliceAddress;
       const pledgeAmount = pledge;
       // Ensure a second contract UTXO exists so we can try to spend two at once
-      (provider as any).addUtxo?.(mecenas.address, randomUtxo());
+      await addUtxo(provider, mecenas.address, randomUtxo());
       const contractUtxos = (await mecenas.getUtxos()).slice(0, 2);
       expect(contractUtxos).toHaveLength(2);
       const totalInput = contractUtxos.reduce((sum, utxo) => sum + utxo.satoshis, 0n);
@@ -96,7 +96,7 @@ describe('Mecenas', () => {
       const recipient = aliceAddress;
       const pledgeAmount = pledge;
       const contractUtxo = getLargestUtxo(await mecenas.getUtxos());
-      const changeAmount = contractUtxo.satoshis - pledgeAmount - minerFee;
+      const changeAmount = contractUtxo.satoshis - pledgeAmount * 2n - minerFee;
 
       // when
       const txPromise = new TransactionBuilder({ provider })
@@ -118,7 +118,7 @@ describe('Mecenas', () => {
       const pledgeAmount = pledge;
       const contractUtxo = getLargestUtxo(await mecenas.getUtxos());
       const changeAmount = contractUtxo.satoshis - pledgeAmount - minerFee;
-      const incorrectChangeAmount = changeAmount * 2n;
+      const incorrectChangeAmount = BigInt(Math.floor(Number(changeAmount) * 0.8));
 
       // when
       const txPromise = new TransactionBuilder({ provider })

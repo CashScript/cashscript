@@ -45,6 +45,8 @@ import {
   OutputAddressNetworkMismatchError,
   OutputTokenCategoryInvalidError,
   OutputTokenCommitmentInvalidError,
+  OutputTokenCommitmentTooLongError,
+  OpReturnSizeTooLargeError,
   OutputBchChangeLockedError,
   OutputTokenChangeLockedError,
 } from './Errors.js';
@@ -61,7 +63,13 @@ export function validateInput(utxo: Utxo, changeLocks: Record<string, boolean>):
 export function validateOutput(output: Output, network: Network, changeLocks: Record<string, boolean>): void {
   validateChangeLocks(changeLocks, output.token?.category);
 
-  if (isOpReturnOutput(output)) return;
+  if (isOpReturnOutput(output)) {
+    const OP_RETURN_MAX_SIZE = 223;
+    if (output.to.byteLength > OP_RETURN_MAX_SIZE) {
+      throw new OpReturnSizeTooLargeError(output.to.byteLength, OP_RETURN_MAX_SIZE);
+    }
+    return;
+  }
 
   const minimumAmount = calculateDust(output);
   if (output.amount < minimumAmount) {
@@ -79,6 +87,11 @@ export function validateOutput(output: Output, network: Network, changeLocks: Re
 
     if (output.token.nft && (typeof output.token.nft.commitment !== 'string' || !isHex(output.token.nft.commitment))) {
       throw new OutputTokenCommitmentInvalidError(output.token.nft.commitment);
+    }
+
+    const NFT_COMMITMENT_MAX_SIZE = 128;
+    if (output.token.nft && output.token.nft.commitment.length > NFT_COMMITMENT_MAX_SIZE * 2) {
+      throw new OutputTokenCommitmentTooLongError(output.token.nft.commitment, NFT_COMMITMENT_MAX_SIZE);
     }
   }
 
@@ -106,7 +119,7 @@ function validateChangeLocks(changeLocks: Record<string, boolean>, category?: st
   }
 }
 
-export function isOpReturnOutput(output: Output): boolean {
+export function isOpReturnOutput(output: Output): output is Output & { to: Uint8Array } {
   return typeof output.to !== 'string' && output.to[0] === Op.OP_RETURN;
 }
 

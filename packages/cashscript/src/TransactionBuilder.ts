@@ -33,7 +33,16 @@ import {
   validateInput,
   validateOutput,
 } from './utils.js';
-import { FailedTransactionError } from './Errors.js';
+import {
+  FailedTransactionError,
+  TransactionFeeTooHighError,
+  TransactionFeePerByteTooHighError,
+  TransactionFeePerByteTooLowError,
+  TransactionInputsRequiredError,
+  TransactionOutputsRequiredError,
+  UnlockingBytecodeTooLargeError,
+  TransactionTooLargeError,
+} from './Errors.js';
 import { DebugResults } from './debugging.js';
 import { debugLibauthTemplate, getLibauthTemplate, getBitauthUri } from './libauth-template/LibauthTemplate.js';
 import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
@@ -302,53 +311,23 @@ export class TransactionBuilder {
     return this;
   }
 
-  private checkMaxFee(transaction: LibauthTransaction): void {
-    const totalInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
-    const totalOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
-    const fee = totalInputAmount - totalOutputAmount;
-
-    if (this.options.maximumFeeSatoshis && fee > this.options.maximumFeeSatoshis) {
-      throw new Error(`Transaction fee of ${fee} is higher than max fee of ${this.options.maximumFeeSatoshis}`);
-    }
-
-    if (this.options.maximumFeeSatsPerByte) {
-      const transactionSize = encodeTransaction(transaction).byteLength;
-      const feePerByte = Number((Number(fee) / transactionSize).toFixed(2));
-
-      if (feePerByte > this.options.maximumFeeSatsPerByte) {
-        throw new Error(`Transaction fee per byte of ${feePerByte} is higher than max fee per byte of ${this.options.maximumFeeSatsPerByte}`);
-      }
-    }
-  }
-
-  private checkFungibleTokenBurn(): void {
-    if (this.options.allowImplicitFungibleTokenBurn) return;
-
-    const tokenInputAmounts: Record<string, bigint> = {};
-    const tokenOutputAmounts: Record<string, bigint> = {};
-
-    for (const input of this.inputs) {
-      if (input.token?.amount) {
-        tokenInputAmounts[input.token.category] = (tokenInputAmounts[input.token.category] || 0n) + input.token.amount;
-      }
-    }
-    for (const output of this.outputs) {
-      if (output.token?.amount) {
-        tokenOutputAmounts[output.token.category] = (tokenOutputAmounts[output.token.category] || 0n) + output.token.amount;
-      }
-    }
-
-    for (const [category, inputAmount] of Object.entries(tokenInputAmounts)) {
-      const outputAmount = tokenOutputAmounts[category] || 0n;
-      if (outputAmount < inputAmount) {
-        throw new Error(`Implicit burning of fungible tokens for category ${category} is not allowed (input amount: ${inputAmount}, output amount: ${outputAmount}). If this is intended, set allowImplicitFungibleTokenBurn to true.`);
-      }
-    }
+  /**
+   * Build the transaction, applying fee and implicit-burn checks, and return the hex-encoded
+   * transaction bytes.
+   *
+   * @returns The signed transaction as a hex string.
+   * @throws If the transaction fee exceeds the configured maximum, or if fungible tokens are
+   *   implicitly burned without `allowImplicitFungibleTokenBurn` enabled.
+   */
+  build(): string {
+    const transaction = this.buildLibauthTransaction();
+    return binToHex(encodeTransaction(transaction));
   }
 
   private buildLibauthTransaction(skipChecks: boolean = false): LibauthTransaction {
     if (!skipChecks) {
       this.checkFungibleTokenBurn();
+      this.checkInputsAndOutputs();
     }
 
     const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
@@ -375,27 +354,16 @@ export class TransactionBuilder {
     ));
 
     inputScripts.forEach((script, i) => {
+      if (!skipChecks) this.checkUnlockingBytecodeSize(script);
       transaction.inputs[i].unlockingBytecode = script;
     });
 
     if (!skipChecks) {
-      this.checkMaxFee(transaction);
+      this.checkFee(transaction);
+      this.checkTransactionSize(transaction);
     }
 
     return transaction;
-  }
-
-  /**
-   * Build the transaction, applying fee and implicit-burn checks, and return the hex-encoded
-   * transaction bytes.
-   *
-   * @returns The signed transaction as a hex string.
-   * @throws If the transaction fee exceeds the configured maximum, or if fungible tokens are
-   *   implicitly burned without `allowImplicitFungibleTokenBurn` enabled.
-   */
-  build(): string {
-    const transaction = this.buildLibauthTransaction();
-    return binToHex(encodeTransaction(transaction));
   }
 
   /**
@@ -588,5 +556,78 @@ export class TransactionBuilder {
       };
     });
     return { ...options, transaction, sourceOutputs };
+  }
+
+  private checkFee(transaction: LibauthTransaction): void {
+    const totalInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
+    const totalOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
+    const transactionSize = encodeTransaction(transaction).byteLength;
+
+    const fee = totalInputAmount - totalOutputAmount;
+    const feePerByte = Number((Number(fee) / transactionSize).toFixed(2));
+
+    if (this.options.maximumFeeSatoshis && fee > this.options.maximumFeeSatoshis) {
+      throw new TransactionFeeTooHighError(fee, this.options.maximumFeeSatoshis);
+    }
+
+    if (this.options.maximumFeeSatsPerByte && feePerByte > this.options.maximumFeeSatsPerByte) {
+      throw new TransactionFeePerByteTooHighError(feePerByte, this.options.maximumFeeSatsPerByte);
+    }
+
+    const STANDARD_MIN_FEE_PER_BYTE = 1.0;
+    if (feePerByte < STANDARD_MIN_FEE_PER_BYTE) {
+      throw new TransactionFeePerByteTooLowError(feePerByte, STANDARD_MIN_FEE_PER_BYTE);
+    }
+  }
+
+  private checkFungibleTokenBurn(): void {
+    if (this.options.allowImplicitFungibleTokenBurn) return;
+
+    const tokenInputAmounts: Record<string, bigint> = {};
+    const tokenOutputAmounts: Record<string, bigint> = {};
+
+    for (const input of this.inputs) {
+      if (input.token?.amount) {
+        tokenInputAmounts[input.token.category] = (tokenInputAmounts[input.token.category] || 0n) + input.token.amount;
+      }
+    }
+    for (const output of this.outputs) {
+      if (output.token?.amount) {
+        tokenOutputAmounts[output.token.category] = (tokenOutputAmounts[output.token.category] || 0n) + output.token.amount;
+      }
+    }
+
+    for (const [category, inputAmount] of Object.entries(tokenInputAmounts)) {
+      const outputAmount = tokenOutputAmounts[category] || 0n;
+      if (outputAmount < inputAmount) {
+        throw new Error(`Implicit burning of fungible tokens for category ${category} is not allowed (input amount: ${inputAmount}, output amount: ${outputAmount}). If this is intended, set allowImplicitFungibleTokenBurn to true.`);
+      }
+    }
+  }
+
+  private checkInputsAndOutputs(): void {
+    if (this.inputs.length === 0) {
+      throw new TransactionInputsRequiredError();
+    }
+
+    if (this.outputs.length === 0) {
+      throw new TransactionOutputsRequiredError();
+    }
+  }
+
+  private checkUnlockingBytecodeSize(script: Uint8Array): void {
+    const MAX_UNLOCKING_BYTECODE_SIZE = 10_000;
+    if (script.byteLength > MAX_UNLOCKING_BYTECODE_SIZE) {
+      throw new UnlockingBytecodeTooLargeError(script.byteLength, MAX_UNLOCKING_BYTECODE_SIZE);
+    }
+  }
+
+  private checkTransactionSize(transaction: LibauthTransaction): void {
+    const transactionSize = encodeTransaction(transaction).byteLength;
+
+    const TX_MAX_STANDARD_SIZE = 100_000;
+    if (transactionSize > TX_MAX_STANDARD_SIZE) {
+      throw new TransactionTooLargeError(transactionSize, TX_MAX_STANDARD_SIZE);
+    }
   }
 }

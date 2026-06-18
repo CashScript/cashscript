@@ -30,8 +30,8 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
       expect(await provider.getUtxos(p2pkhInstance.address)).toHaveLength(0);
 
       // add by address & locking bytecode
-      provider.addUtxo(aliceAddress, randomUtxo({ satoshis: 1100n }));
-      provider.addUtxo(binToHex(addressToLockScript(p2pkhInstance.address)), randomUtxo({ satoshis: 1100n }));
+      provider.addUtxo(aliceAddress, randomUtxo({ satoshis: 1500n }));
+      provider.addUtxo(binToHex(addressToLockScript(p2pkhInstance.address)), randomUtxo({ satoshis: 1500n }));
 
       const aliceUtxos = await provider.getUtxos(aliceAddress);
       const bobUtxos = await provider.getUtxos(bobAddress);
@@ -86,8 +86,8 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
       expect(await provider.getUtxos(p2pkhInstance.address)).toHaveLength(0);
 
       // add by address & locking bytecode
-      provider.addUtxo(aliceAddress, randomUtxo({ satoshis: 1100n }));
-      provider.addUtxo(binToHex(addressToLockScript(p2pkhInstance.address)), randomUtxo({ satoshis: 1100n }));
+      provider.addUtxo(aliceAddress, randomUtxo({ satoshis: 1500n }));
+      provider.addUtxo(binToHex(addressToLockScript(p2pkhInstance.address)), randomUtxo({ satoshis: 1500n }));
 
       const aliceUtxos = await provider.getUtxos(aliceAddress);
       const bobUtxos = await provider.getUtxos(bobAddress);

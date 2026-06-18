@@ -90,8 +90,14 @@ describe('Multi-Contract-Debugging tests', () => {
       const tx = new TransactionBuilder({ provider })
         .addInput(sameNameDifferentPathContract1Utxo, sameNameDifferentPathContract1.unlock.function_1(0n))
         .addInput(sameNameDifferentPathContract2Utxo, sameNameDifferentPathContract2.unlock.function_1(1n))
-        .addOutput({ to: sameNameDifferentPathContract1.address, amount: sameNameDifferentPathContract1Utxo.satoshis })
-        .addOutput({ to: sameNameDifferentPathContract2.address, amount: sameNameDifferentPathContract2Utxo.satoshis });
+        .addOutput({
+          to: sameNameDifferentPathContract1.address,
+          amount: sameNameDifferentPathContract1Utxo.satoshis - 1000n,
+        })
+        .addOutput({
+          to: sameNameDifferentPathContract2.address,
+          amount: sameNameDifferentPathContract2Utxo.satoshis,
+        });
 
       expect(tx).toLog('[Input #0] SameNameDifferentPath.cash:5 a is 0\n[Input #1] SameNameDifferentPath.cash:8 a is not 0');
     });

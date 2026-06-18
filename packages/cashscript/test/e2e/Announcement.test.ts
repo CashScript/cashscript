@@ -59,7 +59,7 @@ describe('Announcement', () => {
       const str = 'A contract may not injure a human being or, through inaction, allow a human being to come to harm.';
       const contractUtxo = getLargestUtxo(await announcement.getUtxos());
       const changeAmount = contractUtxo.satoshis - minerFee;
-      const incorrectChangeAmount = changeAmount * 2n;
+      const incorrectChangeAmount = BigInt(Math.floor(Number(changeAmount) * 0.8));
 
       // when
       const txPromise = new TransactionBuilder({ provider })
