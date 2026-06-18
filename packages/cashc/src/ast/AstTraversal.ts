@@ -22,6 +22,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
@@ -78,6 +79,11 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitRequire(node: RequireNode): Node {
+    node.expression = this.visit(node.expression);
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
     node.expression = this.visit(node.expression);
     return node;
   }

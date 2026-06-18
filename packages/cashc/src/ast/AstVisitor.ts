@@ -21,6 +21,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
@@ -41,6 +42,7 @@ export default abstract class AstVisitor<T> {
   abstract visitAssign(node: AssignNode): T;
   abstract visitTimeOp(node: TimeOpNode): T;
   abstract visitRequire(node: RequireNode): T;
+  abstract visitReturn(node: ReturnNode): T;
   abstract visitConsoleStatement(node: ConsoleStatementNode): T;
   abstract visitBranch(node: BranchNode): T;
   abstract visitDoWhile(node: DoWhileNode): T;

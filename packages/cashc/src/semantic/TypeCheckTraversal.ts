@@ -22,6 +22,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   Node,
   InstantiationNode,
   TupleAssignmentNode,
@@ -34,6 +35,8 @@ import {
   BlockNode,
   StatementNode,
   ExpressionNode,
+  FunctionDefinitionNode,
+  ParameterNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import {
@@ -47,6 +50,9 @@ import {
   IndexOutOfBoundsError,
   TupleAssignmentError,
   BitshiftBitcountNegativeError,
+  ReturnTypeError,
+  MissingReturnStatementError,
+  ReturnStatementError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
@@ -54,6 +60,51 @@ import { Symbol } from '../ast/SymbolTable.js';
 import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
+  // Declared return type of the user-defined function currently being type-checked (if any).
+  private currentReturnType?: Type;
+
+  visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    this.currentReturnType = node.returnType;
+    node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    node.body = this.visit(node.body) as BlockNode;
+    this.currentReturnType = undefined;
+
+    if (node.isUserFunction) {
+      // Inlining requires a single `return` as the final statement of the body. Disallow missing,
+      // early, or nested returns so each call site lowers to a clean result assignment.
+      const statements = node.body.statements ?? [];
+      const finalStatement = statements[statements.length - 1];
+      if (!(finalStatement instanceof ReturnNode)) {
+        throw new MissingReturnStatementError(node);
+      }
+
+      const nestedReturns = countReturns(node.body) - 1;
+      if (nestedReturns > 0) {
+        throw new ReturnStatementError(
+          node,
+          `Function '${node.name}' may only contain a single return statement as its final statement`,
+        );
+      }
+    }
+
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
+    node.expression = this.visit(node.expression);
+
+    // `return` is only valid inside a user-defined (value-returning) function.
+    if (this.currentReturnType === undefined) {
+      throw new ReturnStatementError(node, 'return statement is only allowed in functions with a declared return type');
+    }
+
+    if (!implicitlyCastable(node.expression.type, this.currentReturnType)) {
+      throw new ReturnTypeError(node, node.expression.type, this.currentReturnType);
+    }
+
+    return node;
+  }
+
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
     expectAssignable(node, node.expression.type, node.type);
@@ -624,3 +675,17 @@ function matchSizeLiteral(expr: BinaryOpNode): { sizeNode: UnaryOpNode, literalN
 const isSizeOp = (node: ExpressionNode): node is UnaryOpNode => (
   node instanceof UnaryOpNode && node.operator === UnaryOperator.SIZE
 );
+
+// Counts the number of `return` statements anywhere within a node (used to reject early/nested
+// returns, which the inliner does not support).
+function countReturns(node: Node): number {
+  let count = 0;
+  const counter = new (class extends AstTraversal {
+    visitReturn(returnNode: ReturnNode): Node {
+      count += 1;
+      return super.visitReturn(returnNode);
+    }
+  })();
+  node.accept(counter);
+  return count;
+}

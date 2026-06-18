@@ -9,6 +9,7 @@ import {
   PrimitiveType,
   Script,
   scriptToAsm,
+  scriptToBytecode,
   generateSourceMap,
   FullLocationData,
   LogEntry,
@@ -42,6 +43,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   SourceFileNode,
   Node,
   InstantiationNode,
@@ -80,6 +82,14 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+
+  // Maps each user-defined (value-returning) function name to its assigned VM function identifier
+  // (a sequential number 1, 2, 3, ... encoded as a 0-7 byte VM number) and parameter count. Used by
+  // visitFunctionCall to emit OP_INVOKE for the shared function body stored via OP_DEFINE.
+  private userFunctionIds: Map<string, { id: number, paramCount: number }> = new Map();
+  // True while compiling a user-defined function body as a standalone routine (so that visitReturn
+  // knows to leave only the return value on the stack instead of emitting a require/verify).
+  private compilingUserFunctionBody = false;
 
   constructor(private compilerOptions: CompilerOptions) {
     super();
@@ -149,18 +159,31 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // Keep track of constructor parameter count for instructor pointer calculation
     this.constructorParameterCount = node.parameters.length;
 
-    if (node.functions.length === 1) {
-      node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
+    // Separate user-defined (value-returning) functions from contract spending functions. The user
+    // functions are lowered to CHIP-2025-05 function opcodes (OP_DEFINE / OP_INVOKE), the spending
+    // functions are compiled as before and selected via the function selector at the stack bottom.
+    const userFunctions = node.functions.filter((f) => f.isUserFunction);
+    const spendingFunctions = node.functions.filter((f) => !f.isUserFunction);
+
+    // Define every user function up front (before any OP_INVOKE). The VM function table persists for
+    // the whole evaluation of this (locking/unlocking/redeem) bytecode, so a body defined here can be
+    // invoked from the spending function and from other already-defined function bodies. Assign each
+    // a sequential VM-number identifier (1, 2, 3, ...). Defining all of them before any invoke also
+    // lets bodies invoke each other regardless of declaration order.
+    this.defineUserFunctions(userFunctions);
+
+    if (spendingFunctions.length === 1) {
+      this.visit(spendingFunctions[0]);
     } else {
       this.pushToStack('$$', true);
-      node.functions = node.functions.map((f, i) => {
+      spendingFunctions.forEach((f, i) => {
         const locationData = { location: f.location, positionHint: PositionHint.START };
 
         const stackCopy = [...this.stack];
         const selectorIndex = this.getStackIndex('$$');
 
         this.emit(encodeInt(BigInt(selectorIndex)), locationData);
-        if (i === node.functions.length - 1) {
+        if (i === spendingFunctions.length - 1) {
           this.emit(Op.OP_ROLL, locationData);
           this.removeFromStack(selectorIndex);
         } else {
@@ -171,28 +194,101 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
         this.emit(encodeInt(BigInt(i)), locationData);
         this.emit(Op.OP_NUMEQUAL, locationData);
 
-        if (i < node.functions.length - 1) {
+        if (i < spendingFunctions.length - 1) {
           this.emit(Op.OP_IF, locationData);
         } else {
           this.emit(Op.OP_VERIFY, locationData);
         }
 
-        f = this.visit(f) as FunctionDefinitionNode;
+        this.visit(f);
 
-        if (i < node.functions.length - 1) {
+        if (i < spendingFunctions.length - 1) {
           this.emit(Op.OP_ELSE, { ...locationData, positionHint: PositionHint.END });
         }
 
         this.stack = [...stackCopy];
-        return f;
       });
 
-      for (let i = 0; i < node.functions.length - 1; i += 1) {
+      for (let i = 0; i < spendingFunctions.length - 1; i += 1) {
         this.emit(Op.OP_ENDIF, { location: node.location, positionHint: PositionHint.END });
       }
     }
 
     return node;
+  }
+
+  // Emits the OP_DEFINE prologue for every user-defined function: each body is compiled once as an
+  // independent stack-based routine (its parameters are the initial stack items it consumes, leaving
+  // its return value on top), then stored in the VM function table with a sequential identifier:
+  //   <function_body_bytes> <function_identifier> OP_DEFINE
+  // The body bytecode is pushed as a single data vector, so OP_DEFINE's op-cost is base + the
+  // stack-pushed body bytes; each later OP_INVOKE costs only the base instruction cost. Sharing the
+  // body via the function table — rather than inlining it at every call site — is what keeps the
+  // script small for functions called multiple times.
+  private defineUserFunctions(userFunctions: FunctionDefinitionNode[]): void {
+    if (userFunctions.length === 0) return;
+
+    // Assign identifiers first so a body may OP_INVOKE any other user function (the front-end bans
+    // recursion; note that OP_INVOKE technically permits bounded recursion within the 100-deep
+    // control-stack limit, which is deferred for now).
+    userFunctions.forEach((func, i) => {
+      this.userFunctionIds.set(func.name, { id: i + 1, paramCount: func.parameters.length });
+    });
+
+    userFunctions.forEach((func) => {
+      const { id } = this.userFunctionIds.get(func.name)!;
+      const bodyScript = this.compileUserFunctionBody(func);
+      const bodyBytecode = scriptToBytecode(bodyScript);
+
+      const locationData = { location: func.location, positionHint: PositionHint.START };
+      // <function_body_bytes>
+      this.emit(bodyBytecode, locationData);
+      this.pushToStack('(function body)');
+      // <function_identifier>
+      this.emit(encodeInt(BigInt(id)), locationData);
+      this.pushToStack('(function id)');
+      // OP_DEFINE consumes the identifier and body, storing the body in the function table.
+      this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
+      this.popFromStack(2);
+    });
+  }
+
+  // Compiles a single user-defined function body into an independent Op[] routine using a fresh
+  // GenerateTargetTraversal. The routine's stack model is seeded with the function's parameters (the
+  // calling convention: arguments are passed as the initial stack items, first parameter on top), it
+  // runs the body, and leaves exactly the return value on top of the shared stack.
+  private compileUserFunctionBody(func: FunctionDefinitionNode): Script {
+    const bodyTraversal = new GenerateTargetTraversalWithLocation(this.compilerOptions);
+    // Share the function identifier table so a body can OP_INVOKE other already-defined functions.
+    bodyTraversal.userFunctionIds = this.userFunctionIds;
+    bodyTraversal.currentFunction = func;
+    bodyTraversal.compilingUserFunctionBody = true;
+
+    // Seed the stack with the parameters (visitParameter pushes them to the stack bottom in order,
+    // matching the OP_INVOKE calling convention where the first parameter ends up on top).
+    func.parameters.forEach((param) => bodyTraversal.visit(param));
+
+    if (this.compilerOptions.enforceFunctionParameterTypes) {
+      bodyTraversal.enforceFunctionParameterTypes(func);
+    }
+
+    bodyTraversal.visit(func.body);
+
+    // After the body runs, the return value is on top of the stack. Remove every other stack item
+    // (parameters and locals) so the routine's net effect is: consume the arguments, leave the
+    // single return value on top.
+    bodyTraversal.cleanFunctionBodyStack(func.body);
+
+    return bodyTraversal.output;
+  }
+
+  // Removes everything below the return value left on top of the stack (see compileUserFunctionBody).
+  cleanFunctionBodyStack(functionBodyNode: Node): void {
+    const stackSize = this.stack.length;
+    for (let i = 0; i < stackSize - 1; i += 1) {
+      this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
+      this.nipFromStack();
+    }
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
@@ -376,6 +472,17 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     }
 
     this.popFromStack();
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
+    // Only reachable while compiling a user-defined function body (the front-end rejects `return`
+    // elsewhere). Evaluating the expression leaves the return value on top of the stack; the
+    // surrounding routine (cleanFunctionBodyStack) then drops the consumed parameters and locals.
+    if (!this.compilingUserFunctionBody) {
+      throw new Error('Internal error: return statement reached code generation outside a user-defined function body');
+    }
+    node.expression = this.visit(node.expression);
     return node;
   }
 
@@ -583,6 +690,19 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitFunctionCall(node: FunctionCallNode): Node {
+    // User-defined (value-returning) function call: invoke the shared body stored via OP_DEFINE.
+    const userFunction = this.userFunctionIds.get(node.identifier.name);
+    if (userFunction) {
+      return this.visitUserFunctionCall(node, userFunction);
+    }
+
+    // Defensive: anything that is neither a built-in global function nor a known user function must
+    // not reach code generation. The only valid way a user-defined function call leaves the final
+    // contract bytecode is as an OP_INVOKE emitted by visitUserFunctionCall.
+    if (!Object.values(GlobalFunction).includes(node.identifier.name as GlobalFunction)) {
+      throw new Error(`Internal error: unresolved call to user-defined function '${node.identifier.name}' reached code generation`);
+    }
+
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
       return this.visitMultiSig(node);
     }
@@ -594,6 +714,29 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       { location: node.location, positionHint: PositionHint.END },
     );
     this.popFromStack(node.parameters.length);
+    this.pushToStack('(value)');
+
+    return node;
+  }
+
+  // Emits an OP_INVOKE call to a user-defined function whose body was stored via OP_DEFINE.
+  // Calling convention: arguments are pushed onto the shared stack so that the FIRST parameter ends
+  // up on top (matching how the body's routine seeds its stack from its parameters). To achieve this
+  // we evaluate the argument expressions in REVERSE source order. Then `<function_identifier>
+  // OP_INVOKE` runs the body in the same stack/altstack/function-table; it consumes the arguments
+  // and leaves the single return value on top.
+  private visitUserFunctionCall(node: FunctionCallNode, userFunction: { id: number, paramCount: number }): Node {
+    const args = [...node.parameters];
+    for (let i = args.length - 1; i >= 0; i -= 1) {
+      this.visit(args[i]);
+    }
+
+    this.emit(encodeInt(BigInt(userFunction.id)), { location: node.location, positionHint: PositionHint.START });
+    this.pushToStack('(function id)');
+    this.emit(Op.OP_INVOKE, { location: node.location, positionHint: PositionHint.END });
+
+    // OP_INVOKE pops the identifier; the body consumes the arguments and pushes its return value.
+    this.popFromStack(1 + userFunction.paramCount);
     this.pushToStack('(value)');
 
     return node;

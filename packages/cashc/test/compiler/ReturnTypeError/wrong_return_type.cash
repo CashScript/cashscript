@@ -1,0 +1,9 @@
+contract Test() {
+    function toBytes(int a) returns (bytes) {
+        return a;
+    }
+
+    function spend(int x) {
+        require(toBytes(x) == 0x00);
+    }
+}

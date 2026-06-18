@@ -1,0 +1,14 @@
+contract Test() {
+    function increment(int a) returns (int) {
+        return a + 1;
+    }
+
+    function spend(int x) {
+        if (x > 0) {
+            int y = increment(x);
+            require(y == 6);
+        }
+
+        require(x >= 0);
+    }
+}

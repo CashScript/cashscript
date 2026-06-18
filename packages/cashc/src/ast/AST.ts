@@ -57,8 +57,17 @@ export class FunctionDefinitionNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
+    // User-defined functions (declared with `returns (...)`) return a value and are inlined into
+    // their call sites; contract spending functions have no return type and are compiled directly.
+    public returnType?: Type,
   ) {
     super();
+  }
+
+  // A user-defined (reusable) function is one with a declared return type. These are inlined and
+  // are not emitted as standalone spending functions.
+  get isUserFunction(): boolean {
+    return this.returnType !== undefined;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -153,6 +162,18 @@ export class RequireNode extends NonControlStatementNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitRequire(this);
+  }
+}
+
+export class ReturnNode extends NonControlStatementNode {
+  constructor(
+    public expression: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitReturn(this);
   }
 }
 

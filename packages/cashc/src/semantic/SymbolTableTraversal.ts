@@ -25,7 +25,9 @@ import {
   UnusedVariableError,
   InvalidSymbolTypeError,
   ConstantModificationError,
+  RecursiveFunctionError,
 } from '../Errors.js';
+import { PrimitiveType } from '@cashscript/utils';
 
 export default class SymbolTableTraversal extends AstTraversal {
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];
@@ -39,6 +41,25 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.symbolTables.unshift(node.symbolTable);
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+
+    // Register user-defined (value-returning) functions in the contract scope *before* visiting any
+    // function body, so that calls can resolve regardless of declaration order and mutual calls work.
+    node.functions.forEach((func) => {
+      if (!func.isUserFunction) return;
+      if (this.symbolTables[0].getFromThis(func.name)) {
+        throw new FunctionRedefinitionError(func);
+      }
+      this.symbolTables[0].set(Symbol.function(
+        func.name,
+        func.returnType ?? PrimitiveType.BOOL,
+        func.parameters.map((p) => p.type),
+        func,
+      ));
+    });
+
+    // Detect recursion (direct or mutual) among user-defined functions before inlining.
+    detectRecursion(node.functions);
+
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
 
     const unusedSymbols = node.symbolTable.unusedSymbols();
@@ -62,8 +83,8 @@ export default class SymbolTableTraversal extends AstTraversal {
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     this.currentFunction = node;
 
-    // Checked for function redefinition, but they are not included in the
-    // symbol table, as internal function calls are not supported.
+    // Check for function redefinition. User-defined functions are additionally registered in the
+    // contract symbol table (see visitContract) so that internal calls can resolve to them.
     if (this.functionNames.get(node.name)) {
       throw new FunctionRedefinitionError(node);
     }
@@ -213,4 +234,61 @@ function createTupleVariableDefinition(
   const definition = new VariableDefinitionNode(variable.type, [], variable.name, node.tuple);
   definition.location = node.location;
   return definition;
+}
+
+// Builds the call graph among user-defined functions and throws RecursiveFunctionError if any
+// cycle (direct or mutual recursion) is found. Inlining cannot terminate on recursive functions.
+function detectRecursion(functions: FunctionDefinitionNode[]): void {
+  const userFunctions = functions.filter((f) => f.isUserFunction);
+  const userFunctionNames = new Set(userFunctions.map((f) => f.name));
+  const functionByName = new Map(userFunctions.map((f) => [f.name, f]));
+
+  // Map each user function to the set of user functions it calls.
+  const callGraph = new Map<string, string[]>();
+  userFunctions.forEach((func) => {
+    const calls = collectFunctionCallNames(func.body).filter((name) => userFunctionNames.has(name));
+    callGraph.set(func.name, calls);
+  });
+
+  const visited = new Set<string>();
+  const stack: string[] = [];
+  const onStack = new Set<string>();
+
+  const dfs = (name: string): void => {
+    stack.push(name);
+    onStack.add(name);
+
+    for (const callee of callGraph.get(name) ?? []) {
+      if (onStack.has(callee)) {
+        const cycleStart = stack.indexOf(callee);
+        const cycle = [...stack.slice(cycleStart), callee];
+        throw new RecursiveFunctionError(functionByName.get(callee)!, cycle);
+      }
+      if (!visited.has(callee)) dfs(callee);
+    }
+
+    onStack.delete(name);
+    stack.pop();
+    visited.add(name);
+  };
+
+  userFunctions.forEach((func) => {
+    if (!visited.has(func.name)) dfs(func.name);
+  });
+}
+
+// Recursively collects the names of all FunctionCall identifiers reachable from a node.
+function collectFunctionCallNames(node: Node | undefined): string[] {
+  if (!node) return [];
+
+  const names: string[] = [];
+  const collector = new (class extends AstTraversal {
+    visitFunctionCall(callNode: FunctionCallNode): Node {
+      names.push(callNode.identifier.name);
+      return super.visitFunctionCall(callNode);
+    }
+  })();
+
+  node.accept(collector);
+  return names;
 }

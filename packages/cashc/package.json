@@ -36,8 +36,8 @@
     "test": "test"
   },
   "scripts": {
-    "antlr": "antlr -Dlanguage=TypeScript -visitor -no-listener src/grammar/CashScript.g4",
-    "postantlr": "find src/grammar -type f -name 'CashScriptVisitor.ts' | xargs sed -i '' 's|\\(import .* \".*/.*\\)\";|\\1\\.js\";|g'",
+    "antlr": "antlr -Dlanguage=TypeScript -visitor -no-listener -o src/grammar src/grammar/CashScript.g4",
+    "postantlr": "node -e \"const fs=require('fs');['CashScriptVisitor.ts','CashScriptParser.ts','CashScriptLexer.ts'].forEach(f=>{const p='src/grammar/'+f;if(!fs.existsSync(p))return;const s=fs.readFileSync(p,'utf8').replace(/(from \\\"\\.[^\\\"]*?)(\\\")/g,(m,a,b)=>a.endsWith('.js')?m:a+'.js'+b);fs.writeFileSync(p,s);})\"",
     "build": "yarn clean && yarn compile",
     "clean": "rm -rf ./dist",
     "compile": "tsc -p tsconfig.build.json",

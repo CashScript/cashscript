@@ -28,6 +28,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
@@ -62,6 +63,7 @@ import type {
   LiteralExpressionContext,
   TupleIndexOpContext,
   RequireStatementContext,
+  ReturnStatementContext,
   PragmaDirectiveContext,
   InstantiationContext,
   NullaryOpContext,
@@ -145,7 +147,10 @@ export default class AstBuilder
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
     const body = this.visit(ctx.functionBody());
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, body);
+    // The optional `returns (type)` clause distinguishes user-defined (inlined) functions from
+    // contract spending functions, which have no return type.
+    const returnType = ctx.typeName() ? parseType(ctx.typeName().getText()) : undefined;
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, body, returnType);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -258,6 +263,13 @@ export default class AstBuilder
     const require = new RequireNode(expression, message);
     require.location = Location.fromCtx(ctx);
     return require;
+  }
+
+  visitReturnStatement(ctx: ReturnStatementContext): ReturnNode {
+    const expression = this.visit(ctx.expression());
+    const returnNode = new ReturnNode(expression);
+    returnNode.location = Location.fromCtx(ctx);
+    return returnNode;
   }
 
   visitIfStatement(ctx: IfStatementContext): BranchNode {

@@ -1,0 +1,14 @@
+contract Test() {
+    function increment(int a) returns (int) {
+        return a + 1;
+    }
+
+    function quadruple(int a) returns (int) {
+        return a * 4;
+    }
+
+    function spend(int x) {
+        int y = quadruple(increment(x));
+        require(y == 8);
+    }
+}

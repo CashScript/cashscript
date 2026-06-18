@@ -22,6 +22,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
@@ -80,6 +81,9 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
     this.addOutput(')');
+    if (node.returnType !== undefined) {
+      this.addOutput(` returns (${node.returnType})`);
+    }
     this.outputSymbolTable(node.symbolTable);
     this.addOutput(' ');
 
@@ -144,6 +148,12 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
     this.addOutput(')');
 
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
+    this.addOutput('return ', true);
+    node.expression = this.visit(node.expression);
     return node;
   }
 

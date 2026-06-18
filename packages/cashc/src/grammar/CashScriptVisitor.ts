@@ -1,4 +1,4 @@
-// Generated from src/grammar/CashScript.g4 by ANTLR 4.13.1
+// Generated from src/grammar/CashScript.g4 by ANTLR 4.13.2
 
 import {ParseTreeVisitor} from 'antlr4';
 
@@ -17,6 +17,7 @@ import { ParameterContext } from "./CashScriptParser.js";
 import { BlockContext } from "./CashScriptParser.js";
 import { StatementContext } from "./CashScriptParser.js";
 import { NonControlStatementContext } from "./CashScriptParser.js";
+import { ReturnStatementContext } from "./CashScriptParser.js";
 import { ControlStatementContext } from "./CashScriptParser.js";
 import { VariableDefinitionContext } from "./CashScriptParser.js";
 import { TupleAssignmentContext } from "./CashScriptParser.js";
@@ -147,6 +148,12 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitNonControlStatement?: (ctx: NonControlStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.returnStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReturnStatement?: (ctx: ReturnStatementContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.controlStatement`.
 	 * @param ctx the parse tree

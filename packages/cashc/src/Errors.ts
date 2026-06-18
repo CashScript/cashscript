@@ -15,6 +15,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   StatementNode,
   ContractNode,
@@ -115,6 +116,32 @@ export class EmptyFunctionError extends CashScriptError {
   }
 }
 
+export class RecursiveFunctionError extends CashScriptError {
+  constructor(
+    public node: FunctionDefinitionNode,
+    public cycle: string[],
+  ) {
+    super(node, `Recursive function call detected involving function '${node.name}' (cycle: ${cycle.join(' -> ')})`);
+  }
+}
+
+export class MissingReturnStatementError extends CashScriptError {
+  constructor(
+    public node: FunctionDefinitionNode,
+  ) {
+    super(node, `Function '${node.name}' is missing a return statement on all paths`);
+  }
+}
+
+export class ReturnStatementError extends CashScriptError {
+  constructor(
+    public node: ReturnNode | FunctionDefinitionNode,
+    message: string,
+  ) {
+    super(node, message);
+  }
+}
+
 export class FinalRequireStatementError extends CashScriptError {
   constructor(
     public node: StatementNode,
@@ -131,6 +158,19 @@ export class TypeError extends CashScriptError {
     message?: string,
   ) {
     super(node, message ?? `Found type '${actual}' where type '${expected}' was expected`);
+  }
+}
+
+export class ReturnTypeError extends TypeError {
+  constructor(
+    node: ReturnNode,
+    actual: Type | undefined,
+    expected: Type | undefined,
+  ) {
+    super(
+      node, actual, expected,
+      `Found return value of type '${actual}' where type '${expected}' was expected`,
+    );
   }
 }
 

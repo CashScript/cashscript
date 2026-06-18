@@ -1,0 +1,10 @@
+contract Test() {
+    function square(int a) returns (int) {
+        return a * a;
+    }
+
+    function spend(int x) {
+        int y = square(x) + square(x);
+        require(y == 18);
+    }
+}

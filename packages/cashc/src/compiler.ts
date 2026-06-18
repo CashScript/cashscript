@@ -52,6 +52,13 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
+
+  // User-defined (value-returning) functions are NOT inlined. They are lowered during code
+  // generation to CHIP-2025-05 function opcodes: each function body is compiled once as a
+  // standalone stack-based routine stored in the VM function table via OP_DEFINE, and every call
+  // site emits OP_INVOKE. This shares the body bytecode across all call sites rather than
+  // duplicating it (see GenerateTargetTraversal). The front-end passes above already register the
+  // functions, ban recursion, and type-check return statements.
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
   if (mergedCompilerOptions.enforceLocktimeGuard) {
     ast = ast.accept(new InjectLocktimeGuardTraversal()) as Ast;

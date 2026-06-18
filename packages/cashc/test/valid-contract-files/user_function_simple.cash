@@ -1,0 +1,11 @@
+contract Test() {
+    function double(int a) returns (int) {
+        int doubled = a * 2;
+        return doubled + 1;
+    }
+
+    function spend(int x) {
+        int y = double(x);
+        require(y == 7);
+    }
+}

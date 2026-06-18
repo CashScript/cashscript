@@ -1,0 +1,10 @@
+contract Test() {
+    function factorial(int n) returns (int) {
+        int result = factorial(n);
+        return result;
+    }
+
+    function spend(int x) {
+        require(factorial(x) == 1);
+    }
+}

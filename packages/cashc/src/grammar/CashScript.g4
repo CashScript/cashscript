@@ -29,7 +29,7 @@ contractDefinition
     ;
 
 functionDefinition
-    : 'function' Identifier parameterList functionBody
+    : 'function' Identifier parameterList ('returns' '(' typeName ')')? functionBody
     ;
 
 functionBody
@@ -61,6 +61,11 @@ nonControlStatement
     | timeOpStatement
     | requireStatement
     | consoleStatement
+    | returnStatement
+    ;
+
+returnStatement
+    : 'return' expression
     ;
 
 controlStatement

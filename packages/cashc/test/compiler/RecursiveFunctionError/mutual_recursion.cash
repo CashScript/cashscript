@@ -1,0 +1,13 @@
+contract Test() {
+    function ping(int a) returns (int) {
+        return pong(a);
+    }
+
+    function pong(int a) returns (int) {
+        return ping(a);
+    }
+
+    function spend(int x) {
+        require(ping(x) == 1);
+    }
+}

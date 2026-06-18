@@ -24,8 +24,8 @@ export class Symbol {
     return new Symbol(name, type, SymbolType.VARIABLE);
   }
 
-  static function(name: string, type: Type, parameters: Type[]): Symbol {
-    return new Symbol(name, type, SymbolType.FUNCTION, undefined, parameters);
+  static function(name: string, type: Type, parameters: Type[], definition?: Node): Symbol {
+    return new Symbol(name, type, SymbolType.FUNCTION, definition, parameters);
   }
 
   static class(name: string, type: Type, parameters: Type[]): Symbol {
@@ -73,6 +73,9 @@ export class SymbolTable {
   unusedSymbols(): Symbol[] {
     return Array.from(this.symbols)
       .map((e) => e[1])
+      // Only variables are subject to the unused-variable check; user-defined function symbols
+      // may legitimately go uncalled (and are reported elsewhere if needed).
+      .filter((s) => s.symbolType === SymbolType.VARIABLE)
       .filter((s) => s.references.length === 0);
   }
 }

@@ -21,6 +21,12 @@ export default class InjectLocktimeGuardTraversal extends AstTraversal {
   private functionNeedsGuard = false;
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    // User-defined (value-returning) functions are compiled to standalone OP_DEFINE routines and
+    // never form a top-level spending path on their own, so they do not get a locktime guard.
+    if (node.isUserFunction) {
+      return node;
+    }
+
     this.hasTimeCheckOnPath = false;
     this.functionNeedsGuard = false;
 

@@ -34,6 +34,12 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
       throw new EmptyFunctionError(node);
     }
 
+    // User-defined (value-returning) functions end in a `return` statement rather than a `require`,
+    // and are compiled to standalone OP_DEFINE routines, so the final-require rule does not apply.
+    if (node.isUserFunction) {
+      return node;
+    }
+
     ensureFinalStatementIsRequire(node.body);
 
     return node;
