@@ -278,6 +278,20 @@ export class TransactionBuilder {
   }
 
   /**
+   * Calculate the transaction fee in satoshis and the fee per byte.
+   *
+   * @returns The transaction fee in satoshis and the fee per byte.
+   */
+  calculateTransactionFee(): { feeSats: bigint, feeSatsPerByte: number } {
+    const transactionSize = this.getTransactionSize();
+    const totalInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
+    const totalOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
+    const feeSats = totalInputAmount - totalOutputAmount;
+    const feeSatsPerByte = Number((Number(feeSats) / Number(transactionSize)).toFixed(2));
+    return { feeSats, feeSatsPerByte };
+  }
+
+  /**
    * Set the `nLockTime` of the transaction.
    *
    * @param locktime - The absolute locktime to use (block height or UNIX timestamp).
