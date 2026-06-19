@@ -147,10 +147,13 @@ export default class AstBuilder
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
     const body = this.visit(ctx.functionBody());
-    // The optional `returns (type)` clause distinguishes user-defined (inlined) functions from
-    // contract spending functions, which have no return type.
-    const returnType = ctx.typeName() ? parseType(ctx.typeName().getText()) : undefined;
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, body, returnType);
+    // The optional `returns (type, ...)` clause distinguishes user-defined functions from contract
+    // spending functions, which have no return types. A user function returns one or more values.
+    const returnTypeContexts = ctx.typeName_list();
+    const returnTypes = returnTypeContexts.length > 0
+      ? returnTypeContexts.map((t) => parseType(t.getText()))
+      : undefined;
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, body, returnTypes);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -204,11 +207,11 @@ export default class AstBuilder
     const expression = this.visit(ctx.expression());
     const names = ctx.Identifier_list();
     const types = ctx.typeName_list();
-    const [var1, var2] = names.map((name, i) => ({
+    const targets = names.map((name, i) => ({
       name: name.getText(),
       type: parseType(types[i].getText()),
     }));
-    const tupleAssignment = new TupleAssignmentNode(var1, var2, expression);
+    const tupleAssignment = new TupleAssignmentNode(targets, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
     return tupleAssignment;
   }
@@ -266,8 +269,8 @@ export default class AstBuilder
   }
 
   visitReturnStatement(ctx: ReturnStatementContext): ReturnNode {
-    const expression = this.visit(ctx.expression());
-    const returnNode = new ReturnNode(expression);
+    const expressions = ctx.expression_list().map((e) => this.visit(e) as ExpressionNode);
+    const returnNode = new ReturnNode(expressions);
     returnNode.location = Location.fromCtx(ctx);
     return returnNode;
   }

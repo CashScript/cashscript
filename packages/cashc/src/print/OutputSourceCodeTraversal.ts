@@ -81,8 +81,8 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
     this.addOutput(')');
-    if (node.returnType !== undefined) {
-      this.addOutput(` returns (${node.returnType})`);
+    if (node.returnTypes !== undefined) {
+      this.addOutput(` returns (${node.returnTypes.join(', ')})`);
     }
     this.outputSymbolTable(node.symbolTable);
     this.addOutput(' ');
@@ -116,7 +116,8 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    this.addOutput(`${node.left.type} ${node.left.name}, ${node.right.type} ${node.right.name} = `, true);
+    const targets = node.targets.map((target) => `${target.type} ${target.name}`).join(', ');
+    this.addOutput(`${targets} = `, true);
     this.visit(node.tuple);
 
     return node;
@@ -153,7 +154,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
   visitReturn(node: ReturnNode): Node {
     this.addOutput('return ', true);
-    node.expression = this.visit(node.expression);
+    node.expressions = this.visitCommaList(node.expressions);
     return node;
   }
 

@@ -226,6 +226,196 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     });
   });
 
+  describe('Multi-value (tuple) returns', () => {
+    it('emits OP_DEFINE/OP_INVOKE for a multi-return function', () => {
+      const artifact = compileString(`
+        contract Test() {
+          function tri(int x, int y, int z) returns (int, int, int) {
+            int nx = x * 2; int ny = y * 3; int nz = z + 1;
+            return nx, ny, nz;
+          }
+          function spend(int a) {
+            (int ax, int ay, int az) = tri(a, a, a);
+            require(ax == a * 2);
+            require(ay == a * 3);
+            require(az == a + 1);
+          }
+        }`);
+      const opcodes = artifact.bytecode.split(' ');
+      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
+      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(1);
+    });
+
+    it('a 3-return (Jacobian-double-like) function evaluates correctly on the BCH 2026 VM', () => {
+      // nx = x*2, ny = y*3, nz = z+1 — exercises a 3-coordinate (curve-point-like) return.
+      const source = `
+        contract Test() {
+          function jacDouble(int x, int y, int z) returns (int, int, int) {
+            int nx = x * 2; int ny = y * 3; int nz = z + 1;
+            return nx, ny, nz;
+          }
+          function spend(int a) {
+            (int ax, int ay, int az) = jacDouble(a, a, a);
+            require(ax == a * 2);
+            require(ay == a * 3);
+            require(az == a + 1);
+          }
+        }`;
+      expect(evaluateSpend(source, [encodeInt(5n)]).accepted).toBe(true);
+      expect(evaluateSpend(source, [encodeInt(0n)]).accepted).toBe(true);
+      // Tamper: a contract that asserts wrong results must fail.
+      const wrong = `
+        contract Test() {
+          function jacDouble(int x, int y, int z) returns (int, int, int) {
+            int nx = x * 2; int ny = y * 3; int nz = z + 1;
+            return nx, ny, nz;
+          }
+          function spend(int a) {
+            (int ax, int ay, int az) = jacDouble(a, a, a);
+            require(ax == a);
+            require(ay == a * 3);
+            require(az == a + 1);
+          }
+        }`;
+      expect(evaluateSpend(wrong, [encodeInt(5n)]).accepted).toBe(false);
+    });
+
+    it('the bare (no-parentheses) destructuring form also works', () => {
+      const source = `
+        contract Test() {
+          function tri(int x) returns (int, int, int) { return x, x + 1, x + 2; }
+          function spend(int a) {
+            int p, int q, int r = tri(a);
+            require(p == a);
+            require(q == a + 1);
+            require(r == a + 2);
+          }
+        }`;
+      expect(evaluateSpend(source, [encodeInt(9n)]).accepted).toBe(true);
+    });
+
+    it('a 2-return function evaluates correctly', () => {
+      // Concrete assertions on the destructured values so a wrong unlocking arg is rejected.
+      const source = `
+        contract Test() {
+          function pair(int x, int y) returns (int, int) { return x + y, x - y; }
+          function spend(int a, int b) {
+            (int s, int d) = pair(a, b);
+            require(s == 10);
+            require(d == 4);
+          }
+        }`;
+      // a + b == 10 and a - b == 4 -> a == 7, b == 3. Unlocking items map to parameters in reverse
+      // (the last parameter's argument is pushed first), so [b, a] == [3, 7].
+      expect(evaluateSpend(source, [encodeInt(3n), encodeInt(7n)]).accepted).toBe(true);
+      expect(evaluateSpend(source, [encodeInt(4n), encodeInt(7n)]).accepted).toBe(false);
+    });
+
+    it('a destructured result can feed another call', () => {
+      const source = `
+        contract Test() {
+          function tri(int x) returns (int, int, int) { return x, x + 1, x + 2; }
+          function add(int a, int b) returns (int) { return a + b; }
+          function spend(int a) {
+            (int p, int q, int r) = tri(a);
+            require(add(p, q) == 2 * a + 1);
+            require(r == a + 2);
+          }
+        }`;
+      expect(evaluateSpend(source, [encodeInt(4n)]).accepted).toBe(true);
+      expect(evaluateSpend(source, [encodeInt(5n)]).accepted).toBe(true);
+    });
+
+    it('a multi-return function called twice (single OP_DEFINE) evaluates correctly', () => {
+      const source = `
+        contract Test() {
+          function pair(int x) returns (int, int) { return x * 2, x * 3; }
+          function spend(int a) {
+            (int p1, int q1) = pair(a);
+            (int p2, int q2) = pair(a + 1);
+            require(p1 == a * 2);
+            require(q1 == a * 3);
+            require(p2 == (a + 1) * 2);
+            require(q2 == (a + 1) * 3);
+          }
+        }`;
+      const artifact = compileString(source);
+      const opcodes = artifact.bytecode.split(' ');
+      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
+      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(2);
+      expect(evaluateSpend(source, [encodeInt(6n)]).accepted).toBe(true);
+    });
+
+    it('a 3-return function defined once + invoked is far smaller than the inlined equivalent', () => {
+      const withFunction = `
+        contract Test() {
+          function tri(int x) returns (int, int, int) {
+            int nx = x * 2; int ny = x * 3 + 1; int nz = x + 7;
+            return nx, ny, nz;
+          }
+          function spend(int x) {
+            (int a1, int b1, int c1) = tri(x);
+            (int a2, int b2, int c2) = tri(a1);
+            (int a3, int b3, int c3) = tri(a2);
+            (int a4, int b4, int c4) = tri(a3);
+            require(a4 + b4 + c4 + b1 + b2 + b3 + c1 + c2 + c3 > 0);
+          }
+        }`;
+      const handInlined = `
+        contract Test() {
+          function spend(int x) {
+            int a1 = x * 2; int b1 = x * 3 + 1; int c1 = x + 7;
+            int a2 = a1 * 2; int b2 = a1 * 3 + 1; int c2 = a1 + 7;
+            int a3 = a2 * 2; int b3 = a2 * 3 + 1; int c3 = a2 + 7;
+            int a4 = a3 * 2; int b4 = a3 * 3 + 1; int c4 = a3 + 7;
+            require(a4 + b4 + c4 + b1 + b2 + b3 + c1 + c2 + c3 > 0);
+          }
+        }`;
+      expect(byteSize(compileString(withFunction).bytecode))
+        .toBeLessThan(byteSize(compileString(handInlined).bytecode));
+    });
+
+    it('throws when the number of returned values is fewer than declared', () => {
+      expect(() => compileString(`
+        contract Test() {
+          function f(int x) returns (int, int, int) { return x, x; }
+          function spend(int a) { (int p, int q, int r) = f(a); require(p == 1); require(q == 1); require(r == 1); }
+        }`)).toThrow(ReturnStatementError);
+    });
+
+    it('throws when the number of returned values is more than declared', () => {
+      expect(() => compileString(`
+        contract Test() {
+          function f(int x) returns (int, int) { return x, x, x; }
+          function spend(int a) { (int p, int q) = f(a); require(p == 1); require(q == 1); }
+        }`)).toThrow(ReturnStatementError);
+    });
+
+    it('throws on destructuring-arity mismatch (too few targets)', () => {
+      expect(() => compileString(`
+        contract Test() {
+          function f(int x) returns (int, int, int) { return x, x, x; }
+          function spend(int a) { (int p, int q) = f(a); require(p == 1); require(q == 1); }
+        }`)).toThrow(ReturnStatementError);
+    });
+
+    it('throws when a multi-return function is used as a single value', () => {
+      expect(() => compileString(`
+        contract Test() {
+          function f(int x) returns (int, int) { return x, x; }
+          function spend(int a) { require(f(a) == 1); }
+        }`)).toThrow(ReturnStatementError);
+    });
+
+    it('throws ReturnTypeError when a returned value type mismatches its declared type', () => {
+      expect(() => compileString(`
+        contract Test() {
+          function f(int x) returns (int, bytes) { return x, x; }
+          function spend(int a) { (int p, bytes q) = f(a); require(p == 1); require(q == 0x00); }
+        }`)).toThrow(ReturnTypeError);
+    });
+  });
+
   describe('Errors', () => {
     it('throws RecursiveFunctionError on direct recursion', () => {
       // Recursion stays banned for now. OP_INVOKE technically permits bounded recursion within the

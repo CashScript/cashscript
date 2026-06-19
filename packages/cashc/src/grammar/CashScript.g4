@@ -29,7 +29,7 @@ contractDefinition
     ;
 
 functionDefinition
-    : 'function' Identifier parameterList ('returns' '(' typeName ')')? functionBody
+    : 'function' Identifier parameterList ('returns' '(' typeName (',' typeName)* ')')? functionBody
     ;
 
 functionBody
@@ -65,7 +65,7 @@ nonControlStatement
     ;
 
 returnStatement
-    : 'return' expression
+    : 'return' expression (',' expression)*
     ;
 
 controlStatement
@@ -78,7 +78,8 @@ variableDefinition
     ;
 
 tupleAssignment
-    : typeName Identifier ',' typeName Identifier '=' expression
+    : typeName Identifier (',' typeName Identifier)+ '=' expression
+    | '(' typeName Identifier (',' typeName Identifier)+ ')' '=' expression
     ;
 
 assignStatement

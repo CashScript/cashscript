@@ -57,17 +57,19 @@ export class FunctionDefinitionNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
-    // User-defined functions (declared with `returns (...)`) return a value and are inlined into
-    // their call sites; contract spending functions have no return type and are compiled directly.
-    public returnType?: Type,
+    // User-defined functions (declared with `returns (...)`) return one or more values and are
+    // compiled to standalone OP_DEFINE/OP_INVOKE routines; contract spending functions have no
+    // declared return types and are compiled directly. A single-return function has one element,
+    // a multi-return (tuple) function has N elements in declared order.
+    public returnTypes?: Type[],
   ) {
     super();
   }
 
-  // A user-defined (reusable) function is one with a declared return type. These are inlined and
-  // are not emitted as standalone spending functions.
+  // A user-defined (reusable) function is one with a declared return type list. These are lowered
+  // to OP_DEFINE/OP_INVOKE and are not emitted as standalone spending functions.
   get isUserFunction(): boolean {
-    return this.returnType !== undefined;
+    return this.returnTypes !== undefined;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -107,11 +109,18 @@ export class VariableDefinitionNode extends NonControlStatementNode implements N
   }
 }
 
+export interface TupleTarget {
+  name: string;
+  type: Type;
+}
+
 export class TupleAssignmentNode extends NonControlStatementNode {
   constructor(
-    // TODO: Use an IdentifierNode instead of a custom type
-    public left: { name: string, type: Type },
-    public right: { name: string, type: Type },
+    // TODO: Use IdentifierNodes instead of a custom type
+    // A tuple assignment destructures a tuple-valued expression into N >= 2 named targets in order.
+    // The 2-target form is used for built-in multi-value expressions (e.g. `.split`); N-target forms
+    // (N >= 2) destructure the result of a multi-return user-defined function call.
+    public targets: TupleTarget[],
     public tuple: ExpressionNode,
   ) {
     super();
@@ -167,7 +176,9 @@ export class RequireNode extends NonControlStatementNode {
 
 export class ReturnNode extends NonControlStatementNode {
   constructor(
-    public expression: ExpressionNode,
+    // A return statement yields one or more values in declared order (one for a single-return
+    // function, N for a multi-return/tuple function).
+    public expressions: ExpressionNode[],
   ) {
     super();
   }

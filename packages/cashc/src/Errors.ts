@@ -135,7 +135,9 @@ export class MissingReturnStatementError extends CashScriptError {
 
 export class ReturnStatementError extends CashScriptError {
   constructor(
-    public node: ReturnNode | FunctionDefinitionNode,
+    // Also used for return-count / destructuring-arity mismatches, whose node may be the offending
+    // expression (e.g. the call being destructured) rather than a return statement.
+    public node: ReturnNode | FunctionDefinitionNode | ExpressionNode,
     message: string,
   ) {
     super(node, message);

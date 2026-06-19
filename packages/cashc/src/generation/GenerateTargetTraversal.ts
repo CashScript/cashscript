@@ -86,7 +86,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   // Maps each user-defined (value-returning) function name to its assigned VM function identifier
   // (a sequential number 1, 2, 3, ... encoded as a 0-7 byte VM number) and parameter count. Used by
   // visitFunctionCall to emit OP_INVOKE for the shared function body stored via OP_DEFINE.
-  private userFunctionIds: Map<string, { id: number, paramCount: number }> = new Map();
+  private userFunctionIds: Map<string, { id: number, paramCount: number, returnCount: number }> = new Map();
   // True while compiling a user-defined function body as a standalone routine (so that visitReturn
   // knows to leave only the return value on the stack instead of emitting a require/verify).
   private compilingUserFunctionBody = false;
@@ -232,7 +232,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // recursion; note that OP_INVOKE technically permits bounded recursion within the 100-deep
     // control-stack limit, which is deferred for now).
     userFunctions.forEach((func, i) => {
-      this.userFunctionIds.set(func.name, { id: i + 1, paramCount: func.parameters.length });
+      this.userFunctionIds.set(func.name, {
+        id: i + 1,
+        paramCount: func.parameters.length,
+        returnCount: func.returnTypes!.length,
+      });
     });
 
     userFunctions.forEach((func) => {
@@ -274,20 +278,32 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     bodyTraversal.visit(func.body);
 
-    // After the body runs, the return value is on top of the stack. Remove every other stack item
-    // (parameters and locals) so the routine's net effect is: consume the arguments, leave the
-    // single return value on top.
-    bodyTraversal.cleanFunctionBodyStack(func.body);
+    // After the body runs, the function's N return values are on top of the stack (in declared
+    // order, the last-declared value on top). Remove every other stack item (parameters and locals)
+    // so the routine's net effect is: consume the arguments, leave the N return values on top.
+    bodyTraversal.cleanFunctionBodyStack(func.body, func.returnTypes!.length);
 
     return bodyTraversal.output;
   }
 
-  // Removes everything below the return value left on top of the stack (see compileUserFunctionBody).
-  cleanFunctionBodyStack(functionBodyNode: Node): void {
-    const stackSize = this.stack.length;
-    for (let i = 0; i < stackSize - 1; i += 1) {
-      this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
-      this.nipFromStack();
+  // Removes everything below the N return values left on top of the stack (see
+  // compileUserFunctionBody), preserving the relative order of those top N values.
+  cleanFunctionBodyStack(functionBodyNode: Node, resultCount: number): void {
+    const locationData = { location: functionBodyNode.location, positionHint: PositionHint.END };
+    const dropCount = this.stack.length - resultCount;
+    for (let i = 0; i < dropCount; i += 1) {
+      if (resultCount === 1) {
+        // Single return value: OP_NIP drops the item directly below the top (1 byte).
+        this.emit(Op.OP_NIP, locationData);
+        this.nipFromStack();
+      } else {
+        // Multiple return values: the next item to drop sits at stack index N (just below the N
+        // result values). Roll it to the top and drop it; the N results keep their relative order.
+        this.emit(encodeInt(BigInt(resultCount)), locationData);
+        this.emit(Op.OP_ROLL, locationData);
+        this.emit(Op.OP_DROP, locationData);
+        this.removeFromStack(resultCount);
+      }
     }
   }
 
@@ -410,10 +426,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
+    // The RHS leaves N values on the stack (the last value on top). Replace those N anonymous
+    // entries with the destructuring target names in declared order, so the last target is bound to
+    // the top-of-stack value — matching both the `.split` (N=2) and multi-return-call conventions.
     node.tuple = this.visit(node.tuple);
-    this.popFromStack(2);
-    this.pushToStack(node.left.name);
-    this.pushToStack(node.right.name);
+    this.popFromStack(node.targets.length);
+    node.targets.forEach((target) => this.pushToStack(target.name));
     return node;
   }
 
@@ -477,12 +495,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitReturn(node: ReturnNode): Node {
     // Only reachable while compiling a user-defined function body (the front-end rejects `return`
-    // elsewhere). Evaluating the expression leaves the return value on top of the stack; the
-    // surrounding routine (cleanFunctionBodyStack) then drops the consumed parameters and locals.
+    // elsewhere). Evaluating the expressions in declared order leaves the N return values on top of
+    // the stack (last-declared value on top); the surrounding routine (cleanFunctionBodyStack) then
+    // drops the consumed parameters and locals while preserving the order of the N results.
     if (!this.compilingUserFunctionBody) {
       throw new Error('Internal error: return statement reached code generation outside a user-defined function body');
     }
-    node.expression = this.visit(node.expression);
+    node.expressions = this.visitList(node.expressions);
     return node;
   }
 
@@ -725,7 +744,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   // we evaluate the argument expressions in REVERSE source order. Then `<function_identifier>
   // OP_INVOKE` runs the body in the same stack/altstack/function-table; it consumes the arguments
   // and leaves the single return value on top.
-  private visitUserFunctionCall(node: FunctionCallNode, userFunction: { id: number, paramCount: number }): Node {
+  private visitUserFunctionCall(
+    node: FunctionCallNode,
+    userFunction: { id: number, paramCount: number, returnCount: number },
+  ): Node {
     const args = [...node.parameters];
     for (let i = args.length - 1; i >= 0; i -= 1) {
       this.visit(args[i]);
@@ -735,9 +757,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.pushToStack('(function id)');
     this.emit(Op.OP_INVOKE, { location: node.location, positionHint: PositionHint.END });
 
-    // OP_INVOKE pops the identifier; the body consumes the arguments and pushes its return value.
+    // OP_INVOKE pops the identifier; the body consumes the arguments and pushes its N return values
+    // (the last-declared value ends up on top). For a single-return function the result is a plain
+    // value expression; for a multi-return function the N values are bound by visitTupleAssignment.
     this.popFromStack(1 + userFunction.paramCount);
-    this.pushToStack('(value)');
+    for (let i = 0; i < userFunction.returnCount; i += 1) {
+      this.pushToStack('(value)');
+    }
 
     return node;
   }

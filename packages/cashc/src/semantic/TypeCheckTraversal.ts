@@ -60,18 +60,22 @@ import { Symbol } from '../ast/SymbolTable.js';
 import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
-  // Declared return type of the user-defined function currently being type-checked (if any).
-  private currentReturnType?: Type;
+  // Declared return types of the user-defined function currently being type-checked (if any).
+  private currentReturnTypes?: Type[];
+  // True while visiting the right-hand side of a tuple-destructuring assignment, where a
+  // multi-return function call is permitted (and validated against the destructuring targets).
+  private insideTupleAssignmentRhs = false;
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
-    this.currentReturnType = node.returnType;
+    this.currentReturnTypes = node.returnTypes;
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
-    this.currentReturnType = undefined;
+    this.currentReturnTypes = undefined;
 
     if (node.isUserFunction) {
-      // Inlining requires a single `return` as the final statement of the body. Disallow missing,
-      // early, or nested returns so each call site lowers to a clean result assignment.
+      // The OP_DEFINE/OP_INVOKE lowering requires a single `return` as the final statement of the
+      // body. Disallow missing, early, or nested returns so each call site lowers to a clean result
+      // assignment.
       const statements = node.body.statements ?? [];
       const finalStatement = statements[statements.length - 1];
       if (!(finalStatement instanceof ReturnNode)) {
@@ -91,16 +95,28 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitReturn(node: ReturnNode): Node {
-    node.expression = this.visit(node.expression);
+    node.expressions = this.visitList(node.expressions);
 
     // `return` is only valid inside a user-defined (value-returning) function.
-    if (this.currentReturnType === undefined) {
+    if (this.currentReturnTypes === undefined) {
       throw new ReturnStatementError(node, 'return statement is only allowed in functions with a declared return type');
     }
 
-    if (!implicitlyCastable(node.expression.type, this.currentReturnType)) {
-      throw new ReturnTypeError(node, node.expression.type, this.currentReturnType);
+    // The number of returned values must match the declared return type count.
+    if (node.expressions.length !== this.currentReturnTypes.length) {
+      throw new ReturnStatementError(
+        node,
+        `Function returns ${node.expressions.length} value(s) but ${this.currentReturnTypes.length} were declared`,
+      );
     }
+
+    // Each returned expression must be assignable to the corresponding declared return type.
+    node.expressions.forEach((expression, i) => {
+      const expectedType = this.currentReturnTypes![i];
+      if (!implicitlyCastable(expression.type, expectedType)) {
+        throw new ReturnTypeError(node, expression.type, expectedType);
+      }
+    });
 
     return node;
   }
@@ -112,15 +128,50 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
+    this.insideTupleAssignmentRhs = true;
     node.tuple = this.visit(node.tuple);
+    this.insideTupleAssignmentRhs = false;
+
+    // A multi-return user-defined function call is the only N-ary tuple source. Its declared return
+    // types must match the destructuring targets one-to-one (count + types).
+    const callReturnTypes = userFunctionReturnTypes(node.tuple);
+    if (callReturnTypes !== undefined) {
+      if (callReturnTypes.length !== node.targets.length) {
+        throw new ReturnStatementError(
+          node.tuple,
+          `Function returns ${callReturnTypes.length} value(s) but ${node.targets.length} were destructured`,
+        );
+      }
+
+      node.targets.forEach((target, i) => {
+        if (!implicitlyCastable(callReturnTypes[i], target.type)) {
+          const syntheticAssignment = new VariableDefinitionNode(target.type, [], target.name, node.tuple);
+          syntheticAssignment.location = node.location;
+          throw new AssignTypeError(syntheticAssignment);
+        }
+      });
+
+      return node;
+    }
+
+    // Otherwise the tuple must come from a built-in multi-value expression (e.g. `.split`), which
+    // always produces exactly two values.
     if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
       throw new TupleAssignmentError(node.tuple);
     }
 
-    const assignmentType = new TupleType(node.left.type, node.right.type);
+    if (node.targets.length !== 2) {
+      throw new ReturnStatementError(
+        node.tuple,
+        `Expression returns 2 values but ${node.targets.length} were destructured`,
+      );
+    }
+
+    const [left, right] = node.targets;
+    const assignmentType = new TupleType(left.type, right.type);
 
     if (!implicitlyCastable(node.tuple.type, assignmentType)) {
-      const syntheticAssignment = new VariableDefinitionNode(assignmentType, [], node.left.name, node.tuple);
+      const syntheticAssignment = new VariableDefinitionNode(assignmentType, [], left.name, node.tuple);
       syntheticAssignment.location = node.location;
       throw new AssignTypeError(syntheticAssignment);
     }
@@ -230,6 +281,11 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitFunctionCall(node: FunctionCallNode): Node {
+    // Whether this call is the direct RHS of a tuple destructuring. Consume the flag immediately so
+    // that nested argument calls are type-checked as ordinary (single-value) expressions.
+    const isTupleAssignmentRhs = this.insideTupleAssignmentRhs;
+    this.insideTupleAssignmentRhs = false;
+
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
@@ -249,6 +305,16 @@ export default class TypeCheckTraversal extends AstTraversal {
     }
 
     node.type = type;
+
+    // A multi-return user-defined function does not produce a single value, so it is only valid as
+    // the right-hand side of a tuple destructuring assignment (handled in visitTupleAssignment).
+    // Using it anywhere a single value is expected is an error.
+    if (definition.returnTypes !== undefined && definition.returnTypes.length > 1 && !isTupleAssignmentRhs) {
+      throw new ReturnStatementError(
+        node,
+        `Function '${node.identifier.name}' returns ${definition.returnTypes.length} values and must be destructured into ${definition.returnTypes.length} variables`,
+      );
+    }
 
     // Infer the type of the toPaddedBytes function (depends on the second parameter)
     if (node.identifier.name === GlobalFunction.TO_PADDED_BYTES) {
@@ -676,8 +742,17 @@ const isSizeOp = (node: ExpressionNode): node is UnaryOpNode => (
   node instanceof UnaryOpNode && node.operator === UnaryOperator.SIZE
 );
 
+// If the expression is a call to a user-defined function (one with declared return types), returns
+// that function's full ordered list of return types; otherwise returns undefined. This is the only
+// source of an N-ary (N >= 2) tuple to destructure.
+function userFunctionReturnTypes(node: ExpressionNode): Type[] | undefined {
+  if (!(node instanceof FunctionCallNode)) return undefined;
+  const { definition } = node.identifier;
+  return definition?.returnTypes;
+}
+
 // Counts the number of `return` statements anywhere within a node (used to reject early/nested
-// returns, which the inliner does not support).
+// returns, which the lowering does not support).
 function countReturns(node: Node): number {
   let count = 0;
   const counter = new (class extends AstTraversal {

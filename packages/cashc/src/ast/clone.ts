@@ -71,8 +71,7 @@ function clone(node: Node, renames: Map<string, string>): Node {
 
   if (node instanceof TupleAssignmentNode) {
     return withLocation(new TupleAssignmentNode(
-      { name: rename(node.left.name, renames), type: node.left.type },
-      { name: rename(node.right.name, renames), type: node.right.type },
+      node.targets.map((target) => ({ name: rename(target.name, renames), type: target.type })),
       clone(node.tuple, renames) as ExpressionNode,
     ), node);
   }
@@ -95,7 +94,9 @@ function clone(node: Node, renames: Map<string, string>): Node {
   }
 
   if (node instanceof ReturnNode) {
-    return withLocation(new ReturnNode(clone(node.expression, renames) as ExpressionNode), node);
+    return withLocation(new ReturnNode(
+      node.expressions.map((expression) => clone(expression, renames) as ExpressionNode),
+    ), node);
   }
 
   if (node instanceof ConsoleStatementNode) {
