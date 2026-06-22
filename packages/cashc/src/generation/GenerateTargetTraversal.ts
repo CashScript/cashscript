@@ -95,6 +95,15 @@ class ArgIdentifierCounter extends AstTraversal {
   }
 }
 
+// Maximum compiled body length (in Script elements) for a user-defined function to be INLINED at its
+// call sites instead of shared via OP_DEFINE/OP_INVOKE. After bodies are optimised, the per-call
+// overhead (a funcid push + OP_INVOKE = 2 ops) can exceed the body itself — e.g. addFp is a single
+// OP_ADD — so splicing tiny bodies removes that overhead. 6 is the measured knee for the BN254 field
+// tower: it inlines the hot leaves (addFp=1, mulFp=3, subFp=6 ops) for ~−10% executed op-cost at a
+// few hundred bytes of locking growth, while larger routines (fp2/fp6 mul, finalExp) stay shared —
+// inlining those buys almost no op-cost but grows bytecode fast (each carries the 32-byte field prime).
+const INLINE_MAX_BODY_OPS = 6;
+
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
   sourceMap: string;
@@ -113,6 +122,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   // (a sequential number 1, 2, 3, ... encoded as a 0-7 byte VM number) and parameter count. Used by
   // visitFunctionCall to emit OP_INVOKE for the shared function body stored via OP_DEFINE.
   private userFunctionIds: Map<string, { id: number, paramCount: number, returnCount: number }> = new Map();
+  // Optimised bodies of the user functions selected for inlining (see INLINE_MAX_BODY_OPS). These get
+  // no OP_DEFINE; each call site splices the body in place of `<id> OP_INVOKE`. A body consumes its
+  // arguments from the top of the stack and leaves its results there, so splicing where the staged
+  // args sit is identical to invoking. Shared with body sub-traversals so a body that calls an inlined
+  // function also splices it.
+  private inlinedFunctionBodies: Map<string, Script> = new Map();
   // True while compiling a user-defined function body as a standalone routine (so that visitReturn
   // knows to leave only the return value on the stack instead of emitting a require/verify).
   private compilingUserFunctionBody = false;
@@ -277,11 +292,20 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       });
     });
 
+    // Compiled in declaration order, which (for the field-tower sources) is bottom-up: a callee is
+    // compiled — and its inline decision made — before its callers, so callers splice it. If a callee
+    // is declared after its caller it simply falls back to OP_INVOKE (correct, just not inlined).
     userFunctions.forEach((func) => {
       const { id } = this.userFunctionIds.get(func.name)!;
       const bodyScript = this.compileUserFunctionBody(func);
-      const bodyBytecode = scriptToBytecode(bodyScript);
 
+      // Tiny bodies are inlined at their call sites instead of stored via OP_DEFINE.
+      if (bodyScript.length <= INLINE_MAX_BODY_OPS) {
+        this.inlinedFunctionBodies.set(func.name, bodyScript);
+        return;
+      }
+
+      const bodyBytecode = scriptToBytecode(bodyScript);
       const locationData = { location: func.location, positionHint: PositionHint.START };
       // <function_body_bytes>
       this.emit(bodyBytecode, locationData);
@@ -301,8 +325,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   // runs the body, and leaves exactly the return value on top of the shared stack.
   private compileUserFunctionBody(func: FunctionDefinitionNode): Script {
     const bodyTraversal = new GenerateTargetTraversalWithLocation(this.compilerOptions);
-    // Share the function identifier table so a body can OP_INVOKE other already-defined functions.
+    // Share the function identifier table so a body can OP_INVOKE other already-defined functions,
+    // and the inlined-bodies table so a body can splice an already-inlined callee in place.
     bodyTraversal.userFunctionIds = this.userFunctionIds;
+    bodyTraversal.inlinedFunctionBodies = this.inlinedFunctionBodies;
     bodyTraversal.currentFunction = func;
     bodyTraversal.compilingUserFunctionBody = true;
 
@@ -845,14 +871,23 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.callArgNameCounts = null;
     }
 
-    this.emit(encodeInt(BigInt(userFunction.id)), { location: node.location, positionHint: PositionHint.START });
-    this.pushToStack('(function id)');
-    this.emit(Op.OP_INVOKE, { location: node.location, positionHint: PositionHint.END });
+    const inlinedBody = this.inlinedFunctionBodies.get(node.identifier.name);
+    if (inlinedBody !== undefined) {
+      // Inlined function: splice the body in place of `<id> OP_INVOKE`. The staged arguments are on
+      // top of the stack (first parameter on top), exactly the state the body was compiled for, so it
+      // runs identically — consuming the arguments and leaving its N return values on top.
+      this.emit(inlinedBody, { location: node.location, positionHint: PositionHint.END });
+      this.popFromStack(userFunction.paramCount);
+    } else {
+      this.emit(encodeInt(BigInt(userFunction.id)), { location: node.location, positionHint: PositionHint.START });
+      this.pushToStack('(function id)');
+      this.emit(Op.OP_INVOKE, { location: node.location, positionHint: PositionHint.END });
 
-    // OP_INVOKE pops the identifier; the body consumes the arguments and pushes its N return values
-    // (the last-declared value ends up on top). For a single-return function the result is a plain
-    // value expression; for a multi-return function the N values are bound by visitTupleAssignment.
-    this.popFromStack(1 + userFunction.paramCount);
+      // OP_INVOKE pops the identifier; the body consumes the arguments and pushes its N return values
+      // (the last-declared value ends up on top). For a single-return function the result is a plain
+      // value expression; for a multi-return function the N values are bound by visitTupleAssignment.
+      this.popFromStack(1 + userFunction.paramCount);
+    }
     for (let i = 0; i < userFunction.returnCount; i += 1) {
       this.pushToStack('(value)');
     }

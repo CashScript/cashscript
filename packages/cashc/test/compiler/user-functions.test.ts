@@ -43,7 +43,41 @@ const byteSize = (asm: string): number => scriptToBytecode(asmToScript(asm)).byt
 
 describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
   describe('Code generation emits the function opcodes', () => {
-    it('emits OP_DEFINE once and OP_INVOKE per call site', () => {
+    // A function whose optimised body exceeds INLINE_MAX_BODY_OPS stays shared via OP_DEFINE/OP_INVOKE.
+    it('emits OP_DEFINE once and OP_INVOKE per call site for an above-threshold function', () => {
+      const artifact = compileString(`
+        contract Test() {
+          internal function poly(int a) returns (int) { return (a * a + a * 7 + 13) % 2147483647; }
+          function spend(int x) {
+            int y = poly(x) + poly(x);
+            require(y == 0);
+          }
+        }`);
+
+      const opcodes = artifact.bytecode.split(' ');
+      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
+      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(2);
+    });
+
+    it('emits one OP_DEFINE per declared above-threshold user function', () => {
+      const artifact = compileString(`
+        contract Test() {
+          internal function f(int a) returns (int) { return (a * a + a + 1) % 2147483647; }
+          internal function g(int a) returns (int) { return (a * 4 + a * a + 9) % 2147483647; }
+          function spend(int x) {
+            int y = g(f(x));
+            require(y == 8);
+          }
+        }`);
+
+      const opcodes = artifact.bytecode.split(' ');
+      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(2);
+      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(2);
+    });
+
+    // A tiny body is spliced at its call sites (no OP_DEFINE / OP_INVOKE), since the per-call
+    // funcid-push + OP_INVOKE overhead would exceed the body itself.
+    it('inlines a tiny function instead of emitting OP_DEFINE/OP_INVOKE', () => {
       const artifact = compileString(`
         contract Test() {
           internal function square(int a) returns (int) { return a * a; }
@@ -54,24 +88,10 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
         }`);
 
       const opcodes = artifact.bytecode.split(' ');
-      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
-      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(2);
-    });
-
-    it('emits one OP_DEFINE per declared user function', () => {
-      const artifact = compileString(`
-        contract Test() {
-          internal function increment(int a) returns (int) { return a + 1; }
-          internal function quadruple(int a) returns (int) { return a * 4; }
-          function spend(int x) {
-            int y = quadruple(increment(x));
-            require(y == 8);
-          }
-        }`);
-
-      const opcodes = artifact.bytecode.split(' ');
-      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(2);
-      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(2);
+      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(0);
+      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(0);
+      // the inlined body's multiply appears once per call site
+      expect(opcodes.filter((op) => op === 'OP_MUL')).toHaveLength(2);
     });
   });
 
@@ -326,7 +346,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
       expect(evaluateSpend(source, [encodeInt(5n)]).accepted).toBe(true);
     });
 
-    it('a multi-return function called twice (single OP_DEFINE) evaluates correctly', () => {
+    it('a tiny multi-return function called twice (inlined) evaluates correctly', () => {
       const source = `
         contract Test() {
           internal function pair(int x) returns (int, int) { return x * 2, x * 3; }
@@ -341,8 +361,10 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
         }`;
       const artifact = compileString(source);
       const opcodes = artifact.bytecode.split(' ');
-      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
-      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(2);
+      // `pair` is below the inline threshold, so it is spliced at both call sites (no OP_DEFINE).
+      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(0);
+      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(0);
+      // inlining preserves multi-return semantics across both call sites
       expect(evaluateSpend(source, [encodeInt(6n)]).accepted).toBe(true);
     });
 
@@ -481,19 +503,32 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
       expect(evaluateSpend(source, [encodeInt(4n)]).accepted).toBe(false);
     });
 
-    it('emits OP_DEFINE/OP_INVOKE for an internal function called as a statement', () => {
-      const artifact = compileString(`
+    it('lowers a no-return internal function called as a statement (tiny body inlined)', () => {
+      const tiny = compileString(`
         contract Test() {
           internal function assertEq(int a, int b) { require(a == b); }
           function spend(int x, int y) {
             assertEq(x, y);
             require(x + y == 10);
           }
-        }`);
+        }`).bytecode.split(' ');
+      // tiny body -> spliced (no OP_DEFINE / OP_INVOKE), the require's verify runs inline
+      expect(tiny.filter((op) => op === 'OP_DEFINE')).toHaveLength(0);
+      expect(tiny.filter((op) => op === 'OP_INVOKE')).toHaveLength(0);
 
-      const opcodes = artifact.bytecode.split(' ');
-      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
-      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(1);
+      // an above-threshold no-return internal function stays shared and is invoked as a statement
+      const shared = compileString(`
+        contract Test() {
+          internal function checkRange(int a, int b) {
+            require(a >= 0); require(b >= 0); require(a + b < 1000000); require(a * b >= 0);
+          }
+          function spend(int x, int y) {
+            checkRange(x, y);
+            require(x + y == 10);
+          }
+        }`).bytecode.split(' ');
+      expect(shared.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
+      expect(shared.filter((op) => op === 'OP_INVOKE')).toHaveLength(1);
     });
 
     it('executes correctly: accepts when the internal requires pass', () => {
