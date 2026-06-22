@@ -57,19 +57,24 @@ export class FunctionDefinitionNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
-    // User-defined functions (declared with `returns (...)`) return one or more values and are
-    // compiled to standalone OP_DEFINE/OP_INVOKE routines; contract spending functions have no
-    // declared return types and are compiled directly. A single-return function has one element,
-    // a multi-return (tuple) function has N elements in declared order.
+    // Declared return types of a value-returning reusable function (the optional `returns (...)`
+    // clause): one element for a single-return function, N for a multi-return (tuple) function;
+    // undefined for a no-return function. Only `internal` functions may declare return types.
     public returnTypes?: Type[],
+    // `internal` keyword: marks a reusable function lowered to OP_DEFINE/OP_INVOKE (it may return
+    // value(s) via `returns (...)` or nothing — only `require`s). This is the sole distinction from a
+    // contract spending (top-level) function, which unlocks the UTXO and never declares a return
+    // type. `return` statements are only valid inside `internal` functions.
+    public isInternal: boolean = false,
   ) {
     super();
   }
 
-  // A user-defined (reusable) function is one with a declared return type list. These are lowered
-  // to OP_DEFINE/OP_INVOKE and are not emitted as standalone spending functions.
+  // A user-defined (reusable) function is exactly an `internal` function. These are lowered to
+  // OP_DEFINE/OP_INVOKE and shared across call sites, rather than emitted as standalone spending
+  // functions. Spending functions are the non-internal top-level functions that unlock the contract.
   get isUserFunction(): boolean {
-    return this.returnTypes !== undefined;
+    return this.isInternal;
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
@@ -128,6 +133,20 @@ export class TupleAssignmentNode extends NonControlStatementNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitTupleAssignment(this);
+  }
+}
+
+export class FunctionCallStatementNode extends NonControlStatementNode {
+  // A bare call to a user-defined `internal` (no-return) function, executed for its `require` side
+  // effects. The wrapped call leaves no value on the stack.
+  constructor(
+    public functionCall: FunctionCallNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitFunctionCallStatement(this);
   }
 }
 

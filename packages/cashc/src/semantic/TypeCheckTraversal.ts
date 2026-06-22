@@ -37,6 +37,7 @@ import {
   ExpressionNode,
   FunctionDefinitionNode,
   ParameterNode,
+  FunctionCallStatementNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import {
@@ -65,17 +66,29 @@ export default class TypeCheckTraversal extends AstTraversal {
   // True while visiting the right-hand side of a tuple-destructuring assignment, where a
   // multi-return function call is permitted (and validated against the destructuring targets).
   private insideTupleAssignmentRhs = false;
+  // True while visiting the call directly wrapped by a function-call statement, where a no-return
+  // (`internal`) function call is permitted. A no-return function call is invalid anywhere else.
+  private insideCallStatement = false;
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    // Only `internal` (reusable) functions may declare a return type and use `return`. A top-level
+    // spending function unlocks the UTXO and must not declare one.
+    if (!node.isInternal && node.returnTypes !== undefined) {
+      throw new ReturnStatementError(
+        node,
+        `Function '${node.name}' declares a return type but is not 'internal'; only internal functions may return values`,
+      );
+    }
+
     this.currentReturnTypes = node.returnTypes;
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
     this.currentReturnTypes = undefined;
 
-    if (node.isUserFunction) {
-      // The OP_DEFINE/OP_INVOKE lowering requires a single `return` as the final statement of the
-      // body. Disallow missing, early, or nested returns so each call site lowers to a clean result
-      // assignment.
+    if (node.isUserFunction && node.returnTypes !== undefined) {
+      // The OP_DEFINE/OP_INVOKE lowering requires a single `return` as the final statement of a
+      // value-returning body. Disallow missing, early, or nested returns so each call site lowers to
+      // a clean result assignment.
       const statements = node.body.statements ?? [];
       const finalStatement = statements[statements.length - 1];
       if (!(finalStatement instanceof ReturnNode)) {
@@ -90,6 +103,8 @@ export default class TypeCheckTraversal extends AstTraversal {
         );
       }
     }
+    // A no-return `internal` function must not contain any `return` statement (visitReturn also
+    // rejects this, since currentReturnTypes is undefined — this is the function-level guard).
 
     return node;
   }
@@ -117,6 +132,27 @@ export default class TypeCheckTraversal extends AstTraversal {
         throw new ReturnTypeError(node, expression.type, expectedType);
       }
     });
+
+    return node;
+  }
+
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    // Permit a no-return function call only here (the flag is consumed by visitFunctionCall).
+    this.insideCallStatement = true;
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
+    this.insideCallStatement = false;
+
+    // The callee must be a user-defined `internal` function with no return value. A value-returning
+    // function (or built-in) called as a bare statement would leave its result(s) unconsumed.
+    const calleeDefinition = node.functionCall.identifier.definition?.definition;
+    const isNoReturnUserFunction = calleeDefinition instanceof FunctionDefinitionNode
+      && calleeDefinition.returnTypes === undefined;
+    if (!isNoReturnUserFunction) {
+      throw new ReturnStatementError(
+        node.functionCall,
+        'Only a user-defined internal function with no return value can be called as a statement',
+      );
+    }
 
     return node;
   }
@@ -285,12 +321,27 @@ export default class TypeCheckTraversal extends AstTraversal {
     // that nested argument calls are type-checked as ordinary (single-value) expressions.
     const isTupleAssignmentRhs = this.insideTupleAssignmentRhs;
     this.insideTupleAssignmentRhs = false;
+    // Whether this call is the one directly wrapped by a function-call statement. Consume the flag
+    // immediately so nested argument calls are checked as ordinary (value) expressions.
+    const isCallStatement = this.insideCallStatement;
+    this.insideCallStatement = false;
 
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
     const { definition, type } = node.identifier;
     if (!definition || !definition.parameters) return node; // already checked in symbol table
+
+    // A no-return `internal` function produces no value, so it may only appear as a statement.
+    const calleeDefinition = definition.definition;
+    const isNoReturnUserFunction = calleeDefinition instanceof FunctionDefinitionNode
+      && calleeDefinition.returnTypes === undefined;
+    if (isNoReturnUserFunction && !isCallStatement) {
+      throw new ReturnStatementError(
+        node,
+        `Function '${node.identifier.name}' has no return value and can only be called as a statement`,
+      );
+    }
 
     const parameterTypes = node.parameters.map((p) => p.type!);
     expectParameters(node, parameterTypes, definition.parameters);

@@ -16,6 +16,7 @@ import {
   ForNode,
   CastNode,
   FunctionCallNode,
+  FunctionCallStatementNode,
   InstantiationNode,
   TupleIndexOpNode,
   SliceNode,
@@ -137,6 +138,12 @@ function clone(node: Node, renames: Map<string, string>): Node {
 
   if (node instanceof CastNode) {
     return withLocation(new CastNode(node.type, clone(node.expression, renames) as ExpressionNode, node.isUnsafe), node);
+  }
+
+  if (node instanceof FunctionCallStatementNode) {
+    return withLocation(new FunctionCallStatementNode(
+      clone(node.functionCall, renames) as FunctionCallNode,
+    ), node);
   }
 
   if (node instanceof FunctionCallNode) {

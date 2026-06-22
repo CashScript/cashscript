@@ -46,7 +46,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('emits OP_DEFINE once and OP_INVOKE per call site', () => {
       const artifact = compileString(`
         contract Test() {
-          function square(int a) returns (int) { return a * a; }
+          internal function square(int a) returns (int) { return a * a; }
           function spend(int x) {
             int y = square(x) + square(x);
             require(y == 18);
@@ -61,8 +61,8 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('emits one OP_DEFINE per declared user function', () => {
       const artifact = compileString(`
         contract Test() {
-          function increment(int a) returns (int) { return a + 1; }
-          function quadruple(int a) returns (int) { return a * 4; }
+          internal function increment(int a) returns (int) { return a + 1; }
+          internal function quadruple(int a) returns (int) { return a * 4; }
           function spend(int x) {
             int y = quadruple(increment(x));
             require(y == 8);
@@ -81,7 +81,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('is smaller than the hand-inlined equivalent for a function called 4 times', () => {
       const withFunction = `
         contract Test() {
-          function poly(int a) returns (int) {
+          internal function poly(int a) returns (int) {
             int t = a * a + a;
             return t * 2 + 7;
           }
@@ -116,7 +116,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a function called twice evaluates correctly', () => {
       const source = `
         contract Test() {
-          function square(int a) returns (int) { return a * a; }
+          internal function square(int a) returns (int) { return a * a; }
           function spend(int x) {
             int y = square(x) + square(x);
             require(y == 18);
@@ -130,7 +130,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a function called four times evaluates correctly (size-win contract)', () => {
       const source = `
         contract Test() {
-          function poly(int a) returns (int) { int t = a * a + a; return t * 2 + 7; }
+          internal function poly(int a) returns (int) { int t = a * a + a; return t * 2 + 7; }
           function spend(int x) {
             int y = poly(x) + poly(x) + poly(x) + poly(x);
             require(y == 76);
@@ -144,8 +144,8 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('nested calls evaluate correctly', () => {
       const source = `
         contract Test() {
-          function increment(int a) returns (int) { return a + 1; }
-          function quadruple(int a) returns (int) { return a * 4; }
+          internal function increment(int a) returns (int) { return a + 1; }
+          internal function quadruple(int a) returns (int) { return a * 4; }
           function spend(int x) {
             int y = quadruple(increment(x));
             require(y == 8);
@@ -159,7 +159,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a two-argument function preserves argument order', () => {
       const source = `
         contract Test() {
-          function addThem(int a, int b) returns (int) { return a + b * 2; }
+          internal function addThem(int a, int b) returns (int) { return a + b * 2; }
           function spend(int x) { require(addThem(x, 3) == 10); }
         }`;
       // x + 3 * 2 == 10 -> x == 4
@@ -170,7 +170,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a call inside an if-statement evaluates correctly', () => {
       const source = `
         contract Test() {
-          function increment(int a) returns (int) { return a + 1; }
+          internal function increment(int a) returns (int) { return a + 1; }
           function spend(int x) {
             if (x > 0) { int y = increment(x); require(y == 6); }
             require(x >= 0);
@@ -184,7 +184,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a call inside a loop body evaluates correctly', () => {
       const source = `
         contract Test() {
-          function increment(int a) returns (int) { return a + 1; }
+          internal function increment(int a) returns (int) { return a + 1; }
           function spend(int x) {
             int sum = x;
             for (int i = 0; i < 3; i = i + 1) { sum = sum + increment(i); }
@@ -198,7 +198,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('OP_DEFINE/OP_INVOKE coexist with the multi-spending-function selector', () => {
       const source = `
         contract Test() {
-          function dbl(int a) returns (int) { return a * 2; }
+          internal function dbl(int a) returns (int) { return a * 2; }
           function first(int x) { require(dbl(x) == 4); }
           function second(int x) { require(dbl(x) == 6); }
         }`;
@@ -215,7 +215,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('only exposes contract spending functions in the ABI', () => {
       const artifact = compileString(`
         contract Test() {
-          function double(int a) returns (int) { return a * 2; }
+          internal function double(int a) returns (int) { return a * 2; }
           function spend(int x) {
             require(double(x) == 4);
           }
@@ -230,7 +230,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('emits OP_DEFINE/OP_INVOKE for a multi-return function', () => {
       const artifact = compileString(`
         contract Test() {
-          function tri(int x, int y, int z) returns (int, int, int) {
+          internal function tri(int x, int y, int z) returns (int, int, int) {
             int nx = x * 2; int ny = y * 3; int nz = z + 1;
             return nx, ny, nz;
           }
@@ -250,7 +250,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
       // nx = x*2, ny = y*3, nz = z+1 — exercises a 3-coordinate (curve-point-like) return.
       const source = `
         contract Test() {
-          function jacDouble(int x, int y, int z) returns (int, int, int) {
+          internal function jacDouble(int x, int y, int z) returns (int, int, int) {
             int nx = x * 2; int ny = y * 3; int nz = z + 1;
             return nx, ny, nz;
           }
@@ -266,7 +266,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
       // Tamper: a contract that asserts wrong results must fail.
       const wrong = `
         contract Test() {
-          function jacDouble(int x, int y, int z) returns (int, int, int) {
+          internal function jacDouble(int x, int y, int z) returns (int, int, int) {
             int nx = x * 2; int ny = y * 3; int nz = z + 1;
             return nx, ny, nz;
           }
@@ -283,7 +283,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('the bare (no-parentheses) destructuring form also works', () => {
       const source = `
         contract Test() {
-          function tri(int x) returns (int, int, int) { return x, x + 1, x + 2; }
+          internal function tri(int x) returns (int, int, int) { return x, x + 1, x + 2; }
           function spend(int a) {
             int p, int q, int r = tri(a);
             require(p == a);
@@ -298,7 +298,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
       // Concrete assertions on the destructured values so a wrong unlocking arg is rejected.
       const source = `
         contract Test() {
-          function pair(int x, int y) returns (int, int) { return x + y, x - y; }
+          internal function pair(int x, int y) returns (int, int) { return x + y, x - y; }
           function spend(int a, int b) {
             (int s, int d) = pair(a, b);
             require(s == 10);
@@ -314,8 +314,8 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a destructured result can feed another call', () => {
       const source = `
         contract Test() {
-          function tri(int x) returns (int, int, int) { return x, x + 1, x + 2; }
-          function add(int a, int b) returns (int) { return a + b; }
+          internal function tri(int x) returns (int, int, int) { return x, x + 1, x + 2; }
+          internal function add(int a, int b) returns (int) { return a + b; }
           function spend(int a) {
             (int p, int q, int r) = tri(a);
             require(add(p, q) == 2 * a + 1);
@@ -329,7 +329,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a multi-return function called twice (single OP_DEFINE) evaluates correctly', () => {
       const source = `
         contract Test() {
-          function pair(int x) returns (int, int) { return x * 2, x * 3; }
+          internal function pair(int x) returns (int, int) { return x * 2, x * 3; }
           function spend(int a) {
             (int p1, int q1) = pair(a);
             (int p2, int q2) = pair(a + 1);
@@ -349,7 +349,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('a 3-return function defined once + invoked is far smaller than the inlined equivalent', () => {
       const withFunction = `
         contract Test() {
-          function tri(int x) returns (int, int, int) {
+          internal function tri(int x) returns (int, int, int) {
             int nx = x * 2; int ny = x * 3 + 1; int nz = x + 7;
             return nx, ny, nz;
           }
@@ -378,7 +378,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws when the number of returned values is fewer than declared', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int x) returns (int, int, int) { return x, x; }
+          internal function f(int x) returns (int, int, int) { return x, x; }
           function spend(int a) { (int p, int q, int r) = f(a); require(p == 1); require(q == 1); require(r == 1); }
         }`)).toThrow(ReturnStatementError);
     });
@@ -386,7 +386,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws when the number of returned values is more than declared', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int x) returns (int, int) { return x, x, x; }
+          internal function f(int x) returns (int, int) { return x, x, x; }
           function spend(int a) { (int p, int q) = f(a); require(p == 1); require(q == 1); }
         }`)).toThrow(ReturnStatementError);
     });
@@ -394,7 +394,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws on destructuring-arity mismatch (too few targets)', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int x) returns (int, int, int) { return x, x, x; }
+          internal function f(int x) returns (int, int, int) { return x, x, x; }
           function spend(int a) { (int p, int q) = f(a); require(p == 1); require(q == 1); }
         }`)).toThrow(ReturnStatementError);
     });
@@ -402,7 +402,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws when a multi-return function is used as a single value', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int x) returns (int, int) { return x, x; }
+          internal function f(int x) returns (int, int) { return x, x; }
           function spend(int a) { require(f(a) == 1); }
         }`)).toThrow(ReturnStatementError);
     });
@@ -410,7 +410,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws ReturnTypeError when a returned value type mismatches its declared type', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int x) returns (int, bytes) { return x, x; }
+          internal function f(int x) returns (int, bytes) { return x, x; }
           function spend(int a) { (int p, bytes q) = f(a); require(p == 1); require(q == 0x00); }
         }`)).toThrow(ReturnTypeError);
     });
@@ -422,7 +422,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
       // 100-deep control-stack limit; supporting it is deferred.
       expect(() => compileString(`
         contract Test() {
-          function f(int a) returns (int) { int b = f(a); return b; }
+          internal function f(int a) returns (int) { int b = f(a); return b; }
           function spend(int x) { require(f(x) == 1); }
         }`)).toThrow(RecursiveFunctionError);
     });
@@ -430,8 +430,8 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws RecursiveFunctionError on mutual recursion', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int a) returns (int) { return g(a); }
-          function g(int a) returns (int) { return f(a); }
+          internal function f(int a) returns (int) { return g(a); }
+          internal function g(int a) returns (int) { return f(a); }
           function spend(int x) { require(f(x) == 1); }
         }`)).toThrow(RecursiveFunctionError);
     });
@@ -439,7 +439,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws ReturnTypeError when the return expression type mismatches', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int a) returns (bytes) { return a; }
+          internal function f(int a) returns (bytes) { return a; }
           function spend(int x) { require(f(x) == 0x00); }
         }`)).toThrow(ReturnTypeError);
     });
@@ -447,7 +447,7 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
     it('throws MissingReturnStatementError when a value-returning function does not return', () => {
       expect(() => compileString(`
         contract Test() {
-          function f(int a) returns (int) { int b = a + 1; require(b > 0); }
+          internal function f(int a) returns (int) { int b = a + 1; require(b > 0); }
           function spend(int x) { require(f(x) == 2); }
         }`)).toThrow(MissingReturnStatementError);
     });
@@ -456,6 +456,106 @@ describe('User-defined functions (OP_DEFINE / OP_INVOKE)', () => {
       expect(() => compileString(`
         contract Test() {
           function spend(int x) { return x; }
+        }`)).toThrow(ReturnStatementError);
+    });
+  });
+
+  describe('Internal functions: the internal keyword', () => {
+    it('throws ReturnStatementError when a non-internal function declares a return type', () => {
+      // Reusable (OP_DEFINE/OP_INVOKE) functions must be marked `internal`; a top-level spending
+      // function may not declare a return type.
+      expect(() => compileString(`
+        contract Test() {
+          function notInternal(int a) returns (int) { return a + 1; }
+          function spend(int x) { require(x == 1); }
+        }`)).toThrow(ReturnStatementError);
+    });
+
+    it('a value-returning function works when marked internal', () => {
+      const source = `
+        contract Test() {
+          internal function increment(int a) returns (int) { return a + 1; }
+          function spend(int x) { require(increment(x) == 6); }
+        }`;
+      expect(evaluateSpend(source, [encodeInt(5n)]).accepted).toBe(true);
+      expect(evaluateSpend(source, [encodeInt(4n)]).accepted).toBe(false);
+    });
+
+    it('emits OP_DEFINE/OP_INVOKE for an internal function called as a statement', () => {
+      const artifact = compileString(`
+        contract Test() {
+          internal function assertEq(int a, int b) { require(a == b); }
+          function spend(int x, int y) {
+            assertEq(x, y);
+            require(x + y == 10);
+          }
+        }`);
+
+      const opcodes = artifact.bytecode.split(' ');
+      expect(opcodes.filter((op) => op === 'OP_DEFINE')).toHaveLength(1);
+      expect(opcodes.filter((op) => op === 'OP_INVOKE')).toHaveLength(1);
+    });
+
+    it('executes correctly: accepts when the internal requires pass', () => {
+      const source = `
+        contract Test() {
+          internal function assertEq(int a, int b) { require(a == b); }
+          function spend(int x, int y) {
+            assertEq(x, y);
+            require(x + y == 10);
+          }
+        }`;
+      expect(evaluateSpend(source, [encodeInt(5n), encodeInt(5n)]).accepted).toBe(true);
+    });
+
+    it('executes correctly: rejects when an internal require fails', () => {
+      const source = `
+        contract Test() {
+          internal function assertEq(int a, int b) { require(a == b); }
+          function spend(int x, int y) {
+            assertEq(x, y);
+            require(x + y == 10);
+          }
+        }`;
+      // a != b makes the internal require fail (4 + 6 == 10 still holds, so only assertEq can reject).
+      expect(evaluateSpend(source, [encodeInt(4n), encodeInt(6n)]).accepted).toBe(false);
+    });
+
+    it('supports an internal function calling another internal function', () => {
+      const source = `
+        contract Test() {
+          internal function notZero(int a) { require(a != 0); }
+          internal function bothPositive(int a, int b) { notZero(a); notZero(b); require(a > 0); require(b > 0); }
+          function spend(int x, int y) {
+            bothPositive(x, y);
+            require(x * y == 12);
+          }
+        }`;
+      expect(evaluateSpend(source, [encodeInt(3n), encodeInt(4n)]).accepted).toBe(true);
+      expect(evaluateSpend(source, [encodeInt(0n), encodeInt(4n)]).accepted).toBe(false);
+    });
+
+    it('throws ReturnStatementError when an internal (no-return) function contains a return', () => {
+      expect(() => compileString(`
+        contract Test() {
+          internal function f(int a) { require(a > 0); return a; }
+          function spend(int x) { f(x); require(x == 1); }
+        }`)).toThrow(ReturnStatementError);
+    });
+
+    it('throws ReturnStatementError when a no-return function is used as an expression', () => {
+      expect(() => compileString(`
+        contract Test() {
+          internal function f(int a) { require(a > 0); }
+          function spend(int x) { int y = f(x); require(y == 1); }
+        }`)).toThrow(ReturnStatementError);
+    });
+
+    it('throws ReturnStatementError when a value-returning function is called as a statement', () => {
+      expect(() => compileString(`
+        contract Test() {
+          internal function f(int a) returns (int) { return a + 1; }
+          function spend(int x) { f(x); require(x == 1); }
         }`)).toThrow(ReturnStatementError);
     });
   });

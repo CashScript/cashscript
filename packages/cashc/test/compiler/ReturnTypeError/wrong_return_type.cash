@@ -1,5 +1,5 @@
 contract Test() {
-    function toBytes(int a) returns (bytes) {
+    internal function toBytes(int a) returns (bytes) {
         return a;
     }
 

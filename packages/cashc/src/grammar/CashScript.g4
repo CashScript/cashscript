@@ -29,7 +29,7 @@ contractDefinition
     ;
 
 functionDefinition
-    : 'function' Identifier parameterList ('returns' '(' typeName (',' typeName)* ')')? functionBody
+    : Internal? 'function' Identifier parameterList ('returns' '(' typeName (',' typeName)* ')')? functionBody
     ;
 
 functionBody
@@ -60,8 +60,14 @@ nonControlStatement
     | assignStatement
     | timeOpStatement
     | requireStatement
+    | functionCallStatement
     | consoleStatement
     | returnStatement
+    ;
+
+// A bare call to a user-defined `internal` function (one with no return value, only requires).
+functionCallStatement
+    : functionCall
     ;
 
 returnStatement
@@ -281,6 +287,10 @@ NullaryOp
     | 'tx.outputs.length'
     | 'tx.version'
     | 'tx.locktime'
+    ;
+
+Internal
+    : 'internal'
     ;
 
 Identifier

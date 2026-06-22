@@ -11,6 +11,7 @@ import {
   BranchNode,
   CastNode,
   FunctionCallNode,
+  FunctionCallStatementNode,
   UnaryOpNode,
   BinaryOpNode,
   BoolLiteralNode,
@@ -78,7 +79,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
-    this.addOutput(`function ${node.name}(`, true);
+    this.addOutput(`${node.isInternal ? 'internal ' : ''}function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
     this.addOutput(')');
     if (node.returnTypes !== undefined) {
@@ -155,6 +156,12 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   visitReturn(node: ReturnNode): Node {
     this.addOutput('return ', true);
     node.expressions = this.visitCommaList(node.expressions);
+    return node;
+  }
+
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    this.addOutput('', true);
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
     return node;
   }
 

@@ -1,9 +1,9 @@
 contract Test() {
-    function increment(int a) returns (int) {
+    internal function increment(int a) returns (int) {
         return a + 1;
     }
 
-    function quadruple(int a) returns (int) {
+    internal function quadruple(int a) returns (int) {
         return a * 4;
     }
 

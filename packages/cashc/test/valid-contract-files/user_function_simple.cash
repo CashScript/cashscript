@@ -1,5 +1,5 @@
 contract Test() {
-    function double(int a) returns (int) {
+    internal function double(int a) returns (int) {
         int doubled = a * 2;
         return doubled + 1;
     }

@@ -1,9 +1,9 @@
 contract Test() {
-    function ping(int a) returns (int) {
+    internal function ping(int a) returns (int) {
         return pong(a);
     }
 
-    function pong(int a) returns (int) {
+    internal function pong(int a) returns (int) {
         return ping(a);
     }
 

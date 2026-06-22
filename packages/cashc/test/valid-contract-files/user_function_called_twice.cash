@@ -1,5 +1,5 @@
 contract Test() {
-    function square(int a) returns (int) {
+    internal function square(int a) returns (int) {
         return a * a;
     }
 

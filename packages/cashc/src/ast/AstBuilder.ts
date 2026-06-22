@@ -10,6 +10,7 @@ import {
   VariableDefinitionNode,
   FunctionDefinitionNode,
   AssignNode,
+  FunctionCallStatementNode,
   IdentifierNode,
   BranchNode,
   CastNode,
@@ -64,6 +65,7 @@ import type {
   TupleIndexOpContext,
   RequireStatementContext,
   ReturnStatementContext,
+  FunctionCallStatementContext,
   PragmaDirectiveContext,
   InstantiationContext,
   NullaryOpContext,
@@ -153,7 +155,8 @@ export default class AstBuilder
     const returnTypes = returnTypeContexts.length > 0
       ? returnTypeContexts.map((t) => parseType(t.getText()))
       : undefined;
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, body, returnTypes);
+    const isInternal = ctx.Internal() !== null;
+    const functionDefinition = new FunctionDefinitionNode(name, parameters, body, returnTypes, isInternal);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -273,6 +276,13 @@ export default class AstBuilder
     const returnNode = new ReturnNode(expressions);
     returnNode.location = Location.fromCtx(ctx);
     return returnNode;
+  }
+
+  visitFunctionCallStatement(ctx: FunctionCallStatementContext): FunctionCallStatementNode {
+    const functionCall = this.visit(ctx.functionCall()) as FunctionCallNode;
+    const statement = new FunctionCallStatementNode(functionCall);
+    statement.location = Location.fromCtx(ctx);
+    return statement;
   }
 
   visitIfStatement(ctx: IfStatementContext): BranchNode {

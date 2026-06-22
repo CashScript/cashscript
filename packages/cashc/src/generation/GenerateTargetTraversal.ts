@@ -28,6 +28,7 @@ import {
   VariableDefinitionNode,
   FunctionDefinitionNode,
   AssignNode,
+  FunctionCallStatementNode,
   IdentifierNode,
   BranchNode,
   CastNode,
@@ -271,7 +272,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.userFunctionIds.set(func.name, {
         id: i + 1,
         paramCount: func.parameters.length,
-        returnCount: func.returnTypes!.length,
+        returnCount: func.returnTypes?.length ?? 0,
       });
     });
 
@@ -317,7 +318,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // After the body runs, the function's N return values are on top of the stack (in declared
     // order, the last-declared value on top). Remove every other stack item (parameters and locals)
     // so the routine's net effect is: consume the arguments, leave the N return values on top.
-    bodyTraversal.cleanFunctionBodyStack(func.body, func.returnTypes!.length);
+    bodyTraversal.cleanFunctionBodyStack(func.body, func.returnTypes?.length ?? 0);
 
     return bodyTraversal.output;
   }
@@ -327,6 +328,23 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   cleanFunctionBodyStack(functionBodyNode: Node, resultCount: number): void {
     const locationData = { location: functionBodyNode.location, positionHint: PositionHint.END };
     const dropCount = this.stack.length - resultCount;
+
+    if (resultCount === 0) {
+      // No-return (`internal`) function: nothing is preserved, so drop the whole stack (parameters
+      // and locals) directly from the top with OP_2DROP pairs (1 byte for 2 items) + a trailing
+      // OP_DROP. Net effect of the routine: consume the arguments, leave nothing.
+      let remaining = dropCount;
+      for (; remaining >= 2; remaining -= 2) {
+        this.emit(Op.OP_2DROP, locationData);
+        this.popFromStack(2);
+      }
+      if (remaining === 1) {
+        this.emit(Op.OP_DROP, locationData);
+        this.popFromStack(1);
+      }
+      return;
+    }
+
     for (let i = 0; i < dropCount; i += 1) {
       if (resultCount === 1) {
         // Single return value: OP_NIP drops the item directly below the top (1 byte).
@@ -741,6 +759,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     );
     this.popFromStack();
     this.pushToStack('(value)');
+    return node;
+  }
+
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    // A no-return `internal` function call executed as a statement: emit the OP_INVOKE (which
+    // consumes its arguments and pushes zero return values). Nothing is left to bind or clean up.
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
     return node;
   }
 
