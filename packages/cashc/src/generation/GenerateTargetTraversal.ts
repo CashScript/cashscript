@@ -95,14 +95,11 @@ class ArgIdentifierCounter extends AstTraversal {
   }
 }
 
-// Maximum compiled body length (in Script elements) for a user-defined function to be INLINED at its
-// call sites instead of shared via OP_DEFINE/OP_INVOKE. After bodies are optimised, the per-call
-// overhead (a funcid push + OP_INVOKE = 2 ops) can exceed the body itself — e.g. addFp is a single
-// OP_ADD — so splicing tiny bodies removes that overhead. 6 is the measured knee for the BN254 field
-// tower: it inlines the hot leaves (addFp=1, mulFp=3, subFp=6 ops) for ~−10% executed op-cost at a
-// few hundred bytes of locking growth, while larger routines (fp2/fp6 mul, finalExp) stay shared —
-// inlining those buys almost no op-cost but grows bytecode fast (each carries the 32-byte field prime).
-const INLINE_MAX_BODY_OPS = 6;
+// Inline a user function at its call sites (vs OP_DEFINE/OP_INVOKE) only when its body is this small,
+// so splicing never costs more bytes than the funcid-push + OP_INVOKE it replaces. Bytes are the fee,
+// so this targets size, not op-cost. In bytes, not opcodes: a few-opcode body can embed a large
+// literal (mulFp = OP_MUL <32-byte P> OP_MOD ≈ 35 B) that would be duplicated at every call site.
+const INLINE_MAX_BODY_BYTES = 6;
 
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -298,14 +295,14 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     userFunctions.forEach((func) => {
       const { id } = this.userFunctionIds.get(func.name)!;
       const bodyScript = this.compileUserFunctionBody(func);
+      const bodyBytecode = scriptToBytecode(bodyScript);
 
-      // Tiny bodies are inlined at their call sites instead of stored via OP_DEFINE.
-      if (bodyScript.length <= INLINE_MAX_BODY_OPS) {
+      // Small enough that splicing it costs no more than calling it: inline instead of OP_DEFINE.
+      if (bodyBytecode.length <= INLINE_MAX_BODY_BYTES) {
         this.inlinedFunctionBodies.set(func.name, bodyScript);
         return;
       }
 
-      const bodyBytecode = scriptToBytecode(bodyScript);
       const locationData = { location: func.location, positionHint: PositionHint.START };
       // <function_body_bytes>
       this.emit(bodyBytecode, locationData);
