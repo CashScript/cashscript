@@ -10,6 +10,7 @@ import {
   Script,
   scriptToAsm,
   scriptToBytecode,
+  optimiseBytecode,
   generateSourceMap,
   FullLocationData,
   LogEntry,
@@ -320,7 +321,23 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // so the routine's net effect is: consume the arguments, leave the N return values on top.
     bodyTraversal.cleanFunctionBodyStack(func.body, func.returnTypes?.length ?? 0);
 
-    return bodyTraversal.output;
+    // Run the bytecode optimiser over the body before it is frozen into an OP_DEFINE data vector.
+    // The contract's main optimisation pass (compiler.ts) only ever sees a body as an opaque data
+    // push, so without this the body keeps its unoptimised stack shuffling — e.g. `x + y` compiles
+    // to `OP_0 OP_ROLL OP_1 OP_ROLL OP_ADD` instead of a single `OP_ADD`. Since each body is invoked
+    // many times, optimising it directly cuts both deployed size and executed op-cost. The body's
+    // internal source-map/log/require metadata is not surfaced in the artifact, so only the
+    // optimised script is kept.
+    const { script } = optimiseBytecode(
+      bodyTraversal.output,
+      bodyTraversal.locationData,
+      bodyTraversal.consoleLogs,
+      bodyTraversal.requires,
+      bodyTraversal.sourceTags,
+      0,
+    );
+
+    return script;
   }
 
   // Removes everything below the N return values left on top of the stack (see
