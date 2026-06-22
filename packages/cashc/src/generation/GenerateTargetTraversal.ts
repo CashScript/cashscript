@@ -69,6 +69,30 @@ import {
 } from './utils.js';
 import { isNumericType } from '../utils.js';
 
+// Counts how often each variable name is referenced across a set of expressions. Used to decide
+// whether a final-use variable in a user-function-call argument list is safe to OP_ROLL: a name
+// referenced exactly once in the whole (possibly nested) argument tree has no other use that the
+// reversed-emission ROLL could consume early. Function/instantiation callee identifiers are not
+// stack-variable reads, so they are skipped (only the call arguments are counted).
+class ArgIdentifierCounter extends AstTraversal {
+  counts: Map<string, number> = new Map();
+
+  visitIdentifier(node: IdentifierNode): Node {
+    this.counts.set(node.name, (this.counts.get(node.name) ?? 0) + 1);
+    return node;
+  }
+
+  visitFunctionCall(node: FunctionCallNode): Node {
+    node.parameters = this.visitList(node.parameters);
+    return node;
+  }
+
+  visitInstantiation(node: InstantiationNode): Node {
+    node.parameters = this.visitList(node.parameters);
+    return node;
+  }
+}
+
 export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
   sourceMap: string;
@@ -90,6 +114,18 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   // True while compiling a user-defined function body as a standalone routine (so that visitReturn
   // knows to leave only the return value on the stack instead of emitting a require/verify).
   private compilingUserFunctionBody = false;
+  // Depth counter: > 0 while emitting the arguments of a user-function call. User-function-call
+  // arguments are evaluated in REVERSE source order (so the first parameter ends up on top), which
+  // contradicts the source-order last-use analysis behind opRolls: a variable's textually-last use
+  // (its ROLL site) is emitted FIRST under reversal, so if the variable appears MORE THAN ONCE in the
+  // argument tree that ROLL would consume it before its other uses are emitted. We therefore allow
+  // OP_ROLL in argument position only for a name that appears exactly once across the whole argument
+  // tree (see callArgNameCounts / isOpRoll); names appearing 2+ times stay OP_PICK (copy) and their
+  // originals are dropped by the end-of-scope cleanup (cleanFunctionBodyStack / cleanStack).
+  private userCallArgDepth = 0;
+  // Per-name reference counts across the entire argument tree of the OUTERMOST in-flight user-function
+  // call. Populated when userCallArgDepth goes 0 -> 1 and cleared when it returns to 0.
+  private callArgNameCounts: Map<string, number> | null = null;
 
   constructor(private compilerOptions: CompilerOptions) {
     super();
@@ -749,8 +785,22 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     userFunction: { id: number, paramCount: number, returnCount: number },
   ): Node {
     const args = [...node.parameters];
+    // At the outermost call, count how often each variable is referenced across the whole (possibly
+    // nested) argument tree so isOpRoll can safely ROLL the single-occurrence final uses. Nested
+    // user-function calls reuse this same map (their args are part of the outermost tree).
+    const isOutermostCall = this.userCallArgDepth === 0;
+    if (isOutermostCall) {
+      const counter = new ArgIdentifierCounter();
+      args.forEach((arg) => counter.visit(arg));
+      this.callArgNameCounts = counter.counts;
+    }
+    this.userCallArgDepth += 1;
     for (let i = args.length - 1; i >= 0; i -= 1) {
       this.visit(args[i]);
+    }
+    this.userCallArgDepth -= 1;
+    if (isOutermostCall) {
+      this.callArgNameCounts = null;
     }
 
     this.emit(encodeInt(BigInt(userFunction.id)), { location: node.location, positionHint: PositionHint.START });
@@ -961,7 +1011,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   isOpRoll(node: IdentifierNode): boolean {
-    return this.currentFunction.opRolls.get(node.name) === node && this.scopeDepth === 0;
+    // Must be the variable's final use (opRolls site) and not inside an if/loop scope.
+    if (this.currentFunction.opRolls.get(node.name) !== node || this.scopeDepth !== 0) return false;
+    // Inside a user-function-call argument list, ROLL is only safe when this variable appears exactly
+    // once across the whole argument tree; otherwise reversed emission would consume it too early.
+    if (this.userCallArgDepth > 0) return this.callArgNameCounts?.get(node.name) === 1;
+    return true;
   }
 
   visitBoolLiteral(node: BoolLiteralNode): Node {
