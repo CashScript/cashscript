@@ -47,6 +47,7 @@
         "checksigverify",
         "chipnet",
         "cleanstack",
+        "cleanup",
         "cryptocurrency",
         "collateralized",
         "datasig",
