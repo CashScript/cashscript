@@ -2,6 +2,15 @@
 title: Release Notes
 ---
 
+## v0.13.2
+
+#### cashc compiler
+- :hammer_and_wrench: Add source tag annotations for compiler-injected opcodes for loop condition and stack cleanup.
+
+#### CashScript SDK
+- :sparkles: Add `calculateTransactionFee()` method to `TransactionBuilder` class.
+- :hammer_and_wrench: Add additional local validation when building a transaction.
+
 ## v0.13.1
 
 #### cashc compiler
@@ -24,6 +33,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :sparkles: Add support for narrowing bytes types after `x.length == N` and checks in require or if statements.
 - :hammer_and_wrench: **BREAKING**: Automatically inject `require(tx.time >= tx.locktime)` when a function uses `tx.locktime` without a `tx.time` check in scope, ensuring the spending input is non-final so `nLockTime` is enforced. This can be disabled with the `enforceLocktimeGuard: false` compiler option (CLI: `--skip-enforce-locktime-guard`).
 - :hammer_and_wrench: **BREAKING**: Function parameter types are now strictly enforced (bounded bytes and boolean values). This can be disabled with the `enforceFunctionParameterTypes: false` compiler option (CLI: `--skip-enforce-function-parameter-types`).
+- :hammer_and_wrench: Add source tag annotations for compiler-injected opcodes.
 - :bug: Fix issue where casting bytes larger than `bytes8` to `int` was not allowed.
 - :bug: Fix issue where empty bytecode contracts were not properly compiled.
 - :bug: **BREAKING**: Fix issue where `bool()` casting did not change the value of the argument.

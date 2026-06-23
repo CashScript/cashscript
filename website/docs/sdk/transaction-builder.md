@@ -223,6 +223,19 @@ const transactionSize = transactionBuilder.getTransactionSize();
 console.log(`Transaction size: ${transactionSize} bytes`);
 ```
 
+### calculateTransactionFee()
+```ts
+transactionBuilder.calculateTransactionFee(): { feeSats: bigint, feeSatsPerByte: number }
+```
+
+Calculates the transaction fee in satoshis and the fee per byte.
+
+#### Example
+```ts
+const { feeSats, feeSatsPerByte } = transactionBuilder.calculateTransactionFee();
+console.log(`Transaction fee: ${feeSats} satoshis (${feeSatsPerByte} sats/byte)`);
+```
+
 ## Completing the Transaction
 ### send()
 ```ts
