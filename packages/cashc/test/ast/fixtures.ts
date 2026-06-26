@@ -6,6 +6,7 @@ import {
   Ast,
   ParameterNode,
   FunctionDefinitionNode,
+  FunctionKind,
   BlockNode,
   RequireNode,
   BinaryOpNode,
@@ -45,6 +46,7 @@ export const fixtures: Fixture[] = [
         'P2PKH',
         [new ParameterNode(new BytesType(20), 'pkh')],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'spend',
           [
             new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
@@ -76,6 +78,7 @@ export const fixtures: Fixture[] = [
         'Reassignment',
         [new ParameterNode(PrimitiveType.INT, 'x'), new ParameterNode(PrimitiveType.STRING, 'y')],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'hello',
           [new ParameterNode(PrimitiveType.PUBKEY, 'pk'), new ParameterNode(PrimitiveType.SIG, 's')],
           new BlockNode([
@@ -150,6 +153,7 @@ export const fixtures: Fixture[] = [
         [new ParameterNode(PrimitiveType.INT, 'x'), new ParameterNode(PrimitiveType.INT, 'y')],
         [
           new FunctionDefinitionNode(
+            FunctionKind.CONTRACT,
             'transfer',
             [new ParameterNode(PrimitiveType.INT, 'a'), new ParameterNode(PrimitiveType.INT, 'b')],
             new BlockNode([
@@ -233,6 +237,7 @@ export const fixtures: Fixture[] = [
             ]),
           ),
           new FunctionDefinitionNode(
+            FunctionKind.CONTRACT,
             'timeout',
             [new ParameterNode(PrimitiveType.INT, 'b')],
             new BlockNode([
@@ -312,6 +317,7 @@ export const fixtures: Fixture[] = [
           new ParameterNode(PrimitiveType.PUBKEY, 'pk3'),
         ],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'spend',
           [
             new ParameterNode(PrimitiveType.SIG, 's1'),
@@ -351,6 +357,7 @@ export const fixtures: Fixture[] = [
           new ParameterNode(PrimitiveType.INT, 'priceTarget'),
         ],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'spend',
           [
             new ParameterNode(PrimitiveType.SIG, 'ownerSig'),
@@ -436,6 +443,7 @@ export const fixtures: Fixture[] = [
         'Covenant',
         [],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'spend',
           [],
           new BlockNode([
@@ -651,6 +659,7 @@ export const fixtures: Fixture[] = [
         ],
         [
           new FunctionDefinitionNode(
+            FunctionKind.CONTRACT,
             'receive',
             [],
             new BlockNode([
@@ -772,6 +781,7 @@ export const fixtures: Fixture[] = [
             ]),
           ),
           new FunctionDefinitionNode(
+            FunctionKind.CONTRACT,
             'reclaim',
             [
               new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
@@ -810,6 +820,7 @@ export const fixtures: Fixture[] = [
         'Announcement',
         [],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'announce',
           [],
           new BlockNode([
@@ -913,6 +924,7 @@ export const fixtures: Fixture[] = [
         [],
         [
           new FunctionDefinitionNode(
+            FunctionKind.CONTRACT,
             'spend',
             [new ParameterNode(PrimitiveType.INT, 'value')],
             new BlockNode([
@@ -957,6 +969,7 @@ export const fixtures: Fixture[] = [
         'Loopy',
         [],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'doLoop',
           [],
           new BlockNode([
@@ -1005,6 +1018,7 @@ export const fixtures: Fixture[] = [
         'WhileLoopBasic',
         [],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'spend',
           [],
           new BlockNode([
@@ -1050,6 +1064,7 @@ export const fixtures: Fixture[] = [
         'ForLoopBasic',
         [],
         [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
           'spend',
           [],
           new BlockNode([

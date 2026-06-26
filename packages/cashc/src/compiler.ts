@@ -1,4 +1,3 @@
-import { CharStream, CommonTokenStream } from 'antlr4';
 import { binToHex } from '@bitauth/libauth';
 import {
   Artifact,
@@ -13,13 +12,15 @@ import {
   sourceMapToLocationData,
 } from '@cashscript/utils';
 import fs, { PathLike } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
-import AstBuilder from './ast/AstBuilder.js';
-import { ThrowingErrorListener, CashScriptErrorListener, ForwardingErrorListener } from './ast/error-listeners.js';
+import { CashScriptErrorListener } from './ast/error-listeners.js';
+import { MissingContractError } from './Errors.js';
+import { parseCode } from './parser.js';
+import { resolveDependencies } from './dependency-resolution.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
-import CashScriptLexer from './grammar/CashScriptLexer.js';
-import CashScriptParser from './grammar/CashScriptParser.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
@@ -32,6 +33,7 @@ export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
 
 export interface CompileOptions extends CompilerOptions {
   errorListener?: CashScriptErrorListener;
+  basePath?: string;
 }
 
 /**
@@ -43,11 +45,16 @@ export interface CompileOptions extends CompilerOptions {
  * @throws If the source code contains a syntax, semantic, or type error.
  */
 export function compileString(code: string, compilerOptions: CompileOptions = {}): Artifact {
-  const { errorListener, ...artifactCompilerOptions } = compilerOptions;
+  const { errorListener, basePath, ...artifactCompilerOptions } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
 
   // Lexing + parsing
   let ast = parseCode(code, errorListener);
+
+  ast = resolveDependencies(ast, { basePath, errorListener }) as Ast;
+  if (!ast.contract) throw new MissingContractError();
+
+  const constructorParamLength = ast.contract.parameters.length;
 
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
@@ -60,8 +67,6 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   // Code generation
   const traversal = new GenerateTargetTraversal(mergedCompilerOptions);
   ast = ast.accept(traversal) as Ast;
-
-  const constructorParamLength = ast.contract.parameters.length;
 
   // Bytecode optimisation
   const optimisedBytecodeOld = optimiseBytecodeOld(traversal.output);
@@ -104,32 +109,8 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
  * @throws If the file cannot be read, or if the source contains a compilation error.
  */
 export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions = {}): Artifact {
-  const code = fs.readFileSync(codeFile, { encoding: 'utf-8' });
-  return compileString(code, compilerOptions);
-}
-
-export function parseCode(
-  code: string,
-  errorListener: CashScriptErrorListener = ThrowingErrorListener.INSTANCE,
-): Ast {
-  const syntaxErrorListener = new ForwardingErrorListener(errorListener);
-
-  // Lexing (throwing on errors)
-  const inputStream = new CharStream(code);
-  const lexer = new CashScriptLexer(inputStream);
-  lexer.removeErrorListeners();
-  lexer.addErrorListener(syntaxErrorListener);
-  const tokenStream = new CommonTokenStream(lexer);
-
-  // Parsing (throwing on errors)
-  const parser = new CashScriptParser(tokenStream);
-  parser.removeErrorListeners();
-  parser.addErrorListener(syntaxErrorListener);
-  const parseTree = parser.sourceFile();
-  syntaxErrorListener.throwFirstError();
-
-  // AST building
-  const ast = new AstBuilder(parseTree).build() as Ast;
-
-  return ast;
+  const filePath = codeFile instanceof URL ? fileURLToPath(codeFile) : codeFile.toString();
+  const code = fs.readFileSync(filePath, { encoding: 'utf-8' });
+  const basePath = compilerOptions.basePath ?? path.dirname(filePath);
+  return compileString(code, { ...compilerOptions, basePath });
 }

@@ -21,15 +21,37 @@ export interface Typed {
   type: Type;
 }
 
+export enum FunctionKind {
+  CONTRACT = 'contract',
+  GLOBAL = 'global',
+}
+
 export class SourceFileNode extends Node {
+  // The source file's scope: the table of global functions (each symbol carries its VM function-table id).
+  symbolTable?: SymbolTable;
+
   constructor(
-    public contract: ContractNode,
+    public contract?: ContractNode,
+    public functions: FunctionDefinitionNode[] = [],
+    public imports: ImportNode[] = [],
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitSourceFile(this);
+  }
+}
+
+export class ImportNode extends Node {
+  constructor(
+    public path: string,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitImport(this);
   }
 }
 
@@ -54,9 +76,11 @@ export class FunctionDefinitionNode extends Node implements Named {
   opRolls: Map<string, IdentifierNode> = new Map();
 
   constructor(
+    public kind: FunctionKind,
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
+    public returnType?: Type,
   ) {
     super();
   }
@@ -165,6 +189,30 @@ export class ConsoleStatementNode extends NonControlStatementNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitConsoleStatement(this);
+  }
+}
+
+export class FunctionCallStatementNode extends NonControlStatementNode {
+  constructor(
+    public functionCall: FunctionCallNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitFunctionCallStatement(this);
+  }
+}
+
+export class ReturnNode extends NonControlStatementNode {
+  constructor(
+    public expression: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitReturn(this);
   }
 }
 
@@ -362,7 +410,7 @@ export class ArrayNode extends ExpressionNode {
 }
 
 export class IdentifierNode extends ExpressionNode implements Named {
-  definition?: Symbol;
+  symbol?: Symbol;
 
   constructor(
     public name: string,

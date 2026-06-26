@@ -2,6 +2,14 @@
 title: Release Notes
 ---
 
+## v0.14.0-next.0
+
+⚠️ Note that this is a pre-release version and is not yet stable. There will likely be breaking changes to the APIs and compiler output in subsequent pre-releases.
+
+#### cashc compiler
+- :sparkles: Add support for user-defined reusable functions.
+- :sparkles: Add support for `import` directives to share user-defined functions across files.
+
 ## v0.13.2
 
 #### cashc compiler

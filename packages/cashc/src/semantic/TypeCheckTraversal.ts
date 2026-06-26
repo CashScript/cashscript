@@ -14,6 +14,9 @@ import {
   BranchNode,
   CastNode,
   FunctionCallNode,
+  FunctionCallStatementNode,
+  FunctionDefinitionNode,
+  ParameterNode,
   UnaryOpNode,
   BinaryOpNode,
   IdentifierNode,
@@ -22,6 +25,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   Node,
   InstantiationNode,
   TupleAssignmentNode,
@@ -47,6 +51,8 @@ import {
   IndexOutOfBoundsError,
   TupleAssignmentError,
   BitshiftBitcountNegativeError,
+  UnusedFunctionReturnError,
+  ReturnTypeError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
@@ -54,6 +60,8 @@ import { Symbol } from '../ast/SymbolTable.js';
 import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
+  private currentFunctionReturnType: Type = PrimitiveType.VOID;
+
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
     expectAssignable(node, node.expression.type, node.type);
@@ -178,15 +186,38 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
+    if (node.functionCall.type !== PrimitiveType.VOID) {
+      throw new UnusedFunctionReturnError(node.functionCall);
+    }
+    return node;
+  }
+
+  visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    this.currentFunctionReturnType = node.returnType ?? PrimitiveType.VOID;
+    node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    node.body = this.visit(node.body) as BlockNode;
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
+    node.expression = this.visit(node.expression);
+    if (!implicitlyCastable(node.expression.type, this.currentFunctionReturnType)) {
+      throw new ReturnTypeError(node.expression, node.expression.type, this.currentFunctionReturnType);
+    }
+    return node;
+  }
+
   visitFunctionCall(node: FunctionCallNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
-    const { definition, type } = node.identifier;
-    if (!definition || !definition.parameters) return node; // already checked in symbol table
+    const { symbol, type } = node.identifier;
+    if (!symbol || !symbol.parameters) return node; // already checked in symbol table
 
     const parameterTypes = node.parameters.map((p) => p.type!);
-    expectParameters(node, parameterTypes, definition.parameters);
+    expectParameters(node, parameterTypes, symbol.parameters);
 
     // Additional array length check for checkMultiSig
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
@@ -211,11 +242,11 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
-    const { definition, type } = node.identifier;
-    if (!definition || !definition.parameters) return node; // already checked in symbol table
+    const { symbol, type } = node.identifier;
+    if (!symbol || !symbol.parameters) return node; // already checked in symbol table
 
     const parameterTypes = node.parameters.map((p) => p.type!);
-    expectParameters(node, parameterTypes, definition.parameters);
+    expectParameters(node, parameterTypes, symbol.parameters);
 
     node.type = type;
     return node;
@@ -405,8 +436,8 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitIdentifier(node: IdentifierNode): Node {
-    if (!node.definition) return node;
-    node.type = node.definition.type;
+    if (!node.symbol) return node;
+    node.type = node.symbol.type;
     return node;
   }
 }
@@ -599,13 +630,13 @@ function extractSingleBytesNarrowing(expr: BinaryOpNode): Narrowing | undefined 
   const { sizeNode, literalNode } = match;
   if (!(sizeNode.expression instanceof IdentifierNode)) return undefined;
 
-  const { definition } = sizeNode.expression;
-  if (!definition || !(definition.type instanceof BytesType) || definition.type.bound !== undefined) return undefined;
+  const { symbol } = sizeNode.expression;
+  if (!symbol || !(symbol.type instanceof BytesType) || symbol.type.bound !== undefined) return undefined;
 
   const bound = Number(literalNode.value);
   if (bound <= 0) return undefined;
 
-  return { symbol: definition, bound };
+  return { symbol, bound };
 }
 
 // Matches expr.length <op> N or N <op> expr.length, returning the SIZE node and int literal.

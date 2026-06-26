@@ -2,7 +2,9 @@ import {
   ContractNode,
   ParameterNode,
   FunctionDefinitionNode,
+  FunctionKind,
   RequireNode,
+  ReturnNode,
   TimeOpNode,
   BranchNode,
   ConsoleStatementNode,
@@ -10,9 +12,17 @@ import {
   WhileNode,
   ForNode,
   BlockNode,
+  StatementNode,
+  Node,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
-import { EmptyContractError, EmptyFunctionError, FinalRequireStatementError } from '../Errors.js';
+import {
+  EmptyContractError,
+  EmptyFunctionError,
+  FinalRequireStatementError,
+  MissingReturnError,
+  MisplacedReturnError,
+} from '../Errors.js';
 
 export default class EnsureFinalRequireTraversal extends AstTraversal {
   visitContract(node: ContractNode): ContractNode {
@@ -34,10 +44,55 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
       throw new EmptyFunctionError(node);
     }
 
-    ensureFinalStatementIsRequire(node.body);
+    if (node.kind === FunctionKind.CONTRACT) {
+      ensureFinalStatementIsRequire(node.body);
+    } else if (node.returnType !== undefined) {
+      ensureSingleTailReturn(node.body);
+    }
 
     return node;
   }
+}
+
+// TODO: This code is a bit convoluted, but we're likely to make changes to allow early returns before a mainline release,
+// so we're leaving this code as-is for now.
+
+function ensureSingleTailReturn(body: BlockNode): void {
+  const statements = body.statements ?? [];
+  const finalStatement = statements[statements.length - 1];
+  if (!(finalStatement instanceof ReturnNode)) {
+    throw new MissingReturnError(finalStatement ?? body);
+  }
+
+  const stray = findReturn(statements.slice(0, -1));
+  if (stray) throw new MisplacedReturnError(stray);
+}
+
+function findReturn(statements: StatementNode[]): ReturnNode | undefined {
+  for (const statement of statements) {
+    if (statement instanceof ReturnNode) return statement;
+    for (const list of nestedStatementLists(statement)) {
+      const found = findReturn(list);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
+
+function nestedStatementLists(statement: StatementNode): StatementNode[][] {
+  const asStatements = (block?: Node): StatementNode[] => {
+    if (!block) return [];
+    if (block instanceof BlockNode) return block.statements ?? [];
+    return [block as StatementNode];
+  };
+
+  if (statement instanceof BranchNode) {
+    return [asStatements(statement.ifBlock), asStatements(statement.elseBlock)];
+  }
+  if (statement instanceof DoWhileNode || statement instanceof WhileNode || statement instanceof ForNode) {
+    return [asStatements(statement.block)];
+  }
+  return [];
 }
 
 function ensureFinalStatementIsRequire(block: BlockNode): void {

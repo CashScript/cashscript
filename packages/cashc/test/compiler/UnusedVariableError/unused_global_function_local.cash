@@ -1,0 +1,10 @@
+function withUnusedLocal(int a) returns (int) {
+    int unused = a + 1;
+    return a;
+}
+
+contract UnusedGlobalFunctionLocal() {
+    function spend() {
+        require(withUnusedLocal(1) == 1);
+    }
+}

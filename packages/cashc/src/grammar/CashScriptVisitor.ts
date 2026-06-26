@@ -9,14 +9,19 @@ import { PragmaNameContext } from "./CashScriptParser.js";
 import { PragmaValueContext } from "./CashScriptParser.js";
 import { VersionConstraintContext } from "./CashScriptParser.js";
 import { VersionOperatorContext } from "./CashScriptParser.js";
+import { ImportDirectiveContext } from "./CashScriptParser.js";
+import { TopLevelDefinitionContext } from "./CashScriptParser.js";
+import { GlobalFunctionDefinitionContext } from "./CashScriptParser.js";
 import { ContractDefinitionContext } from "./CashScriptParser.js";
-import { FunctionDefinitionContext } from "./CashScriptParser.js";
+import { ContractFunctionDefinitionContext } from "./CashScriptParser.js";
 import { FunctionBodyContext } from "./CashScriptParser.js";
 import { ParameterListContext } from "./CashScriptParser.js";
 import { ParameterContext } from "./CashScriptParser.js";
 import { BlockContext } from "./CashScriptParser.js";
 import { StatementContext } from "./CashScriptParser.js";
 import { NonControlStatementContext } from "./CashScriptParser.js";
+import { FunctionCallStatementContext } from "./CashScriptParser.js";
+import { ReturnStatementContext } from "./CashScriptParser.js";
 import { ControlStatementContext } from "./CashScriptParser.js";
 import { VariableDefinitionContext } from "./CashScriptParser.js";
 import { TupleAssignmentContext } from "./CashScriptParser.js";
@@ -100,17 +105,35 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 */
 	visitVersionOperator?: (ctx: VersionOperatorContext) => Result;
 	/**
+	 * Visit a parse tree produced by `CashScriptParser.importDirective`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitImportDirective?: (ctx: ImportDirectiveContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.topLevelDefinition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTopLevelDefinition?: (ctx: TopLevelDefinitionContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.globalFunctionDefinition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitGlobalFunctionDefinition?: (ctx: GlobalFunctionDefinitionContext) => Result;
+	/**
 	 * Visit a parse tree produced by `CashScriptParser.contractDefinition`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitContractDefinition?: (ctx: ContractDefinitionContext) => Result;
 	/**
-	 * Visit a parse tree produced by `CashScriptParser.functionDefinition`.
+	 * Visit a parse tree produced by `CashScriptParser.contractFunctionDefinition`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitFunctionDefinition?: (ctx: FunctionDefinitionContext) => Result;
+	visitContractFunctionDefinition?: (ctx: ContractFunctionDefinitionContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.functionBody`.
 	 * @param ctx the parse tree
@@ -147,6 +170,18 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitNonControlStatement?: (ctx: NonControlStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.functionCallStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitFunctionCallStatement?: (ctx: FunctionCallStatementContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.returnStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitReturnStatement?: (ctx: ReturnStatementContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.controlStatement`.
 	 * @param ctx the parse tree

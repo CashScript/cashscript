@@ -1,4 +1,4 @@
-import { PrimitiveType, ArrayType, BytesType } from '@cashscript/utils';
+import { PrimitiveType, ArrayType, BytesType, Op } from '@cashscript/utils';
 import { SymbolTable, Symbol } from './SymbolTable.js';
 
 export const NumberUnit: { [index: string]: number } = {
@@ -63,47 +63,88 @@ GLOBAL_SYMBOL_TABLE.set(
 );
 
 // Global functions
+
+// abs(int) -> int
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.ABS, PrimitiveType.INT, [PrimitiveType.INT]),
+  Symbol.builtinFunction(GlobalFunction.ABS, PrimitiveType.INT, [PrimitiveType.INT], [Op.OP_ABS]),
 );
+
+// min(int, int) -> int
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.MIN, PrimitiveType.INT, [PrimitiveType.INT, PrimitiveType.INT]),
+  Symbol.builtinFunction(GlobalFunction.MIN, PrimitiveType.INT, [PrimitiveType.INT, PrimitiveType.INT], [Op.OP_MIN]),
 );
+
+// max(int, int) -> int
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.MAX, PrimitiveType.INT, [PrimitiveType.INT, PrimitiveType.INT]),
+  Symbol.builtinFunction(GlobalFunction.MAX, PrimitiveType.INT, [PrimitiveType.INT, PrimitiveType.INT], [Op.OP_MAX]),
 );
-GLOBAL_SYMBOL_TABLE.set(Symbol.function(
-  GlobalFunction.WITHIN, PrimitiveType.BOOL,
-  [PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT],
-));
+
+// within(int, int, int) -> bool
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.RIPEMD160, new BytesType(20), [PrimitiveType.ANY]),
+  Symbol.builtinFunction(
+    GlobalFunction.WITHIN, PrimitiveType.BOOL,
+    [PrimitiveType.INT, PrimitiveType.INT, PrimitiveType.INT],
+    [Op.OP_WITHIN],
+  ),
 );
+
+// ripemd160(any) -> bytes20
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.SHA1, new BytesType(20), [PrimitiveType.ANY]),
+  Symbol.builtinFunction(GlobalFunction.RIPEMD160, new BytesType(20), [PrimitiveType.ANY], [Op.OP_RIPEMD160]),
 );
+
+// sha1(any) -> bytes20
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.SHA256, new BytesType(32), [PrimitiveType.ANY]),
+  Symbol.builtinFunction(GlobalFunction.SHA1, new BytesType(20), [PrimitiveType.ANY], [Op.OP_SHA1]),
 );
+
+// sha256(any) -> bytes32
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.HASH160, new BytesType(20), [PrimitiveType.ANY]),
+  Symbol.builtinFunction(GlobalFunction.SHA256, new BytesType(32), [PrimitiveType.ANY], [Op.OP_SHA256]),
 );
+
+// hash160(any) -> bytes20
 GLOBAL_SYMBOL_TABLE.set(
-  Symbol.function(GlobalFunction.HASH256, new BytesType(32), [PrimitiveType.ANY]),
+  Symbol.builtinFunction(GlobalFunction.HASH160, new BytesType(20), [PrimitiveType.ANY], [Op.OP_HASH160]),
 );
-GLOBAL_SYMBOL_TABLE.set(Symbol.function(
-  GlobalFunction.CHECKSIG, PrimitiveType.BOOL,
-  [PrimitiveType.SIG, PrimitiveType.PUBKEY],
-));
-GLOBAL_SYMBOL_TABLE.set(Symbol.function(
-  GlobalFunction.CHECKMULTISIG, PrimitiveType.BOOL,
-  [new ArrayType(PrimitiveType.SIG), new ArrayType(PrimitiveType.PUBKEY)],
-));
-GLOBAL_SYMBOL_TABLE.set(Symbol.function(
-  GlobalFunction.CHECKDATASIG, PrimitiveType.BOOL,
-  [PrimitiveType.DATASIG, new BytesType(), PrimitiveType.PUBKEY],
-));
-GLOBAL_SYMBOL_TABLE.set(Symbol.function(
-  GlobalFunction.TO_PADDED_BYTES, new BytesType(),
-  [PrimitiveType.INT, PrimitiveType.INT],
-));
+
+// hash256(any) -> bytes32
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.builtinFunction(GlobalFunction.HASH256, new BytesType(32), [PrimitiveType.ANY], [Op.OP_HASH256]),
+);
+
+// checkSig(sig, pubkey) -> bool
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.builtinFunction(
+    GlobalFunction.CHECKSIG, PrimitiveType.BOOL,
+    [PrimitiveType.SIG, PrimitiveType.PUBKEY],
+    [Op.OP_CHECKSIG],
+  ),
+);
+
+// checkMultiSig(sig[], pubkey[]) -> bool
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.builtinFunction(
+    GlobalFunction.CHECKMULTISIG, PrimitiveType.BOOL,
+    [new ArrayType(PrimitiveType.SIG), new ArrayType(PrimitiveType.PUBKEY)],
+    [Op.OP_CHECKMULTISIG],
+  ),
+);
+
+// checkDataSig(datasig, bytes, pubkey) -> bool
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.builtinFunction(
+    GlobalFunction.CHECKDATASIG, PrimitiveType.BOOL,
+    [PrimitiveType.DATASIG, new BytesType(), PrimitiveType.PUBKEY],
+    [Op.OP_CHECKDATASIG],
+  ),
+);
+
+// toPaddedBytes(int, int) -> bytes
+GLOBAL_SYMBOL_TABLE.set(
+  Symbol.builtinFunction(
+    GlobalFunction.TO_PADDED_BYTES, new BytesType(),
+    [PrimitiveType.INT, PrimitiveType.INT],
+    [Op.OP_NUM2BIN],
+  ),
+);

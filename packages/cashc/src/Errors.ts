@@ -1,6 +1,7 @@
 import { Type, PrimitiveType } from '@cashscript/utils';
 import {
   IdentifierNode,
+  ImportNode,
   FunctionDefinitionNode,
   VariableDefinitionNode,
   ParameterNode,
@@ -69,7 +70,7 @@ export class InvalidSymbolTypeError extends CashScriptError {
     public node: IdentifierNode,
     public expected: SymbolType,
   ) {
-    super(node, `Found symbol ${node.name} with type ${node.definition?.symbolType} where type ${expected} was expected`);
+    super(node, `Found symbol ${node.name} with type ${node.symbol?.symbolType} where type ${expected} was expected`);
   }
 }
 
@@ -80,6 +81,22 @@ export class FunctionRedefinitionError extends RedefinitionError {
     public node: FunctionDefinitionNode,
   ) {
     super(node, `Redefinition of function ${node.name}`);
+  }
+}
+
+export class MissingContractError extends Error {
+  constructor() {
+    super('Source file does not contain a contract definition');
+    this.name = this.constructor.name;
+  }
+}
+
+export class ImportResolutionError extends CashScriptError {
+  constructor(
+    public node: ImportNode,
+    message: string,
+  ) {
+    super(node, message);
   }
 }
 
@@ -123,6 +140,30 @@ export class FinalRequireStatementError extends CashScriptError {
   }
 }
 
+export class UnusedFunctionReturnError extends CashScriptError {
+  constructor(
+    public node: FunctionCallNode,
+  ) {
+    super(node, `Return value of ${node.identifier.name} must be used; only void functions may be called as a statement`);
+  }
+}
+
+export class MissingReturnError extends CashScriptError {
+  constructor(
+    public node: Node,
+  ) {
+    super(node, 'A value-returning function must end with a return statement');
+  }
+}
+
+export class MisplacedReturnError extends CashScriptError {
+  constructor(
+    public node: StatementNode,
+  ) {
+    super(node, 'A return statement is only allowed as the final statement of a function body');
+  }
+}
+
 export class TypeError extends CashScriptError {
   constructor(
     node: Node,
@@ -131,6 +172,16 @@ export class TypeError extends CashScriptError {
     message?: string,
   ) {
     super(node, message ?? `Found type '${actual}' where type '${expected}' was expected`);
+  }
+}
+
+export class ReturnTypeError extends TypeError {
+  constructor(
+    node: Node,
+    actual?: Type,
+    expected?: Type,
+  ) {
+    super(node, actual, expected, `Cannot return type '${actual}' from a function with return type '${expected}'`);
   }
 }
 

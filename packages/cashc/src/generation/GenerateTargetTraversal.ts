@@ -9,6 +9,8 @@ import {
   PrimitiveType,
   Script,
   scriptToAsm,
+  scriptToBytecode,
+  optimiseBytecode,
   generateSourceMap,
   FullLocationData,
   LogEntry,
@@ -26,6 +28,7 @@ import {
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  FunctionKind,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -60,14 +63,13 @@ import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
   compileCast,
-  compileGlobalFunction,
   compileNullaryOp,
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
 import { isNumericType } from '../utils.js';
 
-export default class GenerateTargetTraversalWithLocation extends AstTraversal {
+export default class GenerateTargetTraversal extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
   sourceMap: string;
   output: Script = [];
@@ -133,7 +135,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitSourceFile(node: SourceFileNode): Node {
-    node.contract = this.visit(node.contract) as ContractNode;
+    this.defineGlobalFunctions(node);
+
+    // The contract is guaranteed to exist here (compileString throws MissingContractError otherwise).
+    node.contract = this.visit(node.contract!) as ContractNode;
 
     // Minimally encode output by going Script -> ASM -> Script
     this.output = asmToScript(scriptToAsm(this.output));
@@ -141,6 +146,51 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.sourceMap = generateSourceMap(this.locationData);
 
     return node;
+  }
+
+  private defineGlobalFunctions(node: SourceFileNode): void {
+    node.functions.forEach((func) => {
+      const { functionId } = node.symbolTable!.getFromThis(func.name)!;
+      const bodyBytecode = this.compileGlobalFunctionBody(func);
+
+      const locationData = { location: func.location, positionHint: PositionHint.START };
+      this.emit(bodyBytecode, locationData); // <function_body_bytes>
+      this.emit(encodeInt(BigInt(functionId!)), locationData); // <function_identifier>
+      this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
+    });
+  }
+
+  private compileGlobalFunctionBody(node: FunctionDefinitionNode): Uint8Array {
+    const bodyTraversal = new GenerateTargetTraversal(this.compilerOptions);
+    bodyTraversal.currentFunction = node;
+    bodyTraversal.constructorParameterCount = 0;
+
+    // Seed the stack with parameters in reverse order so the last parameter is on top (simila to how builtin functions work)
+    for (let i = node.parameters.length - 1; i >= 0; i -= 1) {
+      bodyTraversal.visit(node.parameters[i]);
+    }
+
+    bodyTraversal.visit(node.body);
+    bodyTraversal.cleanGlobalFunctionStack(node);
+
+    const optimised = optimiseBytecode(
+      bodyTraversal.output,
+      bodyTraversal.locationData,
+      bodyTraversal.consoleLogs,
+      bodyTraversal.requires,
+      bodyTraversal.sourceTags,
+      0,
+    );
+
+    return scriptToBytecode(optimised.script);
+  }
+
+  cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {
+    if (node.returnType === undefined) {
+      this.removeScopedVariables(0, node.body); // void: drop the entire frame
+    } else {
+      this.cleanStack(node.body); // value: OP_NIP everything below the return value on top
+    }
   }
 
   visitContract(node: ContractNode): Node {
@@ -196,6 +246,10 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    if (node.kind !== FunctionKind.CONTRACT) {
+      throw new Error('Internal error: global functions are compiled via defineGlobalFunctions');
+    }
+
     this.currentFunction = node;
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
@@ -402,7 +456,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     const data = node.parameters.map((parameter: ConsoleParameterNode) => {
       if (parameter instanceof IdentifierNode) {
-        const symbol = parameter.definition!;
+        const symbol = parameter.symbol!;
 
         // If the variable is not on the stack, then we add the final stack usage to the console log
         const stackIndex = this.getStackIndex(parameter.name, true);
@@ -587,14 +641,11 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       return this.visitMultiSig(node);
     }
 
+    const symbol = node.identifier.symbol!;
     node.parameters = this.visitList(node.parameters);
-
-    this.emit(
-      compileGlobalFunction(node.identifier.name as GlobalFunction),
-      { location: node.location, positionHint: PositionHint.END },
-    );
+    this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
     this.popFromStack(node.parameters.length);
-    this.pushToStack('(value)');
+    if (symbol.type !== PrimitiveType.VOID) this.pushToStack('(value)');
 
     return node;
   }
@@ -774,7 +825,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
     if (this.isOpRoll(node)) {
-      const symbol = node.definition!;
+      const symbol = node.symbol!;
       this.finalStackUsage[node.name] = {
         type: symbol.type.toString(),
         stackIndex,
