@@ -25,6 +25,7 @@ import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
+import DeadCodeEliminationTraversal from './semantic/DeadCodeEliminationTraversal.js';
 
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
@@ -63,6 +64,9 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   if (mergedCompilerOptions.enforceLocktimeGuard) {
     ast = ast.accept(new InjectLocktimeGuardTraversal()) as Ast;
   }
+
+  // Dead-code elimination: drop global functions that are never invoked before code generation
+  ast = ast.accept(new DeadCodeEliminationTraversal()) as Ast;
 
   // Code generation
   const traversal = new GenerateTargetTraversal(mergedCompilerOptions);

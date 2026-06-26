@@ -35,8 +35,14 @@ export class Symbol {
   static userFunction(node: FunctionDefinitionNode, functionId: number): Symbol {
     const parameterTypes = node.parameters.map((parameter) => parameter.type);
     const returnType = node.returnType ?? PrimitiveType.VOID;
-    const bytecode = [encodeInt(BigInt(functionId)), Op.OP_INVOKE];
-    return new Symbol(node.name, returnType, SymbolType.FUNCTION, node, parameterTypes, bytecode, functionId);
+    const symbol = new Symbol(node.name, returnType, SymbolType.FUNCTION, node, parameterTypes);
+    symbol.setFunctionId(functionId);
+    return symbol;
+  }
+
+  setFunctionId(functionId: number): void {
+    this.functionId = functionId;
+    this.bytecode = [encodeInt(BigInt(functionId)), Op.OP_INVOKE];
   }
 
   static class(name: string, type: Type, parameters: Type[]): Symbol {

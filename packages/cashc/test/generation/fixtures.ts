@@ -1517,21 +1517,22 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }] }],
       bytecode:
-        // OP_DEFINE leaf (id 0): return a + 1
-        '8b OP_0 OP_DEFINE '
-        // OP_DEFINE m1 (id 1): return leaf(a) * 2
-        + '008a5295 OP_1 OP_DEFINE '
+        // Functions are defined in call order (DFS from the contract), so m1 is id 0, leaf id 1, m2 id 2.
+        // OP_DEFINE m1 (id 0): return leaf(a) * 2
+        '518a5295 OP_0 OP_DEFINE '
+        // OP_DEFINE leaf (id 1): return a + 1
+        + '8b OP_1 OP_DEFINE '
         // OP_DEFINE m2 (id 2): return leaf(a) + 3
-        + '008a5393 OP_2 OP_DEFINE '
+        + '518a5393 OP_2 OP_DEFINE '
         // require(m1(x) + m2(x) == 18)
-        + 'OP_DUP OP_1 OP_INVOKE OP_SWAP OP_2 OP_INVOKE OP_ADD 12 OP_NUMEQUAL',
+        + 'OP_DUP OP_0 OP_INVOKE OP_SWAP OP_2 OP_INVOKE OP_ADD 12 OP_NUMEQUAL',
       debug: {
-        bytecode: '018b008904008a5295518904008a5393528976518a7c528a9301129c',
+        bytecode: '04518a52950089018b518904518a5393528976008a7c528a9301129c',
         logs: [],
         requires: [
           { ip: 18, line: 6 },
         ],
-        sourceMap: '1::3:1;;::::1;2::4::0;;::::1;::::0;;::::1;6:19:6:20:0;:16::21:1;;:27::28:0;:24::29:1;;:16;:33::35:0;:8::37:1',
+        sourceMap: '2::4:1;;::::1;1::3::0;;::::1;2::4::0;;::::1;6:19:6:20:0;:16::21:1;;:27::28:0;:24::29:1;;:16;:33::35:0;:8::37:1',
       },
       source: fs.readFileSync(new URL('../import-fixtures/diamond.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {

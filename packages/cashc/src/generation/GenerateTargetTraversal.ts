@@ -165,7 +165,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
     bodyTraversal.currentFunction = node;
     bodyTraversal.constructorParameterCount = 0;
 
-    // Seed the stack with parameters in reverse order so the last parameter is on top (simila to how builtin functions work)
+    // Seed the stack with parameters in reverse order so the last parameter is on top
+    // (similar to how builtin functions work)
     for (let i = node.parameters.length - 1; i >= 0; i -= 1) {
       bodyTraversal.visit(node.parameters[i]);
     }
