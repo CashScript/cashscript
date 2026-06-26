@@ -1,0 +1,9 @@
+function verify(sig s, pubkey pk) returns (bool) {
+    return checkSig(s, pk);
+}
+
+contract Test() {
+    function spend(sig s, pubkey pk) {
+        require(verify(s, pk));
+    }
+}

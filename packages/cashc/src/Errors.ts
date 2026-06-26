@@ -164,6 +164,19 @@ export class MisplacedReturnError extends CashScriptError {
   }
 }
 
+export class UnsafeFunctionOperationError extends CashScriptError {
+  constructor(
+    node: Node,
+    operation: string,
+  ) {
+    super(
+      node,
+      `'${operation}' cannot be used inside a user-defined function. Use it directly in a `
+      + 'contract function instead, or pass the resulting value into the function as a parameter',
+    );
+  }
+}
+
 export class TypeError extends CashScriptError {
   constructor(
     node: Node,

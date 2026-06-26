@@ -141,11 +141,14 @@ contract Main() {
 
 Imported function names share a single global namespace, so a name may only be defined once across the whole import graph. Files reached through more than one import path (diamond imports) are resolved once.
 
+:::info
+`checkSig`, `checkMultiSig` and `this.activeBytecode` cannot be used inside a user-defined function, since they would apply to the function body rather than the contract. Use them in a contract function instead (`checkDataSig` is allowed).
+:::
+
 ### Limitations
 This first version of user-defined functions is intentionally limited in scope:
 
 - Functions return **at most one value** (no multiple/tuple returns), and a value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
-- No safety checks are present to prevent functions from calling each other recursively or disallow signature checks inside functions.
 - No advanced optimisations are performed yet on user-defined functions.
 - The local debugging tools in the SDK don't properly support user-defined functions yet.
 

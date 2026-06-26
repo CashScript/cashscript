@@ -1,0 +1,9 @@
+function bodyMatches(bytes expected) returns (bool) {
+    return this.activeBytecode == expected;
+}
+
+contract Test() {
+    function spend(bytes expected) {
+        require(bodyMatches(expected));
+    }
+}

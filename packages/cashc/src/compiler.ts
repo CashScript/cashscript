@@ -24,6 +24,7 @@ import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
+import EnsureFunctionsSafeTraversal from './semantic/EnsureFunctionsSafeTraversal.js';
 import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
 import DeadCodeEliminationTraversal from './semantic/DeadCodeEliminationTraversal.js';
 
@@ -60,6 +61,7 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   // Semantic analysis
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
+  ast = ast.accept(new EnsureFunctionsSafeTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
   if (mergedCompilerOptions.enforceLocktimeGuard) {
     ast = ast.accept(new InjectLocktimeGuardTraversal()) as Ast;
