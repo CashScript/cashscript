@@ -1,14 +1,16 @@
 import { ParseTree, ParseTreeVisitor } from 'antlr4';
 import { hexToBin } from '@bitauth/libauth';
-import { parseType } from '@cashscript/utils';
+import { parseType, Type } from '@cashscript/utils';
 import semver from 'semver';
 import {
   Node,
   SourceFileNode,
+  ImportNode,
   ContractNode,
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  FunctionKind,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -28,11 +30,13 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
   WhileNode,
@@ -40,8 +44,12 @@ import {
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
+  ImportDirectiveContext,
   ContractDefinitionContext,
-  FunctionDefinitionContext,
+  ContractFunctionDefinitionContext,
+  GlobalFunctionDefinitionContext,
+  ReturnStatementContext,
+  FunctionCallStatementContext,
   VariableDefinitionContext,
   TupleAssignmentContext,
   ParameterContext,
@@ -110,10 +118,32 @@ export default class AstBuilder
       this.processPragma(pragma);
     });
 
-    const contract = this.visit(ctx.contractDefinition()) as ContractNode;
-    const sourceFileNode = new SourceFileNode(contract);
+    const imports = ctx.importDirective_list().map((directive) => this.visit(directive) as ImportNode);
+
+    const functions: FunctionDefinitionNode[] = [];
+    let contract: ContractNode | undefined;
+
+    ctx.topLevelDefinition_list().forEach((def) => {
+      if (def.globalFunctionDefinition()) {
+        functions.push(this.visit(def.globalFunctionDefinition()) as FunctionDefinitionNode);
+      } else if (def.contractDefinition()) {
+        if (contract) {
+          throw new ParseError('A source file may define at most one contract', Location.fromCtx(def.contractDefinition()));
+        }
+        contract = this.visit(def.contractDefinition()) as ContractNode;
+      }
+    });
+
+    const sourceFileNode = new SourceFileNode(contract, functions, imports);
     sourceFileNode.location = Location.fromCtx(ctx);
     return sourceFileNode;
+  }
+
+  visitImportDirective(ctx: ImportDirectiveContext): ImportNode {
+    const raw = ctx.StringLiteral().getText();
+    const importNode = new ImportNode(raw.substring(1, raw.length - 1));
+    importNode.location = Location.fromCtx(ctx);
+    return importNode;
   }
 
   processPragma(ctx: PragmaDirectiveContext): void {
@@ -135,17 +165,31 @@ export default class AstBuilder
   visitContractDefinition(ctx: ContractDefinitionContext): ContractNode {
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
-    const functions = ctx.functionDefinition_list().map((f) => this.visit(f) as FunctionDefinitionNode);
+    const functions = ctx.contractFunctionDefinition_list()
+      .map((f) => this.visit(f) as FunctionDefinitionNode);
     const contract = new ContractNode(name, parameters, functions);
     contract.location = Location.fromCtx(ctx);
     return contract;
   }
 
-  visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
+  visitContractFunctionDefinition(ctx: ContractFunctionDefinitionContext): FunctionDefinitionNode {
+    return this.buildFunctionDefinition(ctx, FunctionKind.CONTRACT);
+  }
+
+  visitGlobalFunctionDefinition(ctx: GlobalFunctionDefinitionContext): FunctionDefinitionNode {
+    const returnType = ctx.typeName() ? parseType(ctx.typeName().getText()) : undefined;
+    return this.buildFunctionDefinition(ctx, FunctionKind.GLOBAL, returnType);
+  }
+
+  private buildFunctionDefinition(
+    ctx: ContractFunctionDefinitionContext | GlobalFunctionDefinitionContext,
+    kind: FunctionKind,
+    returnType?: Type,
+  ): FunctionDefinitionNode {
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
-    const body = this.visit(ctx.functionBody());
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, body);
+    const body = this.visit(ctx.functionBody()) as BlockNode;
+    const functionDefinition = new FunctionDefinitionNode(kind, name, parameters, body, returnType);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -258,6 +302,20 @@ export default class AstBuilder
     const require = new RequireNode(expression, message);
     require.location = Location.fromCtx(ctx);
     return require;
+  }
+
+  visitReturnStatement(ctx: ReturnStatementContext): ReturnNode {
+    const expression = this.visit(ctx.expression());
+    const returnNode = new ReturnNode(expression);
+    returnNode.location = Location.fromCtx(ctx);
+    return returnNode;
+  }
+
+  visitFunctionCallStatement(ctx: FunctionCallStatementContext): FunctionCallStatementNode {
+    const functionCall = this.visit(ctx.functionCall()) as FunctionCallNode;
+    const node = new FunctionCallStatementNode(functionCall);
+    node.location = Location.fromCtx(ctx);
+    return node;
   }
 
   visitIfStatement(ctx: IfStatementContext): BranchNode {

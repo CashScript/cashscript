@@ -1,20 +1,24 @@
-import { Type } from '@cashscript/utils';
+import { Type, PrimitiveType, Script, Op, encodeInt } from '@cashscript/utils';
 import {
   VariableDefinitionNode,
   ParameterNode,
+  FunctionDefinitionNode,
   IdentifierNode,
   Node,
 } from './AST.js';
 
 export class Symbol {
   references: IdentifierNode[] = [];
+
   private constructor(
     public name: string,
     public type: Type,
     public symbolType: SymbolType,
     public definition?: Node,
     public parameters?: Type[],
-  ) {}
+    public bytecode?: Script,
+    public functionId?: number,
+  ) { }
 
   static variable(node: VariableDefinitionNode | ParameterNode): Symbol {
     return new Symbol(node.name, node.type, SymbolType.VARIABLE, node);
@@ -24,8 +28,21 @@ export class Symbol {
     return new Symbol(name, type, SymbolType.VARIABLE);
   }
 
-  static function(name: string, type: Type, parameters: Type[]): Symbol {
-    return new Symbol(name, type, SymbolType.FUNCTION, undefined, parameters);
+  static builtinFunction(name: string, returnType: Type, parameters: Type[], bytecode: Script): Symbol {
+    return new Symbol(name, returnType, SymbolType.FUNCTION, undefined, parameters, bytecode);
+  }
+
+  static userFunction(node: FunctionDefinitionNode, functionId: number): Symbol {
+    const parameterTypes = node.parameters.map((parameter) => parameter.type);
+    const returnType = node.returnType ?? PrimitiveType.VOID;
+    const symbol = new Symbol(node.name, returnType, SymbolType.FUNCTION, node, parameterTypes);
+    symbol.setFunctionId(functionId);
+    return symbol;
+  }
+
+  setFunctionId(functionId: number): void {
+    this.functionId = functionId;
+    this.bytecode = [encodeInt(BigInt(functionId)), Op.OP_INVOKE];
   }
 
   static class(name: string, type: Type, parameters: Type[]): Symbol {
@@ -52,7 +69,7 @@ export class SymbolTable {
 
   constructor(
     public parent?: SymbolTable,
-  ) {}
+  ) { }
 
   set(symbol: Symbol): void {
     this.symbols.set(symbol.name, symbol);

@@ -1,0 +1,12 @@
+function clamp(int a) returns (int) {
+    if (a > 10) {
+        return 10;
+    }
+    return a;
+}
+
+contract Test() {
+    function spend(int x) {
+        require(clamp(x) == 5);
+    }
+}

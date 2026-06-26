@@ -108,6 +108,7 @@
         "lshift",
         "LSHIFTNUM",
         "LSHIFTBIN",
+        "math",
         "mecenas",
         "meep",
         "minimaldata",

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { URL } from 'url';
-import { compileString, parseCode } from '../../src/compiler.js';
+import { compileString } from '../../src/compiler.js';
+import { parseCode } from '../../src/parser.js';
 import { buildLineToAsmMap, bytecodeToAsm, bytecodeToScript } from '@cashscript/utils';
 import { hexToBin } from '@bitauth/libauth';
 
@@ -9,7 +10,7 @@ describe('Location', () => {
     const code = fs.readFileSync(new URL('../valid-contract-files/simple_functions.cash', import.meta.url), { encoding: 'utf-8' });
     const ast = parseCode(code);
 
-    const f = ast.contract.functions[0];
+    const f = ast.contract!.functions[0];
 
     expect(f.location).toBeDefined();
     expect((f.location).text(code)).toEqual('function hello(sig s, pubkey pk) {\n        require(checkSig(s, pk));\n    }');
@@ -84,7 +85,7 @@ contract test() {
     const code = fs.readFileSync(new URL('../valid-contract-files/simple_functions.cash', import.meta.url), { encoding: 'utf-8' });
     const ast = parseCode(code);
 
-    const secondFunction = ast.contract.functions[1];
+    const secondFunction = ast.contract!.functions[1];
 
     expect(secondFunction.location).toBeDefined();
     expect(secondFunction.location.start).toEqual({ line: 6, column: 4 });

@@ -1,6 +1,7 @@
 import {
   Node,
   SourceFileNode,
+  ImportNode,
   ContractNode,
   ParameterNode,
   VariableDefinitionNode,
@@ -21,10 +22,12 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
+  FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
   WhileNode,
@@ -33,6 +36,7 @@ import {
 
 export default abstract class AstVisitor<T> {
   abstract visitSourceFile(node: SourceFileNode): T;
+  abstract visitImport(node: ImportNode): T;
   abstract visitContract(node: ContractNode): T;
   abstract visitFunctionDefinition(node: FunctionDefinitionNode): T;
   abstract visitParameter(node: ParameterNode): T;
@@ -41,7 +45,9 @@ export default abstract class AstVisitor<T> {
   abstract visitAssign(node: AssignNode): T;
   abstract visitTimeOp(node: TimeOpNode): T;
   abstract visitRequire(node: RequireNode): T;
+  abstract visitReturn(node: ReturnNode): T;
   abstract visitConsoleStatement(node: ConsoleStatementNode): T;
+  abstract visitFunctionCallStatement(node: FunctionCallStatementNode): T;
   abstract visitBranch(node: BranchNode): T;
   abstract visitDoWhile(node: DoWhileNode): T;
   abstract visitWhile(node: WhileNode): T;

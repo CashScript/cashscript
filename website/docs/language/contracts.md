@@ -60,7 +60,7 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 ```
 
 :::note
-The functions described here are top-level contract functions, which act as the entry points for spending from the contract. CashScript does not yet support user-defined reusable functions that can be called from within other functions. Callable functions are likely coming in CashScript v0.14, which would also allow function calls inside loops and loops inside reusable functions.
+The functions described here are top-level contract functions, which act as the entry points for spending from the contract. CashScript also supports user-defined reusable functions that are declared at the top level of a file (outside the contract) and can be called from contract functions and from each other. See [User-defined functions](#user-defined-functions) below.
 :::
 
 ### Function Arguments
@@ -77,6 +77,83 @@ In CashScript the types for the function arguments are **not** enforced automati
 
 :::info
 The typings for function arguments are enforced by default for boolean values and bounded bytes types such as `bytes20` and `bytes32`.
+:::
+
+## User-defined functions
+Reusable functions are declared at the **top level** of a `.cash` file, outside the contract. They are compiled to the BCH VM's native function opcodes (`OP_DEFINE`/`OP_INVOKE`, available since the May 2026 upgrade), so a function's body is stored once and shared across every call site rather than duplicated.
+
+A function may return a **single value** using a `returns (T)` clause, and is called from contract functions or from other top-level functions:
+
+```solidity
+pragma cashscript ^0.14.0;
+
+function double(int a) returns (int) {
+    return a * 2;
+}
+
+function addThenDouble(int a, int b) returns (int) {
+    return double(a + b);
+}
+
+contract Example() {
+    function spend(int x) {
+        require(addThenDouble(x, 1) == 8);
+    }
+}
+```
+
+A function without a `returns` clause is a **void** function — it performs only `require` checks and is called as a statement:
+
+```solidity
+function requirePositive(int a) {
+    require(a > 0);
+}
+
+contract Example() {
+    function spend(int x) {
+        requirePositive(x);
+        require(x < 100);
+    }
+}
+```
+
+### Importing functions from other files
+Top-level functions can be split across files and pulled in with an `import` directive, which makes the imported file's functions available as if they were declared locally. All `import` directives must appear at the **top of the file** — after any `pragma` directives and before any function or contract definitions. Imports are resolved relative to the importing file, so they require compiling from a file (`compileFile`):
+
+```solidity
+// math.cash
+function double(int a) returns (int) {
+    return a * 2;
+}
+```
+
+```solidity
+// main.cash
+pragma cashscript ^0.14.0;
+import "./math.cash";
+
+contract Main() {
+    function spend(int x) {
+        require(double(x) == 8);
+    }
+}
+```
+
+Imported function names share a single global namespace, so a name may only be defined once across the whole import graph. Files reached through more than one import path (diamond imports) are resolved once.
+
+:::info
+`checkSig`, `checkMultiSig` and `this.activeBytecode` cannot be used inside a user-defined function, since they would apply to the function body rather than the contract. Use them in a contract function instead (`checkDataSig` is allowed).
+:::
+
+### Limitations
+This first version of user-defined functions is intentionally limited in scope:
+
+- Functions return **at most one value** (no multiple/tuple returns), and a value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
+- No advanced optimisations are performed yet on user-defined functions.
+- The local debugging tools in the SDK don't properly support user-defined functions yet.
+
+:::note
+Recursive and mutually recursive functions are allowed and compile fine. At runtime the VM control stack is limited to 100 entries, shared between recursion depth and nested `if` and loop blocks, so excessively deep recursion will fail when the contract gets spent.
 :::
 
 ## Statements

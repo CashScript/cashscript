@@ -1,0 +1,7 @@
+contract Test() {
+    function spend() {
+        require(true);
+    }
+}
+
+import "./helpers.cash";

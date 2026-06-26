@@ -82,6 +82,10 @@ Compiles a CashScript contract from a source file. This compile method is handy 
 const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 ```
 
+:::note
+If the contract uses `import` directives to pull in [user-defined functions](/docs/language/contracts#user-defined-functions) from other files, `compileFile` resolves those imports relative to the source file's directory automatically.
+:::
+
 ### compileString()
 ```ts
 compileString(sourceCode: string, compilerOptions?: CompilerOptions): Artifact
@@ -96,6 +100,10 @@ const source = await result.text();
 
 const P2PKH = compileString(source);
 ```
+
+:::note
+`compileString` has no source file to resolve `import` directives against. To compile a contract that imports [user-defined functions](/docs/language/contracts#user-defined-functions) from other files, use [`compileFile`](#compilefile) instead.
+:::
 
 ### Compiler Options
 ```ts

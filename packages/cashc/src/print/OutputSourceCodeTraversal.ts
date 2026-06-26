@@ -2,6 +2,8 @@ import { binToHex } from '@bitauth/libauth';
 import { SymbolTable } from '../ast/SymbolTable.js';
 import {
   Node,
+  SourceFileNode,
+  ImportNode,
   ContractNode,
   ParameterNode,
   VariableDefinitionNode,
@@ -22,11 +24,13 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
   WhileNode,
@@ -61,6 +65,18 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(` --> ST: ${symbolTable}`);
   }
 
+  visitSourceFile(node: SourceFileNode): Node {
+    node.imports = this.visitList(node.imports) as ImportNode[];
+    node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
+    if (node.contract) node.contract = this.visit(node.contract) as ContractNode;
+    return node;
+  }
+
+  visitImport(node: ImportNode): Node {
+    this.addOutput(`import "${node.path}";\n`, true);
+    return node;
+  }
+
   visitContract(node: ContractNode): Node {
     this.addOutput(`contract ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
@@ -80,6 +96,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
     this.addOutput(')');
+    if (node.returnType) this.addOutput(` returns (${node.returnType})`);
     this.outputSymbolTable(node.symbolTable);
     this.addOutput(' ');
 
@@ -144,6 +161,18 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
     this.addOutput(')');
 
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
+    this.addOutput('return ', true);
+    node.expression = this.visit(node.expression);
+    return node;
+  }
+
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    this.addOutput('', true);
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
     return node;
   }
 

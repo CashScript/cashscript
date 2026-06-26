@@ -1408,4 +1408,143 @@ export const fixtures: Fixture[] = [
       fingerprint: '606e540c38f161868964b683aeb0ddf93094dc36607397ef9b9f507f9028bc37',
     },
   },
+  {
+    // A single global function — the basic OP_DEFINE / OP_INVOKE calling convention.
+    fn: 'global_function_simple.cash',
+    artifact: {
+      contractName: 'GlobalFunctionSimple',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }] }],
+      bytecode:
+        // OP_DEFINE double (id 0): return a * 2
+        '5295 OP_0 OP_DEFINE '
+        // require(double(x) == 6)
+        + 'OP_0 OP_INVOKE OP_6 OP_NUMEQUAL',
+      debug: {
+        bytecode: '0252950089008a569c',
+        logs: [],
+        requires: [
+          { ip: 7, line: 7 },
+        ],
+        sourceMap: '1::3:1;;::::1;7:16:7:25;;:29::30:0;:8::32:1',
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/global_function_simple.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: 'ef6dd7819e66a430286fe16f3d6dad7e026cf1970eda6bc620be7e7a3bdd2a4d',
+    },
+  },
+  {
+    // A multi-parameter global function — locks in the parameter stack-seeding and argument order
+    // (the contract OP_SWAPs x and y into place; the body computes a - b directly).
+    fn: 'global_function_multi_param.cash',
+    artifact: {
+      contractName: 'GlobalFunctionMultiParam',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'int' }] }],
+      bytecode:
+        // OP_DEFINE sub (id 0): return a - b
+        '94 OP_0 OP_DEFINE '
+        // require(sub(x, y) == 7)
+        + 'OP_SWAP OP_0 OP_INVOKE OP_7 OP_NUMEQUAL',
+      debug: {
+        bytecode: '019400897c008a579c',
+        logs: [],
+        requires: [
+          { ip: 8, line: 7 },
+        ],
+        sourceMap: '1::3:1;;::::1;7:23:7:24:0;:16::25:1;;:29::30:0;:8::32:1',
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/global_function_multi_param.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: '8fc72a3f89ee3238266d6dd9ad3919f7238c8d6a31296cc8925968a31c78c7dc',
+    },
+  },
+  {
+    // A void global function called as a statement — no return value, and the void stack-cleanup path.
+    fn: 'global_function_void.cash',
+    artifact: {
+      contractName: 'GlobalFunctionVoid',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }] }],
+      bytecode:
+        // OP_DEFINE requirePositive (id 0): require(a > 0)
+        '00a069 OP_0 OP_DEFINE '
+        // requirePositive(x); require(x < 100)
+        + 'OP_DUP OP_0 OP_INVOKE 64 OP_LESSTHAN',
+      debug: {
+        bytecode: '0300a069008976008a01649f',
+        logs: [],
+        requires: [
+          { ip: 8, line: 8 },
+        ],
+        sourceMap: '1::3:1;;::::1;7:24:7:25:0;:8::26:1;;8:20:8:23:0;:8::25:1',
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/global_function_void.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: '4d5e07b068e501eb26e61aab0d53214aa42590858253b1106d6074d494fde557',
+    },
+  },
+  {
+    // Imports resolved across a diamond (mid1 and mid2 both import leaf): leaf is defined once, and
+    // m1/m2 invoke it transitively.
+    fn: '../import-fixtures/diamond.cash',
+    artifact: {
+      contractName: 'Diamond',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }] }],
+      bytecode:
+        // Functions are defined in call order (DFS from the contract), so m1 is id 0, leaf id 1, m2 id 2.
+        // OP_DEFINE m1 (id 0): return leaf(a) * 2
+        '518a5295 OP_0 OP_DEFINE '
+        // OP_DEFINE leaf (id 1): return a + 1
+        + '8b OP_1 OP_DEFINE '
+        // OP_DEFINE m2 (id 2): return leaf(a) + 3
+        + '518a5393 OP_2 OP_DEFINE '
+        // require(m1(x) + m2(x) == 18)
+        + 'OP_DUP OP_0 OP_INVOKE OP_SWAP OP_2 OP_INVOKE OP_ADD 12 OP_NUMEQUAL',
+      debug: {
+        bytecode: '04518a52950089018b518904518a5393528976008a7c528a9301129c',
+        logs: [],
+        requires: [
+          { ip: 18, line: 6 },
+        ],
+        sourceMap: '2::4:1;;::::1;1::3::0;;::::1;2::4::0;;::::1;6:19:6:20:0;:16::21:1;;:27::28:0;:24::29:1;;:16;:33::35:0;:8::37:1',
+      },
+      source: fs.readFileSync(new URL('../import-fixtures/diamond.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: '316a3305152ec0695bf80303736c79dd1f9cc2f1dbccf57d9965094401363307',
+    },
+  },
 ];
