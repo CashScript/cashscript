@@ -149,6 +149,10 @@ This first version of user-defined functions is intentionally limited in scope:
 - No advanced optimisations are performed yet on user-defined functions.
 - The local debugging tools in the SDK don't properly support user-defined functions yet.
 
+:::note
+Recursive and mutually recursive functions are allowed and compile fine. At runtime the VM control stack is limited to 100 entries, shared between recursion depth and nested `if` and loop blocks, so excessively deep recursion will fail when the contract gets spent.
+:::
+
 ## Statements
 CashScript functions are made up of a collection of statements that determine whether money may be spent from the contract.
 
