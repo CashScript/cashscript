@@ -4,4 +4,4 @@ export { compileFile, compileString, type CompileOptions } from './compiler.js';
 export * from './ast/Location.js';
 export * from './ast/error-listeners.js';
 
-export const version = '0.13.2';
+export const version = '0.14.0-next.0';
