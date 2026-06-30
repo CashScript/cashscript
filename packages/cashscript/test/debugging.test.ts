@@ -16,6 +16,7 @@ import {
   artifactTestLogInsideLoop,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
+import { compileString } from 'cashc';
 
 describe('Debugging tests', () => {
   describe('console.log statements', () => {
@@ -812,5 +813,38 @@ describe('VM Resources', () => {
 
     expect(vmUsage[0]?.hashDigestIterations).toBeGreaterThan(0);
     expect(vmUsage[2]?.hashDigestIterations).toBeGreaterThan(0);
+  });
+});
+
+// Regression: a single-line contract puts control-flow opcodes and the trailing stack cleanup on the same
+// source line. The debug reconstruction (formatBitAuthScript) used to reorder those opcodes, producing a
+// spurious "empty stack" error instead of evaluating the contract correctly. See enforceMonotonicDisplayLines.
+describe('single-line contract debugging', () => {
+  const provider = new MockNetworkProvider();
+
+  const debugSpend = (artifact: ReturnType<typeof compileString>, args: unknown[]): TransactionBuilder => {
+    const contract = new Contract(artifact, [], { provider });
+    const utxo = randomUtxo();
+    provider.addUtxo(contract.address, utxo);
+    return new TransactionBuilder({ provider })
+      .addInput(utxo, contract.unlock.f(...args))
+      .addOutput({ to: contract.address, amount: utxo.satoshis - 2000n });
+  };
+
+  it('evaluates a single-line ternary correctly (consequent and alternative branches)', () => {
+    const artifact = compileString('contract C(){ function f(int a, int b, int e){ int r = a == 0 ? b : 3; require(r == e); } }');
+    expect(() => debugSpend(artifact, [0n, 7n, 7n]).debug()).not.toThrow();
+    expect(() => debugSpend(artifact, [9n, 0n, 3n]).debug()).not.toThrow();
+  });
+
+  it('reports a clean require failure (not a stack error) for a single-line ternary', () => {
+    const artifact = compileString('contract C(){ function f(int a, int b, int e){ int r = a == 0 ? b : 3; require(r == e); } }');
+    expect(debugSpend(artifact, [9n, 0n, 5n])).toFailRequireWith(/Require statement failed/);
+  });
+
+  it('evaluates a single-line if-statement correctly', () => {
+    const artifact = compileString('contract C(){ function f(int a, int b, int e){ int r = b; if (a == 0) { r = b; } require(r == e); } }');
+    expect(() => debugSpend(artifact, [0n, 7n, 7n]).debug()).not.toThrow();
+    expect(() => debugSpend(artifact, [9n, 7n, 7n]).debug()).not.toThrow();
   });
 });

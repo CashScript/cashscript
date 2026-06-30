@@ -1,4 +1,4 @@
-import { BytesType, implicitlyCastable, PrimitiveType, Type } from '@cashscript/utils';
+import { arrayType, BytesType, implicitlyCastable, PrimitiveType, TupleType, Type } from '@cashscript/utils';
 import { BinaryOperator } from './ast/Operator.js';
 
 export function resultingTypeForBinaryOp(
@@ -15,6 +15,14 @@ export function resultingTypeForBinaryOp(
   }
 
   return undefined;
+}
+
+// The type of a ternary `condition ? consequent : alternative` is the common type of both branches,
+// resolved the same way array element types are. Tuples (e.g. from `.split`) are not valid branch values.
+export function resultingTypeForTernary(consequent?: Type, alternative?: Type): Type | undefined {
+  if (!consequent || !alternative) return undefined;
+  if (consequent instanceof TupleType || alternative instanceof TupleType) return undefined;
+  return arrayType([consequent, alternative]);
 }
 
 export function isNumericType(type?: Type): boolean {

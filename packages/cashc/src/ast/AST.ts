@@ -385,6 +385,20 @@ export class UnaryOpNode extends ExpressionNode {
   }
 }
 
+export class TernaryNode extends ExpressionNode {
+  constructor(
+    public condition: ExpressionNode,
+    public consequent: ExpressionNode,
+    public alternative: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitTernary(this);
+  }
+}
+
 export class NullaryOpNode extends ExpressionNode {
   constructor(
     public operator: NullaryOperator,

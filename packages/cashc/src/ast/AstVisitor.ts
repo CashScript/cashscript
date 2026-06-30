@@ -13,6 +13,7 @@ import {
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
+  TernaryNode,
   BoolLiteralNode,
   IntLiteralNode,
   HexLiteralNode,
@@ -59,6 +60,7 @@ export default abstract class AstVisitor<T> {
   abstract visitSlice(node: SliceNode): T;
   abstract visitTupleIndexOp(node: TupleIndexOpNode): T;
   abstract visitBinaryOp(node: BinaryOpNode): T;
+  abstract visitTernary(node: TernaryNode): T;
   abstract visitUnaryOp(node: UnaryOpNode): T;
   abstract visitNullaryOp(node: NullaryOpNode): T;
   abstract visitArray(node: ArrayNode): T;

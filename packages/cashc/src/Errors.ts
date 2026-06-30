@@ -9,6 +9,7 @@ import {
   FunctionCallNode,
   BinaryOpNode,
   UnaryOpNode,
+  TernaryNode,
   TimeOpNode,
   CastNode,
   AssignNode,
@@ -219,6 +220,19 @@ export class UnequalTypeError extends TypeError {
     const left = node.left.type;
     const right = node.right.type;
     super(node, left, right, `Tried to apply operator '${node.operator}' to unequal types '${left}' and '${right}'`);
+  }
+}
+
+export class TernaryBranchMismatchError extends TypeError {
+  constructor(
+    node: TernaryNode,
+  ) {
+    const consequent = node.consequent.type;
+    const alternative = node.alternative.type;
+    super(
+      node, consequent, alternative,
+      `Ternary branches have incompatible types '${consequent}' and '${alternative}'`,
+    );
   }
 }
 

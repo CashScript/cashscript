@@ -1,0 +1,6 @@
+contract Ternary(pubkey pk) {
+    function spend(bool useFirst, sig a, sig b) {
+        sig s = useFirst ? a : b;
+        require(checkSig(s, pk));
+    }
+}

@@ -245,7 +245,31 @@ An overview of all supported operators and their precedence is included below. N
 | 15         | Bitwise OR                          | `\|`                     |
 | 16         | Logical AND                         | `&&`                     |
 | 17         | Logical OR                          | `\|\|`                   |
-| 18         | Assignment                          | `=`                      |
+| 18         | Conditional (ternary)               | `<condition> ? <a> : <b>`|
+| 19         | Assignment                          | `=`                      |
+
+### Conditional (ternary) operator
+
+The conditional operator `<condition> ? <consequent> : <alternative>` evaluates to `consequent` when `condition` is `true`, and to `alternative` otherwise. It is an expression, so it can be used anywhere a value is expected:
+
+```solidity
+int fee = isPriority ? 2000 : 1000;
+require(amount == (isPriority ? 2000 : 1000));
+```
+
+The `condition` must be of type `bool`, and both branches must have a compatible type — the result type is the common type of the two branches (resolved the same way as array element types). The operator is right-associative, so it can be chained to express multiple cases:
+
+```solidity
+// parsed as: a == 0 ? 10 : (a == 1 ? 20 : 30)
+int result = a == 0 ? 10 : a == 1 ? 20 : 30;
+```
+
+Unlike `&&` and `||` (which always evaluate both operands), the ternary operator only evaluates the selected branch at runtime — it compiles to an `OP_IF`/`OP_ELSE`/`OP_ENDIF` block. This means the untaken branch is skipped entirely, so it is safe to guard a potentially-failing operation behind a condition:
+
+```solidity
+// when denominator is zero, the division branch is never executed
+int result = denominator != 0 ? numerator / denominator : 0;
+```
 
 ### Bitshift and arithmetic shift
 

@@ -18,6 +18,7 @@ import {
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
+  TernaryNode,
   BoolLiteralNode,
   IntLiteralNode,
   HexLiteralNode,
@@ -74,6 +75,7 @@ import type {
   InstantiationContext,
   NullaryOpContext,
   UnaryIntrospectionOpContext,
+  TernaryContext,
   ConsoleStatementContext,
   ConsoleParameterContext,
   StatementContext,
@@ -462,6 +464,15 @@ export default class AstBuilder
     const binaryOp = new BinaryOpNode(left, operator, right);
     binaryOp.location = Location.fromCtx(ctx);
     return binaryOp;
+  }
+
+  visitTernary(ctx: TernaryContext): TernaryNode {
+    const condition = this.visit(ctx._condition);
+    const consequent = this.visit(ctx._consequent);
+    const alternative = this.visit(ctx._alternative);
+    const ternary = new TernaryNode(condition, consequent, alternative);
+    ternary.location = Location.fromCtx(ctx);
+    return ternary;
   }
 
   visitArray(ctx: ArrayContext): ArrayNode {

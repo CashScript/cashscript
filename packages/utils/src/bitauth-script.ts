@@ -38,7 +38,7 @@ export function formatBitAuthScript(bytecode: Script, sourceMap: string, sourceC
   // Splice synthetic annotation lines (e.g. for-loop updates) into source and remap opcode lines
   const insertions = buildInsertions(locationData, sourceLines, sourceTags);
   const splicedSourceLines = spliceSyntheticSourceLines(sourceLines, insertions);
-  const splicedLocationData = updateLocationData(locationData, insertions);
+  const splicedLocationData = enforceMonotonicDisplayLines(updateLocationData(locationData, insertions));
 
   // Group opcodes by display line and convert to ASM
   const lineToAsm = buildLineToAsmMap(bytecode, splicedLocationData);
@@ -59,6 +59,27 @@ export function formatBitAuthScript(bytecode: Script, sourceMap: string, sourceC
 function getDisplayLine(singleLocation: SingleLocationData): number {
   const { location, positionHint } = singleLocation;
   return positionHint === PositionHint.END ? location.end.line : location.start.line;
+}
+
+// The debugging VM executes formatBitAuthScript's output, which buildLineToOpcodesMap groups by display line
+// and emits in source-line order. That only matches bytecode order when display lines are non-decreasing in
+// bytecode order. The compiler emits a monotonic source map, but annotation splicing can break this in degenerate
+// cases (e.g. an epilogue tag on a single-line contract, where the closing brace shares the body's line). To keep
+// the executed output equal to the real bytecode, we clamp each opcode's display line to never drop below the
+// previous opcode's. Already-monotonic maps (the normal multi-line case) are returned unchanged.
+function enforceMonotonicDisplayLines(locationData: FullLocationData): FullLocationData {
+  let maxLine = 0;
+  return locationData.map((entry) => {
+    const line = getDisplayLine(entry);
+    if (line >= maxLine) {
+      maxLine = line;
+      return entry;
+    }
+    return {
+      location: { start: { line: maxLine, column: 0 }, end: { line: maxLine, column: 0 } },
+      positionHint: PositionHint.START,
+    };
+  });
 }
 
 function escapeCommentChars(text: string): string {

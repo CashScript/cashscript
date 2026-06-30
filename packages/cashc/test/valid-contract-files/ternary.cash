@@ -1,0 +1,6 @@
+contract Ternary(int threshold) {
+    function spend(int x, int expected) {
+        int result = x > threshold ? x + 1 : x - 1;
+        require(result == expected);
+    }
+}
