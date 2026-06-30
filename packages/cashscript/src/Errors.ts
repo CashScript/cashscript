@@ -1,4 +1,5 @@
 import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
+import { ResolvedFrame, rootFrame } from './debug-frame.js';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -134,12 +135,14 @@ export class FailedTransactionEvaluationError extends FailedTransactionError {
     public inputIndex: number,
     public bitauthUri: string,
     public libauthErrorMessage: string,
+    frame?: ResolvedFrame,
   ) {
     let message = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.\nReason: ${libauthErrorMessage}`;
 
     if (artifact.debug) {
-      const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
-      message = `${artifact.contractName}.cash:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
+      const resolvedFrame = frame ?? rootFrame(artifact);
+      const { statement, lineNumber } = getLocationDataForFrame(resolvedFrame, failingInstructionPointer);
+      message = `${resolvedFrame.sourceName}:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
     }
 
     super(message, bitauthUri);
@@ -154,10 +157,12 @@ export class FailedRequireError extends FailedTransactionError {
     public inputIndex: number,
     public bitauthUri: string,
     public libauthErrorMessage?: string,
+    frame?: ResolvedFrame,
   ) {
-    const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+    const resolvedFrame = frame ?? rootFrame(artifact);
+    const { statement, lineNumber } = getLocationDataForFrame(resolvedFrame, failingInstructionPointer);
 
-    const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
+    const baseMessage = `${resolvedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
     const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
 
@@ -169,19 +174,20 @@ export class FailedRequireError extends FailedTransactionError {
   }
 }
 
-const getLocationDataForInstructionPointer = (
-  artifact: Artifact,
+const getLocationDataForFrame = (
+  frame: ResolvedFrame,
   instructionPointer: number,
 ): { lineNumber: number, statement: string } => {
-  const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
+  const locationData = sourceMapToLocationData(frame.sourceMap);
 
-  // We subtract the constructor inputs because these are present in the evaluation (and thus the instruction pointer)
-  // but they are not present in the source code (and thus the location data)
-  const modifiedInstructionPointer = instructionPointer - artifact.constructorInputs.length;
+  // We subtract the frame's ip offset (the constructor-arg prefix for the root frame, 0 for helper
+  // frames) because those pushes are present in the evaluation (and thus the instruction pointer) but
+  // not in the source code (and thus the location data).
+  const modifiedInstructionPointer = instructionPointer - frame.ipOffset;
 
   const { location } = locationData[modifiedInstructionPointer];
 
-  const failingLines = artifact.source.split('\n').slice(location.start.line - 1, location.end.line);
+  const failingLines = frame.source.split('\n').slice(location.start.line - 1, location.end.line);
 
   // Slice off the start and end of the statement's start and end lines to only return the failing part
   // Note that we first slice off the end, to avoid shifting the end column index

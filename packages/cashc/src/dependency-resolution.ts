@@ -36,7 +36,15 @@ function collectImports(
       if (visitedPaths.has(absolutePath)) return [];
       visitedPaths.add(absolutePath);
 
-      const importedAst = parseCode(readImportedFile(importNode, absolutePath), options.errorListener);
+      const importedSource = readImportedFile(importNode, absolutePath);
+      const importedAst = parseCode(importedSource, options.errorListener);
+
+      // Record source provenance so debug frames can attribute to the imported file
+      importedAst.functions.forEach((func) => {
+        func.sourceCode = importedSource;
+        func.sourceFile = path.basename(absolutePath);
+      });
+
       return [...collect(importedAst.imports, path.dirname(absolutePath)), ...importedAst.functions];
     });
 

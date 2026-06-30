@@ -14,6 +14,8 @@ import {
   artifactTestZeroHandling,
   artifactTestRequireInsideLoop,
   artifactTestLogInsideLoop,
+  artifactTestFunctionDebugging,
+  artifactTestImportedFunctionDebugging,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
@@ -812,5 +814,50 @@ describe('VM Resources', () => {
 
     expect(vmUsage[0]?.hashDigestIterations).toBeGreaterThan(0);
     expect(vmUsage[2]?.hashDigestIterations).toBeGreaterThan(0);
+  });
+});
+
+describe('Debugging tests - user-defined function frames', () => {
+  const provider = new MockNetworkProvider();
+
+  const contract = new Contract(artifactTestFunctionDebugging, [], { provider });
+  const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
+
+  const importedContract = new Contract(artifactTestImportedFunctionDebugging, [], { provider });
+  const importedUtxo = provider.addUtxo(importedContract.address, randomUtxo());
+
+  it('attributes a console.log inside a function to the function source line', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.spend(5n))
+      .addOutput({ to: contract.address, amount: 10000n });
+
+    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:3 checking 5$'));
+  });
+
+  it('attributes a require failing inside a function to the function source line', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.spend(0n))
+      .addOutput({ to: contract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
+  });
+
+  it('still attributes a contract-level require to the contract source line', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.spend(100n))
+      .addOutput({ to: contract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('Test.cash:10 Require statement failed at input 0 in contract Test.cash at line 10 with the following message: x must be small.');
+    expect(transaction).toFailRequireWith('Failing statement: require(x < 100, "x must be small")');
+  });
+
+  it('attributes a require failing inside an imported function to the imported file', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(importedUtxo, importedContract.unlock.spend(0n))
+      .addOutput({ to: importedContract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('function_helpers.cash:2 Require statement failed at input 0 in contract Test.cash at line 2 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
   });
 });

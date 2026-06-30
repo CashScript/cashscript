@@ -1427,6 +1427,9 @@ export const fixtures: Fixture[] = [
           { ip: 7, line: 7 },
         ],
         sourceMap: '1::3:1;;::::1;7:16:7:25;;:29::30:0;:8::32:1',
+        functions: [
+          { name: 'double', inputs: [{ name: 'a', type: 'int' }], bytecode: '5295', sourceMap: '2:15:2:16;:11:::1', logs: [], requires: [] },
+        ],
       },
       source: fs.readFileSync(new URL('../valid-contract-files/global_function_simple.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1461,6 +1464,9 @@ export const fixtures: Fixture[] = [
           { ip: 8, line: 7 },
         ],
         sourceMap: '1::3:1;;::::1;7:23:7:24:0;:16::25:1;;:29::30:0;:8::32:1',
+        functions: [
+          { name: 'sub', inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }], bytecode: '94', sourceMap: '2:11:2:16:1', logs: [], requires: [] },
+        ],
       },
       source: fs.readFileSync(new URL('../valid-contract-files/global_function_multi_param.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1494,6 +1500,9 @@ export const fixtures: Fixture[] = [
           { ip: 8, line: 8 },
         ],
         sourceMap: '1::3:1;;::::1;7:24:7:25:0;:8::26:1;;8:20:8:23:0;:8::25:1',
+        functions: [
+          { name: 'requirePositive', inputs: [{ name: 'a', type: 'int' }], bytecode: '00a069', sourceMap: '2:16:2:17;:12:::1;:4::19', logs: [], requires: [{ ip: 2, line: 2 }] },
+        ],
       },
       source: fs.readFileSync(new URL('../valid-contract-files/global_function_void.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {
@@ -1533,6 +1542,11 @@ export const fixtures: Fixture[] = [
           { ip: 18, line: 6 },
         ],
         sourceMap: '2::4:1;;::::1;1::3::0;;::::1;2::4::0;;::::1;6:19:6:20:0;:16::21:1;;:27::28:0;:24::29:1;;:16;:33::35:0;:8::37:1',
+        functions: [
+          { name: 'm1', inputs: [{ name: 'a', type: 'int' }], bytecode: '518a5295', sourceMap: '3:11:3:18:1;;:21::22:0;:11:::1', logs: [], requires: [], source: fs.readFileSync(new URL('../import-fixtures/mid1.cash', import.meta.url), { encoding: 'utf-8' }), sourceFile: 'mid1.cash' },
+          { name: 'leaf', inputs: [{ name: 'a', type: 'int' }], bytecode: '8b', sourceMap: '2:11:2:16:1', logs: [], requires: [], source: fs.readFileSync(new URL('../import-fixtures/leaf.cash', import.meta.url), { encoding: 'utf-8' }), sourceFile: 'leaf.cash' },
+          { name: 'm2', inputs: [{ name: 'a', type: 'int' }], bytecode: '518a5393', sourceMap: '3:11:3:18:1;;:21::22:0;:11:::1', logs: [], requires: [], source: fs.readFileSync(new URL('../import-fixtures/mid2.cash', import.meta.url), { encoding: 'utf-8' }), sourceFile: 'mid2.cash' },
+        ],
       },
       source: fs.readFileSync(new URL('../import-fixtures/diamond.cash', import.meta.url), { encoding: 'utf-8' }),
       compiler: {

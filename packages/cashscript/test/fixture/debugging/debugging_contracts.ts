@@ -1,4 +1,18 @@
-import { compileString } from 'cashc';
+import { compileFile, compileString } from 'cashc';
+
+const CONTRACT_TEST_FUNCTION_DEBUGGING = `
+function checkValue(int value) {
+  console.log("checking", value);
+  require(value > 0, "value must be positive");
+}
+
+contract Test() {
+  function spend(int x) {
+    checkValue(x);
+    require(x < 100, "x must be small");
+  }
+}
+`;
 
 const CONTRACT_TEST_REQUIRES = `
 contract Test() {
@@ -437,3 +451,7 @@ export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTIPLE_LOG
 export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS);
 export const artifactTestRequireInsideLoop = compileString(CONTRACT_TEST_REQUIRE_INSIDE_LOOP);
 export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_LOOP);
+export const artifactTestFunctionDebugging = compileString(CONTRACT_TEST_FUNCTION_DEBUGGING);
+
+// Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
+export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));

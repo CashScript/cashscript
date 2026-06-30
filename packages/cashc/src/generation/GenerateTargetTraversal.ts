@@ -1,4 +1,4 @@
-import { hexToBin } from '@bitauth/libauth';
+import { binToHex, hexToBin } from '@bitauth/libauth';
 import {
   asmToScript,
   encodeBool,
@@ -13,6 +13,7 @@ import {
   optimiseBytecode,
   generateSourceMap,
   FullLocationData,
+  DebugFrame,
   LogEntry,
   RequireStatement,
   PositionHint,
@@ -77,6 +78,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   consoleLogs: LogEntry[] = [];
   requires: RequireStatement[] = [];
   sourceTags: SourceTagEntry[] = [];
+  frames: DebugFrame[] = [];
   finalStackUsage: Record<string, StackItem> = {};
 
   private scopeDepth = 0;
@@ -183,7 +185,20 @@ export default class GenerateTargetTraversal extends AstTraversal {
       0,
     );
 
-    return scriptToBytecode(optimised.script);
+    const bodyBytecode = scriptToBytecode(optimised.script);
+
+    this.frames.push({
+      name: node.name,
+      inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
+      bytecode: binToHex(bodyBytecode),
+      sourceMap: generateSourceMap(optimised.locationData),
+      logs: optimised.logs,
+      requires: optimised.requires,
+      ...(node.sourceCode !== undefined ? { source: node.sourceCode } : {}),
+      ...(node.sourceFile !== undefined ? { sourceFile: node.sourceFile } : {}),
+    });
+
+    return bodyBytecode;
   }
 
   cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {

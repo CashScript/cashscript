@@ -99,6 +99,7 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
     logs: optimisationResult.logs,
     requires: optimisationResult.requires,
     ...(sourceTags ? { sourceTags } : {}),
+    ...(traversal.frames.length > 0 ? { functions: traversal.frames } : {}),
   };
 
   const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);

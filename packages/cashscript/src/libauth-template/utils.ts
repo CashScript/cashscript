@@ -77,7 +77,9 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
 };
 
 export const formatBytecodeForDebugging = (artifact: Artifact): string => {
-  if (!artifact.debug) {
+  // Render the bytecode in true execution order when there is no debug info, or when the contract uses
+  // user-defined functions (TODO: fix source mapping for functions).
+  if (!artifact.debug || (artifact.debug.functions?.length ?? 0) > 0) {
     return artifact.bytecode
       .split(' ')
       .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
