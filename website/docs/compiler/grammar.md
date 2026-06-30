@@ -192,6 +192,7 @@ expression
     | left=expression op='|' right=expression # BinaryOp
     | left=expression op='&&' right=expression # BinaryOp
     | left=expression op='||' right=expression # BinaryOp
+    | <assoc=right> condition=expression '?' consequent=expression ':' alternative=expression # Ternary
     | '[' (expression (',' expression)* ','?)? ']' # Array
     | NullaryOp # NullaryOp
     | Identifier # Identifier

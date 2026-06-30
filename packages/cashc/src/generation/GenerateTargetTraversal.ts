@@ -36,6 +36,7 @@ import {
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
+  TernaryNode,
   BoolLiteralNode,
   IntLiteralNode,
   HexLiteralNode,
@@ -803,6 +804,31 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.emit(compileUnaryOp(node.operator), { location: node.location, positionHint: PositionHint.END });
     this.popFromStack();
     this.pushToStack('(value)');
+    return node;
+  }
+
+  // A ternary `condition ? consequent : alternative` compiles to OP_IF <consequent> OP_ELSE <alternative> OP_ENDIF.
+  // The condition is consumed by OP_IF; each branch leaves exactly one value, so the net effect mirrors any other
+  // expression: one operand consumed, one result produced. We bump scopeDepth (so variable reads inside the branches
+  // use OP_PICK rather than OP_ROLL, keeping the stack depth identical on both paths) and reset the symbolic stack
+  // before the alternative so both branches are tracked from the same starting point.
+  visitTernary(node: TernaryNode): Node {
+    node.condition = this.visit(node.condition);
+    this.popFromStack();
+
+    this.scopeDepth += 1;
+
+    this.emit(Op.OP_IF, { location: node.consequent.location, positionHint: PositionHint.START });
+    const stackCopy = [...this.stack];
+    node.consequent = this.visit(node.consequent);
+
+    this.emit(Op.OP_ELSE, { location: node.alternative.location, positionHint: PositionHint.START });
+    this.stack = [...stackCopy];
+    node.alternative = this.visit(node.alternative);
+
+    this.emit(Op.OP_ENDIF, { location: node.location, positionHint: PositionHint.END });
+    this.scopeDepth -= 1;
+
     return node;
   }
 

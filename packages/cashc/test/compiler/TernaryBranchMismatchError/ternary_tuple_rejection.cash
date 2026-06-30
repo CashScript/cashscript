@@ -1,0 +1,6 @@
+contract Ternary() {
+    function spend(bool flag, bytes input) {
+        bytes a, bytes b = flag ? input.split(2) : input.split(3);
+        require(a == b);
+    }
+}

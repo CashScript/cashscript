@@ -1547,4 +1547,38 @@ export const fixtures: Fixture[] = [
       fingerprint: '316a3305152ec0695bf80303736c79dd1f9cc2f1dbccf57d9965094401363307',
     },
   },
+  {
+    fn: 'ternary.cash',
+    artifact: {
+      contractName: 'Ternary',
+      constructorInputs: [{ name: 'threshold', type: 'int' }],
+      abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }, { name: 'expected', type: 'int' }] }],
+      bytecode:
+        // int result = x > threshold ? x + 1 : x - 1
+        'OP_OVER OP_LESSTHAN OP_IF OP_DUP OP_1ADD OP_ELSE OP_DUP OP_1SUB OP_ENDIF '
+        // require(result == expected)
+        + 'OP_ROT OP_NUMEQUAL '
+        + 'OP_NIP',
+      debug: {
+        bytecode: '789f63768b67768c687b9c77',
+        logs: [],
+        requires: [
+          { ip: 12, line: 4 },
+        ],
+        sourceMap: '3:21:3:22;:::34:1;:37::42:0;:::38;:::42:1;:45::50:0;:::46;:::50:1;:21;4:26:4:34:0;:8::36:1;2:40:5:5',
+        sourceTags: '11:11:sc',
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/ternary.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: '082541b5fa11c05d39b2f8c06a29d20bdd6605ac0dc339e580d34e5c28d917e9',
+    },
+  },
 ];

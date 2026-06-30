@@ -13,6 +13,7 @@ import {
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
+  TernaryNode,
   BoolLiteralNode,
   IntLiteralNode,
   HexLiteralNode,
@@ -169,6 +170,13 @@ export default class AstTraversal extends AstVisitor<Node> {
   visitBinaryOp(node: BinaryOpNode): Node {
     node.left = this.visit(node.left);
     node.right = this.visit(node.right);
+    return node;
+  }
+
+  visitTernary(node: TernaryNode): Node {
+    node.condition = this.visit(node.condition);
+    node.consequent = this.visit(node.consequent);
+    node.alternative = this.visit(node.alternative);
     return node;
   }
 

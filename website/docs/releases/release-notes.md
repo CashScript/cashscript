@@ -9,6 +9,10 @@ title: Release Notes
 #### cashc compiler
 - :sparkles: Add support for user-defined reusable functions.
 - :sparkles: Add support for `import` directives to share user-defined functions across files.
+- :sparkles: Add support for the conditional (ternary) operator `<condition> ? <consequent> : <alternative>`.
+
+#### CashScript SDK
+- :bug: Fix `debug()` (and `MockNetworkProvider` evaluation) reporting a spurious stack error for contracts whose control flow and stack cleanup share a single source line (e.g. single-line contracts).
 
 ## v0.13.2
 

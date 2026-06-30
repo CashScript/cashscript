@@ -19,6 +19,7 @@ import {
   ParameterNode,
   UnaryOpNode,
   BinaryOpNode,
+  TernaryNode,
   IdentifierNode,
   TimeOpNode,
   VariableDefinitionNode,
@@ -53,11 +54,12 @@ import {
   BitshiftBitcountNegativeError,
   UnusedFunctionReturnError,
   ReturnTypeError,
+  TernaryBranchMismatchError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
 import { Symbol } from '../ast/SymbolTable.js';
-import { resultingTypeForBinaryOp } from '../utils.js';
+import { resultingTypeForBinaryOp, resultingTypeForTernary } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   private currentFunctionReturnType: Type = PrimitiveType.VOID;
@@ -345,6 +347,29 @@ export default class TypeCheckTraversal extends AstTraversal {
       default:
         return node;
     }
+  }
+
+  visitTernary(node: TernaryNode): Node {
+    node.condition = this.visit(node.condition);
+
+    // Mirror if-statement narrowing: a `x.length == N` condition narrows bytes types in the consequent
+    // (the branch taken when the condition holds), but not in the alternative.
+    const narrowings = extractBytesNarrowings(node.condition);
+    executeWithNarrowedTypes(narrowings, () => { node.consequent = this.visit(node.consequent); });
+
+    node.alternative = this.visit(node.alternative);
+
+    if (!implicitlyCastable(node.condition.type, PrimitiveType.BOOL)) {
+      throw new TypeError(node.condition, node.condition.type, PrimitiveType.BOOL);
+    }
+
+    const resultType = resultingTypeForTernary(node.consequent.type, node.alternative.type);
+    if (!resultType) {
+      throw new TernaryBranchMismatchError(node);
+    }
+
+    node.type = resultType;
+    return node;
   }
 
   visitUnaryOp(node: UnaryOpNode): Node {

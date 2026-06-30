@@ -1,0 +1,6 @@
+contract Ternary() {
+    function spend(int x) {
+        int result = x ? 1 : 2;
+        require(result == 1);
+    }
+}

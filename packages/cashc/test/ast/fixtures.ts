@@ -24,6 +24,7 @@ import {
   NullaryOpNode,
   HexLiteralNode,
   UnaryOpNode,
+  TernaryNode,
   InstantiationNode,
   ConsoleStatementNode,
   DoWhileNode,
@@ -1110,6 +1111,51 @@ export const fixtures: Fixture[] = [
                 new IdentifierNode('sum'),
                 BinaryOperator.EQ,
                 new IntLiteralNode(3n),
+              ),
+            ),
+          ]),
+        )],
+      ),
+    ),
+  },
+  {
+    fn: 'ternary.cash',
+    ast: new SourceFileNode(
+      new ContractNode(
+        'Ternary',
+        [new ParameterNode(PrimitiveType.INT, 'threshold')],
+        [new FunctionDefinitionNode(
+          FunctionKind.CONTRACT,
+          'spend',
+          [new ParameterNode(PrimitiveType.INT, 'x'), new ParameterNode(PrimitiveType.INT, 'expected')],
+          new BlockNode([
+            new VariableDefinitionNode(
+              PrimitiveType.INT,
+              [],
+              'result',
+              new TernaryNode(
+                new BinaryOpNode(
+                  new IdentifierNode('x'),
+                  BinaryOperator.GT,
+                  new IdentifierNode('threshold'),
+                ),
+                new BinaryOpNode(
+                  new IdentifierNode('x'),
+                  BinaryOperator.PLUS,
+                  new IntLiteralNode(1n),
+                ),
+                new BinaryOpNode(
+                  new IdentifierNode('x'),
+                  BinaryOperator.MINUS,
+                  new IntLiteralNode(1n),
+                ),
+              ),
+            ),
+            new RequireNode(
+              new BinaryOpNode(
+                new IdentifierNode('result'),
+                BinaryOperator.EQ,
+                new IdentifierNode('expected'),
               ),
             ),
           ]),

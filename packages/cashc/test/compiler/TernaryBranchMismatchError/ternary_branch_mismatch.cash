@@ -1,0 +1,6 @@
+contract Ternary() {
+    function spend(bool flag) {
+        int result = flag ? 1 : true;
+        require(result == 1);
+    }
+}

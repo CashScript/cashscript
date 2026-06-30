@@ -15,6 +15,7 @@ import {
   FunctionCallNode,
   UnaryOpNode,
   BinaryOpNode,
+  TernaryNode,
   BoolLiteralNode,
   IntLiteralNode,
   HexLiteralNode,
@@ -307,6 +308,17 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     node.left = this.visit(node.left);
     this.addOutput(` ${node.operator} `);
     node.right = this.visit(node.right);
+    this.addOutput(')');
+    return node;
+  }
+
+  visitTernary(node: TernaryNode): Node {
+    this.addOutput('(');
+    node.condition = this.visit(node.condition);
+    this.addOutput(' ? ');
+    node.consequent = this.visit(node.consequent);
+    this.addOutput(' : ');
+    node.alternative = this.visit(node.alternative);
     this.addOutput(')');
     return node;
   }

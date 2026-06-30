@@ -43,6 +43,7 @@ import { ExpressionListContext } from "./CashScriptParser.js";
 import { CastContext } from "./CashScriptParser.js";
 import { UnaryIntrospectionOpContext } from "./CashScriptParser.js";
 import { UnaryOpContext } from "./CashScriptParser.js";
+import { TernaryContext } from "./CashScriptParser.js";
 import { LiteralExpressionContext } from "./CashScriptParser.js";
 import { FunctionCallExpressionContext } from "./CashScriptParser.js";
 import { ArrayContext } from "./CashScriptParser.js";
@@ -311,6 +312,13 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitUnaryOp?: (ctx: UnaryOpContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `Ternary`
+	 * labeled alternative in `CashScriptParser.expression`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTernary?: (ctx: TernaryContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `LiteralExpression`
 	 * labeled alternative in `CashScriptParser.expression`.
