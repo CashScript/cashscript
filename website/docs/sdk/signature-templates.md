@@ -93,7 +93,9 @@ const signature = aliceTemplate.signMessageHash(sha256(hexToBin('000000000000000
 
 ### HashType
 
-The default `hashtype` is `HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases.
+The `hashtype` (also called the sighash flag) determines which parts of the spending transaction the signature commits to. When the transaction is signed, these parts are serialized into a signing serialization (or sighash preimage), which is hashed and signed.
+
+The default `hashtype` is `HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases: it commits to every input and output of the transaction, so the signed transaction cannot be altered in any way after signing.
 
 ```ts
 export enum HashType {
@@ -105,6 +107,20 @@ export enum HashType {
 }
 ```
 
+`SIGHASH_ALL`, `SIGHASH_NONE` and `SIGHASH_SINGLE` choose which outputs are signed, while `SIGHASH_UTXOS` and `SIGHASH_ANYONECANPAY` are modifiers that can be OR'd on top to change what else is committed to.
+
+| Flag | Value | Commits to | Typical use |
+| --- | --- | --- | --- |
+| `SIGHASH_ALL` | `0x01` | all inputs and **all** outputs | the default — sign the exact transaction |
+| `SIGHASH_NONE` | `0x02` | all inputs, but **no** outputs | let the outputs be decided after signing |
+| `SIGHASH_SINGLE` | `0x03` | all inputs, and only the **one** output at the same index as the signed input | pair a single input to a single output |
+| `SIGHASH_UTXOS` | `0x20` | *(modifier)* additionally commits to the full contents of the UTXOs being spent | recommended for all contracts — see below |
+| `SIGHASH_ANYONECANPAY` | `0x80` | *(modifier)* only the **current** input, allowing other inputs to be added | crowdfunding-style transactions where anyone can add an input |
+
+The default `SIGHASH_ALL | SIGHASH_UTXOS` is the right choice for almost all smart contract use cases: `SIGHASH_UTXOS` commits to the full value and token contents of every UTXO being spent, which protects introspection-based covenants against an attacker substituting a spent UTXO for a different one of equal amount. The other flags weaken these commitments. `SIGHASH_NONE` and `SIGHASH_SINGLE` leave outputs unsigned, making the transaction malleable, and `SIGHASH_ANYONECANPAY` only signs the current input. Only use them when you specifically need that flexibility.
+
+For a full technical breakdown of the signing serialization and every valid flag combination, see the [Bitcoin Cash transaction signing reference][tx-signing].
+
 #### Example
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
@@ -115,6 +131,10 @@ const signatureTemplate = new SignatureTemplate(
 
 const configuredHashType = signatureTemplate.getHashType()
 ```
+
+#### The hashtype byte
+
+The `hashtype` is appended as a single byte to the end of every signature, so a validator or contract can tell how a signature was produced by inspecting its last byte. On Bitcoin Cash the `SIGHASH_FORKID` bit (`0x40`) is always set. `SignatureTemplate` OR's it in automatically, so the byte appended to the signature is your `hashtype` combined with `0x40`. For example the default `SIGHASH_ALL | SIGHASH_UTXOS` (`0x21`) is appended as `0x61`. This is the value to compare against when inspecting a signature's last byte inside a contract.
 
 ### SignatureAlgorithm
 
@@ -141,3 +161,4 @@ const configuredSignatureAlgorithm = signatureTemplate.getSignatureAlgorithm()
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
 [ecpair]: https://bchjs.fullstack.cash/#api-ECPair
 [privatekey]: https://github.com/bitpay/bitcore/blob/master/packages/bitcore-lib-cash/docs/privatekey.md
+[tx-signing]: https://documentation.cash/protocol/blockchain/transaction/transaction-signing.html
