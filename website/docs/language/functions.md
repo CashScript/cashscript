@@ -95,6 +95,8 @@ bool checkSig(sig s, pubkey pk)
 
 Checks that transaction signature `s` is valid for the current transaction and matches with public key `pk`.
 
+A signature always authorizes the spending of a single input, but the signer chooses how much of the surrounding transaction that authorization is bound to. This is controlled by the [sighash flag][hashtype], encoded in the last byte of `s`. It defaults to `SIGHASH_ALL`, which binds the signature to all of the transaction's inputs and outputs, so the signed input can only be spent in exactly that transaction. Other flags leave parts of the transaction context uncommitted. See the [HashType][hashtype] documentation for the available flags and how to restrict which ones your contract accepts.
+
 ### checkMultiSig()
 ```solidity
 bool checkMultiSig(sig[] sigs, pubkey[] pks)
@@ -129,3 +131,4 @@ Using `bytes20 placeholderPkh = toPaddedBytes(0, 20)` will generate a 20 byte ze
 
 [bip146]: https://github.com/bitcoin/bips/blob/master/bip-0146.mediawiki
 [local-state-guide]: /docs/guides/covenants#keeping-local-state-in-nfts
+[hashtype]: /docs/sdk/signature-templates#hashtype
