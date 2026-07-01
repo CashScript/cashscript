@@ -1,0 +1,6 @@
+contract Test(int constant a) {
+    function hello(sig s, pubkey pk) {
+        require(checkSig(s, pk));
+        require(a > 0);
+    }
+}

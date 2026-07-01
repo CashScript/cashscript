@@ -196,8 +196,9 @@ export default class AstBuilder
 
   visitParameter(ctx: ParameterContext): ParameterNode {
     const type = parseType(ctx.typeName().getText());
+    const modifiers = ctx.modifier_list().map((modifier) => modifier.getText());
     const name = ctx.Identifier().getText();
-    const parameter = new ParameterNode(type, name);
+    const parameter = new ParameterNode(type, name, modifiers);
     parameter.location = Location.fromCtx(ctx);
     return parameter;
   }

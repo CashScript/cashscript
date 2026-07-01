@@ -54,7 +54,7 @@ parameterList
     ;
 
 parameter
-    : typeName Identifier
+    : typeName modifier* Identifier
     ;
 
 block
@@ -203,6 +203,7 @@ expression
 
 modifier
     : 'constant'
+    | 'unused'
     ;
 
 literal

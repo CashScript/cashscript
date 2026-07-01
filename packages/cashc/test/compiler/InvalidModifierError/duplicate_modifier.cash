@@ -1,0 +1,5 @@
+contract Test() {
+    function hello(int a, bytes unused unused zeroPadding) {
+        require(a > 0);
+    }
+}

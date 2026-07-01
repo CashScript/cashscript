@@ -6,7 +6,7 @@ describe('Dead-code elimination', () => {
   it('does not define a global function that is never invoked', () => {
     const code = `
       function used(int a) returns (int) { return a + 1; }
-      function unused(int a) returns (int) { return a * 2; }
+      function notInvoked(int a) returns (int) { return a * 2; }
 
       contract Test() {
         function spend(int x) {

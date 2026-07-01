@@ -1,0 +1,7 @@
+contract UnusedModifier(int unused salt) {
+    function spend(int a, int b, bytes unused zeroPadding) {
+        int unused scratch = a + b;
+        int constant unused magic = 42;
+        require(a + b == 5);
+    }
+}

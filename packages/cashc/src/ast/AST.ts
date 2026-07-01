@@ -99,6 +99,9 @@ export class ParameterNode extends Node implements Named, Typed {
   constructor(
     public type: Type,
     public name: string,
+    // Declaration modifiers (e.g. `unused`, which exempts the parameter from the unused-variable
+    // check — useful for padding bytes that buy a larger compute budget without being referenced).
+    public modifiers: string[] = [],
   ) {
     super();
   }

@@ -27,6 +27,7 @@ import {
   UnusedVariableError,
   InvalidSymbolTypeError,
   ConstantModificationError,
+  InvalidModifierError,
 } from '../Errors.js';
 
 export default class SymbolTableTraversal extends AstTraversal {
@@ -78,7 +79,13 @@ export default class SymbolTableTraversal extends AstTraversal {
       throw new VariableRedefinitionError(node);
     }
 
-    this.symbolTables[0].set(Symbol.variable(node));
+    // `constant` is meaningless on a parameter (parameters are never reassigned), so only `unused`
+    // is accepted; any other or duplicate modifier is rejected.
+    validateModifiers(node, node.modifiers, [Modifier.UNUSED]);
+
+    const symbol = Symbol.variable(node);
+    symbol.ignoreUnused = node.modifiers.includes(Modifier.UNUSED);
+    this.symbolTables[0].set(symbol);
     return node;
   }
 
@@ -145,9 +152,13 @@ export default class SymbolTableTraversal extends AstTraversal {
       throw new VariableRedefinitionError(node);
     }
 
+    validateModifiers(node, node.modifier, [Modifier.CONSTANT, Modifier.UNUSED]);
+
     node.expression = this.visit(node.expression);
 
-    this.symbolTables[0].set(Symbol.variable(node));
+    const symbol = Symbol.variable(node);
+    symbol.ignoreUnused = node.modifier.includes(Modifier.UNUSED);
+    this.symbolTables[0].set(symbol);
 
     return node;
   }
@@ -243,6 +254,27 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     return node;
   }
+}
+
+// Rejects duplicate modifiers and any modifier outside the set allowed in the given declaration
+// context (parameters allow only `unused`; variable definitions allow `constant` / `unused`).
+function validateModifiers(
+  node: ParameterNode | VariableDefinitionNode,
+  modifiers: string[],
+  allowed: Modifier[],
+): void {
+  const seen = new Set<string>();
+  modifiers.forEach((modifier) => {
+    if (seen.has(modifier)) {
+      throw new InvalidModifierError(node, `Duplicate modifier '${modifier}'`);
+    }
+    seen.add(modifier);
+
+    if (!allowed.includes(modifier as Modifier)) {
+      const target = node instanceof ParameterNode ? 'parameters' : 'variables';
+      throw new InvalidModifierError(node, `Modifier '${modifier}' is not allowed on ${target}`);
+    }
+  });
 }
 
 function createTupleVariableDefinition(
