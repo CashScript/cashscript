@@ -198,6 +198,35 @@ export class ReturnTypeError extends TypeError {
   }
 }
 
+export class ReturnCountError extends CashScriptError {
+  constructor(
+    node: Node,
+    actual: number,
+    expected: number,
+  ) {
+    super(node, `Function returns ${actual} value(s) but ${expected} were declared`);
+  }
+}
+
+export class TupleArityError extends CashScriptError {
+  constructor(
+    node: Node,
+    targetCount: number,
+    valueCount: number,
+  ) {
+    super(node, `Cannot destructure ${valueCount} value(s) into ${targetCount} variable(s)`);
+  }
+}
+
+export class MultiReturnDestructureError extends CashScriptError {
+  constructor(
+    node: FunctionCallNode,
+    count: number,
+  ) {
+    super(node, `Function '${node.identifier.name}' returns ${count} values and must be destructured into ${count} variables`);
+  }
+}
+
 export class InvalidParameterTypeError extends TypeError {
   constructor(
     node: FunctionCallNode | RequireNode | InstantiationNode,

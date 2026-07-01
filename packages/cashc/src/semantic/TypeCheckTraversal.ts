@@ -53,6 +53,9 @@ import {
   BitshiftBitcountNegativeError,
   UnusedFunctionReturnError,
   ReturnTypeError,
+  ReturnCountError,
+  TupleArityError,
+  MultiReturnDestructureError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
@@ -60,7 +63,10 @@ import { Symbol } from '../ast/SymbolTable.js';
 import { resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
-  private currentFunctionReturnType: Type = PrimitiveType.VOID;
+  // Declared return types of the function currently being checked (empty for a void function).
+  private currentFunctionReturnTypes: Type[] = [];
+  // True only while visiting the RHS of a tuple destructuring, where a multi-return call is allowed.
+  private insideTupleAssignmentRhs = false;
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
@@ -69,19 +75,38 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
+    this.insideTupleAssignmentRhs = true;
     node.tuple = this.visit(node.tuple);
+    this.insideTupleAssignmentRhs = false;
+
+    // A multi-return function call is the only N-ary tuple source: its return types must match the
+    // destructuring targets one-to-one (count and types).
+    const callReturnTypes = functionCallReturnTypes(node.tuple);
+    if (callReturnTypes !== undefined) {
+      this.checkTupleTargets(node, callReturnTypes);
+      return node;
+    }
+
+    // Otherwise the tuple must come from `.split`, which always produces exactly two values.
     if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
       throw new TupleAssignmentError(node.tuple);
     }
-
-    const assignmentType = new TupleType(node.left.type, node.right.type);
-
-    if (!implicitlyCastable(node.tuple.type, assignmentType)) {
-      const syntheticAssignment = new VariableDefinitionNode(assignmentType, [], node.left.name, node.tuple);
-      syntheticAssignment.location = node.location;
-      throw new AssignTypeError(syntheticAssignment);
-    }
+    this.checkTupleTargets(node, [(node.tuple.type as TupleType).leftType, (node.tuple.type as TupleType).rightType]);
     return node;
+  }
+
+  private checkTupleTargets(node: TupleAssignmentNode, sourceTypes: Type[]): void {
+    if (node.targets.length !== sourceTypes.length) {
+      throw new TupleArityError(node, node.targets.length, sourceTypes.length);
+    }
+
+    node.targets.forEach((target, i) => {
+      if (!implicitlyCastable(sourceTypes[i], target.type)) {
+        const syntheticAssignment = new VariableDefinitionNode(target.type, [], target.name, node.tuple);
+        syntheticAssignment.location = node.location;
+        throw new AssignTypeError(syntheticAssignment);
+      }
+    });
   }
 
   visitAssign(node: AssignNode): Node {
@@ -195,26 +220,45 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
-    this.currentFunctionReturnType = node.returnType ?? PrimitiveType.VOID;
+    this.currentFunctionReturnTypes = node.returnTypes ?? [];
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
     return node;
   }
 
   visitReturn(node: ReturnNode): Node {
-    node.expression = this.visit(node.expression);
-    if (!implicitlyCastable(node.expression.type, this.currentFunctionReturnType)) {
-      throw new ReturnTypeError(node.expression, node.expression.type, this.currentFunctionReturnType);
+    node.expressions = this.visitList(node.expressions);
+
+    const expectedTypes = this.currentFunctionReturnTypes;
+    if (node.expressions.length !== expectedTypes.length) {
+      throw new ReturnCountError(node, node.expressions.length, expectedTypes.length);
     }
+
+    node.expressions.forEach((expression, i) => {
+      if (!implicitlyCastable(expression.type, expectedTypes[i])) {
+        throw new ReturnTypeError(expression, expression.type, expectedTypes[i]);
+      }
+    });
+
     return node;
   }
 
   visitFunctionCall(node: FunctionCallNode): Node {
+    // Consume the tuple-RHS flag immediately so nested argument calls are checked as single values.
+    const isTupleAssignmentRhs = this.insideTupleAssignmentRhs;
+    this.insideTupleAssignmentRhs = false;
+
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
     const { symbol, type } = node.identifier;
     if (!symbol || !symbol.parameters) return node; // already checked in symbol table
+
+    // A multi-return function produces no single value, so it is only valid as a tuple-destructuring
+    // RHS (validated in visitTupleAssignment). Anywhere a single value is expected is an error.
+    if (symbol.returnTypes.length > 1 && !isTupleAssignmentRhs) {
+      throw new MultiReturnDestructureError(node, symbol.returnTypes.length);
+    }
 
     const parameterTypes = node.parameters.map((p) => p.type!);
     expectParameters(node, parameterTypes, symbol.parameters);
@@ -655,3 +699,10 @@ function matchSizeLiteral(expr: BinaryOpNode): { sizeNode: UnaryOpNode, literalN
 const isSizeOp = (node: ExpressionNode): node is UnaryOpNode => (
   node instanceof UnaryOpNode && node.operator === UnaryOperator.SIZE
 );
+
+// If the expression is a function call, returns that function's ordered return types (undefined
+// otherwise). A user-defined function is the only source of an N-ary (N >= 2) tuple to destructure.
+function functionCallReturnTypes(node: ExpressionNode): Type[] | undefined {
+  if (!(node instanceof FunctionCallNode)) return undefined;
+  return node.identifier.symbol?.returnTypes;
+}

@@ -206,10 +206,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {
-    if (node.returnType === undefined) {
+    const returnCount = node.returnTypes?.length ?? 0;
+    if (returnCount === 0) {
       this.removeScopedVariables(0, node.body); // void: drop the entire frame
     } else {
-      this.cleanStack(node.body); // value: OP_NIP everything below the return value on top
+      this.cleanStack(node.body, returnCount); // value(s): drop everything below the N results on top
     }
   }
 
@@ -319,13 +320,24 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
   }
 
-  cleanStack(functionBodyNode: Node): void {
-    // Keep final verification value, OP_NIP the other stack values
+  cleanStack(functionBodyNode: Node, keepCount: number = 1): void {
+    // Keep the top `keepCount` values (a contract function's verification value, or a global
+    // function's return values), dropping everything below them while preserving their order.
     const tagStartIndex = this.output.length;
-    const stackSize = this.stack.length;
-    for (let i = 0; i < stackSize - 1; i += 1) {
-      this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
-      this.nipFromStack();
+    const locationData = { location: functionBodyNode.location, positionHint: PositionHint.END };
+    const dropCount = this.stack.length - keepCount;
+    for (let i = 0; i < dropCount; i += 1) {
+      if (keepCount === 1) {
+        // OP_NIP drops the item directly below the top value (1 byte, cheaper than ROLL + DROP).
+        this.emit(Op.OP_NIP, locationData);
+        this.nipFromStack();
+      } else {
+        // The next item to drop sits just below the top `keepCount` values: roll it up and drop it.
+        this.emit(encodeInt(BigInt(keepCount)), locationData);
+        this.emit(Op.OP_ROLL, locationData);
+        this.emit(Op.OP_DROP, locationData);
+        this.removeFromStack(keepCount);
+      }
     }
     this.tagScopeCleanup(tagStartIndex);
   }
@@ -388,10 +400,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
+    // The RHS leaves N values on the stack (the last on top). Replace those anonymous entries with
+    // the target names in declared order, so the last target binds to the top-of-stack value —
+    // matching both the `.split` (N=2) and multi-return-call conventions.
     node.tuple = this.visit(node.tuple);
-    this.popFromStack(2);
-    this.pushToStack(node.left.name);
-    this.pushToStack(node.right.name);
+    this.popFromStack(node.targets.length);
+    node.targets.forEach((target) => this.pushToStack(target.name));
     return node;
   }
 
@@ -665,7 +679,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters);
     this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
     this.popFromStack(node.parameters.length);
-    if (symbol.type !== PrimitiveType.VOID) this.pushToStack('(value)');
+
+    // The call leaves one value per declared return type (none for a void function); a multi-return
+    // function's values are subsequently bound by visitTupleAssignment.
+    for (let i = 0; i < symbol.returnTypes.length; i += 1) this.pushToStack('(value)');
 
     return node;
   }

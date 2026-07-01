@@ -10,6 +10,10 @@ import {
 export class Symbol {
   references: IdentifierNode[] = [];
 
+  // For functions, the full ordered list of return types (empty for void). `type` mirrors the first
+  // (or VOID) so single-value call sites are unchanged; multi-return call sites read `returnTypes`.
+  returnTypes: Type[] = [];
+
   private constructor(
     public name: string,
     public type: Type,
@@ -29,13 +33,16 @@ export class Symbol {
   }
 
   static builtinFunction(name: string, returnType: Type, parameters: Type[], bytecode: Script): Symbol {
-    return new Symbol(name, returnType, SymbolType.FUNCTION, undefined, parameters, bytecode);
+    const symbol = new Symbol(name, returnType, SymbolType.FUNCTION, undefined, parameters, bytecode);
+    symbol.returnTypes = returnType === PrimitiveType.VOID ? [] : [returnType];
+    return symbol;
   }
 
   static userFunction(node: FunctionDefinitionNode, functionId: number): Symbol {
     const parameterTypes = node.parameters.map((parameter) => parameter.type);
-    const returnType = node.returnType ?? PrimitiveType.VOID;
-    const symbol = new Symbol(node.name, returnType, SymbolType.FUNCTION, node, parameterTypes);
+    const returnTypes = node.returnTypes ?? [];
+    const symbol = new Symbol(node.name, returnTypes[0] ?? PrimitiveType.VOID, SymbolType.FUNCTION, node, parameterTypes);
+    symbol.returnTypes = returnTypes;
     symbol.setFunctionId(functionId);
     return symbol;
   }

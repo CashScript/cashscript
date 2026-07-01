@@ -34,7 +34,7 @@ topLevelDefinition
     ;
 
 globalFunctionDefinition
-    : 'function' Identifier parameterList ('returns' '(' typeName ')')? functionBody
+    : 'function' Identifier parameterList ('returns' '(' typeName (',' typeName)* ')')? functionBody
     ;
 
 contractDefinition
@@ -83,7 +83,7 @@ functionCallStatement
     ;
 
 returnStatement
-    : 'return' expression
+    : 'return' expression (',' expression)*
     ;
 
 controlStatement
@@ -96,7 +96,7 @@ variableDefinition
     ;
 
 tupleAssignment
-    : typeName Identifier ',' typeName Identifier '=' expression
+    : typeName Identifier (',' typeName Identifier)+ '=' expression
     ;
 
 assignStatement

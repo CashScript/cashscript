@@ -46,7 +46,7 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
 
     if (node.kind === FunctionKind.CONTRACT) {
       ensureFinalStatementIsRequire(node.body);
-    } else if (node.returnType !== undefined) {
+    } else if (node.returnTypes !== undefined) {
       ensureSingleTailReturn(node.body);
     }
 

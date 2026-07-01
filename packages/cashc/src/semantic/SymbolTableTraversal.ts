@@ -166,7 +166,7 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    [node.left, node.right].forEach((variable) => {
+    node.targets.forEach((variable) => {
       const definition = createTupleVariableDefinition(node, variable);
 
       const { name } = variable;
@@ -231,7 +231,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
 function createTupleVariableDefinition(
   node: TupleAssignmentNode,
-  variable: TupleAssignmentNode['left'],
+  variable: TupleAssignmentNode['targets'][number],
 ): VariableDefinitionNode {
   const definition = new VariableDefinitionNode(variable.type, [], variable.name, node.tuple);
   definition.location = node.location;

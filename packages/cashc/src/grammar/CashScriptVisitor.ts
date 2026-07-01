@@ -1,4 +1,4 @@
-// Generated from src/grammar/CashScript.g4 by ANTLR 4.13.1
+// Generated from src/grammar/CashScript.g4 by ANTLR 4.13.2
 
 import {ParseTreeVisitor} from 'antlr4';
 

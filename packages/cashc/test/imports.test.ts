@@ -26,6 +26,15 @@ describe('Imports from the filesystem (compileFile)', () => {
     expect(countOpDefines(artifact.bytecode)).toEqual(3);
   });
 
+  it('destructures a multi-return function imported from another file', () => {
+    // The multi-return function is defined in an imported file and destructured in the contract,
+    // proving multi-return composes with the import/module system.
+    const artifact = compileFile(fixture('multi_return_main.cash'));
+    expect(artifact.contractName).toEqual('MultiReturnMain');
+    expect(artifact.bytecode).toContain('OP_INVOKE');
+    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+  });
+
   it('throws when an imported file cannot be found', () => {
     expect(() => compileFile(fixture('missing_import_main.cash'))).toThrow(ImportResolutionError);
   });
