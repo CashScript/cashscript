@@ -74,6 +74,10 @@ To run specific tests, you can use the `-t` flag to match the name mentioned in 
 yarn test -t 'Transaction Builder'
 ```
 
+### Checking bundle size
+
+The `cashscript` package ships to browsers, so we guard its bundle size against regressions. From the `packages/cashscript` directory, `yarn size` bundles the package through Vite/Rollup and fails if the gzipped size exceeds the budget in `bundle-size.budget.json`. It also writes a dependency treemap to `bundle-size/stats.html`. This check runs in CI too. If an increase is intentional, run `yarn size --update` to regenerate the budget and commit it.
+
 ## Code Coverage
 
 New contributions have a code coverage target of 90%+. You can run `yarn test --coverage` to see the coverage report before submitting a PR.
