@@ -170,6 +170,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private defineGlobalFunctions(node: SourceFileNode): void {
     const functionsByName = new Map(node.functions.map((func) => [func.name, func]));
     const inliningEnabled = !this.compilerOptions.disableInlining;
+    const loopExcluded = collectLoopExcludedFunctions(node, functionsByName);
     const definedBodies = new Map<string, OptimiseBytecodeResult>();
 
     // Compile and decide in callee-first order so an inlined callee's body is available to splice into
@@ -178,7 +179,15 @@ export default class GenerateTargetTraversal extends AstTraversal {
     calleesFirst(node.functions, functionsByName).forEach((func) => {
       const symbol = node.symbolTable!.getFromThis(func.name)!;
       const optimisedBody = this.compileGlobalFunctionBody(func);
-      if (inliningEnabled && isWorthInlining(symbol, optimisedBody.script) && !this.invokedFunctions.has(func.name)) {
+      // Tiny bodies (<= 2 script elements) are exempt from the loop exclusion: inlined they step
+      // no more opcodes than the 2-op invoke site even when skipped, execute fewer when taken,
+      // and save the define/invoke bytes — strictly dominant on every axis.
+      if (
+        inliningEnabled
+        && (!loopExcluded.has(func.name) || optimisedBody.script.length <= 2)
+        && isWorthInlining(symbol, optimisedBody.script)
+        && !this.invokedFunctions.has(func.name)
+      ) {
         this.inlinedFunctionBodies.set(func.name, { ...optimisedBody, sourceFile: func.sourceFile });
       } else {
         definedBodies.set(func.name, optimisedBody);
@@ -1065,4 +1074,69 @@ function calledFunctionNames(
   }();
   collector.visit(func.body);
   return names;
+}
+
+// Functions that must stay OP_DEFINE'd because a call site sits inside a loop — directly, or via
+// the callee chain of such a function. Splicing a body into a loop makes every iteration step over
+// it, and the VM charges per-opcode cost even for opcodes in an untaken branch, so a small byte
+// saving multiplies into a large op-cost regression (measured ~2.8x on sparse-input double-and-add
+// loops, where the group-law body sits in a rarely-taken `if`). With OP_DEFINE the skipped call
+// site costs 2 stepped opcodes instead of the whole body.
+//
+// The callee closure protects callees on CONDITIONAL paths inside a loop-resident caller: the
+// caller's defined body is stepped end-to-end on every invoke, so a callee inlined into one of its
+// untaken branches would be stepped per invocation too. A callee on the caller's always-path is
+// stepped ≈ executed either way, so excluding it over-approximates — but the residual cost is only
+// ~2 ops + ~5 bytes per function, so the closure is kept coarse rather than branch-aware. Same
+// deliberate imprecision for always-executed call sites directly in loops: inlining there would
+// actually save the 2 invoke ops per iteration, but the asymmetry (2 ops/iteration sacrificed vs
+// ~100×body-size/iteration protected) makes conservative the right default.
+function collectLoopExcludedFunctions(
+  node: SourceFileNode,
+  functionsByName: Map<string, FunctionDefinitionNode>,
+): Set<string> {
+  const excluded = new Set<string>();
+  let loopDepth = 0;
+  const collector = new class extends AstTraversal {
+    visitWhile(n: WhileNode): Node {
+      loopDepth += 1;
+      const result = super.visitWhile(n);
+      loopDepth -= 1;
+      return result;
+    }
+
+    visitDoWhile(n: DoWhileNode): Node {
+      loopDepth += 1;
+      const result = super.visitDoWhile(n);
+      loopDepth -= 1;
+      return result;
+    }
+
+    visitFor(n: ForNode): Node {
+      loopDepth += 1;
+      const result = super.visitFor(n);
+      loopDepth -= 1;
+      return result;
+    }
+
+    visitFunctionCall(n: FunctionCallNode): Node {
+      if (loopDepth > 0 && functionsByName.has(n.identifier.name)) excluded.add(n.identifier.name);
+      return super.visitFunctionCall(n);
+    }
+  }();
+  node.functions.forEach((func) => collector.visit(func.body));
+  if (node.contract) collector.visit(node.contract);
+
+  const queue = [...excluded];
+  while (queue.length > 0) {
+    const func = functionsByName.get(queue.shift()!);
+    if (func === undefined) continue;
+    calledFunctionNames(func, functionsByName).forEach((name) => {
+      if (!excluded.has(name)) {
+        excluded.add(name);
+        queue.push(name);
+      }
+    });
+  }
+  return excluded;
 }
