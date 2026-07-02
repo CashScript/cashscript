@@ -4,6 +4,10 @@ export interface CompilerOptions {
   // Disable inlining of global functions at their call sites (they are always shared via
   // OP_DEFINE/OP_INVOKE instead). Inlining is on by default.
   disableInlining?: boolean;
+  // Skip the backwards-compat cross-check that re-optimises the bytecode with the legacy
+  // ASM-regex optimiser and compares the results. The check is also skipped automatically
+  // for large scripts, where the legacy optimiser's quadratic cost would dominate compile time.
+  disableOptimisationCrossCheck?: boolean;
 }
 
 export interface AbiInput {
