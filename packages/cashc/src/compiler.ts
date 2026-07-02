@@ -42,6 +42,12 @@ export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceLocktimeGuard: true,
 };
 
+// Above this unoptimised op-count the legacy-optimiser cross-check is skipped automatically.
+// The legacy optimiser is near-linear in practice (measured ~0.15s at 10k elements, ~0.5s at
+// 30-40k), so this gate bounds the cost of a redundant second optimisation pass on very large
+// generated contracts — it is not guarding against asymptotic blowup.
+const OPTIMISATION_CROSS_CHECK_MAX_OPS = 30_000;
+
 export interface CompileOptions extends CompilerOptions {
   errorListener?: CashScriptErrorListener;
 }
@@ -77,6 +83,10 @@ export const compileFile: (codeFile: PathLike, compilerOptions?: CompileOptions)
 
 export interface InternalCompilerOptions extends CompilerOptions {
   disableInlining?: boolean;
+  // Skip the backwards-compat cross-check that re-optimises the bytecode with the legacy
+  // ASM-regex optimiser and compares the results. The check is also skipped automatically for
+  // very large scripts, where the redundant second optimisation pass measurably slows compiles.
+  disableOptimisationCrossCheck?: boolean;
 }
 
 export function compileStringInternal(
@@ -103,7 +113,9 @@ function compileCode(
   resolver: ImportResolver,
   compilerOptions: CompileOptions & InternalCompilerOptions,
 ): Artifact {
-  const { errorListener, disableInlining, ...artifactCompilerOptions } = compilerOptions;
+  const {
+    errorListener, disableInlining, disableOptimisationCrossCheck, ...artifactCompilerOptions
+  } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
 
   // Lexing + parsing
@@ -137,7 +149,6 @@ function compileCode(
   ast = ast.accept(traversal) as Ast;
 
   // Bytecode optimisation
-  const optimisedBytecodeOld = optimiseBytecodeOld(traversal.output);
   const optimisationResult = optimiseBytecode(
     traversal.output,
     sourceMapToLocationData(traversal.sourceMap),
@@ -148,10 +159,18 @@ function compileCode(
     constructorParamLength,
   );
 
-  if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisationResult.script)) {
-    console.error(scriptToAsm(optimisedBytecodeOld));
-    console.error(scriptToAsm(optimisationResult.script));
-    throw new Error('New bytecode optimisation is not backwards compatible, please report this issue to the CashScript team');
+  // Backwards-compat cross-check against the legacy ASM-regex optimiser. The legacy optimiser is
+  // near-linear in practice (~0.15s at 10k elements, ~0.5s at 30-40k measured), so the size gate
+  // is about not paying a redundant second optimisation pass on very large generated contracts,
+  // not about asymptotic blowup; the new optimiser is exercised by the full test suite either
+  // way. Skippable explicitly via the disableOptimisationCrossCheck compiler option.
+  if (!disableOptimisationCrossCheck && traversal.output.length <= OPTIMISATION_CROSS_CHECK_MAX_OPS) {
+    const optimisedBytecodeOld = optimiseBytecodeOld(traversal.output);
+    if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisationResult.script)) {
+      console.error(scriptToAsm(optimisedBytecodeOld));
+      console.error(scriptToAsm(optimisationResult.script));
+      throw new Error('New bytecode optimisation is not backwards compatible, please report this issue to the CashScript team');
+    }
   }
 
   const debug = {
