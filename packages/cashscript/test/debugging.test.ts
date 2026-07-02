@@ -857,7 +857,7 @@ describe('Debugging tests - user-defined function frames', () => {
       .addInput(importedUtxo, importedContract.unlock.spend(0n))
       .addOutput({ to: importedContract.address, amount: 10000n });
 
-    expect(transaction).toFailRequireWith('function_helpers.cash:2 Require statement failed at input 0 in contract Test.cash at line 2 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('function_helpers.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 2) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
   });
 });

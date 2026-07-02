@@ -142,7 +142,8 @@ export class FailedTransactionEvaluationError extends FailedTransactionError {
     if (artifact.debug) {
       const resolvedFrame = frame ?? rootFrame(artifact);
       const { statement, lineNumber } = getLocationDataForFrame(resolvedFrame, failingInstructionPointer);
-      message = `${resolvedFrame.sourceName}:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
+      const context = formatFrameContext(resolvedFrame, artifact.contractName, lineNumber);
+      message = `${resolvedFrame.sourceName}:${lineNumber} Error in transaction at input ${inputIndex} ${context}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
     }
 
     super(message, bitauthUri);
@@ -161,8 +162,9 @@ export class FailedRequireError extends FailedTransactionError {
   ) {
     const resolvedFrame = frame ?? rootFrame(artifact);
     const { statement, lineNumber } = getLocationDataForFrame(resolvedFrame, failingInstructionPointer);
+    const context = formatFrameContext(resolvedFrame, artifact.contractName, lineNumber);
 
-    const baseMessage = `${resolvedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
+    const baseMessage = `${resolvedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} ${context}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
     const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
 
@@ -173,6 +175,14 @@ export class FailedRequireError extends FailedTransactionError {
     super(fullMessage, bitauthUri);
   }
 }
+
+const formatFrameContext = (frame: ResolvedFrame, contractName: string, lineNumber: number): string => {
+  if (frame.functionName) {
+    return `in contract ${contractName}, function ${frame.functionName} (${frame.sourceName}, line ${lineNumber})`;
+  }
+
+  return `in contract ${contractName}.cash at line ${lineNumber}`;
+};
 
 const getLocationDataForFrame = (
   frame: ResolvedFrame,

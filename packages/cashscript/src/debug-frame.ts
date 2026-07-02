@@ -8,6 +8,7 @@ export interface ResolvedFrame {
   ipOffset: number;
   requires: readonly RequireStatement[];
   logs: readonly LogEntry[];
+  functionName?: string;
 }
 
 export const rootFrame = (artifact: Artifact): ResolvedFrame => ({
@@ -39,5 +40,6 @@ export const resolveFrame = (
     ipOffset: 0, // function bodies have no constructor-arg prefix; their ips start at 0
     requires: frame.requires,
     logs: frame.logs,
+    ...(frame.sourceFile !== undefined ? { functionName: frame.name } : {}),
   };
 };
