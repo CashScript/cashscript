@@ -14,6 +14,21 @@ contract Test() {
 }
 `;
 
+const CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS = `
+function hashTwice(pubkey pk) returns (bytes32) {
+  bytes32 singleHash = sha256(pk);
+  console.log(singleHash);
+  bytes32 doubleHash = sha256(singleHash);
+  return doubleHash;
+}
+
+contract Test(pubkey owner) {
+  function spend() {
+    require(hashTwice(owner).length == 32, "should be 32 bytes");
+  }
+}
+`;
+
 const CONTRACT_TEST_REQUIRES = `
 contract Test() {
   function test_logs() {
@@ -452,6 +467,7 @@ export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_
 export const artifactTestRequireInsideLoop = compileString(CONTRACT_TEST_REQUIRE_INSIDE_LOOP);
 export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_LOOP);
 export const artifactTestFunctionDebugging = compileString(CONTRACT_TEST_FUNCTION_DEBUGGING);
+export const artifactTestFunctionIntermediateResults = compileString(CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS);
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));

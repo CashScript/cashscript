@@ -15,6 +15,7 @@ import {
   artifactTestRequireInsideLoop,
   artifactTestLogInsideLoop,
   artifactTestFunctionDebugging,
+  artifactTestFunctionIntermediateResults,
   artifactTestImportedFunctionDebugging,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
@@ -859,5 +860,17 @@ describe('Debugging tests - user-defined function frames', () => {
 
     expect(transaction).toFailRequireWith('function_helpers.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 2) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
+  });
+
+  it('logs intermediate results that get optimised out inside a function', () => {
+    const intermediateContract = new Contract(artifactTestFunctionIntermediateResults, [alicePub], { provider });
+    const intermediateUtxo = provider.addUtxo(intermediateContract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(intermediateUtxo, intermediateContract.unlock.spend())
+      .addOutput({ to: intermediateContract.address, amount: 10000n });
+
+    const expectedHash = binToHex(sha256(alicePub));
+    expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:4 0x${expectedHash}$`));
   });
 });
