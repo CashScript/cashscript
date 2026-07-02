@@ -36,6 +36,14 @@ describe('Imports from the filesystem (compileFile)', () => {
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
   });
 
+  it('merges top-level constants from an imported file', () => {
+    // The imported constant is usable both inside the imported function body and in the contract.
+    const artifact = compileFile(fixture('constants_main.cash'));
+    expect(artifact.contractName).toEqual('ConstantsMain');
+    // 7919 = 0xef1e as a minimally-encoded script number, pushed at both use sites
+    expect([...artifact.bytecode.matchAll(/ef1e/g)]).toHaveLength(2);
+  });
+
   it('throws when an imported file cannot be found', () => {
     expect(() => compileFile(fixture('missing_import_main.cash'))).toThrow(ImportResolutionError);
   });

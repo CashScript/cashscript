@@ -1,0 +1,8 @@
+int constant DERIVED = BASE + 1;
+int constant BASE = 10;
+
+contract Test() {
+    function spend() {
+        require(DERIVED > 0);
+    }
+}

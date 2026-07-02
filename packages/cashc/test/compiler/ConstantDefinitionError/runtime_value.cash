@@ -1,0 +1,7 @@
+int constant LOCKTIME = tx.locktime;
+
+contract Test() {
+    function spend() {
+        require(LOCKTIME > 0);
+    }
+}

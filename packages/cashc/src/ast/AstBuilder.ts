@@ -9,6 +9,7 @@ import {
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   FunctionKind,
   AssignNode,
   IdentifierNode,
@@ -47,6 +48,7 @@ import type {
   ContractDefinitionContext,
   ContractFunctionDefinitionContext,
   GlobalFunctionDefinitionContext,
+  ConstantDefinitionContext,
   ReturnStatementContext,
   FunctionCallStatementContext,
   VariableDefinitionContext,
@@ -117,11 +119,14 @@ export default class AstBuilder
     const imports = ctx.importDirective_list().map((directive) => this.visit(directive) as ImportNode);
 
     const functions: FunctionDefinitionNode[] = [];
+    const constants: ConstantDefinitionNode[] = [];
     let contract: ContractNode | undefined;
 
     ctx.topLevelDefinition_list().forEach((def) => {
       if (def.globalFunctionDefinition()) {
         functions.push(this.visit(def.globalFunctionDefinition()) as FunctionDefinitionNode);
+      } else if (def.constantDefinition()) {
+        constants.push(this.visitConstantDefinition(def.constantDefinition()));
       } else if (def.contractDefinition()) {
         if (contract) {
           throw new ParseError('A source file may define at most one contract', Location.fromCtx(def.contractDefinition()));
@@ -130,9 +135,18 @@ export default class AstBuilder
       }
     });
 
-    const sourceFileNode = new SourceFileNode(contract, functions, imports, pragmas);
+    const sourceFileNode = new SourceFileNode(contract, functions, imports, pragmas, constants);
     sourceFileNode.location = Location.fromCtx(ctx);
     return sourceFileNode;
+  }
+
+  visitConstantDefinition(ctx: ConstantDefinitionContext): ConstantDefinitionNode {
+    const type = parseType(ctx.typeName().getText());
+    const name = ctx.Identifier().getText();
+    const expression = this.visit(ctx.expression()) as ExpressionNode;
+    const node = new ConstantDefinitionNode(type, name, expression);
+    node.location = Location.fromCtx(ctx);
+    return node;
   }
 
   visitImportDirective(ctx: ImportDirectiveContext): ImportNode {

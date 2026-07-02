@@ -3,6 +3,7 @@ import {
   IdentifierNode,
   ImportNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   VariableDefinitionNode,
   ParameterNode,
   Node,
@@ -81,6 +82,32 @@ export class FunctionRedefinitionError extends RedefinitionError {
     public node: FunctionDefinitionNode,
   ) {
     super(node, `Redefinition of function ${node.name}`);
+  }
+}
+
+export class ConstantDefinitionError extends CashScriptError {
+  constructor(
+    public node: ConstantDefinitionNode,
+    message: string,
+  ) {
+    super(node, message);
+  }
+}
+
+export class ConstantRedefinitionError extends RedefinitionError {
+  constructor(
+    public node: ConstantDefinitionNode,
+  ) {
+    super(node, `Redefinition of constant ${node.name}`);
+  }
+}
+
+export class ConstantNameCollisionError extends CashScriptError {
+  constructor(
+    node: Node,
+    name: string,
+  ) {
+    super(node, `Identifier '${name}' collides with a global constant of the same name`);
   }
 }
 

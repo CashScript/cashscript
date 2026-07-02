@@ -1,0 +1,9 @@
+pragma cashscript ^0.14.0;
+
+import "./constants_lib.cash";
+
+contract ConstantsMain() {
+    function spend(int n) {
+        require(modP(n) < PRIME);
+    }
+}

@@ -35,12 +35,30 @@ export class SourceFileNode extends Node {
     public functions: FunctionDefinitionNode[] = [],
     public imports: ImportNode[] = [],
     public pragmas: string[] = [],
+    public constants: ConstantDefinitionNode[] = [],
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitSourceFile(this);
+  }
+}
+
+// A compile-time constant (file top level). Its initializer is folded to a literal and inlined at
+// every use site by the constant-inlining pass, after which this node is discarded — it is never
+// visited by an AstVisitor.
+export class ConstantDefinitionNode extends Node implements Named, Typed {
+  constructor(
+    public type: Type,
+    public name: string,
+    public expression: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(): T {
+    throw new Error('ConstantDefinitionNode must be inlined before AST traversal');
   }
 }
 

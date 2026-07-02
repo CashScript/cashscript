@@ -26,6 +26,7 @@ import {
   ImportResolver,
   resolveDependencies,
 } from './dependency-resolution.js';
+import { inlineConstants } from './constant-folding.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
@@ -95,6 +96,10 @@ function compileCode(
   checkVersionConstraints(ast.pragmas);
 
   ast = resolveDependencies(ast, resolver, errorListener) as Ast;
+
+  // Fold top-level constants to literals and inline them at every use site
+  ast = inlineConstants(ast) as Ast;
+
   if (!ast.contract) throw new MissingContractError();
 
   const constructorParamLength = ast.contract.parameters.length;

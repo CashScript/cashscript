@@ -1,0 +1,20 @@
+pragma cashscript ^0.14.0;
+
+int constant PRIME = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
+int constant PRIME_MINUS_2 = PRIME - 2;
+int constant DOUBLED = 2 * 21;
+bool constant ENABLED = true && !false;
+bytes2 constant TAG = 0xbeef;
+
+function modP(int x) returns (int) {
+    return x % PRIME;
+}
+
+contract GlobalConstants() {
+    function spend(int n, bytes2 tag) {
+        require(ENABLED);
+        require(tag == TAG);
+        require(PRIME_MINUS_2 < PRIME);
+        require(modP(n) + DOUBLED >= 0);
+    }
+}

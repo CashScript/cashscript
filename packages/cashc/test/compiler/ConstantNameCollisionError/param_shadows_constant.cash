@@ -1,0 +1,7 @@
+int constant FEE = 1000;
+
+contract Test() {
+    function spend(int FEE) {
+        require(FEE > 0);
+    }
+}

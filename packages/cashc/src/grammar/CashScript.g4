@@ -30,7 +30,14 @@ importDirective
 
 topLevelDefinition
     : globalFunctionDefinition
+    | constantDefinition
     | contractDefinition
+    ;
+
+// A compile-time constant, folded to a literal and inlined at every use site before semantic
+// analysis. The initializer must be a constant expression (no introspection / runtime values).
+constantDefinition
+    : typeName 'constant' Identifier '=' expression ';'
     ;
 
 globalFunctionDefinition

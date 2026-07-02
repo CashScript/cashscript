@@ -1,0 +1,7 @@
+pragma cashscript ^0.14.0;
+
+int constant PRIME = 7919;
+
+function modP(int x) returns (int) {
+    return x % PRIME;
+}
