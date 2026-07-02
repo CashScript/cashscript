@@ -75,6 +75,10 @@ export class FunctionDefinitionNode extends Node implements Named {
   symbolTable?: SymbolTable;
   opRolls: Map<string, IdentifierNode> = new Map();
 
+  // Source provenance for debugging. Set on imported functions, left undefined for functions in the contract's own file.
+  sourceCode?: string;
+  sourceFile?: string;
+
   constructor(
     public kind: FunctionKind,
     public name: string,
