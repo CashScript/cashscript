@@ -12,6 +12,7 @@ import {
   scriptToBytecode,
   optimiseBytecode,
   generateSourceMap,
+  generateSourceTags,
   FullLocationData,
   DebugFrame,
   LogEntry,
@@ -186,16 +187,19 @@ export default class GenerateTargetTraversal extends AstTraversal {
     );
 
     const bodyBytecode = scriptToBytecode(optimised.script);
+    const sourceTags = generateSourceTags(optimised.sourceTags);
 
     this.frames.push({
       name: node.name,
       inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
       bytecode: binToHex(bodyBytecode),
       sourceMap: generateSourceMap(optimised.locationData),
-      logs: optimised.logs,
-      requires: optimised.requires,
+      ...(sourceTags ? { sourceTags } : {}),
+      location: generateSourceMap([{ location: node.location, positionHint: PositionHint.START }]),
       ...(node.sourceCode !== undefined ? { source: node.sourceCode } : {}),
       ...(node.sourceFile !== undefined ? { sourceFile: node.sourceFile } : {}),
+      logs: optimised.logs,
+      requires: optimised.requires,
     });
 
     return bodyBytecode;

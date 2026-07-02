@@ -27,10 +27,12 @@ export interface DebugFrame {
   inputs: readonly AbiInput[]; // the function's parameters (name and type), mirroring the ABI; for reference
   bytecode: string; // hex of the function body bytecode (exactly what OP_DEFINE stores and the VM runs)
   sourceMap: string; // frame-local source map (ips starting from 0)
+  sourceTags?: string; // frame-local semantic tags for opcodes (e.g. loop update/condition ranges)
+  source?: string; // full text of the defining file; absent means the function lives in the contract's own source file
+  sourceFile?: string; // originating file name for imported functions; absent means the contract's file
+  location: string; // single-entry source map covering the full function definition in its defining file
   logs: readonly LogEntry[]; // frame-local log entries
   requires: readonly RequireStatement[]; // frame-local require statements
-  source?: string; // body source text; absent means the function lives in the contract's own source file
-  sourceFile?: string; // originating file name for imported functions; absent means the contract's file
 }
 
 export interface LogEntry {

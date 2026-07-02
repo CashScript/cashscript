@@ -1,5 +1,5 @@
 import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
-import { DEFAULT_VM_TARGET } from '../src/libauth-template/utils.js';
+import { DEFAULT_VM_TARGET, getLockScriptName } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import { randomUtxo } from '../src/utils.js';
 import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
@@ -872,5 +872,32 @@ describe('Debugging tests - user-defined function frames', () => {
 
     const expectedHash = binToHex(sha256(alicePub));
     expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:4 0x${expectedHash}$`));
+  });
+
+  it('renders source-mapped function definitions in the BitAuth IDE template', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.spend(5n))
+      .addOutput({ to: contract.address, amount: 10000n });
+
+    const template = transaction.getLibauthTemplate();
+    const lockScript = template.scripts[getLockScriptName(contract)].script;
+
+    // The function body is rendered as a `<...>` push group annotated with its own source lines
+    expect(lockScript).toContain('/* function checkValue(int value) {');
+    expect(lockScript).toContain('> OP_0 OP_DEFINE');
+    expect(lockScript).toContain('OP_0 OP_INVOKE');
+  });
+
+  it('renders imported function definitions with their import provenance in the BitAuth IDE template', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(importedUtxo, importedContract.unlock.spend(5n))
+      .addOutput({ to: importedContract.address, amount: 10000n });
+
+    const template = transaction.getLibauthTemplate();
+    const lockScript = template.scripts[getLockScriptName(importedContract)].script;
+
+    expect(lockScript).toContain('>>> function assertPositive (imported from function_helpers.cash)');
+    expect(lockScript).toContain('/* function assertPositive(int value) {');
+    expect(lockScript).toContain('> OP_0 OP_DEFINE');
   });
 });

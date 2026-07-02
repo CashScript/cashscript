@@ -1,4 +1,4 @@
-import { AbiFunction, AbiInput, Artifact, bytecodeToScript, formatBitAuthScript, sha256 } from '@cashscript/utils';
+import { AbiFunction, AbiInput, Artifact, formatBitAuthScript, sha256 } from '@cashscript/utils';
 import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
 import { hexToBin, binToHex, isHex, decodeCashAddress, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
 import { EncodedFunctionArgument } from '../Argument.js';
@@ -77,21 +77,15 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
 };
 
 export const formatBytecodeForDebugging = (artifact: Artifact): string => {
-  // Render the bytecode in true execution order when there is no debug info, or when the contract uses
-  // user-defined functions (TODO: fix source mapping for functions).
-  if (!artifact.debug || (artifact.debug.functions?.length ?? 0) > 0) {
+  // Old artifacts carry no debug information, so we render the raw bytecode in execution order
+  if (!artifact.debug) {
     return artifact.bytecode
       .split(' ')
       .map((asmElement) => (isHex(asmElement) ? `<0x${asmElement}>` : asmElement))
       .join('\n');
   }
 
-  return formatBitAuthScript(
-    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
-    artifact.debug.sourceMap,
-    artifact.source,
-    artifact.debug.sourceTags,
-  );
+  return formatBitAuthScript(artifact.debug, artifact.source);
 };
 
 export const serialiseTokenDetails = (

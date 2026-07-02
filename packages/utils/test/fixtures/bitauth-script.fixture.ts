@@ -493,3 +493,161 @@ OP_0 OP_GREATERTHAN                  /*         require(x > 0);       */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
 ];
+
+// Contracts with user-defined functions render each definition as a source-mapped `<...>` push group.
+// These fixtures are compiled at test time (compileString for same-file functions, compileFile for imports).
+export interface FunctionFixture {
+  name: string;
+  sourceCode?: string; // compiled with compileString when set
+  file?: string; // compiled with compileFile, relative to this fixtures directory (used for imports)
+  expectedBitAuthScript: string;
+}
+
+export const functionFixtures: FunctionFixture[] = [
+  {
+    name: 'LocalFunctions (same-file functions with loop + recursion)',
+    sourceCode: `
+function sumTo(int n) returns (int) {
+    int sum = 0;
+    for (int i = 0; i < n; i = i + 1) {
+        sum = sum + i;
+    }
+    return sum;
+}
+
+function fib(int n) returns (int) {
+    int result = n;
+    if (n >= 2) {
+        result = fib(n - 1) + fib(n - 2);
+    }
+    return result;
+}
+
+contract LocalFunctions() {
+    function spend() {
+        require(sumTo(5) == 10, 'sum mismatch');
+        require(fib(7) == 13, 'fib mismatch');
+    }
+}
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+    expectedBitAuthScript: `
+<                                                                                      /* function sumTo(int n) returns (int) {            */
+  OP_0                                                                                 /*     int sum = 0;                                 */
+  OP_0 OP_BEGIN OP_DUP OP_3 OP_PICK OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF             /*     for (int i = 0; i < n; i = i + 1) {          */
+  OP_2DUP OP_ADD OP_ROT OP_DROP OP_SWAP                                                /*         sum = sum + i;                           */
+  OP_DUP OP_1ADD OP_NIP                                                                /*         >>> for-loop update (i = i + 1)          */
+  OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                             /*         >>> loop condition check                 */
+  OP_DROP                                                                              /*         >>> scope cleanup                        */
+                                                                                       /*     }                                            */
+                                                                                       /*     return sum;                                  */
+  OP_NIP                                                                               /*     >>> scope cleanup                            */
+> OP_0 OP_DEFINE                                                                       /* }                                                */
+                                                                                       /*                                                  */
+<                                                                                      /* function fib(int n) returns (int) {              */
+  OP_DUP OP_DUP                                                                        /*     int result = n;                              */
+  OP_2 OP_GREATERTHANOREQUAL OP_IF                                                     /*     if (n >= 2) {                                */
+  OP_OVER OP_1SUB OP_1 OP_INVOKE OP_2 OP_PICK OP_2 OP_SUB OP_1 OP_INVOKE OP_ADD OP_NIP /*         result = fib(n - 1) + fib(n - 2);        */
+  OP_ENDIF                                                                             /*     }                                            */
+                                                                                       /*     return result;                               */
+  OP_NIP                                                                               /*     >>> scope cleanup                            */
+> OP_1 OP_DEFINE                                                                       /* }                                                */
+                                                                                       /*                                                  */
+                                                                                       /* contract LocalFunctions() {                      */
+                                                                                       /*     function spend() {                           */
+OP_5 OP_0 OP_INVOKE OP_10 OP_NUMEQUALVERIFY                                            /*         require(sumTo(5) == 10, 'sum mismatch'); */
+OP_7 OP_1 OP_INVOKE OP_13 OP_NUMEQUAL                                                  /*         require(fib(7) == 13, 'fib mismatch');   */
+                                                                                       /*     }                                            */
+                                                                                       /* }                                                */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    name: 'ImportedFunctions (two imported functions from one file)',
+    file: 'function-imports/importer.cash',
+    expectedBitAuthScript: `
+                                                /* >>> function double (imported from helpers.cash)               */
+<                                               /* function double(int x) returns (int) {                         */
+  OP_2 OP_MUL                                   /*     return x * 2;                                              */
+> OP_0 OP_DEFINE                                /* }                                                              */
+                                                /*                                                                */
+                                                /* >>> function addChecked (imported from helpers.cash)           */
+<                                               /* function addChecked(int a, int b) returns (int) {              */
+  OP_OVER OP_ADD                                /*     int sum = a + b;                                           */
+  OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_VERIFY /*     require(sum >= a, "overflow");                             */
+                                                /*     return sum;                                                */
+> OP_1 OP_DEFINE                                /* }                                                              */
+                                                /*                                                                */
+                                                /* import "./helpers.cash";                                       */
+                                                /*                                                                */
+                                                /* contract ImportedFunctions() {                                 */
+                                                /*     function spend(int x) {                                    */
+OP_DUP OP_0 OP_INVOKE                           /*         int doubled = double(x);                               */
+OP_SWAP OP_1 OP_INVOKE OP_15 OP_NUMEQUAL        /*         require(addChecked(doubled, x) == 15, "sum mismatch"); */
+                                                /*     }                                                          */
+                                                /* }                                                              */
+                                                /*                                                                */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    // The single-byte 0x81 body (lone OP_BIN2NUM) gets minimally encoded as the opcode OP_1NEGATE at the
+    // define site, so it must be matched to its frame by push-data equality rather than element shape.
+    name: 'MinimalBody (single-byte function body, minimally encoded define site)',
+    sourceCode: `
+function toInt(bytes b) returns (int) {
+    return int(b);
+}
+
+function double(int x) returns (int) {
+    return x * 2;
+}
+
+contract MinimalBody() {
+    function spend(bytes8 b) {
+        require(toInt(b) > 0, 'not positive');
+        require(double(3) == 6, 'bad double');
+    }
+}
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+    expectedBitAuthScript: `
+<                                            /* function toInt(bytes b) returns (int) {        */
+  OP_BIN2NUM                                 /*     return int(b);                             */
+> OP_0 OP_DEFINE                             /* }                                              */
+                                             /*                                                */
+<                                            /* function double(int x) returns (int) {         */
+  OP_2 OP_MUL                                /*     return x * 2;                              */
+> OP_1 OP_DEFINE                             /* }                                              */
+                                             /*                                                */
+                                             /* contract MinimalBody() {                       */
+                                             /*     function spend(bytes8 b) {                 */
+OP_SIZE OP_8 OP_EQUALVERIFY                  /*         >>> parameter type check (bytes8 b)    */
+OP_0 OP_INVOKE OP_0 OP_GREATERTHAN OP_VERIFY /*         require(toInt(b) > 0, 'not positive'); */
+OP_3 OP_1 OP_INVOKE OP_6 OP_NUMEQUAL         /*         require(double(3) == 6, 'bad double'); */
+                                             /*     }                                          */
+                                             /* }                                              */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    name: 'AfterContract (function defined below the contract in the same file)',
+    sourceCode: `
+contract AfterContract() {
+    function spend(int x) {
+        require(double(x) == 10, 'mismatch');
+    }
+}
+
+function double(int a) returns (int) {
+    return a * 2;
+}
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+    expectedBitAuthScript: `
+<                                /* function double(int a) returns (int) {        */
+  OP_2 OP_MUL                    /*     return a * 2;                             */
+> OP_0 OP_DEFINE                 /* }                                             */
+                                 /* contract AfterContract() {                    */
+                                 /*     function spend(int x) {                   */
+OP_0 OP_INVOKE OP_10 OP_NUMEQUAL /*         require(double(x) == 10, 'mismatch'); */
+                                 /*     }                                         */
+                                 /* }                                             */
+                                 /*                                               */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+];
