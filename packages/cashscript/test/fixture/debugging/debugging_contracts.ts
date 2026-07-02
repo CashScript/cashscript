@@ -14,6 +14,22 @@ contract Test() {
 }
 `;
 
+const CONTRACT_TEST_MULTI_RETURN_DEBUGGING = `
+function divmod(int a, int b) returns (int, int) {
+  console.log("dividing", a);
+  require(b > 0, "divisor must be positive");
+  return a / b, a % b;
+}
+
+contract Test() {
+  function spend(int x) {
+    int q, int r = divmod(x, x - 1);
+    require(q == 1, "quotient must be 1");
+    require(r >= 0, "remainder must be non-negative");
+  }
+}
+`;
+
 const CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS = `
 function hashTwice(pubkey pk) returns (bytes32) {
   bytes32 singleHash = sha256(pk);
@@ -471,3 +487,20 @@ export const artifactTestFunctionIntermediateResults = compileString(CONTRACT_TE
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));
+
+// Variants with inlining disabled, so single-use functions stay OP_DEFINE'd and get a debug frame
+// (the default artifacts above inline them, splicing their debug info into the caller instead).
+export const artifactTestFunctionDebuggingDefined = compileString(
+  CONTRACT_TEST_FUNCTION_DEBUGGING,
+  { disableInlining: true },
+);
+export const artifactTestImportedFunctionDebuggingDefined = compileFile(
+  new URL('./function_importer.cash', import.meta.url),
+  { disableInlining: true },
+);
+
+export const artifactTestMultiReturnDebugging = compileString(CONTRACT_TEST_MULTI_RETURN_DEBUGGING);
+export const artifactTestMultiReturnDebuggingDefined = compileString(
+  CONTRACT_TEST_MULTI_RETURN_DEBUGGING,
+  { disableInlining: true },
+);

@@ -1411,6 +1411,8 @@ export const fixtures: Fixture[] = [
   {
     // A single global function — the basic OP_DEFINE / OP_INVOKE calling convention.
     fn: 'global_function_simple.cash',
+    // Disable inlining so this fixture locks in the OP_DEFINE/OP_INVOKE codegen path.
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'GlobalFunctionSimple',
       constructorInputs: [],
@@ -1446,6 +1448,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          disableInlining: true,
         },
       },
       updatedAt: '',
@@ -1456,6 +1459,7 @@ export const fixtures: Fixture[] = [
     // A multi-parameter global function — locks in the parameter stack-seeding and argument order
     // (the contract OP_SWAPs x and y into place; the body computes a - b directly).
     fn: 'global_function_multi_param.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'GlobalFunctionMultiParam',
       constructorInputs: [],
@@ -1491,6 +1495,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          disableInlining: true,
         },
       },
       updatedAt: '',
@@ -1500,6 +1505,7 @@ export const fixtures: Fixture[] = [
   {
     // A void global function called as a statement — no return value, and the void stack-cleanup path.
     fn: 'global_function_void.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'GlobalFunctionVoid',
       constructorInputs: [],
@@ -1535,6 +1541,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          disableInlining: true,
         },
       },
       updatedAt: '',
@@ -1545,6 +1552,7 @@ export const fixtures: Fixture[] = [
     // Imports resolved across a diamond (mid1 and mid2 both import leaf): leaf is defined once, and
     // m1/m2 invoke it transitively.
     fn: '../import-fixtures/diamond.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'Diamond',
       constructorInputs: [],
@@ -1609,6 +1617,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          disableInlining: true,
         },
       },
       updatedAt: '',

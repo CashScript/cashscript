@@ -11,7 +11,8 @@ const countOpDefines = (bytecode: string): number => [...bytecode.matchAll(/OP_D
 
 describe('Imports from the filesystem (compileFile)', () => {
   it('merges global functions from an imported file', () => {
-    const artifact = compileFile(fixture('main.cash'));
+    // Disable inlining so the merged functions are observable as OP_DEFINE/OP_INVOKE.
+    const artifact = compileFile(fixture('main.cash'), { disableInlining: true });
     expect(artifact.contractName).toEqual('Main');
     expect(artifact.bytecode).toContain('OP_INVOKE');
     // both imported functions are defined (one OP_DEFINE each)
@@ -21,7 +22,7 @@ describe('Imports from the filesystem (compileFile)', () => {
   it('de-duplicates a diamond import so a shared leaf is defined once', () => {
     // Diamond imports mid1 and mid2, which both import leaf. The leaf function must be merged once
     // (otherwise it would be a redefinition): leaf, m1, m2 = 3 OP_DEFINEs.
-    const artifact = compileFile(fixture('diamond.cash'));
+    const artifact = compileFile(fixture('diamond.cash'), { disableInlining: true });
     expect(artifact.contractName).toEqual('Diamond');
     expect(countOpDefines(artifact.bytecode)).toEqual(3);
   });
@@ -29,7 +30,7 @@ describe('Imports from the filesystem (compileFile)', () => {
   it('destructures a multi-return function imported from another file', () => {
     // The multi-return function is defined in an imported file and destructured in the contract,
     // proving multi-return composes with the import/module system.
-    const artifact = compileFile(fixture('multi_return_main.cash'));
+    const artifact = compileFile(fixture('multi_return_main.cash'), { disableInlining: true });
     expect(artifact.contractName).toEqual('MultiReturnMain');
     expect(artifact.bytecode).toContain('OP_INVOKE');
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
@@ -47,13 +48,14 @@ describe('Imports from the filesystem (compileFile)', () => {
   it('resolves a cyclic import without infinite looping', () => {
     // cycle_a imports cycle_b which imports cycle_a back; de-duplication by canonical path breaks the
     // cycle, and both functions (a and b) end up defined exactly once.
-    const artifact = compileFile(fixture('cycle_main.cash'));
+    const artifact = compileFile(fixture('cycle_main.cash'), { disableInlining: true });
     expect(artifact.contractName).toEqual('Cycle');
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
   });
 
   it('records provenance as the path relative to the main file', () => {
-    const artifact = compileFile(fixture('nested_main.cash'));
+    // Disable inlining so the imported function keeps its OP_DEFINE and debug frame.
+    const artifact = compileFile(fixture('nested_main.cash'), { disableInlining: true });
     expect(artifact.debug?.functions?.map((func) => func.sourceFile)).toEqual(['nested/helper.cash']);
   });
 
@@ -72,14 +74,15 @@ describe('Imports from in-memory files (compileString)', () => {
   const mainCode = 'import "./math.cash";\ncontract Main() { function spend(int x) { require(double(addOne(x)) == 8); } }';
 
   it('merges global functions from a provided file', () => {
-    const artifact = compileString(mainCode, { files: { './math.cash': mathSource } });
+    // Disable inlining so the merged functions are observable as OP_DEFINE/OP_INVOKE.
+    const artifact = compileString(mainCode, { files: { './math.cash': mathSource }, disableInlining: true });
     expect(artifact.contractName).toEqual('Main');
     expect(artifact.bytecode).toContain('OP_INVOKE');
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
   });
 
   it('normalises file keys so they match regardless of a leading ./', () => {
-    const artifact = compileString(mainCode, { files: { 'math.cash': mathSource } });
+    const artifact = compileString(mainCode, { files: { 'math.cash': mathSource }, disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
   });
 
@@ -91,7 +94,7 @@ describe('Imports from in-memory files (compileString)', () => {
       'lib/b.cash': 'function b(int n) returns (int) { return n * 3; }',
     };
 
-    const artifact = compileString(code, { files });
+    const artifact = compileString(code, { files, disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
     expect(artifact.debug?.functions?.map((func) => func.sourceFile).sort()).toEqual(['lib/a.cash', 'lib/b.cash']);
   });
@@ -104,7 +107,7 @@ describe('Imports from in-memory files (compileString)', () => {
       'b/helper.cash': 'function helperB(int n) returns (int) { return n * 2; }',
     };
 
-    const artifact = compileString(code, { files });
+    const artifact = compileString(code, { files, disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
   });
 
@@ -117,7 +120,7 @@ describe('Imports from in-memory files (compileString)', () => {
       'leaf.cash': 'function leaf(int a) returns (int) { return a + 1; }',
     };
 
-    const artifact = compileString(code, { files });
+    const artifact = compileString(code, { files, disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(3);
   });
 
@@ -125,7 +128,7 @@ describe('Imports from in-memory files (compileString)', () => {
     const code = 'import "../shared.cash";\ncontract C() { function spend(int x) { require(shared(x) == 4); } }';
     const files = { '../shared.cash': 'function shared(int n) returns (int) { return n + 1; }' };
 
-    const artifact = compileString(code, { files });
+    const artifact = compileString(code, { files, disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
   });
 
@@ -139,7 +142,7 @@ describe('Imports from in-memory files (compileString)', () => {
 
   it('compiles when the pragmas of all imported files are satisfied', () => {
     const files = { './math.cash': `pragma cashscript >=0.14.0;\n${mathSource}` };
-    const artifact = compileString(mainCode, { files });
+    const artifact = compileString(mainCode, { files, disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
   });
 
@@ -169,7 +172,8 @@ describe('compileFile / compileString equivalence', () => {
     // and a parent-directory import reached through two different routes (main imports
     // '../shared.cash' and lib/a.cash imports '../../shared.cash' — both must de-duplicate to the
     // same file).
-    const fromDisk = compileFile(fixture('complex/main.cash'));
+    // Disable inlining so the OP_DEFINE count below observes all four imported functions.
+    const fromDisk = compileFile(fixture('complex/main.cash'), { disableInlining: true });
 
     const files = {
       'lib/a.cash': readFixture('complex/lib/a.cash'),
@@ -177,7 +181,7 @@ describe('compileFile / compileString equivalence', () => {
       'lib/util/leaf.cash': readFixture('complex/lib/util/leaf.cash'),
       '../shared.cash': readFixture('shared.cash'),
     };
-    const fromString = compileString(readFixture('complex/main.cash'), { files });
+    const fromString = compileString(readFixture('complex/main.cash'), { files, disableInlining: true });
 
     // sanity-check the fixture actually pulls in all four imported functions
     expect(countOpDefines(fromDisk.bytecode)).toEqual(4);

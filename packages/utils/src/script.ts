@@ -154,7 +154,7 @@ export function generateContractBytecodeScript(baseScript: Script, encodedConstr
   return [...encodedConstructorArgs.slice().reverse(), ...baseScript];
 }
 
-interface OptimiseBytecodeResult {
+export interface OptimiseBytecodeResult {
   script: Script;
   locationData: FullLocationData;
   logs: LogEntry[];

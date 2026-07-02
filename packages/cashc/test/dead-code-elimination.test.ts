@@ -14,7 +14,8 @@ describe('Dead-code elimination', () => {
         }
       }`;
 
-    const artifact = compileString(code);
+    // Disable inlining so OP_DEFINE count reflects dead-code elimination alone.
+    const artifact = compileString(code, { disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
     expect(artifact.bytecode).toContain('OP_INVOKE');
   });
@@ -32,7 +33,8 @@ describe('Dead-code elimination', () => {
       }`;
 
     // Only `used` is reachable; both `deadCaller` and the function it calls (`deadLeaf`) are dropped.
-    const artifact = compileString(code);
+    // Disable inlining so OP_DEFINE count reflects dead-code elimination alone.
+    const artifact = compileString(code, { disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
   });
 
@@ -48,7 +50,8 @@ describe('Dead-code elimination', () => {
       }`;
 
     // `outer` is called directly and `inner` only through `outer` — both must be defined.
-    const artifact = compileString(code);
+    // Disable inlining so OP_DEFINE count reflects dead-code elimination alone.
+    const artifact = compileString(code, { disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
   });
 
@@ -62,7 +65,8 @@ describe('Dead-code elimination', () => {
         }
       }`;
 
-    const artifact = compileString(code);
+    // Disable inlining so OP_DEFINE count reflects dead-code elimination alone.
+    const artifact = compileString(code, { disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
   });
 
@@ -77,7 +81,8 @@ describe('Dead-code elimination', () => {
         }
       }`;
 
-    const artifact = compileString(code);
+    // Disable inlining so OP_DEFINE count reflects dead-code elimination alone.
+    const artifact = compileString(code, { disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(2);
   });
 
@@ -94,7 +99,8 @@ describe('Dead-code elimination', () => {
       }`;
 
     // deadA <-> deadB form a cycle but neither is reachable, so both are dropped.
-    const artifact = compileString(code);
+    // Disable inlining so OP_DEFINE count reflects dead-code elimination alone.
+    const artifact = compileString(code, { disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
   });
 
@@ -106,7 +112,7 @@ describe('Dead-code elimination', () => {
       function double(int a) returns (int) { return a * 2; }
     `;
 
-    const artifact = compileString(code, { files: { './math.cash': mathSource } });
+    const artifact = compileString(code, { files: { './math.cash': mathSource }, disableInlining: true });
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
   });
 });

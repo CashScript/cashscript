@@ -11,6 +11,7 @@ import {
   scriptToAsm,
   scriptToBytecode,
   optimiseBytecode,
+  OptimiseBytecodeResult,
   generateSourceMap,
   generateSourceTags,
   FullLocationData,
@@ -60,6 +61,7 @@ import {
   ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
+import { Symbol } from '../ast/SymbolTable.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
 import { BinaryOperator } from '../ast/Operator.js';
 import {
@@ -70,6 +72,12 @@ import {
   compileUnaryOp,
 } from './utils.js';
 import { isNumericType } from '../utils.js';
+
+// The optimised body of a function chosen for inlining, including its frame-local debug info
+// (location data, logs, requires, source tags) so call sites can splice that too.
+interface InlinedFunction extends OptimiseBytecodeResult {
+  sourceFile?: string; // originating file for imported functions; absent means the contract's own file
+}
 
 export default class GenerateTargetTraversal extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -85,6 +93,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+  // Optimised bodies of global functions chosen for inlining: call sites splice these instead of
+  // emitting OP_INVOKE, and they get no OP_DEFINE. Shared with body sub-traversals so an inlined
+  // callee is spliced into its callers too.
+  inlinedFunctionBodies: Map<string, InlinedFunction> = new Map();
+  // Global functions emitted as an OP_INVOKE (so they need an OP_DEFINE and cannot be inlined). Only
+  // populated for recursive/cyclic calls, where the callee is still being compiled when its call is
+  // emitted. Shared with body sub-traversals.
+  invokedFunctions: Set<string> = new Set();
 
   constructor(private compilerOptions: CompilerOptions) {
     super();
@@ -152,21 +168,62 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   private defineGlobalFunctions(node: SourceFileNode): void {
-    node.functions.forEach((func) => {
-      const { functionId } = node.symbolTable!.getFromThis(func.name)!;
-      const bodyBytecode = this.compileGlobalFunctionBody(func, functionId!);
+    const functionsByName = new Map(node.functions.map((func) => [func.name, func]));
+    const inliningEnabled = !this.compilerOptions.disableInlining;
+    const definedBodies = new Map<string, OptimiseBytecodeResult>();
 
+    // Compile and decide in callee-first order so an inlined callee's body is available to splice into
+    // its callers (a spliced callee then counts towards its caller's body size). A function already
+    // emitted as an OP_INVOKE (recursion) must stay shared via OP_DEFINE.
+    calleesFirst(node.functions, functionsByName).forEach((func) => {
+      const symbol = node.symbolTable!.getFromThis(func.name)!;
+      const optimisedBody = this.compileGlobalFunctionBody(func);
+      if (inliningEnabled && isWorthInlining(symbol, optimisedBody.script) && !this.invokedFunctions.has(func.name)) {
+        this.inlinedFunctionBodies.set(func.name, { ...optimisedBody, sourceFile: func.sourceFile });
+      } else {
+        definedBodies.set(func.name, optimisedBody);
+      }
+    });
+
+    // Emit OP_DEFINEs in declaration order so output is stable regardless of the compile order above.
+    // Only defined functions get a debug frame: an inlined body never executes via OP_INVOKE, so its
+    // debug info is spliced into the caller at each call site instead (see spliceInlinedFunction).
+    node.functions.forEach((func) => {
+      const optimisedBody = definedBodies.get(func.name);
+      if (optimisedBody === undefined) return; // inlined: no OP_DEFINE
+      const { functionId } = node.symbolTable!.getFromThis(func.name)!;
+      this.pushDebugFrame(func, optimisedBody, functionId!);
       const locationData = { location: func.location, positionHint: PositionHint.START };
-      this.emit(bodyBytecode, locationData); // <function_body_bytes>
+      this.emit(scriptToBytecode(optimisedBody.script), locationData); // <function_body_bytes>
       this.emit(encodeInt(BigInt(functionId!)), locationData); // <function_identifier>
       this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
     });
   }
 
-  private compileGlobalFunctionBody(node: FunctionDefinitionNode, functionId: number): Uint8Array {
+  private pushDebugFrame(node: FunctionDefinitionNode, optimised: OptimiseBytecodeResult, functionId: number): void {
+    const sourceTags = generateSourceTags(optimised.sourceTags);
+
+    this.frames.push({
+      id: functionId,
+      name: node.name,
+      inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
+      bytecode: binToHex(scriptToBytecode(optimised.script)),
+      sourceMap: generateSourceMap(optimised.locationData),
+      ...(sourceTags ? { sourceTags } : {}),
+      ...(node.sourceCode !== undefined ? { source: node.sourceCode } : {}),
+      ...(node.sourceFile !== undefined ? { sourceFile: node.sourceFile } : {}),
+      logs: optimised.logs,
+      requires: optimised.requires,
+    });
+  }
+
+  private compileGlobalFunctionBody(node: FunctionDefinitionNode): OptimiseBytecodeResult {
     const bodyTraversal = new GenerateTargetTraversal(this.compilerOptions);
     bodyTraversal.currentFunction = node;
     bodyTraversal.constructorParameterCount = 0;
+    // Share the inline tables so a body splices its already-inlined callees (and records OP_INVOKEs).
+    bodyTraversal.inlinedFunctionBodies = this.inlinedFunctionBodies;
+    bodyTraversal.invokedFunctions = this.invokedFunctions;
 
     // Seed the stack with parameters in reverse order so the last parameter is on top
     // (similar to how builtin functions work)
@@ -186,23 +243,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       0,
     );
 
-    const bodyBytecode = scriptToBytecode(optimised.script);
-    const sourceTags = generateSourceTags(optimised.sourceTags);
-
-    this.frames.push({
-      id: functionId,
-      name: node.name,
-      inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
-      bytecode: binToHex(bodyBytecode),
-      sourceMap: generateSourceMap(optimised.locationData),
-      ...(sourceTags ? { sourceTags } : {}),
-      ...(node.sourceCode !== undefined ? { source: node.sourceCode } : {}),
-      ...(node.sourceFile !== undefined ? { sourceFile: node.sourceFile } : {}),
-      logs: optimised.logs,
-      requires: optimised.requires,
-    });
-
-    return bodyBytecode;
+    return optimised;
   }
 
   cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {
@@ -702,7 +743,17 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     const symbol = node.identifier.symbol!;
     node.parameters = this.visitList(node.parameters);
-    this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
+
+    // An inlined function is spliced in place of `<id> OP_INVOKE`. Its optimised body was compiled
+    // with the arguments staged on top of the stack (the exact state here), so it runs identically:
+    // consuming the arguments and leaving its N return values on top.
+    const inlined = this.inlinedFunctionBodies.get(node.identifier.name);
+    if (inlined !== undefined) {
+      this.spliceInlinedFunction(node, inlined);
+    } else {
+      this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
+      if (symbol.functionId !== undefined) this.invokedFunctions.add(node.identifier.name);
+    }
     this.popFromStack(node.parameters.length);
 
     // The call leaves one value per declared return type (none for a void function); a multi-return
@@ -710,6 +761,39 @@ export default class GenerateTargetTraversal extends AstTraversal {
     for (let i = 0; i < symbol.returnTypes.length; i += 1) this.pushToStack('(value)');
 
     return node;
+  }
+
+  // Splices an inlined body together with its frame-local debug info (ip-shifted), so logs and
+  // requires inside it keep working without a debug frame. A same-file body keeps its own source
+  // locations; a body from another file is attributed to the call site instead, since a source map
+  // can only reference its own frame's source file.
+  private spliceInlinedFunction(node: FunctionCallNode, inlined: InlinedFunction): void {
+    const callSiteLocation = { location: node.location, positionHint: PositionHint.END };
+    const callSiteLine = node.location.start.line;
+    const sameFile = inlined.sourceFile === this.currentFunction?.sourceFile;
+    const ipOffset = this.output.length + this.constructorParameterCount;
+    const tagOffset = this.output.length;
+
+    inlined.script.forEach((op, i) => this.emit(op, sameFile ? inlined.locationData[i] : callSiteLocation));
+
+    this.requires.push(...inlined.requires.map((entry) => ({
+      ...entry,
+      ip: entry.ip + ipOffset,
+      ...(sameFile ? {} : { line: callSiteLine }),
+    })));
+
+    this.consoleLogs.push(...inlined.logs.map((entry) => ({
+      ...entry,
+      ip: entry.ip + ipOffset,
+      ...(sameFile ? {} : { line: callSiteLine }),
+      data: entry.data.map((item) => (typeof item === 'string' ? item : { ...item, ip: item.ip + ipOffset })),
+    })));
+
+    this.sourceTags.push(...inlined.sourceTags.map((entry) => ({
+      ...entry,
+      startIndex: entry.startIndex + tagOffset,
+      endIndex: entry.endIndex + tagOffset,
+    })));
   }
 
   visitMultiSig(node: FunctionCallNode): Node {
@@ -931,4 +1015,54 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.pushToStack('(value)');
     return node;
   }
+}
+
+// Byte-exact comparison: defining costs the body once (as a push) plus <id> OP_DEFINE, and
+// <id> OP_INVOKE per call site; inlining costs the body at every call site. A tie favours
+// inlining (frees the function id and skips the OP_INVOKE round-trip at runtime).
+function isWorthInlining(symbol: Symbol, bodyScript: Script): boolean {
+  const useCount = symbol.references.length;
+  const bodyBytes = scriptToBytecode(bodyScript).length;
+  const bodyPushBytes = scriptToBytecode([scriptToBytecode(bodyScript)]).length;
+  const idBytes = scriptToBytecode([encodeInt(BigInt(symbol.functionId!))]).length;
+  const definedCost = bodyPushBytes + idBytes + 1 + useCount * (idBytes + 1);
+  return useCount * bodyBytes <= definedCost;
+}
+
+// Orders functions so every callee precedes its callers (post-order over the call graph), so an
+// inlined callee's compiled body is available to splice into its callers. A cycle (recursion) is
+// broken by the visited guard; those functions fall back to OP_DEFINE/OP_INVOKE.
+function calleesFirst(
+  functions: FunctionDefinitionNode[],
+  functionsByName: Map<string, FunctionDefinitionNode>,
+): FunctionDefinitionNode[] {
+  const ordered: FunctionDefinitionNode[] = [];
+  const visited = new Set<string>();
+
+  const visit = (func: FunctionDefinitionNode): void => {
+    if (visited.has(func.name)) return;
+    visited.add(func.name);
+    calledFunctionNames(func, functionsByName).forEach((name) => visit(functionsByName.get(name)!));
+    ordered.push(func);
+  };
+
+  functions.forEach(visit);
+  return ordered;
+}
+
+// The names of the global functions called anywhere within a function's body.
+function calledFunctionNames(
+  func: FunctionDefinitionNode,
+  functionsByName: Map<string, FunctionDefinitionNode>,
+): Set<string> {
+  const names = new Set<string>();
+  const collector = new class extends AstTraversal {
+    visitFunctionCall(node: FunctionCallNode): Node {
+      if (functionsByName.has(node.identifier.name)) names.add(node.identifier.name);
+      node.parameters = this.visitList(node.parameters);
+      return node;
+    }
+  }();
+  collector.visit(func.body);
+  return names;
 }

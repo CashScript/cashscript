@@ -53,9 +53,11 @@ describe('Libauth Script formatting', () => {
   });
 
   describe('User-defined function formatting', () => {
+    // These fixtures pin the OP_DEFINE/OP_INVOKE rendering of function frames, so inlining is
+    // disabled (inlined functions have no frame; their body is spliced into the caller).
     const compileFixture = (fixture: FunctionFixture): Artifact => (fixture.file
-      ? compileFile(new URL(`./fixtures/${fixture.file}`, import.meta.url))
-      : compileString(fixture.sourceCode!));
+      ? compileFile(new URL(`./fixtures/${fixture.file}`, import.meta.url), { disableInlining: true })
+      : compileString(fixture.sourceCode!, { disableInlining: true }));
 
     functionFixtures.forEach((fixture) => {
       describe(fixture.name, () => {

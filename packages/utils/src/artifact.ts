@@ -1,6 +1,9 @@
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
   enforceLocktimeGuard?: boolean;
+  // Disable inlining of global functions at their call sites (they are always shared via
+  // OP_DEFINE/OP_INVOKE instead). Inlining is on by default.
+  disableInlining?: boolean;
 }
 
 export interface AbiInput {

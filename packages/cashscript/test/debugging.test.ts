@@ -15,8 +15,12 @@ import {
   artifactTestRequireInsideLoop,
   artifactTestLogInsideLoop,
   artifactTestFunctionDebugging,
+  artifactTestFunctionDebuggingDefined,
   artifactTestFunctionIntermediateResults,
   artifactTestImportedFunctionDebugging,
+  artifactTestImportedFunctionDebuggingDefined,
+  artifactTestMultiReturnDebugging,
+  artifactTestMultiReturnDebuggingDefined,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
@@ -821,11 +825,20 @@ describe('VM Resources', () => {
 describe('Debugging tests - user-defined function frames', () => {
   const provider = new MockNetworkProvider();
 
+  // Default compilation: the single-use functions in these fixtures are inlined, so their debug
+  // info is spliced into the caller instead of living in a frame.
   const contract = new Contract(artifactTestFunctionDebugging, [], { provider });
   const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
   const importedContract = new Contract(artifactTestImportedFunctionDebugging, [], { provider });
   const importedUtxo = provider.addUtxo(importedContract.address, randomUtxo());
+
+  // Compiled with disableInlining: the same functions stay OP_DEFINE'd and get a debug frame.
+  const definedContract = new Contract(artifactTestFunctionDebuggingDefined, [], { provider });
+  const definedUtxo = provider.addUtxo(definedContract.address, randomUtxo());
+
+  const importedDefinedContract = new Contract(artifactTestImportedFunctionDebuggingDefined, [], { provider });
+  const importedDefinedUtxo = provider.addUtxo(importedDefinedContract.address, randomUtxo());
 
   it('attributes a console.log inside a function to the function source line', () => {
     const transaction = new TransactionBuilder({ provider })
@@ -853,10 +866,38 @@ describe('Debugging tests - user-defined function frames', () => {
     expect(transaction).toFailRequireWith('Failing statement: require(x < 100, "x must be small")');
   });
 
-  it('attributes a require failing inside an imported function to the imported file', () => {
+  it('attributes a require failing inside an inlined imported function to the call site', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(importedUtxo, importedContract.unlock.spend(0n))
       .addOutput({ to: importedContract.address, amount: 10000n });
+
+    // The imported function is inlined, and a source map cannot reference another file, so the
+    // failure is attributed to the call site — with the require message kept intact.
+    expect(transaction).toFailRequireWith('Test.cash:5 Require statement failed at input 0 in contract Test.cash at line 5 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: assertPositive(x)');
+  });
+
+  it('attributes a require failing inside a function frame to the function source line', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(definedUtxo, definedContract.unlock.spend(0n))
+      .addOutput({ to: definedContract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
+  });
+
+  it('attributes a console.log inside a function frame to the function source line', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(definedUtxo, definedContract.unlock.spend(5n))
+      .addOutput({ to: definedContract.address, amount: 10000n });
+
+    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:3 checking 5$'));
+  });
+
+  it('attributes a require failing inside an imported function to the imported file', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(importedDefinedUtxo, importedDefinedContract.unlock.spend(0n))
+      .addOutput({ to: importedDefinedContract.address, amount: 10000n });
 
     expect(transaction).toFailRequireWith('function_helpers.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 2) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
@@ -876,11 +917,11 @@ describe('Debugging tests - user-defined function frames', () => {
 
   it('renders source-mapped function definitions in the BitAuth IDE template', () => {
     const transaction = new TransactionBuilder({ provider })
-      .addInput(contractUtxo, contract.unlock.spend(5n))
-      .addOutput({ to: contract.address, amount: 10000n });
+      .addInput(definedUtxo, definedContract.unlock.spend(5n))
+      .addOutput({ to: definedContract.address, amount: 10000n });
 
     const template = transaction.getLibauthTemplate();
-    const lockScript = template.scripts[getLockScriptName(contract)].script;
+    const lockScript = template.scripts[getLockScriptName(definedContract)].script;
 
     // The function body is rendered as a `<...>` push group annotated with its own source lines
     expect(lockScript).toContain('/* function checkValue(int value) {');
@@ -890,14 +931,78 @@ describe('Debugging tests - user-defined function frames', () => {
 
   it('renders imported function definitions with their import provenance in the BitAuth IDE template', () => {
     const transaction = new TransactionBuilder({ provider })
-      .addInput(importedUtxo, importedContract.unlock.spend(5n))
-      .addOutput({ to: importedContract.address, amount: 10000n });
+      .addInput(importedDefinedUtxo, importedDefinedContract.unlock.spend(5n))
+      .addOutput({ to: importedDefinedContract.address, amount: 10000n });
 
     const template = transaction.getLibauthTemplate();
-    const lockScript = template.scripts[getLockScriptName(importedContract)].script;
+    const lockScript = template.scripts[getLockScriptName(importedDefinedContract)].script;
 
     expect(lockScript).toContain('>>> function assertPositive (imported from function_helpers.cash)');
     expect(lockScript).toContain('/* function assertPositive(int value) {');
     expect(lockScript).toContain('> OP_0 OP_DEFINE');
+  });
+
+  describe('multi-return functions', () => {
+    const multiReturnContract = new Contract(artifactTestMultiReturnDebugging, [], { provider });
+    const multiReturnUtxo = provider.addUtxo(multiReturnContract.address, randomUtxo());
+
+    const multiReturnDefinedContract = new Contract(artifactTestMultiReturnDebuggingDefined, [], { provider });
+    const multiReturnDefinedUtxo = provider.addUtxo(multiReturnDefinedContract.address, randomUtxo());
+
+    it('attributes a console.log inside an inlined multi-return function to the function source line', () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(multiReturnUtxo, multiReturnContract.unlock.spend(5n))
+        .addOutput({ to: multiReturnContract.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:3 dividing 5$'));
+    });
+
+    it('attributes a require failing inside an inlined multi-return function to the function source line', () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(multiReturnUtxo, multiReturnContract.unlock.spend(1n))
+        .addOutput({ to: multiReturnContract.address, amount: 10000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: divisor must be positive.');
+      expect(transaction).toFailRequireWith('Failing statement: require(b > 0, "divisor must be positive")');
+    });
+
+    it('attributes a contract-level require after a multi-return call to the contract source line', () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(multiReturnUtxo, multiReturnContract.unlock.spend(2n))
+        .addOutput({ to: multiReturnContract.address, amount: 10000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:11 Require statement failed at input 0 in contract Test.cash at line 11 with the following message: quotient must be 1.');
+      expect(transaction).toFailRequireWith('Failing statement: require(q == 1, "quotient must be 1")');
+    });
+
+    it('attributes debug info inside a defined multi-return function frame to the function source lines', () => {
+      const logTransaction = new TransactionBuilder({ provider })
+        .addInput(multiReturnDefinedUtxo, multiReturnDefinedContract.unlock.spend(5n))
+        .addOutput({ to: multiReturnDefinedContract.address, amount: 10000n });
+
+      expect(logTransaction).toLog(new RegExp('^\\[Input #0] Test.cash:3 dividing 5$'));
+
+      const failTransaction = new TransactionBuilder({ provider })
+        .addInput(multiReturnDefinedUtxo, multiReturnDefinedContract.unlock.spend(1n))
+        .addOutput({ to: multiReturnDefinedContract.address, amount: 10000n });
+
+      expect(failTransaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: divisor must be positive.');
+      expect(failTransaction).toFailRequireWith('Failing statement: require(b > 0, "divisor must be positive")');
+    });
+  });
+
+  it('renders an inlined function body at its call site in the BitAuth IDE template', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.spend(5n))
+      .addOutput({ to: contract.address, amount: 10000n });
+
+    const template = transaction.getLibauthTemplate();
+    const lockScript = template.scripts[getLockScriptName(contract)].script;
+
+    // The single-use function is inlined: no definition/invocation remains, and the spliced body
+    // is annotated with the function's own source lines (same-file, so they stay expressible).
+    expect(lockScript).not.toContain('OP_DEFINE');
+    expect(lockScript).not.toContain('OP_INVOKE');
+    expect(lockScript).toContain('require(value > 0, "value must be positive")');
   });
 });
