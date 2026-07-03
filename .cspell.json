@@ -76,6 +76,7 @@
         "gotchas",
         "greaterthan",
         "greaterthanorequal",
+        "groth",
         "hardcodes",
         "hash",
         "hashoutputs",
