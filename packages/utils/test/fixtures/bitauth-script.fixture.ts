@@ -478,7 +478,7 @@ OP_7 OP_1 OP_INVOKE OP_13 OP_NUMEQUAL                                           
                                                 /*                                                                */
                                                 /* >>> function addChecked (imported from helpers.cash)           */
 <                                               /* function addChecked(int a, int b) returns (int) {              */
-  OP_OVER OP_ADD                                /*     int sum = a + b;                                           */
+  OP_DUP OP_ROT OP_ADD                          /*     int sum = a + b;                                           */
   OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_VERIFY /*     require(sum >= a, "overflow");                             */
                                                 /*     return sum;                                                */
 > OP_1 OP_DEFINE                                /* }                                                              */
@@ -488,7 +488,7 @@ OP_7 OP_1 OP_INVOKE OP_13 OP_NUMEQUAL                                           
                                                 /* contract ImportedFunctions() {                                 */
                                                 /*     function spend(int x) {                                    */
 OP_DUP OP_0 OP_INVOKE                           /*         int doubled = double(x);                               */
-OP_SWAP OP_1 OP_INVOKE OP_15 OP_NUMEQUAL        /*         require(addChecked(doubled, x) == 15, "sum mismatch"); */
+OP_1 OP_INVOKE OP_15 OP_NUMEQUAL                /*         require(addChecked(doubled, x) == 15, "sum mismatch"); */
                                                 /*     }                                                          */
                                                 /* }                                                              */
                                                 /*                                                                */
