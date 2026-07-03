@@ -27,6 +27,7 @@ import {
   resolveDependencies,
 } from './dependency-resolution.js';
 import { inlineConstants } from './constant-folding.js';
+import { hoistRepeatedConstants } from './constant-hoisting.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
@@ -99,6 +100,11 @@ function compileCode(
 
   // Fold top-level constants to literals and inline them at every use site
   ast = inlineConstants(ast) as Ast;
+
+  // Under the 'size' objective, bind repeated in-body literals to locals (see CompilerOptions)
+  if (mergedCompilerOptions.optimizeFor === 'size') {
+    ast = hoistRepeatedConstants(ast) as Ast;
+  }
 
   if (!ast.contract) throw new MissingContractError();
 

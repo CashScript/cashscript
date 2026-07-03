@@ -28,6 +28,10 @@ program
   .option('-S, --skip-enforce-function-parameter-types', 'Do not enforce function parameter types.')
   .option('-L, --skip-enforce-locktime-guard', 'Do not inject a tx.time guard when tx.locktime is used.')
   .addOption(
+    new Option('-O, --optimize-for <target>', 'Optimisation objective: minimise bytecode size or executed op-cost (default).')
+      .choices(['size', 'opcost']),
+  )
+  .addOption(
     new Option('-f, --format <format>', 'Specify the format of the output.')
       .choices(['json', 'ts'])
       .default('json'),
@@ -53,6 +57,7 @@ function run(): void {
   const compilerOptions: CompilerOptions = {
     enforceFunctionParameterTypes: !opts.skipEnforceFunctionParameterTypes,
     enforceLocktimeGuard: !opts.skipEnforceLocktimeGuard,
+    ...(opts.optimizeFor ? { optimizeFor: opts.optimizeFor } : {}),
   };
 
   try {
