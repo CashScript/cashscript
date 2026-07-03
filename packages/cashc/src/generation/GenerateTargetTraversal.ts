@@ -23,6 +23,7 @@ import {
   StackItem,
   BytesType,
   CompilerOptions,
+  OptimizationTarget,
   SourceTagEntry,
   SourceTagKind,
 } from '@cashscript/utils';
@@ -191,7 +192,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       if (
         inliningEnabled
         && (!loopExcluded.has(func.name) || optimisedBody.script.length <= 2)
-        && isWorthInlining(symbol, optimisedBody.script)
+        && isWorthInlining(symbol, optimisedBody.script, this.compilerOptions.optimizeFor)
         && !this.invokedFunctions.has(func.name)
       ) {
         this.inlinedFunctionBodies.set(func.name, { ...optimisedBody, sourceFile: func.sourceFile });
@@ -1090,12 +1091,20 @@ class ArgIdentifierCounter extends AstTraversal {
   }
 }
 
+// Under the 'opcost' objective (the default), a small body is inlined regardless of use count,
+// even when OP_DEFINE would be smaller: every invocation costs ~2 executed instructions (funcid
+// push + OP_INVOKE) that splicing a tiny body avoids, and for op-bound contracts the byte cost is
+// free anyway (their unlocking scripts are zero-padded to buy op budget, so extra ops translate
+// directly into more padding while locking bytes do not).
+const OPCOST_INLINE_MAX_BODY_BYTES = 6;
+
 // Byte-exact comparison: defining costs the body once (as a push) plus <id> OP_DEFINE, and
 // <id> OP_INVOKE per call site; inlining costs the body at every call site. A tie favours
 // inlining (frees the function id and skips the OP_INVOKE round-trip at runtime).
-function isWorthInlining(symbol: Symbol, bodyScript: Script): boolean {
+function isWorthInlining(symbol: Symbol, bodyScript: Script, optimizeFor?: OptimizationTarget): boolean {
   const useCount = symbol.references.length;
   const bodyBytes = scriptToBytecode(bodyScript).length;
+  if (optimizeFor !== 'size' && bodyBytes <= OPCOST_INLINE_MAX_BODY_BYTES) return true;
   const bodyPushBytes = scriptToBytecode([scriptToBytecode(bodyScript)]).length;
   const idBytes = scriptToBytecode([encodeInt(BigInt(symbol.functionId!))]).length;
   const definedCost = bodyPushBytes + idBytes + 1 + useCount * (idBytes + 1);

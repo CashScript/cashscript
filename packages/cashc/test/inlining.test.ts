@@ -29,6 +29,25 @@ describe('Function inlining', () => {
     expect(hasInvoke(bytecode)).toBe(true);
   });
 
+  it("inlines a small multi-use body under 'opcost' (default) even when OP_DEFINE would be smaller", () => {
+    // 5-byte body used 4x: byte-exact accounting prefers OP_DEFINE (16 vs 20 bytes), but every
+    // invocation costs ~2 executed instructions that splicing avoids — the 'opcost' objective
+    // (the default) takes the ops, the 'size' objective takes the bytes.
+    const code = `
+      function addF(int x, int y) returns (int) { return (x + y) % 7919; }
+      contract C() {
+        function spend(int a, int b) {
+          int t1 = addF(a, b);
+          int t2 = addF(t1, a);
+          int t3 = addF(t2, b);
+          require(addF(t3, t1) >= 0);
+        }
+      }`;
+    expect(hasDefine(compileString(code).bytecode)).toBe(false);
+    expect(hasDefine(compileString(code, { optimizeFor: 'opcost' }).bytecode)).toBe(false);
+    expect(hasDefine(compileString(code, { optimizeFor: 'size' }).bytecode)).toBe(true);
+  });
+
   it('never inlines a recursive function (would splice a call to an undefined body)', () => {
     const code = `
       function loop(int x) returns (int) { return loop(x) + 1; }
