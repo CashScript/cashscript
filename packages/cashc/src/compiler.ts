@@ -27,6 +27,7 @@ import {
   ImportResolver,
   resolveDependencies,
 } from './dependency-resolution.js';
+import { sinkDefinitions } from './def-sinking.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import { FoldGlobalConstantsTraversal } from './semantic/FoldGlobalConstantsTraversal.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
@@ -91,10 +92,20 @@ export interface InternalCompilerOptions extends CompilerOptions {
   // ASM-regex optimiser and compares the results. The check is also skipped automatically for
   // very large scripts, where the redundant second optimisation pass measurably slows compiles.
   disableOptimisationCrossCheck?: boolean;
+  // Skip def-sinking. Under `optimizeFor: 'size'`, definitions move down to just before their
+  // first use when that shrinks the bytecode (the compiler keeps the smaller of the sunk and
+  // unsunk compiles). This flag is for tools that need the source-ordered compile as input.
+  disableDefSinking?: boolean;
   // Skip constant hoisting. Under `optimizeFor: 'size'`, repeated in-body literals are bound to
   // locals when that shrinks the bytecode (the compiler keeps the hoisted compile only when it
   // is strictly smaller). This flag is for tools that need the literal-shaped compile as input.
   disableConstantHoisting?: boolean;
+}
+
+// The AST rewrites applied before semantic analysis in a single compile candidate.
+interface RewriteFlags {
+  sinkDefs: boolean;
+  hoistConstants: boolean;
 }
 
 export function compileStringInternal(
@@ -122,30 +133,36 @@ function compileCode(
   compilerOptions: CompileOptions & InternalCompilerOptions,
 ): Artifact {
   const optimizeFor = compilerOptions.optimizeFor ?? DEFAULT_COMPILER_OPTIONS.optimizeFor;
-  if (optimizeFor !== 'size' || compilerOptions.disableConstantHoisting) {
-    return compileImpl(code, resolver, compilerOptions, false);
+  if (optimizeFor !== 'size') {
+    return compileImpl(code, resolver, compilerOptions, { sinkDefs: false, hoistConstants: false });
   }
 
-  // Hoisting helps most contracts but can cost bytes on some, so the 'size' objective compiles
-  // both variants and keeps the hoisted compile only when it is strictly smaller.
-  const hoisted = compileImpl(code, resolver, compilerOptions, true);
-  const unhoisted = compileImpl(code, resolver, compilerOptions, false);
+  // Each 'size' rewrite helps most contracts but can cost bytes on some, so the 'size' objective
+  // compiles every enabled combination and keeps the smallest artifact. Candidates are ordered
+  // so ties resolve conservatively: the sunk compile wins a def-sinking tie (established
+  // behaviour), and the hoisted compile is only kept when it is strictly smaller.
+  const sinkOptions = compilerOptions.disableDefSinking ? [false] : [true, false];
+  const hoistOptions = compilerOptions.disableConstantHoisting ? [false] : [false, true];
+  const candidates = sinkOptions
+    .flatMap((sinkDefs) => hoistOptions.map((hoistConstants) => ({ sinkDefs, hoistConstants })));
   const compiledBytes = (artifact: Artifact): number => artifact.debug?.bytecode.length ?? artifact.bytecode.length;
-  return compiledBytes(hoisted) < compiledBytes(unhoisted) ? hoisted : unhoisted;
+  return candidates
+    .map((rewrites) => compileImpl(code, resolver, compilerOptions, rewrites))
+    .reduce((best, candidate) => (compiledBytes(candidate) < compiledBytes(best) ? candidate : best));
 }
 
 function compileImpl(
   code: string,
   resolver: ImportResolver,
   compilerOptions: CompileOptions & InternalCompilerOptions,
-  hoistConstants: boolean,
+  rewrites: RewriteFlags,
 ): Artifact {
   const {
     errorListener, disableInlining, disableOptimisationCrossCheck,
-    // consumed in compileCode (which picks the hoisted or unhoisted compile); destructured here
-    // only to keep it out of the serialized artifact options
+    // consumed in compileCode (which picks the smallest rewrite combination); destructured here
+    // only to keep them out of the serialized artifact options
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    disableConstantHoisting,
+    disableDefSinking, disableConstantHoisting,
     ...artifactCompilerOptions
   } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
@@ -158,8 +175,13 @@ function compileImpl(
 
   // Under the 'size' objective, bind repeated in-body literals to locals (see CompilerOptions).
   // Runs before semantic analysis so the introduced locals get symbols like any other variable.
-  if (hoistConstants) {
+  if (rewrites.hoistConstants) {
     ast = hoistRepeatedConstants(ast) as Ast;
+  }
+
+  // Sink variable definitions to just before their first use
+  if (rewrites.sinkDefs) {
+    ast = sinkDefinitions(ast) as Ast;
   }
 
   if (!ast.contract) throw new MissingContractError();
