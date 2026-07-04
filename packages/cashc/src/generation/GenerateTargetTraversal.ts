@@ -379,20 +379,42 @@ export default class GenerateTargetTraversal extends AstTraversal {
   cleanStack(functionBodyNode: Node, keepCount: number = 1): void {
     // Keep the top `keepCount` values (a contract function's verification value, or a global
     // function's return values), dropping everything below them while preserving their order.
+    // Chooses per-item dropping (OP_NIP, or <k> OP_ROLL OP_DROP) or the altstack form
+    // (k× OP_TOALTSTACK, OP_2DROP pairs, k× OP_FROMALTSTACK — fixed 2k-op overhead, ~1 op per
+    // 2 drops) by op/byte estimate on the active objective. A just-pushed constant verification
+    // value stays on the NIP path: the peephole already rewrites `OP_1 OP_NIP…` to
+    // `OP_2DROP… OP_1`, which beats the altstack round-trip.
     const tagStartIndex = this.output.length;
     const locationData = { location: functionBodyNode.location, positionHint: PositionHint.END };
     const dropCount = this.stack.length - keepCount;
-    for (let i = 0; i < dropCount; i += 1) {
-      if (keepCount === 1) {
-        // OP_NIP drops the item directly below the top value (1 byte, cheaper than ROLL + DROP).
-        this.emit(Op.OP_NIP, locationData);
-        this.nipFromStack();
-      } else {
-        // The next item to drop sits just below the top `keepCount` values: roll it up and drop it.
-        this.emit(encodeInt(BigInt(keepCount)), locationData);
-        this.emit(Op.OP_ROLL, locationData);
-        this.emit(Op.OP_DROP, locationData);
-        this.removeFromStack(keepCount);
+    const pairDrops = Math.floor(dropCount / 2) + (dropCount % 2);
+    const perItemOps = keepCount === 1 ? dropCount * 100 : dropCount * (301 + keepCount);
+    const altOps = 200 * keepCount + 100 * pairDrops;
+    const perItemBytes = keepCount === 1 ? dropCount : dropCount * 3;
+    const altBytes = 2 * keepCount + pairDrops;
+    const topIsFreshConstant = keepCount === 1 && isConstantPushElement(this.output[this.output.length - 1]);
+    const useAltstack = !topIsFreshConstant && (this.compilerOptions.optimizeFor === 'size'
+      ? altBytes < perItemBytes
+      : altOps < perItemOps);
+    if (useAltstack) {
+      for (let i = 0; i < keepCount; i += 1) this.emit(Op.OP_TOALTSTACK, locationData);
+      for (let i = 0; i + 1 < dropCount; i += 2) this.emit(Op.OP_2DROP, locationData);
+      if (dropCount % 2 === 1) this.emit(Op.OP_DROP, locationData);
+      for (let i = 0; i < keepCount; i += 1) this.emit(Op.OP_FROMALTSTACK, locationData);
+      for (let i = 0; i < dropCount; i += 1) this.removeFromStack(keepCount);
+    } else {
+      for (let i = 0; i < dropCount; i += 1) {
+        if (keepCount === 1) {
+          // OP_NIP drops the item directly below the top value (1 byte, cheaper than ROLL + DROP).
+          this.emit(Op.OP_NIP, locationData);
+          this.nipFromStack();
+        } else {
+          // The next item to drop sits just below the top `keepCount` values: roll it up and drop it.
+          this.emit(encodeInt(BigInt(keepCount)), locationData);
+          this.emit(Op.OP_ROLL, locationData);
+          this.emit(Op.OP_DROP, locationData);
+          this.removeFromStack(keepCount);
+        }
       }
     }
     this.tagScopeCleanup(tagStartIndex);
@@ -1098,6 +1120,14 @@ class ArgIdentifierCounter extends AstTraversal {
 // directly into more padding while locking bytes do not).
 const OPCOST_INLINE_MAX_BODY_BYTES = 6;
 
+// A script element that pushes a constant: raw push data, or one of the small-integer push
+// opcodes. Used to spot a `require`-style body whose verification value was just pushed.
+function isConstantPushElement(element: OpOrData | undefined): boolean {
+  if (element === undefined) return false;
+  if (element instanceof Uint8Array) return true;
+  return element === Op.OP_0 || element === Op.OP_1NEGATE || (element >= Op.OP_1 && element <= Op.OP_16);
+}
+
 // Byte-exact comparison: defining costs the body once (as a push) plus <id> OP_DEFINE, and
 // <id> OP_INVOKE per call site; inlining costs the body at every call site. A tie favours
 // inlining (frees the function id and skips the OP_INVOKE round-trip at runtime).
@@ -1163,7 +1193,9 @@ function calledFunctionNames(
 // ~2 ops + ~5 bytes per function, so the closure is kept coarse rather than branch-aware. Same
 // deliberate imprecision for always-executed call sites directly in loops: inlining there would
 // actually save the 2 invoke ops per iteration, but the asymmetry (2 ops/iteration sacrificed vs
-// ~100×body-size/iteration protected) makes conservative the right default.
+// ~100×body-size/iteration protected) makes conservative the right default. (A branch-aware
+// variant was measured at ±0 op-cost on real codebases — every hot call site is if-guarded —
+// and rejected as not worth the complexity.)
 function collectLoopExcludedFunctions(
   node: SourceFileNode,
   functionsByName: Map<string, FunctionDefinitionNode>,
