@@ -1,6 +1,15 @@
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
   enforceLocktimeGuard?: boolean;
+  // Reschedule straight-line stack code from its dataflow DAG after bytecode optimisation,
+  // so operands are computed onto the top of the stack instead of fetched from variable
+  // slots with `<depth> OP_PICK/OP_ROLL`, and choose each user function's argument-arrival
+  // order jointly with its schedule (see stack-rescheduling.ts). Candidates are ranked by
+  // the `optimizeFor` objective; per block the compiler keeps min(original, rescheduled),
+  // function bodies are differentially tested on a VM against the plain compile. Off by
+  // default: rescheduled regions keep only statement-level debug info (each emitted
+  // opcode maps to its block's merged source span). Single-function contracts only.
+  rescheduleStacks?: boolean;
   // The optimisation objective for decisions that trade bytecode size against op-cost.
   // 'size' minimises bytecode bytes (e.g. binds a literal repeated within one function body to a
   // local, so later uses are ~2-byte stack picks instead of repeated pushes: ~-30 bytes per

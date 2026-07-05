@@ -101,6 +101,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private constructorParameterCount: number;
   inlineRanges: InlineRange[] = [];
 
+  // Stack arity (parameter/return counts) of every OP_DEFINE'd function, keyed by its
+  // functionId — consumed by post-codegen passes (stack rescheduling) that need OP_INVOKE
+  // stack effects without re-deriving them from the bytecode.
+  definedFunctionArities: Map<number, { in: number; out: number }> = new Map();
+
   // Depth of nested user-function-call argument staging (see stageUserFunctionArguments).
   private userCallArgDepth = 0;
   // Per-variable occurrence counts across the outermost call's whole argument tree. Names appearing
@@ -243,6 +248,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // Emit definitions in ID order so debug.functions[n] corresponds to the n-th define site (id n).
     definedFunctions.forEach(({ func, compiledResult }, functionId) => {
       this.frames.push(this.buildDebugFrame(func, compiledResult, functionId));
+      this.definedFunctionArities.set(functionId, { in: func.parameters.length, out: func.returnTypes?.length ?? 0 });
       const locationData = { location: func.location, positionHint: PositionHint.START };
       this.emit(scriptToBytecode(compiledResult.script), locationData); // <function_body_bytes>
       this.emit(encodeInt(BigInt(functionId)), locationData); // <function_identifier>
