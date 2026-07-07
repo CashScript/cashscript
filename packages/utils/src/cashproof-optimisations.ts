@@ -57,6 +57,7 @@ OP_CHECKDATASIG OP_VERIFY              <=> OP_CHECKDATASIGVERIFY;
 # OP_SWAP OP_OR                          <=> OP_OR;
 # OP_SWAP OP_XOR                         <=> OP_XOR;
 OP_SWAP OP_ADD                         <=> OP_ADD;
+OP_SWAP OP_MUL                         <=> OP_MUL;
 OP_SWAP OP_EQUAL                       <=> OP_EQUAL;
 OP_SWAP OP_NUMEQUAL                    <=> OP_NUMEQUAL;
 OP_SWAP OP_NUMNOTEQUAL                 <=> OP_NUMNOTEQUAL;
