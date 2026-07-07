@@ -19,7 +19,12 @@ import { Ast } from './ast/AST.js';
 import { CashScriptErrorListener } from './ast/error-listeners.js';
 import { MissingContractError } from './Errors.js';
 import { parseCode } from './parser.js';
-import { resolveDependencies } from './dependency-resolution.js';
+import {
+  createDiskResolver,
+  createMemoryResolver,
+  ImportResolver,
+  resolveDependencies,
+} from './dependency-resolution.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
@@ -35,7 +40,10 @@ export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
 
 export interface CompileOptions extends CompilerOptions {
   errorListener?: CashScriptErrorListener;
-  basePath?: string;
+}
+
+export interface CompileStringOptions extends CompileOptions {
+  files?: Record<string, string>;
 }
 
 /**
@@ -44,16 +52,43 @@ export interface CompileOptions extends CompilerOptions {
  * @param code - The CashScript source code to compile.
  * @param compilerOptions - Optional compiler options that override the defaults.
  * @returns The compiled CashScript artifact, including ABI, bytecode and debug information.
- * @throws If the source code contains a syntax, semantic, or type error.
+ * @throws If the source code contains a syntax, semantic, or type error, or an import cannot be resolved.
  */
-export function compileString(code: string, compilerOptions: CompileOptions = {}): Artifact {
-  const { errorListener, basePath, ...artifactCompilerOptions } = compilerOptions;
+export function compileString(code: string, compilerOptions: CompileStringOptions = {}): Artifact {
+  const { files, ...remainingOptions } = compilerOptions;
+  const resolver = createMemoryResolver(files ?? {});
+  return compileCode(code, resolver, remainingOptions);
+}
+
+/**
+ * Read a `.cash` source file from disk and compile it to an `Artifact`.
+ *
+ * Import directives are resolved from the filesystem, relative to the importing file's directory.
+ *
+ * @param codeFile - The path to the `.cash` source file.
+ * @param compilerOptions - Optional compiler options that override the defaults.
+ * @returns The compiled CashScript artifact.
+ * @throws If the file cannot be read, or if the source contains a compilation error.
+ */
+export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions = {}): Artifact {
+  const filePath = codeFile instanceof URL ? fileURLToPath(codeFile) : codeFile.toString();
+  const code = fs.readFileSync(filePath, { encoding: 'utf-8' });
+  const resolver = createDiskResolver(path.dirname(filePath));
+  return compileCode(code, resolver, compilerOptions);
+}
+
+function compileCode(
+  code: string,
+  resolver: ImportResolver,
+  compilerOptions: CompileOptions,
+): Artifact {
+  const { errorListener, ...artifactCompilerOptions } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
 
   // Lexing + parsing
   let ast = parseCode(code, errorListener);
 
-  ast = resolveDependencies(ast, { basePath, errorListener }) as Ast;
+  ast = resolveDependencies(ast, resolver, errorListener) as Ast;
   if (!ast.contract) throw new MissingContractError();
 
   const constructorParamLength = ast.contract.parameters.length;
@@ -105,19 +140,4 @@ export function compileString(code: string, compilerOptions: CompileOptions = {}
   const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);
 
   return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions, fingerprint);
-}
-
-/**
- * Read a `.cash` source file from disk and compile it to an `Artifact`.
- *
- * @param codeFile - The path to the `.cash` source file.
- * @param compilerOptions - Optional compiler options that override the defaults.
- * @returns The compiled CashScript artifact.
- * @throws If the file cannot be read, or if the source contains a compilation error.
- */
-export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions = {}): Artifact {
-  const filePath = codeFile instanceof URL ? fileURLToPath(codeFile) : codeFile.toString();
-  const code = fs.readFileSync(filePath, { encoding: 'utf-8' });
-  const basePath = compilerOptions.basePath ?? path.dirname(filePath);
-  return compileString(code, { ...compilerOptions, basePath });
 }

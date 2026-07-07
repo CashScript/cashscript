@@ -1,7 +1,5 @@
-import { fileURLToPath } from 'url';
 import { compileString } from '../src/index.js';
 
-const fixtureDir = fileURLToPath(new URL('./import-fixtures/', import.meta.url));
 const countOpDefines = (bytecode: string): number => [...bytecode.matchAll(/OP_DEFINE/g)].length;
 
 describe('Dead-code elimination', () => {
@@ -103,8 +101,12 @@ describe('Dead-code elimination', () => {
   it('eliminates an unused imported function', () => {
     // math.cash exports both `addOne` and `double`; only `double` is used here, so `addOne` is dropped.
     const code = 'import "./math.cash";\ncontract Test() { function spend(int x) { require(double(x) == 8); } }';
+    const mathSource = `
+      function addOne(int a) returns (int) { return a + 1; }
+      function double(int a) returns (int) { return a * 2; }
+    `;
 
-    const artifact = compileString(code, { basePath: fixtureDir });
+    const artifact = compileString(code, { files: { './math.cash': mathSource } });
     expect(countOpDefines(artifact.bytecode)).toEqual(1);
   });
 });

@@ -1,0 +1,3 @@
+function leaf(int n) returns (int) {
+    return n + 1;
+}
