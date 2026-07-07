@@ -154,7 +154,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private defineGlobalFunctions(node: SourceFileNode): void {
     node.functions.forEach((func) => {
       const { functionId } = node.symbolTable!.getFromThis(func.name)!;
-      const bodyBytecode = this.compileGlobalFunctionBody(func);
+      const bodyBytecode = this.compileGlobalFunctionBody(func, functionId!);
 
       const locationData = { location: func.location, positionHint: PositionHint.START };
       this.emit(bodyBytecode, locationData); // <function_body_bytes>
@@ -163,7 +163,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     });
   }
 
-  private compileGlobalFunctionBody(node: FunctionDefinitionNode): Uint8Array {
+  private compileGlobalFunctionBody(node: FunctionDefinitionNode, functionId: number): Uint8Array {
     const bodyTraversal = new GenerateTargetTraversal(this.compilerOptions);
     bodyTraversal.currentFunction = node;
     bodyTraversal.constructorParameterCount = 0;
@@ -190,12 +190,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
     const sourceTags = generateSourceTags(optimised.sourceTags);
 
     this.frames.push({
+      id: functionId,
       name: node.name,
       inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
       bytecode: binToHex(bodyBytecode),
       sourceMap: generateSourceMap(optimised.locationData),
       ...(sourceTags ? { sourceTags } : {}),
-      location: generateSourceMap([{ location: node.location, positionHint: PositionHint.START }]),
       ...(node.sourceCode !== undefined ? { source: node.sourceCode } : {}),
       ...(node.sourceFile !== undefined ? { sourceFile: node.sourceFile } : {}),
       logs: optimised.logs,

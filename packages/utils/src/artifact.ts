@@ -23,6 +23,7 @@ export interface DebugInformation {
 }
 
 export interface DebugFrame {
+  id: number; // the function's id, as used with OP_DEFINE and OP_INVOKE in the bytecode
   name: string; // the function's name
   inputs: readonly AbiInput[]; // the function's parameters (name and type), mirroring the ABI; for reference
   bytecode: string; // hex of the function body bytecode (exactly what OP_DEFINE stores and the VM runs)
@@ -30,7 +31,6 @@ export interface DebugFrame {
   sourceTags?: string; // frame-local semantic tags for opcodes (e.g. loop update/condition ranges)
   source?: string; // full text of the defining file; absent means the function lives in the contract's own source file
   sourceFile?: string; // originating file name for imported functions; absent means the contract's file
-  location: string; // single-entry source map covering the full function definition in its defining file
   logs: readonly LogEntry[]; // frame-local log entries
   requires: readonly RequireStatement[]; // frame-local require statements
 }

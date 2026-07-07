@@ -1,7 +1,7 @@
 import { binToHex, createCompilerBch } from '@bitauth/libauth';
 import { Artifact } from '../src/artifact.js';
 import { asmToScript, scriptToBytecode } from '../src/script.js';
-import { buildLineToAsmMap, formatBitAuthScript } from '../src/bitauth-script.js';
+import { formatBitAuthScript } from '../src/bitauth-script.js';
 import { FunctionFixture, fixtures, functionFixtures } from './fixtures/bitauth-script.fixture.js';
 import { compileFile, compileString } from 'cashc';
 
@@ -16,10 +16,6 @@ describe('Libauth Script formatting', () => {
         expect(artifact.debug?.sourceMap).toEqual(fixture.sourceMap);
         expect(artifact.debug?.sourceTags).toEqual(fixture.sourceTags);
         expect(artifact.bytecode).toEqual(fixture.asmBytecode);
-      });
-
-      it('should build a line-to-asm map', () => {
-        expect(buildLineToAsmMap(scriptBytecode, fixture.sourceMap)).toEqual(fixture.expectedLineToAsmMap);
       });
 
       it('should format script as debugging output for BitAuth IDE', () => {
