@@ -118,7 +118,9 @@ contract Example() {
 ```
 
 ### Importing functions from other files
-Top-level functions can be split across files and pulled in with an `import` directive, which makes the imported file's functions available as if they were declared locally. All `import` directives must appear at the **top of the file** — after any `pragma` directives and before any function or contract definitions. Imports are resolved relative to the importing file, so they require compiling from a file (`compileFile`):
+Top-level functions can be split across files and pulled in with an `import` directive, which makes the imported file's functions available as if they were declared locally. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any function or contract definitions.
+
+Imports are resolved relative to the importing file: from the filesystem when compiling with [`compileFile`](/docs/compiler#compilefile), or from the `files` compiler option when using [`compileString`](/docs/compiler#compilestring).
 
 ```solidity
 // math.cash
@@ -141,6 +143,8 @@ contract Main() {
 
 Imported function names share a single global namespace, so a name may only be defined once across the whole import graph. Files reached through more than one import path (diamond imports) are resolved once.
 
+Imported files can declare their own [`pragma` directives](#pragma), and every pragma across the whole import graph — the main file and all (transitively) imported files — must be satisfied by the compiler version.
+
 :::info
 `checkSig`, `checkMultiSig` and `this.activeBytecode` cannot be used inside a user-defined function, since they would apply to the function body rather than the contract. Use them in a contract function instead (`checkDataSig` is allowed).
 :::
@@ -150,7 +154,6 @@ This first version of user-defined functions is intentionally limited in scope:
 
 - Functions return **at most one value** (no multiple/tuple returns), and a value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
 - No advanced optimisations are performed yet on user-defined functions.
-- The local debugging tools in the SDK don't properly support user-defined functions yet.
 
 :::note
 Recursive and mutually recursive functions are allowed and compile fine. At runtime the VM control stack is limited to 100 entries, shared between recursion depth and nested `if` and loop blocks, so excessively deep recursion will fail when the contract gets spent.

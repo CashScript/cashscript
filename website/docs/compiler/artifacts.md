@@ -27,6 +27,7 @@ interface Artifact {
     logs: LogEntry[] // log entries generated from `console.log` statements
     requires: RequireStatement[] // messages for failing `require` statements
     sourceTags?: string // semantic tags for opcodes (e.g. loop update/condition ranges)
+    functions?: DebugFrame[] // debug metadata for each user-defined function
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
   fingerprint?: string // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
@@ -59,6 +60,19 @@ interface RequireStatement {
   ip: number; // instruction pointer
   line: number; // line in the source code
   message?: string; // custom message for failing `require` statement
+}
+
+interface DebugFrame {
+  id: number; // the function's id, as used with OP_DEFINE / OP_INVOKE in the bytecode
+  name: string; // the function's name
+  inputs: AbiInput[]; // the function's parameters (name and type)
+  bytecode: string; // hex-encoded bytecode of the function body (exactly what OP_DEFINE stores)
+  sourceMap: string; // source map of the function body (instruction pointers starting from 0)
+  sourceTags?: string; // semantic tags for opcodes within the function body
+  source?: string; // full source code of the defining file (only present for imported functions)
+  sourceFile?: string; // file name the function is imported from (absent for the contract's own file)
+  logs: LogEntry[]; // log entries within the function body
+  requires: RequireStatement[]; // messages for failing `require` statements within the function body
 }
 
 interface CompilerOptions {

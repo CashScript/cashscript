@@ -2,13 +2,18 @@
 title: Release Notes
 ---
 
-## v0.14.0-next.0
+## v0.14.0-next.1
 
 ⚠️ Note that this is a pre-release version and is not yet stable. There will likely be breaking changes to the APIs and compiler output in subsequent pre-releases.
 
 #### cashc compiler
 - :sparkles: Add support for user-defined reusable functions.
 - :sparkles: Add support for `import` directives to share user-defined functions across files.
+- :hammer_and_wrench: Update `compileString` to take an optional `files` object for filesystem-free import resolution.
+- :racehorse: Add new `OP_SWAP OP_MUL` optimisation.
+
+#### CashScript SDK
+- :sparkles: Add support for debugging user-defined functions.
 
 ## v0.13.2
 

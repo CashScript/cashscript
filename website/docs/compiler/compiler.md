@@ -88,7 +88,7 @@ If the contract uses `import` directives to pull in [user-defined functions](/do
 
 ### compileString()
 ```ts
-compileString(sourceCode: string, compilerOptions?: CompilerOptions): Artifact
+compileString(sourceCode: string, compilerOptions?: CompilerOptions & { files?: Record<string, string> }): Artifact
 ```
 
 Compiles a CashScript contract from a source code string. This compile method is handy in a browser compilation setting like the [CashScript Playground](https://playground.cashscript.org/) where testing contracts can be quickly compiled and discarded. The method is also useful if no source file is locally available (e.g. the source code is retrieved with a REST API).
@@ -101,8 +101,30 @@ const source = await result.text();
 const P2PKH = compileString(source);
 ```
 
+`compileString` never reads from the filesystem, so `import` directives that pull in [user-defined functions](/docs/language/contracts#user-defined-functions) are resolved from the `files` compiler option instead. Its keys are the import paths relative to the main source (using forward slashes), and its values are the corresponding source code strings.
+
+```ts
+const mathSource = `
+function double(int a) returns (int) {
+    return a * 2;
+}
+`;
+
+const source = `
+import "./math.cash";
+
+contract Doubler() {
+    function spend(int x) {
+        require(double(x) == 8);
+    }
+}
+`;
+
+const Doubler = compileString(source, { files: { './math.cash': mathSource } });
+```
+
 :::note
-`compileString` has no source file to resolve `import` directives against. To compile a contract that imports [user-defined functions](/docs/language/contracts#user-defined-functions) from other files, use [`compileFile`](#compilefile) instead.
+Imports inside imported files are resolved relative to the *importing* file, but their keys in `files` remain relative to the main source. For example, if `lib/a.cash` contains `import "./b.cash";`, that file must be provided under the key `lib/b.cash`.
 :::
 
 ### Compiler Options
