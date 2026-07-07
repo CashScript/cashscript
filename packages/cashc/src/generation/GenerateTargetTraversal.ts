@@ -493,7 +493,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     // In a loop/branch the stack layout must be preserved, so reassignments are folded in place. This
     // requires declarations to form a contiguous block below all reassignments (the natural layout of
-    // a multi-return: fresh values, then updated accumulators); any other interleaving is rejected.
+    // a multi-return: fresh values, then updated accumulators). SymbolTableTraversal enforces this
+    // ordering for every tuple destructuring (TupleTargetOrderError), so the check here is an
+    // internal invariant only.
     const firstReassign = node.targets.findIndex((target) => target.isReassignment);
     const lastDeclaration = node.targets.reduce((acc, target, i) => (target.isReassignment ? acc : i), -1);
     if (lastDeclaration > firstReassign) {

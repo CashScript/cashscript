@@ -65,8 +65,10 @@ import { resultingTypeForBinaryOp } from '../utils.js';
 export default class TypeCheckTraversal extends AstTraversal {
   // Declared return types of the function currently being checked (empty for a void function).
   private currentFunctionReturnTypes: Type[] = [];
-  // True only while visiting the RHS of a tuple destructuring, where a multi-return call is allowed.
-  private insideTupleAssignmentRhs = false;
+  // The one expression allowed to be a multi-return call: the RHS of the tuple destructuring being
+  // visited. Matched by NODE IDENTITY in visitFunctionCall, so a call merely nested inside the RHS
+  // tree (e.g. `pair().split(1)`) is still rejected — it would silently discard return values.
+  private tupleAssignmentRhs: Node | null = null;
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
@@ -75,9 +77,9 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    this.insideTupleAssignmentRhs = true;
+    this.tupleAssignmentRhs = node.tuple;
     node.tuple = this.visit(node.tuple);
-    this.insideTupleAssignmentRhs = false;
+    this.tupleAssignmentRhs = null;
 
     // A multi-return function call is the only N-ary tuple source: its return types must match the
     // destructuring targets one-to-one (count and types).
@@ -247,9 +249,8 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitFunctionCall(node: FunctionCallNode): Node {
-    // Consume the tuple-RHS flag immediately so nested argument calls are checked as single values.
-    const isTupleAssignmentRhs = this.insideTupleAssignmentRhs;
-    this.insideTupleAssignmentRhs = false;
+    // Only the destructuring RHS itself qualifies (identity check) — never a nested call.
+    const isTupleAssignmentRhs = this.tupleAssignmentRhs === node;
 
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);

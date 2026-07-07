@@ -23,6 +23,7 @@ import {
   ExpressionNode,
   SliceNode,
   IntLiteralNode,
+  TupleAssignmentNode,
 } from './ast/AST.js';
 import { Symbol, SymbolType } from './ast/SymbolTable.js';
 import { Location } from './ast/Location.js';
@@ -333,6 +334,23 @@ export class TupleAssignmentError extends CashScriptError {
     node: ExpressionNode,
   ) {
     super(node, 'Expression must return a tuple to use destructuring');
+  }
+}
+
+export class DuplicateTupleTargetError extends CashScriptError {
+  constructor(
+    node: TupleAssignmentNode,
+    name: string,
+  ) {
+    super(node, `Duplicate target '${name}' in tuple destructuring`);
+  }
+}
+
+export class TupleTargetOrderError extends CashScriptError {
+  constructor(
+    node: TupleAssignmentNode,
+  ) {
+    super(node, 'Declaration targets must come before all reassignment targets in a tuple destructuring');
   }
 }
 
