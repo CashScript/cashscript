@@ -1,7 +1,6 @@
 import { ParseTree, ParseTreeVisitor } from 'antlr4';
 import { hexToBin } from '@bitauth/libauth';
 import { parseType, Type } from '@cashscript/utils';
-import semver from 'semver';
 import {
   Node,
   SourceFileNode,
@@ -95,8 +94,7 @@ import {
   TimeOp,
 } from './Globals.js';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma.js';
-import { version } from '../index.js';
-import { ParseError, VersionError } from '../Errors.js';
+import { ParseError } from '../Errors.js';
 
 export default class AstBuilder
   extends ParseTreeVisitor<Node>
@@ -114,9 +112,7 @@ export default class AstBuilder
   }
 
   visitSourceFile(ctx: SourceFileContext): SourceFileNode {
-    ctx.pragmaDirective_list().forEach((pragma) => {
-      this.processPragma(pragma);
-    });
+    const pragmas = ctx.pragmaDirective_list().flatMap((pragma) => this.extractVersionConstraints(pragma));
 
     const imports = ctx.importDirective_list().map((directive) => this.visit(directive) as ImportNode);
 
@@ -134,7 +130,7 @@ export default class AstBuilder
       }
     });
 
-    const sourceFileNode = new SourceFileNode(contract, functions, imports);
+    const sourceFileNode = new SourceFileNode(contract, functions, imports, pragmas);
     sourceFileNode.location = Location.fromCtx(ctx);
     return sourceFileNode;
   }
@@ -146,19 +142,13 @@ export default class AstBuilder
     return importNode;
   }
 
-  processPragma(ctx: PragmaDirectiveContext): void {
+  extractVersionConstraints(ctx: PragmaDirectiveContext): string[] {
     const pragmaName = getPragmaName(ctx.pragmaName().getText());
     if (pragmaName !== PragmaName.CASHSCRIPT) throw new Error(); // Shouldn't happen
 
-    // Strip any -beta tags
-    const actualVersion = version.replace(/-.*/g, '');
-
-    ctx.pragmaValue().versionConstraint_list().forEach((constraint) => {
+    return ctx.pragmaValue().versionConstraint_list().map((constraint) => {
       const op = getVersionOpFromCtx(constraint.versionOperator());
-      const versionConstraint = `${op}${constraint.VersionLiteral().getText()}`;
-      if (!semver.satisfies(actualVersion, versionConstraint)) {
-        throw new VersionError(actualVersion, versionConstraint);
-      }
+      return `${op}${constraint.VersionLiteral().getText()}`;
     });
   }
 

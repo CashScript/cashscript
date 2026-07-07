@@ -34,6 +34,7 @@ export class SourceFileNode extends Node {
     public contract?: ContractNode,
     public functions: FunctionDefinitionNode[] = [],
     public imports: ImportNode[] = [],
+    public pragmas: string[] = [],
   ) {
     super();
   }

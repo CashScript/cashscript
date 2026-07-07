@@ -1,0 +1,7 @@
+import "./bad_pragma_helper.cash";
+
+contract BadPragma() {
+    function spend(int x) {
+        require(bump(x) == 5);
+    }
+}

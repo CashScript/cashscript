@@ -914,6 +914,9 @@ export const fixtures: Fixture[] = [
           ]),
         )],
       ),
+      [],
+      [],
+      ['>=0.8.0'],
     ),
   },
   {

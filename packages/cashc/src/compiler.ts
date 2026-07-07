@@ -16,6 +16,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { generateArtifact } from './artifact/Artifact.js';
 import { Ast } from './ast/AST.js';
+import { checkVersionConstraints } from './ast/Pragma.js';
 import { CashScriptErrorListener } from './ast/error-listeners.js';
 import { MissingContractError } from './Errors.js';
 import { parseCode } from './parser.js';
@@ -87,6 +88,7 @@ function compileCode(
 
   // Lexing + parsing
   let ast = parseCode(code, errorListener);
+  checkVersionConstraints(ast.pragmas);
 
   ast = resolveDependencies(ast, resolver, errorListener) as Ast;
   if (!ast.contract) throw new MissingContractError();

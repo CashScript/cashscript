@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { SourceFileNode, FunctionDefinitionNode, ImportNode } from './ast/AST.js';
+import { checkVersionConstraints } from './ast/Pragma.js';
 import type { CashScriptErrorListener } from './ast/error-listeners.js';
 import { ImportResolutionError } from './Errors.js';
 import { parseCode } from './parser.js';
@@ -94,6 +95,7 @@ function collectImports(
       }
 
       const importedAst = parseCode(importedSource, errorListener);
+      checkVersionConstraints(importedAst.pragmas, resolver.sourceName(canonicalPath));
 
       // Record source provenance so debug frames can attribute to the imported file
       importedAst.functions.forEach((func) => {

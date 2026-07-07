@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { compileFile, compileString } from '../src/index.js';
-import { ImportResolutionError, FunctionRedefinitionError } from '../src/Errors.js';
+import { ImportResolutionError, FunctionRedefinitionError, VersionError } from '../src/Errors.js';
 
 const fixture = (name: string): string => fileURLToPath(new URL(`./import-fixtures/${name}`, import.meta.url));
 
@@ -46,6 +46,11 @@ describe('Imports from the filesystem (compileFile)', () => {
   it('records provenance as the path relative to the main file', () => {
     const artifact = compileFile(fixture('nested_main.cash'));
     expect(artifact.debug?.functions?.map((func) => func.sourceFile)).toEqual(['nested/helper.cash']);
+  });
+
+  it('throws when an imported file has a pragma that the compiler version does not satisfy', () => {
+    expect(() => compileFile(fixture('bad_pragma_main.cash'))).toThrow(VersionError);
+    expect(() => compileFile(fixture('bad_pragma_main.cash'))).toThrow(/bad_pragma_helper\.cash/);
   });
 });
 
@@ -121,6 +126,31 @@ describe('Imports from in-memory files (compileString)', () => {
 
   it('throws when an import is missing from the provided files', () => {
     expect(() => compileString(mainCode, { files: {} })).toThrow(ImportResolutionError);
+  });
+
+  it('compiles when the pragmas of all imported files are satisfied', () => {
+    const files = { './math.cash': `pragma cashscript >=0.14.0;\n${mathSource}` };
+    const artifact = compileString(mainCode, { files });
+    expect(countOpDefines(artifact.bytecode)).toEqual(2);
+  });
+
+  it('throws a VersionError naming the imported file when its pragma is not satisfied', () => {
+    const files = { './math.cash': `pragma cashscript >=999.0.0;\n${mathSource}` };
+    expect(() => compileString(mainCode, { files })).toThrow(VersionError);
+    expect(() => compileString(mainCode, { files })).toThrow(
+      /cashc version .* does not satisfy version constraint >=999\.0\.0 \(from pragma in imported file 'math\.cash'\)/,
+    );
+  });
+
+  it('enforces the pragma of a transitively imported file', () => {
+    const code = 'import "./lib/a.cash";\ncontract C() { function spend(int x) { require(a(x) == 7); } }';
+    const files = {
+      'lib/a.cash': 'import "./b.cash";\nfunction a(int n) returns (int) { return b(n) + 1; }',
+      'lib/b.cash': 'pragma cashscript >=999.0.0;\nfunction b(int n) returns (int) { return n * 3; }',
+    };
+
+    expect(() => compileString(code, { files })).toThrow(VersionError);
+    expect(() => compileString(code, { files })).toThrow(/lib\/b\.cash/);
   });
 });
 
