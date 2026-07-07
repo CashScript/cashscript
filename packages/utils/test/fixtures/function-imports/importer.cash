@@ -1,0 +1,8 @@
+import "./helpers.cash";
+
+contract ImportedFunctions() {
+    function spend(int x) {
+        int doubled = double(x);
+        require(addChecked(doubled, x) == 15, "sum mismatch");
+    }
+}

@@ -1,0 +1,9 @@
+function double(int x) returns (int) {
+    return x * 2;
+}
+
+function addChecked(int a, int b) returns (int) {
+    int sum = a + b;
+    require(sum >= a, "overflow");
+    return sum;
+}

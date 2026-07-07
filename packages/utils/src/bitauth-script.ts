@@ -1,60 +1,263 @@
-import { range } from './data.js';
-import { Script, scriptToBitAuthAsm } from './script.js';
+import { hexToBin } from '@bitauth/libauth';
+import { DebugFrame, DebugInformation } from './artifact.js';
+import { encodeInt, range } from './data.js';
+import { Op, Script, bytecodeToScript, scriptToBitAuthAsm } from './script.js';
 import { parseSourceTags, sourceMapToLocationData } from './source-map.js';
-import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
+import { FullLocationData, LocationI, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
 
-export type LineToOpcodesMap = Record<string, Script>;
-export type LineToAsmMap = Record<string, string>;
-
-export function buildLineToOpcodesMap(
-  bytecode: Script,
-  sourceMapOrLocationData: string | FullLocationData,
-): LineToOpcodesMap {
-  const locationData = typeof sourceMapOrLocationData === 'string' ? sourceMapToLocationData(sourceMapOrLocationData) : sourceMapOrLocationData;
-
-  return locationData.reduce<LineToOpcodesMap>((lineToOpcodeMap, singleLocation, index) => {
-    const opcode = bytecode[index];
-    const line = getDisplayLine(singleLocation);
-
-    return {
-      ...lineToOpcodeMap,
-      [line]: [...(lineToOpcodeMap[line] || []), opcode],
-    };
-  }, {});
-}
-
-export function buildLineToAsmMap(bytecode: Script, sourceMapOrLocationData: string | FullLocationData): LineToAsmMap {
-  const lineToOpcodesMap = buildLineToOpcodesMap(bytecode, sourceMapOrLocationData);
-
-  return Object.fromEntries(
-    Object.entries(lineToOpcodesMap).map(([lineNumber, opcodeList]) => [lineNumber, scriptToBitAuthAsm(opcodeList)]),
-  );
-}
-
-export function formatBitAuthScript(bytecode: Script, sourceMap: string, sourceCode: string, sourceTags?: string): string {
-  const locationData = sourceMapToLocationData(sourceMap);
+export function formatBitAuthScript(debug: DebugInformation, sourceCode: string): string {
   const sourceLines = sourceCode.split('\n');
 
-  // Splice synthetic annotation lines (e.g. for-loop updates) into source and remap opcode lines
-  const insertions = buildInsertions(locationData, sourceLines, sourceTags);
-  const splicedSourceLines = spliceSyntheticSourceLines(sourceLines, insertions);
-  const splicedLocationData = updateLocationData(locationData, insertions);
+  const rows = walkScript({
+    script: bytecodeToScript(hexToBin(debug.bytecode)),
+    sourceMap: debug.sourceMap,
+    sourceTags: debug.sourceTags,
+    functions: debug.functions,
+    sourceLines,
+    startLine: 1,
+    endLine: sourceLines.length,
+    asmIndent: '',
+  });
 
-  // Group opcodes by display line and convert to ASM
-  const lineToAsm = buildLineToAsmMap(bytecode, splicedLocationData);
-
-  // Format output
-  const escapedLines = splicedSourceLines.map(escapeCommentChars);
-  const maxAsmLen = Math.max(...escapedLines.map((_, i) => (lineToAsm[i + 1] || '').length));
-  const maxSrcLen = Math.max(...escapedLines.map((l) => l.length));
-
-  return escapedLines.map((src, i) => {
-    const asm = lineToAsm[i + 1] || '';
-    return `${asm.padEnd(maxAsmLen)} /* ${src.padEnd(maxSrcLen)} */`;
-  }).join('\n');
+  return renderRows(rows);
 }
 
-// --- Helpers ---
+interface WalkParams {
+  script: Script;
+  sourceMap: string;
+  sourceTags?: string;
+  functions?: readonly DebugFrame[];
+  sourceLines: string[];
+  startLine: number;
+  endLine: number;
+  asmIndent: string;
+}
+
+function walkScript(params: WalkParams): Row[] {
+  const segments = segmentScript(params);
+  return renderSegments(segments, params);
+}
+
+interface LineGroupSegment {
+  kind: 'lineGroup';
+  asm: string;
+  line: number;
+}
+
+interface AnnotationSegment {
+  kind: 'annotation';
+  asm: string;
+  comment: string;
+  insertAfterLine: number;
+}
+
+interface FunctionDefinitionSegment {
+  kind: 'functionDefinition';
+  frame: DebugFrame;
+  location: LocationI;
+}
+
+type Segment = LineGroupSegment | AnnotationSegment | FunctionDefinitionSegment;
+
+function segmentScript(params: WalkParams): Segment[] {
+  const { script, sourceLines } = params;
+  const locationData = sourceMapToLocationData(params.sourceMap);
+  const tags = parseSourceTags(params.sourceTags ?? '');
+  const frames = params.functions ?? [];
+
+  const segments: Segment[] = [];
+  let index = 0;
+
+  while (index < script.length) {
+    // Function definitions are always at the start of the script in sets of three: `<body> <id> OP_DEFINE` per frame
+    if (index < frames.length * 3) {
+      segments.push({ kind: 'functionDefinition', frame: frames[index / 3], location: locationData[index].location });
+      index += 3;
+      continue;
+    }
+
+    const tag = findTagAt(tags, index);
+    if (tag) {
+      segments.push(annotationSegment(script, tag, tags, locationData, sourceLines));
+      index = tag.endIndex + 1;
+      continue;
+    }
+
+    const endIndex = findLineGroupEnd(script, index, locationData, tags);
+    segments.push({ kind: 'lineGroup', asm: scriptToBitAuthAsm(script.slice(index, endIndex)), line: getDisplayLine(locationData[index]) });
+    index = endIndex;
+  }
+
+  return segments;
+}
+
+function annotationSegment(
+  script: Script,
+  tag: SourceTagEntry,
+  tags: SourceTagEntry[],
+  locationData: FullLocationData,
+  sourceLines: string[],
+): AnnotationSegment {
+  const { insertAfterLine, indent } = deriveAnchor(tag, tags, locationData, sourceLines);
+
+  return {
+    kind: 'annotation',
+    asm: scriptToBitAuthAsm(script.slice(tag.startIndex, tag.endIndex + 1)),
+    comment: `${indent}${tagDescription(tag, locationData, sourceLines)}`,
+    insertAfterLine,
+  };
+}
+
+// A line group runs until the next opcode that belongs to a tagged range or maps to a different source line
+function findLineGroupEnd(script: Script, start: number, locationData: FullLocationData, tags: SourceTagEntry[]): number {
+  const line = getDisplayLine(locationData[start]);
+  const nextBoundary = range(start + 1, script.length - 1).find((index) => (
+    getDisplayLine(locationData[index]) !== line || findTagAt(tags, index) !== undefined
+  ));
+
+  return nextBoundary ?? script.length;
+}
+
+function findTagAt(tags: SourceTagEntry[], index: number): SourceTagEntry | undefined {
+  return tags.find((tag) => index >= tag.startIndex && index <= tag.endIndex);
+}
+
+interface Row {
+  asm: string;
+  comment: string;
+}
+
+interface RenderState {
+  rows: Row[];
+  lastRenderedLine: number; // the last source line that has been rendered
+}
+
+type RenderContext = WalkParams & {
+  functionSectionLines: Set<number>; // source lines rendered inside function sections, never as filler
+};
+
+const BLANK_ROW: Row = { asm: '', comment: '' };
+
+function renderSegments(segments: Segment[], params: WalkParams): Row[] {
+  const context: RenderContext = {
+    ...params,
+    functionSectionLines: deriveFunctionSectionLines(segments, params.sourceLines),
+  };
+
+  const initialState: RenderState = { rows: [], lastRenderedLine: params.startLine - 1 };
+  const finalState = segments.reduce((state, segment) => renderSegment(state, segment, context), initialState);
+
+  // After the last opcode, fill in the remaining source lines (e.g. the contract's closing braces)
+  return [...finalState.rows, ...fillerRows(finalState.lastRenderedLine, params.endLine, context)];
+}
+
+function deriveFunctionSectionLines(segments: Segment[], sourceLines: string[]): Set<number> {
+  const localFunctionSegments = segments.filter(
+    (segment): segment is FunctionDefinitionSegment => segment.kind === 'functionDefinition' && segment.frame.source === undefined,
+  );
+
+  return new Set(localFunctionSegments.flatMap(({ location }) => {
+    let lastLine = location.end.line;
+    while (lastLine < sourceLines.length && sourceLines[lastLine].trim() === '') lastLine += 1;
+    return range(location.start.line, lastLine);
+  }));
+}
+
+function renderSegment(state: RenderState, segment: Segment, context: RenderContext): RenderState {
+  if (segment.kind === 'functionDefinition') return renderFunctionDefinition(state, segment, context);
+  if (segment.kind === 'annotation') return renderAnnotation(state, segment, context);
+  return renderLineGroup(state, segment, context);
+}
+
+// The group's row renders its own source line, after filling in the opcode-less lines above it
+function renderLineGroup(state: RenderState, segment: LineGroupSegment, context: RenderContext): RenderState {
+  return {
+    rows: [
+      ...state.rows,
+      ...fillerRows(state.lastRenderedLine, segment.line - 1, context),
+      { asm: context.asmIndent + segment.asm, comment: context.sourceLines[segment.line - 1] },
+    ],
+    lastRenderedLine: advanceTo(state.lastRenderedLine, segment.line, context),
+  };
+}
+
+// The `>>>` annotation row lands right after its anchor line
+function renderAnnotation(state: RenderState, segment: AnnotationSegment, context: RenderContext): RenderState {
+  return {
+    rows: [
+      ...state.rows,
+      ...fillerRows(state.lastRenderedLine, segment.insertAfterLine, context),
+      { asm: context.asmIndent + segment.asm, comment: segment.comment },
+    ],
+    lastRenderedLine: advanceTo(state.lastRenderedLine, segment.insertAfterLine, context),
+  };
+}
+
+function renderFunctionDefinition(
+  state: RenderState,
+  segment: FunctionDefinitionSegment,
+  context: RenderContext,
+): RenderState {
+  const { frame, location } = segment;
+  const isImported = frame.sourceFile !== undefined;
+  const sourceLines = isImported ? frame.source!.split('\n') : context.sourceLines;
+
+  const headerRows = isImported
+    ? [{ asm: '', comment: `>>> function ${frame.name} (imported from ${frame.sourceFile})` }]
+    : [];
+
+  return {
+    rows: [...state.rows, ...headerRows, ...buildFunctionSection(frame, location, sourceLines), BLANK_ROW],
+    lastRenderedLine: state.lastRenderedLine,
+  };
+}
+
+function buildFunctionSection(frame: DebugFrame, location: LocationI, sourceLines: string[]): Row[] {
+  const bodyScript = bytecodeToScript(hexToBin(frame.bytecode));
+  const defineAsm = scriptToBitAuthAsm([encodeInt(BigInt(frame.id)), Op.OP_DEFINE]);
+  const { start, end } = location;
+
+  if (end.line === start.line) {
+    const asm = ['<', scriptToBitAuthAsm(bodyScript), '>', defineAsm].filter((part) => part !== '').join(' ');
+    return [{ asm, comment: sourceLines[start.line - 1] }];
+  }
+
+  const bodyRows = walkScript({
+    script: bodyScript,
+    sourceMap: frame.sourceMap,
+    sourceTags: frame.sourceTags,
+    sourceLines,
+    startLine: start.line + 1,
+    endLine: end.line - 1,
+    asmIndent: '  ',
+  });
+
+  return [
+    { asm: '<', comment: sourceLines[start.line - 1] },
+    ...bodyRows,
+    { asm: `> ${defineAsm}`, comment: sourceLines[end.line - 1] },
+  ];
+}
+
+function fillerRows(afterLine: number, throughLine: number, context: RenderContext): Row[] {
+  return range(afterLine + 1, Math.min(throughLine, context.endLine))
+    .filter((line) => !context.functionSectionLines.has(line))
+    .map((line) => ({ asm: '', comment: context.sourceLines[line - 1] }));
+}
+
+function advanceTo(renderedLine: number, line: number, context: RenderContext): number {
+  return Math.max(renderedLine, Math.min(line, context.endLine));
+}
+
+function renderRows(rows: Row[]): string {
+  const escapedRows = rows.map((row) => ({ asm: row.asm, comment: escapeCommentChars(row.comment) }));
+  const maxAsmLength = Math.max(...escapedRows.map((row) => row.asm.length));
+  const maxCommentLength = Math.max(...escapedRows.map((row) => row.comment.length));
+
+  return escapedRows
+    .map((row) => `${row.asm.padEnd(maxAsmLength)} /* ${row.comment.padEnd(maxCommentLength)} */`)
+    .join('\n');
+}
 
 function getDisplayLine(singleLocation: SingleLocationData): number {
   const { location, positionHint } = singleLocation;
@@ -65,16 +268,6 @@ function escapeCommentChars(text: string): string {
   return text.replaceAll('/*', '\\/*').replaceAll('*/', '*\\/');
 }
 
-// --- Source tag handling (for-loop update annotations) ---
-
-interface Insertion {
-  insertAfterLine: number;
-  annotation: string;
-  startIndex: number;
-  endIndex: number;
-}
-
-// Where a synthetic annotation line is spliced, and the indentation it's rendered with.
 interface Anchor {
   insertAfterLine: number;
   indent: string;
@@ -92,20 +285,6 @@ const EPILOGUE_KINDS = [
   SourceTagKind.LOOP_CONDITION,
 ];
 
-function buildInsertions(
-  locationData: FullLocationData,
-  sourceLines: string[],
-  sourceTags?: string,
-): Insertion[] {
-  const tags = (sourceTags ? parseSourceTags(sourceTags) : []);
-
-  return tags.map((tag) => {
-    const { insertAfterLine, indent } = deriveAnchor(tag, tags, locationData, sourceLines);
-    const annotation = `${indent}${tagDescription(tag, locationData, sourceLines)}`;
-    return { insertAfterLine, annotation, startIndex: tag.startIndex, endIndex: tag.endIndex };
-  });
-}
-
 function deriveAnchor(
   tag: SourceTagEntry,
   tags: SourceTagEntry[],
@@ -120,15 +299,15 @@ function deriveAnchor(
     const firstBodyOpcode = lastPrologueOpcode + 1;
     const firstBodyLine = getDisplayLine(locationData[firstBodyOpcode]);
 
+    // `insertAfterLine` of `firstBodyLine - 1` lands all the prologue annotations directly above the
+    // first body statement, at its indentation.
     return {
-      // `insertAfterLine` splices *after* a line, so `firstBodyLine - 1` lands all the prologue
-      // annotations directly above the first body statement, at its indentation.
       insertAfterLine: firstBodyLine - 1,
       indent: lineIndent(sourceLines, firstBodyLine),
     };
   }
 
-  // Scope cleanup and loop-back condition tags always get inserted right before the scope's closing brace.
+  // Scope cleanup and loop-back condition tags always land right before the scope's closing brace.
   if (EPILOGUE_KINDS.includes(tag.kind)) {
     const braceLine = getDisplayLine(locationData[tag.startIndex]);
     return {
@@ -142,40 +321,6 @@ function deriveAnchor(
     indent: deriveIndent(getDisplayLine(locationData[tag.startIndex]), sourceLines),
   };
 }
-
-function spliceSyntheticSourceLines(sourceLines: string[], insertions: Insertion[]): string[] {
-  return insertions.reduceRight(
-    (lines, ins) => [...lines.slice(0, ins.insertAfterLine), ins.annotation, ...lines.slice(ins.insertAfterLine)],
-    sourceLines,
-  );
-}
-
-function updateLocationData(locationData: FullLocationData, insertions: Insertion[]): FullLocationData {
-  return insertions.reduceRight((location, insertion) => {
-    return location.map((entry, opcodeIndex) => {
-      const currentLineNumber = getDisplayLine(location[opcodeIndex]);
-      const updatedLineNumber = getUpdatedLineNumber(currentLineNumber, insertion, opcodeIndex);
-      if (updatedLineNumber === currentLineNumber) return entry;
-
-      return {
-        location: {
-          start: { line: updatedLineNumber, column: 0 },
-          end: { line: updatedLineNumber, column: 0 },
-        },
-        positionHint: PositionHint.START,
-      };
-    });
-  }, locationData);
-}
-
-const getUpdatedLineNumber = (currentLineNumber: number, insertion: Insertion, opcodeIndex: number): number => {
-  const newLineNumber = insertion.insertAfterLine + 1;
-  const inTagRange = opcodeIndex >= insertion.startIndex && opcodeIndex <= insertion.endIndex;
-
-  if (inTagRange) return newLineNumber;
-  if (currentLineNumber > insertion.insertAfterLine) return currentLineNumber + 1;
-  return currentLineNumber;
-};
 
 // e.g. ">>> for-loop update (i = i + 1)"
 function tagDescription(tag: SourceTagEntry, locationData: FullLocationData, sourceLines: string[]): string {

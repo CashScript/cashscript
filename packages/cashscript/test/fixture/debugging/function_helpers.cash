@@ -1,0 +1,3 @@
+function assertPositive(int value) {
+    require(value > 0, "value must be positive");
+}
