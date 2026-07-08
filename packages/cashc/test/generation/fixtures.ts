@@ -37,6 +37,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -83,6 +84,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -135,6 +137,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -181,6 +184,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -259,6 +263,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -287,6 +292,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -322,6 +328,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -355,6 +362,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -420,6 +428,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -457,6 +466,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -488,6 +498,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -526,6 +537,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -621,6 +633,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -704,6 +717,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -759,6 +773,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -787,6 +802,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -815,6 +831,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -846,6 +863,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -874,6 +892,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -904,6 +923,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -949,6 +969,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -980,6 +1001,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1012,6 +1034,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1044,6 +1067,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1073,6 +1097,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1102,6 +1127,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1133,6 +1159,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1175,6 +1202,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1206,6 +1234,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1238,6 +1267,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1268,6 +1298,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1297,6 +1328,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1350,6 +1382,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1402,6 +1435,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: false,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
@@ -1448,6 +1482,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
           disableInlining: true,
         },
       },
@@ -1495,6 +1530,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
           disableInlining: true,
         },
       },
@@ -1541,6 +1577,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
           disableInlining: true,
         },
       },
@@ -1617,6 +1654,7 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
           disableInlining: true,
         },
       },

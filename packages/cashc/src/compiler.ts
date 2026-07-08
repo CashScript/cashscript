@@ -39,6 +39,9 @@ import DeadCodeEliminationTraversal from './semantic/DeadCodeEliminationTraversa
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
   enforceLocktimeGuard: true,
+  // recorded explicitly so artifacts always state the objective they were compiled under
+  // (see CompilerOptions in @cashscript/utils for the size/opcost trade-off)
+  optimizeFor: 'opcost',
 };
 
 // Above this unoptimised op-count the legacy-optimiser cross-check is skipped automatically
