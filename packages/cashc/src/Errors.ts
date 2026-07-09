@@ -19,7 +19,6 @@ import {
   InstantiationNode,
   StatementNode,
   ContractNode,
-  ExpressionNode,
   SliceNode,
   IntLiteralNode,
 } from './ast/AST.js';
@@ -269,14 +268,6 @@ export class AssignTypeError extends TypeError {
   ) {
     const expected = node instanceof AssignNode ? node.identifier.type : node.type;
     super(node, node.expression.type, expected, `Type '${node.expression.type}' can not be assigned to variable of type '${expected}'`);
-  }
-}
-
-export class TupleAssignmentError extends CashScriptError {
-  constructor(
-    node: ExpressionNode,
-  ) {
-    super(node, 'Expression must return a tuple to use destructuring');
   }
 }
 

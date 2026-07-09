@@ -28,12 +28,11 @@ export class BytesType {
 
 export class TupleType {
   constructor(
-    public leftType: Type,
-    public rightType: Type,
+    public elementTypes: Type[],
   ) { }
 
   toString(): string {
-    return `(${this.leftType}, ${this.rightType})`;
+    return `(${this.elementTypes.join(', ')})`;
   }
 }
 
@@ -120,9 +119,8 @@ export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (actual === PrimitiveType.VOID || expected === PrimitiveType.VOID) return false;
 
   if (actual instanceof TupleType && expected instanceof TupleType) {
-    const leftIsCompatible = implicitlyCastable(actual.leftType, expected.leftType);
-    const rightIsCompatible = implicitlyCastable(actual.rightType, expected.rightType);
-    return leftIsCompatible && rightIsCompatible;
+    return actual.elementTypes.length === expected.elementTypes.length
+      && actual.elementTypes.every((elementType, i) => implicitlyCastable(elementType, expected.elementTypes[i]));
   }
 
   // Can't cast between Tuple and non-Tuple

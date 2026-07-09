@@ -1615,4 +1615,50 @@ export const fixtures: Fixture[] = [
       fingerprint: '316a3305152ec0695bf80303736c79dd1f9cc2f1dbccf57d9965094401363307',
     },
   },
+  {
+    // A multi-return function — locks in the calling convention: return values are left on the stack
+    // in declared order (last value on top) and bound by an N-ary tuple destructuring at the call site.
+    fn: 'global_function_multi_return.cash',
+    artifact: {
+      contractName: 'GlobalFunctionMultiReturn',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }] }],
+      bytecode:
+        // OP_DEFINE divmod (id 0): return a / b, a % b — leaves [quotient, remainder], remainder on top
+        '6e967b7b97 OP_0 OP_DEFINE '
+        // int q, int r = divmod(x, 3); require(q == 4); require(r == 1)
+        + 'OP_3 OP_0 OP_INVOKE OP_SWAP OP_4 OP_NUMEQUALVERIFY OP_1 OP_NUMEQUAL',
+      debug: {
+        bytecode: '056e967b7b97008953008a7c549d519c',
+        logs: [],
+        requires: [
+          { ip: 8, line: 8 },
+          { ip: 11, line: 9 },
+        ],
+        sourceMap: '1::3:1;;::::1;7:33:7:34:0;:23::35:1;;8:16:8:17:0;:21::22;:8::24:1;9:21:9:22:0;:8::24:1',
+        functions: [
+          {
+            id: 0,
+            name: 'divmod',
+            inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }],
+            bytecode: '6e967b7b97',
+            sourceMap: '2:11:2:16;::::1;:18::19:0;:22::23;:18:::1',
+            logs: [],
+            requires: [],
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/global_function_multi_return.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: 'f747468c9408ec52949a22dc2f271a944ee5793eabaa913c9c2b1b4c3fbd0a56',
+    },
+  },
 ];

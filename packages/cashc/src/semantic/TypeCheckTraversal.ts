@@ -49,7 +49,6 @@ import {
   AssignTypeError,
   ArrayElementError,
   IndexOutOfBoundsError,
-  TupleAssignmentError,
   BitshiftBitcountNegativeError,
   UnusedFunctionReturnError,
   ReturnTypeError,
@@ -57,10 +56,10 @@ import {
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { GlobalFunction } from '../ast/Globals.js';
 import { Symbol } from '../ast/SymbolTable.js';
-import { resultingTypeForBinaryOp } from '../utils.js';
+import { functionReturnType, resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
-  private currentFunctionReturnType: Type = PrimitiveType.VOID;
+  private currentFunctionReturnTypes: Type[] = [];
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
@@ -70,17 +69,15 @@ export default class TypeCheckTraversal extends AstTraversal {
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
-    if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
-      throw new TupleAssignmentError(node.tuple);
-    }
 
-    const assignmentType = new TupleType(node.left.type, node.right.type);
-
-    if (!implicitlyCastable(node.tuple.type, assignmentType)) {
-      const syntheticAssignment = new VariableDefinitionNode(assignmentType, [], node.left.name, node.tuple);
+    const targetsType = new TupleType(node.targets.map((target) => target.type));
+    if (!implicitlyCastable(node.tuple.type, targetsType)) {
+      const targetNames = node.targets.map((target) => target.name).join(', ');
+      const syntheticAssignment = new VariableDefinitionNode(targetsType, [], targetNames, node.tuple);
       syntheticAssignment.location = node.location;
       throw new AssignTypeError(syntheticAssignment);
     }
+
     return node;
   }
 
@@ -195,17 +192,26 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
-    this.currentFunctionReturnType = node.returnType ?? PrimitiveType.VOID;
+    this.currentFunctionReturnTypes = node.returnTypes ?? [];
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
     return node;
   }
 
   visitReturn(node: ReturnNode): Node {
-    node.expression = this.visit(node.expression);
-    if (!implicitlyCastable(node.expression.type, this.currentFunctionReturnType)) {
-      throw new ReturnTypeError(node.expression, node.expression.type, this.currentFunctionReturnType);
+    node.expressions = this.visitList(node.expressions);
+
+    // Every returned expression must be a single value: forwarding a tuple (e.g. `return pair()`
+    // from another multi-return function) would otherwise slip through the wrapped comparison below.
+    node.expressions.forEach((expression) => expectSingleValue(expression, expression.type));
+
+    const actualType = functionReturnType(node.expressions.map((expression) => expression.type!));
+    const expectedType = functionReturnType(this.currentFunctionReturnTypes);
+
+    if (!implicitlyCastable(actualType, expectedType)) {
+      throw new ReturnTypeError(node, actualType, expectedType);
     }
+
     return node;
   }
 
@@ -257,11 +263,18 @@ export default class TypeCheckTraversal extends AstTraversal {
 
     expectTuple(node, node.tuple.type);
 
-    if (node.index !== 0 && node.index !== 1) {
+    // Tuple indexing is only supported on .split() results. A multi-return function call leaves all
+    // of its values on the stack, so it must be destructured instead (codegen has no partial binding).
+    if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
+      expectSingleValue(node.tuple, node.tuple.type);
+    }
+
+    const { elementTypes } = node.tuple.type as TupleType;
+    if (node.index < 0 || node.index >= elementTypes.length) {
       throw new IndexOutOfBoundsError(node);
     }
 
-    node.type = node.index === 0 ? (node.tuple.type as TupleType).leftType : (node.tuple.type as TupleType).rightType;
+    node.type = elementTypes[node.index];
     return node;
   }
 
@@ -314,6 +327,7 @@ export default class TypeCheckTraversal extends AstTraversal {
         return node;
       case BinaryOperator.EQ:
       case BinaryOperator.NE:
+        expectSingleValue(node.left, node.left.type);
         expectCompatibleBytesBounds(node, node.left.type, node.right.type);
         node.type = PrimitiveType.BOOL;
         return node;
@@ -483,7 +497,7 @@ function expectCompatibleBytesBounds(node: BinaryOpNode, left?: Type, right?: Ty
 function expectTuple(node: ExpectedNode, actual?: Type): void {
   if (!(actual instanceof TupleType)) {
     // We use a placeholder tuple to indicate that we're expecting *any* tuple at all
-    const placeholderTuple = new TupleType(new BytesType(), new BytesType());
+    const placeholderTuple = new TupleType([new BytesType(), new BytesType()]);
     throw new UnsupportedTypeError(node, actual, placeholderTuple);
   }
 }
@@ -510,7 +524,7 @@ function inferTupleType(node: BinaryOpNode): Type {
 
   // string.split() -> string, string
   if (node.left.type === PrimitiveType.STRING) {
-    return new TupleType(PrimitiveType.STRING, PrimitiveType.STRING);
+    return new TupleType([PrimitiveType.STRING, PrimitiveType.STRING]);
   }
 
   // If the expression is not a bytes type, then it must be a different compatible type (e.g. sig/pubkey)
@@ -519,14 +533,14 @@ function inferTupleType(node: BinaryOpNode): Type {
 
   // bytes.split(variable) -> bytes, bytes
   if (!(node.right instanceof IntLiteralNode)) {
-    return new TupleType(new BytesType(), new BytesType());
+    return new TupleType([new BytesType(), new BytesType()]);
   }
 
   const splitIndex = Number(node.right.value);
 
   // bytes.split(NumberLiteral) -> bytes(NumberLiteral), bytes
   if (expressionType.bound === undefined) {
-    return new TupleType(new BytesType(splitIndex), new BytesType());
+    return new TupleType([new BytesType(splitIndex), new BytesType()]);
   }
 
   if (splitIndex > expressionType.bound) {
@@ -534,10 +548,10 @@ function inferTupleType(node: BinaryOpNode): Type {
   }
 
   // bytesX.split(NumberLiteral) -> bytes(NumberLiteral), bytes(X - NumberLiteral)
-  return new TupleType(
+  return new TupleType([
     new BytesType(splitIndex),
     new BytesType(expressionType.bound! - splitIndex),
-  );
+  ]);
 }
 
 function inferSliceType(node: SliceNode): Type {
@@ -655,3 +669,9 @@ function matchSizeLiteral(expr: BinaryOpNode): { sizeNode: UnaryOpNode, literalN
 const isSizeOp = (node: ExpressionNode): node is UnaryOpNode => (
   node instanceof UnaryOpNode && node.operator === UnaryOperator.SIZE
 );
+
+function expectSingleValue(node: Node, type?: Type): void {
+  if (type instanceof TupleType) {
+    throw new TypeError(node, type, undefined, `Found tuple '${type}' where a single value was expected`);
+  }
+}

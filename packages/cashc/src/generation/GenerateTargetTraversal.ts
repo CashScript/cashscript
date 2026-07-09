@@ -21,6 +21,7 @@ import {
   SingleLocationData,
   StackItem,
   BytesType,
+  TupleType,
   CompilerOptions,
   SourceTagEntry,
   SourceTagKind,
@@ -206,11 +207,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {
-    if (node.returnType === undefined) {
-      this.removeScopedVariables(0, node.body); // void: drop the entire frame
-    } else {
-      this.cleanStack(node.body); // value: OP_NIP everything below the return value on top
-    }
+    // Drop everything below the return values on top (or the entire frame for a void function)
+    this.cleanStack(node.body, node.returnTypes?.length ?? 0);
   }
 
   visitContract(node: ContractNode): Node {
@@ -319,14 +317,24 @@ export default class GenerateTargetTraversal extends AstTraversal {
     }
   }
 
-  cleanStack(functionBodyNode: Node): void {
-    // Keep final verification value, OP_NIP the other stack values
+  // Keep only the top `keepCount` values (a contract function's verification value, or a global
+  // function's return values), dropping everything below them while preserving their order.
+  cleanStack(functionBodyNode: Node, keepCount: number = 1): void {
+    this.dropFromStack(functionBodyNode, keepCount, this.stack.length - keepCount);
+  }
+
+  private dropFromStack(node: Node, keepCount: number, dropCount: number): void {
     const tagStartIndex = this.output.length;
-    const stackSize = this.stack.length;
-    for (let i = 0; i < stackSize - 1; i += 1) {
-      this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
-      this.nipFromStack();
+    const locationData = { location: node.location, positionHint: PositionHint.END };
+
+    // Note that in case of keepCount = 1, this gets optimised to just OP_NIP, or for keepCount = 0 to OP_DROP
+    for (let i = 0; i < dropCount; i += 1) {
+      this.emit(encodeInt(BigInt(keepCount)), locationData);
+      this.emit(Op.OP_ROLL, locationData);
+      this.emit(Op.OP_DROP, locationData);
+      this.removeFromStack(keepCount);
     }
+
     this.tagScopeCleanup(tagStartIndex);
   }
 
@@ -389,9 +397,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
-    this.popFromStack(2);
-    this.pushToStack(node.left.name);
-    this.pushToStack(node.right.name);
+    this.popFromStack(node.targets.length);
+    node.targets.forEach((target) => this.pushToStack(target.name));
     return node;
   }
 
@@ -625,14 +632,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
     });
   }
 
+  // Drop the values that a scope (a branch or loop body) added on top of the pre-scope stack.
   removeScopedVariables(depthBeforeScope: number, node: Node): void {
-    const tagStartIndex = this.output.length;
-    const dropCount = this.stack.length - depthBeforeScope;
-    for (let i = 0; i < dropCount; i += 1) {
-      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
-      this.popFromStack();
-    }
-    this.tagScopeCleanup(tagStartIndex);
+    this.dropFromStack(node, 0, this.stack.length - depthBeforeScope);
   }
 
   private tagScopeCleanup(tagStartIndex: number): void {
@@ -665,7 +667,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters);
     this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
     this.popFromStack(node.parameters.length);
-    if (symbol.type !== PrimitiveType.VOID) this.pushToStack('(value)');
+
+    // The call leaves one value per declared return type (none for a void function); a multi-return
+    // function's values (a TupleType) are subsequently bound by visitTupleAssignment.
+    const returnValueCount = symbol.type === PrimitiveType.VOID ? 0
+      : symbol.type instanceof TupleType ? symbol.type.elementTypes.length : 1;
+    for (let i = 0; i < returnValueCount; i += 1) this.pushToStack('(value)');
 
     return node;
   }

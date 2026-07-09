@@ -366,8 +366,10 @@ export const fixtures: Fixture[] = [
           ],
           new BlockNode([
             new TupleAssignmentNode(
-              { name: 'blockHeightBin', type: new BytesType(4) },
-              { name: 'priceBin', type: new BytesType(4) },
+              [
+                { name: 'blockHeightBin', type: new BytesType(4) },
+                { name: 'priceBin', type: new BytesType(4) },
+              ],
               new BinaryOpNode(
                 new IdentifierNode('oracleMessage'),
                 BinaryOperator.SPLIT,

@@ -85,7 +85,7 @@ export class FunctionDefinitionNode extends Node implements Named {
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
-    public returnType?: Type,
+    public returnTypes?: Type[],
   ) {
     super();
   }
@@ -127,11 +127,15 @@ export class VariableDefinitionNode extends NonControlStatementNode implements N
   }
 }
 
+export interface TupleAssignmentTarget {
+  name: string;
+  type: Type;
+}
+
 export class TupleAssignmentNode extends NonControlStatementNode {
   constructor(
-    // TODO: Use an IdentifierNode instead of a custom type
-    public left: { name: string, type: Type },
-    public right: { name: string, type: Type },
+    // TODO: Use IdentifierNodes instead of a custom type
+    public targets: TupleAssignmentTarget[],
     public tuple: ExpressionNode,
   ) {
     super();
@@ -211,7 +215,7 @@ export class FunctionCallStatementNode extends NonControlStatementNode {
 
 export class ReturnNode extends NonControlStatementNode {
   constructor(
-    public expression: ExpressionNode,
+    public expressions: ExpressionNode[],
   ) {
     super();
   }

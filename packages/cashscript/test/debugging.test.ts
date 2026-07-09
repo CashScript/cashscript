@@ -17,6 +17,7 @@ import {
   artifactTestFunctionDebugging,
   artifactTestFunctionIntermediateResults,
   artifactTestImportedFunctionDebugging,
+  artifactTestMultiReturn,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
@@ -860,6 +861,25 @@ describe('Debugging tests - user-defined function frames', () => {
 
     expect(transaction).toFailRequireWith('function_helpers.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 2) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
+  });
+
+  it('binds multi-return values to destructuring targets in declared order', () => {
+    const multiReturnContract = new Contract(artifactTestMultiReturn, [], { provider });
+    const multiReturnUtxo = provider.addUtxo(multiReturnContract.address, randomUtxo());
+
+    // 13 / 3 = 4 remainder 1: both requires only pass if q binds the first return value and r the last
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(multiReturnUtxo, multiReturnContract.unlock.spend(13n))
+      .addOutput({ to: multiReturnContract.address, amount: 10000n });
+
+    expect(transaction).not.toFailRequire();
+
+    // 14 / 3 = 4 remainder 2: the remainder require fails and attributes to its own line
+    const failingTransaction = new TransactionBuilder({ provider })
+      .addInput(multiReturnUtxo, multiReturnContract.unlock.spend(14n))
+      .addOutput({ to: multiReturnContract.address, amount: 10000n });
+
+    expect(failingTransaction).toFailRequireWith('Test.cash:10 Require statement failed at input 0 in contract Test.cash at line 10 with the following message: remainder should be 1.');
   });
 
   it('logs intermediate results that get optimised out inside a function', () => {
