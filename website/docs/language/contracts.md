@@ -117,6 +117,22 @@ contract Example() {
 }
 ```
 
+A function can also return **multiple values** by declaring `returns (T1, T2, ...)` and returning a comma-separated list. A call to such a function must be destructured into exactly one variable per return value:
+
+```solidity
+function divmod(int a, int b) returns (int, int) {
+    return a / b, a % b;
+}
+
+contract Example() {
+    function spend(int x) {
+        int quotient, int remainder = divmod(x, 3);
+        require(quotient == 4);
+        require(remainder == 1);
+    }
+}
+```
+
 ### Importing functions from other files
 Top-level functions can be split across files and pulled in with an `import` directive, which makes the imported file's functions available as if they were declared locally. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any function or contract definitions.
 
@@ -152,7 +168,7 @@ Imported files can declare their own [`pragma` directives](#pragma), and every p
 ### Limitations
 This first version of user-defined functions is intentionally limited in scope:
 
-- Functions return **at most one value** (no multiple/tuple returns), and a value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
+- A value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
 - No advanced optimisations are performed yet on user-defined functions.
 
 :::note
