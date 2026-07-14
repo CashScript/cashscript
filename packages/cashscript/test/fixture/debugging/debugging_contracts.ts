@@ -29,6 +29,23 @@ contract Test(pubkey owner) {
 }
 `;
 
+// Multi-value return destructuring: the requires only pass when the first declared return value
+// binds to the first target (quotient) and the last to the last (remainder), pinning the runtime
+// value ordering of the calling convention.
+const CONTRACT_TEST_MULTI_RETURN = `
+function divmod(int a, int b) returns (int, int) {
+  return a / b, a % b;
+}
+
+contract Test() {
+  function spend(int x) {
+    int q, int r = divmod(x, 3);
+    require(q == 4, "quotient should be 4");
+    require(r == 1, "remainder should be 1");
+  }
+}
+`;
+
 const CONTRACT_TEST_REQUIRES = `
 contract Test() {
   function test_logs() {
@@ -468,6 +485,7 @@ export const artifactTestRequireInsideLoop = compileString(CONTRACT_TEST_REQUIRE
 export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_LOOP);
 export const artifactTestFunctionDebugging = compileString(CONTRACT_TEST_FUNCTION_DEBUGGING);
 export const artifactTestFunctionIntermediateResults = compileString(CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS);
+export const artifactTestMultiReturn = compileString(CONTRACT_TEST_MULTI_RETURN);
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));

@@ -167,19 +167,21 @@ export default class AstBuilder
   }
 
   visitGlobalFunctionDefinition(ctx: GlobalFunctionDefinitionContext): FunctionDefinitionNode {
-    const returnType = ctx.typeName() ? parseType(ctx.typeName().getText()) : undefined;
-    return this.buildFunctionDefinition(ctx, FunctionKind.GLOBAL, returnType);
+    const returnTypes = ctx.typeName_list().length > 0
+      ? ctx.typeName_list().map((typeName) => parseType(typeName.getText()))
+      : undefined;
+    return this.buildFunctionDefinition(ctx, FunctionKind.GLOBAL, returnTypes);
   }
 
   private buildFunctionDefinition(
     ctx: ContractFunctionDefinitionContext | GlobalFunctionDefinitionContext,
     kind: FunctionKind,
-    returnType?: Type,
+    returnTypes?: Type[],
   ): FunctionDefinitionNode {
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
     const body = this.visit(ctx.functionBody()) as BlockNode;
-    const functionDefinition = new FunctionDefinitionNode(kind, name, parameters, body, returnType);
+    const functionDefinition = new FunctionDefinitionNode(kind, name, parameters, body, returnTypes);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -231,13 +233,12 @@ export default class AstBuilder
 
   visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
-    const names = ctx.Identifier_list();
     const types = ctx.typeName_list();
-    const [var1, var2] = names.map((name, i) => ({
+    const targets = ctx.Identifier_list().map((name, i) => ({
       name: name.getText(),
       type: parseType(types[i].getText()),
     }));
-    const tupleAssignment = new TupleAssignmentNode(var1, var2, expression);
+    const tupleAssignment = new TupleAssignmentNode(targets, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
     return tupleAssignment;
   }
@@ -295,8 +296,8 @@ export default class AstBuilder
   }
 
   visitReturnStatement(ctx: ReturnStatementContext): ReturnNode {
-    const expression = this.visit(ctx.expression());
-    const returnNode = new ReturnNode(expression);
+    const expressions = ctx.expression_list().map((expression) => this.visit(expression) as ExpressionNode);
+    const returnNode = new ReturnNode(expressions);
     returnNode.location = Location.fromCtx(ctx);
     return returnNode;
   }

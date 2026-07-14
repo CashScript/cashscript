@@ -1,4 +1,4 @@
-import { Type, PrimitiveType, Script, Op, encodeInt } from '@cashscript/utils';
+import { Type, Script, Op, encodeInt } from '@cashscript/utils';
 import {
   VariableDefinitionNode,
   ParameterNode,
@@ -6,6 +6,7 @@ import {
   IdentifierNode,
   Node,
 } from './AST.js';
+import { functionReturnType } from '../utils.js';
 
 export class Symbol {
   references: IdentifierNode[] = [];
@@ -34,8 +35,7 @@ export class Symbol {
 
   static userFunction(node: FunctionDefinitionNode, functionId: number): Symbol {
     const parameterTypes = node.parameters.map((parameter) => parameter.type);
-    const returnType = node.returnType ?? PrimitiveType.VOID;
-    const symbol = new Symbol(node.name, returnType, SymbolType.FUNCTION, node, parameterTypes);
+    const symbol = new Symbol(node.name, functionReturnType(node.returnTypes), SymbolType.FUNCTION, node, parameterTypes);
     symbol.setFunctionId(functionId);
     return symbol;
   }

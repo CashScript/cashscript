@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+NEVER stage changes, just leave them in the working directory.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
