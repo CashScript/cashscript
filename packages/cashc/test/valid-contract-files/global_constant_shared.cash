@@ -1,0 +1,8 @@
+bytes32 constant HASH = 0x3333333333333333333333333333333333333333333333333333333333333333;
+
+contract GlobalConstantShared(bytes32 first, bytes32 second) {
+    function spend() {
+        require(first == HASH);
+        require(second == HASH);
+    }
+}

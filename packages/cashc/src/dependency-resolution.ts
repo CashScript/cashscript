@@ -1,6 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { SourceFileNode, FunctionDefinitionNode, ImportNode } from './ast/AST.js';
+import {
+  SourceFileNode,
+  FunctionDefinitionNode,
+  ConstantDefinitionNode,
+  ImportNode,
+} from './ast/AST.js';
 import { checkVersionConstraints } from './ast/Pragma.js';
 import type { CashScriptErrorListener } from './ast/error-listeners.js';
 import { ImportResolutionError } from './Errors.js';
@@ -62,25 +67,31 @@ export function resolveDependencies(
     );
   }
 
-  const importedFunctions = collectImports(ast.imports, resolver, errorListener);
-  ast.functions = [...importedFunctions, ...ast.functions];
+  const importedDefinitions = collectImports(ast.imports, resolver, errorListener);
+  ast.functions = [...importedDefinitions.functions, ...ast.functions];
+  ast.constants = [...importedDefinitions.constants, ...ast.constants];
   ast.imports = [];
 
   return ast;
 }
 
-// Depth-first walk of the import graph, returning every global function it reaches. `visitedPaths` is
-// internal bookkeeping that de-duplicates files by canonical path — collapsing diamonds (a file reached
-// through two paths is read once) and guaranteeing termination for mutual or cyclic imports — so this
-// function stays pure with respect to its arguments.
+interface ImportedDefinitions {
+  functions: FunctionDefinitionNode[];
+  constants: ConstantDefinitionNode[];
+}
+
+// Depth-first walk of the import graph, returning every global definition it reaches. `visitedPaths`
+// is internal bookkeeping that de-duplicates files by canonical path — collapsing diamonds (a file
+// reached through two paths is read once) and guaranteeing termination for mutual or cyclic imports —
+// so this function stays pure with respect to its arguments.
 function collectImports(
   imports: ImportNode[],
   resolver: ImportResolver,
   errorListener?: CashScriptErrorListener,
-): FunctionDefinitionNode[] {
+): ImportedDefinitions {
   const visitedPaths = new Set<string>();
 
-  const collect = (currentImports: ImportNode[], currentDir: string): FunctionDefinitionNode[] =>
+  const collect = (currentImports: ImportNode[], currentDir: string): ImportedDefinitions[] =>
     currentImports.flatMap((importNode) => {
       const canonicalPath = resolver.resolve(currentDir, importNode.path);
       if (visitedPaths.has(canonicalPath)) return [];
@@ -102,9 +113,20 @@ function collectImports(
         func.sourceCode = importedSource;
         func.sourceFile = resolver.sourceName(canonicalPath);
       });
+      importedAst.constants.forEach((constant) => {
+        constant.sourceCode = importedSource;
+        constant.sourceFile = resolver.sourceName(canonicalPath);
+      });
 
-      return [...collect(importedAst.imports, resolver.dirname(canonicalPath)), ...importedAst.functions];
+      return [
+        ...collect(importedAst.imports, resolver.dirname(canonicalPath)),
+        { functions: importedAst.functions, constants: importedAst.constants },
+      ];
     });
 
-  return collect(imports, resolver.rootDir);
+  const collected = collect(imports, resolver.rootDir);
+  return {
+    functions: collected.flatMap((definitions) => definitions.functions),
+    constants: collected.flatMap((definitions) => definitions.constants),
+  };
 }

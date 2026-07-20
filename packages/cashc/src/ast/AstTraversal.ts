@@ -6,6 +6,7 @@ import {
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -29,6 +30,7 @@ import {
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  LiteralNode,
   FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
@@ -39,6 +41,7 @@ import AstVisitor from './AstVisitor.js';
 
 export default class AstTraversal extends AstVisitor<Node> {
   visitSourceFile(node: SourceFileNode): Node {
+    node.constants = this.visitList(node.constants) as ConstantDefinitionNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
     node.contract = this.visitOptional(node.contract) as ContractNode | undefined;
     return node;
@@ -57,6 +60,11 @@ export default class AstTraversal extends AstVisitor<Node> {
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
+    return node;
+  }
+
+  visitConstantDefinition(node: ConstantDefinitionNode): Node {
+    node.value = this.visit(node.value) as LiteralNode;
     return node;
   }
 

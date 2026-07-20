@@ -1,0 +1,7 @@
+int constant VALUE = 4 + 9;
+
+contract GlobalConstantNonLiteral() {
+    function spend() {
+        require(VALUE == 13);
+    }
+}

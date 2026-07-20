@@ -9,6 +9,7 @@ title: Release Notes
 #### cashc compiler
 - :sparkles: Add support for user-defined reusable functions.
 - :sparkles: Add support for multiple return values in user-defined functions, destructured at the call site.
+- :sparkles: Add support for top-level global constants.
 - :sparkles: Add support for `import` directives to share user-defined functions across files.
 - :hammer_and_wrench: Update `compileString` to take an optional `files` object for filesystem-free import resolution.
 - :racehorse: Add new `OP_SWAP OP_MUL` optimisation.

@@ -8,6 +8,7 @@ import {
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -37,6 +38,7 @@ import {
   ForNode,
   NonControlStatementNode,
   ExpressionNode,
+  LiteralNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 
@@ -68,6 +70,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
   visitSourceFile(node: SourceFileNode): Node {
     node.imports = this.visitList(node.imports) as ImportNode[];
+    node.constants = this.visitList(node.constants) as ConstantDefinitionNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
     if (node.contract) node.contract = this.visit(node.contract) as ContractNode;
     return node;
@@ -104,6 +107,13 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     node.body = this.visit(node.body) as BlockNode;
     this.addOutput('\n');
 
+    return node;
+  }
+
+  visitConstantDefinition(node: ConstantDefinitionNode): Node {
+    this.addOutput(`${node.type} constant ${node.name} = `, true);
+    node.value = this.visit(node.value) as LiteralNode;
+    this.addOutput(';\n');
     return node;
   }
 

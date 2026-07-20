@@ -1,4 +1,4 @@
-// Generated from src/grammar/CashScript.g4 by ANTLR 4.13.2
+// Generated from src/grammar/CashScript.g4 by ANTLR 4.13.1
 
 import {ParseTreeVisitor} from 'antlr4';
 
@@ -12,6 +12,7 @@ import { VersionOperatorContext } from "./CashScriptParser.js";
 import { ImportDirectiveContext } from "./CashScriptParser.js";
 import { TopLevelDefinitionContext } from "./CashScriptParser.js";
 import { GlobalFunctionDefinitionContext } from "./CashScriptParser.js";
+import { ConstantDefinitionContext } from "./CashScriptParser.js";
 import { ContractDefinitionContext } from "./CashScriptParser.js";
 import { ContractFunctionDefinitionContext } from "./CashScriptParser.js";
 import { FunctionBodyContext } from "./CashScriptParser.js";
@@ -122,6 +123,12 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitGlobalFunctionDefinition?: (ctx: GlobalFunctionDefinitionContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.constantDefinition`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitConstantDefinition?: (ctx: ConstantDefinitionContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.contractDefinition`.
 	 * @param ctx the parse tree

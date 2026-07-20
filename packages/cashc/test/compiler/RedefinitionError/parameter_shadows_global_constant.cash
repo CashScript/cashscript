@@ -1,0 +1,7 @@
+int constant VALUE = 1;
+
+contract ParameterShadowsGlobalConstant(int VALUE) {
+    function spend() {
+        require(VALUE == 1);
+    }
+}

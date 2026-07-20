@@ -11,6 +11,7 @@ import {
   scriptToAsm,
   scriptToBytecode,
   optimiseBytecode,
+  OptimiseBytecodeResult,
   generateSourceMap,
   generateSourceTags,
   FullLocationData,
@@ -153,18 +154,24 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   private defineGlobalFunctions(node: SourceFileNode): void {
-    node.functions.forEach((func) => {
-      const { functionId } = node.symbolTable!.getFromThis(func.name)!;
-      const bodyBytecode = this.compileGlobalFunctionBody(func, functionId!);
+    // Assign function IDs to all global functions
+    node.functions.forEach((func, functionId) => {
+      node.symbolTable!.getFromThis(func.name)!.setFunctionId(functionId);
+    });
 
+    // Emit definitions in ID order so debug.functions[n] corresponds to the n-th define site (id n).
+    node.functions.forEach((func, functionId) => {
+      const bytecodeResult = this.compileGlobalFunctionBody(func);
+      this.pushDebugFrame(func, bytecodeResult, functionId);
       const locationData = { location: func.location, positionHint: PositionHint.START };
+      const bodyBytecode = scriptToBytecode(bytecodeResult.script);
       this.emit(bodyBytecode, locationData); // <function_body_bytes>
-      this.emit(encodeInt(BigInt(functionId!)), locationData); // <function_identifier>
+      this.emit(encodeInt(BigInt(functionId)), locationData); // <function_identifier>
       this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
     });
   }
 
-  private compileGlobalFunctionBody(node: FunctionDefinitionNode, functionId: number): Uint8Array {
+  private compileGlobalFunctionBody(node: FunctionDefinitionNode): OptimiseBytecodeResult {
     const bodyTraversal = new GenerateTargetTraversal(this.compilerOptions);
     bodyTraversal.currentFunction = node;
     bodyTraversal.constructorParameterCount = 0;
@@ -178,7 +185,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     bodyTraversal.visit(node.body);
     bodyTraversal.cleanGlobalFunctionStack(node);
 
-    const optimised = optimiseBytecode(
+    const optimisedResult = optimiseBytecode(
       bodyTraversal.output,
       bodyTraversal.locationData,
       bodyTraversal.consoleLogs,
@@ -187,23 +194,24 @@ export default class GenerateTargetTraversal extends AstTraversal {
       0,
     );
 
-    const bodyBytecode = scriptToBytecode(optimised.script);
-    const sourceTags = generateSourceTags(optimised.sourceTags);
+    return optimisedResult;
+  }
 
+
+  private pushDebugFrame(node: FunctionDefinitionNode, optimised: OptimiseBytecodeResult, functionId: number): void {
     this.frames.push({
       id: functionId,
       name: node.name,
+      kind: node.constant ? ('constant' as const) : undefined,
       inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
-      bytecode: binToHex(bodyBytecode),
+      bytecode: binToHex(scriptToBytecode(optimised.script)),
       sourceMap: generateSourceMap(optimised.locationData),
-      ...(sourceTags ? { sourceTags } : {}),
-      ...(node.sourceCode !== undefined ? { source: node.sourceCode } : {}),
-      ...(node.sourceFile !== undefined ? { sourceFile: node.sourceFile } : {}),
+      sourceTags: generateSourceTags(optimised.sourceTags) || undefined,
+      source: node.sourceCode,
+      sourceFile: node.sourceFile,
       logs: optimised.logs,
       requires: optimised.requires,
     });
-
-    return bodyBytecode;
   }
 
   cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {

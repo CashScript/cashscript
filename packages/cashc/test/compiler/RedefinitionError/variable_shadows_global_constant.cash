@@ -1,0 +1,8 @@
+int constant VALUE = 1;
+
+contract VariableShadowsGlobalConstant() {
+    function spend() {
+        int VALUE = 2;
+        require(VALUE == 2);
+    }
+}

@@ -44,13 +44,13 @@ export const fixtures: Fixture[] = [
     ast: new SourceFileNode(
       new ContractNode(
         'P2PKH',
-        [new ParameterNode(new BytesType(20), 'pkh')],
+        [new ParameterNode(new BytesType(20), [], 'pkh')],
         [new FunctionDefinitionNode(
           FunctionKind.CONTRACT,
           'spend',
           [
-            new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
-            new ParameterNode(PrimitiveType.SIG, 's'),
+            new ParameterNode(PrimitiveType.PUBKEY, [], 'pk'),
+            new ParameterNode(PrimitiveType.SIG, [], 's'),
           ],
           new BlockNode([
             new RequireNode(
@@ -76,11 +76,11 @@ export const fixtures: Fixture[] = [
     ast: new SourceFileNode(
       new ContractNode(
         'Reassignment',
-        [new ParameterNode(PrimitiveType.INT, 'x'), new ParameterNode(PrimitiveType.STRING, 'y')],
+        [new ParameterNode(PrimitiveType.INT, [], 'x'), new ParameterNode(PrimitiveType.STRING, [], 'y')],
         [new FunctionDefinitionNode(
           FunctionKind.CONTRACT,
           'hello',
-          [new ParameterNode(PrimitiveType.PUBKEY, 'pk'), new ParameterNode(PrimitiveType.SIG, 's')],
+          [new ParameterNode(PrimitiveType.PUBKEY, [], 'pk'), new ParameterNode(PrimitiveType.SIG, [], 's')],
           new BlockNode([
             new VariableDefinitionNode(
               PrimitiveType.INT,
@@ -150,12 +150,12 @@ export const fixtures: Fixture[] = [
     ast: new SourceFileNode(
       new ContractNode(
         'MultiFunctionIfStatements',
-        [new ParameterNode(PrimitiveType.INT, 'x'), new ParameterNode(PrimitiveType.INT, 'y')],
+        [new ParameterNode(PrimitiveType.INT, [], 'x'), new ParameterNode(PrimitiveType.INT, [], 'y')],
         [
           new FunctionDefinitionNode(
             FunctionKind.CONTRACT,
             'transfer',
-            [new ParameterNode(PrimitiveType.INT, 'a'), new ParameterNode(PrimitiveType.INT, 'b')],
+            [new ParameterNode(PrimitiveType.INT, [], 'a'), new ParameterNode(PrimitiveType.INT, [], 'b')],
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
@@ -239,7 +239,7 @@ export const fixtures: Fixture[] = [
           new FunctionDefinitionNode(
             FunctionKind.CONTRACT,
             'timeout',
-            [new ParameterNode(PrimitiveType.INT, 'b')],
+            [new ParameterNode(PrimitiveType.INT, [], 'b')],
             new BlockNode([
               new VariableDefinitionNode(
                 PrimitiveType.INT,
@@ -312,16 +312,16 @@ export const fixtures: Fixture[] = [
       new ContractNode(
         'MultiSig',
         [
-          new ParameterNode(PrimitiveType.PUBKEY, 'pk1'),
-          new ParameterNode(PrimitiveType.PUBKEY, 'pk2'),
-          new ParameterNode(PrimitiveType.PUBKEY, 'pk3'),
+          new ParameterNode(PrimitiveType.PUBKEY, [], 'pk1'),
+          new ParameterNode(PrimitiveType.PUBKEY, [], 'pk2'),
+          new ParameterNode(PrimitiveType.PUBKEY, [], 'pk3'),
         ],
         [new FunctionDefinitionNode(
           FunctionKind.CONTRACT,
           'spend',
           [
-            new ParameterNode(PrimitiveType.SIG, 's1'),
-            new ParameterNode(PrimitiveType.SIG, 's2'),
+            new ParameterNode(PrimitiveType.SIG, [], 's1'),
+            new ParameterNode(PrimitiveType.SIG, [], 's2'),
           ],
           new BlockNode([
             new RequireNode(
@@ -351,18 +351,18 @@ export const fixtures: Fixture[] = [
       new ContractNode(
         'HodlVault',
         [
-          new ParameterNode(PrimitiveType.PUBKEY, 'ownerPk'),
-          new ParameterNode(PrimitiveType.PUBKEY, 'oraclePk'),
-          new ParameterNode(PrimitiveType.INT, 'minBlock'),
-          new ParameterNode(PrimitiveType.INT, 'priceTarget'),
+          new ParameterNode(PrimitiveType.PUBKEY, [], 'ownerPk'),
+          new ParameterNode(PrimitiveType.PUBKEY, [], 'oraclePk'),
+          new ParameterNode(PrimitiveType.INT, [], 'minBlock'),
+          new ParameterNode(PrimitiveType.INT, [], 'priceTarget'),
         ],
         [new FunctionDefinitionNode(
           FunctionKind.CONTRACT,
           'spend',
           [
-            new ParameterNode(PrimitiveType.SIG, 'ownerSig'),
-            new ParameterNode(PrimitiveType.DATASIG, 'oracleSig'),
-            new ParameterNode(new BytesType(8), 'oracleMessage'),
+            new ParameterNode(PrimitiveType.SIG, [], 'ownerSig'),
+            new ParameterNode(PrimitiveType.DATASIG, [], 'oracleSig'),
+            new ParameterNode(new BytesType(8), [], 'oracleMessage'),
           ],
           new BlockNode([
             new TupleAssignmentNode(
@@ -654,10 +654,10 @@ export const fixtures: Fixture[] = [
       new ContractNode(
         'Mecenas',
         [
-          new ParameterNode(new BytesType(20), 'recipient'),
-          new ParameterNode(new BytesType(20), 'funder'),
-          new ParameterNode(PrimitiveType.INT, 'pledge'),
-          new ParameterNode(PrimitiveType.INT, 'period'),
+          new ParameterNode(new BytesType(20), [], 'recipient'),
+          new ParameterNode(new BytesType(20), [], 'funder'),
+          new ParameterNode(PrimitiveType.INT, [], 'pledge'),
+          new ParameterNode(PrimitiveType.INT, [], 'period'),
         ],
         [
           new FunctionDefinitionNode(
@@ -786,8 +786,8 @@ export const fixtures: Fixture[] = [
             FunctionKind.CONTRACT,
             'reclaim',
             [
-              new ParameterNode(PrimitiveType.PUBKEY, 'pk'),
-              new ParameterNode(PrimitiveType.SIG, 's'),
+              new ParameterNode(PrimitiveType.PUBKEY, [], 'pk'),
+              new ParameterNode(PrimitiveType.SIG, [], 's'),
             ],
             new BlockNode([
               new RequireNode(
@@ -918,6 +918,7 @@ export const fixtures: Fixture[] = [
       ),
       [],
       [],
+      [],
       ['>=0.8.0'],
     ),
   },
@@ -931,7 +932,7 @@ export const fixtures: Fixture[] = [
           new FunctionDefinitionNode(
             FunctionKind.CONTRACT,
             'spend',
-            [new ParameterNode(PrimitiveType.INT, 'value')],
+            [new ParameterNode(PrimitiveType.INT, [], 'value')],
             new BlockNode([
               new RequireNode(
                 new BinaryOpNode(

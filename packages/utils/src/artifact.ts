@@ -19,12 +19,13 @@ export interface DebugInformation {
   logs: readonly LogEntry[]; // log entries generated from `console.log` statements
   requires: readonly RequireStatement[]; // messages for failing `require` statements
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
-  functions?: readonly DebugFrame[]; // Debug metadata for each user-defined function
+  functions?: readonly DebugFrame[]; // Debug metadata for each shared global definition
 }
 
 export interface DebugFrame {
   id: number; // the function's id, as used with OP_DEFINE and OP_INVOKE in the bytecode
-  name: string; // the function's name
+  name: string; // the function/constant's name
+  kind?: 'constant'; // present when the VM function is the lowered form of a global constant; absent for regular functions
   inputs: readonly AbiInput[]; // the function's parameters (name and type), mirroring the ABI; for reference
   bytecode: string; // hex of the function body bytecode (exactly what OP_DEFINE stores and the VM runs)
   sourceMap: string; // frame-local source map (ips starting from 0)

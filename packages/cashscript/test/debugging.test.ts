@@ -854,12 +854,20 @@ describe('Debugging tests - user-defined function frames', () => {
     expect(transaction).toFailRequireWith('Failing statement: require(x < 100, "x must be small")');
   });
 
-  it('attributes a require failing inside an imported function to the imported file', () => {
+  it('attributes a console.log inside an imported function frame to the imported file', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(importedUtxo, importedContract.unlock.spend(5n))
+      .addOutput({ to: importedContract.address, amount: 10000n });
+
+    expect(transaction).toLog(new RegExp('^\\[Input #0] function_helpers.cash:2 checking 5$'));
+  });
+
+  it('attributes a require failing inside an imported function frame to the imported file', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(importedUtxo, importedContract.unlock.spend(0n))
       .addOutput({ to: importedContract.address, amount: 10000n });
 
-    expect(transaction).toFailRequireWith('function_helpers.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 2) with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('function_helpers.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 3) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
   });
 
@@ -916,7 +924,7 @@ describe('Debugging tests - user-defined function frames', () => {
     const template = transaction.getLibauthTemplate();
     const lockScript = template.scripts[getLockScriptName(importedContract)].script;
 
-    expect(lockScript).toContain('>>> function assertPositive (imported from function_helpers.cash)');
+    expect(lockScript).toContain('>>> imported from function_helpers.cash');
     expect(lockScript).toContain('/* function assertPositive(int value) {');
     expect(lockScript).toContain('> OP_0 OP_DEFINE');
   });

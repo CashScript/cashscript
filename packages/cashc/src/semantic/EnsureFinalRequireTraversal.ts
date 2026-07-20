@@ -2,7 +2,6 @@ import {
   ContractNode,
   ParameterNode,
   FunctionDefinitionNode,
-  FunctionKind,
   RequireNode,
   ReturnNode,
   TimeOpNode,
@@ -44,10 +43,10 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
       throw new EmptyFunctionError(node);
     }
 
-    if (node.kind === FunctionKind.CONTRACT) {
-      ensureFinalStatementIsRequire(node.body);
-    } else if (node.returnTypes !== undefined) {
+    if (node.returnTypes !== undefined) {
       ensureSingleTailReturn(node.body);
+    } else {
+      ensureFinalStatementIsRequire(node.body);
     }
 
     return node;

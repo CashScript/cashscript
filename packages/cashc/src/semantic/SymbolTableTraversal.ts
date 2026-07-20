@@ -5,6 +5,7 @@ import {
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   FunctionKind,
   IdentifierNode,
   StatementNode,
@@ -21,9 +22,9 @@ import {
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable.js';
+import { createConstantLiteral } from './LowerGlobalConstantsTraversal.js';
 import {
-  FunctionRedefinitionError,
-  VariableRedefinitionError,
+  RedefinitionError,
   UndefinedReferenceError,
   UnusedVariableError,
   InvalidSymbolTypeError,
@@ -40,12 +41,14 @@ export default class SymbolTableTraversal extends AstTraversal {
   visitSourceFile(node: SourceFileNode): Node {
     const globalFunctionTable = new SymbolTable(this.symbolTables[0]);
 
-    node.functions.forEach((functionNode, functionId) => {
-      if (globalFunctionTable.get(functionNode.name)) {
-        throw new FunctionRedefinitionError(functionNode);
-      }
-      const symbol = Symbol.userFunction(functionNode, functionId);
-      globalFunctionTable.set(symbol);
+    node.functions.forEach((functionNode) => {
+      if (globalFunctionTable.get(functionNode.name)) throw new RedefinitionError(functionNode, functionNode.name);
+      globalFunctionTable.set(Symbol.userFunction(functionNode));
+    });
+
+    node.constants.forEach((constantNode) => {
+      if (globalFunctionTable.get(constantNode.name)) throw new RedefinitionError(constantNode, constantNode.name);
+      globalFunctionTable.set(Symbol.constant(constantNode));
     });
 
     node.symbolTable = globalFunctionTable;
@@ -76,7 +79,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitParameter(node: ParameterNode): Node {
     if (this.symbolTables[0].get(node.name)) {
-      throw new VariableRedefinitionError(node);
+      throw new RedefinitionError(node, node.name);
     }
 
     this.symbolTables[0].set(Symbol.variable(node));
@@ -88,7 +91,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     if (node.kind === FunctionKind.CONTRACT) {
       if (this.contractFunctionNames.get(node.name)) {
-        throw new FunctionRedefinitionError(node);
+        throw new RedefinitionError(node, node.name);
       }
       this.contractFunctionNames.set(node.name, true);
     }
@@ -143,7 +146,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     if (this.symbolTables[0].get(node.name)) {
-      throw new VariableRedefinitionError(node);
+      throw new RedefinitionError(node, node.name);
     }
 
     node.expression = this.visit(node.expression);
@@ -154,13 +157,19 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitAssign(node: AssignNode): Node {
-    const v = this.symbolTables[0].get(node.identifier.name)?.definition as VariableDefinitionNode;
-    // const used_modifiers = [] # PREVENT USER FROM USING SAME MODIFIER AGAIN
-    v?.modifier?.forEach((modifier) => {
-      if (modifier === Modifier.CONSTANT) {
-        throw new ConstantModificationError(v);
-      }
-    });
+    const definition = this.symbolTables[0].get(node.identifier.name)?.definition;
+
+    if (definition === undefined || definition instanceof FunctionDefinitionNode) {
+      throw new UndefinedReferenceError(node.identifier);
+    }
+
+    if (definition instanceof ConstantDefinitionNode) {
+      throw new ConstantModificationError(node, node.identifier.name);
+    }
+
+    if (definition.modifiers?.includes(Modifier.CONSTANT)) {
+      throw new ConstantModificationError(node, node.identifier.name);
+    }
 
     super.visitAssign(node);
     return node;
@@ -172,7 +181,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
       const { name } = variable;
       if (this.symbolTables[0].get(name)) {
-        throw new VariableRedefinitionError(definition);
+        throw new RedefinitionError(definition, name);
       }
       this.symbolTables[0].set(
         Symbol.variable(definition),
@@ -216,6 +225,12 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     if (symbol.symbolType !== this.expectedSymbolType) {
       throw new InvalidSymbolTypeError(node, this.expectedSymbolType);
+    }
+
+    // Global constant references are replaced by their literal value, so all later passes
+    // (type checking, literal-driven analysis, codegen) see a plain literal at the use site.
+    if (symbol.definition instanceof ConstantDefinitionNode) {
+      return createConstantLiteral(symbol.definition, node);
     }
 
     node.symbol = symbol;

@@ -36,6 +36,7 @@ importDirective
 
 topLevelDefinition
     : globalFunctionDefinition
+    | constantDefinition
     | contractDefinition
     ;
 
@@ -224,6 +225,10 @@ typeCast
     : PrimitiveType
     | UnboundedBytes
     | UnsafeCast
+    ;
+
+constantDefinition
+    : typeName 'constant' Identifier '=' literal ';'
     ;
 
 VersionLiteral

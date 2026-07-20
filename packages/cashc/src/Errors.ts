@@ -3,8 +3,8 @@ import {
   IdentifierNode,
   ImportNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   VariableDefinitionNode,
-  ParameterNode,
   Node,
   FunctionCallNode,
   BinaryOpNode,
@@ -12,7 +12,6 @@ import {
   TimeOpNode,
   CastNode,
   AssignNode,
-  BranchNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
@@ -73,13 +72,12 @@ export class InvalidSymbolTypeError extends CashScriptError {
   }
 }
 
-export class RedefinitionError extends CashScriptError { }
-
-export class FunctionRedefinitionError extends RedefinitionError {
+export class RedefinitionError extends CashScriptError {
   constructor(
-    public node: FunctionDefinitionNode,
+    public node: Node,
+    public identifier: string,
   ) {
-    super(node, `Redefinition of function ${node.name}`);
+    super(node, `Redefinition of identifier ${identifier}`);
   }
 }
 
@@ -96,14 +94,6 @@ export class ImportResolutionError extends CashScriptError {
     message: string,
   ) {
     super(node, message);
-  }
-}
-
-export class VariableRedefinitionError extends RedefinitionError {
-  constructor(
-    public node: VariableDefinitionNode | ParameterNode,
-  ) {
-    super(node, `Redefinition of variable ${node.name}`);
   }
 }
 
@@ -264,27 +254,24 @@ export class CastTypeError extends TypeError {
 
 export class AssignTypeError extends TypeError {
   constructor(
-    node: AssignNode | VariableDefinitionNode,
+    node: AssignNode | VariableDefinitionNode | ConstantDefinitionNode,
   ) {
     const expected = node instanceof AssignNode ? node.identifier.type : node.type;
-    super(node, node.expression.type, expected, `Type '${node.expression.type}' can not be assigned to variable of type '${expected}'`);
-  }
-}
-
-export class ConstantConditionError extends CashScriptError {
-  constructor(
-    node: BranchNode | RequireNode,
-    res: boolean,
-  ) {
-    super(node, `Condition always evaluates to ${res}`);
+    const expression = node instanceof ConstantDefinitionNode ? node.value : node.expression;
+    const target = node instanceof ConstantDefinitionNode ? `constant '${node.name}'` : 'variable';
+    super(node, expression.type, expected, `Type '${expression.type}' can not be assigned to ${target} of type '${expected}'`);
   }
 }
 
 export class ConstantModificationError extends CashScriptError {
+  constructor(node: VariableDefinitionNode | ConstantDefinitionNode);
+  constructor(node: Node, name: string);
   constructor(
-    node: VariableDefinitionNode,
+    node: Node,
+    name?: string,
   ) {
-    super(node, `Tried to modify immutable variable '${node.name}'`);
+    const constantName = name ?? (node as VariableDefinitionNode | ConstantDefinitionNode).name;
+    super(node, `Tried to modify immutable variable '${constantName}'`);
   }
 }
 

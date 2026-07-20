@@ -1,6 +1,17 @@
+/*   global-definitions.test.ts
+ *
+ * - This file tests the compilation behaviour of user-defined global functions and constants:
+ *   dead-code elimination of unreachable definitions, stable VM function-ID assignment, and the
+ *   lowering of constants to zero-argument functions.
+ * - Compile errors are tested with the fixture files in ./compiler, and the exact compiled output
+ *   is locked in by the fixtures in generation/fixtures.ts.
+ */
+
 import { compileString } from '../src/index.js';
 
-const countOpDefines = (bytecode: string): number => [...bytecode.matchAll(/OP_DEFINE/g)].length;
+const countOp = (bytecode: string, opcode: string): number => [...bytecode.matchAll(new RegExp(opcode, 'g'))].length;
+
+const longHex = (byte: string): string => `0x${byte.repeat(32)}`;
 
 describe('Dead-code elimination', () => {
   it('does not define a global function that is never invoked', () => {
@@ -15,7 +26,7 @@ describe('Dead-code elimination', () => {
       }`;
 
     const artifact = compileString(code);
-    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toEqual(1);
     expect(artifact.bytecode).toContain('OP_INVOKE');
   });
 
@@ -33,7 +44,7 @@ describe('Dead-code elimination', () => {
 
     // Only `used` is reachable; both `deadCaller` and the function it calls (`deadLeaf`) are dropped.
     const artifact = compileString(code);
-    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toEqual(1);
   });
 
   it('keeps a function that is only reachable transitively', () => {
@@ -49,7 +60,7 @@ describe('Dead-code elimination', () => {
 
     // `outer` is called directly and `inner` only through `outer` — both must be defined.
     const artifact = compileString(code);
-    expect(countOpDefines(artifact.bytecode)).toEqual(2);
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toEqual(2);
   });
 
   it('keeps a recursive function without looping forever', () => {
@@ -63,7 +74,7 @@ describe('Dead-code elimination', () => {
       }`;
 
     const artifact = compileString(code);
-    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toEqual(1);
   });
 
   it('keeps mutually recursive functions that are reachable', () => {
@@ -78,7 +89,7 @@ describe('Dead-code elimination', () => {
       }`;
 
     const artifact = compileString(code);
-    expect(countOpDefines(artifact.bytecode)).toEqual(2);
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toEqual(2);
   });
 
   it('eliminates a mutually recursive cycle that is never reached', () => {
@@ -95,7 +106,7 @@ describe('Dead-code elimination', () => {
 
     // deadA <-> deadB form a cycle but neither is reachable, so both are dropped.
     const artifact = compileString(code);
-    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toEqual(1);
   });
 
   it('eliminates an unused imported function', () => {
@@ -107,11 +118,74 @@ describe('Dead-code elimination', () => {
     `;
 
     const artifact = compileString(code, { files: { './math.cash': mathSource } });
-    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toEqual(1);
+  });
+
+  it('does not define an unused constant', () => {
+    const contract = `
+      contract Unused() {
+        function spend() {
+          require(true);
+        }
+      }`;
+
+    const withConstant = compileString(`bytes32 constant UNUSED = ${longHex('11')};\n${contract}`);
+    expect(withConstant.bytecode).toEqual(compileString(contract).bytecode);
+  });
+
+  it('does not define a constant referenced only by console.log', () => {
+    const contract = (message: string): string => `
+      contract ConsoleOnly() {
+        function spend() {
+          console.log(${message});
+          require(true);
+        }
+      }`;
+
+    const withConstant = compileString(`string constant MESSAGE = "debug only";\n${contract('MESSAGE')}`);
+    expect(withConstant.bytecode).toEqual(compileString(contract('"debug only"')).bytecode);
   });
 });
 
-describe('Stable function id assignment', () => {
+describe('Global constants', () => {
+  it('compiles a constant identically to an equivalent zero-argument function', () => {
+    const contract = (reference: string): string => `
+      contract Repeated(bytes32 first, bytes32 second) {
+        function spend() {
+          require(first == ${reference} && second == ${reference});
+        }
+      }`;
+
+    const constant = compileString(`bytes32 constant HASH = ${longHex('33')};\n${contract('HASH')}`);
+    const fn = compileString(`function HASH() returns (bytes32) { return ${longHex('33')}; }\n${contract('HASH()')}`);
+
+    expect(countOp(constant.bytecode, 'OP_DEFINE')).toBe(1);
+    expect(countOp(constant.bytecode, 'OP_INVOKE')).toBe(2);
+    expect(constant.bytecode).toEqual(fn.bytecode);
+  });
+
+  it('retains debug source provenance for imported constants', () => {
+    const importedSource = `bytes32 constant IMPORTED_HASH = ${longHex('44')};`;
+    const source = `
+      import "./constants.cash";
+      contract Imported(bytes32 first, bytes32 second) {
+        function spend() {
+          require(first == IMPORTED_HASH && second == IMPORTED_HASH);
+        }
+      }`;
+
+    const artifact = compileString(source, { files: { './constants.cash': importedSource } });
+    expect(countOp(artifact.bytecode, 'OP_DEFINE')).toBe(1);
+    expect(artifact.debug?.functions?.[0]).toMatchObject({
+      name: 'IMPORTED_HASH',
+      kind: 'constant',
+      source: importedSource,
+      sourceFile: 'constants.cash',
+    });
+  });
+});
+
+describe('Stable function ID assignment', () => {
   it('reordering function declarations does not change the bytecode', () => {
     const ordered = `
       function a(int n) returns (int) { return n + 1; }
@@ -160,5 +234,33 @@ describe('Stable function id assignment', () => {
       }`;
 
     expect(compileString(renamed).bytecode).toEqual(compileString(original).bytecode);
+  });
+
+  it('assigns IDs by first use across functions and constants', () => {
+    const source = (first: string, second: string, fn: string, order: number[]): string => {
+      const definitions = [
+        `bytes32 constant ${first} = ${longHex('aa')};`,
+        `function ${fn}() returns (bytes32) { return ${longHex('cc')}; }`,
+        `bytes32 constant ${second} = ${longHex('bb')};`,
+      ];
+
+      return `
+        ${order.map((index) => definitions[index]).join('\n')}
+        contract Stable(bytes32 a, bytes32 b, bytes32 c) {
+          function spend() {
+            require(a == ${first} && b == ${fn}() && c == ${second});
+          }
+        }`;
+    };
+
+    const original = compileString(source('FIRST', 'SECOND', 'value', [0, 1, 2]));
+    const renamedAndReordered = compileString(source('ALPHA', 'OMEGA', 'renamed', [2, 0, 1]));
+
+    expect(renamedAndReordered.bytecode).toEqual(original.bytecode);
+    expect(original.debug?.functions?.map(({ name, id }) => ({ name, id }))).toEqual([
+      { name: 'FIRST', id: 0 },
+      { name: 'value', id: 1 },
+      { name: 'SECOND', id: 2 },
+    ]);
   });
 });

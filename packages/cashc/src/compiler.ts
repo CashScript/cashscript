@@ -33,6 +33,7 @@ import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.
 import EnsureFunctionsSafeTraversal from './semantic/EnsureFunctionsSafeTraversal.js';
 import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
 import DeadCodeEliminationTraversal from './semantic/DeadCodeEliminationTraversal.js';
+import { LowerGlobalConstantsTraversal } from './semantic/LowerGlobalConstantsTraversal.js';
 
 export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
   enforceFunctionParameterTypes: true,
@@ -104,6 +105,10 @@ function compileCode(
     ast = ast.accept(new InjectLocktimeGuardTraversal()) as Ast;
   }
 
+  // Turn global constants into synthetic zero-argument functions, so they can share reachability analysis and
+  // VM function-ID assignment with user-defined functions
+  ast = ast.accept(new LowerGlobalConstantsTraversal()) as Ast;
+
   // Dead-code elimination: drop global functions that are never invoked before code generation
   ast = ast.accept(new DeadCodeEliminationTraversal()) as Ast;
 
@@ -128,15 +133,15 @@ function compileCode(
     throw new Error('New bytecode optimisation is not backwards compatible, please report this issue to the CashScript team');
   }
 
-  // Attach debug information
-  const sourceTags = generateSourceTags(optimisationResult.sourceTags);
+  // Attach debug information (optional fields may be set to undefined; they are removed when the
+  // artifact is serialised)
   const debug = {
     bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
     sourceMap: generateSourceMap(optimisationResult.locationData),
     logs: optimisationResult.logs,
     requires: optimisationResult.requires,
-    ...(sourceTags ? { sourceTags } : {}),
-    ...(traversal.frames.length > 0 ? { functions: traversal.frames } : {}),
+    sourceTags: generateSourceTags(optimisationResult.sourceTags) || undefined,
+    functions: traversal.frames.length > 0 ? traversal.frames : undefined,
   };
 
   const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);

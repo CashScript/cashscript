@@ -1,5 +1,5 @@
 {
-    "version": "0.1",
+    "version": "0.2",
     "language": "en-GB",
     "words": [
         "aave",
@@ -11,6 +11,7 @@
         "authchain",
         "anyhedge",
         "anyonecanpay",
+        "backpointer",
         "badlength",
         "bchjs",
         "bchreg",
@@ -31,6 +32,7 @@
         "boolor",
         "bytecode",
         "bytesize",
+        "callees",
         "cashaddress",
         "cashc",
         "cashproof",

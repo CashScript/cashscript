@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { compileFile, compileString } from '../src/index.js';
-import { ImportResolutionError, FunctionRedefinitionError, VersionError } from '../src/Errors.js';
+import { ImportResolutionError, RedefinitionError, VersionError } from '../src/Errors.js';
 
 const fixture = (name: string): string => fileURLToPath(new URL(`./import-fixtures/${name}`, import.meta.url));
 
@@ -41,7 +41,7 @@ describe('Imports from the filesystem (compileFile)', () => {
 
   it('throws when an imported function collides with a local function of the same name', () => {
     // duplicate_import_main defines `shared` and imports a file that also defines `shared`.
-    expect(() => compileFile(fixture('duplicate_import_main.cash'))).toThrow(FunctionRedefinitionError);
+    expect(() => compileFile(fixture('duplicate_import_main.cash'))).toThrow(RedefinitionError);
   });
 
   it('resolves a cyclic import without infinite looping', () => {

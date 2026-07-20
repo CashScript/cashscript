@@ -471,12 +471,12 @@ OP_7 OP_1 OP_INVOKE OP_13 OP_NUMEQUAL                                           
     name: 'ImportedFunctions (two imported functions from one file)',
     file: 'function-imports/importer.cash',
     expectedBitAuthScript: `
-                                                /* >>> function double (imported from helpers.cash)               */
+                                                /* >>> imported from helpers.cash                                 */
 <                                               /* function double(int x) returns (int) {                         */
   OP_2 OP_MUL                                   /*     return x * 2;                                              */
 > OP_0 OP_DEFINE                                /* }                                                              */
                                                 /*                                                                */
-                                                /* >>> function addChecked (imported from helpers.cash)           */
+                                                /* >>> imported from helpers.cash                                 */
 <                                               /* function addChecked(int a, int b) returns (int) {              */
   OP_OVER OP_ADD                                /*     int sum = a + b;                                           */
   OP_DUP OP_ROT OP_GREATERTHANOREQUAL OP_VERIFY /*     require(sum >= a, "overflow");                             */
@@ -556,6 +556,36 @@ OP_0 OP_INVOKE OP_10 OP_NUMEQUAL /*         require(double(x) == 10, 'mismatch')
                                  /*     }                                         */
                                  /* }                                             */
                                  /*                                               */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    // Global constants are zero-argument VM functions: each definition renders as a define push
+    // group on the constant's declaration line, and each use compiles to an OP_INVOKE.
+    name: 'GlobalConstants (constants as zero-argument function definitions)',
+    sourceCode: `
+bytes32 constant HASH = 0x3333333333333333333333333333333333333333333333333333333333333333;
+int constant ONE = 1;
+
+contract GlobalConstants(bytes32 first, bytes32 second) {
+    function spend(int n) {
+        require(first == HASH, 'first mismatch');
+        require(second == HASH, 'second mismatch');
+        require(n + ONE == 2, 'n mismatch');
+    }
+}
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+    expectedBitAuthScript: `
+< <0x3333333333333333333333333333333333333333333333333333333333333333> > OP_0 OP_DEFINE /* bytes32 constant HASH = 0x3333333333333333333333333333333333333333333333333333333333333333; */
+                                                                                        /*                                                                                             */
+< OP_1 > OP_1 OP_DEFINE                                                                 /* int constant ONE = 1;                                                                       */
+                                                                                        /*                                                                                             */
+                                                                                        /* contract GlobalConstants(bytes32 first, bytes32 second) {                                   */
+                                                                                        /*     function spend(int n) {                                                                 */
+OP_0 OP_INVOKE OP_EQUALVERIFY                                                           /*         require(first == HASH, 'first mismatch');                                           */
+OP_0 OP_INVOKE OP_EQUALVERIFY                                                           /*         require(second == HASH, 'second mismatch');                                         */
+OP_1 OP_INVOKE OP_ADD OP_2 OP_NUMEQUAL                                                  /*         require(n + ONE == 2, 'n mismatch');                                                */
+                                                                                        /*     }                                                                                       */
+                                                                                        /* }                                                                                           */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
 ];

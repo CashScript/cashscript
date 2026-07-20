@@ -11,15 +11,7 @@ export default class DeadCodeEliminationTraversal extends AstTraversal {
 
   visitSourceFile(node: SourceFileNode): Node {
     super.visitOptional(node.contract);
-
-    // Set the node.functions to the reachable functions and re-index functionIds, the order is based on insertion
-    // into the set, which is most stable for the functionId as it is based on contract structure rather than
-    // name or order of declaration.
     node.functions = [...this.reachableFunctions];
-    node.functions.forEach((func, index) => {
-      node.symbolTable!.getFromThis(func.name)!.setFunctionId(index);
-    });
-
     return node;
   }
 

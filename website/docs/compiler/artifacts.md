@@ -27,7 +27,7 @@ interface Artifact {
     logs: LogEntry[] // log entries generated from `console.log` statements
     requires: RequireStatement[] // messages for failing `require` statements
     sourceTags?: string // semantic tags for opcodes (e.g. loop update/condition ranges)
-    functions?: DebugFrame[] // debug metadata for each user-defined function
+    functions?: DebugFrame[] // debug metadata for each shared global definition
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
   fingerprint?: string // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
@@ -64,7 +64,8 @@ interface RequireStatement {
 
 interface DebugFrame {
   id: number; // the function's id, as used with OP_DEFINE / OP_INVOKE in the bytecode
-  name: string; // the function's name
+  name: string; // the source definition's name
+  kind?: 'constant'; // present when the VM function implements a global constant; absent for regular functions
   inputs: AbiInput[]; // the function's parameters (name and type)
   bytecode: string; // hex-encoded bytecode of the function body (exactly what OP_DEFINE stores)
   sourceMap: string; // source map of the function body (instruction pointers starting from 0)

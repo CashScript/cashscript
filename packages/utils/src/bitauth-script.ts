@@ -203,7 +203,7 @@ function renderFunctionDefinition(
   const sourceLines = isImported ? frame.source!.split('\n') : context.sourceLines;
 
   const headerRows = isImported
-    ? [{ asm: '', comment: `>>> function ${frame.name} (imported from ${frame.sourceFile})` }]
+    ? [{ asm: '', comment: `>>> imported from ${frame.sourceFile}` }]
     : [];
 
   return {

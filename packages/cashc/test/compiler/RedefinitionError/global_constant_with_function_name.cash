@@ -1,0 +1,11 @@
+int constant helper = 1;
+
+function helper() returns (int) {
+    return 1;
+}
+
+contract GlobalConstantWithFunctionName() {
+    function spend() {
+        require(helper() == 1);
+    }
+}
