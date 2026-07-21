@@ -105,8 +105,8 @@ function compileCode(
     ast = ast.accept(new InjectLocktimeGuardTraversal()) as Ast;
   }
 
-  // Turn global constants into synthetic zero-argument functions, so they can share reachability analysis and
-  // VM function-ID assignment with user-defined functions
+  // Turn global constants into synthetic zero-argument functions, so they can share reachability analysis,
+  // inlining, and VM function-ID assignment with user-defined functions
   ast = ast.accept(new LowerGlobalConstantsTraversal()) as Ast;
 
   // Dead-code elimination: drop global functions that are never invoked before code generation

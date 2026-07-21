@@ -63,7 +63,9 @@ function segmentScript(params: WalkParams): Segment[] {
   const { script, sourceLines } = params;
   const locationData = sourceMapToLocationData(params.sourceMap);
   const tags = parseSourceTags(params.sourceTags ?? '');
-  const frames = params.functions ?? [];
+  // Only defined (OP_DEFINE'd) frames have a define site in the script; inlined callables are
+  // listed after them in the functions list purely as documentation and render nothing here
+  const frames = (params.functions ?? []).filter((frame) => frame.id !== undefined);
 
   const segments: Segment[] = [];
   let index = 0;
@@ -212,9 +214,10 @@ function renderFunctionDefinition(
   };
 }
 
+// Only called for defined frames (id present), which segmentScript filters on
 function buildFunctionSection(frame: DebugFrame, location: LocationI, sourceLines: string[]): Row[] {
   const bodyScript = bytecodeToScript(hexToBin(frame.bytecode));
-  const defineAsm = scriptToBitAuthAsm([encodeInt(BigInt(frame.id)), Op.OP_DEFINE]);
+  const defineAsm = scriptToBitAuthAsm([encodeInt(BigInt(frame.id!)), Op.OP_DEFINE]);
   const { start, end } = location;
 
   if (end.line === start.line) {

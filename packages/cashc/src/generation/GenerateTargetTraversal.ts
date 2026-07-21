@@ -14,6 +14,7 @@ import {
   OptimiseBytecodeResult,
   generateSourceMap,
   generateSourceTags,
+  parseSourceTags,
   FullLocationData,
   DebugFrame,
   LogEntry,
@@ -72,6 +73,13 @@ import {
   compileUnaryOp,
 } from './utils.js';
 import { isNumericType } from '../utils.js';
+import { Symbol } from '../ast/SymbolTable.js';
+
+interface InlineRange {
+  startIp: number;
+  frame: DebugFrame;
+  line: number;
+}
 
 export default class GenerateTargetTraversal extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -87,6 +95,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+  private inlineRanges: InlineRange[] = [];
 
   constructor(private compilerOptions: CompilerOptions) {
     super();
@@ -145,6 +154,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // The contract is guaranteed to exist here (compileString throws MissingContractError otherwise).
     node.contract = this.visit(node.contract!) as ContractNode;
 
+    this.mergeInlinedDebugInfo();
+
     // Minimally encode output by going Script -> ASM -> Script
     this.output = asmToScript(scriptToAsm(this.output));
 
@@ -153,22 +164,80 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
+  private mergeInlinedDebugInfo(): void {
+    this.inlineRanges.forEach(({ startIp, frame, line }) => {
+      this.requires.push(...frame.requires.map((entry) => ({
+        ...entry,
+        ip: entry.ip + startIp,
+        line,
+      })));
+
+      this.consoleLogs.push(...frame.logs.map((entry) => ({
+        ...entry,
+        ip: entry.ip + startIp,
+        data: entry.data.map((item) => (typeof item === 'string' ? item : { ...item, ip: item.ip + startIp })),
+        line,
+      })));
+
+      // Source tags use opcode indices rather than ips, which excludes the constructor arguments
+      const startIndex = startIp - this.constructorParameterCount;
+      this.sourceTags.push(...parseSourceTags(frame.sourceTags ?? '').map((entry) => ({
+        ...entry,
+        startIndex: entry.startIndex + startIndex,
+        endIndex: entry.endIndex + startIndex,
+      })));
+    });
+
+    // Restore overall program order, since the merged entries were appended after this program's own
+    this.requires.sort((a, b) => a.ip - b.ip);
+    this.consoleLogs.sort((a, b) => a.ip - b.ip);
+    this.sourceTags.sort((a, b) => a.startIndex - b.startIndex);
+  }
+
   private defineGlobalFunctions(node: SourceFileNode): void {
-    // Assign function IDs to all global functions
-    node.functions.forEach((func, functionId) => {
+    // Assign function IDs to recursive functions first
+    const recursiveFunctions = node.functions.filter(isRecursive);
+    recursiveFunctions.forEach((func, functionId) => {
       node.symbolTable!.getFromThis(func.name)!.setFunctionId(functionId);
     });
 
+    const reachableCalls = [node.contract!, ...node.functions].flatMap((n) => collectFunctionCalls(n));
+    const definedFunctions: Array<{ func: FunctionDefinitionNode, compiledResult: OptimiseBytecodeResult }> = [];
+    let nextFunctionId = recursiveFunctions.length;
+
+    node.functions.forEach((func) => {
+      const symbol = node.symbolTable!.getFromThis(func.name)!;
+      const compiledResult = this.compileGlobalFunctionBody(func);
+
+      // If the function should be inlined, we ONLY update the symbol
+      if (shouldInline(symbol, compiledResult, reachableCalls, nextFunctionId, this.compilerOptions)) {
+        symbol.setInlinedBytecode(compiledResult.script, this.buildDebugFrame(func, compiledResult));
+        return;
+      }
+
+      // If the function ID is not yet assigned, we assign it (skipped for recursive functions which were assigned above)
+      if (symbol.functionId === undefined) {
+        symbol.setFunctionId(nextFunctionId);
+        nextFunctionId += 1;
+      }
+
+      // Pre-assigned recursive functions and non-inlined functions should be defined
+      definedFunctions[symbol.functionId!] = { func, compiledResult };
+    });
+
     // Emit definitions in ID order so debug.functions[n] corresponds to the n-th define site (id n).
-    node.functions.forEach((func, functionId) => {
-      const bytecodeResult = this.compileGlobalFunctionBody(func);
-      this.pushDebugFrame(func, bytecodeResult, functionId);
+    definedFunctions.forEach(({ func, compiledResult }, functionId) => {
+      this.frames.push(this.buildDebugFrame(func, compiledResult, functionId));
       const locationData = { location: func.location, positionHint: PositionHint.START };
-      const bodyBytecode = scriptToBytecode(bytecodeResult.script);
-      this.emit(bodyBytecode, locationData); // <function_body_bytes>
+      this.emit(scriptToBytecode(compiledResult.script), locationData); // <function_body_bytes>
       this.emit(encodeInt(BigInt(functionId)), locationData); // <function_identifier>
       this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
     });
+
+    // Inlined callables are documented as id-less frames after the defined ones
+    node.functions
+      .flatMap((func) => node.symbolTable!.getFromThis(func.name)!.inlinedFrame ?? [])
+      .forEach((frame) => this.frames.push(frame));
   }
 
   private compileGlobalFunctionBody(node: FunctionDefinitionNode): OptimiseBytecodeResult {
@@ -184,6 +253,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     bodyTraversal.visit(node.body);
     bodyTraversal.cleanGlobalFunctionStack(node);
+    bodyTraversal.mergeInlinedDebugInfo();
 
     const optimisedResult = optimiseBytecode(
       bodyTraversal.output,
@@ -197,9 +267,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return optimisedResult;
   }
 
-
-  private pushDebugFrame(node: FunctionDefinitionNode, optimised: OptimiseBytecodeResult, functionId: number): void {
-    this.frames.push({
+  private buildDebugFrame(
+    node: FunctionDefinitionNode,
+    optimised: OptimiseBytecodeResult,
+    functionId?: number,
+  ): DebugFrame {
+    return {
       id: functionId,
       name: node.name,
       kind: node.constant ? ('constant' as const) : undefined,
@@ -211,7 +284,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       sourceFile: node.sourceFile,
       logs: optimised.logs,
       requires: optimised.requires,
-    });
+    };
   }
 
   cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {
@@ -673,7 +746,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     const symbol = node.identifier.symbol!;
     node.parameters = this.visitList(node.parameters);
+
+    const startIp = this.output.length + this.constructorParameterCount;
     this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
+
+    if (symbol.inlinedFrame) {
+      this.inlineRanges.push({ startIp, frame: symbol.inlinedFrame, line: node.location.start.line });
+    }
+
     this.popFromStack(node.parameters.length);
 
     // The call leaves one value per declared return type (none for a void function); a multi-return
@@ -905,3 +985,72 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 }
+
+const shouldInline = (
+  symbol: Symbol,
+  optimisedResult: OptimiseBytecodeResult,
+  reachableCalls: FunctionCallNode[],
+  nextFunctionId: number,
+  compilerOptions: CompilerOptions,
+): boolean => {
+  if (compilerOptions.disableInlining) return false;
+  if (symbol.functionId !== undefined) return false;
+
+  const callCount = reachableCalls.filter((call) => call.identifier.symbol === symbol).length;
+  return isWorthInlining(nextFunctionId, optimisedResult.script, callCount);
+};
+
+function isWorthInlining(candidateFunctionId: number, bodyScript: Script, callCount: number): boolean {
+  const bodyBytes = scriptToBytecode(bodyScript).length;
+  const idBytes = scriptToBytecode([encodeInt(BigInt(candidateFunctionId))]).length;
+
+  const bytesWhenDefined = bodyBytes + idBytes + 1 + callCount * (idBytes + 1);
+  const bytesWhenInlined = callCount * bodyBytes;
+
+  return bytesWhenInlined <= bytesWhenDefined;
+}
+
+class FunctionCallCollector extends AstTraversal {
+  functionCalls: FunctionCallNode[] = [];
+
+  visitFunctionCall(node: FunctionCallNode): Node {
+    this.functionCalls.push(node);
+    node.parameters = this.visitList(node.parameters);
+    return node;
+  }
+}
+
+function collectFunctionCalls(node: Node): FunctionCallNode[] {
+  const collector = new FunctionCallCollector();
+  collector.visit(node);
+  return collector.functionCalls;
+}
+
+// The global functions a function's body calls directly (deduplicated). A call targets a global
+// function when its resolved symbol carries a definition node — builtin functions have none.
+function calledFunctions(func: FunctionDefinitionNode): FunctionDefinitionNode[] {
+  return collectFunctionCalls(func.body)
+    .map((call) => call.identifier.symbol?.definition)
+    .filter((definition): definition is FunctionDefinitionNode => definition instanceof FunctionDefinitionNode)
+    .filter((definition, index, definitions) => definitions.indexOf(definition) === index);
+}
+
+// A function is recursive when it can transitively call itself. Recursive functions can never be
+// inlined — expanding them would never terminate — so they always keep a shared definition.
+function isRecursive(func: FunctionDefinitionNode): boolean {
+  return transitiveCalledFunctions(func).includes(func);
+}
+
+function transitiveCalledFunctions(func: FunctionDefinitionNode): FunctionDefinitionNode[] {
+  const callees: FunctionDefinitionNode[] = [];
+
+  const visit = (current: FunctionDefinitionNode): void => calledFunctions(current).forEach((callee) => {
+    if (callees.includes(callee)) return;
+    callees.push(callee);
+    visit(callee);
+  });
+
+  visit(func);
+  return callees;
+}
+

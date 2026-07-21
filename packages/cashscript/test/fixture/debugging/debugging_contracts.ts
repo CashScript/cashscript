@@ -489,3 +489,14 @@ export const artifactTestMultiReturn = compileString(CONTRACT_TEST_MULTI_RETURN)
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));
+
+// Variants with inlining disabled, so single-use functions stay OP_DEFINE'd and are debugged
+// through their own frames (attributing to their own source instead of the call site).
+export const artifactTestFunctionDebuggingDefined = compileString(
+  CONTRACT_TEST_FUNCTION_DEBUGGING,
+  { disableInlining: true },
+);
+export const artifactTestImportedFunctionDebuggingDefined = compileFile(
+  new URL('./function_importer.cash', import.meta.url),
+  { disableInlining: true },
+);

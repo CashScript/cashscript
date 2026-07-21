@@ -1,5 +1,7 @@
 /* eslint-disable max-len */
 
+import { CompilerOptions } from '../../src/artifact.js';
+
 export interface Fixture {
   name: string;
   sourceCode: string;
@@ -407,12 +409,14 @@ export interface FunctionFixture {
   name: string;
   sourceCode?: string; // compiled with compileString when set
   file?: string; // compiled with compileFile, relative to this fixtures directory (used for imports)
+  compilerOptions?: CompilerOptions;
   expectedBitAuthScript: string;
 }
 
 export const functionFixtures: FunctionFixture[] = [
   {
     name: 'LocalFunctions (same-file functions with loop + recursion)',
+    compilerOptions: { disableInlining: true },
     sourceCode: `
 function sumTo(int n) returns (int) {
     int sum = 0;
@@ -437,7 +441,18 @@ contract LocalFunctions() {
     }
 }
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
+    // fib is recursive, so it receives its id before the callee-first compilation pass and is
+    // defined first; sumTo follows in id order.
     expectedBitAuthScript: `
+<                                                                                      /* function fib(int n) returns (int) {              */
+  OP_DUP OP_DUP                                                                        /*     int result = n;                              */
+  OP_2 OP_GREATERTHANOREQUAL OP_IF                                                     /*     if (n >= 2) {                                */
+  OP_OVER OP_1SUB OP_0 OP_INVOKE OP_2 OP_PICK OP_2 OP_SUB OP_0 OP_INVOKE OP_ADD OP_NIP /*         result = fib(n - 1) + fib(n - 2);        */
+  OP_ENDIF                                                                             /*     }                                            */
+                                                                                       /*     return result;                               */
+  OP_NIP                                                                               /*     >>> scope cleanup                            */
+> OP_0 OP_DEFINE                                                                       /* }                                                */
+                                                                                       /*                                                  */
 <                                                                                      /* function sumTo(int n) returns (int) {            */
   OP_0                                                                                 /*     int sum = 0;                                 */
   OP_0 OP_BEGIN OP_DUP OP_3 OP_PICK OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF             /*     for (int i = 0; i < n; i = i + 1) {          */
@@ -448,21 +463,12 @@ contract LocalFunctions() {
                                                                                        /*     }                                            */
                                                                                        /*     return sum;                                  */
   OP_NIP                                                                               /*     >>> scope cleanup                            */
-> OP_0 OP_DEFINE                                                                       /* }                                                */
-                                                                                       /*                                                  */
-<                                                                                      /* function fib(int n) returns (int) {              */
-  OP_DUP OP_DUP                                                                        /*     int result = n;                              */
-  OP_2 OP_GREATERTHANOREQUAL OP_IF                                                     /*     if (n >= 2) {                                */
-  OP_OVER OP_1SUB OP_1 OP_INVOKE OP_2 OP_PICK OP_2 OP_SUB OP_1 OP_INVOKE OP_ADD OP_NIP /*         result = fib(n - 1) + fib(n - 2);        */
-  OP_ENDIF                                                                             /*     }                                            */
-                                                                                       /*     return result;                               */
-  OP_NIP                                                                               /*     >>> scope cleanup                            */
 > OP_1 OP_DEFINE                                                                       /* }                                                */
                                                                                        /*                                                  */
                                                                                        /* contract LocalFunctions() {                      */
                                                                                        /*     function spend() {                           */
-OP_5 OP_0 OP_INVOKE OP_10 OP_NUMEQUALVERIFY                                            /*         require(sumTo(5) == 10, 'sum mismatch'); */
-OP_7 OP_1 OP_INVOKE OP_13 OP_NUMEQUAL                                                  /*         require(fib(7) == 13, 'fib mismatch');   */
+OP_5 OP_1 OP_INVOKE OP_10 OP_NUMEQUALVERIFY                                            /*         require(sumTo(5) == 10, 'sum mismatch'); */
+OP_7 OP_0 OP_INVOKE OP_13 OP_NUMEQUAL                                                  /*         require(fib(7) == 13, 'fib mismatch');   */
                                                                                        /*     }                                            */
                                                                                        /* }                                                */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
@@ -470,6 +476,7 @@ OP_7 OP_1 OP_INVOKE OP_13 OP_NUMEQUAL                                           
   {
     name: 'ImportedFunctions (two imported functions from one file)',
     file: 'function-imports/importer.cash',
+    compilerOptions: { disableInlining: true },
     expectedBitAuthScript: `
                                                 /* >>> imported from helpers.cash                                 */
 <                                               /* function double(int x) returns (int) {                         */
@@ -498,6 +505,7 @@ OP_SWAP OP_1 OP_INVOKE OP_15 OP_NUMEQUAL        /*         require(addChecked(do
     // The single-byte 0x81 body (lone OP_BIN2NUM) gets minimally encoded as the opcode OP_1NEGATE at the
     // define site, so it must be matched to its frame by push-data equality rather than element shape.
     name: 'MinimalBody (single-byte function body, minimally encoded define site)',
+    compilerOptions: { disableInlining: true },
     sourceCode: `
 function toInt(bytes b) returns (int) {
     return int(b);
@@ -533,7 +541,66 @@ OP_3 OP_1 OP_INVOKE OP_6 OP_NUMEQUAL         /*         require(double(3) == 6, 
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {
+    // A large constant used twice is lowered to a shared definition rendered as a define push group
+    // on its declaration line; the small constant ONE stays inlined at its use site (as OP_1ADD).
+    name: 'GlobalConstants (shared and inlined constants)',
+    sourceCode: `
+bytes32 constant HASH = 0x3333333333333333333333333333333333333333333333333333333333333333;
+int constant ONE = 1;
+
+contract GlobalConstants(bytes32 first, bytes32 second) {
+    function spend(int n) {
+        require(first == HASH, 'first mismatch');
+        require(second == HASH, 'second mismatch');
+        require(n + ONE == 2, 'n mismatch');
+    }
+}
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+    expectedBitAuthScript: `
+< <0x3333333333333333333333333333333333333333333333333333333333333333> > OP_0 OP_DEFINE /* bytes32 constant HASH = 0x3333333333333333333333333333333333333333333333333333333333333333; */
+                                                                                        /*                                                                                             */
+                                                                                        /* int constant ONE = 1;                                                                       */
+                                                                                        /*                                                                                             */
+                                                                                        /* contract GlobalConstants(bytes32 first, bytes32 second) {                                   */
+                                                                                        /*     function spend(int n) {                                                                 */
+OP_0 OP_INVOKE OP_EQUALVERIFY                                                           /*         require(first == HASH, 'first mismatch');                                           */
+OP_0 OP_INVOKE OP_EQUALVERIFY                                                           /*         require(second == HASH, 'second mismatch');                                         */
+OP_1ADD OP_2 OP_NUMEQUAL                                                                /*         require(n + ONE == 2, 'n mismatch');                                                */
+                                                                                        /*     }                                                                                       */
+                                                                                        /* }                                                                                           */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
+    // A single-use function is inlined at the call site instead of defined: no define push groups,
+    // and the emitted body opcodes are attributed to the call site (the function's own source
+    // renders as bare comment lines).
+    name: 'InlinedFunction (single-use function inlined at the call site)',
+    sourceCode: `
+function double(int x) returns (int) {
+    return x * 2;
+}
+
+contract InlinedFunction() {
+    function spend(int n) {
+        require(double(n) == 10, 'mismatch');
+    }
+}
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+    expectedBitAuthScript: `
+                              /* function double(int x) returns (int) {        */
+                              /*     return x * 2;                             */
+                              /* }                                             */
+                              /*                                               */
+                              /* contract InlinedFunction() {                  */
+                              /*     function spend(int n) {                   */
+OP_2 OP_MUL OP_10 OP_NUMEQUAL /*         require(double(n) == 10, 'mismatch'); */
+                              /*     }                                         */
+                              /* }                                             */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
+  {
     name: 'AfterContract (function defined below the contract in the same file)',
+    compilerOptions: { disableInlining: true },
     sourceCode: `
 contract AfterContract() {
     function spend(int x) {
@@ -562,6 +629,7 @@ OP_0 OP_INVOKE OP_10 OP_NUMEQUAL /*         require(double(x) == 10, 'mismatch')
     // Global constants are zero-argument VM functions: each definition renders as a define push
     // group on the constant's declaration line, and each use compiles to an OP_INVOKE.
     name: 'GlobalConstants (constants as zero-argument function definitions)',
+    compilerOptions: { disableInlining: true },
     sourceCode: `
 bytes32 constant HASH = 0x3333333333333333333333333333333333333333333333333333333333333333;
 int constant ONE = 1;

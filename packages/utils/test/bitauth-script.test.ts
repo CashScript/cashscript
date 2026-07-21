@@ -54,8 +54,8 @@ describe('Libauth Script formatting', () => {
 
   describe('User-defined function formatting', () => {
     const compileFixture = (fixture: FunctionFixture): Artifact => (fixture.file
-      ? compileFile(new URL(`./fixtures/${fixture.file}`, import.meta.url))
-      : compileString(fixture.sourceCode!));
+      ? compileFile(new URL(`./fixtures/${fixture.file}`, import.meta.url), fixture.compilerOptions)
+      : compileString(fixture.sourceCode!, fixture.compilerOptions));
 
     functionFixtures.forEach((fixture) => {
       describe(fixture.name, () => {

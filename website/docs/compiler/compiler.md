@@ -101,7 +101,7 @@ const source = await result.text();
 const P2PKH = compileString(source);
 ```
 
-`compileString` never reads from the filesystem, so `import` directives that pull in [top-level definitions](/docs/language/contracts#importing-definitions-from-other-files) are resolved from the `files` compiler option instead. Its keys are the import paths relative to the main source (using forward slashes), and its values are the corresponding source code strings.
+`compileString` never reads from the filesystem, so `import` directives that pull in [top-level definitions](/docs/language/contracts#importing-functions-and-constants-from-other-files) are resolved from the `files` compiler option instead. Its keys are the import paths relative to the main source (using forward slashes), and its values are the corresponding source code strings.
 
 ```ts
 const mathSource = `
@@ -132,6 +132,7 @@ Imports inside imported files are resolved relative to the *importing* file, but
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
   enforceLocktimeGuard?: boolean;
+  disableInlining?: boolean;
 }
 ```
 
@@ -148,3 +149,9 @@ This option is useful if you are certain that passing in incorrect function para
 The `enforceLocktimeGuard` option controls whether the compiler injects a `require(tx.time >= tx.locktime)` check when `tx.locktime` is used in a function without a `require(tx.time >= ...)` (or in some cases, `require(this.age >= ...)`) check already in scope. By default, it is set to `true`.
 
 If set to `false`, the compiler will not inject this guard. Without a guard, the value of `tx.locktime` is not guaranteed to be enforced by the network, which makes any comparison against `tx.locktime` meaningless and can bypass time-based restrictions in the contract.
+
+#### disableInlining
+
+The compiler normally inlines global functions and constants when that produces bytecode no larger than sharing them with `OP_DEFINE`/`OP_INVOKE`. Set `disableInlining` to `true` to always retain the shared-definition form. By default, it is `false`.
+
+Inlining can affect debug attribution: an inlined function is attributed to its call site when debugging, while a shared (`OP_DEFINE`'d) function executes its own debug frame and is attributed to its own source. Set `disableInlining` to `true` if you want every function to be debugged through its own frame.

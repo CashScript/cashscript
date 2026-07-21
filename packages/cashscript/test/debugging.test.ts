@@ -15,8 +15,10 @@ import {
   artifactTestRequireInsideLoop,
   artifactTestLogInsideLoop,
   artifactTestFunctionDebugging,
+  artifactTestFunctionDebuggingDefined,
   artifactTestFunctionIntermediateResults,
   artifactTestImportedFunctionDebugging,
+  artifactTestImportedFunctionDebuggingDefined,
   artifactTestMultiReturn,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
@@ -828,21 +830,30 @@ describe('Debugging tests - user-defined function frames', () => {
   const importedContract = new Contract(artifactTestImportedFunctionDebugging, [], { provider });
   const importedUtxo = provider.addUtxo(importedContract.address, randomUtxo());
 
-  it('attributes a console.log inside a function to the function source line', () => {
+  const definedContract = new Contract(artifactTestFunctionDebuggingDefined, [], { provider });
+  const definedUtxo = provider.addUtxo(definedContract.address, randomUtxo());
+
+  const importedDefinedContract = new Contract(artifactTestImportedFunctionDebuggingDefined, [], { provider });
+  const importedDefinedUtxo = provider.addUtxo(importedDefinedContract.address, randomUtxo());
+
+  it('attributes a console.log inside an inlined function to the call site', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.spend(5n))
       .addOutput({ to: contract.address, amount: 10000n });
 
-    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:3 checking 5$'));
+    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:9 checking 5$'));
   });
 
-  it('attributes a require failing inside a function to the function source line', () => {
+  it('attributes a require failing inside an inlined function to the call site', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.spend(0n))
       .addOutput({ to: contract.address, amount: 10000n });
 
-    expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: value must be positive.');
-    expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
+    // The source map attributes an inlined body to its call site; the require's own line and the
+    // function's frame are retained in the artifact, but are not yet used for attribution here
+    // (the defined variant below attributes to the function's own line)
+    expect(transaction).toFailRequireWith('Test.cash:9 Require statement failed at input 0 in contract Test.cash at line 9 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: checkValue(x)');
   });
 
   it('still attributes a contract-level require to the contract source line', () => {
@@ -854,18 +865,38 @@ describe('Debugging tests - user-defined function frames', () => {
     expect(transaction).toFailRequireWith('Failing statement: require(x < 100, "x must be small")');
   });
 
-  it('attributes a console.log inside an imported function frame to the imported file', () => {
+  it('attributes a require failing inside an inlined imported function to the call site', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(importedUtxo, importedContract.unlock.spend(0n))
+      .addOutput({ to: importedContract.address, amount: 10000n });
+
+    // An inlined body from another file cannot contribute source locations to the contract's
+    // source map, so its debug info is attributed to the call site (unlike the defined form,
+    // whose own frame attributes to the imported file — see the defined variants below)
+    expect(transaction).toFailRequireWith('Test.cash:5 Require statement failed at input 0 in contract Test.cash at line 5 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: assertPositive(x)');
+  });
+
+  it('attributes a console.log inside an inlined imported function to the call site', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(importedUtxo, importedContract.unlock.spend(5n))
       .addOutput({ to: importedContract.address, amount: 10000n });
+
+    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:5 checking 5$'));
+  });
+
+  it('attributes a console.log inside an imported function frame to the imported file', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(importedDefinedUtxo, importedDefinedContract.unlock.spend(5n))
+      .addOutput({ to: importedDefinedContract.address, amount: 10000n });
 
     expect(transaction).toLog(new RegExp('^\\[Input #0] function_helpers.cash:2 checking 5$'));
   });
 
   it('attributes a require failing inside an imported function frame to the imported file', () => {
     const transaction = new TransactionBuilder({ provider })
-      .addInput(importedUtxo, importedContract.unlock.spend(0n))
-      .addOutput({ to: importedContract.address, amount: 10000n });
+      .addInput(importedDefinedUtxo, importedDefinedContract.unlock.spend(0n))
+      .addOutput({ to: importedDefinedContract.address, amount: 10000n });
 
     expect(transaction).toFailRequireWith('function_helpers.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 3) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
@@ -899,16 +930,16 @@ describe('Debugging tests - user-defined function frames', () => {
       .addOutput({ to: intermediateContract.address, amount: 10000n });
 
     const expectedHash = binToHex(sha256(alicePub));
-    expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:4 0x${expectedHash}$`));
+    expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:11 0x${expectedHash}$`));
   });
 
   it('renders source-mapped function definitions in the BitAuth IDE template', () => {
     const transaction = new TransactionBuilder({ provider })
-      .addInput(contractUtxo, contract.unlock.spend(5n))
-      .addOutput({ to: contract.address, amount: 10000n });
+      .addInput(definedUtxo, definedContract.unlock.spend(5n))
+      .addOutput({ to: definedContract.address, amount: 10000n });
 
     const template = transaction.getLibauthTemplate();
-    const lockScript = template.scripts[getLockScriptName(contract)].script;
+    const lockScript = template.scripts[getLockScriptName(definedContract)].script;
 
     // The function body is rendered as a `<...>` push group annotated with its own source lines
     expect(lockScript).toContain('/* function checkValue(int value) {');
@@ -918,14 +949,27 @@ describe('Debugging tests - user-defined function frames', () => {
 
   it('renders imported function definitions with their import provenance in the BitAuth IDE template', () => {
     const transaction = new TransactionBuilder({ provider })
-      .addInput(importedUtxo, importedContract.unlock.spend(5n))
-      .addOutput({ to: importedContract.address, amount: 10000n });
+      .addInput(importedDefinedUtxo, importedDefinedContract.unlock.spend(5n))
+      .addOutput({ to: importedDefinedContract.address, amount: 10000n });
 
     const template = transaction.getLibauthTemplate();
-    const lockScript = template.scripts[getLockScriptName(importedContract)].script;
+    const lockScript = template.scripts[getLockScriptName(importedDefinedContract)].script;
 
     expect(lockScript).toContain('>>> imported from function_helpers.cash');
     expect(lockScript).toContain('/* function assertPositive(int value) {');
     expect(lockScript).toContain('> OP_0 OP_DEFINE');
+  });
+
+  it('renders an inlined function body without a definition or invocation', () => {
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.spend(5n))
+      .addOutput({ to: contract.address, amount: 10000n });
+
+    const template = transaction.getLibauthTemplate();
+    const lockScript = template.scripts[getLockScriptName(contract)].script;
+
+    expect(lockScript).not.toContain('OP_DEFINE');
+    expect(lockScript).not.toContain('OP_INVOKE');
+    expect(lockScript).toContain('require(value > 0, "value must be positive")');
   });
 });

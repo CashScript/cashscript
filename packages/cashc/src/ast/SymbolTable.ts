@@ -1,4 +1,4 @@
-import { Type, Script, Op, encodeInt } from '@cashscript/utils';
+import { DebugFrame, Type, Script, Op, encodeInt } from '@cashscript/utils';
 import {
   VariableDefinitionNode,
   ParameterNode,
@@ -11,6 +11,7 @@ import { functionReturnType } from '../utils.js';
 
 export class Symbol {
   references: IdentifierNode[] = [];
+  inlinedFrame?: DebugFrame;
 
   private constructor(
     public name: string,
@@ -46,6 +47,11 @@ export class Symbol {
   setFunctionId(functionId: number): void {
     this.functionId = functionId;
     this.bytecode = [encodeInt(BigInt(functionId)), Op.OP_INVOKE];
+  }
+
+  setInlinedBytecode(bytecode: Script, frame: DebugFrame): void {
+    this.bytecode = bytecode;
+    this.inlinedFrame = frame;
   }
 
   static class(name: string, type: Type, parameters: Type[]): Symbol {

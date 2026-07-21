@@ -27,7 +27,7 @@ interface Artifact {
     logs: LogEntry[] // log entries generated from `console.log` statements
     requires: RequireStatement[] // messages for failing `require` statements
     sourceTags?: string // semantic tags for opcodes (e.g. loop update/condition ranges)
-    functions?: DebugFrame[] // debug metadata for each shared global definition
+    functions?: DebugFrame[] // debug metadata for each global definition (defined frames first, then inlined ones)
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
   fingerprint?: string // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
@@ -62,8 +62,12 @@ interface RequireStatement {
   message?: string; // custom message for failing `require` statement
 }
 
+// Debug metadata for a global function or constant. Shared (OP_DEFINE'd) callables execute their
+// body as a standalone VM function. Inlined callables have no define site or id — their body is
+// emitted at every call site and their debug entries are merged into the containing program's own —
+// but they are still listed with their compiled body and source provenance to document the callable.
 interface DebugFrame {
-  id: number; // the function's id, as used with OP_DEFINE / OP_INVOKE in the bytecode
+  id?: number; // the function's id, as used with OP_DEFINE / OP_INVOKE in the bytecode (absent for inlined callables)
   name: string; // the source definition's name
   kind?: 'constant'; // present when the VM function implements a global constant; absent for regular functions
   inputs: AbiInput[]; // the function's parameters (name and type)
@@ -79,5 +83,6 @@ interface DebugFrame {
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean; // Enforce function parameter types (default: true)
   enforceLocktimeGuard?: boolean; // Enforce the tx.locktime guard (default: true)
+  disableInlining?: boolean; // Keep global definitions as OP_DEFINE/OP_INVOKE (default: false)
 }
 ```

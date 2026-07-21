@@ -27,7 +27,9 @@ export const resolveFrame = (
   artifact: Artifact,
   step: AuthenticationProgramStateCommon,
 ): ResolvedFrame => {
-  const frames = artifact.debug?.functions ?? [];
+  // Only defined frames (id present) execute as standalone VM functions; an inlined callable's
+  // frame documents a body that only ever runs spliced into another program
+  const frames = (artifact.debug?.functions ?? []).filter((candidate) => candidate.id !== undefined);
   const activeBytecode = frames.length > 0 ? getActiveBytecode(step) : undefined;
   const frame = frames.find((candidate) => candidate.bytecode === activeBytecode);
 

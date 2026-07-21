@@ -1,6 +1,8 @@
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
   enforceLocktimeGuard?: boolean;
+  // Keep global definitions as OP_DEFINE/OP_INVOKE even when inlining produces smaller bytecode.
+  disableInlining?: boolean;
 }
 
 export interface AbiInput {
@@ -19,11 +21,16 @@ export interface DebugInformation {
   logs: readonly LogEntry[]; // log entries generated from `console.log` statements
   requires: readonly RequireStatement[]; // messages for failing `require` statements
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
-  functions?: readonly DebugFrame[]; // Debug metadata for each shared global definition
+  functions?: readonly DebugFrame[]; // Debug metadata for each global definition (defined frames first, then inlined ones)
 }
 
+// Debug metadata for a global function or constant. Shared (OP_DEFINE'd) callables execute their
+// body as a standalone VM function, so their frame-local debug info is used directly during
+// debugging. Inlined callables have no define site or id — their body is emitted at every call
+// site and their debug entries are merged into the containing program's own — but they are still
+// listed here with their compiled body and source provenance to document the callable.
 export interface DebugFrame {
-  id: number; // the function's id, as used with OP_DEFINE and OP_INVOKE in the bytecode
+  id?: number; // the function's id, as used with OP_DEFINE and OP_INVOKE in the bytecode; absent for inlined callables
   name: string; // the function/constant's name
   kind?: 'constant'; // present when the VM function is the lowered form of a global constant; absent for regular functions
   inputs: readonly AbiInput[]; // the function's parameters (name and type), mirroring the ABI; for reference
