@@ -56,11 +56,8 @@ export interface CompileStringOptions extends CompileOptions {
  * @returns The compiled CashScript artifact, including ABI, bytecode and debug information.
  * @throws If the source code contains a syntax, semantic, or type error, or an import cannot be resolved.
  */
-export function compileString(code: string, compilerOptions: CompileStringOptions = {}): Artifact {
-  const { files, ...remainingOptions } = compilerOptions;
-  const resolver = createMemoryResolver(files ?? {});
-  return compileCode(code, resolver, remainingOptions);
-}
+export const compileString: (code: string, compilerOptions?: CompileStringOptions) => Artifact =
+  compileStringInternal;
 
 /**
  * Read a `.cash` source file from disk and compile it to an `Artifact`.
@@ -72,7 +69,27 @@ export function compileString(code: string, compilerOptions: CompileStringOption
  * @returns The compiled CashScript artifact.
  * @throws If the file cannot be read, or if the source contains a compilation error.
  */
-export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions = {}): Artifact {
+export const compileFile: (codeFile: PathLike, compilerOptions?: CompileOptions) => Artifact =
+  compileFileInternal;
+
+
+export interface InternalCompilerOptions extends CompilerOptions {
+  disableInlining?: boolean;
+}
+
+export function compileStringInternal(
+  code: string,
+  compilerOptions: CompileStringOptions & InternalCompilerOptions = {},
+): Artifact {
+  const { files, ...remainingOptions } = compilerOptions;
+  const resolver = createMemoryResolver(files ?? {});
+  return compileCode(code, resolver, remainingOptions);
+}
+
+export function compileFileInternal(
+  codeFile: PathLike,
+  compilerOptions: CompileOptions & InternalCompilerOptions = {},
+): Artifact {
   const filePath = codeFile instanceof URL ? fileURLToPath(codeFile) : codeFile.toString();
   const code = fs.readFileSync(filePath, { encoding: 'utf-8' });
   const resolver = createDiskResolver(path.dirname(filePath));
@@ -82,9 +99,9 @@ export function compileFile(codeFile: PathLike, compilerOptions: CompileOptions 
 function compileCode(
   code: string,
   resolver: ImportResolver,
-  compilerOptions: CompileOptions,
+  compilerOptions: CompileOptions & InternalCompilerOptions,
 ): Artifact {
-  const { errorListener, ...artifactCompilerOptions } = compilerOptions;
+  const { errorListener, disableInlining, ...artifactCompilerOptions } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
 
   // Lexing + parsing
@@ -113,7 +130,7 @@ function compileCode(
   ast = ast.accept(new DeadCodeEliminationTraversal()) as Ast;
 
   // Code generation
-  const traversal = new GenerateTargetTraversal(mergedCompilerOptions);
+  const traversal = new GenerateTargetTraversal({ ...mergedCompilerOptions, disableInlining });
   ast = ast.accept(traversal) as Ast;
 
   // Bytecode optimisation

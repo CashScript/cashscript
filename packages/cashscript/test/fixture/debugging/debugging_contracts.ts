@@ -1,4 +1,4 @@
-import { compileFile, compileString } from 'cashc';
+import { compileFile, compileString } from 'cashc/dist/internal.js';
 
 const CONTRACT_TEST_FUNCTION_DEBUGGING = `
 function checkValue(int value) {

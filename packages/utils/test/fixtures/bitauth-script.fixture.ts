@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 
-import { CompilerOptions } from '../../src/artifact.js';
+import { InternalCompilerOptions } from 'cashc/dist/internal.js';
 
 export interface Fixture {
   name: string;
@@ -409,7 +409,7 @@ export interface FunctionFixture {
   name: string;
   sourceCode?: string; // compiled with compileString when set
   file?: string; // compiled with compileFile, relative to this fixtures directory (used for imports)
-  compilerOptions?: CompilerOptions;
+  compilerOptions?: InternalCompilerOptions;
   expectedBitAuthScript: string;
 }
 

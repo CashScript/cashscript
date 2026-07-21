@@ -8,7 +8,7 @@
  *   is locked in by the fixtures in generation/fixtures.ts.
  */
 
-import { compileString } from '../src/index.js';
+import { compileString } from '../src/internal.js';
 
 const countOp = (bytecode: string, opcode: string): number => [...bytecode.matchAll(new RegExp(opcode, 'g'))].length;
 

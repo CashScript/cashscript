@@ -1,8 +1,6 @@
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
   enforceLocktimeGuard?: boolean;
-  // Keep global definitions as OP_DEFINE/OP_INVOKE even when inlining produces smaller bytecode.
-  disableInlining?: boolean;
 }
 
 export interface AbiInput {

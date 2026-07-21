@@ -24,7 +24,6 @@ import {
   StackItem,
   BytesType,
   TupleType,
-  CompilerOptions,
   SourceTagEntry,
   SourceTagKind,
 } from '@cashscript/utils';
@@ -74,6 +73,7 @@ import {
 } from './utils.js';
 import { isNumericType } from '../utils.js';
 import { Symbol } from '../ast/SymbolTable.js';
+import type { InternalCompilerOptions } from '../compiler.js';
 
 interface InlineRange {
   startIp: number;
@@ -97,7 +97,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private constructorParameterCount: number;
   private inlineRanges: InlineRange[] = [];
 
-  constructor(private compilerOptions: CompilerOptions) {
+  constructor(private compilerOptions: InternalCompilerOptions) {
     super();
   }
 
@@ -991,7 +991,7 @@ const shouldInline = (
   optimisedResult: OptimiseBytecodeResult,
   reachableCalls: FunctionCallNode[],
   nextFunctionId: number,
-  compilerOptions: CompilerOptions,
+  compilerOptions: InternalCompilerOptions,
 ): boolean => {
   if (compilerOptions.disableInlining) return false;
   if (symbol.functionId !== undefined) return false;

@@ -1,4 +1,5 @@
-import { Artifact, CompilerOptions } from '@cashscript/utils';
+import { Artifact } from '@cashscript/utils';
+import { InternalCompilerOptions } from '../../src/internal.js';
 import fs from 'fs';
 import { URL } from 'url';
 import { version } from '../../src/index.js';
@@ -6,7 +7,7 @@ import { version } from '../../src/index.js';
 interface Fixture {
   fn: string,
   artifact: Artifact,
-  compilerOptions?: CompilerOptions,
+  compilerOptions?: InternalCompilerOptions,
 }
 
 export const fixtures: Fixture[] = [
@@ -1447,7 +1448,6 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
-          disableInlining: true,
         },
       },
       updatedAt: '',
@@ -1494,7 +1494,6 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
-          disableInlining: true,
         },
       },
       updatedAt: '',
@@ -1540,7 +1539,6 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
-          disableInlining: true,
         },
       },
       updatedAt: '',
@@ -1617,7 +1615,6 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
-          disableInlining: true,
         },
       },
       updatedAt: '',
@@ -1811,7 +1808,6 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
-          disableInlining: true,
         },
       },
       updatedAt: '',

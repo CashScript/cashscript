@@ -4,7 +4,7 @@
  */
 
 import { URL } from 'url';
-import { compileFile } from '../../src/index.js';
+import { compileFile } from '../../src/internal.js';
 import { fixtures } from './fixtures.js';
 
 describe('Code generation & target code optimisation', () => {

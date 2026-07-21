@@ -83,6 +83,5 @@ interface DebugFrame {
 interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean; // Enforce function parameter types (default: true)
   enforceLocktimeGuard?: boolean; // Enforce the tx.locktime guard (default: true)
-  disableInlining?: boolean; // Keep global definitions as OP_DEFINE/OP_INVOKE (default: false)
 }
 ```

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { compileFile, compileString } from '../src/index.js';
+import { compileFile, compileString } from '../src/internal.js';
 import { ImportResolutionError, RedefinitionError, VersionError } from '../src/Errors.js';
 
 const fixture = (name: string): string => fileURLToPath(new URL(`./import-fixtures/${name}`, import.meta.url));
