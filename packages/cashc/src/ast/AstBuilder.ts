@@ -249,11 +249,17 @@ export default class AstBuilder
 
   visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
-    const types = ctx.typeName_list();
-    const targets = ctx.Identifier_list().map((name, i) => ({
-      name: name.getText(),
-      type: parseType(types[i].getText()),
-    }));
+    // Each target is either `typeName Identifier` (fresh declaration) or `Identifier` (reassignment
+    // of an existing variable). A reassignment target has no type at parse time; SymbolTableTraversal
+    // fills it in from the existing variable's symbol.
+    const targets = ctx.tupleTarget_list().map((target) => {
+      const typeName = target.typeName();
+      return {
+        name: target.Identifier().getText(),
+        type: typeName ? parseType(typeName.getText()) : undefined,
+        isReassignment: typeName === null,
+      };
+    });
     const tupleAssignment = new TupleAssignmentNode(targets, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
     return tupleAssignment;

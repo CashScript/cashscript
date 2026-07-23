@@ -507,9 +507,39 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
+    // The RHS leaves N values on the stack, last on top (as `.split` and multi-return calls do).
     node.tuple = this.visit(node.tuple);
-    this.popFromStack(node.targets.length);
-    node.targets.forEach((target) => this.pushToStack(target.name));
+    const n = node.targets.length;
+
+    // Outside a loop/branch, binding is a pure rename: the result entries take the target names, and
+    // a reassigned variable's old slot becomes a dead duplicate cleaned up at end of scope.
+    const scopedReassign = this.scopeDepth > 0 && node.targets.some((target) => target.isReassignment);
+    if (!scopedReassign) {
+      this.popFromStack(n);
+      node.targets.forEach((target) => this.pushToStack(target.name));
+      return node;
+    }
+
+    // In a loop/branch the stack layout must be preserved, so reassignments are folded in place. This
+    // requires declarations to form a contiguous block below all reassignments (the natural layout of
+    // a multi-return: fresh values, then updated accumulators). SymbolTableTraversal enforces this
+    // ordering for every tuple destructuring (TupleTargetOrderError), so the check here is an
+    // internal invariant only.
+    const firstReassign = node.targets.findIndex((target) => target.isReassignment);
+    const lastDeclaration = node.targets.reduce((acc, target, i) => (target.isReassignment ? acc : i), -1);
+    if (lastDeclaration > firstReassign) {
+      throw new Error('Declaration targets must come before all reassignment targets in a scoped tuple destructuring');
+    }
+
+    // Fold the trailing reassignment block into the existing slots top-down (each target's value is on
+    // top when processed), then rename the leading declaration values in place (no opcodes).
+    for (let i = n - 1; i >= firstReassign; i -= 1) {
+      this.emitReplace(this.getStackIndex(node.targets[i].name), node);
+      this.popFromStack();
+    }
+    for (let s = 0; s < firstReassign; s += 1) {
+      this.stack[s] = node.targets[firstReassign - 1 - s].name;
+    }
     return node;
   }
 

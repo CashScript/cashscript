@@ -101,7 +101,16 @@ variableDefinition
     ;
 
 tupleAssignment
-    : typeName Identifier (',' typeName Identifier)+ '=' expression
+    : tupleTarget (',' tupleTarget)+ '=' expression
+    | '(' tupleTarget (',' tupleTarget)+ ')' '=' expression
+    ;
+
+// A destructuring target is either a fresh declaration (`int x`) or an existing variable to
+// reassign (`x`, no type). Reassigning existing variables avoids the fresh-temp + per-element
+// rebind workaround; the code generator lowers a top-level reassignment to a stack rename.
+tupleTarget
+    : typeName Identifier
+    | Identifier
     ;
 
 assignStatement

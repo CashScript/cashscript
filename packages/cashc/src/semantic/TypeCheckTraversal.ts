@@ -79,7 +79,9 @@ export default class TypeCheckTraversal extends AstTraversal {
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
 
-    const targetsType = new TupleType(node.targets.map((target) => target.type));
+    // target.type is resolved for every target by SymbolTableTraversal before this pass (declared
+    // targets carry their declared type; reassignment targets adopt the existing variable's type).
+    const targetsType = new TupleType(node.targets.map((target) => target.type!));
     if (!implicitlyCastable(node.tuple.type, targetsType)) {
       const targetNames = node.targets.map((target) => target.name).join(', ');
       const syntheticAssignment = new VariableDefinitionNode(targetsType, [], targetNames, node.tuple);

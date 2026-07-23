@@ -29,6 +29,8 @@ import {
   UnusedVariableError,
   InvalidSymbolTypeError,
   ConstantModificationError,
+  DuplicateTupleTargetError,
+  TupleTargetOrderError,
   InvalidModifierError,
 } from '../Errors.js';
 
@@ -177,7 +179,49 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
+    // Declarations must form a contiguous block before all reassignment targets — the one layout
+    // scoped codegen can fold in place (see GenerateTargetTraversal.visitTupleAssignment). Enforced
+    // uniformly so a statement's legality does not depend on whether it sits inside a loop/branch.
+    const firstReassignment = node.targets.findIndex((target) => target.isReassignment);
+    if (firstReassignment !== -1 && node.targets.slice(firstReassignment).some((target) => !target.isReassignment)) {
+      throw new TupleTargetOrderError(node);
+    }
+
+    const seenTargetNames = new Set<string>();
     node.targets.forEach((variable) => {
+      if (seenTargetNames.has(variable.name)) {
+        throw new DuplicateTupleTargetError(node, variable.name);
+      }
+      seenTargetNames.add(variable.name);
+
+      if (variable.isReassignment) {
+        // Reassignment of an existing variable (`x`, no type): adopt its type for the type-check and
+        // register a reference (so it isn't flagged unused). Do NOT create a new symbol.
+        const reference = new IdentifierNode(variable.name);
+        reference.location = node.location;
+        const existing = this.symbolTables[0].get(variable.name);
+        if (!existing) {
+          throw new UndefinedReferenceError(reference);
+        }
+        // only variables can be reassigned (not functions or classes)
+        if (existing.symbolType !== SymbolType.VARIABLE) {
+          throw new InvalidSymbolTypeError(reference, SymbolType.VARIABLE);
+        }
+        if (existing.definition instanceof ConstantDefinitionNode) {
+          throw new ConstantModificationError(node, variable.name);
+        }
+        const definition = existing.definition as VariableDefinitionNode | undefined;
+        if (definition?.modifiers?.includes(Modifier.CONSTANT)) {
+          throw new ConstantModificationError(node, variable.name);
+        }
+        variable.type = existing.type;
+        existing.references.push(reference);
+        // The reassignment is now the variable's latest use, so codegen must not roll it off the
+        // stack at an earlier read (mirrors visitIdentifier's bookkeeping for plain assignments).
+        this.currentFunction.opRolls.set(variable.name, reference);
+        return;
+      }
+
       const definition = createTupleVariableDefinition(node, variable);
 
       const { name } = variable;
@@ -275,7 +319,9 @@ function createTupleVariableDefinition(
   node: TupleAssignmentNode,
   variable: TupleAssignmentTarget,
 ): VariableDefinitionNode {
-  const definition = new VariableDefinitionNode(variable.type, [], variable.name, node.tuple);
+  // Only declaration targets reach here (reassignment targets are handled before this is called),
+  // so `type` is always defined.
+  const definition = new VariableDefinitionNode(variable.type!, [], variable.name, node.tuple);
   definition.location = node.location;
   return definition;
 }

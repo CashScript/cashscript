@@ -156,7 +156,12 @@ export class VariableDefinitionNode extends NonControlStatementNode implements N
 
 export interface TupleAssignmentTarget {
   name: string;
-  type: Type;
+  // For a fresh-declaration target (`int x`) this is the declared type. For a reassignment target
+  // (`x`, no type) it is undefined at parse time and filled in from the existing variable's symbol
+  // during SymbolTableTraversal.
+  type?: Type;
+  // True for a reassignment of an already-declared variable (no `typeName` in source).
+  isReassignment?: boolean;
 }
 
 export class TupleAssignmentNode extends NonControlStatementNode {
