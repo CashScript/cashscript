@@ -5,6 +5,7 @@ import {
   computeBytecodeFingerprintWithConstructorArgs,
   generateSourceMap,
   generateSourceTags,
+  generateInlineRanges,
   optimiseBytecode,
   optimiseBytecodeOld,
   scriptToAsm,
@@ -141,6 +142,7 @@ function compileCode(
     traversal.consoleLogs,
     traversal.requires,
     traversal.sourceTags,
+    traversal.inlineRanges,
     constructorParamLength,
   );
 
@@ -159,6 +161,7 @@ function compileCode(
     requires: optimisationResult.requires,
     sourceTags: generateSourceTags(optimisationResult.sourceTags) || undefined,
     functions: traversal.frames.length > 0 ? traversal.frames : undefined,
+    inlineRanges: generateInlineRanges(optimisationResult.inlineRanges) || undefined,
   };
 
   const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);

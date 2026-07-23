@@ -1639,6 +1639,8 @@ export const fixtures: Fixture[] = [
           { ip: 5, line: 5 },
         ],
         sourceMap: '5:16:5:27:1;:::33;:37::38:0;:8::40:1',
+        // Both literal pushes were fused into the OP_1ADDs during optimisation; the ranges track them
+        inlineRanges: '1:1:ONE;2:2:ONE',
         functions: [
           {
             // The inlined constant is documented as an id-less frame; both of its literal pushes
@@ -1735,8 +1737,9 @@ export const fixtures: Fixture[] = [
           { ip: 6, line: 9 },
         ],
         // The emitted body ops (ips 1-4) and the merged require/log entries above all map to the
-        // call site; the function's own lines live on its frame below
+        // call site; the function's own lines live on its frame below, tied together by the range
         sourceMap: '9:24:9:25;:16::26:1;;;;:8::33',
+        inlineRanges: '1:4:checked',
         functions: [
           {
             // The inlined function is documented as an id-less frame carrying its compiled body

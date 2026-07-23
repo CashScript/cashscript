@@ -14,6 +14,7 @@ import {
   OptimiseBytecodeResult,
   generateSourceMap,
   generateSourceTags,
+  generateInlineRanges,
   parseSourceTags,
   FullLocationData,
   DebugFrame,
@@ -72,11 +73,12 @@ import {
   compileUnaryOp,
 } from './utils.js';
 import { isNumericType } from '../utils.js';
-import { Symbol } from '../ast/SymbolTable.js';
+import { collectFunctionCalls, isRecursive, shouldInline } from './inlining.js';
 import type { InternalCompilerOptions } from '../compiler.js';
 
 interface InlineRange {
   startIp: number;
+  endIp: number;
   frame: DebugFrame;
   line: number;
 }
@@ -95,7 +97,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
-  private inlineRanges: InlineRange[] = [];
+  inlineRanges: InlineRange[] = [];
 
   constructor(private compilerOptions: InternalCompilerOptions) {
     super();
@@ -261,6 +263,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       bodyTraversal.consoleLogs,
       bodyTraversal.requires,
       bodyTraversal.sourceTags,
+      bodyTraversal.inlineRanges,
       0,
     );
 
@@ -284,6 +287,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
       sourceFile: node.sourceFile,
       logs: optimised.logs,
       requires: optimised.requires,
+      inlineRanges: generateInlineRanges(optimised.inlineRanges) || undefined,
     };
   }
 
@@ -748,10 +752,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters);
 
     const startIp = this.output.length + this.constructorParameterCount;
+    const endIp = startIp + symbol.bytecode!.length - 1;
+
     this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
 
     if (symbol.inlinedFrame) {
-      this.inlineRanges.push({ startIp, frame: symbol.inlinedFrame, line: node.location.start.line });
+      this.inlineRanges.push({ startIp, endIp, frame: symbol.inlinedFrame, line: node.location.start.line });
     }
 
     this.popFromStack(node.parameters.length);
@@ -984,73 +990,5 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.pushToStack('(value)');
     return node;
   }
-}
-
-const shouldInline = (
-  symbol: Symbol,
-  optimisedResult: OptimiseBytecodeResult,
-  reachableCalls: FunctionCallNode[],
-  nextFunctionId: number,
-  compilerOptions: InternalCompilerOptions,
-): boolean => {
-  if (compilerOptions.disableInlining) return false;
-  if (symbol.functionId !== undefined) return false;
-
-  const callCount = reachableCalls.filter((call) => call.identifier.symbol === symbol).length;
-  return isWorthInlining(nextFunctionId, optimisedResult.script, callCount);
-};
-
-function isWorthInlining(candidateFunctionId: number, bodyScript: Script, callCount: number): boolean {
-  const bodyBytes = scriptToBytecode(bodyScript).length;
-  const idBytes = scriptToBytecode([encodeInt(BigInt(candidateFunctionId))]).length;
-
-  const bytesWhenDefined = bodyBytes + idBytes + 1 + callCount * (idBytes + 1);
-  const bytesWhenInlined = callCount * bodyBytes;
-
-  return bytesWhenInlined <= bytesWhenDefined;
-}
-
-class FunctionCallCollector extends AstTraversal {
-  functionCalls: FunctionCallNode[] = [];
-
-  visitFunctionCall(node: FunctionCallNode): Node {
-    this.functionCalls.push(node);
-    node.parameters = this.visitList(node.parameters);
-    return node;
-  }
-}
-
-function collectFunctionCalls(node: Node): FunctionCallNode[] {
-  const collector = new FunctionCallCollector();
-  collector.visit(node);
-  return collector.functionCalls;
-}
-
-// The global functions a function's body calls directly (deduplicated). A call targets a global
-// function when its resolved symbol carries a definition node — builtin functions have none.
-function calledFunctions(func: FunctionDefinitionNode): FunctionDefinitionNode[] {
-  return collectFunctionCalls(func.body)
-    .map((call) => call.identifier.symbol?.definition)
-    .filter((definition): definition is FunctionDefinitionNode => definition instanceof FunctionDefinitionNode)
-    .filter((definition, index, definitions) => definitions.indexOf(definition) === index);
-}
-
-// A function is recursive when it can transitively call itself. Recursive functions can never be
-// inlined — expanding them would never terminate — so they always keep a shared definition.
-function isRecursive(func: FunctionDefinitionNode): boolean {
-  return transitiveCalledFunctions(func).includes(func);
-}
-
-function transitiveCalledFunctions(func: FunctionDefinitionNode): FunctionDefinitionNode[] {
-  const callees: FunctionDefinitionNode[] = [];
-
-  const visit = (current: FunctionDefinitionNode): void => calledFunctions(current).forEach((callee) => {
-    if (callees.includes(callee)) return;
-    callees.push(callee);
-    visit(callee);
-  });
-
-  visit(func);
-  return callees;
 }
 

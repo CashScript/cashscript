@@ -295,6 +295,7 @@ describe('Inlining and shared definitions', () => {
       requires: [expect.objectContaining({ line: 2, message: 'must be positive' })],
     }));
     expect(artifact.debug?.functions?.[0].id).toBeUndefined();
+    expect(artifact.debug?.inlineRanges).toMatch(/^\d+:\d+:assertPositive$/);
   });
 
   it('attributes debug info spliced into a defined body to the call site within that body', () => {
@@ -321,6 +322,7 @@ describe('Inlining and shared definitions', () => {
       line: 7,
       message: 'value too large',
     }));
+    expect(artifact.debug?.functions?.[0].inlineRanges).toMatch(/^\d+:\d+:assertSmall$/);
   });
 
   it('can disable inlining for callers that need the shared-definition form', () => {

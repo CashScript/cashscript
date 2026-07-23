@@ -28,6 +28,7 @@ interface Artifact {
     requires: RequireStatement[] // messages for failing `require` statements
     sourceTags?: string // semantic tags for opcodes (e.g. loop update/condition ranges)
     functions?: DebugFrame[] // debug metadata for each global definition (defined frames first, then inlined ones)
+    inlineRanges?: string // "startIp:endIp:name;..." — runs where inlined callables' bodies were emitted
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
   fingerprint?: string // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
@@ -78,6 +79,7 @@ interface DebugFrame {
   sourceFile?: string; // file name the function is imported from (absent for the contract's own file)
   logs: LogEntry[]; // log entries within the function body
   requires: RequireStatement[]; // messages for failing `require` statements within the function body
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted within this body (frame-local ips)
 }
 
 interface CompilerOptions {

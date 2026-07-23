@@ -1,5 +1,5 @@
 import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
-import { ResolvedFrame, rootFrame } from './debug-frame.js';
+import { ResolvedFrame, resolveInlineAttribution, rootFrame } from './debug-frame.js';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -161,10 +161,15 @@ export class FailedRequireError extends FailedTransactionError {
     frame?: ResolvedFrame,
   ) {
     const resolvedFrame = frame ?? rootFrame(artifact);
-    const { statement, lineNumber } = getLocationDataForFrame(resolvedFrame, failingInstructionPointer);
-    const context = formatFrameContext(resolvedFrame, artifact.contractName, lineNumber);
 
-    const baseMessage = `${resolvedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} ${context}`;
+    const inline = resolveInlineAttribution(artifact, resolvedFrame, requireStatement, 'requires');
+    const attributedFrame = inline?.frame ?? resolvedFrame;
+    const attributedIp = inline?.entry.ip ?? failingInstructionPointer;
+
+    const { statement, lineNumber } = getLocationDataForFrame(attributedFrame, attributedIp);
+    const context = formatFrameContext(attributedFrame, artifact.contractName, lineNumber);
+
+    const baseMessage = `${attributedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} ${context}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
     const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
 

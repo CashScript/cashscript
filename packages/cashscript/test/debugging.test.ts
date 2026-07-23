@@ -20,6 +20,7 @@ import {
   artifactTestImportedFunctionDebugging,
   artifactTestImportedFunctionDebuggingDefined,
   artifactTestMultiReturn,
+  artifactTestMultilineFunctionRequire,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
@@ -836,24 +837,23 @@ describe('Debugging tests - user-defined function frames', () => {
   const importedDefinedContract = new Contract(artifactTestImportedFunctionDebuggingDefined, [], { provider });
   const importedDefinedUtxo = provider.addUtxo(importedDefinedContract.address, randomUtxo());
 
-  it('attributes a console.log inside an inlined function to the call site', () => {
+  it('attributes a console.log inside an inlined function to the function source line', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.spend(5n))
       .addOutput({ to: contract.address, amount: 10000n });
 
-    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:9 checking 5$'));
+    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:3 checking 5$'));
   });
 
-  it('attributes a require failing inside an inlined function to the call site', () => {
+  it('attributes a require failing inside an inlined function to the function source line', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.spend(0n))
       .addOutput({ to: contract.address, amount: 10000n });
 
-    // The source map attributes an inlined body to its call site; the require's own line and the
-    // function's frame are retained in the artifact, but are not yet used for attribution here
-    // (the defined variant below attributes to the function's own line)
-    expect(transaction).toFailRequireWith('Test.cash:9 Require statement failed at input 0 in contract Test.cash at line 9 with the following message: value must be positive.');
-    expect(transaction).toFailRequireWith('Failing statement: checkValue(x)');
+    // The artifact's inline ranges tie the merged require back to the function's own frame, so
+    // inlining is transparent: the failure reads like the defined variant below
+    expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
   });
 
   it('still attributes a contract-level require to the contract source line', () => {
@@ -865,24 +865,38 @@ describe('Debugging tests - user-defined function frames', () => {
     expect(transaction).toFailRequireWith('Failing statement: require(x < 100, "x must be small")');
   });
 
-  it('attributes a require failing inside an inlined imported function to the call site', () => {
+  it('attributes a multiline require failing inside an inlined function with its full statement', () => {
+    const multilineContract = new Contract(artifactTestMultilineFunctionRequire, [], { provider });
+    const multilineUtxo = provider.addUtxo(multilineContract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(multilineUtxo, multilineContract.unlock.spend(0n))
+      .addOutput({ to: multilineContract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('Test.cash:3 Require statement failed at input 0 in contract Test.cash at line 3 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith(`Failing statement: require(
+    value > 0,
+    "value must be positive"
+  )`);
+  });
+
+  it('attributes a require failing inside an inlined imported function to the imported function', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(importedUtxo, importedContract.unlock.spend(0n))
       .addOutput({ to: importedContract.address, amount: 10000n });
 
-    // An inlined body from another file cannot contribute source locations to the contract's
-    // source map, so its debug info is attributed to the call site (unlike the defined form,
-    // whose own frame attributes to the imported file — see the defined variants below)
-    expect(transaction).toFailRequireWith('Test.cash:5 Require statement failed at input 0 in contract Test.cash at line 5 with the following message: value must be positive.');
-    expect(transaction).toFailRequireWith('Failing statement: assertPositive(x)');
+    // Inlining is transparent for debugging: the failure reads exactly like the defined
+    // (OP_DEFINE'd) form of the same function — see the defined variants below
+    expect(transaction).toFailRequireWith('function_helpers.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 3) with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
   });
 
-  it('attributes a console.log inside an inlined imported function to the call site', () => {
+  it('attributes a console.log inside an inlined imported function to the imported file', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(importedUtxo, importedContract.unlock.spend(5n))
       .addOutput({ to: importedContract.address, amount: 10000n });
 
-    expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:5 checking 5$'));
+    expect(transaction).toLog(new RegExp('^\\[Input #0] function_helpers.cash:2 checking 5$'));
   });
 
   it('attributes a console.log inside an imported function frame to the imported file', () => {
@@ -930,7 +944,7 @@ describe('Debugging tests - user-defined function frames', () => {
       .addOutput({ to: intermediateContract.address, amount: 10000n });
 
     const expectedHash = binToHex(sha256(alicePub));
-    expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:11 0x${expectedHash}$`));
+    expect(transaction).toLog(new RegExp(`^\\[Input #0] Test.cash:4 0x${expectedHash}$`));
   });
 
   it('renders source-mapped function definitions in the BitAuth IDE template', () => {

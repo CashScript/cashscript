@@ -29,6 +29,24 @@ contract Test(pubkey owner) {
 }
 `;
 
+// The require statement inside the (inlined) function spans multiple lines, so its statement can
+// only be extracted through the function frame's source map rather than a single source line.
+const CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE = `
+function checkRange(int value) {
+  require(
+    value > 0,
+    "value must be positive"
+  );
+}
+
+contract Test() {
+  function spend(int x) {
+    checkRange(x);
+    require(x < 100);
+  }
+}
+`;
+
 // Multi-value return destructuring: the requires only pass when the first declared return value
 // binds to the first target (quotient) and the last to the last (remainder), pinning the runtime
 // value ordering of the calling convention.
@@ -486,6 +504,7 @@ export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_
 export const artifactTestFunctionDebugging = compileString(CONTRACT_TEST_FUNCTION_DEBUGGING);
 export const artifactTestFunctionIntermediateResults = compileString(CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS);
 export const artifactTestMultiReturn = compileString(CONTRACT_TEST_MULTI_RETURN);
+export const artifactTestMultilineFunctionRequire = compileString(CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE);
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));

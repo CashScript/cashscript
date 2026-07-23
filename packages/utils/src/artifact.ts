@@ -20,6 +20,7 @@ export interface DebugInformation {
   requires: readonly RequireStatement[]; // messages for failing `require` statements
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
   functions?: readonly DebugFrame[]; // Debug metadata for each global definition (defined frames first, then inlined ones)
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted (see `generateInlineRanges`)
 }
 
 // Debug metadata for a global function or constant. Shared (OP_DEFINE'd) callables execute their
@@ -39,6 +40,13 @@ export interface DebugFrame {
   sourceFile?: string; // originating file name for imported functions; absent means the contract's file
   logs: readonly LogEntry[]; // frame-local log entries
   requires: readonly RequireStatement[]; // frame-local require statements
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted within this body (frame-local ips)
+}
+
+export interface InlineRange {
+  startIp: number; // first ip of the emitted body (inclusive)
+  endIp: number; // last ip of the emitted body (inclusive)
+  frame: DebugFrame; // the inlined callable's debug frame
 }
 
 export interface LogEntry {
@@ -67,6 +75,9 @@ export interface RequireStatement {
   line: number; // line in the source code
   message?: string; // custom message for failing `require` statement
 }
+
+// Any debug entry that lives at an instruction pointer and attributes to a source line
+export type DebugEntry = RequireStatement | LogEntry;
 
 export interface Artifact {
   contractName: string;

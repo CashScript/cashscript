@@ -1,4 +1,5 @@
 import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
+import { InlineRange } from './artifact.js';
 
 /*
  * The source mappings for the bytecode use the following notation (similar to Solidity):
@@ -140,4 +141,23 @@ export function parseSourceTags(sourceTags: string): SourceTagEntry[] {
 export function generateSourceTags(entries: SourceTagEntry[]): string {
   if (entries.length === 0) return '';
   return entries.map((entry) => `${entry.startIndex}:${entry.endIndex}:${entry.kind}`).join(';');
+}
+
+/*
+ * Format: "startIp:endIp:name;..." — the runs where inlined callables' bodies were emitted within
+ * one program, referencing each callable's debug frame by its (globally unique) name
+ */
+export function generateInlineRanges(entries: InlineRange[]): string {
+  return entries
+    .filter((entry) => entry.endIp >= entry.startIp) // a body optimised down to nothing leaves no run
+    .map((entry) => `${entry.startIp}:${entry.endIp}:${entry.frame.name}`)
+    .join(';');
+}
+
+export function parseInlineRanges(inlineRanges: string): { startIp: number, endIp: number, frameName: string }[] {
+  if (!inlineRanges) return [];
+  return inlineRanges.split(';').map((segment) => {
+    const [startStr, endStr, frameName] = segment.split(':');
+    return { startIp: Number(startStr), endIp: Number(endStr), frameName };
+  });
 }
