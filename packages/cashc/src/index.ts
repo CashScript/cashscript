@@ -6,4 +6,4 @@ export {
 export * from './ast/Location.js';
 export * from './ast/error-listeners.js';
 
-export const version = '0.14.0-next.1';
+export const version = '0.14.0-next.2';

@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.14.0-next.1
+## v0.14.0-next.2
 
 ⚠️ Note that this is a pre-release version and is not yet stable. There will likely be breaking changes to the APIs and compiler output in subsequent pre-releases.
 
