@@ -1491,7 +1491,8 @@ export const fixtures: Fixture[] = [
   },
   {
     // A multi-parameter global function — locks in the parameter stack-seeding and argument order
-    // (the contract OP_SWAPs x and y into place; the body computes a - b directly).
+    // (the body OP_SWAPs into place against the first-parameter-on-top entry layout; the
+    // declaration-order arguments at the call site then need no staging at all).
     fn: 'global_function_multi_param.cash',
     compilerOptions: { disableInlining: true },
     artifact: {
@@ -1499,24 +1500,24 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }, { name: 'y', type: 'int' }] }],
       bytecode:
-        // OP_DEFINE sub (id 0): return a - b
-        '94 OP_0 OP_DEFINE '
-        // require(sub(x, y) == 7)
-        + 'OP_SWAP OP_0 OP_INVOKE OP_7 OP_NUMEQUAL',
+        // OP_DEFINE sub (id 0): return a - b (entry layout: a on top, so OP_SWAP before OP_SUB)
+        '7c94 OP_0 OP_DEFINE '
+        // require(sub(x, y) == 7) — x and y are in declaration order: zero staging instructions
+        + 'OP_0 OP_INVOKE OP_7 OP_NUMEQUAL',
       debug: {
-        bytecode: '019400897c008a579c',
+        bytecode: '027c940089008a579c',
         logs: [],
         requires: [
-          { ip: 8, line: 7 },
+          { ip: 7, line: 7 },
         ],
-        sourceMap: '1::3:1;;::::1;7:23:7:24:0;:16::25:1;;:29::30:0;:8::32:1',
+        sourceMap: '1::3:1;;::::1;7:16:7:25;;:29::30:0;:8::32:1',
         functions: [
           {
             id: 0,
             name: 'sub',
             inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }],
-            bytecode: '94',
-            sourceMap: '2:11:2:16:1',
+            bytecode: '7c94',
+            sourceMap: '2:15:2:16;:11:::1',
             logs: [],
             requires: [],
           },
@@ -1533,7 +1534,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
-      fingerprint: '8fc72a3f89ee3238266d6dd9ad3919f7238c8d6a31296cc8925968a31c78c7dc',
+      fingerprint: 'ef6dd7819e66a430286fe16f3d6dad7e026cf1970eda6bc620be7e7a3bdd2a4d',
     },
   },
   {
@@ -1821,25 +1822,27 @@ export const fixtures: Fixture[] = [
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }] }],
       bytecode:
-        // OP_DEFINE divmod (id 0): return a / b, a % b — leaves [quotient, remainder], remainder on top
-        '6e967b7b97 OP_0 OP_DEFINE '
+        // OP_DEFINE divmod (id 0): compiled against first-parameter-on-top entry —
+        // return a / b, a % b — leaves [quotient, remainder], remainder on top
+        '6e7c967c7b97 OP_0 OP_DEFINE '
         // int q, int r = divmod(x, 3); require(q == 4); require(r == 1)
-        + 'OP_3 OP_0 OP_INVOKE OP_SWAP OP_4 OP_NUMEQUALVERIFY OP_1 OP_NUMEQUAL',
+        // (arguments staged right-to-left: 3 first, then x swapped on top)
+        + 'OP_3 OP_SWAP OP_0 OP_INVOKE OP_SWAP OP_4 OP_NUMEQUALVERIFY OP_1 OP_NUMEQUAL',
       debug: {
-        bytecode: '056e967b7b97008953008a7c549d519c',
+        bytecode: '066e7c967c7b970089537c008a7c549d519c',
         logs: [],
         requires: [
-          { ip: 8, line: 8 },
-          { ip: 11, line: 9 },
+          { ip: 9, line: 8 },
+          { ip: 12, line: 9 },
         ],
-        sourceMap: '1::3:1;;::::1;7:33:7:34:0;:23::35:1;;8:16:8:17:0;:21::22;:8::24:1;9:21:9:22:0;:8::24:1',
+        sourceMap: '1::3:1;;::::1;7:33:7:34:0;:30::31;:23::35:1;;8:16:8:17:0;:21::22;:8::24:1;9:21:9:22:0;:8::24:1',
         functions: [
           {
             id: 0,
             name: 'divmod',
             inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }],
-            bytecode: '6e967b7b97',
-            sourceMap: '2:11:2:16;::::1;:18::19:0;:22::23;:18:::1',
+            bytecode: '6e7c967c7b97',
+            sourceMap: '2:11:2:16;;::::1;:18::19:0;:22::23;:18:::1',
             logs: [],
             requires: [],
           },
@@ -1856,7 +1859,7 @@ export const fixtures: Fixture[] = [
         },
       },
       updatedAt: '',
-      fingerprint: 'f747468c9408ec52949a22dc2f271a944ee5793eabaa913c9c2b1b4c3fbd0a56',
+      fingerprint: '13fdcb97e1a0f3546c30fb4f0c29338c1678c729db4e148151a026f93b27652d',
     },
   },
   {
@@ -1874,8 +1877,9 @@ export const fixtures: Fixture[] = [
         inputs: [{ name: 'a', type: 'int' }, { name: 'b', type: 'int' }, { name: 'zeroPadding', type: 'bytes' }],
       }],
       bytecode:
-        // OP_DEFINE pad (id 0): drop unused param `padding`, leaving `value` as the return value
-        '75 OP_0 OP_DEFINE '
+        // OP_DEFINE pad (id 0): first param on top, so the trailing unused param `padding`
+        // sits below `value` and is dropped with OP_NIP, leaving `value` as the return value
+        '77 OP_0 OP_DEFINE '
         // drop unused constructor param `salt` (top of stack)
         + 'OP_DROP '
         // roll up and drop unused function param `zeroPadding`
@@ -1884,21 +1888,21 @@ export const fixtures: Fixture[] = [
         + 'OP_2DUP OP_ADD OP_DROP '
         // int constant unused magic = 42 — dropped as well
         + '2a OP_DROP '
-        // require(pad(a, 100) + b == 5)
-        + '64 OP_0 OP_INVOKE OP_ADD OP_5 OP_NUMEQUAL',
+        // require(pad(a, 100) + b == 5) — arguments staged right-to-left, so `a` is rolled on top
+        + '64 OP_SWAP OP_0 OP_INVOKE OP_ADD OP_5 OP_NUMEQUAL',
       debug: {
-        bytecode: '01750089757b756e9375012a750164008a93559c',
+        bytecode: '01770089757b756e9375012a7501647c008a93559c',
         logs: [],
         requires: [
-          { ip: 18, line: 9 },
+          { ip: 19, line: 9 },
         ],
-        sourceMap: '1::3:1;;::::1;5:24:5:39:0;6:33:6:57;;7:29:7:34;::::1;:8::35;8:36:8:38:0;:8::39:1;9:23:9:26:0;:16::27:1;;:::31;:35::36:0;:8::38:1',
+        sourceMap: '1::3:1;;::::1;5:24:5:39:0;6:33:6:57;;7:29:7:34;::::1;:8::35;8:36:8:38:0;:8::39:1;9:23:9:26:0;:20::21;:16::27:1;;:::31;:35::36:0;:8::38:1',
         functions: [
           {
             id: 0,
             name: 'pad',
             inputs: [{ name: 'value', type: 'int' }, { name: 'padding', type: 'int' }],
-            bytecode: '75',
+            bytecode: '77',
             sourceMap: '1:24:1:42',
             logs: [],
             requires: [],
@@ -1912,10 +1916,11 @@ export const fixtures: Fixture[] = [
         options: {
           enforceFunctionParameterTypes: true,
           enforceLocktimeGuard: true,
+          optimizeFor: 'opcost',
         },
       },
       updatedAt: '',
-      fingerprint: '4fcac7e0c885a2d3d6a344866c39c4febdffcaf9bb658ac08a87ed7dea9808b6',
+      fingerprint: '776d6c2a2477b7dd5820a5439110bae3a6bf399c3494e06ba4657d90fcc34d8e',
     },
   },
 ];
