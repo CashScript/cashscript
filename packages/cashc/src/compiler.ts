@@ -152,8 +152,6 @@ function compileCode(
     throw new Error('New bytecode optimisation is not backwards compatible, please report this issue to the CashScript team');
   }
 
-  // Attach debug information (optional fields may be set to undefined; they are removed when the
-  // artifact is serialised)
   const debug = {
     bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
     sourceMap: generateSourceMap(optimisationResult.locationData),

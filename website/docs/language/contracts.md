@@ -42,30 +42,24 @@ Upon initialization of the contract, constructor parameters are encoded and adde
 :::
 
 ## Global constants
-Global constants are declared at the **top level** of a `.cash` file, outside the contract, and can be used by
-contract functions and user-defined functions. Their initialiser must currently be a literal; expressions and casts
-are not supported.
+Global constants are declared at the **top level** of a `.cash` file, outside the contract, and can be used by contract functions and user-defined functions. Their initialiser must currently be a literal; expressions and casts are not supported.
 
 ```solidity
 int constant MAX_ATTEMPTS = 3;
-int constant TIMEOUT = 2 hours;
+int constant TIMEOUT = 12; // 12 blocks
 bytes32 constant EMPTY_HASH = 0x0000000000000000000000000000000000000000000000000000000000000000;
 
 contract Example() {
     function spend(int attempts) {
         require(attempts < MAX_ATTEMPTS);
-        require(tx.time >= TIMEOUT);
+        require(this.age >= TIMEOUT);
     }
 }
 ```
 
-The literal must be assignable to the declared type. Global constants are immutable, and their names share the
-global namespace with user-defined functions and built-in symbols. Parameters and local variables cannot shadow
-them.
+The literal must be assignable to the declared type. Global constants are immutable, and their names share the global namespace with user-defined functions and built-in symbols. Parameters and local variables cannot shadow them.
 
-Global constants do not become constructor arguments or mutable stack variables. The compiler treats them like
-zero-argument value-returning functions internally: small values and one-use constants are generally inlined,
-while larger values used repeatedly can be shared with `OP_DEFINE`/`OP_INVOKE`.
+Global constants do not become constructor arguments or mutable stack variables. The compiler treats them like zero-argument value-returning functions internally: small values and one-use constants are generally inlined, while larger values used repeatedly can be shared with `OP_DEFINE`/`OP_INVOKE`.
 
 ## Functions
 The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using 'covenants it's possible to specify additional conditions — like restricting *where* money can be sent. To learn more about covenants, refer to the [CashScript Covenants Guide](/docs/guides/covenants).

@@ -63,10 +63,6 @@ interface RequireStatement {
   message?: string; // custom message for failing `require` statement
 }
 
-// Debug metadata for a global function or constant. Shared (OP_DEFINE'd) callables execute their
-// body as a standalone VM function. Inlined callables have no define site or id — their body is
-// emitted at every call site and their debug entries are merged into the containing program's own —
-// but they are still listed with their compiled body and source provenance to document the callable.
 interface DebugFrame {
   id?: number; // the function's id, as used with OP_DEFINE / OP_INVOKE in the bytecode (absent for inlined callables)
   name: string; // the source definition's name
