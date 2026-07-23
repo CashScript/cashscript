@@ -73,7 +73,9 @@ import {
   compileUnaryOp,
 } from './utils.js';
 import { isNumericType } from '../utils.js';
-import { collectFunctionCalls, isRecursive, shouldInline } from './inlining.js';
+import {
+  collectFunctionCalls, collectLoopResidentFunctions, isRecursive, shouldInline,
+} from './inlining.js';
 import type { InternalCompilerOptions } from '../compiler.js';
 
 interface InlineRange {
@@ -204,6 +206,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     });
 
     const reachableCalls = [node.contract!, ...node.functions].flatMap((n) => collectFunctionCalls(n));
+    const loopResidentFunctions = collectLoopResidentFunctions(node);
     const definedFunctions: Array<{ func: FunctionDefinitionNode, compiledResult: OptimiseBytecodeResult }> = [];
     let nextFunctionId = recursiveFunctions.length;
 
@@ -212,7 +215,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
       const compiledResult = this.compileGlobalFunctionBody(func);
 
       // If the function should be inlined, we ONLY update the symbol
-      if (shouldInline(symbol, compiledResult, reachableCalls, nextFunctionId, this.compilerOptions)) {
+      const inline = shouldInline(
+        symbol, compiledResult, reachableCalls, loopResidentFunctions, nextFunctionId, this.compilerOptions,
+      );
+      if (inline) {
         symbol.setInlinedBytecode(compiledResult.script, this.buildDebugFrame(func, compiledResult));
         return;
       }

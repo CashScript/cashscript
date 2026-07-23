@@ -177,6 +177,76 @@ describe('Inlining and shared definitions', () => {
     expect(bytecode).toContain('OP_INVOKE');
   });
 
+  it('keeps a function called inside a loop shared via OP_DEFINE (skipped-branch stepping cost)', () => {
+    const code = `
+      function big(int x) returns (int) { return (x * 7 + 3) * (x + 11) - 5; }
+      contract C() {
+        function spend(int n) {
+          int acc = 0;
+          for (int i = 0; i < 10; i = i + 1) {
+            if (n > i) { acc = big(acc + i); }
+          }
+          require(acc > 0);
+        }
+      }`;
+
+    const { bytecode } = compileString(code);
+    expect(bytecode).toContain('OP_DEFINE');
+    expect(bytecode).toContain('OP_INVOKE');
+  });
+
+  it('keeps the callees of a loop-called function shared too (they would be stepped per iteration)', () => {
+    const code = `
+      function inner(int x) returns (int) { return (x * 7 + 3) * (x + 11) - 5; }
+      function outer(int x) returns (int) { if (x > 5) { x = inner(x); } return x; }
+      contract C() {
+        function spend(int n) {
+          int acc = 0;
+          for (int i = 0; i < 10; i = i + 1) { acc = outer(acc + n); }
+          require(acc > 0);
+        }
+      }`;
+
+    // both outer and inner stay defined -> two OP_DEFINEs
+    const { bytecode } = compileString(code);
+    expect(countOp(bytecode, 'OP_DEFINE')).toEqual(2);
+    expect(bytecode).toContain('OP_INVOKE');
+  });
+
+  it('inlines a function whose only call site is a for-loop initializer (runs before OP_BEGIN)', () => {
+    const code = `
+      function calc(int x) returns (int) { return (x * 7 + 3) * (x + 11) - 5; }
+      contract C() {
+        function spend(int n) {
+          int acc = 0;
+          for (int i = calc(n); i < 10; i = i + 1) { acc = acc + i; }
+          require(acc > 0);
+        }
+      }`;
+
+    const { bytecode } = compileString(code);
+    expect(bytecode).not.toContain('OP_DEFINE');
+    expect(bytecode).not.toContain('OP_INVOKE');
+  });
+
+  it('still inlines a tiny body inside a loop (steps no more than the invoke site would)', () => {
+    const code = `
+      function inc(int x) returns (int) { return x + 1; }
+      contract C() {
+        function spend(int n) {
+          int acc = 0;
+          for (int i = 0; i < 10; i = i + 1) {
+            if (n > i) { acc = inc(acc); }
+          }
+          require(acc > 0);
+        }
+      }`;
+
+    const { bytecode } = compileString(code);
+    expect(bytecode).not.toContain('OP_DEFINE');
+    expect(bytecode).not.toContain('OP_INVOKE');
+  });
+
   it('ignores call sites inside eliminated functions when deciding to inline', () => {
     const code = `
       function big(int x) returns (int) { return (x * 7 + 3) * (x + 11) - 5; }
