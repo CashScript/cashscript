@@ -177,6 +177,25 @@ describe('Inlining and shared definitions', () => {
     expect(bytecode).toContain('OP_INVOKE');
   });
 
+  it("inlines a small multi-use body under 'opcost' (default) even when OP_DEFINE would be smaller", () => {
+    // 5-byte body used 4x: byte-exact accounting prefers OP_DEFINE, but every invocation costs
+    // ~2 executed instructions that splicing avoids — the 'opcost' objective (the default) takes
+    // the ops, the 'size' objective takes the bytes.
+    const code = `
+      function addF(int x, int y) returns (int) { return (x + y) % 7919; }
+      contract C() {
+        function spend(int a, int b) {
+          int t1 = addF(a, b);
+          int t2 = addF(t1, a);
+          int t3 = addF(t2, b);
+          require(addF(t3, t1) >= 0);
+        }
+      }`;
+    expect(compileString(code).bytecode).not.toContain('OP_DEFINE');
+    expect(compileString(code, { optimizeFor: 'opcost' }).bytecode).not.toContain('OP_DEFINE');
+    expect(compileString(code, { optimizeFor: 'size' }).bytecode).toContain('OP_DEFINE');
+  });
+
   it('keeps a function called inside a loop shared via OP_DEFINE (skipped-branch stepping cost)', () => {
     const code = `
       function big(int x) returns (int) { return (x * 7 + 3) * (x + 11) - 5; }
