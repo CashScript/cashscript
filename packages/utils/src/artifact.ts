@@ -1,7 +1,16 @@
 export interface CompilerOptions {
   enforceFunctionParameterTypes?: boolean;
   enforceLocktimeGuard?: boolean;
+  // The optimisation objective for decisions that trade bytecode size against op-cost.
+  // 'size' minimises bytecode bytes (e.g. binds a literal repeated within one function body to a
+  // local, so later uses are ~2-byte stack picks instead of repeated pushes: ~-30 bytes per
+  // duplicate of a 32-byte constant, ~+2 ops per execution of the binding). 'opcost' (the
+  // default) minimises executed op-cost instead — right for op-bound contracts, whose unlocking
+  // scripts are zero-padded to buy op budget, making byte savings free and extra ops pure cost.
+  optimizeFor?: OptimizationTarget;
 }
+
+export type OptimizationTarget = 'size' | 'opcost';
 
 export interface AbiInput {
   name: string;
