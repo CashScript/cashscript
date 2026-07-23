@@ -1,0 +1,10 @@
+function double(int a) returns (int) {
+    return a * 2;
+}
+
+contract AssignToFunctionName() {
+    function spend(int x) {
+        double = 5;
+        require(double(x) == 10);
+    }
+}

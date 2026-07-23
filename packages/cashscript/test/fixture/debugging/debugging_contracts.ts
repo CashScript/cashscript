@@ -1,4 +1,4 @@
-import { compileFile, compileString } from 'cashc';
+import { compileFile, compileString } from 'cashc/dist/internal.js';
 
 const CONTRACT_TEST_FUNCTION_DEBUGGING = `
 function checkValue(int value) {
@@ -25,6 +25,24 @@ function hashTwice(pubkey pk) returns (bytes32) {
 contract Test(pubkey owner) {
   function spend() {
     require(hashTwice(owner).length == 32, "should be 32 bytes");
+  }
+}
+`;
+
+// The require statement inside the (inlined) function spans multiple lines, so its statement can
+// only be extracted through the function frame's source map rather than a single source line.
+const CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE = `
+function checkRange(int value) {
+  require(
+    value > 0,
+    "value must be positive"
+  );
+}
+
+contract Test() {
+  function spend(int x) {
+    checkRange(x);
+    require(x < 100);
   }
 }
 `;
@@ -486,6 +504,18 @@ export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_
 export const artifactTestFunctionDebugging = compileString(CONTRACT_TEST_FUNCTION_DEBUGGING);
 export const artifactTestFunctionIntermediateResults = compileString(CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS);
 export const artifactTestMultiReturn = compileString(CONTRACT_TEST_MULTI_RETURN);
+export const artifactTestMultilineFunctionRequire = compileString(CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE);
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));
+
+// Variants with inlining disabled, so single-use functions stay OP_DEFINE'd and are debugged
+// through their own frames (attributing to their own source instead of the call site).
+export const artifactTestFunctionDebuggingDefined = compileString(
+  CONTRACT_TEST_FUNCTION_DEBUGGING,
+  { disableInlining: true },
+);
+export const artifactTestImportedFunctionDebuggingDefined = compileFile(
+  new URL('./function_importer.cash', import.meta.url),
+  { disableInlining: true },
+);

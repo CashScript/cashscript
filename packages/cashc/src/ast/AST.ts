@@ -27,12 +27,13 @@ export enum FunctionKind {
 }
 
 export class SourceFileNode extends Node {
-  // The source file's scope: the table of global functions (each symbol carries its VM function-table id).
+  // The source file's scope: the table of global definitions (shared definitions carry a VM function-table id).
   symbolTable?: SymbolTable;
 
   constructor(
     public contract?: ContractNode,
     public functions: FunctionDefinitionNode[] = [],
+    public constants: ConstantDefinitionNode[] = [],
     public imports: ImportNode[] = [],
     public pragmas: string[] = [],
   ) {
@@ -41,6 +42,24 @@ export class SourceFileNode extends Node {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitSourceFile(this);
+  }
+}
+
+export class ConstantDefinitionNode extends Node implements Named, Typed {
+  // Source provenance for debugging. Set on imported constants, left undefined for constants in the contract's own file.
+  sourceCode?: string;
+  sourceFile?: string;
+
+  constructor(
+    public type: Type,
+    public name: string,
+    public value: LiteralNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitConstantDefinition(this);
   }
 }
 
@@ -76,6 +95,9 @@ export class FunctionDefinitionNode extends Node implements Named {
   symbolTable?: SymbolTable;
   opRolls: Map<string, IdentifierNode> = new Map();
 
+  // Set when this is the synthetic zero-argument function used to lower a global constant.
+  constant?: ConstantDefinitionNode;
+
   // Source provenance for debugging. Set on imported functions, left undefined for functions in the contract's own file.
   sourceCode?: string;
   sourceFile?: string;
@@ -98,6 +120,7 @@ export class FunctionDefinitionNode extends Node implements Named {
 export class ParameterNode extends Node implements Named, Typed {
   constructor(
     public type: Type,
+    public modifiers: string[],
     public name: string,
   ) {
     super();
@@ -108,6 +131,8 @@ export class ParameterNode extends Node implements Named, Typed {
   }
 }
 
+export type DefinitionNode = VariableDefinitionNode | ConstantDefinitionNode | FunctionDefinitionNode | ParameterNode;
+
 export abstract class StatementNode extends Node { }
 export abstract class ControlStatementNode extends StatementNode { }
 export abstract class NonControlStatementNode extends StatementNode { }
@@ -115,7 +140,7 @@ export abstract class NonControlStatementNode extends StatementNode { }
 export class VariableDefinitionNode extends NonControlStatementNode implements Named, Typed {
   constructor(
     public type: Type,
-    public modifier: string[],
+    public modifiers: string[],
     public name: string,
     public expression: ExpressionNode,
   ) {
@@ -434,6 +459,9 @@ export class IdentifierNode extends ExpressionNode implements Named {
 
 export abstract class LiteralNode<T = any> extends ExpressionNode {
   public value: T;
+
+  // Set when this is the synthetic literal node used to represent a global constant
+  constant?: ConstantDefinitionNode;
 
   toString(): string {
     return `${this.value}`;

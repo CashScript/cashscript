@@ -11,8 +11,11 @@ import {
   scriptToAsm,
   scriptToBytecode,
   optimiseBytecode,
+  OptimiseBytecodeResult,
   generateSourceMap,
   generateSourceTags,
+  generateInlineRanges,
+  parseSourceTags,
   FullLocationData,
   DebugFrame,
   LogEntry,
@@ -22,7 +25,6 @@ import {
   StackItem,
   BytesType,
   TupleType,
-  CompilerOptions,
   SourceTagEntry,
   SourceTagKind,
 } from '@cashscript/utils';
@@ -71,6 +73,15 @@ import {
   compileUnaryOp,
 } from './utils.js';
 import { isNumericType } from '../utils.js';
+import { collectFunctionCalls, isRecursive, shouldInline } from './inlining.js';
+import type { InternalCompilerOptions } from '../compiler.js';
+
+interface InlineRange {
+  startIp: number;
+  endIp: number;
+  frame: DebugFrame;
+  line: number;
+}
 
 export default class GenerateTargetTraversal extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
@@ -86,8 +97,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+  inlineRanges: InlineRange[] = [];
 
-  constructor(private compilerOptions: CompilerOptions) {
+  constructor(private compilerOptions: InternalCompilerOptions) {
     super();
   }
 
@@ -144,6 +156,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
     // The contract is guaranteed to exist here (compileString throws MissingContractError otherwise).
     node.contract = this.visit(node.contract!) as ContractNode;
 
+    this.mergeInlinedDebugInfo();
+
     // Minimally encode output by going Script -> ASM -> Script
     this.output = asmToScript(scriptToAsm(this.output));
 
@@ -152,19 +166,83 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 
-  private defineGlobalFunctions(node: SourceFileNode): void {
-    node.functions.forEach((func) => {
-      const { functionId } = node.symbolTable!.getFromThis(func.name)!;
-      const bodyBytecode = this.compileGlobalFunctionBody(func, functionId!);
+  private mergeInlinedDebugInfo(): void {
+    this.inlineRanges.forEach(({ startIp, frame, line }) => {
+      this.requires.push(...frame.requires.map((entry) => ({
+        ...entry,
+        ip: entry.ip + startIp,
+        line,
+      })));
 
-      const locationData = { location: func.location, positionHint: PositionHint.START };
-      this.emit(bodyBytecode, locationData); // <function_body_bytes>
-      this.emit(encodeInt(BigInt(functionId!)), locationData); // <function_identifier>
-      this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
+      this.consoleLogs.push(...frame.logs.map((entry) => ({
+        ...entry,
+        ip: entry.ip + startIp,
+        data: entry.data.map((item) => (typeof item === 'string' ? item : { ...item, ip: item.ip + startIp })),
+        line,
+      })));
+
+      // Source tags use opcode indices rather than ips, which excludes the constructor arguments
+      const startIndex = startIp - this.constructorParameterCount;
+      this.sourceTags.push(...parseSourceTags(frame.sourceTags ?? '').map((entry) => ({
+        ...entry,
+        startIndex: entry.startIndex + startIndex,
+        endIndex: entry.endIndex + startIndex,
+      })));
     });
+
+    // Restore overall program order, since the merged entries were appended after this program's own
+    this.requires.sort((a, b) => a.ip - b.ip);
+    this.consoleLogs.sort((a, b) => a.ip - b.ip);
+    this.sourceTags.sort((a, b) => a.startIndex - b.startIndex);
   }
 
-  private compileGlobalFunctionBody(node: FunctionDefinitionNode, functionId: number): Uint8Array {
+  private defineGlobalFunctions(node: SourceFileNode): void {
+    // Assign function IDs to recursive functions first
+    const recursiveFunctions = node.functions.filter(isRecursive);
+    recursiveFunctions.forEach((func, functionId) => {
+      node.symbolTable!.getFromThis(func.name)!.setFunctionId(functionId);
+    });
+
+    const reachableCalls = [node.contract!, ...node.functions].flatMap((n) => collectFunctionCalls(n));
+    const definedFunctions: Array<{ func: FunctionDefinitionNode, compiledResult: OptimiseBytecodeResult }> = [];
+    let nextFunctionId = recursiveFunctions.length;
+
+    node.functions.forEach((func) => {
+      const symbol = node.symbolTable!.getFromThis(func.name)!;
+      const compiledResult = this.compileGlobalFunctionBody(func);
+
+      // If the function should be inlined, we ONLY update the symbol
+      if (shouldInline(symbol, compiledResult, reachableCalls, nextFunctionId, this.compilerOptions)) {
+        symbol.setInlinedBytecode(compiledResult.script, this.buildDebugFrame(func, compiledResult));
+        return;
+      }
+
+      // If the function ID is not yet assigned, we assign it (skipped for recursive functions which were assigned above)
+      if (symbol.functionId === undefined) {
+        symbol.setFunctionId(nextFunctionId);
+        nextFunctionId += 1;
+      }
+
+      // Pre-assigned recursive functions and non-inlined functions should be defined
+      definedFunctions[symbol.functionId!] = { func, compiledResult };
+    });
+
+    // Emit definitions in ID order so debug.functions[n] corresponds to the n-th define site (id n).
+    definedFunctions.forEach(({ func, compiledResult }, functionId) => {
+      this.frames.push(this.buildDebugFrame(func, compiledResult, functionId));
+      const locationData = { location: func.location, positionHint: PositionHint.START };
+      this.emit(scriptToBytecode(compiledResult.script), locationData); // <function_body_bytes>
+      this.emit(encodeInt(BigInt(functionId)), locationData); // <function_identifier>
+      this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
+    });
+
+    // Inlined callables are documented as id-less frames after the defined ones
+    node.functions
+      .flatMap((func) => node.symbolTable!.getFromThis(func.name)!.inlinedFrame ?? [])
+      .forEach((frame) => this.frames.push(frame));
+  }
+
+  private compileGlobalFunctionBody(node: FunctionDefinitionNode): OptimiseBytecodeResult {
     const bodyTraversal = new GenerateTargetTraversal(this.compilerOptions);
     bodyTraversal.currentFunction = node;
     bodyTraversal.constructorParameterCount = 0;
@@ -177,33 +255,40 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     bodyTraversal.visit(node.body);
     bodyTraversal.cleanGlobalFunctionStack(node);
+    bodyTraversal.mergeInlinedDebugInfo();
 
-    const optimised = optimiseBytecode(
+    const optimisedResult = optimiseBytecode(
       bodyTraversal.output,
       bodyTraversal.locationData,
       bodyTraversal.consoleLogs,
       bodyTraversal.requires,
       bodyTraversal.sourceTags,
+      bodyTraversal.inlineRanges,
       0,
     );
 
-    const bodyBytecode = scriptToBytecode(optimised.script);
-    const sourceTags = generateSourceTags(optimised.sourceTags);
+    return optimisedResult;
+  }
 
-    this.frames.push({
+  private buildDebugFrame(
+    node: FunctionDefinitionNode,
+    optimised: OptimiseBytecodeResult,
+    functionId?: number,
+  ): DebugFrame {
+    return {
       id: functionId,
       name: node.name,
+      kind: node.constant ? ('constant' as const) : undefined,
       inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
-      bytecode: binToHex(bodyBytecode),
+      bytecode: binToHex(scriptToBytecode(optimised.script)),
       sourceMap: generateSourceMap(optimised.locationData),
-      ...(sourceTags ? { sourceTags } : {}),
-      ...(node.sourceCode !== undefined ? { source: node.sourceCode } : {}),
-      ...(node.sourceFile !== undefined ? { sourceFile: node.sourceFile } : {}),
+      sourceTags: generateSourceTags(optimised.sourceTags) || undefined,
+      source: node.sourceCode,
+      sourceFile: node.sourceFile,
       logs: optimised.logs,
       requires: optimised.requires,
-    });
-
-    return bodyBytecode;
+      inlineRanges: generateInlineRanges(optimised.inlineRanges) || undefined,
+    };
   }
 
   cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {
@@ -665,7 +750,16 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     const symbol = node.identifier.symbol!;
     node.parameters = this.visitList(node.parameters);
+
+    const startIp = this.output.length + this.constructorParameterCount;
+    const endIp = startIp + symbol.bytecode!.length - 1;
+
     this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
+
+    if (symbol.inlinedFrame) {
+      this.inlineRanges.push({ startIp, endIp, frame: symbol.inlinedFrame, line: node.location.start.line });
+    }
+
     this.popFromStack(node.parameters.length);
 
     // The call leaves one value per declared return type (none for a void function); a multi-return
@@ -897,3 +991,4 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 }
+

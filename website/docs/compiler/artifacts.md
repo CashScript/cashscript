@@ -27,7 +27,8 @@ interface Artifact {
     logs: LogEntry[] // log entries generated from `console.log` statements
     requires: RequireStatement[] // messages for failing `require` statements
     sourceTags?: string // semantic tags for opcodes (e.g. loop update/condition ranges)
-    functions?: DebugFrame[] // debug metadata for each user-defined function
+    functions?: DebugFrame[] // debug metadata for each global definition (defined frames first, then inlined ones)
+    inlineRanges?: string // "startIp:endIp:name;..." — runs where inlined callables' bodies were emitted
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
   fingerprint?: string // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
@@ -63,8 +64,9 @@ interface RequireStatement {
 }
 
 interface DebugFrame {
-  id: number; // the function's id, as used with OP_DEFINE / OP_INVOKE in the bytecode
-  name: string; // the function's name
+  id?: number; // the function's id, as used with OP_DEFINE / OP_INVOKE in the bytecode (absent for inlined callables)
+  name: string; // the source definition's name
+  kind?: 'constant'; // present when the VM function implements a global constant; absent for regular functions
   inputs: AbiInput[]; // the function's parameters (name and type)
   bytecode: string; // hex-encoded bytecode of the function body (exactly what OP_DEFINE stores)
   sourceMap: string; // source map of the function body (instruction pointers starting from 0)
@@ -73,6 +75,7 @@ interface DebugFrame {
   sourceFile?: string; // file name the function is imported from (absent for the contract's own file)
   logs: LogEntry[]; // log entries within the function body
   requires: RequireStatement[]; // messages for failing `require` statements within the function body
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted within this body (frame-local ips)
 }
 
 interface CompilerOptions {

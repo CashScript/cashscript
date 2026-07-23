@@ -1,0 +1,17 @@
+bool constant ENABLED = true;
+int constant NEGATIVE = -7;
+int constant INTERVAL = 2 hours;
+int constant DEADLINE = date("2021-02-17T01:30:00");
+string constant GREETING = 'hello';
+bytes4 constant MAGIC = 0x01020304;
+
+contract GlobalConstantLiterals() {
+    function spend(bool enabled, int negative, int interval, int deadline, string greeting, bytes4 magic) {
+        require(enabled == ENABLED);
+        require(negative == NEGATIVE);
+        require(interval == INTERVAL);
+        require(deadline == DEADLINE);
+        require(greeting == GREETING);
+        require(magic == MAGIC);
+    }
+}

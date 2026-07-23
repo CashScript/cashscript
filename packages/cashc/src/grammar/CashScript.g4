@@ -30,11 +30,16 @@ importDirective
 
 topLevelDefinition
     : globalFunctionDefinition
+    | constantDefinition
     | contractDefinition
     ;
 
 globalFunctionDefinition
     : 'function' Identifier parameterList ('returns' '(' typeName (',' typeName)* ')')? functionBody
+    ;
+
+constantDefinition
+    : typeName 'constant' Identifier '=' literal ';'
     ;
 
 contractDefinition

@@ -16,6 +16,8 @@ import {
   FunctionCallNode,
   FunctionCallStatementNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
+  LiteralNode,
   ParameterNode,
   UnaryOpNode,
   BinaryOpNode,
@@ -60,6 +62,12 @@ import { functionReturnType, resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   private currentFunctionReturnTypes: Type[] = [];
+
+  visitConstantDefinition(node: ConstantDefinitionNode): Node {
+    node.value = this.visit(node.value) as LiteralNode;
+    expectAssignable(node, node.value.type, node.type);
+    return node;
+  }
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
@@ -502,7 +510,7 @@ function expectTuple(node: ExpectedNode, actual?: Type): void {
   }
 }
 
-type AssigningNode = AssignNode | VariableDefinitionNode;
+type AssigningNode = AssignNode | VariableDefinitionNode | ConstantDefinitionNode;
 function expectAssignable(node: AssigningNode, actual?: Type, expected?: Type): void {
   if (!implicitlyCastable(actual, expected)) {
     throw new AssignTypeError(node);

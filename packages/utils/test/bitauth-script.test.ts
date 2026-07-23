@@ -3,7 +3,7 @@ import { Artifact } from '../src/artifact.js';
 import { asmToScript, scriptToBytecode } from '../src/script.js';
 import { formatBitAuthScript } from '../src/bitauth-script.js';
 import { FunctionFixture, fixtures, functionFixtures } from './fixtures/bitauth-script.fixture.js';
-import { compileFile, compileString } from 'cashc';
+import { compileFile, compileString } from 'cashc/dist/internal.js';
 
 describe('Libauth Script formatting', () => {
   fixtures.forEach((fixture) => {
@@ -54,8 +54,8 @@ describe('Libauth Script formatting', () => {
 
   describe('User-defined function formatting', () => {
     const compileFixture = (fixture: FunctionFixture): Artifact => (fixture.file
-      ? compileFile(new URL(`./fixtures/${fixture.file}`, import.meta.url))
-      : compileString(fixture.sourceCode!));
+      ? compileFile(new URL(`./fixtures/${fixture.file}`, import.meta.url), fixture.compilerOptions)
+      : compileString(fixture.sourceCode!, fixture.compilerOptions));
 
     functionFixtures.forEach((fixture) => {
       describe(fixture.name, () => {

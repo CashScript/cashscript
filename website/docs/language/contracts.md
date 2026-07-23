@@ -41,6 +41,26 @@ The typings for the constructor arguments are only semantic and used when initia
 Upon initialization of the contract, constructor parameters are encoded and added to the contract's bytecode in the reversed order of their declaration. This can be important when manually constructing the contract locking script for debugging or optimization purposes.
 :::
 
+## Global constants
+Global constants are declared at the **top level** of a `.cash` file, outside the contract, and can be used by contract functions and user-defined functions. Their initialiser must currently be a literal; expressions and casts are not supported.
+
+```solidity
+int constant MAX_ATTEMPTS = 3;
+int constant TIMEOUT = 12; // 12 blocks
+bytes32 constant EMPTY_HASH = 0x0000000000000000000000000000000000000000000000000000000000000000;
+
+contract Example() {
+    function spend(int attempts) {
+        require(attempts < MAX_ATTEMPTS);
+        require(this.age >= TIMEOUT);
+    }
+}
+```
+
+The literal must be assignable to the declared type. Global constants are immutable, and their names share the global namespace with user-defined functions and built-in symbols. Parameters and local variables cannot shadow them.
+
+Global constants do not become constructor arguments or mutable stack variables. The compiler treats them like zero-argument value-returning functions internally: small values and one-use constants are generally inlined, while larger values used repeatedly can be shared with `OP_DEFINE`/`OP_INVOKE`.
+
 ## Functions
 The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using 'covenants it's possible to specify additional conditions — like restricting *where* money can be sent. To learn more about covenants, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
 
@@ -80,7 +100,7 @@ The typings for function arguments are enforced by default for boolean values an
 :::
 
 ## User-defined functions
-Reusable functions are declared at the **top level** of a `.cash` file, outside the contract. They are compiled to the BCH VM's native function opcodes (`OP_DEFINE`/`OP_INVOKE`, available since the May 2026 upgrade), so a function's body is stored once and shared across every call site rather than duplicated.
+Reusable functions are declared at the **top level** of a `.cash` file, outside the contract. The compiler chooses between inlining their bodies and sharing them with the BCH VM's native function opcodes (`OP_DEFINE`/`OP_INVOKE`), based on the resulting bytecode size. Single-use functions are inlined; recursive functions remain shared definitions.
 
 A function may return a **single value** using a `returns (T)` clause, and is called from contract functions or from other top-level functions:
 
@@ -133,15 +153,35 @@ contract Example() {
 }
 ```
 
-### Importing functions from other files
-Top-level functions can be split across files and pulled in with an `import` directive, which makes the imported file's functions available as if they were declared locally. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any function or contract definitions.
+## Global constants
+Global constants are declared at the **top level** of a `.cash` file, outside the contract, and can be used by contract functions and user-defined functions. Their initialiser must be a literal: expressions and casts are not supported.
+
+```solidity
+int constant MAX_ATTEMPTS = 3;
+int constant TIMEOUT = 2 hours;
+bytes32 constant EMPTY_HASH = 0x0000000000000000000000000000000000000000000000000000000000000000;
+
+contract Example() {
+    function spend(int attempts) {
+        require(attempts < MAX_ATTEMPTS);
+        require(tx.time >= TIMEOUT);
+    }
+}
+```
+
+The literal must be assignable to the declared type. Global constants are immutable, and their names share the global namespace with user-defined functions and built-in symbols. Parameters and local variables cannot shadow them.
+
+### Importing functions and constants from other files
+Top-level functions and constants can be split across files and pulled in with an `import` directive, which makes the imported functions and constants available as if they were declared locally. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any constant, function or contract definitions.
 
 Imports are resolved relative to the importing file: from the filesystem when compiling with [`compileFile`](/docs/compiler#compilefile), or from the `files` compiler option when using [`compileString`](/docs/compiler#compilestring).
 
 ```solidity
 // math.cash
+int constant FACTOR = 2;
+
 function double(int a) returns (int) {
-    return a * 2;
+    return a * FACTOR;
 }
 ```
 
@@ -157,7 +197,7 @@ contract Main() {
 }
 ```
 
-Imported function names share a single global namespace, so a name may only be defined once across the whole import graph. Files reached through more than one import path (diamond imports) are resolved once.
+Imported function and constant names share a single global namespace, so a name may only be defined once across the whole import graph. Files reached through more than one import path (diamond imports) are resolved once.
 
 Imported files can declare their own [`pragma` directives](#pragma), and every pragma across the whole import graph — the main file and all (transitively) imported files — must be satisfied by the compiler version.
 
@@ -169,7 +209,7 @@ Imported files can declare their own [`pragma` directives](#pragma), and every p
 This first version of user-defined functions is intentionally limited in scope:
 
 - A value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
-- No advanced optimisations are performed yet on user-defined functions.
+- A void function must end with a `require` statement, just like contract functions (when it ends with an if-statement or loop, every branch must end with a `require`).
 
 :::note
 Recursive and mutually recursive functions are allowed and compile fine. At runtime the VM control stack is limited to 100 entries, shared between recursion depth and nested `if` and loop blocks, so excessively deep recursion will fail when the contract gets spent.
@@ -351,18 +391,18 @@ contract P2PKH(bytes20 pkh) {
 
 ## Scope
 
-CashScript uses nested scopes for parameters, variables and global functions. There cannot be two identical names within the same scope or within a nested scope.
+CashScript uses nested scopes for global constants, parameters, variables and global functions. There cannot be two identical names within the same scope or within a nested scope.
 
 There are the following scopes in the nesting order:
 
-- **Global scope** - contains global functions and global variables (e.g. `sha256`, `hash160`, `checkSig`, etc.)
+- **Global scope** - contains global constants, global functions and built-in symbols (e.g. `sha256`, `hash160`, `checkSig`, etc.)
 - **Contract scope** - contains contract parameters
 - **Function scope** - contains function parameters and local variables
 - **Local scope** - contains local variables introduced by control flow blocks (e.g. `if`, `else`)
 
 #### Example
 ```solidity
-// Global scope (contains global functions and global variables like sha256, hash160, checkSig, etc.)
+// Global scope (contains global constants, functions and built-in symbols like sha256, hash160, checkSig, etc.)
 
 // Contract scope (contains contract parameters - sender, recipient, timeout)
 contract TransferWithTimeout(

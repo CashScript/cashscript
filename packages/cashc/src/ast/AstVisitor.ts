@@ -6,6 +6,7 @@ import {
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -39,6 +40,7 @@ export default abstract class AstVisitor<T> {
   abstract visitImport(node: ImportNode): T;
   abstract visitContract(node: ContractNode): T;
   abstract visitFunctionDefinition(node: FunctionDefinitionNode): T;
+  abstract visitConstantDefinition(node: ConstantDefinitionNode): T;
   abstract visitParameter(node: ParameterNode): T;
   abstract visitVariableDefinition(node: VariableDefinitionNode): T;
   abstract visitTupleAssignment(node: TupleAssignmentNode): T;

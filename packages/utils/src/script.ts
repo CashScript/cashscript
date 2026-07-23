@@ -12,7 +12,7 @@ import OptimisationsEquivFile from './cashproof-optimisations.js';
 import { optimisationReplacements } from './optimisations.js';
 import { range } from './data.js';
 import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
-import { LogEntry, RequireStatement } from './artifact.js';
+import { InlineRange, LogEntry, RequireStatement } from './artifact.js';
 
 export const Op = OpcodesBch;
 export type Op = number;
@@ -154,12 +154,13 @@ export function generateContractBytecodeScript(baseScript: Script, encodedConstr
   return [...encodedConstructorArgs.slice().reverse(), ...baseScript];
 }
 
-interface OptimiseBytecodeResult {
+export interface OptimiseBytecodeResult {
   script: Script;
   locationData: FullLocationData;
   logs: LogEntry[];
   requires: RequireStatement[];
   sourceTags: SourceTagEntry[];
+  inlineRanges: InlineRange[];
 }
 
 export function optimiseBytecode(
@@ -168,6 +169,7 @@ export function optimiseBytecode(
   logs: LogEntry[],
   requires: RequireStatement[],
   sourceTags: SourceTagEntry[],
+  inlineRanges: InlineRange[],
   constructorParamLength: number,
   runs: number = 1000,
 ): OptimiseBytecodeResult {
@@ -179,7 +181,10 @@ export function optimiseBytecode(
       logs: newLogs,
       requires: newRequires,
       sourceTags: newSourceTags,
-    } = replaceOps(script, locationData, logs, requires, sourceTags, constructorParamLength, optimisationReplacements);
+      inlineRanges: newInlineRanges,
+    } = replaceOps(
+      script, locationData, logs, requires, sourceTags, inlineRanges, constructorParamLength, optimisationReplacements,
+    );
 
     // Break on fixed point
     if (scriptToAsm(oldScript) === scriptToAsm(newScript)) break;
@@ -189,9 +194,12 @@ export function optimiseBytecode(
     logs = newLogs;
     requires = newRequires;
     sourceTags = newSourceTags;
+    inlineRanges = newInlineRanges;
   }
 
-  return { script, locationData, logs, requires, sourceTags: reconcileScopeCleanupTags(script, sourceTags) };
+  return {
+    script, locationData, logs, requires, sourceTags: reconcileScopeCleanupTags(script, sourceTags), inlineRanges,
+  };
 }
 
 const SCOPE_CLEANUP_OPCODES = [Op.OP_DROP, Op.OP_NIP, Op.OP_2DROP];
@@ -271,6 +279,7 @@ interface ReplaceOpsResult {
   logs: LogEntry[];
   requires: RequireStatement[];
   sourceTags: SourceTagEntry[];
+  inlineRanges: InlineRange[];
 }
 
 function replaceOps(
@@ -279,6 +288,7 @@ function replaceOps(
   logs: LogEntry[],
   requires: RequireStatement[],
   sourceTags: SourceTagEntry[],
+  inlineRanges: InlineRange[],
   constructorParamLength: number,
   optimisations: string[][],
 ): ReplaceOpsResult {
@@ -287,6 +297,7 @@ function replaceOps(
   let newLogs = [...logs];
   let newRequires = [...requires];
   let newSourceTags = [...sourceTags];
+  let newInlineRanges = [...inlineRanges];
 
   optimisations.forEach(([pattern, replacement]) => {
     let processedAsm = '';
@@ -342,25 +353,21 @@ function replaceOps(
       // the constructor parameters still have to get added to the front of the script when a new Contract is created.
       const scriptIp = scriptIndex + constructorParamLength;
 
-      newRequires = newRequires.map((require) => {
-        // We calculate the new ip of the require by subtracting the length diff between the matched pattern and replacement
-        const newCalculatedRequireIp = require.ip - lengthDiff;
+      // Positions after the replaced pattern shift back by the length difference; positions inside
+      // the replaced pattern clamp to the pattern's start. (Positions inside a pattern are impossible
+      // for the current set of optimisations, but the clamp future-proofs the code.)
+      const adjustPosition = (position: number, patternStart: number): number => (
+        position >= patternStart ? Math.max(patternStart, position - lengthDiff) : position
+      );
 
-        return {
-          ...require,
-          // If the require is within the pattern, we want to make sure that the new ip is at least the scriptIp
-          // Note that this is impossible for the current set of optimisations, but future proofs the code
-          ip: require.ip >= scriptIp ? Math.max(scriptIp, newCalculatedRequireIp) : require.ip,
-        };
-      });
+      newRequires = newRequires.map((require) => ({
+        ...require,
+        ip: adjustPosition(require.ip, scriptIp),
+      }));
 
       newLogs = newLogs.map((log) => {
-        // We calculate the new ip of the log by subtracting the length diff between the matched pattern and replacement
-        const newCalculatedLogIp = log.ip - lengthDiff;
-
         return {
-          // If the log is within the pattern, we want to make sure that the new ip is at least the scriptIp
-          ip: log.ip >= scriptIp ? Math.max(scriptIp, newCalculatedLogIp) : log.ip,
+          ip: adjustPosition(log.ip, scriptIp),
           line: log.line,
           data: log.data.map((data) => {
             if (typeof data === 'string') return data;
@@ -387,11 +394,18 @@ function replaceOps(
         };
       });
 
-      // Source tags use raw script indices (no constructor offset), so we adjust using scriptIndex directly
+      // Source tags use raw script indices (no constructor offset), so they adjust against scriptIndex
       newSourceTags = newSourceTags.map((tag) => ({
         ...tag,
-        startIndex: tag.startIndex >= scriptIndex ? Math.max(scriptIndex, tag.startIndex - lengthDiff) : tag.startIndex,
-        endIndex: tag.endIndex >= scriptIndex ? Math.max(scriptIndex, tag.endIndex - lengthDiff) : tag.endIndex,
+        startIndex: adjustPosition(tag.startIndex, scriptIndex),
+        endIndex: adjustPosition(tag.endIndex, scriptIndex),
+      }));
+
+      // Inline ranges use ip coordinates (like requires), so both bounds adjust against scriptIp
+      newInlineRanges = newInlineRanges.map((inlineRange) => ({
+        ...inlineRange,
+        startIp: adjustPosition(inlineRange.startIp, scriptIp),
+        endIp: adjustPosition(inlineRange.endIp, scriptIp),
       }));
 
       // We add the replacement to the processed asm
@@ -419,6 +433,7 @@ function replaceOps(
     logs: newLogs,
     requires: newRequires,
     sourceTags: newSourceTags,
+    inlineRanges: newInlineRanges,
   };
 }
 

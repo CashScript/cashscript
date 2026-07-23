@@ -101,7 +101,7 @@ const source = await result.text();
 const P2PKH = compileString(source);
 ```
 
-`compileString` never reads from the filesystem, so `import` directives that pull in [user-defined functions](/docs/language/contracts#user-defined-functions) are resolved from the `files` compiler option instead. Its keys are the import paths relative to the main source (using forward slashes), and its values are the corresponding source code strings.
+`compileString` never reads from the filesystem, so `import` directives that pull in [top-level definitions](/docs/language/contracts#importing-functions-and-constants-from-other-files) are resolved from the `files` compiler option instead. Its keys are the import paths relative to the main source (using forward slashes), and its values are the corresponding source code strings.
 
 ```ts
 const mathSource = `

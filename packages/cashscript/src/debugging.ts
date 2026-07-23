@@ -2,7 +2,7 @@ import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationPro
 import { Artifact, LogData, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
-import { getActiveBytecode, resolveFrame } from './debug-frame.js';
+import { attributeLogEntry, getActiveBytecode, resolveFrame } from './debug-frame.js';
 import { getBitauthUri } from './libauth-template/LibauthTemplate.js';
 import { VmTarget } from './interfaces.js';
 
@@ -105,7 +105,8 @@ const debugSingleScenario = (
         return logEntries.map((logEntry) => {
           const decodedLogData = logEntry.data
             .map((dataEntry) => decodeLogDataEntry(dataEntry, reversedPriorDebugSteps, vm, frameBytecode));
-          return { logEntry, decodedLogData, sourceName: frame.sourceName };
+
+          return { ...attributeLogEntry(artifact, frame, logEntry), decodedLogData };
         });
       });
 

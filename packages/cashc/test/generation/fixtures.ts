@@ -1,4 +1,5 @@
-import { Artifact, CompilerOptions } from '@cashscript/utils';
+import { Artifact } from '@cashscript/utils';
+import { InternalCompilerOptions } from '../../src/internal.js';
 import fs from 'fs';
 import { URL } from 'url';
 import { version } from '../../src/index.js';
@@ -6,7 +7,7 @@ import { version } from '../../src/index.js';
 interface Fixture {
   fn: string,
   artifact: Artifact,
-  compilerOptions?: CompilerOptions,
+  compilerOptions?: InternalCompilerOptions,
 }
 
 export const fixtures: Fixture[] = [
@@ -1411,6 +1412,7 @@ export const fixtures: Fixture[] = [
   {
     // A single global function — the basic OP_DEFINE / OP_INVOKE calling convention.
     fn: 'global_function_simple.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'GlobalFunctionSimple',
       constructorInputs: [],
@@ -1456,6 +1458,7 @@ export const fixtures: Fixture[] = [
     // A multi-parameter global function — locks in the parameter stack-seeding and argument order
     // (the contract OP_SWAPs x and y into place; the body computes a - b directly).
     fn: 'global_function_multi_param.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'GlobalFunctionMultiParam',
       constructorInputs: [],
@@ -1500,6 +1503,7 @@ export const fixtures: Fixture[] = [
   {
     // A void global function called as a statement — no return value, and the void stack-cleanup path.
     fn: 'global_function_void.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'GlobalFunctionVoid',
       constructorInputs: [],
@@ -1545,41 +1549,32 @@ export const fixtures: Fixture[] = [
     // Imports resolved across a diamond (mid1 and mid2 both import leaf): leaf is defined once, and
     // m1/m2 invoke it transitively.
     fn: '../import-fixtures/diamond.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'Diamond',
       constructorInputs: [],
       abi: [{ name: 'spend', inputs: [{ name: 'x', type: 'int' }] }],
       bytecode:
-        // Functions are defined in call order (DFS from the contract), so m1 is id 0, leaf id 1, m2 id 2.
-        // OP_DEFINE m1 (id 0): return leaf(a) * 2
-        '518a5295 OP_0 OP_DEFINE '
-        // OP_DEFINE leaf (id 1): return a + 1
-        + '8b OP_1 OP_DEFINE '
+        // Functions are defined in callee-first order (leaf before its callers), so leaf is id 0,
+        // m1 id 1, m2 id 2.
+        // OP_DEFINE leaf (id 0): return a + 1
+        '8b OP_0 OP_DEFINE '
+        // OP_DEFINE m1 (id 1): return leaf(a) * 2
+        + '008a5295 OP_1 OP_DEFINE '
         // OP_DEFINE m2 (id 2): return leaf(a) + 3
-        + '518a5393 OP_2 OP_DEFINE '
+        + '008a5393 OP_2 OP_DEFINE '
         // require(m1(x) + m2(x) == 18)
-        + 'OP_DUP OP_0 OP_INVOKE OP_SWAP OP_2 OP_INVOKE OP_ADD 12 OP_NUMEQUAL',
+        + 'OP_DUP OP_1 OP_INVOKE OP_SWAP OP_2 OP_INVOKE OP_ADD 12 OP_NUMEQUAL',
       debug: {
-        bytecode: '04518a52950089018b518904518a5393528976008a7c528a9301129c',
+        bytecode: '018b008904008a5295518904008a5393528976518a7c528a9301129c',
         logs: [],
         requires: [
           { ip: 18, line: 6 },
         ],
-        sourceMap: '2::4:1;;::::1;1::3::0;;::::1;2::4::0;;::::1;6:19:6:20:0;:16::21:1;;:27::28:0;:24::29:1;;:16;:33::35:0;:8::37:1',
+        sourceMap: '1::3:1;;::::1;2::4::0;;::::1;::::0;;::::1;6:19:6:20:0;:16::21:1;;:27::28:0;:24::29:1;;:16;:33::35:0;:8::37:1',
         functions: [
           {
             id: 0,
-            name: 'm1',
-            inputs: [{ name: 'a', type: 'int' }],
-            bytecode: '518a5295',
-            sourceMap: '3:11:3:18:1;;:21::22:0;:11:::1',
-            logs: [],
-            requires: [],
-            source: fs.readFileSync(new URL('../import-fixtures/mid1.cash', import.meta.url), { encoding: 'utf-8' }),
-            sourceFile: 'mid1.cash',
-          },
-          {
-            id: 1,
             name: 'leaf',
             inputs: [{ name: 'a', type: 'int' }],
             bytecode: '8b',
@@ -1590,10 +1585,21 @@ export const fixtures: Fixture[] = [
             sourceFile: 'leaf.cash',
           },
           {
+            id: 1,
+            name: 'm1',
+            inputs: [{ name: 'a', type: 'int' }],
+            bytecode: '008a5295',
+            sourceMap: '3:11:3:18:1;;:21::22:0;:11:::1',
+            logs: [],
+            requires: [],
+            source: fs.readFileSync(new URL('../import-fixtures/mid1.cash', import.meta.url), { encoding: 'utf-8' }),
+            sourceFile: 'mid1.cash',
+          },
+          {
             id: 2,
             name: 'm2',
             inputs: [{ name: 'a', type: 'int' }],
-            bytecode: '518a5393',
+            bytecode: '008a5393',
             sourceMap: '3:11:3:18:1;;:21::22:0;:11:::1',
             logs: [],
             requires: [],
@@ -1616,9 +1622,159 @@ export const fixtures: Fixture[] = [
     },
   },
   {
+    // A small global constant used repeatedly — inlined as a plain literal at each use site (no
+    // OP_DEFINE), with source locations mapping to the use sites rather than the declaration.
+    fn: 'global_constant_inlined.cash',
+    artifact: {
+      contractName: 'GlobalConstantInlined',
+      constructorInputs: [{ name: 'value', type: 'int' }],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode:
+        // require(value + ONE + ONE == 3)
+        'OP_1ADD OP_1ADD OP_3 OP_NUMEQUAL',
+      debug: {
+        bytecode: '8b8b539c',
+        logs: [],
+        requires: [
+          { ip: 5, line: 5 },
+        ],
+        sourceMap: '5:16:5:27:1;:::33;:37::38:0;:8::40:1',
+        // Both literal pushes were fused into the OP_1ADDs during optimisation; the ranges track them
+        inlineRanges: '1:1:ONE;2:2:ONE',
+        functions: [
+          {
+            // The inlined constant is documented as an id-less frame; both of its literal pushes
+            // were emitted at the use sites and fused into the OP_1ADDs during optimisation
+            name: 'ONE',
+            kind: 'constant',
+            inputs: [],
+            bytecode: '51',
+            sourceMap: '1:19:1:20',
+            logs: [],
+            requires: [],
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/global_constant_inlined.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: '0d639aa764e1dc4045e25efe7dc27bd247b3cd45dd6c3a878a83bc3015e38a59',
+    },
+  },
+  {
+    // A global constant used repeatedly — lowered to a zero-argument VM function definition with a
+    // kind: 'constant' debug frame; each use compiles to an OP_INVOKE.
+    fn: 'global_constant_shared.cash',
+    artifact: {
+      contractName: 'GlobalConstantShared',
+      constructorInputs: [{ name: 'first', type: 'bytes32' }, { name: 'second', type: 'bytes32' }],
+      abi: [{ name: 'spend', inputs: [] }],
+      bytecode:
+        // OP_DEFINE HASH (id 0): the 32-byte literal
+        '203333333333333333333333333333333333333333333333333333333333333333 OP_0 OP_DEFINE '
+        // require(first == HASH); require(second == HASH)
+        + 'OP_0 OP_INVOKE OP_EQUALVERIFY OP_0 OP_INVOKE OP_EQUAL',
+      debug: {
+        bytecode: '212033333333333333333333333333333333333333333333333333333333333333330089008a88008a87',
+        logs: [],
+        requires: [
+          { ip: 7, line: 5 },
+          { ip: 11, line: 6 },
+        ],
+        sourceMap: '1::1:91;;::::1;5:25:5:29;;:8::31;6:26:6:30;;:8::32',
+        functions: [
+          {
+            id: 0,
+            name: 'HASH',
+            kind: 'constant',
+            inputs: [],
+            bytecode: '203333333333333333333333333333333333333333333333333333333333333333',
+            sourceMap: '1:24:1:90',
+            logs: [],
+            requires: [],
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/global_constant_shared.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: '6a5509a2ece64c7e47b4e1185da2f8b92fc0e1f75cc818be86b783c7bf134c5e',
+    },
+  },
+  {
+    // A single-use global function — inlined at the call site, splicing its console.log and require
+    // metadata into the contract's debug info (same-file bodies keep their own source lines).
+    fn: 'global_function_inlined.cash',
+    artifact: {
+      contractName: 'GlobalFunctionInlined',
+      constructorInputs: [],
+      abi: [{ name: 'spend', inputs: [{ name: 'n', type: 'int' }] }],
+      bytecode:
+        // require(checked(n) == n), with checked(x) spliced in:
+        // console.log ... require(x > 0, "positive") ... return x
+        'OP_DUP OP_DUP OP_0 OP_GREATERTHAN OP_VERIFY OP_NUMEQUAL',
+      debug: {
+        bytecode: '767600a0699c',
+        logs: [
+          { ip: 1, line: 9, data: ['checking', { stackIndex: 0, type: 'int', ip: 1 }] },
+        ],
+        requires: [
+          { ip: 4, line: 9, message: 'positive' },
+          { ip: 6, line: 9 },
+        ],
+        // The emitted body ops (ips 1-4) and the merged require/log entries above all map to the
+        // call site; the function's own lines live on its frame below, tied together by the range
+        sourceMap: '9:24:9:25;:16::26:1;;;;:8::33',
+        inlineRanges: '1:4:checked',
+        functions: [
+          {
+            // The inlined function is documented as an id-less frame carrying its compiled body
+            // and frame-local debug info (ips from 0)
+            name: 'checked',
+            inputs: [{ name: 'x', type: 'int' }],
+            bytecode: '7600a069',
+            sourceMap: '3:12:3:13;:16::17;:12:::1;:4::31',
+            logs: [
+              { ip: 0, line: 2, data: ['checking', { stackIndex: 0, type: 'int', ip: 0 }] },
+            ],
+            requires: [
+              { ip: 3, line: 3, message: 'positive' },
+            ],
+          },
+        ],
+      },
+      source: fs.readFileSync(new URL('../valid-contract-files/global_function_inlined.cash', import.meta.url), { encoding: 'utf-8' }),
+      compiler: {
+        name: 'cashc',
+        version,
+        options: {
+          enforceFunctionParameterTypes: true,
+          enforceLocktimeGuard: true,
+        },
+      },
+      updatedAt: '',
+      fingerprint: 'a19e54aee90995fe784da8e5501a95020d91aa1ccf17ac1f3c7a3e7be0813a73',
+    },
+  },
+  {
     // A multi-return function — locks in the calling convention: return values are left on the stack
     // in declared order (last value on top) and bound by an N-ary tuple destructuring at the call site.
     fn: 'global_function_multi_return.cash',
+    compilerOptions: { disableInlining: true },
     artifact: {
       contractName: 'GlobalFunctionMultiReturn',
       constructorInputs: [],

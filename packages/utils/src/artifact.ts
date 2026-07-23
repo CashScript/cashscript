@@ -19,12 +19,14 @@ export interface DebugInformation {
   logs: readonly LogEntry[]; // log entries generated from `console.log` statements
   requires: readonly RequireStatement[]; // messages for failing `require` statements
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
-  functions?: readonly DebugFrame[]; // Debug metadata for each user-defined function
+  functions?: readonly DebugFrame[]; // Debug metadata for each global definition (defined frames first, then inlined ones)
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted (see `generateInlineRanges`)
 }
 
 export interface DebugFrame {
-  id: number; // the function's id, as used with OP_DEFINE and OP_INVOKE in the bytecode
-  name: string; // the function's name
+  id?: number; // the function's id, as used with OP_DEFINE and OP_INVOKE in the bytecode; absent for inlined callables
+  name: string; // the function/constant's name
+  kind?: 'constant'; // present when the VM function is the lowered form of a global constant; absent for regular functions
   inputs: readonly AbiInput[]; // the function's parameters (name and type), mirroring the ABI; for reference
   bytecode: string; // hex of the function body bytecode (exactly what OP_DEFINE stores and the VM runs)
   sourceMap: string; // frame-local source map (ips starting from 0)
@@ -33,6 +35,13 @@ export interface DebugFrame {
   sourceFile?: string; // originating file name for imported functions; absent means the contract's file
   logs: readonly LogEntry[]; // frame-local log entries
   requires: readonly RequireStatement[]; // frame-local require statements
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted within this body (frame-local ips)
+}
+
+export interface InlineRange {
+  startIp: number; // first ip of the emitted body (inclusive)
+  endIp: number; // last ip of the emitted body (inclusive)
+  frame: DebugFrame; // the inlined callable's debug frame
 }
 
 export interface LogEntry {
@@ -61,6 +70,9 @@ export interface RequireStatement {
   line: number; // line in the source code
   message?: string; // custom message for failing `require` statement
 }
+
+// Any debug entry that lives at an instruction pointer and attributes to a source line
+export type DebugEntry = RequireStatement | LogEntry;
 
 export interface Artifact {
   contractName: string;
