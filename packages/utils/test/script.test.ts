@@ -101,6 +101,6 @@ describe('script utils', () => {
   describe.skip('TODO: generateContractBytecodeScript()', () => {
   });
 
-  describe.skip('TODO: optimiseBytecode()', () => {
-  });
+  // optimiseBytecode() is covered by optimiser-differential.test.ts (seeded fuzz vs the legacy
+  // optimiser, directed edge cases, and metadata adjustment goldens).
 });
