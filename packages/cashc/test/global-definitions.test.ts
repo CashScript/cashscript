@@ -232,6 +232,51 @@ describe('Inlining and shared definitions', () => {
     expect(bytecode).toContain('OP_INVOKE');
   });
 
+  it('keeps a tiny helper shared when its call sites are spread across contract functions', () => {
+    // 6-byte, 6-element body called once per entry: spending any entry steps the other two
+    // inlined copies at 100/opcode (2 x 400 extra vs their invoke sites), which exceeds the
+    // saved define (313) + own invoke (201) — so the density guard keeps OP_DEFINE.
+    const code = `
+      function calc(int x) returns (int) { return x * 3 + 2 - 5; }
+      contract C() {
+        function a(int n) { require(calc(n) == 0); }
+        function b(int n) { require(calc(n) == 1); }
+        function c(int n) { require(calc(n) == 2); }
+      }`;
+
+    const { bytecode } = compileString(code);
+    expect(bytecode).toContain('OP_DEFINE');
+    expect(countOp(bytecode, 'OP_INVOKE')).toEqual(3);
+  });
+
+  it('still force-inlines a spread helper when its body is small enough that no spend path loses', () => {
+    // 4-byte, 4-element body, same spread: 2 x 200 extra stepping stays under the saved
+    // define (309) + invoke (201), so inlining cannot lose op-cost on any path.
+    const code = `
+      function calc(int x) returns (int) { return x * 3 + 2; }
+      contract C() {
+        function a(int n) { require(calc(n) == 0); }
+        function b(int n) { require(calc(n) == 1); }
+        function c(int n) { require(calc(n) == 2); }
+      }`;
+
+    const { bytecode } = compileString(code);
+    expect(bytecode).not.toContain('OP_DEFINE');
+    expect(bytecode).not.toContain('OP_INVOKE');
+  });
+
+  it('inlines a 7-byte body used twice (byte-exact tie: the define prelude carries a push prefix)', () => {
+    // inlined: 2 x 7 = 14 bytes; defined: (1 + 7) body push + 1 id + 1 OP_DEFINE + 2 x 2 call
+    // sites = 14 bytes — a tie in bytes, and inlining skips the define and invoke op-cost.
+    const code = `
+      function calc(int x) returns (int) { return x * 17 + 2 - 5; }
+      contract C() { function spend(int n) { require(calc(n) + calc(n + 1) > 0); } }`;
+
+    const { bytecode } = compileString(code);
+    expect(bytecode).not.toContain('OP_DEFINE');
+    expect(bytecode).not.toContain('OP_INVOKE');
+  });
+
   it('inlines a function whose only call site is a for-loop initializer (runs before OP_BEGIN)', () => {
     const code = `
       function calc(int x) returns (int) { return (x * 7 + 3) * (x + 11) - 5; }

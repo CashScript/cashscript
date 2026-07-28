@@ -25,6 +25,7 @@ export const shouldInline = (
   symbol: Symbol,
   optimisedResult: OptimiseBytecodeResult,
   reachableCalls: FunctionCallNode[],
+  entryReachableCalls: FunctionCallNode[][],
   loopResidentFunctions: Set<FunctionDefinitionNode>,
   nextFunctionId: number,
   compilerOptions: InternalCompilerOptions,
@@ -47,43 +48,69 @@ export const shouldInline = (
   }
 
   const callCount = reachableCalls.filter((call) => call.identifier.symbol === symbol).length;
-  return isWorthInlining(nextFunctionId, optimisedResult.script, callCount, compilerOptions.optimizeFor);
+  const entryCallCounts = entryReachableCalls
+    .map((calls) => calls.filter((call) => call.identifier.symbol === symbol).length);
+  return isWorthInlining(nextFunctionId, optimisedResult.script, callCount, entryCallCounts, compilerOptions.optimizeFor);
 };
 
 // Op-cost accounting (CHIP-2021-05 VM limits): every evaluated instruction costs a base 100 and
 // stack pushes add 1 per pushed byte, so sharing a body of B bytes (1-byte funcid) pays
 // <body push> <id push> OP_DEFINE = 301 + 2B once per spend (OP_DEFINE re-prices the body's
 // stack-pushed bytes) plus <id push> OP_INVOKE = 201 per call, while an inlined body executes at
-// identical cost to an invoked one. For EXECUTED call sites inlining therefore always wins op-cost.
-// That is not a universal win: a SKIPPED call site (untaken branch — e.g. a helper called once per
-// entry function of a multi-function contract) steps the whole inlined body at 100/opcode where an
-// invoke site steps 2 ops (a 6-element body: 600 vs 200; a helper shared across 4 entry functions
-// measured ~686 op-cost worse AND +8 bytes when force-inlined). Forcing tiny bodies inline is thus
-// a bet on execution density — that call sites usually execute — with the downside bounded small:
-// each skipped site risks ~100 x (elements - 2) op-cost, while each executed site saves the
-// 201/call invoke overhead plus the one-time 301 + 2B define. On bytes: the model below omits the
-// body push's length prefix, so the true two-site break-even is 7 bytes, not 6 — the cap
-// deliberately stays at 6 so any body forced inline here is one the byte model would also inline
-// at two uses, capping the byte regression at ~4 bytes per extra call site. Loop-resident bodies
-// are still excluded above: stepping a skipped inlined body costs 100/opcode per ITERATION, which
-// quickly dwarfs the 201/call invoke saving.
+// identical cost to an invoked one. For EXECUTED call sites inlining therefore always wins
+// op-cost, so under the 'opcost' objective tiny bodies inline regardless of use count. The cap
+// bounds the collateral bytes: each inlined call site costs B bytes instead of the ~2-byte invoke
+// site, so 6 tolerates ~4 extra bytes per additional call site (~50 op-cost bought per byte).
+// Loop-resident bodies are excluded before this rule (stepping a skipped inlined body costs
+// 100/opcode per ITERATION), and the density guard below excludes bodies whose call sites are
+// spread across contract entry functions.
 const OPCOST_INLINE_MAX_BODY_BYTES = 6;
 
 function isWorthInlining(
   candidateFunctionId: number,
   bodyScript: Script,
   callCount: number,
+  entryCallCounts: number[],
   optimizeFor?: OptimizationTarget,
 ): boolean {
   const bodyBytes = scriptToBytecode(bodyScript).length;
-  if (optimizeFor !== 'size' && bodyBytes <= OPCOST_INLINE_MAX_BODY_BYTES) return true;
+  if (
+    optimizeFor !== 'size'
+    && bodyBytes <= OPCOST_INLINE_MAX_BODY_BYTES
+    && passesDensityGuard(entryCallCounts, bodyScript.length, bodyBytes)
+  ) {
+    return true;
+  }
 
   const idBytes = scriptToBytecode([encodeInt(BigInt(candidateFunctionId))]).length;
 
-  const bytesWhenDefined = bodyBytes + idBytes + 1 + callCount * (idBytes + 1);
+  // The define site pushes the body as data, so it carries a push-length prefix; serializing the
+  // wrapped body computes prefix + body exactly at any size.
+  const bodyPushBytes = scriptToBytecode([scriptToBytecode(bodyScript)]).length;
+  const bytesWhenDefined = bodyPushBytes + idBytes + 1 + callCount * (idBytes + 1);
   const bytesWhenInlined = callCount * bodyBytes;
 
   return bytesWhenInlined <= bytesWhenDefined;
+}
+
+// A multi-function contract compiles into one script with a selector branch per entry function,
+// and the VM steps (and charges 100/opcode for) the branches a spend does NOT take. An inlined
+// copy in an untaken branch therefore costs 100 x elements per spend where an invoke site costs
+// 200 — so a tiny body is only forced inline when no spend path can lose op-cost: for every entry
+// function, the extra stepping of the OTHER entries' copies must not exceed what inlining saves
+// (the one-time define and the entry's own invoke overhead). Single-entry contracts pass
+// trivially (no other branches); bodies of <= 2 elements pass at any spread (a copy steps no more
+// than the invoke site it replaces). No spend-frequency assumptions: the bound must hold for
+// every entry. Call sites inside still-defined helpers are attributed to every entry reaching the
+// helper, an over-approximation that only makes the guard more conservative (keeps OP_DEFINE and
+// forgoes at most the 201/call invoke saving — never a stepping regression).
+function passesDensityGuard(entryCallCounts: number[], bodyElements: number, bodyBytes: number): boolean {
+  if (bodyElements <= 2) return true;
+  const totalCalls = entryCallCounts.reduce((total, count) => total + count, 0);
+  const defineCost = 301 + 2 * bodyBytes;
+  return entryCallCounts.every((count) => (
+    100 * (bodyElements - 2) * (totalCalls - count) <= defineCost + 201 * count
+  ));
 }
 
 class FunctionCallCollector extends AstTraversal {
@@ -101,6 +128,30 @@ export function collectFunctionCalls(node: Node): FunctionCallNode[] {
   collector.visit(node);
   return collector.functionCalls;
 }
+
+// Call sites reachable from each contract entry function: the entry's own body plus the bodies
+// of every global function it (transitively) calls. Feeds the inlining density guard, which
+// needs to know how a callee's call sites distribute over the selector branches.
+export function collectEntryReachableCalls(node: SourceFileNode): FunctionCallNode[][] {
+  return (node.contract?.functions ?? []).map((entry) => {
+    const calls = [...collectFunctionCalls(entry)];
+    const seen = new Set<FunctionDefinitionNode>();
+    const queue = callDefinitions(calls);
+    while (queue.length > 0) {
+      const definition = queue.shift()!;
+      if (seen.has(definition)) continue;
+      seen.add(definition);
+      const inner = collectFunctionCalls(definition.body);
+      calls.push(...inner);
+      queue.push(...callDefinitions(inner));
+    }
+    return calls;
+  });
+}
+
+const callDefinitions = (calls: FunctionCallNode[]): FunctionDefinitionNode[] => calls
+  .map((call) => call.identifier.symbol?.definition)
+  .filter((definition): definition is FunctionDefinitionNode => definition instanceof FunctionDefinitionNode);
 
 export function isRecursive(func: FunctionDefinitionNode): boolean {
   return transitiveCalledFunctions(func).includes(func);

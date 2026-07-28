@@ -74,7 +74,7 @@ import {
 } from './utils.js';
 import { isNumericType } from '../utils.js';
 import {
-  collectFunctionCalls, collectLoopResidentFunctions, isRecursive, shouldInline,
+  collectEntryReachableCalls, collectFunctionCalls, collectLoopResidentFunctions, isRecursive, shouldInline,
 } from './inlining.js';
 import type { InternalCompilerOptions } from '../compiler.js';
 
@@ -218,6 +218,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     });
 
     const reachableCalls = [node.contract!, ...node.functions].flatMap((n) => collectFunctionCalls(n));
+    const entryReachableCalls = collectEntryReachableCalls(node);
     const loopResidentFunctions = collectLoopResidentFunctions(node);
     const definedFunctions: Array<{ func: FunctionDefinitionNode, compiledResult: OptimiseBytecodeResult }> = [];
     let nextFunctionId = recursiveFunctions.length;
@@ -228,7 +229,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
       // If the function should be inlined, we ONLY update the symbol
       const inline = shouldInline(
-        symbol, compiledResult, reachableCalls, loopResidentFunctions, nextFunctionId, this.compilerOptions,
+        symbol, compiledResult, reachableCalls, entryReachableCalls, loopResidentFunctions, nextFunctionId,
+        this.compilerOptions,
       );
       if (inline) {
         symbol.setInlinedBytecode(compiledResult.script, this.buildDebugFrame(func, compiledResult));
