@@ -21,6 +21,11 @@ import {
   artifactTestImportedFunctionDebuggingDefined,
   artifactTestMultiReturn,
   artifactTestMultilineFunctionRequire,
+  artifactTestNestedFunctions,
+  artifactTestNestedFunctionsDefined,
+  artifactTestNestedImportedFunctions,
+  artifactTestMixedNestedFunctions,
+  artifactTestInlinedCallingDefined,
 } from './fixture/debugging/debugging_contracts.js';
 import { sha256 } from '@cashscript/utils';
 
@@ -852,7 +857,7 @@ describe('Debugging tests - user-defined function frames', () => {
 
     // The artifact's inline ranges tie the merged require back to the function's own frame, so
     // inlining is transparent: the failure reads like the defined variant below
-    expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test, function checkValue (Test.cash, line 4) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
   });
 
@@ -865,6 +870,85 @@ describe('Debugging tests - user-defined function frames', () => {
     expect(transaction).toFailRequireWith('Failing statement: require(x < 100, "x must be small")');
   });
 
+  it('shows a call stack when a require fails in a nested inlined function', () => {
+    const nestedContract = new Contract(artifactTestNestedFunctions, [], { provider });
+    const nestedUtxo = provider.addUtxo(nestedContract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(nestedUtxo, nestedContract.unlock.spend(0n))
+      .addOutput({ to: nestedContract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('Test.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (Test.cash, line 3) with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith(`  at assertPositive (Test.cash:3) — require(value > 0, "value must be positive");
+  at validate (Test.cash:7) — assertPositive(amount)
+  at Test.cash:13 — validate(x)`);
+  });
+
+  it('shows a call stack when a require fails in a nested defined function', () => {
+    const nestedContract = new Contract(artifactTestNestedFunctionsDefined, [], { provider });
+    const nestedUtxo = provider.addUtxo(nestedContract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(nestedUtxo, nestedContract.unlock.spend(0n))
+      .addOutput({ to: nestedContract.address, amount: 10000n });
+
+    // The trace is identical to the inlined variant: runtime callers come from the VM's control
+    // stack instead of inline ranges, but the displayed stack is the same
+    expect(transaction).toFailRequireWith('Test.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (Test.cash, line 3) with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith(`  at assertPositive (Test.cash:3) — require(value > 0, "value must be positive");
+  at validate (Test.cash:7) — assertPositive(amount)
+  at Test.cash:13 — validate(x)`);
+  });
+
+  it('shows a call stack across imported functions', () => {
+    const nestedContract = new Contract(artifactTestNestedImportedFunctions, [], { provider });
+    const nestedUtxo = provider.addUtxo(nestedContract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(nestedUtxo, nestedContract.unlock.spend(0n))
+      .addOutput({ to: nestedContract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('nested_helpers.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (nested_helpers.cash, line 3) with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith(`  at assertPositive (nested_helpers.cash:3) — require(value > 0, "value must be positive");
+  at validate (nested_helpers.cash:7) — assertPositive(amount)
+  at Test.cash:6 — validate(x)`);
+  });
+
+  it('shows a call stack when an inlined function calls a defined function', () => {
+    const inlinedCallingDefinedContract = new Contract(artifactTestInlinedCallingDefined, [], { provider });
+    const inlinedCallingDefinedUtxo = provider.addUtxo(inlinedCallingDefinedContract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(inlinedCallingDefinedUtxo, inlinedCallingDefinedContract.unlock.spend(0n))
+      .addOutput({ to: inlinedCallingDefinedContract.address, amount: 10000n });
+
+    // The invoke of bigCheck sits inside the inlined wrapper's body within the contract; the
+    // inline range and the invoke's position within it give wrapper its own hop
+    expect(transaction).toFailRequireWith('Test.cash:3 Require statement failed at input 0 in contract Test, function bigCheck (Test.cash, line 3) with the following message: v must be positive.');
+    expect(transaction).toFailRequireWith(`  at bigCheck (Test.cash:3) — require(v > 0, "v must be positive");
+  at wrapper (Test.cash:8) — bigCheck(v)
+  at Test.cash:13 — wrapper(x)`);
+  });
+
+  it('shows a call stack alternating between defined and inlined functions', () => {
+    const mixedContract = new Contract(artifactTestMixedNestedFunctions, [], { provider });
+    const mixedUtxo = provider.addUtxo(mixedContract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(mixedUtxo, mixedContract.unlock.spend(0n))
+      .addOutput({ to: mixedContract.address, amount: 10000n });
+
+    // The inlined innerCheck attributes through deepHelper's inline ranges; the runtime hops come
+    // from the VM's control stack, with the inlined middle recovered from the position of the
+    // deepHelper invoke within middle's inline range in outerHelper
+    expect(transaction).toFailRequireWith('Test.cash:3 Require statement failed at input 0 in contract Test, function innerCheck (Test.cash, line 3) with the following message: v must be positive.');
+    expect(transaction).toFailRequireWith(`  at innerCheck (Test.cash:3) — require(v > 0, "v must be positive");
+  at deepHelper (Test.cash:7) — innerCheck(v)
+  at middle (Test.cash:12) — deepHelper(v)
+  at outerHelper (Test.cash:16) — middle(v)
+  at Test.cash:21 — outerHelper(x)`);
+  });
+
   it('attributes a multiline require failing inside an inlined function with its full statement', () => {
     const multilineContract = new Contract(artifactTestMultilineFunctionRequire, [], { provider });
     const multilineUtxo = provider.addUtxo(multilineContract.address, randomUtxo());
@@ -873,11 +957,13 @@ describe('Debugging tests - user-defined function frames', () => {
       .addInput(multilineUtxo, multilineContract.unlock.spend(0n))
       .addOutput({ to: multilineContract.address, amount: 10000n });
 
-    expect(transaction).toFailRequireWith('Test.cash:3 Require statement failed at input 0 in contract Test.cash at line 3 with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Test.cash:3 Require statement failed at input 0 in contract Test, function checkRange (Test.cash, line 3) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith(`Failing statement: require(
     value > 0,
     "value must be positive"
   )`);
+    // In the call stack display, the multiline statement is flattened to a single line
+    expect(transaction).toFailRequireWith('at checkRange (Test.cash:3) — require( value > 0, "value must be positive" )');
   });
 
   it('attributes a require failing inside an inlined imported function to the imported function', () => {

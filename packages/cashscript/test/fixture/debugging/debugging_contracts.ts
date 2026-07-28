@@ -29,6 +29,98 @@ contract Test(pubkey owner) {
 }
 `;
 
+// Nested function calls, so a require failing in the innermost function produces a call stack
+// through the intermediate function into the contract. The Defined variant exercises the same
+// stack through the VM's control stack instead of through inline ranges.
+const CONTRACT_TEST_NESTED_FUNCTIONS = `
+function assertPositive(int value) {
+  require(value > 0, "value must be positive");
+}
+
+function validate(int amount) {
+  assertPositive(amount);
+  require(amount < 1000, "amount too large");
+}
+
+contract Test() {
+  function spend(int x) {
+    validate(x);
+    require(x < 100);
+  }
+}
+`;
+
+// The same nested-call shape as CONTRACT_TEST_NESTED_FUNCTIONS, but with the functions imported
+// from another file, so the call stack attributes its hops to the imported file.
+const NESTED_HELPERS_SOURCE = `
+function assertPositive(int value) {
+  require(value > 0, "value must be positive");
+}
+
+function validate(int amount) {
+  assertPositive(amount);
+  require(amount < 1000, "amount too large");
+}
+`;
+
+const CONTRACT_TEST_NESTED_IMPORTED_FUNCTIONS = `
+import "./nested_helpers.cash";
+
+contract Test() {
+  function spend(int x) {
+    validate(x);
+    require(x < 100);
+  }
+}
+`;
+
+// The inlined wrapper invokes the defined bigCheck, where the require fails — the smallest shape
+// where an inline range and the VM's control stack combine in one call stack.
+const CONTRACT_TEST_INLINED_CALLING_DEFINED = `
+function bigCheck(int v) returns (int) {
+  require(v > 0, "v must be positive");
+  return (v * 7 + 3) * (v + 11) - 5;
+}
+
+function wrapper(int v) returns (int) {
+  return bigCheck(v) + bigCheck(v + 1);
+}
+
+contract Test() {
+  function spend(int x) {
+    require(wrapper(x) > 0, "sum must be positive");
+  }
+}
+`;
+
+// Alternates between shared and inlined callables: spend invokes the defined outerHelper, which
+// contains the inlined middle, which invokes the defined deepHelper, which contains the inlined
+// innerCheck where the require fails.
+const CONTRACT_TEST_MIXED_NESTED_FUNCTIONS = `
+function innerCheck(int v) {
+  require(v > 0, "v must be positive");
+}
+
+function deepHelper(int v) returns (int) {
+  innerCheck(v);
+  return (v * 7 + 3) * (v + 11) - 5;
+}
+
+function middle(int v) returns (int) {
+  return deepHelper(v) + deepHelper(v + 1);
+}
+
+function outerHelper(int v) returns (int) {
+  return middle(v) * 2;
+}
+
+contract Test() {
+  function spend(int x) {
+    require(outerHelper(x) + outerHelper(x + 1) > 0, "sum must be positive");
+  }
+}
+`;
+
 // The require statement inside the (inlined) function spans multiple lines, so its statement can
 // only be extracted through the function frame's source map rather than a single source line.
 const CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE = `
@@ -505,6 +597,17 @@ export const artifactTestFunctionDebugging = compileString(CONTRACT_TEST_FUNCTIO
 export const artifactTestFunctionIntermediateResults = compileString(CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS);
 export const artifactTestMultiReturn = compileString(CONTRACT_TEST_MULTI_RETURN);
 export const artifactTestMultilineFunctionRequire = compileString(CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE);
+export const artifactTestNestedFunctions = compileString(CONTRACT_TEST_NESTED_FUNCTIONS);
+export const artifactTestNestedFunctionsDefined = compileString(
+  CONTRACT_TEST_NESTED_FUNCTIONS,
+  { disableInlining: true },
+);
+export const artifactTestNestedImportedFunctions = compileString(
+  CONTRACT_TEST_NESTED_IMPORTED_FUNCTIONS,
+  { files: { './nested_helpers.cash': NESTED_HELPERS_SOURCE } },
+);
+export const artifactTestMixedNestedFunctions = compileString(CONTRACT_TEST_MIXED_NESTED_FUNCTIONS);
+export const artifactTestInlinedCallingDefined = compileString(CONTRACT_TEST_INLINED_CALLING_DEFINED);
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));

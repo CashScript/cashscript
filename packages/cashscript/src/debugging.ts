@@ -2,7 +2,7 @@ import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationPro
 import { Artifact, LogData, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
-import { attributeLogEntry, getActiveBytecode, resolveFrame } from './debug-frame.js';
+import { attributeLogEntry, buildCallStack, getActiveBytecode, resolveFrame } from './debug-frame.js';
 import { getBitauthUri } from './libauth-template/LibauthTemplate.js';
 import { VmTarget } from './interfaces.js';
 
@@ -100,7 +100,7 @@ const debugSingleScenario = (
         if (logEntries.length === 0) return [];
 
         const reversedPriorDebugSteps = executedDebugSteps.slice(0, index + 1).reverse();
-        const frameBytecode = getActiveBytecode(debugStep);
+        const frameBytecode = getActiveBytecode(debugStep.instructions);
 
         return logEntries.map((logEntry) => {
           const decodedLogData = logEntry.data
@@ -148,9 +148,11 @@ const debugSingleScenario = (
     const requireStatement = frame.requires.find((statement) => statement.ip === requireStatementIp);
 
     if (requireStatement) {
+      const callStack = buildCallStack(artifact, lastExecutedDebugStep, frame, requireStatement, failingIp);
+
       // Note that we use failingIp here rather than requireStatementIp, see comment above
       throw new FailedRequireError(
-        artifact, failingIp, requireStatement, inputIndex, getBitauthUri(template), error, frame,
+        artifact, failingIp, requireStatement, inputIndex, getBitauthUri(template), error, frame, callStack,
       );
     }
 
@@ -188,8 +190,19 @@ const debugSingleScenario = (
     const requireStatement = frame.requires.find((message) => message.ip === finalExecutedVerifyIp);
 
     if (requireStatement) {
+      const callStack = buildCallStack(
+        artifact, lastExecutedDebugStep, frame, requireStatement, sourcemapInstructionPointer,
+      );
+
       throw new FailedRequireError(
-        artifact, sourcemapInstructionPointer, requireStatement, inputIndex, getBitauthUri(template), undefined, frame,
+        artifact,
+        sourcemapInstructionPointer,
+        requireStatement,
+        inputIndex,
+        getBitauthUri(template),
+        undefined,
+        frame,
+        callStack,
       );
     }
 
@@ -260,7 +273,7 @@ const decodeLogDataEntry = (
   if (typeof dataEntry === 'string') return dataEntry;
 
   const dataEntryDebugStep = reversedPriorDebugSteps.find(
-    (step) => step.ip === dataEntry.ip && getActiveBytecode(step) === frameBytecode,
+    (step) => step.ip === dataEntry.ip && getActiveBytecode(step.instructions) === frameBytecode,
   );
 
   if (!dataEntryDebugStep) {

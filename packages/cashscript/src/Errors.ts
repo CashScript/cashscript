@@ -1,5 +1,11 @@
-import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
-import { ResolvedFrame, resolveInlineAttribution, rootFrame } from './debug-frame.js';
+import { Artifact, RequireStatement, Type } from '@cashscript/utils';
+import {
+  CallStackEntry,
+  ResolvedFrame,
+  getLocationDataForFrame,
+  resolveInlineAttribution,
+  rootFrame,
+} from './debug-frame.js';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -159,6 +165,7 @@ export class FailedRequireError extends FailedTransactionError {
     public bitauthUri: string,
     public libauthErrorMessage?: string,
     frame?: ResolvedFrame,
+    public callStack: CallStackEntry[] = [],
   ) {
     const resolvedFrame = frame ?? rootFrame(artifact);
 
@@ -175,9 +182,12 @@ export class FailedRequireError extends FailedTransactionError {
 
     // Compiler-injected guards (e.g. the tx.locktime guard) have no user-written source, so the
     // extracted statement is empty — the require message fully describes the failure on its own.
-    const fullMessage = statement.trim() ? `${headline}\nFailing statement: ${statement}` : headline;
+    const statementMessage = statement.trim() ? `${headline}\nFailing statement: ${statement}` : headline;
 
-    super(fullMessage, bitauthUri);
+    // A single-entry call stack adds nothing over the headline, so it is only shown for nested calls
+    const callStackMessage = callStack.length >= 2 ? `\n${formatCallStack(callStack)}` : '';
+
+    super(statementMessage + callStackMessage, bitauthUri);
   }
 }
 
@@ -189,28 +199,9 @@ const formatFrameContext = (frame: ResolvedFrame, contractName: string, lineNumb
   return `in contract ${contractName}.cash at line ${lineNumber}`;
 };
 
-const getLocationDataForFrame = (
-  frame: ResolvedFrame,
-  instructionPointer: number,
-): { lineNumber: number, statement: string } => {
-  const locationData = sourceMapToLocationData(frame.sourceMap);
-
-  // We subtract the frame's ip offset (the constructor-arg prefix for the root frame, 0 for helper
-  // frames) because those pushes are present in the evaluation (and thus the instruction pointer) but
-  // not in the source code (and thus the location data).
-  const modifiedInstructionPointer = instructionPointer - frame.ipOffset;
-
-  const { location } = locationData[modifiedInstructionPointer];
-
-  const failingLines = frame.source.split('\n').slice(location.start.line - 1, location.end.line);
-
-  // Slice off the start and end of the statement's start and end lines to only return the failing part
-  // Note that we first slice off the end, to avoid shifting the end column index
-  failingLines[failingLines.length - 1] = failingLines[failingLines.length - 1].slice(0, location.end.column);
-  failingLines[0] = failingLines[0].slice(location.start.column);
-
-  const statement = failingLines.join('\n');
-  const lineNumber = location.start.line;
-
-  return { statement, lineNumber };
-};
+const formatCallStack = (callStack: CallStackEntry[]): string => callStack
+  .map(({ functionName, sourceName, line, statement }) => {
+    const location = functionName ? `${functionName} (${sourceName}:${line})` : `${sourceName}:${line}`;
+    return `  at ${location} — ${statement}`;
+  })
+  .join('\n');
