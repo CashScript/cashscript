@@ -1,5 +1,5 @@
 import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
-import { InlineRange } from './artifact.js';
+import { DebugFrame, InlineRange } from './artifact.js';
 
 /*
  * The source mappings for the bytecode use the following notation (similar to Solidity):
@@ -154,7 +154,19 @@ export function generateInlineRanges(entries: InlineRange[]): string {
     .join(';');
 }
 
-export function parseInlineRanges(inlineRanges: string): { startIp: number, endIp: number, frameName: string }[] {
+export function parseAndResolveInlineRanges(
+  inlineRanges?: string,
+  frames?: readonly DebugFrame[],
+): InlineRange[] {
+  if (!inlineRanges || !frames) return [];
+
+  return parseInlineRanges(inlineRanges).flatMap(({ startIp, endIp, frameName }) => {
+    const frame = frames.find((candidate) => candidate.name === frameName);
+    return frame ? [{ startIp, endIp, frame }] : [];
+  });
+}
+
+function parseInlineRanges(inlineRanges: string): { startIp: number, endIp: number, frameName: string }[] {
   if (!inlineRanges) return [];
   return inlineRanges.split(';').map((segment) => {
     const [startStr, endStr, frameName] = segment.split(':');
