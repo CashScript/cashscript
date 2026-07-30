@@ -1,0 +1,7 @@
+int constant LOCKTIME = tx.locktime;
+
+contract GlobalConstantUnsupportedExpression() {
+    function spend() {
+        require(LOCKTIME == 0);
+    }
+}

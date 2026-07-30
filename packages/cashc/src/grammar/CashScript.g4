@@ -39,7 +39,7 @@ globalFunctionDefinition
     ;
 
 constantDefinition
-    : typeName 'constant' Identifier '=' literal ';'
+    : typeName 'constant' Identifier '=' expression ';'
     ;
 
 contractDefinition

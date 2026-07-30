@@ -4,6 +4,7 @@ import {
   ConsoleStatementNode,
   ConstantDefinitionNode,
   ContractNode,
+  ExpressionNode,
   FunctionCallNode,
   FunctionDefinitionNode,
   FunctionKind,
@@ -96,17 +97,25 @@ function createConstantFunction(constant: ConstantDefinitionNode): FunctionDefin
   return definition;
 }
 
-// Create a synthetic LiteralNode that represents a reference to a lowered constant function,
-// so later passes can treat it as a literal
-export function createConstantLiteral(constant: ConstantDefinitionNode, reference: IdentifierNode): LiteralNode {
+// Clone a constant's literal value, adopting the reference's location and the constant's declared type
+export function cloneConstantValue(constant: ConstantDefinitionNode, reference: IdentifierNode): LiteralNode {
   const literal = cloneLiteral(constant.value);
   literal.location = reference.location;
   literal.type = constant.type;
+  return literal;
+}
+
+// Create a synthetic LiteralNode that represents a reference to a lowered constant function,
+// so later passes can treat it as a literal
+export function createConstantLiteral(constant: ConstantDefinitionNode, reference: IdentifierNode): LiteralNode {
+  const literal = cloneConstantValue(constant, reference);
   literal.constant = constant;
   return literal;
 }
 
-function cloneLiteral(node: LiteralNode): LiteralNode {
+// SymbolTableTraversal folds every constant's value to a literal before constants are lowered or referenced
+function cloneLiteral(node: ExpressionNode): LiteralNode {
+  if (!(node instanceof LiteralNode)) throw new Error('Expected constant value to be folded to a literal'); // Shouldn't happen
   const clone: LiteralNode = Object.assign(Object.create(Object.getPrototypeOf(node)), node);
   if (clone instanceof HexLiteralNode) clone.value = clone.value.slice();
   return clone;

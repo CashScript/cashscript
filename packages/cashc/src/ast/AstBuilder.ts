@@ -144,7 +144,7 @@ export default class AstBuilder
   visitConstantDefinition(ctx: ConstantDefinitionContext): ConstantDefinitionNode {
     const type = parseType(ctx.typeName().getText());
     const name = ctx.Identifier().getText();
-    const value = this.createLiteral(ctx.literal());
+    const value = this.visit(ctx.expression()) as ExpressionNode;
     const constantDefinition = new ConstantDefinitionNode(type, name, value);
     constantDefinition.location = Location.fromCtx(ctx);
     return constantDefinition;

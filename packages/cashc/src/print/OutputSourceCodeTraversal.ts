@@ -38,7 +38,6 @@ import {
   ForNode,
   NonControlStatementNode,
   ExpressionNode,
-  LiteralNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 
@@ -112,7 +111,7 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
   visitConstantDefinition(node: ConstantDefinitionNode): Node {
     this.addOutput(`${node.type} constant ${node.name} = `, true);
-    node.value = this.visit(node.value) as LiteralNode;
+    node.value = this.visit(node.value) as ExpressionNode;
     this.addOutput(';\n');
     return node;
   }

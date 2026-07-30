@@ -28,6 +28,7 @@ import {
   resolveDependencies,
 } from './dependency-resolution.js';
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
+import { FoldGlobalConstantsTraversal } from './semantic/FoldGlobalConstantsTraversal.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
@@ -115,6 +116,7 @@ function compileCode(
   const constructorParamLength = ast.contract.parameters.length;
 
   // Semantic analysis
+  ast = ast.accept(new FoldGlobalConstantsTraversal()) as Ast;
   ast = ast.accept(new SymbolTableTraversal()) as Ast;
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFunctionsSafeTraversal()) as Ast;

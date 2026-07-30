@@ -263,6 +263,26 @@ export class AssignTypeError extends TypeError {
   }
 }
 
+export class InvalidConstantExpressionError extends CashScriptError {
+  constructor(
+    public node: Node,
+  ) {
+    super(
+      node,
+      'Global constant definitions only support literals, references to other constants, '
+      + 'integer arithmetic and concatenation',
+    );
+  }
+}
+
+export class DivisionByZeroError extends CashScriptError {
+  constructor(
+    public node: BinaryOpNode,
+  ) {
+    super(node, 'Division by zero');
+  }
+}
+
 export class ConstantModificationError extends CashScriptError {
   constructor(node: VariableDefinitionNode | ConstantDefinitionNode);
   constructor(node: Node, name: string);

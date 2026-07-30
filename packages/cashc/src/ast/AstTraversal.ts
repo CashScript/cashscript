@@ -30,7 +30,7 @@ import {
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
-  LiteralNode,
+  ExpressionNode,
   FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
@@ -64,7 +64,7 @@ export default class AstTraversal extends AstVisitor<Node> {
   }
 
   visitConstantDefinition(node: ConstantDefinitionNode): Node {
-    node.value = this.visit(node.value) as LiteralNode;
+    node.value = this.visit(node.value) as ExpressionNode;
     return node;
   }
 
