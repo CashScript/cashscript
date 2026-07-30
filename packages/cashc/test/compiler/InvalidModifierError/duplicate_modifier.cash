@@ -1,0 +1,5 @@
+contract Test() {
+    function spend(bytes unused unused padding) {
+        require(true);
+    }
+}

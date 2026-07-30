@@ -1,5 +1,5 @@
 function withUnusedLocal(int a) returns (int) {
-    int unused = a + 1;
+    int scratch = a + 1;
     return a;
 }
 

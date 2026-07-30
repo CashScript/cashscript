@@ -138,6 +138,7 @@
         "op",
         "opcode",
         "opcodes",
+        "opcost",
         "opcount",
         "OUTPOINTINDEX",
         "OUTPOINTTXHASH",
