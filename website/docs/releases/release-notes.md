@@ -2,7 +2,7 @@
 title: Release Notes
 ---
 
-## v0.14.0-next.2
+## v0.14.0-next.3
 
 ⚠️ Note that this is a pre-release version and is not yet stable. There will likely be breaking changes to the APIs and compiler output in subsequent pre-releases.
 
@@ -10,6 +10,8 @@ title: Release Notes
 - :sparkles: Add support for user-defined reusable functions.
 - :sparkles: Add support for multiple return values in user-defined functions, destructured at the call site.
 - :sparkles: Add support for top-level global constants.
+- :sparkles: Allow for simple arithmetic / concatenation operations in global constant definitions.
+- :sparkles: Add `unused` modifier for parameters or variables that are intentionally unused.
 - :sparkles: Add support for `import` directives to share user-defined functions across files.
 - :hammer_and_wrench: Update `compileString` to take an optional `files` object for filesystem-free import resolution.
 - :racehorse: Inline global functions and constants when this is no larger than `OP_DEFINE`/`OP_INVOKE`.
@@ -17,6 +19,7 @@ title: Release Notes
 
 #### CashScript SDK
 - :sparkles: Add support for debugging user-defined functions.
+- :sparkles: Add stack trace when debugging failed requires inside nested functions.
 
 ## v0.13.2
 
