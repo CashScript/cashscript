@@ -63,7 +63,7 @@ import {
   ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
-import { GlobalFunction, Class } from '../ast/Globals.js';
+import { GlobalFunction, Class, Modifier } from '../ast/Globals.js';
 import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
@@ -252,6 +252,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     for (let i = node.parameters.length - 1; i >= 0; i -= 1) {
       bodyTraversal.visit(node.parameters[i]);
     }
+    bodyTraversal.dropUnusedParameters(node.parameters);
 
     bodyTraversal.visit(node.body);
     bodyTraversal.cleanGlobalFunctionStack(node);
@@ -301,6 +302,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     // Keep track of constructor parameter count for instructor pointer calculation
     this.constructorParameterCount = node.parameters.length;
+    this.dropUnusedParameters(node.parameters);
 
     if (node.functions.length === 1) {
       node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
@@ -356,6 +358,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.currentFunction = node;
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    this.dropUnusedParameters(node.parameters);
 
     if (this.compilerOptions.enforceFunctionParameterTypes) {
       this.enforceFunctionParameterTypes(node);
@@ -423,6 +426,21 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.tagScopeCleanup(tagStartIndex);
   }
 
+  private dropUnusedParameters(parameters: ParameterNode[]): void {
+    parameters
+      .filter((parameter) => parameter.modifiers.includes(Modifier.UNUSED))
+      .sort((a, b) => this.getStackIndex(a.name) - this.getStackIndex(b.name))
+      .forEach((parameter) => {
+        const stackIndex = this.getStackIndex(parameter.name);
+        const locationData = { location: parameter.location, positionHint: PositionHint.START };
+
+        this.emit(encodeInt(BigInt(stackIndex)), locationData);
+        this.emit(Op.OP_ROLL, locationData);
+        this.emit(Op.OP_DROP, locationData);
+        this.removeFromStack(stackIndex);
+      });
+  }
+
   enforceFunctionParameterTypes(node: FunctionDefinitionNode): void {
     node.parameters.forEach((parameter) => this.enforceFunctionParameterType(parameter));
   }
@@ -463,6 +481,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   shouldEnforceFunctionParameterType(node: ParameterNode): boolean {
+    if (node.modifiers.includes(Modifier.UNUSED)) return false;
     if (node.type === PrimitiveType.BOOL) return true;
     if (node.type instanceof BytesType && node.type.bound !== undefined) return true;
     return false;
@@ -475,6 +494,13 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
+
+    if (node.modifiers.includes(Modifier.UNUSED)) {
+      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
+      this.popFromStack();
+      return node;
+    }
+
     this.popFromStack();
     this.pushToStack(node.name);
     return node;

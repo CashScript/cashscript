@@ -243,13 +243,28 @@ contract P2PKH(bytes20 pkh) {
 Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on — unless specifying the `constant` keyword. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
 
 :::note
-CashScript disallows variable shadowing and unused variables.
+CashScript disallows variable shadowing and unused variables unless they are explicitly marked `unused`.
 :::
 
 #### Example
 ```solidity
 int myNumber = 3000;
 string constant myString = 'Bitcoin Cash';
+```
+
+### Intentionally unused values
+
+Parameters and local variables that intentionally have no references can use the `unused` modifier. These values are dropped from the stack immediately after their declaration. A declaration marked `unused` cannot be referenced later. Some use cases for this include padding the contract bytecode in order to get a higher opcost budget, or nonces in order to differentiate between similar contracts.
+
+#### Example
+
+```solidity
+contract Versioned(bytes unused reserved) {
+    function spend(int value, bytes unused padding) {
+        int unused discarded = value + 1;
+        require(value == 1);
+    }
+}
 ```
 
 ### Variable assignment

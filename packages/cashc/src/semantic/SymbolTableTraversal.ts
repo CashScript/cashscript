@@ -29,6 +29,7 @@ import {
   UnusedVariableError,
   InvalidSymbolTypeError,
   ConstantModificationError,
+  InvalidModifierError,
 } from '../Errors.js';
 
 export default class SymbolTableTraversal extends AstTraversal {
@@ -81,6 +82,8 @@ export default class SymbolTableTraversal extends AstTraversal {
     if (this.symbolTables[0].get(node.name)) {
       throw new RedefinitionError(node, node.name);
     }
+
+    validateModifiers(node, node.modifiers, [Modifier.UNUSED]);
 
     this.symbolTables[0].set(Symbol.variable(node));
     return node;
@@ -149,6 +152,8 @@ export default class SymbolTableTraversal extends AstTraversal {
       throw new RedefinitionError(node, node.name);
     }
 
+    validateModifiers(node, node.modifiers, [Modifier.CONSTANT, Modifier.UNUSED]);
+
     node.expression = this.visit(node.expression);
 
     this.symbolTables[0].set(Symbol.variable(node));
@@ -157,17 +162,13 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitAssign(node: AssignNode): Node {
-    const definition = this.symbolTables[0].get(node.identifier.name)?.definition;
+    const symbol = this.symbolTables[0].get(node.identifier.name);
 
-    if (definition === undefined || definition instanceof FunctionDefinitionNode) {
+    if (symbol?.definition === undefined || symbol.definition instanceof FunctionDefinitionNode) {
       throw new UndefinedReferenceError(node.identifier);
     }
 
-    if (definition instanceof ConstantDefinitionNode) {
-      throw new ConstantModificationError(node, node.identifier.name);
-    }
-
-    if (definition.modifiers?.includes(Modifier.CONSTANT)) {
+    if (symbol.hasModifier(Modifier.CONSTANT)) {
       throw new ConstantModificationError(node, node.identifier.name);
     }
 
@@ -227,6 +228,10 @@ export default class SymbolTableTraversal extends AstTraversal {
       throw new InvalidSymbolTypeError(node, this.expectedSymbolType);
     }
 
+    if (symbol.hasModifier(Modifier.UNUSED)) {
+      throw new InvalidModifierError(node, `Cannot reference variable '${node.name}' because it is marked 'unused'`);
+    }
+
     // Global constant references are replaced by their literal value, so all later passes
     // (type checking, literal-driven analysis, codegen) see a plain literal at the use site.
     if (symbol.definition instanceof ConstantDefinitionNode) {
@@ -243,6 +248,27 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     return node;
   }
+}
+
+function validateModifiers(
+  node: ParameterNode | VariableDefinitionNode,
+  modifiers: Modifier[],
+  allowed: Modifier[],
+): void {
+  const seen = new Set<Modifier>();
+
+  modifiers.forEach((modifier) => {
+    if (seen.has(modifier)) {
+      throw new InvalidModifierError(node, `Duplicate modifier '${modifier}'`);
+    }
+
+    if (!allowed.includes(modifier)) {
+      const target = node instanceof ParameterNode ? 'parameters' : 'variables';
+      throw new InvalidModifierError(node, `Modifier '${modifier}' is not allowed on ${target}`);
+    }
+
+    seen.add(modifier);
+  });
 }
 
 function createTupleVariableDefinition(

@@ -1,5 +1,5 @@
 import { Type, PrimitiveType, BytesType } from '@cashscript/utils';
-import { TimeOp } from './Globals.js';
+import { Modifier, TimeOp } from './Globals.js';
 import AstVisitor from './AstVisitor.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator.js';
 import { Location } from './Location.js';
@@ -49,6 +49,8 @@ export class ConstantDefinitionNode extends Node implements Named, Typed {
   // Source provenance for debugging. Set on imported constants, left undefined for constants in the contract's own file.
   sourceCode?: string;
   sourceFile?: string;
+
+  modifiers = [Modifier.CONSTANT];
 
   constructor(
     public type: Type,
@@ -120,7 +122,7 @@ export class FunctionDefinitionNode extends Node implements Named {
 export class ParameterNode extends Node implements Named, Typed {
   constructor(
     public type: Type,
-    public modifiers: string[],
+    public modifiers: Modifier[],
     public name: string,
   ) {
     super();
@@ -140,7 +142,7 @@ export abstract class NonControlStatementNode extends StatementNode { }
 export class VariableDefinitionNode extends NonControlStatementNode implements Named, Typed {
   constructor(
     public type: Type,
-    public modifiers: string[],
+    public modifiers: Modifier[],
     public name: string,
     public expression: ExpressionNode,
   ) {

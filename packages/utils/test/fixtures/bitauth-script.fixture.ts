@@ -311,21 +311,23 @@ OP_ADD OP_12 OP_NUMEQUAL                                                        
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {
-    name: 'ParameterCheck (parameter type check)',
+    name: 'ParameterCheck (parameter type check + unused parameter drop)',
     sourceCode: `contract ParameterCheck() {
     function spend(
         bytes8 tag,
+        bytes8 unused padding,
     ) {
         require(tag.length == 8);
     }
 }`,
-    asmBytecode: 'OP_SIZE OP_8 OP_EQUALVERIFY OP_SIZE OP_NIP OP_8 OP_NUMEQUAL',
-    sourceMap: '3:8:3:18;;;5:16:5:26:1;;:30::31:0;:8::33:1',
-    sourceTags: '0:2:pv',
+    asmBytecode: 'OP_NIP OP_SIZE OP_8 OP_EQUALVERIFY OP_SIZE OP_NIP OP_8 OP_NUMEQUAL',
+    sourceMap: '4:8:4:29;3::3:18;;;6:16:6:26:1;;:30::31:0;:8::33:1',
+    sourceTags: '1:3:pv',
     expectedBitAuthScript: `
                                 /* contract ParameterCheck() {                   */
                                 /*     function spend(                           */
                                 /*         bytes8 tag,                           */
+OP_NIP                          /*         bytes8 unused padding,                */
                                 /*     ) {                                       */
 OP_SIZE OP_8 OP_EQUALVERIFY     /*         >>> parameter type check (bytes8 tag) */
 OP_SIZE OP_NIP OP_8 OP_NUMEQUAL /*         require(tag.length == 8);             */

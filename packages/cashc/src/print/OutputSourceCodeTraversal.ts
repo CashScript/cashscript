@@ -128,12 +128,14 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitParameter(node: ParameterNode): Node {
-    this.addOutput(`${node.type} ${node.name}`);
+    const modifiers = node.modifiers.length > 0 ? `${node.modifiers.join(' ')} ` : '';
+    this.addOutput(`${node.type} ${modifiers}${node.name}`);
     return node;
   }
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
-    this.addOutput(`${node.type} ${node.name} = `, true);
+    const modifiers = node.modifiers.length > 0 ? `${node.modifiers.join(' ')} ` : '';
+    this.addOutput(`${node.type} ${modifiers}${node.name} = `, true);
     this.visit(node.expression);
 
     return node;
