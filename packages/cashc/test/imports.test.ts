@@ -44,12 +44,10 @@ describe('Imports from the filesystem (compileFile)', () => {
     expect(() => compileFile(fixture('duplicate_import_main.cash'))).toThrow(RedefinitionError);
   });
 
-  it('resolves a cyclic import without infinite looping', () => {
-    // cycle_a imports cycle_b which imports cycle_a back; de-duplication by canonical path breaks the
-    // cycle, and both functions (a and b) end up defined exactly once.
-    const artifact = compileFile(fixture('cycle_main.cash'), { disableInlining: true });
-    expect(artifact.contractName).toEqual('Cycle');
-    expect(countOpDefines(artifact.bytecode)).toEqual(2);
+  it('throws on cyclic imports', () => {
+    // cycle_a imports cycle_b which imports cycle_a back
+    expect(() => compileFile(fixture('cycle_main.cash'))).toThrow(ImportResolutionError);
+    expect(() => compileFile(fixture('cycle_main.cash'))).toThrow(/Cyclic import of '\.\/cycle_a\.cash'/);
   });
 
   it('records provenance as the path relative to the main file', () => {

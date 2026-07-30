@@ -143,7 +143,7 @@ describe('Dead-code elimination', () => {
         }
       }`;
 
-    const withConstant = compileString(`string constant MESSAGE = "debug only";\n${contract('MESSAGE')}`);
+    const withConstant = compileString(`string constant MESSAGE = "debug" + " only";\n${contract('MESSAGE')}`);
     expect(withConstant.bytecode).toEqual(compileString(contract('"debug only"')).bytecode);
   });
 });
@@ -371,6 +371,56 @@ describe('Global constants', () => {
       source: importedSource,
       sourceFile: 'constants.cash',
     });
+  });
+
+  it('folds constant definitions to literals at compile time', () => {
+    const contract = `
+      contract Computed(int number, int derived, string text, bytes4 data) {
+        function spend() {
+          require(number == NUMBER);
+          require(derived == DERIVED);
+          require(text == TEXT);
+          require(data == DATA);
+        }
+      }`;
+
+    const computed = compileString(`
+      int constant NUMBER = (10 + 10) * 5 - 30 / 4 % 5;
+      int constant DERIVED = -NUMBER * 2 + 4;
+      string constant TEXT = "debug" + " " + "only";
+      bytes4 constant DATA = 0x0102 + 0x0304;
+      ${contract}`);
+
+    const literal = compileString(`
+      int constant NUMBER = 98;
+      int constant DERIVED = -192;
+      string constant TEXT = "debug only";
+      bytes4 constant DATA = 0x01020304;
+      ${contract}`);
+
+    expect(computed.bytecode).toEqual(literal.bytecode);
+  });
+
+  it('folds references to imported constants', () => {
+    const importedSource = 'int constant BASE = 20 + 1;';
+    const source = `
+      import "./constants.cash";
+      int constant DERIVED = BASE * 2;
+      contract Imported(int number) {
+        function spend() {
+          require(number == DERIVED);
+        }
+      }`;
+
+    const contract = `
+      contract Imported(int number) {
+        function spend() {
+          require(number == 42);
+        }
+      }`;
+
+    const artifact = compileString(source, { files: { './constants.cash': importedSource } });
+    expect(artifact.bytecode).toEqual(compileString(contract).bytecode);
   });
 });
 

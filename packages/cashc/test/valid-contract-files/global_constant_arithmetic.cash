@@ -1,0 +1,17 @@
+int constant BASE = 10 + 10;
+int constant DERIVED = BASE - 5;
+int constant NEGATED = -DERIVED * 2;
+int constant COMPLEX = (BASE * 100 + 50) / 4 % 1000;
+string constant GREETING = "hello" + " " + "world";
+bytes4 constant MAGIC = 0x0102 + 0x0304;
+
+contract GlobalConstantArithmetic() {
+    function spend(int base, int derived, int negated, int complex, string greeting, bytes4 magic) {
+        require(base == BASE);
+        require(derived == DERIVED);
+        require(negated == NEGATED);
+        require(complex == COMPLEX);
+        require(greeting == GREETING);
+        require(magic == MAGIC);
+    }
+}

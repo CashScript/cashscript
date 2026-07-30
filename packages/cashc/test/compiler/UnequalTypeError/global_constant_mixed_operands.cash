@@ -1,0 +1,7 @@
+int constant MIXED = 10 + true;
+
+contract GlobalConstantMixedOperands() {
+    function spend() {
+        require(MIXED == 0);
+    }
+}

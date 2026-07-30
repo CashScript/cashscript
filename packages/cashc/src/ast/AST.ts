@@ -53,7 +53,7 @@ export class ConstantDefinitionNode extends Node implements Named, Typed {
   constructor(
     public type: Type,
     public name: string,
-    public value: LiteralNode,
+    public value: ExpressionNode,
   ) {
     super();
   }

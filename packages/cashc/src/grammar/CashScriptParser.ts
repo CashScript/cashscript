@@ -658,7 +658,7 @@ export default class CashScriptParser extends Parser {
 			this.state = 157;
 			this.match(CashScriptParser.T__9);
 			this.state = 158;
-			this.literal();
+			this.expression(0);
 			this.state = 159;
 			this.match(CashScriptParser.T__1);
 			}
@@ -2785,7 +2785,7 @@ export default class CashScriptParser extends Parser {
 	146,1,0,0,0,146,148,1,0,0,0,147,145,1,0,0,0,148,149,5,16,0,0,149,151,1,
 	0,0,0,150,138,1,0,0,0,150,151,1,0,0,0,151,152,1,0,0,0,152,153,3,24,12,0,
 	153,17,1,0,0,0,154,155,3,84,42,0,155,156,5,17,0,0,156,157,5,81,0,0,157,
-	158,5,10,0,0,158,159,3,80,40,0,159,160,5,2,0,0,160,19,1,0,0,0,161,162,5,
+	158,5,10,0,0,158,159,3,76,38,0,159,160,5,2,0,0,160,19,1,0,0,0,161,162,5,
 	18,0,0,162,163,5,81,0,0,163,164,3,26,13,0,164,168,5,19,0,0,165,167,3,22,
 	11,0,166,165,1,0,0,0,167,170,1,0,0,0,168,166,1,0,0,0,168,169,1,0,0,0,169,
 	171,1,0,0,0,170,168,1,0,0,0,171,172,5,20,0,0,172,21,1,0,0,0,173,174,5,12,
@@ -3147,8 +3147,8 @@ export class ConstantDefinitionContext extends ParserRuleContext {
 	public Identifier(): TerminalNode {
 		return this.getToken(CashScriptParser.Identifier, 0);
 	}
-	public literal(): LiteralContext {
-		return this.getTypedRuleContext(LiteralContext, 0) as LiteralContext;
+	public expression(): ExpressionContext {
+		return this.getTypedRuleContext(ExpressionContext, 0) as ExpressionContext;
 	}
     public get ruleIndex(): number {
     	return CashScriptParser.RULE_constantDefinition;

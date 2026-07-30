@@ -81,19 +81,22 @@ interface ImportedDefinitions {
 }
 
 // Depth-first walk of the import graph, returning every global definition it reaches. `visitedPaths`
-// is internal bookkeeping that de-duplicates files by canonical path — collapsing diamonds (a file
-// reached through two paths is read once) and guaranteeing termination for mutual or cyclic imports —
-// so this function stays pure with respect to its arguments.
+// de-duplicates files by canonical path so a diamond's shared leaf is read once, while `activePaths`
+// tracks the files currently being resolved so cyclic imports are rejected.
 function collectImports(
   imports: ImportNode[],
   resolver: ImportResolver,
   errorListener?: CashScriptErrorListener,
 ): ImportedDefinitions {
   const visitedPaths = new Set<string>();
+  const activePaths = new Set<string>();
 
   const collect = (currentImports: ImportNode[], currentDir: string): ImportedDefinitions[] =>
     currentImports.flatMap((importNode) => {
       const canonicalPath = resolver.resolve(currentDir, importNode.path);
+      if (activePaths.has(canonicalPath)) {
+        throw new ImportResolutionError(importNode, `Cyclic import of '${importNode.path}'`);
+      }
       if (visitedPaths.has(canonicalPath)) return [];
       visitedPaths.add(canonicalPath);
 
@@ -118,8 +121,12 @@ function collectImports(
         constant.sourceFile = resolver.sourceName(canonicalPath);
       });
 
+      activePaths.add(canonicalPath);
+      const transitiveDefinitions = collect(importedAst.imports, resolver.dirname(canonicalPath));
+      activePaths.delete(canonicalPath);
+
       return [
-        ...collect(importedAst.imports, resolver.dirname(canonicalPath)),
+        ...transitiveDefinitions,
         { functions: importedAst.functions, constants: importedAst.constants },
       ];
     });

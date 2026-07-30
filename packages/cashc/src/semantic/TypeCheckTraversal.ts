@@ -64,6 +64,7 @@ export default class TypeCheckTraversal extends AstTraversal {
   private currentFunctionReturnTypes: Type[] = [];
 
   visitConstantDefinition(node: ConstantDefinitionNode): Node {
+    // The constant's value has already been folded to a literal by SymbolTableTraversal
     node.value = this.visit(node.value) as LiteralNode;
     expectAssignable(node, node.value.type, node.type);
     return node;

@@ -228,7 +228,7 @@ typeCast
     ;
 
 constantDefinition
-    : typeName 'constant' Identifier '=' literal ';'
+    : typeName 'constant' Identifier '=' expression ';'
     ;
 
 VersionLiteral
