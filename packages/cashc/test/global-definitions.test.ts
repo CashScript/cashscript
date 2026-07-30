@@ -18,7 +18,7 @@ describe('Dead-code elimination', () => {
   it('does not define a global function that is never invoked', () => {
     const code = `
       function used(int a) returns (int) { return a + 1; }
-      function unused(int a) returns (int) { return a * 2; }
+      function notUsed(int a) returns (int) { return a * 2; }
 
       contract Test() {
         function spend(int x) {
@@ -180,11 +180,11 @@ describe('Inlining and shared definitions', () => {
   it('ignores call sites inside eliminated functions when deciding to inline', () => {
     const code = `
       function big(int x) returns (int) { return (x * 7 + 3) * (x + 11) - 5; }
-      function unused(int x) returns (int) { return big(x) + big(x + 1) + big(x + 2); }
+      function notUsed(int x) returns (int) { return big(x) + big(x + 1) + big(x + 2); }
       contract C() { function spend(int n) { require(big(n) > 0); } }`;
 
     // big is multi-use on paper, but all extra call sites live in the eliminated function
-    // unused — only the single reachable call counts, so big is inlined
+    // notUsed — only the single reachable call counts, so big is inlined
     const { bytecode } = compileString(code);
     expect(bytecode).not.toContain('OP_DEFINE');
     expect(bytecode).not.toContain('OP_INVOKE');

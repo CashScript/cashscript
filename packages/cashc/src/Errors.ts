@@ -295,6 +295,8 @@ export class ConstantModificationError extends CashScriptError {
   }
 }
 
+export class InvalidModifierError extends CashScriptError { }
+
 export class ArrayElementError extends CashScriptError {
   constructor(
     node: ArrayNode,

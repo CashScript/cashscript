@@ -7,6 +7,7 @@ import {
   IdentifierNode,
   DefinitionNode,
 } from './AST.js';
+import { Modifier } from './Globals.js';
 import { functionReturnType } from '../utils.js';
 
 export class Symbol {
@@ -22,6 +23,12 @@ export class Symbol {
     public bytecode?: Script,
     public functionId?: number,
   ) { }
+
+  hasModifier(modifier: Modifier): boolean {
+    return this.definition !== undefined
+      && !(this.definition instanceof FunctionDefinitionNode)
+      && this.definition.modifiers.includes(modifier);
+  }
 
   static variable(node: VariableDefinitionNode | ParameterNode): Symbol {
     return new Symbol(node.name, node.type, SymbolType.VARIABLE, node);
@@ -99,6 +106,7 @@ export class SymbolTable {
   unusedSymbols(): Symbol[] {
     return Array.from(this.symbols)
       .map((e) => e[1])
+      .filter((s) => !s.hasModifier(Modifier.UNUSED))
       .filter((s) => s.references.length === 0);
   }
 }
