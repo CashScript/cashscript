@@ -1,5 +1,6 @@
 import {
   encodeInt,
+  Op,
   OptimiseBytecodeResult,
   Script,
   scriptToBytecode,
@@ -24,11 +25,14 @@ export const shouldInline = (
 };
 
 function isWorthInlining(candidateFunctionId: number, bodyScript: Script, callCount: number): boolean {
-  const bodyBytes = scriptToBytecode(bodyScript).length;
-  const idBytes = scriptToBytecode([encodeInt(BigInt(candidateFunctionId))]).length;
+  const bodyBytecode = scriptToBytecode(bodyScript);
+  const functionId = encodeInt(BigInt(candidateFunctionId));
 
-  const bytesWhenDefined = bodyBytes + idBytes + 1 + callCount * (idBytes + 1);
-  const bytesWhenInlined = callCount * bodyBytes;
+  const defineBytes = scriptToBytecode([bodyBytecode, functionId, Op.OP_DEFINE]).length;
+  const invokeBytes = scriptToBytecode([functionId, Op.OP_INVOKE]).length;
+
+  const bytesWhenDefined = defineBytes + callCount * invokeBytes;
+  const bytesWhenInlined = callCount * bodyBytecode.length;
 
   return bytesWhenInlined <= bytesWhenDefined;
 }
