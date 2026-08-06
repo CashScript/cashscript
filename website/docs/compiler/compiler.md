@@ -83,7 +83,7 @@ const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 ```
 
 :::note
-If the contract uses `import` directives to pull in [user-defined functions](/docs/language/contracts#user-defined-functions) from other files, `compileFile` resolves those imports relative to the source file's directory automatically.
+If the contract uses `import` directives to pull in [user-defined functions](/docs/language/contracts#user-defined-functions) from other files, `compileFile` resolves those imports relative to the source file's directory automatically. Package imports such as `import "@example/math-lib/math.cash"` are resolved from `node_modules` directories, walking up from the importing file's directory like Node.js module resolution.
 :::
 
 ### compileString()
@@ -124,7 +124,7 @@ const Doubler = compileString(source, { files: { './math.cash': mathSource } });
 ```
 
 :::note
-Imports inside imported files are resolved relative to the *importing* file, but their keys in `files` remain relative to the main source. For example, if `lib/a.cash` contains `import "./b.cash";`, that file must be provided under the key `lib/b.cash`.
+Imports inside imported files are resolved relative to the *importing* file, but their keys in `files` remain relative to the main source. For example, if `lib/a.cash` contains `import "./b.cash";`, that file must be provided under the key `lib/b.cash`. Package imports such as `import "@example/math-lib/math.cash"` are looked up verbatim, so they must be provided under exactly that key.
 :::
 
 ### Compiler Options

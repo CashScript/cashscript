@@ -1,0 +1,7 @@
+import "mathlib/math.cash";
+
+contract NodeModulesShadow() {
+    function spend(int x) {
+        require(nmNearest(x) == 4);
+    }
+}

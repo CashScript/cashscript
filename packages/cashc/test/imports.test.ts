@@ -161,6 +161,100 @@ describe('Imports from in-memory files (compileString)', () => {
   });
 });
 
+describe('Imports from node_modules (package imports)', () => {
+  it('resolves a package import from the nearest node_modules directory', () => {
+    const artifact = compileFile(fixture('nm_main.cash'), { disableInlining: true });
+    expect(artifact.contractName).toEqual('NodeModulesMain');
+    expect(artifact.bytecode).toContain('OP_INVOKE');
+    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+  });
+
+  it('walks up parent directories to find node_modules', () => {
+    // nested/nm_nested_main.cash has no nested/node_modules, so resolution walks up to
+    // import-fixtures/node_modules
+    const artifact = compileFile(fixture('nested/nm_nested_main.cash'), { disableInlining: true });
+    expect(artifact.contractName).toEqual('NodeModulesNested');
+    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+  });
+
+  it('prefers the nearest node_modules over an ancestor one', () => {
+    // shadow/node_modules/mathlib/math.cash defines nmNearest, the ancestor copy defines nmAdd.
+    // The contract calls nmNearest, so it only compiles if the nearest copy is resolved.
+    const artifact = compileFile(fixture('shadow/nm_shadow_main.cash'), { disableInlining: true });
+    expect(artifact.contractName).toEqual('NodeModulesShadow');
+    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+  });
+
+  it('resolves relative imports inside an imported package relative to the package file', () => {
+    // mathlib/main.cash imports './helper.cash', which lives inside the package
+    const artifact = compileFile(fixture('nm_transitive_main.cash'), { disableInlining: true });
+    expect(countOpDefines(artifact.bytecode)).toEqual(2);
+  });
+
+  it('resolves package imports inside an imported package (transitive dependencies)', () => {
+    // mathlib/combined.cash itself contains a package import of @cashlibs/utils/util.cash, which is
+    // resolved by walking up from mathlib's own directory to the shared node_modules
+    const artifact = compileFile(fixture('nm_package_deps_main.cash'), { disableInlining: true });
+    expect(artifact.contractName).toEqual('NodeModulesPackageDeps');
+    expect(countOpDefines(artifact.bytecode)).toEqual(2);
+    expect(artifact.debug?.functions?.map((func) => func.sourceFile).sort())
+      .toEqual(['@cashlibs/utils/util.cash', 'mathlib/combined.cash']);
+  });
+
+  it('resolves scoped package imports', () => {
+    const artifact = compileFile(fixture('nm_scoped_main.cash'), { disableInlining: true });
+    expect(artifact.contractName).toEqual('NodeModulesScoped');
+    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+  });
+
+  it('records provenance as the package import path rather than a filesystem path', () => {
+    const artifact = compileFile(fixture('nm_transitive_main.cash'), { disableInlining: true });
+    expect(artifact.debug?.functions?.map((func) => func.sourceFile).sort())
+      .toEqual(['mathlib/helper.cash', 'mathlib/main.cash']);
+  });
+
+  it('throws when a package import cannot be found in any node_modules directory', () => {
+    expect(() => compileFile(fixture('nm_missing_main.cash'))).toThrow(ImportResolutionError);
+    expect(() => compileFile(fixture('nm_missing_main.cash'))).toThrow(
+      /Could not find imported file 'nonexistent-cashscript-pkg\/foo\.cash' in any node_modules directory/,
+    );
+  });
+
+  it('resolves package imports verbatim from the files option when compiling from a string', () => {
+    const code = 'import "mathlib/math.cash";\n'
+      + 'contract C() { function spend(int x) { require(nmAdd(x, 3) == 8); } }';
+    const files = { 'mathlib/math.cash': readFixture('node_modules/mathlib/math.cash') };
+
+    const artifact = compileString(code, { files, disableInlining: true });
+    expect(countOpDefines(artifact.bytecode)).toEqual(1);
+    expect(artifact.debug?.functions?.map((func) => func.sourceFile)).toEqual(['mathlib/math.cash']);
+  });
+
+  it('resolves relative imports inside an in-memory package relative to the package file', () => {
+    const code = 'import "pkg/main.cash";\n'
+      + 'contract C() { function spend(int x) { require(pkgMain(x) == 12); } }';
+    const files = {
+      'pkg/main.cash': 'import "./helper.cash";\nfunction pkgMain(int n) returns (int) { return pkgHelper(n) * 2; }',
+      'pkg/helper.cash': 'function pkgHelper(int n) returns (int) { return n + 1; }',
+    };
+
+    const artifact = compileString(code, { files, disableInlining: true });
+    expect(countOpDefines(artifact.bytecode)).toEqual(2);
+  });
+
+  it('compiles a node_modules import to the exact same artifact from disk and from memory', () => {
+    const fromDisk = compileFile(fixture('nm_transitive_main.cash'), { disableInlining: true });
+
+    const files = {
+      'mathlib/main.cash': readFixture('node_modules/mathlib/main.cash'),
+      'mathlib/helper.cash': readFixture('node_modules/mathlib/helper.cash'),
+    };
+    const fromString = compileString(readFixture('nm_transitive_main.cash'), { files, disableInlining: true });
+
+    expect(fromString).toEqual({ ...fromDisk, updatedAt: expect.any(String) });
+  });
+});
+
 describe('compileFile / compileString equivalence', () => {
   it('compiles a complex import graph to the exact same artifact from disk and from memory', () => {
     // complex/main.cash exercises nested directories, a diamond (a and b both import util/leaf),

@@ -1,0 +1,7 @@
+import "@cashlibs/utils/util.cash";
+
+contract NodeModulesScoped() {
+    function spend(int x) {
+        require(scopedUtil(x) == 9);
+    }
+}

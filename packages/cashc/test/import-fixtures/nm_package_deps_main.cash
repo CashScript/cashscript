@@ -1,0 +1,7 @@
+import "mathlib/combined.cash";
+
+contract NodeModulesPackageDeps() {
+    function spend(int x) {
+        require(nmCombined(x) == 10);
+    }
+}

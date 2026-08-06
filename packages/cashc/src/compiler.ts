@@ -64,7 +64,9 @@ export const compileString: (code: string, compilerOptions?: CompileStringOption
 /**
  * Read a `.cash` source file from disk and compile it to an `Artifact`.
  *
- * Import directives are resolved from the filesystem, relative to the importing file's directory.
+ * Import directives are resolved from the filesystem: file paths (starting with './', '../' or '/')
+ * relative to the importing file's directory, and package imports (e.g. 'pkg/math.cash')
+ * from node_modules directories, walking up from the importing file's directory.
  *
  * @param codeFile - The path to the `.cash` source file.
  * @param compilerOptions - Optional compiler options that override the defaults.

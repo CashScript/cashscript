@@ -1,0 +1,7 @@
+import "nonexistent-cashscript-pkg/foo.cash";
+
+contract NodeModulesMissing() {
+    function spend(int x) {
+        require(x == 1);
+    }
+}

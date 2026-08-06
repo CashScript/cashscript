@@ -13,10 +13,11 @@ import { parseCode } from './parser.js';
 
 // A minimal virtual filesystem used to resolve import directives. Canonical paths are opaque keys:
 // absolute filesystem paths for the disk resolver, normalised POSIX paths relative to the main
-// source for the in-memory resolver.
+// source for the in-memory resolver. `resolve` returns undefined when a package import
+// cannot be located.
 export interface ImportResolver {
   rootDir: string;
-  resolve(fromDir: string, importPath: string): string;
+  resolve(fromDir: string, importPath: string): string | undefined;
   read(canonicalPath: string): string | undefined;
   dirname(canonicalPath: string): string;
   sourceName(canonicalPath: string): string;
@@ -25,7 +26,9 @@ export interface ImportResolver {
 export function createDiskResolver(rootDir: string): ImportResolver {
   return {
     rootDir,
-    resolve: (fromDir, importPath) => path.resolve(fromDir, importPath),
+    resolve: (fromDir, importPath) => (isPackageImport(importPath)
+      ? resolveFromNodeModules(fromDir, importPath)
+      : path.resolve(fromDir, importPath)),
     read: (canonicalPath) => {
       try {
         return fs.readFileSync(canonicalPath, { encoding: 'utf-8' });
@@ -34,7 +37,10 @@ export function createDiskResolver(rootDir: string): ImportResolver {
       }
     },
     dirname: (canonicalPath) => path.dirname(canonicalPath),
-    sourceName: (canonicalPath) => path.relative(rootDir, canonicalPath).split(path.sep).join(path.posix.sep),
+    sourceName: (canonicalPath) => {
+      const relativePath = getPackageImportPath(canonicalPath) ?? path.relative(rootDir, canonicalPath);
+      return relativePath.split(path.sep).join(path.posix.sep);
+    },
   };
 }
 
@@ -46,7 +52,10 @@ export function createMemoryResolver(files: Record<string, string>): ImportResol
 
   return {
     rootDir: '.',
-    resolve: (fromDir, importPath) => path.posix.normalize(path.posix.join(fromDir, importPath)),
+    // Package imports are looked up verbatim ('pkg/math.cash'), regardless of the importing file
+    resolve: (fromDir, importPath) => (isPackageImport(importPath)
+      ? path.posix.normalize(importPath)
+      : path.posix.normalize(path.posix.join(fromDir, importPath))),
     read: (canonicalPath) => normalisedFiles[canonicalPath],
     dirname: (canonicalPath) => path.posix.dirname(canonicalPath),
     sourceName: (canonicalPath) => canonicalPath,
@@ -94,6 +103,12 @@ function collectImports(
   const collect = (currentImports: ImportNode[], currentDir: string): ImportedDefinitions[] =>
     currentImports.flatMap((importNode) => {
       const canonicalPath = resolver.resolve(currentDir, importNode.path);
+      if (canonicalPath === undefined) {
+        throw new ImportResolutionError(
+          importNode,
+          `Could not find imported file '${importNode.path}' in any node_modules directory`,
+        );
+      }
       if (activePaths.has(canonicalPath)) {
         throw new ImportResolutionError(importNode, `Cyclic import of '${importNode.path}'`);
       }
@@ -136,4 +151,39 @@ function collectImports(
     functions: collected.flatMap((definitions) => definitions.functions),
     constants: collected.flatMap((definitions) => definitions.constants),
   };
+}
+
+
+function isPackageImport(importPath: string): boolean {
+  return !importPath.startsWith('./') && !importPath.startsWith('../') && !importPath.startsWith('/');
+}
+
+// Walk up from the importing file's directory looking for node_modules/<importPath>, so
+// contract libraries can be installed and imported as regular npm packages
+function resolveFromNodeModules(fromDir: string, importPath: string): string | undefined {
+  const currentDir = path.resolve(fromDir);
+  const nodeModulesDir = path.join(currentDir, 'node_modules');
+  const candidate = path.join(nodeModulesDir, importPath);
+
+  if (isValidCandidate(nodeModulesDir, candidate)) return candidate;
+
+  const parentDir = path.dirname(currentDir);
+  if (parentDir === currentDir) return undefined;
+
+  return resolveFromNodeModules(parentDir, importPath);
+}
+
+function isValidCandidate(nodeModulesDir: string, candidate: string): boolean {
+  // The prefix check stops '..' segments in a specifier from escaping the node_modules directory
+  if (!candidate.startsWith(nodeModulesDir + path.sep)) return false;
+  const stats = fs.statSync(candidate, { throwIfNoEntry: false });
+  return stats?.isFile() ?? false;
+}
+
+// A file inside node_modules is named by its package import path ('pkg/math.cash')
+function getPackageImportPath(canonicalPath: string): string | undefined {
+  const nodeModulesSegment = `${path.sep}node_modules${path.sep}`;
+  const nodeModulesIndex = canonicalPath.lastIndexOf(nodeModulesSegment);
+  if (nodeModulesIndex === -1) return undefined;
+  return canonicalPath.slice(nodeModulesIndex + nodeModulesSegment.length);
 }
