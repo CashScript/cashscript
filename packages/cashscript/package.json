@@ -38,6 +38,7 @@
     "lint": "eslint . --ext .ts --ignore-path ../../.eslintignore",
     "prepare": "yarn build",
     "prepublishOnly": "yarn test && yarn lint",
+    "size": "tsx scripts/check-bundle-size.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -53,7 +54,9 @@
     "eslint": "^8.54.0",
     "p-queue": "^9.1.2",
     "p-retry": "^8.0.0",
+    "rollup-plugin-visualizer": "^7.0.1",
     "typescript": "^5.9.2",
+    "vite": "7.2.7",
     "vitest": "^4.0.15"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"

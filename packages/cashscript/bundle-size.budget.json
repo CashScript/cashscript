@@ -1,0 +1,12 @@
+{
+  "_comment": "Gzipped-byte budgets for the cashscript consumer bundle. Regenerate with `yarn size --update`. See issue #389.",
+  "tolerance": 0.05,
+  "scenarios": {
+    "full": {
+      "maxGzip": 247946
+    },
+    "typical": {
+      "maxGzip": 242598
+    }
+  }
+}

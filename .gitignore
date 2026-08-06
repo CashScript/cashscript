@@ -107,4 +107,7 @@ typings/
 
 manual-test.ts
 
+# Bundle size check output
+packages/cashscript/bundle-size/
+
 .claude/
