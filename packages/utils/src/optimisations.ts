@@ -150,6 +150,9 @@ const unprovableOptimisations = [
   ['OP_GREATERTHAN OP_NOT', 'OP_LESSTHANOREQUAL'],
   ['OP_LESSTHANOREQUAL OP_NOT', 'OP_GREATERTHAN'],
   ['OP_GREATERTHANOREQUAL OP_NOT', 'OP_LESSTHAN'],
+
+  // This can get emitted by tuple destructuring
+  ['OP_TOALTSTACK OP_FROMALTSTACK', ''],
 ] as [string, string][];
 
 // Note: we moved these optimisations into a single file, but kept the exact same order as before,
