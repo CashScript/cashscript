@@ -51,18 +51,17 @@
     "@cashscript/utils": "^0.14.0-next.3",
     "antlr4": "^4.13.2",
     "commander": "^14.0.0",
-    "semver": "^7.7.2"
+    "semver": "^7.8.5"
   },
   "devDependencies": {
-    "@types/node": "^22.17.0",
-    "@types/semver": "^7.7.0",
-    "@vitest/coverage-v8": "^4.0.15",
-    "cpy-cli": "^5.0.0",
+    "@types/node": "^24.13.3",
+    "@types/semver": "^7.8.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^8.54.0",
     "eslint-plugin-import": "^2.31.0",
-    "tsx": "^4.20.3",
+    "tsx": "^4.23.12",
     "typescript": "^5.9.2",
-    "vitest": "^4.0.15"
+    "vitest": "^4.1.10"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
 }
