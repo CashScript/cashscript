@@ -43,10 +43,10 @@
     "@bitauth/libauth": "^3.1.0-next.8"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^8.54.0",
     "typescript": "^5.9.2",
-    "vitest": "^4.0.15"
+    "vitest": "^4.1.10"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
 }
