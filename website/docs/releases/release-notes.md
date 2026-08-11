@@ -13,6 +13,8 @@ title: Release Notes
 - :sparkles: Allow for simple arithmetic / concatenation operations in global constant definitions.
 - :sparkles: Add `unused` modifier for parameters or variables that are intentionally unused.
 - :sparkles: Add support for `import` directives to share user-defined functions across files.
+- :sparkles: Resolve package imports (e.g. `import "pkg/math.cash"`) from `node_modules`, so contract libraries can be installed as npm packages.
+- :sparkles: Add support for reassigning existing variables in tuple destructuring (e.g. `(a, b) = swap(a, b)`), optionally mixed with fresh declarations.
 - :hammer_and_wrench: Update `compileString` to take an optional `files` object for filesystem-free import resolution.
 - :racehorse: Inline global functions and constants when this is no larger than `OP_DEFINE`/`OP_INVOKE`.
 - :racehorse: Add new `OP_SWAP OP_MUL` optimisation.
