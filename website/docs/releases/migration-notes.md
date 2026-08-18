@@ -6,18 +6,42 @@ title: Migration Notes
 
 ### CashScript SDK
 
-#### SighashType
+#### SignatureTemplate
 
-The `HashType` enum has been renamed to `SighashType`. The `SignatureTemplate` constructor parameter and the `getHashType()` method have been renamed accordingly.
+The `getHashType()`, `getPublicKey()` and `getSignatureAlgorithm()` are now simple `sighashType`, `publicKey` and `signatureAlgorithm` properties.
+
+```ts
+// before
+const hashType = signatureTemplate.getHashType();
+const publicKey = signatureTemplate.getPublicKey();
+const signatureAlgorithm = signatureTemplate.getSignatureAlgorithm();
+
+// after
+const sighashType = signatureTemplate.sighashType;
+const publicKey = signatureTemplate.publicKey;
+const signatureAlgorithm = signatureTemplate.signatureAlgorithm;
+```
+
+Note that `getHashType()` returned the sighash type with the BCH fork ID flag applied, while the `sighashType` property returns the configured sighash type as it was passed to the constructor.
+
+The `bchForkId` parameter has been removed from `generateSignature()`. A signature without the BCH fork ID flag is invalid under BCH consensus rules, so the flag is now always applied when signing.
+
+```ts
+// before
+const signature = signatureTemplate.generateSignature(sighash, bchForkId);
+
+// after
+const signature = signatureTemplate.generateSignature(sighash);
+```
+
+The `HashType` enum has been renamed to `SighashType`.
 
 ```ts
 // before
 const signatureTemplate = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS);
-const configuredHashType = signatureTemplate.getHashType();
 
 // after
 const signatureTemplate = new SignatureTemplate(wif, SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS);
-const configuredSighashType = signatureTemplate.getSighashType();
 ```
 
 ## v0.12 to v0.13

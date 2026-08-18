@@ -1,4 +1,4 @@
-import { decodePrivateKeyWif, hexToBin, isHex, secp256k1, SigningSerializationFlag } from '@bitauth/libauth';
+import { decodePrivateKeyWif, hexToBin, isHex, secp256k1 } from '@bitauth/libauth';
 import { hash256, scriptToBytecode } from '@cashscript/utils';
 import {
   GenerateUnlockingBytecodeOptions,
@@ -6,7 +6,7 @@ import {
   SignatureAlgorithm,
   P2PKHUnlocker,
 } from './interfaces.js';
-import { createSighashPreimage, publicKeyToP2PKHLockingBytecode } from './utils.js';
+import { createSighashPreimage, publicKeyToP2PKHLockingBytecode, toSigningSerializationType } from './utils.js';
 
 /**
  * A signature template used to sign CashScript transactions. Wraps a private key together with
@@ -16,6 +16,11 @@ import { createSighashPreimage, publicKeyToP2PKHLockingBytecode } from './utils.
 export default class SignatureTemplate {
   /** The raw private key bytes used for signing. */
   public privateKey: Uint8Array;
+
+  /** The 33-byte compressed public key that corresponds to the template's private key. */
+  get publicKey(): Uint8Array {
+    return secp256k1.derivePublicKeyCompressed(this.privateKey) as Uint8Array;
+  }
 
   /**
    * Create a new SignatureTemplate.
@@ -28,8 +33,8 @@ export default class SignatureTemplate {
    */
   constructor(
     signer: Keypair | Uint8Array | string,
-    private sighashType: SighashType = SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS,
-    private signatureAlgorithm: SignatureAlgorithm = SignatureAlgorithm.SCHNORR,
+    public readonly sighashType: SighashType = SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS,
+    public readonly signatureAlgorithm: SignatureAlgorithm = SignatureAlgorithm.SCHNORR,
   ) {
     if (isKeypair(signer)) {
       const wif = signer.toWIF();
@@ -51,13 +56,11 @@ export default class SignatureTemplate {
    * byte, ready to be used as a transaction signature.
    *
    * @param payload - The 32-byte sighash to sign.
-   * @param bchForkId - Whether to include the BCH fork id flag in the appended sighash type byte.
-   *   Defaults to `true`.
    * @returns The signature bytes followed by the sighash type byte.
    */
-  generateSignature(payload: Uint8Array, bchForkId?: boolean): Uint8Array {
+  generateSignature(payload: Uint8Array): Uint8Array {
     const signature = this.signMessageHash(payload);
-    return Uint8Array.from([...signature, this.getSighashType(bchForkId)]);
+    return Uint8Array.from([...signature, toSigningSerializationType(this.sighashType)]);
   }
 
   /**
@@ -75,49 +78,21 @@ export default class SignatureTemplate {
   }
 
   /**
-   * Get the sighash flags used by this template.
-   *
-   * @param bchForkId - Whether to OR in the BCH fork id flag. Defaults to `true`.
-   * @returns The combined sighash type byte.
-   */
-  getSighashType(bchForkId: boolean = true): number {
-    return bchForkId ? (this.sighashType | SigningSerializationFlag.forkId) : this.sighashType;
-  }
-
-  /**
-   * @returns The signature algorithm (ECDSA or Schnorr) used by this template.
-   */
-  getSignatureAlgorithm(): SignatureAlgorithm {
-    return this.signatureAlgorithm;
-  }
-
-  /**
-   * Derive the compressed public key that corresponds to the template's private key.
-   *
-   * @returns The 33-byte compressed public key.
-   */
-  getPublicKey(): Uint8Array {
-    return secp256k1.derivePublicKeyCompressed(this.privateKey) as Uint8Array;
-  }
-
-  /**
    * Build a P2PKH `Unlocker` for the address derived from this template's private key. The
    * returned unlocker can be passed directly to `TransactionBuilder.addInput`.
    *
    * @returns An unlocker that signs the corresponding P2PKH UTXO.
    */
   unlockP2PKH(): P2PKHUnlocker {
-    const publicKey = this.getPublicKey();
-    const prevOutScript = publicKeyToP2PKHLockingBytecode(publicKey);
-    const sighashType = this.getSighashType();
+    const prevOutScript = publicKeyToP2PKHLockingBytecode(this.publicKey);
 
     return {
       generateLockingBytecode: () => prevOutScript,
       generateUnlockingBytecode: ({ transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions) => {
-        const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, prevOutScript, sighashType);
+        const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, prevOutScript, this.sighashType);
         const sighash = hash256(preimage);
         const signature = this.generateSignature(sighash);
-        const unlockingBytecode = scriptToBytecode([signature, publicKey]);
+        const unlockingBytecode = scriptToBytecode([signature, this.publicKey]);
         return unlockingBytecode;
       },
       template: this,

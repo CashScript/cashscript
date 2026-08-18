@@ -63,8 +63,8 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
 
   return typesAndArguments.map(([input, arg]) => {
     if (arg instanceof SignatureTemplate) {
-      const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
-      const sighashTypeName = getSighashTypeName(arg.getSighashType(false));
+      const signatureAlgorithmName = getSignatureAlgorithmName(arg.signatureAlgorithm);
+      const sighashTypeName = getSighashTypeName(arg.sighashType);
       return `<${input.name}.${signatureAlgorithmName}.${sighashTypeName}> // ${input.type}`;
     }
 
