@@ -195,7 +195,7 @@ class ContractInternal<
           if (!(arg instanceof SignatureTemplate)) return arg;
 
           // Generate transaction signature from SignatureTemplate
-          const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, bytecode, arg.getHashType());
+          const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, bytecode, arg.getSighashType());
           const sighash = hash256(preimage);
           return arg.generateSignature(sighash);
         });

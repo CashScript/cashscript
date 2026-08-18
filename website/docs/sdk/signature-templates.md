@@ -16,7 +16,7 @@ In place of a signature, a `SignatureTemplate` can be passed, which will generat
 ```ts
 new SignatureTemplate(
   signer: Keypair | Uint8Array | string,
-  hashtype?: HashType,
+  sighashType?: SighashType,
   signatureAlgorithm?: SignatureAlgorithm
 )
 ```
@@ -37,7 +37,7 @@ const transferDetails = await new TransactionBuilder({ provider })
   .send();
 ```
 
-The `hashtype` and `signatureAlgorithm` options are covered under ['Advanced Usage'](/docs/sdk/signature-templates#advanced-usage).
+The `sighashType` and `signatureAlgorithm` options are covered under ['Advanced Usage'](/docs/sdk/signature-templates#advanced-usage).
 
 ## SignatureTemplate Methods
 
@@ -91,12 +91,12 @@ const signature = aliceTemplate.signMessageHash(sha256(hexToBin('000000000000000
 
 ## Advanced Usage
 
-### HashType
+### SighashType
 
-The default `hashtype` is `HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases.
+The default `sighashType` is `SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases.
 
 ```ts
-export enum HashType {
+export enum SighashType {
   SIGHASH_ALL = 0x01,
   SIGHASH_NONE = 0x02,
   SIGHASH_SINGLE = 0x03,
@@ -110,10 +110,10 @@ export enum HashType {
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 
 const signatureTemplate = new SignatureTemplate(
-  wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
+  wif, SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS
 );
 
-const configuredHashType = signatureTemplate.getHashType()
+const configuredSighashType = signatureTemplate.getSighashType()
 ```
 
 ### SignatureAlgorithm
@@ -131,9 +131,9 @@ export enum SignatureAlgorithm {
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 
-const hashType = HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
+const sighashType = SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS
 const signatureAlgorithm = SignatureAlgorithm.SCHNORR
-const signatureTemplate = new SignatureTemplate(wif, hashType,signatureAlgorithm);
+const signatureTemplate = new SignatureTemplate(wif, sighashType,signatureAlgorithm);
 
 const configuredSignatureAlgorithm = signatureTemplate.getSignatureAlgorithm()
 ```

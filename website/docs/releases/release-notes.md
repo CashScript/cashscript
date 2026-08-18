@@ -22,6 +22,7 @@ title: Release Notes
 #### CashScript SDK
 - :sparkles: Add support for debugging user-defined functions.
 - :sparkles: Add stack trace when debugging failed requires inside nested functions.
+- :hammer_and_wrench: **BREAKING**: Rename the `HashType` enum to `SighashType`, and the `SignatureTemplate`'s `getHashType()` method to `getSighashType()`.
 
 ## v0.13.2
 

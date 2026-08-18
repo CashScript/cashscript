@@ -270,10 +270,10 @@ export function createSighashPreimage(
   sourceOutputs: LibauthOutput[],
   inputIndex: number,
   coveredBytecode: Uint8Array,
-  hashtype: number,
+  sighashType: number,
 ): Uint8Array {
   const context = { inputIndex, sourceOutputs, transaction };
-  const signingSerializationType = new Uint8Array([hashtype]);
+  const signingSerializationType = new Uint8Array([sighashType]);
 
   const sighashPreimage = generateSigningSerializationBch(context, { coveredBytecode, signingSerializationType });
 

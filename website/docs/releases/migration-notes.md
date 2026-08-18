@@ -2,6 +2,24 @@
 title: Migration Notes
 ---
 
+## v0.13 to v0.14
+
+### CashScript SDK
+
+#### SighashType
+
+The `HashType` enum has been renamed to `SighashType`. The `SignatureTemplate` constructor parameter and the `getHashType()` method have been renamed accordingly.
+
+```ts
+// before
+const signatureTemplate = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS);
+const configuredHashType = signatureTemplate.getHashType();
+
+// after
+const signatureTemplate = new SignatureTemplate(wif, SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS);
+const configuredSighashType = signatureTemplate.getSighashType();
+```
+
 ## v0.12 to v0.13
 
 ### cashc compiler

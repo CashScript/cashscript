@@ -1,5 +1,5 @@
 import { generateLibauthSourceOutputs } from 'cashscript/dist/utils.js';
-import { HashType, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
+import { MockNetworkProvider, SighashType, SignatureAlgorithm, SignatureTemplate, TransactionBuilder } from '../src/index.js';
 import { aliceAddress, alicePriv, alicePub, aliceWif } from './fixture/vars.js';
 import { binToHex, decodeTransactionUnsafe, hexToBin } from '@bitauth/libauth';
 
@@ -34,13 +34,13 @@ describe('SignatureTemplate', () => {
     });
 
     it('should append the correct hash type when fork ID is true', () => {
-      const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_SINGLE);
+      const signatureTemplate = new SignatureTemplate(alicePriv, SighashType.SIGHASH_SINGLE);
       const signature = signatureTemplate.generateSignature(hexToBin('0000000000000000000000'), true);
       expect(signature).toEqual(hexToBin('bcac180e17de108003cce026708bd2af54b860dad2626cee157f4ed5abd993b9085d615015f905978adc51e8878226280ddd27d899f086519c0978e53332d79943'));
     });
 
     it('should append the correct hash type when fork ID is false', () => {
-      const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_SINGLE);
+      const signatureTemplate = new SignatureTemplate(alicePriv, SighashType.SIGHASH_SINGLE);
       const signature = signatureTemplate.generateSignature(hexToBin('0000000000000000000000'), false);
       expect(signature).toEqual(hexToBin('bcac180e17de108003cce026708bd2af54b860dad2626cee157f4ed5abd993b9085d615015f905978adc51e8878226280ddd27d899f086519c0978e53332d79903'));
     });

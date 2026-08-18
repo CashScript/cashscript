@@ -6,7 +6,7 @@ import {
   Network,
   TransactionBuilder,
   SignatureAlgorithm,
-  HashType,
+  SighashType,
 } from '../../src/index.js';
 import {
   alicePriv,
@@ -108,7 +108,7 @@ describe('HodlVault', () => {
       const amount = 10000n;
       const { utxos, changeAmount } = gatherUtxos(await hodlVault.getUtxos(), { amount, fee: 2000n });
 
-      const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
+      const signatureTemplate = new SignatureTemplate(alicePriv, SighashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
 
       // when
       const tx = await new TransactionBuilder({ provider })
@@ -185,7 +185,7 @@ describe('HodlVault', () => {
         .send()).rejects.toThrow('HodlVault.cash:31 Require statement failed at input 0 in contract HodlVault.cash at line 31');
 
       // datasig: unlocker should throw when given an improper length
-      const signatureTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
+      const signatureTemplate = new SignatureTemplate(alicePriv, SighashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
       expect(() => hodlVault.unlock.spend(signatureTemplate, placeholder(100), message)).toThrow("Found type 'bytes100' where type 'datasig' was expected");
 
       // datasig: unlocker should not throw when given a proper length, but transaction should fail on invalid sig
