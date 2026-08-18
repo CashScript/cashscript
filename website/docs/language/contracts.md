@@ -133,7 +133,7 @@ contract Example() {
 }
 ```
 
-You can also desctructure the return value into existing variables instead of declaring new ones:
+You can also destructure the return value into existing variables instead of declaring new ones:
 
 ```solidity
 function nextFib(int a, int b) returns (int, int) {
