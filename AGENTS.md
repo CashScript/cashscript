@@ -84,7 +84,7 @@ Shared between compiler and SDK:
 - `source-map.ts` — source map encoding/decoding (format: `sl:sc:el:ec:h` per opcode, `;`-separated, with field inheritance compression)
 - `bitauth-script.ts` — formats bytecode as human-readable BitAuth script (used in debugging)
 - `types.ts` — shared types including `SourceTagKind`, `SourceTagEntry`
-- `optimisations.ts` / `cashproof-optimisations.ts` — peephole optimization rules
+- `optimisations.ts` — peephole optimization rules
 
 ## Code Conventions
 

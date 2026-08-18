@@ -7,8 +7,6 @@ import {
   generateSourceTags,
   generateInlineRanges,
   optimiseBytecode,
-  optimiseBytecodeOld,
-  scriptToAsm,
   scriptToBytecode,
   sourceMapToLocationData,
 } from '@cashscript/utils';
@@ -139,7 +137,6 @@ function compileCode(
   ast = ast.accept(traversal) as Ast;
 
   // Bytecode optimisation
-  const optimisedBytecodeOld = optimiseBytecodeOld(traversal.output);
   const optimisationResult = optimiseBytecode(
     traversal.output,
     sourceMapToLocationData(traversal.sourceMap),
@@ -149,12 +146,6 @@ function compileCode(
     traversal.inlineRanges,
     constructorParamLength,
   );
-
-  if (scriptToAsm(optimisedBytecodeOld) !== scriptToAsm(optimisationResult.script)) {
-    console.error(scriptToAsm(optimisedBytecodeOld));
-    console.error(scriptToAsm(optimisationResult.script));
-    throw new Error('New bytecode optimisation is not backwards compatible, please report this issue to the CashScript team');
-  }
 
   const debug = {
     bytecode: binToHex(scriptToBytecode(optimisationResult.script)),
