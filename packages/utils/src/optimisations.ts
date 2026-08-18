@@ -137,10 +137,6 @@ export const optimisationReplacements = [
   ['OP_DUP OP_AND', ''],
   ['OP_DUP OP_OR', ''],
 
-  // TODO: Enable this optimisation when we overhaul the type system
-  // (right now bool(4) == true => false, but !!bool(4) == true => true) so can't replace OP_NOT OP_NOT with ''
-  // ['OP_NOT OP_NOT', '']
-
   // Invert comparison operators instead of negating them
   ['OP_LESSTHAN OP_NOT', 'OP_GREATERTHANOREQUAL'],
   ['OP_GREATERTHAN OP_NOT', 'OP_LESSTHANOREQUAL'],
@@ -149,4 +145,12 @@ export const optimisationReplacements = [
 
   // This can get emitted by tuple destructuring
   ['OP_TOALTSTACK OP_FROMALTSTACK', ''],
+
+  // unsafe_bool(4) == true => false, but !!unsafe_bool(4) == true => true) so we can't replace OP_NOT OP_NOT with ''
+  // in the general case, but when it is followed by a consuming instruction that does not differentiate between
+  // true and truthy values (e.g. OP_IF, OP_UNTIL, OP_VERIFY), we can replace OP_NOT OP_NOT with ''
+  // Note that technically OP_NOT OP_NOT would also do a VM-number check, which gets removed by this optimisation
+  ['OP_NOT OP_NOT OP_UNTIL', 'OP_UNTIL'],
+  ['OP_NOT OP_NOTIF', 'OP_IF'],
+  ['OP_NOT OP_NOT OP_VERIFY', 'OP_VERIFY'],
 ] as [string, string][];
