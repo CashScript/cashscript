@@ -1,5 +1,5 @@
 import { AbiFunction, AbiInput, Artifact, formatBitAuthScript, sha256 } from '@cashscript/utils';
-import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
+import { LibauthTokenDetails, SighashType, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
 import { hexToBin, binToHex, isHex, decodeCashAddress, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
 import { EncodedFunctionArgument } from '../Argument.js';
 import { zip } from '../utils.js';
@@ -32,23 +32,23 @@ export const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm
   return signatureAlgorithmNames[signatureAlgorithm];
 };
 
-export const getHashTypeName = (hashType: HashType): string => {
-  const hashtypeNames = {
-    [HashType.SIGHASH_ALL]: 'all_outputs',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_SINGLE]: 'corresponding_output',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_NONE]: 'no_outputs',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
+export const getSighashTypeName = (sighashType: SighashType): string => {
+  const sighashTypeNames = {
+    [SighashType.SIGHASH_ALL]: 'all_outputs',
+    [SighashType.SIGHASH_ALL | SighashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
+    [SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
+    [SighashType.SIGHASH_ALL | SighashType.SIGHASH_ANYONECANPAY | SighashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
+    [SighashType.SIGHASH_SINGLE]: 'corresponding_output',
+    [SighashType.SIGHASH_SINGLE | SighashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
+    [SighashType.SIGHASH_SINGLE | SighashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
+    [SighashType.SIGHASH_SINGLE | SighashType.SIGHASH_ANYONECANPAY | SighashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
+    [SighashType.SIGHASH_NONE]: 'no_outputs',
+    [SighashType.SIGHASH_NONE | SighashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
+    [SighashType.SIGHASH_NONE | SighashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
+    [SighashType.SIGHASH_NONE | SighashType.SIGHASH_ANYONECANPAY | SighashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
   };
 
-  return hashtypeNames[hashType];
+  return sighashTypeNames[sighashType];
 };
 
 export const addHexPrefixExceptEmpty = (value: string): string => {
@@ -63,9 +63,9 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
 
   return typesAndArguments.map(([input, arg]) => {
     if (arg instanceof SignatureTemplate) {
-      const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
-      const hashtypeName = getHashTypeName(arg.getHashType(false));
-      return `<${input.name}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
+      const signatureAlgorithmName = getSignatureAlgorithmName(arg.signatureAlgorithm);
+      const sighashTypeName = getSighashTypeName(arg.sighashType);
+      return `<${input.name}.${signatureAlgorithmName}.${sighashTypeName}> // ${input.type}`;
     }
 
     const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;

@@ -14,6 +14,7 @@ import {
   bigIntToCompactUint,
   NonFungibleTokenCapability,
   bigIntToVmNumber,
+  SigningSerializationFlag,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -35,6 +36,7 @@ import {
   UnlockableUtxo,
   LibauthTokenDetails,
   ContractType,
+  SighashType,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -265,15 +267,20 @@ function toBin(output: string): Uint8Array {
   return encode(data);
 }
 
+// BCH consensus requires the fork id flag on every signing serialization
+export function toSigningSerializationType(sighashType: SighashType): number {
+  return sighashType | SigningSerializationFlag.forkId;
+}
+
 export function createSighashPreimage(
   transaction: Transaction,
   sourceOutputs: LibauthOutput[],
   inputIndex: number,
   coveredBytecode: Uint8Array,
-  hashtype: number,
+  sighashType: SighashType,
 ): Uint8Array {
   const context = { inputIndex, sourceOutputs, transaction };
-  const signingSerializationType = new Uint8Array([hashtype]);
+  const signingSerializationType = new Uint8Array([toSigningSerializationType(sighashType)]);
 
   const sighashPreimage = generateSigningSerializationBch(context, { coveredBytecode, signingSerializationType });
 

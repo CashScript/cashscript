@@ -1,4 +1,4 @@
-import { Contract, HashType, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
+import { Contract, MockNetworkProvider, SighashType, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, randomNFT, randomToken, randomUtxo } from '../../../src/index.js';
 import TransferWithTimeout from '../transfer_with_timeout.artifact.js';
 import Mecenas from '../mecenas.artifact.js';
 import P2PKH from '../p2pkh.artifact.js';
@@ -1262,7 +1262,7 @@ export const fixtures: Fixture[] = [
       },
     },
   },
-  // TODO: Make it work with different hashtypes and signature algorithms
+  // TODO: Make it work with different sighash types and signature algorithms
   // {
   //   name: 'P2PKH (sending NFTs)',
   //   transaction: (() => {
@@ -1272,11 +1272,11 @@ export const fixtures: Fixture[] = [
   //     const to = contract.address;
   //     const amount = 1000n;
 
-  //     const hashtype = HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY;
+  //     const sighashType = SighashType.SIGHASH_SINGLE | SighashType.SIGHASH_ANYONECANPAY;
   //     const signatureAlgorithm = SignatureAlgorithm.ECDSA;
 
   //     const tx = contract.functions
-  //       .spend(alicePub, new SignatureTemplate(alicePriv, hashtype, signatureAlgorithm))
+  //       .spend(alicePub, new SignatureTemplate(alicePriv, sighashType, signatureAlgorithm))
   //       .to(to, amount);
 
   //     return tx;
@@ -1295,8 +1295,8 @@ export const fixtures: Fixture[] = [
       const amount = 1000n;
 
       const aliceDefaultTemplate = new SignatureTemplate(alicePriv);
-      const aliceCustomTemplate = new SignatureTemplate(alicePriv, HashType.SIGHASH_NONE, SignatureAlgorithm.ECDSA);
-      const bobCustomTemplate = new SignatureTemplate(bobPriv, HashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
+      const aliceCustomTemplate = new SignatureTemplate(alicePriv, SighashType.SIGHASH_NONE, SignatureAlgorithm.ECDSA);
+      const bobCustomTemplate = new SignatureTemplate(bobPriv, SighashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
 
       const tx = new TransactionBuilder({ provider })
         .addInput(p2pkhUtxo, aliceDefaultTemplate.unlockP2PKH())

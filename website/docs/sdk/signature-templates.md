@@ -16,7 +16,7 @@ In place of a signature, a `SignatureTemplate` can be passed, which will generat
 ```ts
 new SignatureTemplate(
   signer: Keypair | Uint8Array | string,
-  hashtype?: HashType,
+  sighashType?: SighashType,
   signatureAlgorithm?: SignatureAlgorithm
 )
 ```
@@ -37,7 +37,37 @@ const transferDetails = await new TransactionBuilder({ provider })
   .send();
 ```
 
-The `hashtype` and `signatureAlgorithm` options are covered under ['Advanced Usage'](/docs/sdk/signature-templates#advanced-usage).
+The `sighashType` and `signatureAlgorithm` options are covered under ['Advanced Usage'](/docs/sdk/signature-templates#advanced-usage).
+
+## SignatureTemplate Properties
+
+### privateKey
+
+The `SignatureTemplate` exposes the private key it signs with as a property. Whichever format the `signer` was passed in (WIF, hex string, `Uint8Array` or a `Keypair` object), it is decoded to raw private key bytes.
+
+```ts
+signatureTemplate.privateKey: Uint8Array
+```
+
+### publicKey
+
+The `SignatureTemplate` exposes the matching public key as a property:
+
+```ts
+signatureTemplate.publicKey: Uint8Array
+```
+
+### sighashType
+
+The configured sighash type is exposed as a property. Note that the BCH fork ID flag is always applied on top of this value when signing, since it is required by BCH consensus. Its possible values are covered under ['Advanced Usage'](/docs/sdk/signature-templates#sighashtype).
+
+### signatureAlgorithm
+
+The configured signature algorithm is exposed as a property. Its possible values are covered under ['Advanced Usage'](/docs/sdk/signature-templates#signaturealgorithm).
+
+```ts
+signatureTemplate.signatureAlgorithm: SignatureAlgorithm
+```
 
 ## SignatureTemplate Methods
 
@@ -55,21 +85,6 @@ import { aliceTemplate, aliceAddress, transactionBuilder } from './somewhere.js'
 
 const aliceUtxos = await provider.getUtxos(aliceAddress);
 transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
-```
-
-### getPublicKey()
-
-The `SignatureTemplate` also has a helper method to get the matching PublicKey in the following way:
-
-```ts
-signatureTemplate.getPublicKey(): Uint8Array
-```
-
-#### Example
-```ts
-import { aliceTemplate } from './somewhere.js';
-
-const alicePublicKey = aliceTemplate.getPublicKey()
 ```
 
 ### signMessageHash()
@@ -91,12 +106,12 @@ const signature = aliceTemplate.signMessageHash(sha256(hexToBin('000000000000000
 
 ## Advanced Usage
 
-### HashType
+### SighashType
 
-The default `hashtype` is `HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases.
+The default `sighashType` is `SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS` because this is the most secure option for smart contract use cases.
 
 ```ts
-export enum HashType {
+export enum SighashType {
   SIGHASH_ALL = 0x01,
   SIGHASH_NONE = 0x02,
   SIGHASH_SINGLE = 0x03,
@@ -110,10 +125,10 @@ export enum HashType {
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 
 const signatureTemplate = new SignatureTemplate(
-  wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
+  wif, SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS
 );
 
-const configuredHashType = signatureTemplate.getHashType()
+const configuredSighashType = signatureTemplate.sighashType
 ```
 
 ### SignatureAlgorithm
@@ -131,11 +146,11 @@ export enum SignatureAlgorithm {
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
 
-const hashType = HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS
+const sighashType = SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS
 const signatureAlgorithm = SignatureAlgorithm.SCHNORR
-const signatureTemplate = new SignatureTemplate(wif, hashType,signatureAlgorithm);
+const signatureTemplate = new SignatureTemplate(wif, sighashType,signatureAlgorithm);
 
-const configuredSignatureAlgorithm = signatureTemplate.getSignatureAlgorithm()
+const configuredSignatureAlgorithm = signatureTemplate.signatureAlgorithm
 ```
 
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
