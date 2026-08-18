@@ -1,4 +1,6 @@
-const provableOptimisations = [
+// Note: the order in which these optimisations are applied can impact the output, so entries should
+// not be reordered without carefully verifying the compiled bytecode of existing contracts.
+export const optimisationReplacements = [
   // Hardcoded arithmetic
   ['OP_1 OP_ADD', 'OP_1ADD'],
   ['OP_1 OP_SUB', 'OP_1SUB'],
@@ -119,33 +121,27 @@ const provableOptimisations = [
   // .slice(0, x) optimisation & .slice(x, y.length) optimisation
   ['OP_0 OP_SPLIT OP_NIP', ''],
   ['OP_SIZE OP_SPLIT OP_DROP', ''],
-] as [string, string][];
 
-const unprovableOptimisations = [
   // Hardcoded arithmetic
-  // CashProof can't prove OP_IF without parameters
   ['OP_NOT OP_IF', 'OP_NOTIF'],
+
   // Merge OP_VERIFY
-  // CashProof can't prove OP_CHECKMULTISIG without specifying N
   ['OP_CHECKMULTISIG OP_VERIFY', 'OP_CHECKMULTISIGVERIFY'],
+
   // Remove/replace extraneous OP_SWAP
-  // CashProof can't prove bitwise operators
   ['OP_SWAP OP_AND', 'OP_AND'],
   ['OP_SWAP OP_OR', 'OP_OR'],
   ['OP_SWAP OP_XOR', 'OP_XOR'],
 
   // Remove/replace extraneous OP_DUP
-  // CashProof can't prove bitwise operators
   ['OP_DUP OP_AND', ''],
   ['OP_DUP OP_OR', ''],
-
-  // These are new optimisations that we cannot prove since CashProof doesn't work any more
-  // //////////////////////////////////////////////////////////////////////////////////////
 
   // TODO: Enable this optimisation when we overhaul the type system
   // (right now bool(4) == true => false, but !!bool(4) == true => true) so can't replace OP_NOT OP_NOT with ''
   // ['OP_NOT OP_NOT', '']
 
+  // Invert comparison operators instead of negating them
   ['OP_LESSTHAN OP_NOT', 'OP_GREATERTHANOREQUAL'],
   ['OP_GREATERTHAN OP_NOT', 'OP_LESSTHANOREQUAL'],
   ['OP_LESSTHANOREQUAL OP_NOT', 'OP_GREATERTHAN'],
@@ -154,7 +150,3 @@ const unprovableOptimisations = [
   // This can get emitted by tuple destructuring
   ['OP_TOALTSTACK OP_FROMALTSTACK', ''],
 ] as [string, string][];
-
-// Note: we moved these optimisations into a single file, but kept the exact same order as before,
-// because the order in which optimisations are applied can impact the output.
-export const optimisationReplacements = [...provableOptimisations, ...unprovableOptimisations];
