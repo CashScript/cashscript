@@ -79,9 +79,9 @@ export default class TypeCheckTraversal extends AstTraversal {
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
 
-    const targetsType = new TupleType(node.targets.map((target) => target.type));
+    const targetsType = new TupleType(node.targets.map((target) => target.type!));
     if (!implicitlyCastable(node.tuple.type, targetsType)) {
-      const targetNames = node.targets.map((target) => target.name).join(', ');
+      const targetNames = node.targets.map((target) => target.identifier.name).join(', ');
       const syntheticAssignment = new VariableDefinitionNode(targetsType, [], targetNames, node.tuple);
       syntheticAssignment.location = node.location;
       throw new AssignTypeError(syntheticAssignment);

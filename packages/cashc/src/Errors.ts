@@ -20,6 +20,7 @@ import {
   ContractNode,
   SliceNode,
   IntLiteralNode,
+  TupleAssignmentNode,
 } from './ast/AST.js';
 import { Symbol, SymbolType } from './ast/SymbolTable.js';
 import { Location } from './ast/Location.js';
@@ -280,6 +281,15 @@ export class DivisionByZeroError extends CashScriptError {
     public node: BinaryOpNode,
   ) {
     super(node, 'Division by zero');
+  }
+}
+
+export class DuplicateTupleTargetError extends CashScriptError {
+  constructor(
+    node: TupleAssignmentNode,
+    name: string,
+  ) {
+    super(node, `Duplicate target '${name}' in tuple destructuring`);
   }
 }
 

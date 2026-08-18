@@ -155,13 +155,13 @@ export class VariableDefinitionNode extends NonControlStatementNode implements N
 }
 
 export interface TupleAssignmentTarget {
-  name: string;
-  type: Type;
+  identifier: IdentifierNode;
+  type?: Type;
+  isReassignment?: boolean;
 }
 
 export class TupleAssignmentNode extends NonControlStatementNode {
   constructor(
-    // TODO: Use IdentifierNodes instead of a custom type
     public targets: TupleAssignmentTarget[],
     public tuple: ExpressionNode,
   ) {

@@ -249,11 +249,16 @@ export default class AstBuilder
 
   visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
-    const types = ctx.typeName_list();
-    const targets = ctx.Identifier_list().map((name, i) => ({
-      name: name.getText(),
-      type: parseType(types[i].getText()),
-    }));
+    const targets = ctx.tupleTarget_list().map((target) => {
+      const typeName = target.typeName();
+      const identifier = new IdentifierNode(target.Identifier().getText());
+      identifier.location = Location.fromToken(target.Identifier().symbol);
+      return {
+        identifier,
+        type: typeName ? parseType(typeName.getText()) : undefined,
+        isReassignment: !typeName,
+      };
+    });
     const tupleAssignment = new TupleAssignmentNode(targets, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
     return tupleAssignment;

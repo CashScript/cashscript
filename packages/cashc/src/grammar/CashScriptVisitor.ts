@@ -26,6 +26,7 @@ import { ReturnStatementContext } from "./CashScriptParser.js";
 import { ControlStatementContext } from "./CashScriptParser.js";
 import { VariableDefinitionContext } from "./CashScriptParser.js";
 import { TupleAssignmentContext } from "./CashScriptParser.js";
+import { TupleTargetContext } from "./CashScriptParser.js";
 import { AssignStatementContext } from "./CashScriptParser.js";
 import { TimeOpStatementContext } from "./CashScriptParser.js";
 import { RequireStatementContext } from "./CashScriptParser.js";
@@ -207,6 +208,12 @@ export default class CashScriptVisitor<Result> extends ParseTreeVisitor<Result> 
 	 * @return the visitor result
 	 */
 	visitTupleAssignment?: (ctx: TupleAssignmentContext) => Result;
+	/**
+	 * Visit a parse tree produced by `CashScriptParser.tupleTarget`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitTupleTarget?: (ctx: TupleTargetContext) => Result;
 	/**
 	 * Visit a parse tree produced by `CashScriptParser.assignStatement`.
 	 * @param ctx the parse tree

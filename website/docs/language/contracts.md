@@ -133,6 +133,27 @@ contract Example() {
 }
 ```
 
+You can also destructure the return value into existing variables instead of declaring new ones:
+
+```solidity
+function nextFib(int a, int b) returns (int, int) {
+    return b, a + b;
+}
+
+contract Example() {
+    function spend(int fib5) {
+        int current = 0;
+        int next = 1;
+        for (int i = 0; i < 5; i = i + 1) {
+            (current, next) = nextFib(current, next);
+        }
+        require(current == fib5);
+    }
+}
+```
+
+Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(int fresh, current, next) = step(current, next);`). Inside loops and branches, listing declarations before reassignments compiles to slightly smaller bytecode.
+
 :::info
 `checkSig`, `checkMultiSig` and `this.activeBytecode` cannot be used inside a user-defined function, since they would apply to the function body rather than the contract. Use them in a contract function instead (`checkDataSig` is allowed).
 :::

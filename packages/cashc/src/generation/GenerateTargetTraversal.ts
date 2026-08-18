@@ -508,8 +508,34 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
-    this.popFromStack(node.targets.length);
-    node.targets.forEach((target) => this.pushToStack(target.name));
+
+    // Outside of a loop/branch, a reassignment is just a rename (the old value stays on the stack)
+    const scopedReassign = this.scopeDepth > 0 && node.targets.some((target) => target.isReassignment);
+    if (!scopedReassign) {
+      this.popFromStack(node.targets.length);
+      node.targets.forEach((target) => this.pushToStack(target.identifier.name));
+      return node;
+    }
+
+    const locationData = { location: node.location, positionHint: PositionHint.END };
+    const parkedDeclarations: string[] = [];
+
+    const reversedTargets = [...node.targets].reverse();
+    reversedTargets.forEach((target) => {
+      if (target.isReassignment) {
+        this.emitReplace(this.getStackIndex(target.identifier.name), node);
+      } else {
+        this.emit(Op.OP_TOALTSTACK, locationData);
+        parkedDeclarations.push(target.identifier.name);
+      }
+      this.popFromStack();
+    });
+
+    parkedDeclarations.reverse().forEach((name) => {
+      this.emit(Op.OP_FROMALTSTACK, locationData);
+      this.pushToStack(name);
+    });
+
     return node;
   }
 
@@ -1017,4 +1043,3 @@ export default class GenerateTargetTraversal extends AstTraversal {
     return node;
   }
 }
-

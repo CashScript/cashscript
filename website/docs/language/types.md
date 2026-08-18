@@ -161,12 +161,14 @@ string cash = bitcoinCash.split(8)[1];
 It is not supported to use a variable for the tupleIndex. Instead you can assign both sides of the tuple as shown below and use either element conditional on the value of the variable.
 :::
 
-It is also possible to assign both sides of the tuple at once with a destructuring syntax:
+It is also possible to assign both sides of the tuple at once with a destructuring syntax, allowing both new variable declarations and reassignments:
 
 ```solidity
 string hello, string world = "Hello World".split(6);
 require(hello + "World" == "Hello " + world);
 ```
+
+Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(bytes fresh, existing) = x.split(1);`). The target list may optionally be wrapped in parentheses.
 
 ## Type Casting
 Type casting can be done both explicitly and implicitly depending on the type. `pubkey`, `sig` and `datasig` can be implicitly cast to `bytes`, meaning they can be used anywhere where you would normally use a `bytes` type. Explicit type casting can be done with a broader range of types, but is still limited. The syntax of this explicit type casting is illustrated below:

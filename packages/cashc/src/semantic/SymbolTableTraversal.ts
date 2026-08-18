@@ -29,6 +29,7 @@ import {
   UnusedVariableError,
   InvalidSymbolTypeError,
   ConstantModificationError,
+  DuplicateTupleTargetError,
   InvalidModifierError,
 } from '../Errors.js';
 
@@ -164,7 +165,7 @@ export default class SymbolTableTraversal extends AstTraversal {
   visitAssign(node: AssignNode): Node {
     const symbol = this.symbolTables[0].get(node.identifier.name);
 
-    if (symbol?.definition === undefined || symbol.definition instanceof FunctionDefinitionNode) {
+    if (!symbol) {
       throw new UndefinedReferenceError(node.identifier);
     }
 
@@ -177,16 +178,29 @@ export default class SymbolTableTraversal extends AstTraversal {
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    node.targets.forEach((variable) => {
-      const definition = createTupleVariableDefinition(node, variable);
-
-      const { name } = variable;
-      if (this.symbolTables[0].get(name)) {
-        throw new RedefinitionError(definition, name);
+    const seenTargetNames = new Set<string>();
+    node.targets.forEach((target) => {
+      if (seenTargetNames.has(target.identifier.name)) {
+        throw new DuplicateTupleTargetError(node, target.identifier.name);
       }
-      this.symbolTables[0].set(
-        Symbol.variable(definition),
-      );
+      seenTargetNames.add(target.identifier.name);
+
+      if (target.isReassignment) {
+        if (this.symbolTables[0].get(target.identifier.name)?.hasModifier(Modifier.CONSTANT)) {
+          throw new ConstantModificationError(node, target.identifier.name);
+        }
+
+        target.identifier = this.visit(target.identifier) as IdentifierNode;
+        target.type = target.identifier.symbol!.type;
+      } else {
+        const definition = createTupleVariableDefinition(node, target);
+
+        if (this.symbolTables[0].get(target.identifier.name)) {
+          throw new RedefinitionError(definition, target.identifier.name);
+        }
+
+        this.symbolTables[0].set(Symbol.variable(definition));
+      }
     });
 
     node.tuple = this.visit(node.tuple);
@@ -273,9 +287,9 @@ function validateModifiers(
 
 function createTupleVariableDefinition(
   node: TupleAssignmentNode,
-  variable: TupleAssignmentTarget,
+  target: TupleAssignmentTarget,
 ): VariableDefinitionNode {
-  const definition = new VariableDefinitionNode(variable.type, [], variable.name, node.tuple);
+  const definition = new VariableDefinitionNode(target.type!, [], target.identifier.name, node.tuple);
   definition.location = node.location;
   return definition;
 }

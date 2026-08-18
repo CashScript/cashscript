@@ -101,7 +101,13 @@ variableDefinition
     ;
 
 tupleAssignment
-    : typeName Identifier (',' typeName Identifier)+ '=' expression
+    : tupleTarget (',' tupleTarget)+ '=' expression
+    | '(' tupleTarget (',' tupleTarget)+ ')' '=' expression
+    ;
+
+tupleTarget
+    : typeName Identifier
+    | Identifier
     ;
 
 assignStatement
@@ -215,8 +221,8 @@ numberLiteral
     ;
 
 typeName
-    : PrimitiveType 
-    | BoundedBytes 
+    : PrimitiveType
+    | BoundedBytes
     | UnboundedBytes
     ;
 

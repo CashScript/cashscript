@@ -1,0 +1,33 @@
+// Scoped tuple reassignment inside if-branches: the stack layout must be preserved, so
+// reassignment values are folded into the existing variable slots (with altstack parking when a
+// declaration value sits above a reassignment value).
+
+// Called from both contract functions and large enough that it is NOT inlined, so destructuring
+// also covers results produced by an OP_INVOKE call (single-call functions are always inlined).
+function branchPair(int x) returns (int, int) {
+    int t = x * 3 + (x % 7) + (x / 2);
+    return t + 1, t * 2 - x;
+}
+
+contract TupleReassignmentBranches() {
+    // mixed declaration + reassignment inside a branch, declarations first: no parking needed
+    function declarationFirst(int a) {
+        int total = 0;
+        if (a > 10) {
+            int d, total = branchPair(a);
+            require(d != 0);
+        }
+        require(total >= 0);
+    }
+
+    // reassignment before declaration inside a branch: the trailing declaration value is parked
+    // on the altstack while the reassignment value below it folds into its slot
+    function reassignmentFirst(int a) {
+        int total = 0;
+        if (a > 10) {
+            (total, int extra) = branchPair(a + 1);
+            require(extra != 0);
+        }
+        require(total >= 0);
+    }
+}
