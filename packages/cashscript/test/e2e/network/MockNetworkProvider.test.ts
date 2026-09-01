@@ -55,7 +55,7 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
       await expect(provider.sendRawTransaction(tx.slice(0, -2))).rejects.toThrow('Error reading transaction.');
 
       // send valid transaction
-      await expect(provider.sendRawTransaction(tx)).resolves.not.toThrow();
+      const txid = await provider.sendRawTransaction(tx);
 
       // utxos should be removed from the provider
       expect(await provider.getUtxos(aliceAddress)).toHaveLength(0);
@@ -64,7 +64,11 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
       // utxo should be added to bob
       expect(await provider.getUtxos(bobAddress)).toHaveLength(1);
 
-      await expect(provider.sendRawTransaction(tx)).rejects.toThrow('already submitted');
+      // resubmission resolves with the same txid and doesn't change the utxo set
+      await expect(provider.sendRawTransaction(tx)).resolves.toBe(txid);
+      expect(await provider.getUtxos(aliceAddress)).toHaveLength(0);
+      expect(await provider.getUtxos(p2pkhInstance.address)).toHaveLength(0);
+      expect(await provider.getUtxos(bobAddress)).toHaveLength(1);
     });
   });
 
