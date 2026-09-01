@@ -77,7 +77,8 @@ export default class MockNetworkProvider implements NetworkProvider {
     const txid = binToHex(sha256(sha256(transactionBin)).reverse());
 
     if (this.options.updateUtxoSet && this.transactionMap[txid]) {
-      throw new Error(`Transaction with txid ${txid} was already submitted`);
+      console.warn(`Transaction with txid ${txid} was already submitted`);
+      return txid;
     }
 
     this.transactionMap[txid] = txHex;
