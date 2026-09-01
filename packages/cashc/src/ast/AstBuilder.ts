@@ -256,6 +256,7 @@ export default class AstBuilder
       return {
         identifier,
         type: typeName ? parseType(typeName.getText()) : undefined,
+        modifiers: target.modifier_list().map((modifier) => modifier.getText() as Modifier),
         isReassignment: !typeName,
       };
     });

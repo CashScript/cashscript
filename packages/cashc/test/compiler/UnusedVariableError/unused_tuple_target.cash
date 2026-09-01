@@ -1,0 +1,6 @@
+contract Test() {
+    function spend() {
+        bytes head, bytes tail = 0x1234.split(1);
+        require(tail == 0x34);
+    }
+}

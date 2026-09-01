@@ -514,6 +514,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     if (!scopedReassign) {
       this.popFromStack(node.targets.length);
       node.targets.forEach((target) => this.pushToStack(target.identifier.name));
+      this.dropUnusedTupleTargets(node);
       return node;
     }
 
@@ -524,6 +525,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
     reversedTargets.forEach((target) => {
       if (target.isReassignment) {
         this.emitReplace(this.getStackIndex(target.identifier.name), node);
+      } else if (target.modifiers.includes(Modifier.UNUSED)) {
+        this.emit(Op.OP_DROP, locationData);
       } else {
         this.emit(Op.OP_TOALTSTACK, locationData);
         parkedDeclarations.push(target.identifier.name);
@@ -537,6 +540,21 @@ export default class GenerateTargetTraversal extends AstTraversal {
     });
 
     return node;
+  }
+
+  private dropUnusedTupleTargets(node: TupleAssignmentNode): void {
+    const locationData = { location: node.location, positionHint: PositionHint.END };
+
+    node.targets
+      .filter((target) => target.modifiers.includes(Modifier.UNUSED))
+      .sort((a, b) => this.getStackIndex(a.identifier.name) - this.getStackIndex(b.identifier.name))
+      .forEach((target) => {
+        const stackIndex = this.getStackIndex(target.identifier.name);
+        this.emit(encodeInt(BigInt(stackIndex)), locationData);
+        this.emit(Op.OP_ROLL, locationData);
+        this.emit(Op.OP_DROP, locationData);
+        this.removeFromStack(stackIndex);
+      });
   }
 
   visitAssign(node: AssignNode): Node {

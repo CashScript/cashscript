@@ -367,8 +367,8 @@ export const fixtures: Fixture[] = [
           new BlockNode([
             new TupleAssignmentNode(
               [
-                { identifier: new IdentifierNode('blockHeightBin'), type: new BytesType(4) },
-                { identifier: new IdentifierNode('priceBin'), type: new BytesType(4) },
+                { identifier: new IdentifierNode('blockHeightBin'), type: new BytesType(4), modifiers: [] },
+                { identifier: new IdentifierNode('priceBin'), type: new BytesType(4), modifiers: [] },
               ],
               new BinaryOpNode(
                 new IdentifierNode('oracleMessage'),

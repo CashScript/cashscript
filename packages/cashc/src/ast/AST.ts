@@ -157,6 +157,7 @@ export class VariableDefinitionNode extends NonControlStatementNode implements N
 export interface TupleAssignmentTarget {
   identifier: IdentifierNode;
   type?: Type;
+  modifiers: Modifier[];
   isReassignment?: boolean;
 }
 

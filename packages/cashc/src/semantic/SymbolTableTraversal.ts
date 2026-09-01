@@ -199,6 +199,8 @@ export default class SymbolTableTraversal extends AstTraversal {
           throw new RedefinitionError(definition, target.identifier.name);
         }
 
+        validateModifiers(definition, definition.modifiers, [Modifier.CONSTANT, Modifier.UNUSED]);
+
         this.symbolTables[0].set(Symbol.variable(definition));
       }
     });
@@ -289,7 +291,7 @@ function createTupleVariableDefinition(
   node: TupleAssignmentNode,
   target: TupleAssignmentTarget,
 ): VariableDefinitionNode {
-  const definition = new VariableDefinitionNode(target.type!, [], target.identifier.name, node.tuple);
+  const definition = new VariableDefinitionNode(target.type!, target.modifiers, target.identifier.name, node.tuple);
   definition.location = node.location;
   return definition;
 }

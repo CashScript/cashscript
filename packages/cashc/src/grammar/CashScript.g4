@@ -106,7 +106,7 @@ tupleAssignment
     ;
 
 tupleTarget
-    : typeName Identifier
+    : typeName modifier* Identifier
     | Identifier
     ;
 

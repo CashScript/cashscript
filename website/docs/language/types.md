@@ -170,6 +170,12 @@ require(hello + "World" == "Hello " + world);
 
 Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(bytes fresh, existing) = x.split(1);`). The target list may optionally be wrapped in parentheses.
 
+Newly declared targets accept the same modifiers as regular variable declarations: `constant` prevents later reassignment, while `unused` discards the value immediately, which is useful when only part of the tuple is needed:
+
+```solidity
+bytes unused ignored, bytes constant tail = someBytes.split(4);
+```
+
 ## Type Casting
 Type casting can be done both explicitly and implicitly depending on the type. `pubkey`, `sig` and `datasig` can be implicitly cast to `bytes`, meaning they can be used anywhere where you would normally use a `bytes` type. Explicit type casting can be done with a broader range of types, but is still limited. The syntax of this explicit type casting is illustrated below:
 
