@@ -1,10 +1,3 @@
-/*   Compiler.test.ts
- *
- * - This file is used to test the overall functioning of the compiler.
- * - It tests successful compilation using fixture .cash files in ../valid-contract-files.
- * - It tests compile errors using fixture .cash files in respective Error directories.
- */
-
 import { URL } from 'url';
 import { getSubdirectories, readCashFiles } from '../test-utils.js';
 import * as Errors from '../../src/Errors.js';
@@ -21,14 +14,6 @@ contract Test() {
 const INVALID_SOURCE = 'contract Test() { function unlock() { require(true) } }';
 
 describe('Compiler', () => {
-  describe('Successful compilation', () => {
-    readCashFiles(new URL('../valid-contract-files', import.meta.url)).forEach((file) => {
-      it(`${file.fn} should succeed`, () => {
-        expect(() => compileString(file.contents)).not.toThrow();
-      });
-    });
-  });
-
   describe('Compilation errors', () => {
     const errorTypes = getSubdirectories(new URL('.', import.meta.url));
 

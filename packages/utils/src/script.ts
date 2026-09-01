@@ -236,7 +236,7 @@ function replaceOps(
     const replacementLength = replacement === '' ? 0 : replacement.split(/\s+/).length;
     const lengthDiff = patternLength - replacementLength;
 
-    // (?=\s|$) requires the pattern to end at a token boundary (no partial matches) withoutconsuming the separator
+    // (?=\s|$) requires the pattern to end at a token boundary (no partial matches) without consuming the separator
     const regex = new RegExp(`${pattern}(?=\\s|$)`, 'g');
 
     // Most rules match nothing on any given script, and must leave the ASM untouched.

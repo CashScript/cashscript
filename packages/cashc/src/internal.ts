@@ -4,5 +4,5 @@
  * from the package's public API. This module is not re-exported from the package index and
  * carries no stability guarantees.
  */
-export { compileFileInternal as compileFile, compileStringInternal as compileString } from './compiler.js';
+export { compileFileInternal as compileFile, compileStringInternal as compileString, DEFAULT_COMPILER_OPTIONS } from './compiler.js';
 export type { InternalCompilerOptions } from './compiler.js';
