@@ -28,14 +28,14 @@ export const fixtures: Fixture[] = [
         // require(interval == INTERVAL);
         + 'OP_SWAP 201c OP_NUMEQUALVERIFY '
         // require(deadline == DEADLINE);
-        + 'OP_SWAP 88632c60 OP_NUMEQUALVERIFY '
+        + 'OP_SWAP 98712c60 OP_NUMEQUALVERIFY '
         // require(greeting == GREETING);
         + 'OP_SWAP 68656c6c6f OP_EQUALVERIFY '
         // require(magic == MAGIC);
         + '01020304 OP_EQUAL',
       fingerprint: '74578f6eb254c7cb367434c6754d27e684bd1b3c7362fac7a0024397c9f73331',
       debug: {
-        bytecode: '92557a8254887c519d7c01879d7c02201c9d7c0488632c609d7c0568656c6c6f88040102030487',
+        bytecode: '92557a8254887c519d7c01879d7c02201c9d7c0498712c609d7c0568656c6c6f88040102030487',
         sourceMap: '9:19:9:31;:92::104;;;;;10:16:10:23;:27::34:1;:8::36;11:16:11:24:0;:28::36:1;:8::38;12:16:12:24:0;:28::36:1;:8::38;13:16:13:24:0;:28::36:1;:8::38;14:16:14:24:0;:28::36:1;:8::38;15:25:15:30;:8::32',
         logs: [],
         requires: [
@@ -79,7 +79,7 @@ export const fixtures: Fixture[] = [
             name: 'DEADLINE',
             kind: 'constant',
             inputs: [],
-            bytecode: '0488632c60',
+            bytecode: '0498712c60',
             sourceMap: '4:24:4:51',
             logs: [],
             requires: [],
