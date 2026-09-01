@@ -5,7 +5,7 @@
  *   definitions at their call sites or to share them as OP_DEFINE / OP_INVOKE definitions, the
  *   lowering of constants to zero-argument functions, and stable VM function-ID assignment.
  * - Compile errors are tested with the fixture files in ./compiler, and the exact compiled output
- *   is locked in by the fixtures in generation/fixtures.ts.
+ *   is locked in by the fixture modules in generation/fixtures.
  */
 
 import { compileString } from '../src/internal.js';
