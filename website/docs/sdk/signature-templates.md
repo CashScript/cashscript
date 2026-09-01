@@ -120,6 +120,16 @@ export enum SighashType {
 }
 ```
 
+`SIGHASH_ALL`, `SIGHASH_NONE` and `SIGHASH_SINGLE` choose which outputs are signed, while `SIGHASH_UTXOS` and `SIGHASH_ANYONECANPAY` are modifiers that can be OR'd on top to change what else is committed to. For a full technical breakdown of the signing serialization and every valid flag combination, see the [Bitcoin Cash transaction signing reference][tx-signing].
+
+| Flag | Value | Commits to | Typical use |
+| --- | --- | --- | --- |
+| `SIGHASH_ALL` | `0x01` | all inputs and **all** outputs | sign the exact transaction |
+| `SIGHASH_NONE` | `0x02` | all inputs, but **no** outputs | let the outputs be decided after signing |
+| `SIGHASH_SINGLE` | `0x03` | all inputs, and only the **one** output at the same index as the signed input | pair a single input to a single output |
+| `SIGHASH_UTXOS` | `0x20` | *(modifier)* additionally commits to the full contents of the UTXOs being spent | recommended for all contracts — see below |
+| `SIGHASH_ANYONECANPAY` | `0x80` | *(modifier)* only the **current** input, allowing other inputs to be added | crowdfunding-style transactions where anyone can add an input |
+
 #### Example
 ```ts
 const wif = 'L4vmKsStbQaCvaKPnCzdRArZgdAxTqVx8vjMGLW5nHtWdRguiRi1';
@@ -156,3 +166,4 @@ const configuredSignatureAlgorithm = signatureTemplate.signatureAlgorithm
 [wif]: https://en.bitcoin.it/wiki/Wallet_import_format
 [ecpair]: https://bchjs.fullstack.cash/#api-ECPair
 [privatekey]: https://github.com/bitpay/bitcore/blob/master/packages/bitcore-lib-cash/docs/privatekey.md
+[tx-signing]: https://documentation.cash/protocol/blockchain/transaction/transaction-signing.html
