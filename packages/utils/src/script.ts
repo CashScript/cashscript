@@ -236,33 +236,24 @@ function replaceOps(
     const replacementLength = replacement === '' ? 0 : replacement.split(/\s+/).length;
     const lengthDiff = patternLength - replacementLength;
 
-    // We add a space or end of string to the end of the pattern to ensure that we match the whole
-    // pattern (no partial matches). The /g flag lets the sweep resume from lastIndex rather than
-    // re-slicing the haystack, which is what keeps the scan linear.
-    const regex = new RegExp(`${pattern}(\\s|$)`, 'g');
+    // (?=\s|$) requires the pattern to end at a token boundary (no partial matches) withoutconsuming the separator
+    const regex = new RegExp(`${pattern}(?=\\s|$)`, 'g');
 
-    // Collect the rewritten ASM as slices of the sweep-start string, joined once at the end, rather
-    // than re-concatenating and whitespace-collapsing a growing prefix on every match.
-    const asmParts: string[] = [];
-    let copiedUpTo = 0;
+    // Most rules match nothing on any given script, and must leave the ASM untouched.
+    const matches = [...asm.matchAll(regex)];
+    if (matches.length === 0) return;
 
-    // scriptIndex tracks the position within the metadata arrays. It advances by counting the
-    // spaces separating the tokens leading up to each match (the ASM is single-space separated),
-    // and matches arrive left to right, so every character is counted once per sweep.
-    let scriptIndex = 0;
-    let countedUpTo = 0;
+    // Make a mapping *once* that maps the character offset of every opcode/token to its script index
+    const scriptIndexAtCharacterOffset = new Map<number, number>();
+    asm.split(' ').reduce((characterOffset, token, scriptIndex) => {
+      scriptIndexAtCharacterOffset.set(characterOffset, scriptIndex);
+      return characterOffset + token.length + 1;
+    }, 0);
 
-    // Regex /g resumes each search from lastIndex, past the text the previous match consumed, so a
-    // replacement never participates in another match of the same rule, and neither does adjacency
-    // created by one of this rule's own removals.
-    for (let match = regex.exec(asm); match !== null; match = regex.exec(asm)) {
-      const matchStart = match.index;
-
-      scriptIndex += asm.slice(countedUpTo, matchStart).split(' ').length - 1;
-      countedUpTo = matchStart;
-
-      asmParts.push(asm.slice(copiedUpTo, matchStart), replacement);
-      copiedUpTo = matchStart + pattern.length;
+    // Process the matches right to left: replacing a pattern only shifts the metadata positions
+    // that come after it, so the indices of the remaining (earlier) matches stay valid as-is.
+    for (const match of matches.reverse()) {
+      const scriptIndex = scriptIndexAtCharacterOffset.get(match.index)!;
 
       // We get the locationData entries for every opcode in the pattern
       const patternLocations = newLocationData.slice(scriptIndex, scriptIndex + patternLength);
@@ -338,10 +329,7 @@ function replaceOps(
         };
       });
 
-      // Source tags use raw script indices (no constructor offset), so they adjust against
-      // scriptIndex. Capturing it is safe (the map runs before scriptIndex advances), but the
-      // no-loop-func rule cannot see that.
-      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      // Source tags use raw script indices (no constructor offset), so they adjust against scriptIndex
       newSourceTags = newSourceTags.map((tag) => ({
         ...tag,
         startIndex: adjustPosition(tag.startIndex, scriptIndex),
@@ -355,16 +343,9 @@ function replaceOps(
         endIp: adjustPosition(inlineRange.endIp, scriptIp),
       }));
 
-      // The splices above removed lengthDiff entries from the metadata arrays, so the position of
-      // everything after this match - including all later matches - shifts back by that amount.
-      scriptIndex -= lengthDiff;
     }
 
-    // Most rules match nothing on any given script, and must leave the ASM untouched.
-    if (asmParts.length === 0) return;
-
-    asmParts.push(asm.slice(copiedUpTo));
-    asm = asmParts.join(' ').replace(/\s+/g, ' ').trim();
+    asm = asm.replace(regex, replacement).replace(/\s+/g, ' ').trim();
   });
 
   return {
