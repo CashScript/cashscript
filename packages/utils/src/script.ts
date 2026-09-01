@@ -173,27 +173,14 @@ export function optimiseBytecode(
   runs: number = 1000,
 ): OptimiseBytecodeResult {
   for (let i = 0; i < runs; i += 1) {
-    const oldScript = script;
-    const {
-      script: newScript,
-      locationData: newLocationData,
-      logs: newLogs,
-      requires: newRequires,
-      sourceTags: newSourceTags,
-      inlineRanges: newInlineRanges,
-    } = replaceOps(
+    const result = replaceOps(
       script, locationData, logs, requires, sourceTags, inlineRanges, constructorParamLength, optimisationReplacements,
     );
 
     // Break on fixed point
-    if (scriptToAsm(oldScript) === scriptToAsm(newScript)) break;
+    if (!result.changed) break;
 
-    script = newScript;
-    locationData = newLocationData;
-    logs = newLogs;
-    requires = newRequires;
-    sourceTags = newSourceTags;
-    inlineRanges = newInlineRanges;
+    ({ script, locationData, logs, requires, sourceTags, inlineRanges } = result);
   }
 
   return {
@@ -221,13 +208,8 @@ function reconcileScopeCleanupTags(script: Script, sourceTags: SourceTagEntry[])
   });
 }
 
-interface ReplaceOpsResult {
-  script: Script;
-  locationData: FullLocationData;
-  logs: LogEntry[];
-  requires: RequireStatement[];
-  sourceTags: SourceTagEntry[];
-  inlineRanges: InlineRange[];
+interface ReplaceOpsResult extends OptimiseBytecodeResult {
+  changed: boolean;
 }
 
 function replaceOps(
@@ -238,33 +220,40 @@ function replaceOps(
   sourceTags: SourceTagEntry[],
   inlineRanges: InlineRange[],
   constructorParamLength: number,
-  optimisations: string[][],
+  optimisations: [string, string][],
 ): ReplaceOpsResult {
-  let asm = scriptToAsm(script);
-  let newLocationData = [...locationData];
+  const originalAsm = scriptToAsm(script);
+  let asm = originalAsm;
+  const newLocationData = [...locationData];
   let newLogs = [...logs];
   let newRequires = [...requires];
   let newSourceTags = [...sourceTags];
   let newInlineRanges = [...inlineRanges];
 
   optimisations.forEach(([pattern, replacement]) => {
-    let processedAsm = '';
-    let asmToSearch = asm;
+    const patternTokens = pattern.split(/\s+/);
+    const patternLength = patternTokens.length;
+    const replacementLength = replacement === '' ? 0 : replacement.split(/\s+/).length;
+    const lengthDiff = patternLength - replacementLength;
 
-    // We add a space or end of string to the end of the pattern to ensure that we match the whole pattern
-    // (no partial matches)
-    const regex = new RegExp(`${pattern}(\\s|$)`, 'g');
+    // (?=\s|$) requires the pattern to end at a token boundary (no partial matches) withoutconsuming the separator
+    const regex = new RegExp(`${pattern}(?=\\s|$)`, 'g');
 
-    let matchIndex = asmToSearch.search(regex);
-    while (matchIndex !== -1) {
-      // We add the part before the match to the processed asm
-      processedAsm = mergeAsm(processedAsm, asmToSearch.slice(0, matchIndex));
+    // Most rules match nothing on any given script, and must leave the ASM untouched.
+    const matches = [...asm.matchAll(regex)];
+    if (matches.length === 0) return;
 
-      // We count the number of spaces in the processed asm + 1, which is equal to the script index
-      // We do the same thing to calculate the number of opcodes in the pattern and replacement
-      const scriptIndex = processedAsm === '' ? 0 : [...processedAsm.matchAll(/\s+/g)].length + 1;
-      const patternLength = [...pattern.matchAll(/\s+/g)].length + 1;
-      const replacementLength = replacement === '' ? 0 : [...replacement.matchAll(/\s+/g)].length + 1;
+    // Make a mapping *once* that maps the character offset of every opcode/token to its script index
+    const scriptIndexAtCharacterOffset = new Map<number, number>();
+    asm.split(' ').reduce((characterOffset, token, scriptIndex) => {
+      scriptIndexAtCharacterOffset.set(characterOffset, scriptIndex);
+      return characterOffset + token.length + 1;
+    }, 0);
+
+    // Process the matches right to left: replacing a pattern only shifts the metadata positions
+    // that come after it, so the indices of the remaining (earlier) matches stay valid as-is.
+    for (const match of matches.reverse()) {
+      const scriptIndex = scriptIndexAtCharacterOffset.get(match.index)!;
 
       // We get the locationData entries for every opcode in the pattern
       const patternLocations = newLocationData.slice(scriptIndex, scriptIndex + patternLength);
@@ -294,8 +283,6 @@ function replaceOps(
       // (note that every opcode in the replacement has the same location)
       const replacementLocations = new Array<SingleLocationData>(replacementLength).fill(mergedLocation);
       newLocationData.splice(scriptIndex, patternLength, ...replacementLocations);
-
-      const lengthDiff = patternLength - replacementLength; // 2 or 1
 
       // The IP of an opcode in the script is its index within the script + the constructor parameters, because
       // the constructor parameters still have to get added to the front of the script when a new Contract is created.
@@ -330,7 +317,7 @@ function replaceOps(
             }
 
             const addedTransformationsCount = data.ip - scriptIp;
-            const addedTransformations = [...pattern.split(/\s+/g)].slice(0, addedTransformationsCount).join(' ');
+            const addedTransformations = patternTokens.slice(0, addedTransformationsCount).join(' ');
             const newTransformations = data.transformations ? `${addedTransformations} ${data.transformations}` : addedTransformations;
 
             return {
@@ -356,27 +343,14 @@ function replaceOps(
         endIp: adjustPosition(inlineRange.endIp, scriptIp),
       }));
 
-      // We add the replacement to the processed asm
-      processedAsm = mergeAsm(processedAsm, replacement);
-
-      // We do not add the matched pattern anywhere since it gets replaced
-
-      // We set the asmToSearch to the part after the match
-      asmToSearch = asmToSearch.slice(matchIndex + pattern.length).trim();
-
-      // Find the next match
-      matchIndex = asmToSearch.search(regex);
     }
 
-    // We add the remaining asm to the processed asm
-    processedAsm = mergeAsm(processedAsm, asmToSearch);
-
-    // We replace the original asm with the processed asm so that the next optimisation can use the updated asm
-    asm = processedAsm;
+    asm = asm.replace(regex, replacement).replace(/\s+/g, ' ').trim();
   });
 
   return {
     script: asmToScript(asm),
+    changed: asm !== originalAsm,
     locationData: newLocationData,
     logs: newLogs,
     requires: newRequires,
@@ -415,10 +389,4 @@ const getLowestStartLocation = (locations: SingleLocationData[]): SingleLocation
 
     return lowest;
   }, locations[0]);
-};
-
-const mergeAsm = (asm1: string, asm2: string): string => {
-  // We merge two ASM strings by adding a space between them, and removing any duplicate spaces
-  // or trailing/leading spaces, which might have been introduced due to regex matching / replacements / empty asm strings
-  return `${asm1} ${asm2}`.replace(/\s+/g, ' ').trim();
 };
