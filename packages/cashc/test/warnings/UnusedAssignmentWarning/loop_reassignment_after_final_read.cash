@@ -1,0 +1,12 @@
+contract Test() {
+    function spend(int a) {
+        int x = 1;
+        require(x == 1);
+        int i = 0;
+        while (i < a) {
+            x = i;
+            i = i + 1;
+        }
+        require(true);
+    }
+}

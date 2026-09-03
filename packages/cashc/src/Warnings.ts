@@ -1,4 +1,4 @@
-import { Node } from './ast/AST.js';
+import { IdentifierNode, Node } from './ast/AST.js';
 import { Symbol } from './ast/SymbolTable.js';
 
 export class CashScriptWarning {
@@ -26,8 +26,16 @@ export class UnusedVariableWarning extends CashScriptWarning {
   }
 }
 
-export type CashScriptWarningListener = (warnings: CashScriptWarning[]) => void;
+export class UnusedAssignmentWarning extends CashScriptWarning {
+  constructor(
+    public identifier: IdentifierNode,
+  ) {
+    super(identifier, `Value assigned to '${identifier.name}' is never read`);
+  }
+}
 
-export const defaultWarningListener: CashScriptWarningListener = (warnings) => {
-  warnings.forEach((warning) => console.warn(`Warning: ${warning.message}`));
+export type CashScriptWarningListener = (warning: CashScriptWarning) => void;
+
+export const defaultWarningListener: CashScriptWarningListener = (warning) => {
+  console.warn(`Warning: ${warning.message}`);
 };

@@ -10,8 +10,18 @@ import {
 import { Modifier } from './Globals.js';
 import { functionReturnType } from '../utils.js';
 
+export enum ReferenceKind {
+  READ = 'read',
+  WRITE = 'write',
+}
+
+export interface Reference {
+  kind: ReferenceKind;
+  node: IdentifierNode;
+}
+
 export class Symbol {
-  uses: IdentifierNode[] = [];
+  references: Reference[] = [];
   inlinedFrame?: DebugFrame;
 
   private constructor(
@@ -30,8 +40,12 @@ export class Symbol {
       && this.definition.modifiers.includes(modifier);
   }
 
+  getReferences(kind: ReferenceKind): Reference[] {
+    return this.references.filter((reference) => reference.kind === kind);
+  }
+
   isUnused(): boolean {
-    return this.uses.length === 0;
+    return this.getReferences(ReferenceKind.READ).length === 0;
   }
 
   static variable(node: VariableDefinitionNode | ParameterNode): Symbol {

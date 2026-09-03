@@ -29,6 +29,7 @@ import {
 import GenerateTargetTraversal from './generation/GenerateTargetTraversal.js';
 import { FoldGlobalConstantsTraversal } from './semantic/FoldGlobalConstantsTraversal.js';
 import SymbolTableTraversal from './semantic/SymbolTableTraversal.js';
+import UnusedCodeWarningsTraversal from './semantic/UnusedCodeTraversal.js';
 import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 import EnsureFunctionsSafeTraversal from './semantic/EnsureFunctionsSafeTraversal.js';
@@ -122,9 +123,8 @@ function compileCode(
   // Semantic analysis
   ast = ast.accept(new FoldGlobalConstantsTraversal()) as Ast;
 
-  const symbolTableTraversal = new SymbolTableTraversal();
-  ast = ast.accept(symbolTableTraversal) as Ast;
-  (warningListener ?? defaultWarningListener)(symbolTableTraversal.warnings);
+  ast = ast.accept(new SymbolTableTraversal()) as Ast;
+  ast = ast.accept(new UnusedCodeWarningsTraversal(warningListener ?? defaultWarningListener)) as Ast;
 
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFunctionsSafeTraversal()) as Ast;

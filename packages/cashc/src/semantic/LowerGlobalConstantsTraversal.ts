@@ -71,7 +71,6 @@ export class LowerGlobalConstantsTraversal extends AstTraversal {
     identifier.location = node.location;
     identifier.type = node.type;
     identifier.symbol = symbol;
-    symbol.uses.push(identifier);
 
     const call = new FunctionCallNode(identifier, []);
     call.location = node.location;

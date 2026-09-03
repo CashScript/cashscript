@@ -280,6 +280,8 @@ A parameter or local variable that is declared but never used results in a compi
 
 Some use cases for intentionally unused values include padding the contract bytecode in order to get a higher opcost budget, or nonces in order to differentiate between similar contracts.
 
+The compiler also warns when a value is assigned to a variable that is never read afterwards, since such an assignment has no effect on the contract.
+
 #### Example
 
 ```solidity
