@@ -127,6 +127,21 @@ const Doubler = compileString(source, { files: { './math.cash': mathSource } });
 Imports inside imported files are resolved relative to the *importing* file, but their keys in `files` remain relative to the main source. For example, if `lib/a.cash` contains `import "./b.cash";`, that file must be provided under the key `lib/b.cash`. Package imports such as `import "@example/math-lib/math.cash"` are looked up verbatim, so they must be provided under exactly that key.
 :::
 
+### Compilation Warnings
+
+Some issues, such as unused variables that are not marked [`unused`](/docs/language/contracts#intentionally-unused-values), do not prevent compilation but produce a compiler warning instead. By default these warnings are printed with `console.warn`. When compiling from JavaScript, a custom `warningListener` can be passed as a compiler option to capture the structured warnings instead. It is called once per compilation with the full (possibly empty) list of warnings. The default listener is exported as `defaultWarningListener`, so a custom listener can compose with it to keep the standard console output.
+
+```ts
+import { compileString, defaultWarningListener } from 'cashc';
+
+const P2PKH = compileString(source, {
+  warningListener: (warnings) => {
+    defaultWarningListener(warnings); // still print the warnings to the console
+    myDiagnostics.push(...warnings);
+  },
+});
+```
+
 ### Compiler Options
 ```ts
 interface CompilerOptions {

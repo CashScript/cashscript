@@ -26,14 +26,16 @@ import { createConstantLiteral } from './LowerGlobalConstantsTraversal.js';
 import {
   RedefinitionError,
   UndefinedReferenceError,
-  UnusedVariableError,
   InvalidSymbolTypeError,
   ConstantModificationError,
   DuplicateTupleTargetError,
   InvalidModifierError,
 } from '../Errors.js';
+import { CashScriptWarning, UnusedVariableWarning } from '../Warnings.js';
 
 export default class SymbolTableTraversal extends AstTraversal {
+  warnings: CashScriptWarning[] = [];
+
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];
   private contractFunctionNames: Map<string, boolean> = new Map<string, boolean>();
   private currentFunction: FunctionDefinitionNode;
@@ -70,10 +72,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
 
-    const unusedSymbols = node.symbolTable.unusedSymbols();
-    if (unusedSymbols.length !== 0) {
-      throw new UnusedVariableError(unusedSymbols[0]);
-    }
+    this.collectUnusedSymbolWarnings(node.symbolTable);
 
     this.symbolTables.shift();
     return node;
@@ -86,7 +85,8 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     validateModifiers(node, node.modifiers, [Modifier.UNUSED]);
 
-    this.symbolTables[0].set(Symbol.variable(node));
+    node.symbol = Symbol.variable(node);
+    this.symbolTables[0].set(node.symbol);
     return node;
   }
 
@@ -106,10 +106,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body);
 
-    const unusedSymbols = node.symbolTable.unusedSymbols();
-    if (unusedSymbols.length !== 0) {
-      throw new UnusedVariableError(unusedSymbols[0]);
-    }
+    this.collectUnusedSymbolWarnings(node.symbolTable);
 
     this.symbolTables.shift();
     return node;
@@ -121,10 +118,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     node.statements = this.visitOptionalList(node.statements) as StatementNode[];
 
-    const unusedSymbols = node.symbolTable.unusedSymbols();
-    if (unusedSymbols.length !== 0) {
-      throw new UnusedVariableError(unusedSymbols[0]);
-    }
+    this.collectUnusedSymbolWarnings(node.symbolTable);
 
     this.symbolTables.shift();
     return node;
@@ -139,10 +133,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.update = this.visit(node.update) as AssignNode;
     node.block = this.visit(node.block);
 
-    const unusedSymbols = node.symbolTable.unusedSymbols();
-    if (unusedSymbols.length !== 0) {
-      throw new UnusedVariableError(unusedSymbols[0]);
-    }
+    this.collectUnusedSymbolWarnings(node.symbolTable);
 
     this.symbolTables.shift();
     return node;
@@ -157,23 +148,15 @@ export default class SymbolTableTraversal extends AstTraversal {
 
     node.expression = this.visit(node.expression);
 
-    this.symbolTables[0].set(Symbol.variable(node));
+    node.symbol = Symbol.variable(node);
+    this.symbolTables[0].set(node.symbol);
 
     return node;
   }
 
   visitAssign(node: AssignNode): Node {
-    const symbol = this.symbolTables[0].get(node.identifier.name);
-
-    if (!symbol) {
-      throw new UndefinedReferenceError(node.identifier);
-    }
-
-    if (symbol.hasModifier(Modifier.CONSTANT)) {
-      throw new ConstantModificationError(node, node.identifier.name);
-    }
-
-    super.visitAssign(node);
+    node.identifier.symbol = this.resolveAssignmentTarget(node, node.identifier);
+    node.expression = this.visit(node.expression);
     return node;
   }
 
@@ -186,12 +169,8 @@ export default class SymbolTableTraversal extends AstTraversal {
       seenTargetNames.add(target.identifier.name);
 
       if (target.isReassignment) {
-        if (this.symbolTables[0].get(target.identifier.name)?.hasModifier(Modifier.CONSTANT)) {
-          throw new ConstantModificationError(node, target.identifier.name);
-        }
-
-        target.identifier = this.visit(target.identifier) as IdentifierNode;
-        target.type = target.identifier.symbol!.type;
+        target.identifier.symbol = this.resolveAssignmentTarget(node, target.identifier);
+        target.type = target.identifier.symbol.type;
       } else {
         const definition = createTupleVariableDefinition(node, target);
 
@@ -201,7 +180,8 @@ export default class SymbolTableTraversal extends AstTraversal {
 
         validateModifiers(definition, definition.modifiers, [Modifier.CONSTANT, Modifier.UNUSED]);
 
-        this.symbolTables[0].set(Symbol.variable(definition));
+        target.identifier.symbol = Symbol.variable(definition);
+        this.symbolTables[0].set(target.identifier.symbol);
       }
     });
 
@@ -255,7 +235,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     node.symbol = symbol;
-    node.symbol.references.push(node);
+    node.symbol.uses.push(node);
 
     // Keep track of final use of variables for code generation (excluding console statements)
     if (!this.insideConsoleStatement) {
@@ -263,6 +243,36 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     return node;
+  }
+
+  // Assignment targets are resolved without counting as a use of the variable, since only reads count
+  private resolveAssignmentTarget(node: AssignNode | TupleAssignmentNode, identifier: IdentifierNode): Symbol {
+    const symbol = this.symbolTables[0].get(identifier.name);
+
+    if (!symbol) {
+      throw new UndefinedReferenceError(identifier);
+    }
+
+    if (symbol.hasModifier(Modifier.CONSTANT)) {
+      throw new ConstantModificationError(node, identifier.name);
+    }
+
+    if (symbol.symbolType !== SymbolType.VARIABLE) {
+      throw new InvalidSymbolTypeError(identifier, SymbolType.VARIABLE);
+    }
+
+    if (symbol.hasModifier(Modifier.UNUSED)) {
+      throw new InvalidModifierError(identifier, `Cannot assign to variable '${identifier.name}' because it is marked 'unused'`);
+    }
+
+    // An assignment still needs the variable to be on the stack, so it does count as its final use for code generation
+    this.currentFunction.opRolls.set(identifier.name, identifier);
+
+    return symbol;
+  }
+
+  private collectUnusedSymbolWarnings(symbolTable: SymbolTable): void {
+    this.warnings.push(...symbolTable.getUnmarkedUnusedSymbols().map((symbol) => new UnusedVariableWarning(symbol)));
   }
 }
 

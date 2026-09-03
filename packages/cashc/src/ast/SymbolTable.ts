@@ -11,7 +11,7 @@ import { Modifier } from './Globals.js';
 import { functionReturnType } from '../utils.js';
 
 export class Symbol {
-  references: IdentifierNode[] = [];
+  uses: IdentifierNode[] = [];
   inlinedFrame?: DebugFrame;
 
   private constructor(
@@ -28,6 +28,10 @@ export class Symbol {
     return this.definition !== undefined
       && !(this.definition instanceof FunctionDefinitionNode)
       && this.definition.modifiers.includes(modifier);
+  }
+
+  isUnused(): boolean {
+    return this.uses.length === 0;
   }
 
   static variable(node: VariableDefinitionNode | ParameterNode): Symbol {
@@ -103,10 +107,10 @@ export class SymbolTable {
     return `[${Array.from(this.symbols).map((e) => e[1])}]`;
   }
 
-  unusedSymbols(): Symbol[] {
+  getUnmarkedUnusedSymbols(): Symbol[] {
     return Array.from(this.symbols)
       .map((e) => e[1])
       .filter((s) => !s.hasModifier(Modifier.UNUSED))
-      .filter((s) => s.references.length === 0);
+      .filter((s) => s.isUnused());
   }
 }

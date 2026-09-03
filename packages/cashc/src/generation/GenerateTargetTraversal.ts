@@ -63,7 +63,7 @@ import {
   ForNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
-import { GlobalFunction, Class, Modifier } from '../ast/Globals.js';
+import { GlobalFunction, Class } from '../ast/Globals.js';
 import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
@@ -428,7 +428,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   private dropUnusedParameters(parameters: ParameterNode[]): void {
     parameters
-      .filter((parameter) => parameter.modifiers.includes(Modifier.UNUSED))
+      .filter((parameter) => parameter.symbol!.isUnused())
       .sort((a, b) => this.getStackIndex(a.name) - this.getStackIndex(b.name))
       .forEach((parameter) => {
         const stackIndex = this.getStackIndex(parameter.name);
@@ -481,7 +481,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   }
 
   shouldEnforceFunctionParameterType(node: ParameterNode): boolean {
-    if (node.modifiers.includes(Modifier.UNUSED)) return false;
+    if (node.symbol!.isUnused()) return false;
     if (node.type === PrimitiveType.BOOL) return true;
     if (node.type instanceof BytesType && node.type.bound !== undefined) return true;
     return false;
@@ -495,7 +495,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
 
-    if (node.modifiers.includes(Modifier.UNUSED)) {
+    if (node.symbol!.isUnused()) {
       this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack();
       return node;
@@ -523,10 +523,11 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     const reversedTargets = [...node.targets].reverse();
     reversedTargets.forEach((target) => {
-      if (target.isReassignment) {
-        this.emitReplace(this.getStackIndex(target.identifier.name), node);
-      } else if (target.modifiers.includes(Modifier.UNUSED)) {
+      // Unused variables are never added the stack, so their defined or re-assigned value is dropped
+      if (target.identifier.symbol!.isUnused()) {
         this.emit(Op.OP_DROP, locationData);
+      } else if (target.isReassignment) {
+        this.emitReplace(this.getStackIndex(target.identifier.name), node);
       } else {
         this.emit(Op.OP_TOALTSTACK, locationData);
         parkedDeclarations.push(target.identifier.name);
@@ -546,7 +547,7 @@ export default class GenerateTargetTraversal extends AstTraversal {
     const locationData = { location: node.location, positionHint: PositionHint.END };
 
     node.targets
-      .filter((target) => target.modifiers.includes(Modifier.UNUSED))
+      .filter((target) => target.identifier.symbol!.isUnused())
       .sort((a, b) => this.getStackIndex(a.identifier.name) - this.getStackIndex(b.identifier.name))
       .forEach((target) => {
         const stackIndex = this.getStackIndex(target.identifier.name);
@@ -559,6 +560,14 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitAssign(node: AssignNode): Node {
     node.expression = this.visit(node.expression);
+
+    // An unused variable never gets added to the stack, so the assigned value is dropped as well
+    if (node.identifier.symbol!.isUnused()) {
+      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
+      this.popFromStack();
+      return node;
+    }
+
     if (this.scopeDepth > 0) {
       this.emitReplace(this.getStackIndex(node.identifier.name), node);
       this.popFromStack();

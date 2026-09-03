@@ -1,4 +1,5 @@
 export * from './Errors.js';
+export * from './Warnings.js';
 export * as utils from '@cashscript/utils';
 export {
   compileFile, compileString, type CompileOptions, type CompileStringOptions,

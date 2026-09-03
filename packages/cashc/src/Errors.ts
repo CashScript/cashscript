@@ -22,7 +22,7 @@ import {
   IntLiteralNode,
   TupleAssignmentNode,
 } from './ast/AST.js';
-import { Symbol, SymbolType } from './ast/SymbolTable.js';
+import { SymbolType } from './ast/SymbolTable.js';
 import { Location } from './ast/Location.js';
 import { BinaryOperator } from './ast/Operator.js';
 
@@ -95,14 +95,6 @@ export class ImportResolutionError extends CashScriptError {
     message: string,
   ) {
     super(node, message);
-  }
-}
-
-export class UnusedVariableError extends CashScriptError {
-  constructor(
-    public symbol: Symbol,
-  ) {
-    super(symbol.definition as Node, `Unused variable ${symbol.name}`);
   }
 }
 
