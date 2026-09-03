@@ -21,7 +21,9 @@ import {
   TupleAssignmentTarget,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
-import { SymbolTable, Symbol, SymbolType } from '../ast/SymbolTable.js';
+import {
+  SymbolTable, Symbol, SymbolType, ReferenceKind,
+} from '../ast/SymbolTable.js';
 import { createConstantLiteral } from './LowerGlobalConstantsTraversal.js';
 import {
   RedefinitionError,
@@ -31,11 +33,8 @@ import {
   DuplicateTupleTargetError,
   InvalidModifierError,
 } from '../Errors.js';
-import { CashScriptWarning, UnusedVariableWarning } from '../Warnings.js';
 
 export default class SymbolTableTraversal extends AstTraversal {
-  warnings: CashScriptWarning[] = [];
-
   private symbolTables: SymbolTable[] = [GLOBAL_SYMBOL_TABLE];
   private contractFunctionNames: Map<string, boolean> = new Map<string, boolean>();
   private currentFunction: FunctionDefinitionNode;
@@ -72,8 +71,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
 
-    this.collectUnusedSymbolWarnings(node.symbolTable);
-
     this.symbolTables.shift();
     return node;
   }
@@ -106,8 +103,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body);
 
-    this.collectUnusedSymbolWarnings(node.symbolTable);
-
     this.symbolTables.shift();
     return node;
   }
@@ -117,8 +112,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.symbolTables.unshift(node.symbolTable);
 
     node.statements = this.visitOptionalList(node.statements) as StatementNode[];
-
-    this.collectUnusedSymbolWarnings(node.symbolTable);
 
     this.symbolTables.shift();
     return node;
@@ -132,8 +125,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.condition = this.visit(node.condition);
     node.update = this.visit(node.update) as AssignNode;
     node.block = this.visit(node.block);
-
-    this.collectUnusedSymbolWarnings(node.symbolTable);
 
     this.symbolTables.shift();
     return node;
@@ -157,6 +148,7 @@ export default class SymbolTableTraversal extends AstTraversal {
   visitAssign(node: AssignNode): Node {
     node.identifier.symbol = this.resolveAssignmentTarget(node, node.identifier);
     node.expression = this.visit(node.expression);
+    this.addReference(ReferenceKind.WRITE, node.identifier);
     return node;
   }
 
@@ -186,6 +178,11 @@ export default class SymbolTableTraversal extends AstTraversal {
     });
 
     node.tuple = this.visit(node.tuple);
+
+    node.targets
+      .filter((target) => target.isReassignment)
+      .forEach((target) => this.addReference(ReferenceKind.WRITE, target.identifier));
+
     return node;
   }
 
@@ -235,7 +232,7 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     node.symbol = symbol;
-    node.symbol.uses.push(node);
+    this.addReference(ReferenceKind.READ, node);
 
     // Keep track of final use of variables for code generation (excluding console statements)
     if (!this.insideConsoleStatement) {
@@ -243,6 +240,10 @@ export default class SymbolTableTraversal extends AstTraversal {
     }
 
     return node;
+  }
+
+  private addReference(kind: ReferenceKind, node: IdentifierNode): void {
+    node.symbol!.references.push({ kind, node });
   }
 
   // Assignment targets are resolved without counting as a use of the variable, since only reads count
@@ -269,10 +270,6 @@ export default class SymbolTableTraversal extends AstTraversal {
     this.currentFunction.opRolls.set(identifier.name, identifier);
 
     return symbol;
-  }
-
-  private collectUnusedSymbolWarnings(symbolTable: SymbolTable): void {
-    this.warnings.push(...symbolTable.getUnmarkedUnusedSymbols().map((symbol) => new UnusedVariableWarning(symbol)));
   }
 }
 

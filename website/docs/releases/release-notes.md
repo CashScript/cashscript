@@ -12,7 +12,9 @@ title: Release Notes
 - :sparkles: Add support for top-level global constants.
 - :sparkles: Allow for simple arithmetic / concatenation operations in global constant definitions.
 - :sparkles: Add `unused` modifier for parameters or variables that are intentionally unused.
-- :hammer_and_wrench: Unused variables that are not marked `unused` now produce a compiler warning instead of a compilation error. Warnings are printed with `console.warn`, or passed to the new `warningListener` compiler option.
+- :hammer_and_wrench: Unused variables that are not marked `unused` now produce a compiler warning instead of a compilation error. Only reads count as usage, so variables that are only assigned to are reported as well. Warnings are printed with `console.warn`, or passed to the new `warningListener` compiler option.
+- :sparkles: Add a compiler warning for values assigned to a variable that are never read afterwards.
+- :racehorse: Treat parameters and variables that are never read the same as explicitly `unused`-marked ones: they are dropped from the stack immediately, and no parameter type enforcement is generated for them.
 - :sparkles: Add support for `import` directives to share user-defined functions across files.
 - :sparkles: Resolve package imports (e.g. `import "pkg/math.cash"`) from `node_modules`, so contract libraries can be installed as npm packages.
 - :sparkles: Add support for reassigning existing variables in tuple destructuring (e.g. `(a, b) = swap(a, b)`), optionally mixed with fresh declarations.

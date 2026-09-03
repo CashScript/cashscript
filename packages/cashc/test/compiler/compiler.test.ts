@@ -52,9 +52,9 @@ describe('Compiler', () => {
             const expectedWarning = Warnings[warningType as keyof typeof Warnings];
             if (!expectedWarning) throw new Error(`Invalid test configuration: warning ${warningType} does not exist`);
 
-            let warnings: Warnings.CashScriptWarning[] = [];
+            const warnings: Warnings.CashScriptWarning[] = [];
             try {
-              compileString(file.contents, { warningListener: (reported) => { warnings = reported; } });
+              compileString(file.contents, { warningListener: (warning) => { warnings.push(warning); } });
             } catch {
               // ignore compilation errors from later phases
             }
@@ -112,7 +112,7 @@ describe('Compiler', () => {
   describe('Custom warning listener', () => {
     it('uses the custom warning listener for compilation warnings', () => {
       const warnings: Warnings.CashScriptWarning[] = [];
-      compileString(UNUSED_VARIABLE_SOURCE, { warningListener: (reported) => { warnings.push(...reported); } });
+      compileString(UNUSED_VARIABLE_SOURCE, { warningListener: (warning) => { warnings.push(warning); } });
 
       expect(warnings).toHaveLength(1);
       expect(warnings[0]).toBeInstanceOf(Warnings.UnusedVariableWarning);
