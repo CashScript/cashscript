@@ -120,6 +120,8 @@ export class FunctionDefinitionNode extends Node implements Named {
 }
 
 export class ParameterNode extends Node implements Named, Typed {
+  symbol?: Symbol;
+
   constructor(
     public type: Type,
     public modifiers: Modifier[],
@@ -140,6 +142,8 @@ export abstract class ControlStatementNode extends StatementNode { }
 export abstract class NonControlStatementNode extends StatementNode { }
 
 export class VariableDefinitionNode extends NonControlStatementNode implements Named, Typed {
+  symbol?: Symbol;
+
   constructor(
     public type: Type,
     public modifiers: Modifier[],

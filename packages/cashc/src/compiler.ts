@@ -18,6 +18,7 @@ import { Ast } from './ast/AST.js';
 import { checkVersionConstraints } from './ast/Pragma.js';
 import { CashScriptErrorListener } from './ast/error-listeners.js';
 import { MissingContractError } from './Errors.js';
+import { CashScriptWarningListener, defaultWarningListener } from './Warnings.js';
 import { parseCode } from './parser.js';
 import {
   createDiskResolver,
@@ -42,6 +43,7 @@ export const DEFAULT_COMPILER_OPTIONS: CompilerOptions = {
 
 export interface CompileOptions extends CompilerOptions {
   errorListener?: CashScriptErrorListener;
+  warningListener?: CashScriptWarningListener;
 }
 
 export interface CompileStringOptions extends CompileOptions {
@@ -55,6 +57,8 @@ export interface CompileStringOptions extends CompileOptions {
  * @param compilerOptions - Optional compiler options that override the defaults.
  * @returns The compiled CashScript artifact, including ABI, bytecode and debug information.
  * @throws If the source code contains a syntax, semantic, or type error, or an import cannot be resolved.
+ * @remarks Compilation warnings (e.g. unused variables) are passed to the `warningListener` compiler
+ * option, or printed with `console.warn` when no listener is provided.
  */
 export const compileString: (code: string, compilerOptions?: CompileStringOptions) => Artifact =
   compileStringInternal;
@@ -103,7 +107,7 @@ function compileCode(
   resolver: ImportResolver,
   compilerOptions: CompileOptions & InternalCompilerOptions,
 ): Artifact {
-  const { errorListener, disableInlining, ...artifactCompilerOptions } = compilerOptions;
+  const { errorListener, warningListener, disableInlining, ...artifactCompilerOptions } = compilerOptions;
   const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
 
   // Lexing + parsing
@@ -117,7 +121,11 @@ function compileCode(
 
   // Semantic analysis
   ast = ast.accept(new FoldGlobalConstantsTraversal()) as Ast;
-  ast = ast.accept(new SymbolTableTraversal()) as Ast;
+
+  const symbolTableTraversal = new SymbolTableTraversal();
+  ast = ast.accept(symbolTableTraversal) as Ast;
+  (warningListener ?? defaultWarningListener)(symbolTableTraversal.warnings);
+
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
   ast = ast.accept(new EnsureFunctionsSafeTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;

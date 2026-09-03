@@ -265,7 +265,7 @@ contract P2PKH(bytes20 pkh) {
 Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on — unless specifying the `constant` keyword. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
 
 :::note
-CashScript disallows variable shadowing and unused variables unless they are explicitly marked `unused`.
+CashScript disallows variable shadowing, and the compiler emits a warning for unused variables unless they are explicitly marked `unused`.
 :::
 
 #### Example
@@ -276,7 +276,9 @@ string constant myString = 'Bitcoin Cash';
 
 ### Intentionally unused values
 
-Parameters and local variables that intentionally have no references can use the `unused` modifier. These values are dropped from the stack immediately after their declaration. A declaration marked `unused` cannot be referenced later. Some use cases for this include padding the contract bytecode in order to get a higher opcost budget, or nonces in order to differentiate between similar contracts.
+A parameter or local variable that is declared but never used results in a compiler warning. If the variable is intended to be unused, this warning can be silenced by marking the variable as `unused`. Unused parameters and local variables are dropped from the stack immediately after their declaration, and no [parameter type enforcement](/docs/compiler#enforcefunctionparametertypes) is generated for unused parameters.
+
+Some use cases for intentionally unused values include padding the contract bytecode in order to get a higher opcost budget, or nonces in order to differentiate between similar contracts.
 
 #### Example
 
