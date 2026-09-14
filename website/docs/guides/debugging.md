@@ -34,6 +34,44 @@ Bitauth IDE: [link]
 
 Read the error message to see which line in the CashScript contract causes the transaction validation to fail. Investigate whether the contract function invocation is the issue (on the TypeScript SDK side) or whether the issue is in the CashScript contract itself (so you'd need to update your contract and recompile the artifact). If it is not clear **why** the CashScript contract is failing on that line, then you can use the following two strategies: console logging & Bitauth IDE stack trace.
 
+### Call stacks
+
+When the failing `require` statement sits inside a [user-defined function](/docs/language/contracts#user-defined-functions), the error message also includes a call stack showing how execution reached it. The innermost frame is listed first, the contract function that started the call last.
+
+```solidity title="Test.cash"
+function assertPositive(int value) {
+  require(value > 0, "value must be positive");
+}
+
+function validate(int amount) {
+  assertPositive(amount);
+  require(amount < 1000, "amount too large");
+}
+
+contract Test() {
+  function spend(int x) {
+    validate(x);
+    require(x < 100);
+  }
+}
+```
+
+Spending this contract with `x = 0` produces:
+
+```bash
+Test.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (Test.cash, line 2) with the following message: value must be positive.
+Failing statement: require(value > 0, "value must be positive");
+  at assertPositive (Test.cash:2) — require(value > 0, "value must be positive");
+  at validate (Test.cash:6) — assertPositive(amount)
+  at Test.cash:12 — validate(x)
+```
+
+This tells you not just which `require` failed, but which call site passed it the bad value. Functions imported from another file are reported with the file they are defined in, so a failure inside a shared library points at that library's source rather than at your contract.
+
+:::note
+The call stack is only shown for nested calls. When a `require` fails directly in a contract function, the headline already says where it failed, so no call stack is added.
+:::
+
 ### Console Logging
 
 To help with debugging you can add `console.log` statements to your CashScript contract file to log variables. This way you investigate whether the variables have the expected values when they get to the failing `require` statement in the CashScript file. After adding the `console.log` statements, recompile your contract so they are added to your contract's Artifact.

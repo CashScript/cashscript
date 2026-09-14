@@ -152,7 +152,7 @@ contract Example() {
 }
 ```
 
-Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(int fresh, current, next) = step(current, next);`). Inside loops and branches, listing declarations before reassignments compiles to slightly smaller bytecode.
+Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(current, next, int fresh) = step(current, next);`). Inside loops and branches, listing reassignments before declarations compiles to smaller bytecode, as explained in the [optimization guide](/docs/guides/optimization#5-reassign-before-you-declare).
 
 :::info
 `checkSig`, `checkMultiSig` and `this.activeBytecode` cannot be used inside a user-defined function, since they would apply to the function body rather than the contract. Use them in a contract function instead (`checkDataSig` is allowed).
