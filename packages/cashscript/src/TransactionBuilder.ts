@@ -12,7 +12,7 @@ import {
   Output,
   TransactionDetails,
   UnlockableUtxo,
-  Utxo,
+  SpendableUtxo,
   InputOptions,
   isUnlockableUtxo,
   isStandardUnlockableUtxo,
@@ -34,6 +34,7 @@ import {
   getOutputSize,
   validateInput,
   validateOutput,
+  validateUnlocker,
 } from './utils.js';
 import {
   FailedTransactionError,
@@ -109,7 +110,7 @@ export class TransactionBuilder {
    * @returns This builder for chaining.
    * @throws If the UTXO is invalid.
    */
-  addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
+  addInput(utxo: SpendableUtxo, unlocker: Unlocker, options?: InputOptions): this {
     return this.addInputs([utxo], unlocker, options);
   }
 
@@ -122,7 +123,7 @@ export class TransactionBuilder {
    * @returns This builder for chaining.
    * @throws If any UTXO is invalid.
    */
-  addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
+  addInputs(utxos: SpendableUtxo[], unlocker: Unlocker, options?: InputOptions): this;
 
   /**
    * Add multiple UTXOs that each carry their own unlocker.
@@ -133,7 +134,7 @@ export class TransactionBuilder {
    */
   addInputs(utxos: UnlockableUtxo[]): this;
 
-  addInputs(utxos: Utxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
+  addInputs(utxos: SpendableUtxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
     utxos.forEach((utxo) => validateInput(utxo, this.changeLocks));
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
@@ -141,6 +142,10 @@ export class TransactionBuilder {
     ) {
       throw new Error('Either all UTXOs must have an individual unlocker specified, or no UTXOs must have an individual unlocker specified and a shared unlocker must be provided');
     }
+
+    utxos.forEach((utxo, i) => (
+      validateUnlocker(utxo, unlocker ?? (utxo as UnlockableUtxo).unlocker, this.inputs.length + i, this.provider.network)
+    ));
 
     if (!unlocker) {
       this.inputs = this.inputs.concat(utxos as UnlockableUtxo[]);

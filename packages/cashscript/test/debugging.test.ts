@@ -1,4 +1,4 @@
-import { Contract, FailedTransactionError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, VmTarget } from '../src/index.js';
+import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, UnlockerLockingBytecodeMismatchError, VmTarget } from '../src/index.js';
 import { DEFAULT_VM_TARGET, getLockScriptName } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import { randomUtxo } from '../src/utils.js';
@@ -177,7 +177,7 @@ describe('Debugging tests', () => {
 
     it('should log inside a loop', async () => {
       const transaction = new TransactionBuilder({ provider })
-        .addInput(contractUtxo, contractTestLogInsideLoop.unlock.test_log_inside_loop())
+        .addInput(contractTestLogInsideLoopUtxo, contractTestLogInsideLoop.unlock.test_log_inside_loop())
         .addOutput({ to: contractTestLogInsideLoop.address, amount: 10000n });
 
       expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:6 i: 0$'));
@@ -751,18 +751,16 @@ describe('Debugging tests', () => {
       expect(Object.keys(result).length).toBeGreaterThan(0);
     });
 
-    // We currently don't have a way to properly handle non-matching UTXOs and unlockers
-    // Note: that also goes for Contract UTXOs where a user uses an unlocker of a different contract
-    it.skip('should fail when spending from P2PKH inputs with an unlocker for a different public key', async () => {
+    it('should fail when spending from P2PKH inputs with an unlocker for a different public key', async () => {
       const provider = new MockNetworkProvider();
       provider.addUtxo(aliceAddress, randomUtxo());
       provider.addUtxo(aliceAddress, randomUtxo());
 
-      const transactionBuilder = new TransactionBuilder({ provider })
-        .addInputs(await provider.getUtxos(aliceAddress), new SignatureTemplate(bobPriv).unlockP2PKH())
-        .addOutput({ to: aliceAddress, amount: 5000n });
+      const utxos = await provider.getUtxos(aliceAddress);
 
-      expect(() => transactionBuilder.debug()).toThrow(FailedTransactionError);
+      expect(() => (
+        new TransactionBuilder({ provider }).addInputs(utxos, new SignatureTemplate(bobPriv).unlockP2PKH())
+      )).toThrow(UnlockerLockingBytecodeMismatchError);
     });
   });
 

@@ -1,12 +1,53 @@
 import { AbiFunction, AbiInput, Artifact, formatBitAuthScript, sha256 } from '@cashscript/utils';
 import { LibauthTokenDetails, SighashType, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
-import { hexToBin, binToHex, isHex, decodeCashAddress, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
+import {
+  hexToBin,
+  binToHex,
+  isHex,
+  decodeCashAddress,
+  Input,
+  assertSuccess,
+  decodeAuthenticationInstructions,
+  AuthenticationInstructionPush,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon,
+  AuthenticationVirtualMachine,
+  ResolvedTransactionCommon,
+  createVirtualMachineBch2023,
+  createVirtualMachineBch2025,
+  createVirtualMachineBch2026,
+  createVirtualMachineBchSpec,
+} from '@bitauth/libauth';
 import { EncodedFunctionArgument } from '../Argument.js';
 import { zip } from '../utils.js';
 import SignatureTemplate from '../SignatureTemplate.js';
 import { Contract } from '../Contract.js';
 
 export const DEFAULT_VM_TARGET = VmTarget.BCH_2026_05;
+
+/* eslint-disable @typescript-eslint/indent */
+export type VM = AuthenticationVirtualMachine<
+  ResolvedTransactionCommon,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon
+>;
+/* eslint-enable @typescript-eslint/indent */
+
+export const createVirtualMachine = (vmTarget: VmTarget): VM => {
+  switch (vmTarget) {
+    case 'BCH_2023_05':
+      return createVirtualMachineBch2023();
+    case 'BCH_2025_05':
+      return createVirtualMachineBch2025();
+    case 'BCH_2026_05':
+      return createVirtualMachineBch2026();
+    case 'BCH_SPEC':
+      // TODO: This typecast is shitty, but it's hard to fix
+      return createVirtualMachineBchSpec() as unknown as VM;
+    default:
+      throw new Error(`Evaluation is not supported for the ${vmTarget} virtual machine.`);
+  }
+};
 
 export const getLockScriptName = (contract: Contract): string => {
   if (contract.contractType === 'p2s') {

@@ -13,7 +13,7 @@ import {
   ConstructorArgument, encodeFunctionArgument, encodeConstructorArguments, FunctionArgument,
 } from './Argument.js';
 import {
-  Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, Utxo, ContractType, ContractFunctionUnlocker,
+  Unlocker, ContractOptions, GenerateUnlockingBytecodeOptions, SpendableUtxo, ContractType, ContractFunctionUnlocker,
 } from './interfaces.js';
 import NetworkProvider from './network/NetworkProvider.js';
 import {
@@ -84,7 +84,7 @@ class ContractBase {
    *
    * @returns A list of UTXOs spendable by this contract.
    */
-  async getUtxos(): Promise<Utxo[]> {
+  async getUtxos(): Promise<SpendableUtxo[]> {
     if (this.contractType === 'p2s') {
       return this.provider.getUtxosForLockingBytecode(this.bytecode);
     }
@@ -204,9 +204,7 @@ class ContractInternal<
         return unlockingBytecode;
       };
 
-      const generateLockingBytecode = (): Uint8Array => hexToBin(this.lockingBytecode);
-
-      return { generateUnlockingBytecode, generateLockingBytecode, contract: this, params: args, abiFunction };
+      return { generateUnlockingBytecode, contract: this, params: args, abiFunction };
     };
   }
 }
