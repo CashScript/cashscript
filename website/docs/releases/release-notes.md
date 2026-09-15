@@ -29,6 +29,11 @@ title: Release Notes
 - :hammer_and_wrench: **BREAKING**: Remove the `bchForkId` parameter from `SignatureTemplate`'s `generateSignature()` method, since BCH consensus rules always require the fork ID flag.
 - :hammer_and_wrench: **BREAKING**: Rename the `HashType` enum to `SighashType`.
 
+## v0.13.3
+
+#### CashScript SDK
+- :bug: Fix issue where `getTransactionSize()` undersized inputs when using `placeholderP2PKHUnlocker()`
+
 ## v0.13.2
 
 #### cashc compiler
