@@ -2,30 +2,27 @@
 title: Release Notes
 ---
 
-## v0.14.0-next.4
+## v0.14.0-next.5
 
 This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### cashc compiler
-- :sparkles: Add support for user-defined reusable functions.
-- :sparkles: Add support for multiple return values in user-defined functions, destructured at the call site.
-- :sparkles: Add support for top-level global constants.
-- :sparkles: Allow for simple arithmetic / concatenation operations in global constant definitions.
-- :sparkles: Add `unused` modifier for parameters or variables that are intentionally unused.
-- :hammer_and_wrench: Unused variables that are not marked `unused` now produce a compiler warning instead of a compilation error. Only reads count as usage, so variables that are only assigned to are reported as well. Warnings are printed with `console.warn`, or passed to the new `warningListener` compiler option.
-- :sparkles: Add a compiler warning for values assigned to a variable that are never read afterwards.
-- :racehorse: Treat parameters and variables that are never read the same as explicitly `unused`-marked ones: they are dropped from the stack immediately, and no parameter type enforcement is generated for them.
-- :sparkles: Add support for `import` directives to share user-defined functions across files.
-- :sparkles: Resolve package imports (e.g. `import "pkg/math.cash"`) from `node_modules`, so contract libraries can be installed as npm packages.
+- :sparkles: Add support for user-defined reusable functions, including multiple return values.
+- :sparkles: Add support for top-level global constants, including simple arithmetic / concatenation operations.
+- :sparkles: Add support for `import` directives to share user-defined functions across files, including imports from `node_modules`.
 - :sparkles: Add support for reassigning existing variables in tuple destructuring (e.g. `(a, b) = swap(a, b)`), optionally mixed with fresh declarations.
+- :sparkles: Add `unused` modifier for parameters or variables that are intentionally unused.
 - :hammer_and_wrench: Update `compileString` to take an optional `files` object for filesystem-free import resolution.
-- :racehorse: Inline global functions and constants when this is no larger than `OP_DEFINE`/`OP_INVOKE`.
-- :racehorse: Add new `OP_SWAP OP_MUL` and `OP_NOT OP_NOT` optimisations.
+- :hammer_and_wrench: Unused variables that are not marked `unused` now produce a compiler warning instead of a compilation error. Warnings are printed with `console.warn`, or passed to the new `warningListener` compiler option.
+- :hammer_and_wrench: Add a compiler warning for values assigned to a variable that are never read afterwards.
+- :bug: Fix bug where date literal parsing was different per locale, it now uses UTC.
+- :racehorse: Add new `OP_SWAP OP_MUL`, `OP_NOT OP_NOT` and `TO_ALTSTACK OP_FROMALTSTACK` optimisations.
+- :racehorse: Greatly improve compiler speed for very large contracts.
 
 #### CashScript SDK
-- :sparkles: Add support for debugging user-defined functions.
-- :sparkles: Add stack trace when debugging failed requires inside nested functions.
-- :sparkles: Add a `validateTransactions` option (default: `true`) to the `MockNetworkProvider` to validate sent transactions against the BCH VM using the actual locking bytecode of the spent UTXOs.
+- :sparkles: Add support for debugging user-defined functions, including stack traces for nested functions.
+- :sparkles: Add a `validateTransactions` option (default: `true`) to the `MockNetworkProvider` to validate sent transactions against the BCH VM.
+- :hammer_and_wrench: MockNetworkProvider now warns instead of errors when resubmitting an already-seen transaction.
 - :hammer_and_wrench: Add `lockingBytecode` field to the `Utxo` interface, set automatically on all UTXOs returned by network providers.
 - :hammer_and_wrench: **BREAKING**: Replace the `SignatureTemplate`'s `getHashType()`, `getPublicKey()` and `getSignatureAlgorithm()` methods with the `sighashType`, `publicKey` and `signatureAlgorithm` properties.
 - :hammer_and_wrench: **BREAKING**: Remove the `bchForkId` parameter from `SignatureTemplate`'s `generateSignature()` method, since BCH consensus rules always require the fork ID flag.
