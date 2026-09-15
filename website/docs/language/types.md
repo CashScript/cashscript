@@ -127,7 +127,7 @@ Operators:
 - `!=` (inequality)
 
 ### Transaction Signature
-`sig`: Byte sequence representing a transaction signature. Generally 65 bytes long: a 64-byte Schnorr signature followed by a single sighash flag byte that indicates which parts of the transaction were signed. See [HashType](/docs/sdk/signature-templates#hashtype) for the meaning of this byte.
+`sig`: Byte sequence representing a transaction signature. Generally 65 bytes long: a 64-byte Schnorr signature followed by a single sighash flag byte that indicates which parts of the transaction were signed. See [SighashType](/docs/sdk/signature-templates#sighashtype) for the meaning of this byte.
 
 Operators:
 
