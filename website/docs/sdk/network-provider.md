@@ -24,16 +24,21 @@ const connectedNetwork = provider.network;
 
 ### getUtxos()
 ```ts
-async provider.getUtxos(address: string): Promise<Utxo[]>;
+async provider.getUtxos(address: string): Promise<SpendableUtxo[]>;
 ```
 Returns all UTXOs on specific address. Both confirmed and unconfirmed UTXOs are included.
 
 ```ts
+interface SpendableUtxo extends Utxo {
+  lockingBytecode: string;
+}
+
 interface Utxo {
   txid: string;
   vout: number;
   satoshis: bigint;
   token?: TokenDetails;
+  lockingBytecode?: string;
 }
 
 interface TokenDetails {
@@ -46,6 +51,8 @@ interface TokenDetails {
 }
 ```
 
+The `lockingBytecode` field contains the hex-encoded locking bytecode of the UTXO. It is set automatically on all UTXOs returned by network providers, and is required by the `TransactionBuilder` to spend the UTXO.
+
 #### Example
 ```ts
 const userUtxos = await provider.getUtxos(userAddress)
@@ -53,7 +60,7 @@ const userUtxos = await provider.getUtxos(userAddress)
 
 ### getUtxosForLockingBytecode()
 ```ts
-async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<SpendableUtxo[]>;
 ```
 Returns all UTXOs for a specific locking bytecode. Both confirmed and unconfirmed UTXOs are included.
 
@@ -98,7 +105,7 @@ const txId = await provider.sendRawTransaction(txHex)
 
 ## Custom NetworkProviders
 
-A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if you want to use a new or different BCH indexer for network information, it is simple to add support for it by creating your own `NetworkProvider` adapter by implementing the [NetworkProvider interface](https://github.com/CashScript/cashscript/blob/master/packages/cashscript/src/network/NetworkProvider.ts).
+A big strength of the NetworkProvider setup is that it allows you to implement custom providers. So if you want to use a new or different BCH indexer for network information, it is simple to add support for it by creating your own `NetworkProvider` adapter by implementing the [NetworkProvider interface](https://github.com/CashScript/cashscript/blob/master/packages/cashscript/src/network/NetworkProvider.ts). Note that UTXOs returned by a `NetworkProvider` must include their `lockingBytecode`, which is required by the `TransactionBuilder` to spend them.
 
 You can create a PR to add your custom `NetworkProvider` to the CashScript codebase to share this functionality with others. It is required to have basic automated tests for any new `NetworkProvider`.
 

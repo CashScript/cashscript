@@ -3,7 +3,7 @@ import TransferWithTimeout from '../transfer_with_timeout.artifact.js';
 import Mecenas from '../mecenas.artifact.js';
 import P2PKH from '../p2pkh.artifact.js';
 import HoldVault from '../hodl_vault.artifact.js';
-import { aliceAddress, alicePkh, alicePriv, alicePub, bobPkh, bobPriv, bobPub, oracle, oraclePub } from '../vars.js';
+import { aliceAddress, alicePkh, alicePriv, alicePub, bobAddress, bobPkh, bobPriv, bobPub, oracle, oraclePub } from '../vars.js';
 import { WalletTemplate, hexToBin } from '@bitauth/libauth';
 
 const provider = new MockNetworkProvider();
@@ -1290,6 +1290,7 @@ export const fixtures: Fixture[] = [
       const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
 
       const p2pkhUtxo = provider.addUtxo(aliceAddress, randomUtxo());
+      const bobP2pkhUtxo = provider.addUtxo(bobAddress, randomUtxo());
 
       const to = contract.tokenAddress;
       const amount = 1000n;
@@ -1301,7 +1302,7 @@ export const fixtures: Fixture[] = [
       const tx = new TransactionBuilder({ provider })
         .addInput(p2pkhUtxo, aliceDefaultTemplate.unlockP2PKH())
         .addInput(contractUtxo, contract.unlock.spend(alicePub, aliceCustomTemplate))
-        .addInput(p2pkhUtxo, bobCustomTemplate.unlockP2PKH())
+        .addInput(bobP2pkhUtxo, bobCustomTemplate.unlockP2PKH())
         .addOutput({ to, amount });
 
       return tx;

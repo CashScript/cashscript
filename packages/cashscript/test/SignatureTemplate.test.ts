@@ -69,12 +69,11 @@ describe('SignatureTemplate', () => {
         txid: '043ec3826702c45460a6dd6b13e343a8f1bc06bc047b63ca484f791dfdfd92c2',
         vout: 8,
         satoshis: 109759n,
+        lockingBytecode: '76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac',
       };
 
       const signatureTemplate = new SignatureTemplate(alicePriv);
       const unlocker = signatureTemplate.unlockP2PKH();
-
-      expect(unlocker.generateLockingBytecode()).toEqual(hexToBin('76a914512dbb2c8c02efbac8d92431aa0ac33f6b0bf97088ac'));
 
       const transactionBuilder = new TransactionBuilder({ provider: new MockNetworkProvider() })
         .addInput(utxo, unlocker)

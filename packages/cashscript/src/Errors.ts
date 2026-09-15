@@ -19,6 +19,12 @@ export class UndefinedInputError extends Error {
   }
 }
 
+export class InputMissingLockingBytecodeError extends Error {
+  constructor() {
+    super('Input UTXO is missing its lockingBytecode. UTXOs fetched from a network provider include it automatically; when constructing UTXOs manually, set lockingBytecode to the hex-encoded locking script of the output.');
+  }
+}
+
 export class OutputSatoshisTooSmallError extends Error {
   constructor(satoshis: bigint, minimumAmount: bigint) {
     super(`Tried to add an output with ${satoshis} satoshis, which is less than the required minimum for this output-type (${minimumAmount})`);
@@ -94,6 +100,17 @@ export class TransactionOutputsRequiredError extends Error {
 export class UnlockingBytecodeTooLargeError extends Error {
   constructor(size: number, maximumSize: number) {
     super(`Unlocking bytecode size of ${size} is greater than the maximum size of ${maximumSize}`);
+  }
+}
+
+export class UnlockerLockingBytecodeMismatchError extends Error {
+  constructor(
+    public inputIndex: number,
+    utxoLockScript: string,
+    unlockerLockScript: string,
+    unlockerDescription: string,
+  ) {
+    super(`Input #${inputIndex} is locked by ${utxoLockScript}, which does not match the provided unlocker (${unlockerDescription}, corresponding to ${unlockerLockScript}). This transaction would be rejected by the network. Make sure to use an unlocker that matches the address/contract holding the UTXO.`);
   }
 }
 

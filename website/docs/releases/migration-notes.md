@@ -44,6 +44,22 @@ const signatureTemplate = new SignatureTemplate(wif, HashType.SIGHASH_ALL | Hash
 const signatureTemplate = new SignatureTemplate(wif, SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS);
 ```
 
+#### UTXOs must include their locking bytecode
+
+UTXOs returned by network providers now include a `lockingBytecode` field with the actual locking bytecode of the UTXO, and input UTXOs passed to the `TransactionBuilder` are required to include this field.
+
+If you fetch UTXOs from a standard network provider, no code changes are needed. If you construct UTXOs manually (e.g. from your own indexer or persisted data), you need to add the `lockingBytecode` field:
+
+```ts
+// before
+const utxo = { txid, vout, satoshis };
+
+// after
+const utxo = { txid, vout, satoshis, lockingBytecode };
+```
+
+Since the spent UTXO's `lockingBytecode` is now the source of truth for the locking script, the `generateLockingBytecode()` method was removed from the `Unlocker` interface. If you implement custom unlockers, remove the `generateLockingBytecode()` method from your implementation.
+
 ## v0.12 to v0.13
 
 ### cashc compiler

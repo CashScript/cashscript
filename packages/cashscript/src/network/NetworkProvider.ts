@@ -1,4 +1,4 @@
-import { Utxo, Network } from '../interfaces.js';
+import { SpendableUtxo, Network } from '../interfaces.js';
 
 export default interface NetworkProvider {
   /**
@@ -11,14 +11,14 @@ export default interface NetworkProvider {
    * @param address The CashAddress for which we wish to retrieve UTXOs.
    * @returns List of UTXOs spendable by the provided address.
    */
-  getUtxos(address: string): Promise<Utxo[]>;
+  getUtxos(address: string): Promise<SpendableUtxo[]>;
 
   /**
    * Retrieve all UTXOs (confirmed and unconfirmed) for a given locking bytecode.
    * @param lockingBytecode The locking bytecode for which we wish to retrieve UTXOs.
    * @returns List of UTXOs spendable by the provided locking bytecode.
    */
-  getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+  getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<SpendableUtxo[]>;
 
   /**
    * @returns The current block height.

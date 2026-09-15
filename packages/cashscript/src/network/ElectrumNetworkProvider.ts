@@ -5,7 +5,7 @@ import {
   type RequestResponse,
   type ElectrumClientEvents,
 } from '@electrum-cash/network';
-import { Utxo, Network } from '../interfaces.js';
+import { SpendableUtxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
 import {
@@ -75,12 +75,12 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     }
   }
 
-  async getUtxos(address: string): Promise<Utxo[]> {
+  async getUtxos(address: string): Promise<SpendableUtxo[]> {
     const lockingBytecode = addressToLockScript(address);
     return this.getUtxosForLockingBytecode(lockingBytecode);
   }
 
-  async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]> {
+  async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<SpendableUtxo[]> {
     if (typeof lockingBytecode === 'string' && !isHex(lockingBytecode)) {
       throw new Error(`Invalid locking bytecode: ${lockingBytecode} is not a valid hex string`);
     }
@@ -94,6 +94,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
       satoshis: BigInt(utxo.value),
+      lockingBytecode: binToHex(lockingBytecodeBin),
       token: utxo.token_data ? {
         ...utxo.token_data,
         amount: BigInt(utxo.token_data.amount),

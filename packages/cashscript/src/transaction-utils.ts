@@ -5,8 +5,8 @@ import { isFungibleTokenUtxo, isNonTokenUtxo } from './utils.js';
  * Result of `gatherBchUtxos` and `gatherFungibleTokenUtxos`: the selected UTXOs and the total
  * amount they cover (satoshis for BCH, token amount for fungible tokens).
  */
-export interface GatherUtxosResult {
-  utxos: Utxo[];
+export interface GatherUtxosResult<U extends Utxo = Utxo> {
+  utxos: U[];
   totalAmount: bigint;
 }
 
@@ -19,12 +19,12 @@ export interface GatherUtxosResult {
  * @returns The selected UTXOs and their cumulative satoshi amount.
  * @throws If the available non-token UTXOs do not cover the requested amount.
  */
-export function gatherBchUtxos(utxos: Utxo[], amount: bigint): GatherUtxosResult {
+export function gatherBchUtxos<U extends Utxo>(utxos: U[], amount: bigint): GatherUtxosResult<U> {
   const sortedBchUtxos = utxos
     .filter(isNonTokenUtxo)
     .toSorted((a, b) => Number(b.satoshis - a.satoshis));
 
-  const targetUtxos: Utxo[] = [];
+  const targetUtxos: U[] = [];
   let total = 0n;
 
   for (const utxo of sortedBchUtxos) {
@@ -50,12 +50,14 @@ export function gatherBchUtxos(utxos: Utxo[], amount: bigint): GatherUtxosResult
  * @returns The selected UTXOs and their cumulative token amount.
  * @throws If the available fungible token UTXOs do not cover the requested amount.
  */
-export function gatherFungibleTokenUtxos(utxos: Utxo[], tokenCategory: string, amount: bigint): GatherUtxosResult {
+export function gatherFungibleTokenUtxos<U extends Utxo>(
+  utxos: U[], tokenCategory: string, amount: bigint,
+): GatherUtxosResult<U> {
   const sortedTokenUtxos = utxos
     .filter((utxo) => isFungibleTokenUtxo(utxo) && utxo.token!.category === tokenCategory)
     .toSorted((a, b) => Number(b.token!.amount - a.token!.amount));
 
-  const targetUtxos: Utxo[] = [];
+  const targetUtxos: U[] = [];
   let total = 0n;
 
   for (const utxo of sortedTokenUtxos) {

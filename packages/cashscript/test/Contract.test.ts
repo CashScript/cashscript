@@ -182,8 +182,8 @@ describe('Contract', () => {
     });
 
     it('generates correct locking bytecode', () => {
-      expect(instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv)).generateLockingBytecode())
-        .toEqual(hexToBin('aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587'));
+      expect(instance.lockingBytecode)
+        .toEqual('aa2034d9ffce86b4d136ca74e9db6f6433d3548966a6be064052e728a4c1d16aa3a587');
     });
 
     it('can spend from a p2s contract', async () => {
@@ -205,6 +205,7 @@ describe('Contract', () => {
         txid: 'e5ac1aa9730d7514b541895e466c987327a4b0c57fcbbd50fc73788f5c0f65d9',
         vout: 4,
         satoshis: 102745n,
+        lockingBytecode: instance.lockingBytecode,
       };
 
       const unlocker = instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv));

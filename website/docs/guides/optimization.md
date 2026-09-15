@@ -184,14 +184,13 @@ You can create an `Artifact` for a fully hand-written contract so it becomes pos
 In the [addInput() method][addInput()] on the TransactionBuilder you can provide a custom `Unlocker`
 
 ```ts
-transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
+transactionBuilder.addInput(utxo: SpendableUtxo, unlocker: Unlocker, options?: InputOptions): this
 ```
 
 the `Unlocker` interface is the following:
 
 ```ts
 interface Unlocker {
-  generateLockingBytecode: () => Uint8Array;
   generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
 }
 

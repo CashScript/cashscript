@@ -20,6 +20,7 @@ interface Utxo {
   vout: number;
   satoshis: bigint;
   token?: TokenDetails;
+  lockingBytecode?: string;
 }
 
 interface TokenDetails {

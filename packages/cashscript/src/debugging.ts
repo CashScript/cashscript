@@ -1,37 +1,14 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogData, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
 import { attributeLogEntry, buildCallStack, getActiveBytecode, resolveFrame } from './debug-frame.js';
 import { getBitauthUri } from './libauth-template/LibauthTemplate.js';
+import { createVirtualMachine, VM } from './libauth-template/utils.js';
 import { VmTarget } from './interfaces.js';
 
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
-
-/* eslint-disable @typescript-eslint/indent */
-type VM = AuthenticationVirtualMachine<
-  ResolvedTransactionCommon,
-  AuthenticationProgramCommon,
-  AuthenticationProgramStateCommon
->;
-/* eslint-enable @typescript-eslint/indent */
-
-const createVirtualMachine = (vmTarget: VmTarget): VM => {
-  switch (vmTarget) {
-    case 'BCH_2023_05':
-      return createVirtualMachineBch2023();
-    case 'BCH_2025_05':
-      return createVirtualMachineBch2025();
-    case 'BCH_2026_05':
-      return createVirtualMachineBch2026();
-    case 'BCH_SPEC':
-      // TODO: This typecast is shitty, but it's hard to fix
-      return createVirtualMachineBchSpec() as unknown as VM;
-    default:
-      throw new Error(`Debugging is not supported for the ${vmTarget} virtual machine.`);
-  }
-};
 
 // debugs the template, optionally logging the execution data
 export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {

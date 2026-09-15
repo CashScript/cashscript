@@ -9,6 +9,7 @@ import {
   alicePriv,
   alicePub,
   bobAddress,
+  bobPriv,
 } from '../../fixture/vars.js';
 
 describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', () => {
@@ -69,6 +70,58 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
       expect(await provider.getUtxos(aliceAddress)).toHaveLength(0);
       expect(await provider.getUtxos(p2pkhInstance.address)).toHaveLength(0);
       expect(await provider.getUtxos(bobAddress)).toHaveLength(1);
+    });
+  });
+
+  describe('transaction validation', () => {
+    const provider = new MockNetworkProvider();
+
+    beforeEach(() => {
+      provider.reset();
+    });
+
+    it('should annotate UTXOs with the locking bytecode they were added under', async () => {
+      const aliceLockingBytecode = binToHex(addressToLockScript(aliceAddress));
+      const addedUtxo = provider.addUtxo(aliceAddress, randomUtxo());
+
+      expect(addedUtxo.lockingBytecode).toBe(aliceLockingBytecode);
+
+      const fetchedUtxos = await provider.getUtxos(aliceAddress);
+      expect(fetchedUtxos[0].lockingBytecode).toBe(aliceLockingBytecode);
+    });
+
+    it('should reject a transaction that spends a UTXO with a mismatched unlocker', async () => {
+      // We deliberately set the lockingBytecode to bob's lock script so the TransactionBuilder
+      // mismatch check does not trigger, allowing us to build a transaction that spends alice's
+      // UTXO with bob's key
+      const bobLockingBytecode = binToHex(addressToLockScript(bobAddress));
+      const utxo = { ...provider.addUtxo(aliceAddress, randomUtxo()), lockingBytecode: bobLockingBytecode };
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(provider.sendRawTransaction(transaction)).rejects.toThrow();
+
+      // the failed transaction should not have updated the utxo set
+      expect(await provider.getUtxos(aliceAddress)).toHaveLength(1);
+    });
+
+    it('should accept invalid transactions when validateTransactions is set to false', async () => {
+      const nonValidatingProvider = new MockNetworkProvider({ validateTransactions: false });
+      const bobLockingBytecode = binToHex(addressToLockScript(bobAddress));
+      const utxo = {
+        ...nonValidatingProvider.addUtxo(aliceAddress, randomUtxo()),
+        lockingBytecode: bobLockingBytecode,
+      };
+
+      const transaction = new TransactionBuilder({ provider: nonValidatingProvider })
+        .addInput(utxo, new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(nonValidatingProvider.sendRawTransaction(transaction)).resolves.toBeTruthy();
     });
   });
 

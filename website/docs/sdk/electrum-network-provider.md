@@ -54,16 +54,21 @@ const provider = new ElectrumNetworkProvider('chipnet', { hostname });
 
 ### getUtxos()
 ```ts
-async provider.getUtxos(address: string): Promise<Utxo[]>;
+async provider.getUtxos(address: string): Promise<SpendableUtxo[]>;
 ```
 Returns all UTXOs on specific address. Both confirmed and unconfirmed UTXOs are included.
 
 ```ts
+interface SpendableUtxo extends Utxo {
+  lockingBytecode: string;
+}
+
 interface Utxo {
   txid: string;
   vout: number;
   satoshis: bigint;
   token?: TokenDetails;
+  lockingBytecode?: string;
 }
 
 interface TokenDetails {
@@ -82,7 +87,7 @@ const userUtxos = await provider.getUtxos(userAddress)
 ```
 ### getUtxosForLockingBytecode()
 ```ts
-async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]>;
+async provider.getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<SpendableUtxo[]>;
 ```
 Returns all UTXOs for a specific locking bytecode. Both confirmed and unconfirmed UTXOs are included.
 

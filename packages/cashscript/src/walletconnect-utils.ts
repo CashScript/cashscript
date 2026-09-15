@@ -1,6 +1,6 @@
 import { type LibauthOutput, isContractUnlocker, type PlaceholderP2PKHUnlocker, type UnlockableUtxo } from './interfaces.js';
 import { type AbiFunction, type Artifact } from '@cashscript/utils';
-import { cashAddressToLockingBytecode, hexToBin, type Input, type TransactionCommon } from '@bitauth/libauth';
+import { binToHex, cashAddressToLockingBytecode, hexToBin, type Input, type TransactionCommon } from '@bitauth/libauth';
 
 // Wallet Connect interfaces according to the spec
 // see https://github.com/mainnet-pat/wc2-bch-bcr
@@ -80,10 +80,9 @@ export const placeholderP2PKHUnlocker = (userAddress: string): PlaceholderP2PKHU
     throw new Error(`Invalid address: ${decodeAddressResult}`);
   }
 
-  const lockingBytecode = decodeAddressResult.bytecode;
   return {
-    generateLockingBytecode: () => lockingBytecode,
     generateUnlockingBytecode: () => Uint8Array.from(Array(0)),
     placeholder: true,
+    lockingBytecode: binToHex(decodeAddressResult.bytecode),
   };
 };

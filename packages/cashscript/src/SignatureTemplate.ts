@@ -87,7 +87,6 @@ export default class SignatureTemplate {
     const prevOutScript = publicKeyToP2PKHLockingBytecode(this.publicKey);
 
     return {
-      generateLockingBytecode: () => prevOutScript,
       generateUnlockingBytecode: ({ transaction, sourceOutputs, inputIndex }: GenerateUnlockingBytecodeOptions) => {
         const preimage = createSighashPreimage(transaction, sourceOutputs, inputIndex, prevOutScript, this.sighashType);
         const sighash = hash256(preimage);

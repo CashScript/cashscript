@@ -4,7 +4,7 @@ title: Release Notes
 
 ## v0.14.0-next.4
 
-⚠️ Note that this is a pre-release version and is not yet stable. There will likely be breaking changes to the APIs and compiler output in subsequent pre-releases.
+This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
 
 #### cashc compiler
 - :sparkles: Add support for user-defined reusable functions.
@@ -25,14 +25,19 @@ title: Release Notes
 #### CashScript SDK
 - :sparkles: Add support for debugging user-defined functions.
 - :sparkles: Add stack trace when debugging failed requires inside nested functions.
+- :sparkles: Add a `validateTransactions` option (default: `true`) to the `MockNetworkProvider` to validate sent transactions against the BCH VM using the actual locking bytecode of the spent UTXOs.
+- :hammer_and_wrench: Add `lockingBytecode` field to the `Utxo` interface, set automatically on all UTXOs returned by network providers.
 - :hammer_and_wrench: **BREAKING**: Replace the `SignatureTemplate`'s `getHashType()`, `getPublicKey()` and `getSignatureAlgorithm()` methods with the `sighashType`, `publicKey` and `signatureAlgorithm` properties.
 - :hammer_and_wrench: **BREAKING**: Remove the `bchForkId` parameter from `SignatureTemplate`'s `generateSignature()` method, since BCH consensus rules always require the fork ID flag.
 - :hammer_and_wrench: **BREAKING**: Rename the `HashType` enum to `SighashType`.
+- :hammer_and_wrench: **BREAKING**: The `TransactionBuilder` now requires UTXOs to include their `lockingBytecode`, and validates it against the provided unlocker.
+- :boom: **BREAKING**: Remove `generateLockingBytecode()` from the `Unlocker` interface.
+
 
 ## v0.13.3
 
 #### CashScript SDK
-- :bug: Fix issue where `getTransactionSize()` undersized inputs when using `placeholderP2PKHUnlocker()`
+- :bug: Fix issue where `getTransactionSize()` undersized inputs when using `placeholderP2PKHUnlocker()`.
 
 ## v0.13.2
 
