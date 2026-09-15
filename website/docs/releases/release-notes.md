@@ -2,6 +2,11 @@
 title: Release Notes
 ---
 
+## v0.13.3
+
+#### CashScript SDK
+- :bug: Fix issue where `getTransactionSize()` undersized inputs when using `placeholderP2PKHUnlocker()`
+
 ## v0.13.2
 
 #### cashc compiler
