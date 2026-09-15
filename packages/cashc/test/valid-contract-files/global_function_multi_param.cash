@@ -1,0 +1,9 @@
+function sub(int a, int b) returns (int) {
+    return a - b;
+}
+
+contract GlobalFunctionMultiParam() {
+    function spend(int x, int y) {
+        require(sub(x, y) == 7);
+    }
+}

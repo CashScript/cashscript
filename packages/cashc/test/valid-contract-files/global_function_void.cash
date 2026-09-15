@@ -1,0 +1,10 @@
+function requirePositive(int a) {
+    require(a > 0);
+}
+
+contract GlobalFunctionVoid() {
+    function spend(int x) {
+        requirePositive(x);
+        require(x < 100);
+    }
+}

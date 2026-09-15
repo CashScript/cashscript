@@ -1,5 +1,5 @@
 import { Type, PrimitiveType, BytesType } from '@cashscript/utils';
-import { TimeOp } from './Globals.js';
+import { Modifier, TimeOp } from './Globals.js';
 import AstVisitor from './AstVisitor.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from './Operator.js';
 import { Location } from './Location.js';
@@ -21,15 +21,59 @@ export interface Typed {
   type: Type;
 }
 
+export enum FunctionKind {
+  CONTRACT = 'contract',
+  GLOBAL = 'global',
+}
+
 export class SourceFileNode extends Node {
+  // The source file's scope: the table of global definitions (shared definitions carry a VM function-table id).
+  symbolTable?: SymbolTable;
+
   constructor(
-    public contract: ContractNode,
+    public contract?: ContractNode,
+    public functions: FunctionDefinitionNode[] = [],
+    public constants: ConstantDefinitionNode[] = [],
+    public imports: ImportNode[] = [],
+    public pragmas: string[] = [],
   ) {
     super();
   }
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitSourceFile(this);
+  }
+}
+
+export class ConstantDefinitionNode extends Node implements Named, Typed {
+  // Source provenance for debugging. Set on imported constants, left undefined for constants in the contract's own file.
+  sourceCode?: string;
+  sourceFile?: string;
+
+  modifiers = [Modifier.CONSTANT];
+
+  constructor(
+    public type: Type,
+    public name: string,
+    public value: ExpressionNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitConstantDefinition(this);
+  }
+}
+
+export class ImportNode extends Node {
+  constructor(
+    public path: string,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitImport(this);
   }
 }
 
@@ -53,10 +97,19 @@ export class FunctionDefinitionNode extends Node implements Named {
   symbolTable?: SymbolTable;
   opRolls: Map<string, IdentifierNode> = new Map();
 
+  // Set when this is the synthetic zero-argument function used to lower a global constant.
+  constant?: ConstantDefinitionNode;
+
+  // Source provenance for debugging. Set on imported functions, left undefined for functions in the contract's own file.
+  sourceCode?: string;
+  sourceFile?: string;
+
   constructor(
+    public kind: FunctionKind,
     public name: string,
     public parameters: ParameterNode[],
     public body: BlockNode,
+    public returnTypes?: Type[],
   ) {
     super();
   }
@@ -67,8 +120,11 @@ export class FunctionDefinitionNode extends Node implements Named {
 }
 
 export class ParameterNode extends Node implements Named, Typed {
+  symbol?: Symbol;
+
   constructor(
     public type: Type,
+    public modifiers: Modifier[],
     public name: string,
   ) {
     super();
@@ -79,14 +135,18 @@ export class ParameterNode extends Node implements Named, Typed {
   }
 }
 
+export type DefinitionNode = VariableDefinitionNode | ConstantDefinitionNode | FunctionDefinitionNode | ParameterNode;
+
 export abstract class StatementNode extends Node { }
 export abstract class ControlStatementNode extends StatementNode { }
 export abstract class NonControlStatementNode extends StatementNode { }
 
 export class VariableDefinitionNode extends NonControlStatementNode implements Named, Typed {
+  symbol?: Symbol;
+
   constructor(
     public type: Type,
-    public modifier: string[],
+    public modifiers: Modifier[],
     public name: string,
     public expression: ExpressionNode,
   ) {
@@ -98,11 +158,16 @@ export class VariableDefinitionNode extends NonControlStatementNode implements N
   }
 }
 
+export interface TupleAssignmentTarget {
+  identifier: IdentifierNode;
+  type?: Type;
+  modifiers: Modifier[];
+  isReassignment?: boolean;
+}
+
 export class TupleAssignmentNode extends NonControlStatementNode {
   constructor(
-    // TODO: Use an IdentifierNode instead of a custom type
-    public left: { name: string, type: Type },
-    public right: { name: string, type: Type },
+    public targets: TupleAssignmentTarget[],
     public tuple: ExpressionNode,
   ) {
     super();
@@ -165,6 +230,30 @@ export class ConsoleStatementNode extends NonControlStatementNode {
 
   accept<T>(visitor: AstVisitor<T>): T {
     return visitor.visitConsoleStatement(this);
+  }
+}
+
+export class FunctionCallStatementNode extends NonControlStatementNode {
+  constructor(
+    public functionCall: FunctionCallNode,
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitFunctionCallStatement(this);
+  }
+}
+
+export class ReturnNode extends NonControlStatementNode {
+  constructor(
+    public expressions: ExpressionNode[],
+  ) {
+    super();
+  }
+
+  accept<T>(visitor: AstVisitor<T>): T {
+    return visitor.visitReturn(this);
   }
 }
 
@@ -362,7 +451,7 @@ export class ArrayNode extends ExpressionNode {
 }
 
 export class IdentifierNode extends ExpressionNode implements Named {
-  definition?: Symbol;
+  symbol?: Symbol;
 
   constructor(
     public name: string,
@@ -377,6 +466,9 @@ export class IdentifierNode extends ExpressionNode implements Named {
 
 export abstract class LiteralNode<T = any> extends ExpressionNode {
   public value: T;
+
+  // Set when this is the synthetic literal node used to represent a global constant
+  constant?: ConstantDefinitionNode;
 
   toString(): string {
     return `${this.value}`;

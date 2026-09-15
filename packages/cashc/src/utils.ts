@@ -1,5 +1,11 @@
-import { BytesType, implicitlyCastable, PrimitiveType, Type } from '@cashscript/utils';
+import { BytesType, implicitlyCastable, PrimitiveType, TupleType, Type } from '@cashscript/utils';
 import { BinaryOperator } from './ast/Operator.js';
+
+export function functionReturnType(returnTypes?: Type[]): Type {
+  if (returnTypes === undefined || returnTypes.length === 0) return PrimitiveType.VOID;
+  if (returnTypes.length === 1) return returnTypes[0];
+  return new TupleType(returnTypes);
+}
 
 export function resultingTypeForBinaryOp(
   operator: BinaryOperator,

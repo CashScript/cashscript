@@ -1,0 +1,27 @@
+// Tuple assignment targets accept the same modifiers as variable definitions: `constant` makes
+// the declared variable immutable and `unused` drops the value right after the assignment, so a
+// destructuring can keep just part of a tuple.
+
+function pair(int x) returns (int, int) {
+    return x + 1, x * 2;
+}
+
+contract TupleModifiers() {
+    function spend(int n) {
+        // `unused` on the first target: the kept value is nipped from under the dropped one
+        int unused incremented, int constant doubled = pair(n);
+
+        // `unused` on the last target: dropped straight off the top of the stack
+        bytes payload, bytes unused padding = 0x1234.split(1);
+
+        // mixed in-branch reassignment: the unused declaration is dropped instead of being
+        // parked on the altstack
+        int acc = n;
+        if (acc > 0) {
+            (acc, int unused scratch) = pair(acc);
+        }
+
+        require(acc + doubled >= 0);
+        require(payload == 0x12);
+    }
+}

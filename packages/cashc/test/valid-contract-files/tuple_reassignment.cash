@@ -1,0 +1,50 @@
+// Destructuring into existing variables: a target without a type reassigns an already-declared
+// variable instead of declaring a fresh one. Covers straight-line reassignment, mixed
+// declaration+reassignment, and in-loop reassignment of loop-carried state (the case that previously
+// needed a fresh-temp + per-element rebind workaround).
+
+function swap(int x, int y) returns (int, int) {
+    return y, x;
+}
+
+// returns a fresh scalar followed by the two updated accumulators
+function step(int x, int y) returns (int, int, int) {
+    return x * x + 1, y, x;
+}
+
+contract TupleReassignment() {
+    function spend(int seed) {
+        int a = seed;
+        int b = seed + 1;
+
+        // straight-line reassignment of both existing variables
+        (a, b) = swap(a, b);
+
+        // mixed: declare c fresh, reassign a
+        (int c, a) = swap(a, b);
+
+        // loop-carried state reassigned in place each iteration
+        for (int i = 0; i < 4; i = i + 1) {
+            (a, b) = swap(a, b);
+        }
+
+        // mixed declaration + reassignment IN A LOOP: declarations-first compiles smallest
+        // (the reassignment values fold straight off the top of the stack)
+        for (int j = 0; j < 4; j = j + 1) {
+            (int lo, a, b) = step(a, b);
+            require(lo >= 0);
+        }
+
+        // interleaved order works too: the declaration value is parked on the altstack while the
+        // reassignment value below it folds into its slot
+        for (int k = 0; k < 2; k = k + 1) {
+            (a, int hi, b) = step(a, b);
+            require(hi >= 0);
+        }
+
+        // reassignment before declaration, in the bare (unparenthesized) form
+        b, int d = swap(a, c);
+
+        require(a + b + c + d >= 0);
+    }
+}

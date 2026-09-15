@@ -1,0 +1,6 @@
+contract AssignToBuiltinName() {
+    function spend(int x) {
+        abs = x;
+        require(abs > 0);
+    }
+}

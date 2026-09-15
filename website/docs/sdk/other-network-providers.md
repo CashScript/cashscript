@@ -15,11 +15,6 @@ The `MockNetworkProvider` has extra methods to enable this local emulation such 
 You can read more about the `MockNetworkProvider` and automated tests on the [testing setup](/docs/sdk/testing-setup) page.
 
 ```ts
-interface MockNetworkProviderOptions {
-  updateUtxoSet?: boolean;
-  vmTarget?: VmTarget;
-}
-
 interface MockNetworkProvider extends NetworkProvider {
   options: MockNetworkProviderOptions;
   vmTarget: VmTarget;
@@ -29,17 +24,27 @@ interface MockNetworkProvider extends NetworkProvider {
   // Hardcode the block height
   setBlockHeight(newBlockHeight: number): void;
 
-  // Add a UTXO to the UTXO set of the mock network
-  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): Utxo;
+  // Add a UTXO to the UTXO set of the mock network, returns the UTXO including its locking bytecode
+  addUtxo(addressOrLockingBytecode: string, utxo: Utxo): SpendableUtxo;
 
   // Reset the UTXO set and transaction list of the mock network
   reset(): void;
 }
 ```
 
-The `updateUtxoSet` option is used to determine whether the UTXO set should be updated after a transaction is sent. If `updateUtxoSet` is `true` (default), the UTXO set will be updated to reflect the new state of the mock network. If `updateUtxoSet` is `false`, the UTXO set will not be updated.
+### Options
 
-The `vmTarget` option defaults to the current VM of `BCH_2026_05`, but this can be changed to test your contract against different BCH virtual machine targets.
+```ts
+interface MockNetworkProviderOptions {
+  updateUtxoSet?: boolean;
+  validateTransactions?: boolean;
+  vmTarget?: VmTarget;
+}
+```
+
+- `updateUtxoSet` (default `true`) — update the in-memory UTXO set after a transaction is sent, consuming the spent UTXOs and adding the transaction's outputs.
+- `validateTransactions` (default `true`) — evaluate sent transactions against the BCH VM using the actual locking bytecode of the spent UTXOs, rejecting transactions that a real node would reject. Requires `updateUtxoSet`.
+- `vmTarget` (default `BCH_2026_05`) — the BCH virtual machine version used for local debugging and transaction validation.
 
 #### Example
 ```ts

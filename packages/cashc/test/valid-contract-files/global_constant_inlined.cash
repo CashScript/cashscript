@@ -1,0 +1,7 @@
+int constant ONE = 1;
+
+contract GlobalConstantInlined(int value) {
+    function spend() {
+        require(value + ONE + ONE == 3);
+    }
+}

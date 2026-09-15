@@ -127,7 +127,7 @@ Operators:
 - `!=` (inequality)
 
 ### Transaction Signature
-`sig`: Byte sequence representing a transaction signature. Generally 65 bytes long.
+`sig`: Byte sequence representing a transaction signature. Generally 65 bytes long: a 64-byte Schnorr signature followed by a single sighash flag byte that indicates which parts of the transaction were signed. See [HashType](/docs/sdk/signature-templates#hashtype) for the meaning of this byte.
 
 Operators:
 
@@ -161,11 +161,19 @@ string cash = bitcoinCash.split(8)[1];
 It is not supported to use a variable for the tupleIndex. Instead you can assign both sides of the tuple as shown below and use either element conditional on the value of the variable.
 :::
 
-It is also possible to assign both sides of the tuple at once with a destructuring syntax:
+It is also possible to assign both sides of the tuple at once with a destructuring syntax, allowing both new variable declarations and reassignments:
 
 ```solidity
 string hello, string world = "Hello World".split(6);
 require(hello + "World" == "Hello " + world);
+```
+
+Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(bytes fresh, existing) = x.split(1);`). The target list may optionally be wrapped in parentheses.
+
+Newly declared targets accept the same modifiers as regular variable declarations: `constant` prevents later reassignment, while `unused` discards the value immediately, which is useful when only part of the tuple is needed:
+
+```solidity
+bytes unused ignored, bytes constant tail = someBytes.split(4);
 ```
 
 ## Type Casting

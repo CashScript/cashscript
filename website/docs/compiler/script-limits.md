@@ -28,17 +28,26 @@ If your local state grows larger than the allowed maximum, one option is to hash
 
 ### Operation cost limit
 
-Bitcoin Cash enforces an operation cost limit (op-cost) per transaction input. This determines the computational budget available for operations in a contract. The op-cost is based on script length: longer input scripts allow for a higher compute budget.
+Bitcoin Cash enforces an operation cost limit (op-cost) per transaction input. This determines the computational budget available for operations in a contract. The op-cost is based on script length: longer input scripts allow for a higher compute budget. You can find the exact op-cost per operation in the [op-cost-table][op-cost-table].
 
 #### Buying compute budget
 
-Since longer input scripts allow for a larger compute budget, some contracts use zero-padding (adding non-functional bytes) to "buy" more computation power without changing logic. You can find the exact op-cost per operation in the [op-cost-table][op-cost-table].
+When running into op-cost limits, one option is to "buy" more compute budget by adding padding to the unlocking bytecode, since op-cost is calculated as `(41 + unlockingBytecodeLength) * 800`, adding 800 op-cost budget per byte. Because this increases the transaction size, this also increases the transaction fee.
 
-```ts
-function maxOperationCost(unlockingBytecodeLength) {
-  return (41n + unlockingBytecodeLength) * 800n;
+In CashScript, this padding can be added with an [`unused` parameter](/docs/language/contracts#intentionally-unused-values) in the constructor or spending function. An `unused` constructor parameter becomes part of the contract bytecode, so it buys a fixed amount of extra budget. An `unused` function parameter is provided by the spender at transaction time, so the amount of padding can be chosen dynamically per transaction.
+
+```solidity
+contract HeavyComputation(pubkey pk, bytes unused fixedPadding) {
+    function spend(sig s, bytes unused dynamicPadding) {
+        // ... heavy computation ...
+        require(checkSig(s, pk));
+    }
 }
 ```
+
+:::tip
+Due to compiler optimisations, it is most efficient to place `unused` parameters at the end of the parameter list.
+:::
 
 ### Other contract-related limits
 

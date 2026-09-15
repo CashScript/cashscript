@@ -1,0 +1,8 @@
+int constant VALUE = 1;
+
+contract ModifyGlobalConstant() {
+    function spend() {
+        VALUE = 2;
+        require(true);
+    }
+}

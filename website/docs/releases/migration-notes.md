@@ -2,6 +2,64 @@
 title: Migration Notes
 ---
 
+## v0.13 to v0.14
+
+### CashScript SDK
+
+#### SignatureTemplate
+
+The `getHashType()`, `getPublicKey()` and `getSignatureAlgorithm()` are now simple `sighashType`, `publicKey` and `signatureAlgorithm` properties.
+
+```ts
+// before
+const hashType = signatureTemplate.getHashType();
+const publicKey = signatureTemplate.getPublicKey();
+const signatureAlgorithm = signatureTemplate.getSignatureAlgorithm();
+
+// after
+const sighashType = signatureTemplate.sighashType;
+const publicKey = signatureTemplate.publicKey;
+const signatureAlgorithm = signatureTemplate.signatureAlgorithm;
+```
+
+Note that `getHashType()` returned the sighash type with the BCH fork ID flag applied, while the `sighashType` property returns the configured sighash type as it was passed to the constructor.
+
+The `bchForkId` parameter has been removed from `generateSignature()`. A signature without the BCH fork ID flag is invalid under BCH consensus rules, so the flag is now always applied when signing.
+
+```ts
+// before
+const signature = signatureTemplate.generateSignature(sighash, bchForkId);
+
+// after
+const signature = signatureTemplate.generateSignature(sighash);
+```
+
+The `HashType` enum has been renamed to `SighashType`.
+
+```ts
+// before
+const signatureTemplate = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS);
+
+// after
+const signatureTemplate = new SignatureTemplate(wif, SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS);
+```
+
+#### UTXOs must include their locking bytecode
+
+UTXOs returned by network providers now include a `lockingBytecode` field with the actual locking bytecode of the UTXO, and input UTXOs passed to the `TransactionBuilder` are required to include this field.
+
+If you fetch UTXOs from a standard network provider, no code changes are needed. If you construct UTXOs manually (e.g. from your own indexer or persisted data), you need to add the `lockingBytecode` field:
+
+```ts
+// before
+const utxo = { txid, vout, satoshis };
+
+// after
+const utxo = { txid, vout, satoshis, lockingBytecode };
+```
+
+Since the spent UTXO's `lockingBytecode` is now the source of truth for the locking script, the `generateLockingBytecode()` method was removed from the `Unlocker` interface. If you implement custom unlockers, remove the `generateLockingBytecode()` method from your implementation.
+
 ## v0.12 to v0.13
 
 ### cashc compiler

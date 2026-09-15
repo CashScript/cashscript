@@ -1,0 +1,10 @@
+contract Test(int a) {
+    function spend() {
+        int x = 1;
+        require(x == 1);
+        if (a > 0) {
+            x = 2;
+        }
+        require(true);
+    }
+}

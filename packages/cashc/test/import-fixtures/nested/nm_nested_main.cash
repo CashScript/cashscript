@@ -1,0 +1,7 @@
+import "mathlib/math.cash";
+
+contract NodeModulesNested() {
+    function spend(int x) {
+        require(nmAdd(x, 3) == 8);
+    }
+}

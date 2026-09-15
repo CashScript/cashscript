@@ -1,9 +1,10 @@
 import { Type, PrimitiveType } from '@cashscript/utils';
 import {
   IdentifierNode,
+  ImportNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   VariableDefinitionNode,
-  ParameterNode,
   Node,
   FunctionCallNode,
   BinaryOpNode,
@@ -11,18 +12,17 @@ import {
   TimeOpNode,
   CastNode,
   AssignNode,
-  BranchNode,
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
   InstantiationNode,
   StatementNode,
   ContractNode,
-  ExpressionNode,
   SliceNode,
   IntLiteralNode,
+  TupleAssignmentNode,
 } from './ast/AST.js';
-import { Symbol, SymbolType } from './ast/SymbolTable.js';
+import { SymbolType } from './ast/SymbolTable.js';
 import { Location } from './ast/Location.js';
 import { BinaryOperator } from './ast/Operator.js';
 
@@ -69,33 +69,32 @@ export class InvalidSymbolTypeError extends CashScriptError {
     public node: IdentifierNode,
     public expected: SymbolType,
   ) {
-    super(node, `Found symbol ${node.name} with type ${node.definition?.symbolType} where type ${expected} was expected`);
+    super(node, `Found symbol ${node.name} with type ${node.symbol?.symbolType} where type ${expected} was expected`);
   }
 }
 
-export class RedefinitionError extends CashScriptError { }
-
-export class FunctionRedefinitionError extends RedefinitionError {
+export class RedefinitionError extends CashScriptError {
   constructor(
-    public node: FunctionDefinitionNode,
+    public node: Node,
+    public identifier: string,
   ) {
-    super(node, `Redefinition of function ${node.name}`);
+    super(node, `Redefinition of identifier ${identifier}`);
   }
 }
 
-export class VariableRedefinitionError extends RedefinitionError {
-  constructor(
-    public node: VariableDefinitionNode | ParameterNode,
-  ) {
-    super(node, `Redefinition of variable ${node.name}`);
+export class MissingContractError extends Error {
+  constructor() {
+    super('Source file does not contain a contract definition');
+    this.name = this.constructor.name;
   }
 }
 
-export class UnusedVariableError extends CashScriptError {
+export class ImportResolutionError extends CashScriptError {
   constructor(
-    public symbol: Symbol,
+    public node: ImportNode,
+    message: string,
   ) {
-    super(symbol.definition as Node, `Unused variable ${symbol.name}`);
+    super(node, message);
   }
 }
 
@@ -123,6 +122,43 @@ export class FinalRequireStatementError extends CashScriptError {
   }
 }
 
+export class UnusedFunctionReturnError extends CashScriptError {
+  constructor(
+    public node: FunctionCallNode,
+  ) {
+    super(node, `Return value of ${node.identifier.name} must be used; only void functions may be called as a statement`);
+  }
+}
+
+export class MissingReturnError extends CashScriptError {
+  constructor(
+    public node: Node,
+  ) {
+    super(node, 'A value-returning function must end with a return statement');
+  }
+}
+
+export class MisplacedReturnError extends CashScriptError {
+  constructor(
+    public node: StatementNode,
+  ) {
+    super(node, 'A return statement is only allowed as the final statement of a function body');
+  }
+}
+
+export class UnsafeFunctionOperationError extends CashScriptError {
+  constructor(
+    node: Node,
+    operation: string,
+  ) {
+    super(
+      node,
+      `'${operation}' cannot be used inside a user-defined function. Use it directly in a `
+      + 'contract function instead, or pass the resulting value into the function as a parameter',
+    );
+  }
+}
+
 export class TypeError extends CashScriptError {
   constructor(
     node: Node,
@@ -131,6 +167,16 @@ export class TypeError extends CashScriptError {
     message?: string,
   ) {
     super(node, message ?? `Found type '${actual}' where type '${expected}' was expected`);
+  }
+}
+
+export class ReturnTypeError extends TypeError {
+  constructor(
+    node: Node,
+    actual?: Type,
+    expected?: Type,
+  ) {
+    super(node, actual, expected, `Cannot return type '${actual}' from a function with return type '${expected}'`);
   }
 }
 
@@ -201,37 +247,57 @@ export class CastTypeError extends TypeError {
 
 export class AssignTypeError extends TypeError {
   constructor(
-    node: AssignNode | VariableDefinitionNode,
+    node: AssignNode | VariableDefinitionNode | ConstantDefinitionNode,
   ) {
     const expected = node instanceof AssignNode ? node.identifier.type : node.type;
-    super(node, node.expression.type, expected, `Type '${node.expression.type}' can not be assigned to variable of type '${expected}'`);
+    const expression = node instanceof ConstantDefinitionNode ? node.value : node.expression;
+    const target = node instanceof ConstantDefinitionNode ? `constant '${node.name}'` : 'variable';
+    super(node, expression.type, expected, `Type '${expression.type}' can not be assigned to ${target} of type '${expected}'`);
   }
 }
 
-export class TupleAssignmentError extends CashScriptError {
+export class InvalidConstantExpressionError extends CashScriptError {
   constructor(
-    node: ExpressionNode,
+    public node: Node,
   ) {
-    super(node, 'Expression must return a tuple to use destructuring');
+    super(
+      node,
+      'Global constant definitions only support literals, references to other constants, '
+      + 'integer arithmetic and concatenation',
+    );
   }
 }
 
-export class ConstantConditionError extends CashScriptError {
+export class DivisionByZeroError extends CashScriptError {
   constructor(
-    node: BranchNode | RequireNode,
-    res: boolean,
+    public node: BinaryOpNode,
   ) {
-    super(node, `Condition always evaluates to ${res}`);
+    super(node, 'Division by zero');
+  }
+}
+
+export class DuplicateTupleTargetError extends CashScriptError {
+  constructor(
+    node: TupleAssignmentNode,
+    name: string,
+  ) {
+    super(node, `Duplicate target '${name}' in tuple destructuring`);
   }
 }
 
 export class ConstantModificationError extends CashScriptError {
+  constructor(node: VariableDefinitionNode | ConstantDefinitionNode);
+  constructor(node: Node, name: string);
   constructor(
-    node: VariableDefinitionNode,
+    node: Node,
+    name?: string,
   ) {
-    super(node, `Tried to modify immutable variable '${node.name}'`);
+    const constantName = name ?? (node as VariableDefinitionNode | ConstantDefinitionNode).name;
+    super(node, `Tried to modify immutable variable '${constantName}'`);
   }
 }
+
+export class InvalidModifierError extends CashScriptError { }
 
 export class ArrayElementError extends CashScriptError {
   constructor(
@@ -273,10 +339,12 @@ export class BitshiftBitcountNegativeError extends CashScriptError {
 
 export class VersionError extends Error {
   constructor(
-    actual: string,
-    constraint: string,
+    readonly actual: string,
+    readonly constraint: string,
+    readonly sourceFile?: string,
   ) {
-    const message = `cashc version ${actual} does not satisfy version constraint ${constraint}`;
+    const provenance = sourceFile ? ` (from pragma in imported file '${sourceFile}')` : '';
+    const message = `cashc version ${actual} does not satisfy version constraint ${constraint}${provenance}`;
     super(message);
 
     this.name = this.constructor.name;

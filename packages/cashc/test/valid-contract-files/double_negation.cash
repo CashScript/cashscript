@@ -1,0 +1,22 @@
+contract DoubleNegation(bool flag) {
+    function spend(int target) {
+        // OP_NOT OP_NOT OP_VERIFY => OP_VERIFY
+        require(!!flag);
+
+        int i = 0;
+        bool done = false;
+
+        do {
+            i = i + 1;
+            done = i >= target;
+        // OP_NOT OP_NOT OP_UNTIL => OP_UNTIL
+        } while (!done);
+
+        // OP_NOT OP_NOT OP_IF => OP_NOT OP_NOTIF => OP_IF
+        if (!!flag) {
+            require(i == target);
+        }
+
+        require(i > 0);
+    }
+}

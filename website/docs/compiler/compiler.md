@@ -82,9 +82,13 @@ Compiles a CashScript contract from a source file. This compile method is handy 
 const P2PKH = compileFile(new URL('p2pkh.cash', import.meta.url));
 ```
 
+:::note
+If the contract uses `import` directives to pull in [user-defined functions](/docs/language/contracts#user-defined-functions) from other files, `compileFile` resolves those imports relative to the source file's directory automatically. Package imports such as `import "@example/math-lib/math.cash"` are resolved from `node_modules` directories, walking up from the importing file's directory like Node.js module resolution.
+:::
+
 ### compileString()
 ```ts
-compileString(sourceCode: string, compilerOptions?: CompilerOptions): Artifact
+compileString(sourceCode: string, compilerOptions?: CompilerOptions & { files?: Record<string, string> }): Artifact
 ```
 
 Compiles a CashScript contract from a source code string. This compile method is handy in a browser compilation setting like the [CashScript Playground](https://playground.cashscript.org/) where testing contracts can be quickly compiled and discarded. The method is also useful if no source file is locally available (e.g. the source code is retrieved with a REST API).
@@ -95,6 +99,47 @@ const result = await fetch(`${baseUrl}/master/examples/p2pkh.cash`);
 const source = await result.text();
 
 const P2PKH = compileString(source);
+```
+
+`compileString` never reads from the filesystem, so `import` directives that pull in [top-level definitions](/docs/language/contracts#importing-functions-and-constants-from-other-files) are resolved from the `files` compiler option instead. Its keys are the import paths relative to the main source (using forward slashes), and its values are the corresponding source code strings.
+
+```ts
+const mathSource = `
+function double(int a) returns (int) {
+    return a * 2;
+}
+`;
+
+const source = `
+import "./math.cash";
+
+contract Doubler() {
+    function spend(int x) {
+        require(double(x) == 8);
+    }
+}
+`;
+
+const Doubler = compileString(source, { files: { './math.cash': mathSource } });
+```
+
+:::note
+Imports inside imported files are resolved relative to the *importing* file, but their keys in `files` remain relative to the main source. For example, if `lib/a.cash` contains `import "./b.cash";`, that file must be provided under the key `lib/b.cash`. Package imports such as `import "@example/math-lib/math.cash"` are looked up verbatim, so they must be provided under exactly that key.
+:::
+
+### Compilation Warnings
+
+Some issues, such as unused variables that are not marked [`unused`](/docs/language/contracts#intentionally-unused-values), do not prevent compilation but produce a compiler warning instead. By default these warnings are printed with `console.warn`. When compiling from JavaScript, a custom `warningListener` can be passed as a compiler option to capture the structured warnings instead. It is called for each warning. The default listener is exported as `defaultWarningListener`, so a custom listener can compose with it to keep the standard console output.
+
+```ts
+import { compileString, defaultWarningListener } from 'cashc';
+
+const P2PKH = compileString(source, {
+  warningListener: (warning) => {
+    defaultWarningListener(warning); // still print the warning to the console
+    myDiagnostics.push(warning);
+  },
+});
 ```
 
 ### Compiler Options

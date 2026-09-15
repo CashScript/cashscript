@@ -213,3 +213,102 @@ describe('InjectLocktimeGuardTraversal', () => {
     expect(compileString(src, { enforceLocktimeGuard: false }).bytecode.startsWith(GUARD_PREFIX)).toBe(false);
   });
 });
+
+// The guard is only injected into contract spending functions, never into global functions (non-finality
+// is a transaction-wide property, so a single guard on the spending path covers any tx.locktime accessed
+// inside invoked global functions). Whether a contract function needs the guard is therefore decided by
+// looking through the global functions it (transitively) invokes. The injected guard is a require with a
+// distinctive message, which is detectable even when the OP_DEFINE prologue precedes the contract body.
+describe('InjectLocktimeGuardTraversal — global functions', () => {
+  const GUARD_MESSAGE = 'non-final sequence number';
+  const guardInjected = (src: string): boolean => (compileString(src).debug?.requires ?? [])
+    .some((statement) => statement.message?.includes(GUARD_MESSAGE));
+
+  it('injects guard in the contract when an invoked global uses tx.locktime', () => {
+    const src = `
+      function usesLocktime() returns (int) { return tx.locktime; }
+      contract T() {
+        function spend() {
+          require(usesLocktime() >= 100);
+        }
+      }`;
+    expect(guardInjected(src)).toBe(true);
+  });
+
+  it('does not inject when the contract has a tx.time check before invoking the global', () => {
+    const src = `
+      function usesLocktime() returns (int) { return tx.locktime; }
+      contract T() {
+        function spend() {
+          require(tx.time >= 100);
+          require(usesLocktime() >= 100);
+        }
+      }`;
+    expect(guardInjected(src)).toBe(false);
+  });
+
+  it('does not inject when the invoked global covers its own tx.locktime with a tx.time check', () => {
+    const src = `
+      function usesLocktime() returns (int) { require(tx.time >= 100); return tx.locktime; }
+      contract T() {
+        function spend() {
+          require(usesLocktime() >= 0);
+        }
+      }`;
+    expect(guardInjected(src)).toBe(false);
+  });
+
+  it('injects guard for tx.locktime reached transitively through nested global invocations', () => {
+    const src = `
+      function inner() returns (int) { return tx.locktime; }
+      function outer() returns (int) { return inner(); }
+      contract T() {
+        function spend() {
+          require(outer() >= 100);
+        }
+      }`;
+    expect(guardInjected(src)).toBe(true);
+  });
+
+  it('does not inject when a caller global covers the callee with its own tx.time check', () => {
+    const src = `
+      function inner() returns (int) { return tx.locktime; }
+      function outer() returns (int) { require(tx.time >= 100); return inner(); }
+      contract T() {
+        function spend() {
+          require(outer() >= 0);
+        }
+      }`;
+    expect(guardInjected(src)).toBe(false);
+  });
+
+  it('injects guard when an invoked global only uses tx.locktime inside a branch', () => {
+    const src = `
+      function maybeLocktime(int a) {
+        if (a > 0) {
+          int x = tx.locktime;
+          require(x >= 100);
+        } else {
+          require(a == 0);
+        }
+      }
+      contract T() {
+        function spend(int x) {
+          maybeLocktime(x);
+          require(x >= 0);
+        }
+      }`;
+    expect(guardInjected(src)).toBe(true);
+  });
+
+  it('does not inject when an invoked global does not use tx.locktime', () => {
+    const src = `
+      function double(int a) returns (int) { return a * 2; }
+      contract T() {
+        function spend(int x) {
+          require(double(x) >= 2);
+        }
+      }`;
+    expect(guardInjected(src)).toBe(false);
+  });
+});

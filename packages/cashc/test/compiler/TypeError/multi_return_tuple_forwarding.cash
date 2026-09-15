@@ -1,0 +1,15 @@
+function pair(int a) returns (int, int) {
+    return a, a + 1;
+}
+
+function forward(int a) returns (int, int) {
+    // The tuple types match, but a returned expression must be a single value
+    return pair(a);
+}
+
+contract Test() {
+    function spend(int x) {
+        int p, int q = forward(x);
+        require(p == q);
+    }
+}

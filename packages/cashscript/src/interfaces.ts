@@ -10,9 +10,14 @@ export interface Utxo {
   vout: number;
   satoshis: bigint;
   token?: TokenDetails;
+  lockingBytecode?: string;
 }
 
-export interface UnlockableUtxo extends Utxo {
+export interface SpendableUtxo extends Utxo {
+  lockingBytecode: string;
+}
+
+export interface UnlockableUtxo extends SpendableUtxo {
   unlocker: Unlocker;
   options?: InputOptions;
 }
@@ -40,7 +45,6 @@ export interface GenerateUnlockingBytecodeOptions {
 }
 
 export interface Unlocker {
-  generateLockingBytecode: () => Uint8Array;
   generateUnlockingBytecode: (options: GenerateUnlockingBytecodeOptions) => Uint8Array;
 }
 
@@ -56,7 +60,7 @@ export interface P2PKHUnlocker extends Unlocker {
 
 export type StandardUnlocker = ContractUnlocker | P2PKHUnlocker;
 
-export type PlaceholderP2PKHUnlocker = Unlocker & { placeholder: true };
+export type PlaceholderP2PKHUnlocker = Unlocker & { placeholder: true, lockingBytecode: string };
 
 export type ContractFunctionUnlocker = (...args: FunctionArgument[]) => ContractUnlocker;
 
@@ -133,7 +137,7 @@ export enum SignatureAlgorithm {
   SCHNORR = 0x01,
 }
 
-export enum HashType {
+export enum SighashType {
   SIGHASH_ALL = 0x01,
   SIGHASH_NONE = 0x02,
   SIGHASH_SINGLE = 0x03,

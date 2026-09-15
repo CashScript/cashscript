@@ -18,7 +18,7 @@ import {
   carolPriv,
   carolPub,
 } from '../fixture/vars.js';
-import { Network, Utxo } from '../../src/interfaces.js';
+import { Network, SpendableUtxo } from '../../src/interfaces.js';
 import { addressToLockScript, randomUtxo } from '../../src/utils.js';
 import p2pkhArtifact from '../fixture/p2pkh.artifact.js';
 import twtArtifact from '../fixture/transfer_with_timeout.artifact.js';
@@ -214,9 +214,9 @@ describe('Multi Contract', () => {
     const correctLockingBytecode = addressToLockScript(correctContract.address);
     const siblingIntrospectionContract = new Contract(SiblingIntrospectionArtifact, [correctLockingBytecode], { provider });
 
-    let correctContractUtxo: Utxo;
-    let incorrectContractUtxo: Utxo;
-    let siblingIntrospectionUtxo: Utxo;
+    let correctContractUtxo: SpendableUtxo;
+    let incorrectContractUtxo: SpendableUtxo;
+    let siblingIntrospectionUtxo: SpendableUtxo;
 
     beforeAll(async () => {
       correctContractUtxo = await addUtxo(provider, correctContract.address, randomUtxo());

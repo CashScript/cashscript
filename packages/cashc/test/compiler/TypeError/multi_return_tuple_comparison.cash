@@ -1,0 +1,11 @@
+function pair(int a) returns (int, int) {
+    return a, a + 1;
+}
+
+contract Test() {
+    function spend(int x) {
+        // Both sides have equal tuple types, so this would pass a pure type-equality check,
+        // but no operator works on tuples
+        require(pair(x) == pair(x));
+    }
+}
