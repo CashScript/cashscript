@@ -264,11 +264,11 @@ describe('Transaction Builder', () => {
         .addOutput({ to: aliceAddress, amount: 1000n })
         .getTransactionSize();
 
-      // the signed size carries a 65-byte Schnorr signature, the placeholder is sized for the 73-byte DER bound
-      expect(placeholderSize - signedSize).toBe(8n);
+      // the wallet signs with a 65-byte Schnorr signature, so the placeholder is sized exactly like the signed input
+      expect(placeholderSize).toBe(signedSize);
     });
 
-    it('should pay at least the fee rate once a placeholder input is signed', async () => {
+    it('should pay exactly the fee rate once a placeholder input is signed', async () => {
       const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
 
       const builder = new TransactionBuilder({ provider })
@@ -281,7 +281,7 @@ describe('Transaction Builder', () => {
         .addOutputs(builder.outputs)
         .getTransactionSize();
 
-      expect(builder.calculateTransactionFee().feeSats).toBeGreaterThanOrEqual(signedSize);
+      expect(builder.calculateTransactionFee().feeSats).toBe(signedSize);
     });
   });
 
