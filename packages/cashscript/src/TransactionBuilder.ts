@@ -19,9 +19,11 @@ import {
   StandardUnlockableUtxo,
   VmResourceUsage,
   isContractUnlocker,
+  isPlaceholderUnlocker,
   BchChangeOutputOptions,
   TokenChangeOutputOptions,
 } from './interfaces.js';
+import { PLACEHOLDER_P2PKH_UNLOCKING_SIZE } from './constants.js';
 import { NetworkProvider } from './network/index.js';
 import {
   calculateDust,
@@ -278,12 +280,19 @@ export class TransactionBuilder {
 
   /**
    * Build the transaction (skipping fee and burn checks) and return its encoded byte length.
+   * Inputs with a placeholder unlocker are counted at the size they take up once the wallet signs them.
    *
    * @returns The size of the transaction in bytes.
    */
   getTransactionSize(): bigint {
     const transaction = this.buildLibauthTransaction(true);
-    return BigInt(encodeTransaction(transaction).byteLength);
+    return BigInt(this.getEncodedTransactionSize(transaction));
+  }
+
+  // Placeholder unlockers serialise as an empty unlocking script, so their eventual signed size is added here
+  private getEncodedTransactionSize(transaction: LibauthTransaction): number {
+    const placeholderInputCount = this.inputs.filter((input) => isPlaceholderUnlocker(input.unlocker)).length;
+    return encodeTransaction(transaction).byteLength + placeholderInputCount * PLACEHOLDER_P2PKH_UNLOCKING_SIZE;
   }
 
   /**
@@ -561,7 +570,7 @@ export class TransactionBuilder {
   private checkFee(transaction: LibauthTransaction): void {
     const totalInputAmount = this.inputs.reduce((total, input) => total + input.satoshis, 0n);
     const totalOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
-    const transactionSize = encodeTransaction(transaction).byteLength;
+    const transactionSize = this.getEncodedTransactionSize(transaction);
 
     const fee = totalInputAmount - totalOutputAmount;
     const feePerByte = Number((Number(fee) / transactionSize).toFixed(2));
@@ -623,7 +632,7 @@ export class TransactionBuilder {
   }
 
   private checkTransactionSize(transaction: LibauthTransaction): void {
-    const transactionSize = encodeTransaction(transaction).byteLength;
+    const transactionSize = this.getEncodedTransactionSize(transaction);
 
     const TX_MAX_STANDARD_SIZE = 100_000;
     if (transactionSize > TX_MAX_STANDARD_SIZE) {

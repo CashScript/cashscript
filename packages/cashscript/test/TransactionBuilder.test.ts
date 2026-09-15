@@ -250,6 +250,41 @@ describe('Transaction Builder', () => {
     });
   });
 
+  describe('test TransactionBuilder.getTransactionSize', () => {
+    it('should size placeholder P2PKH inputs as signed inputs', async () => {
+      const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
+
+      const placeholderSize = new TransactionBuilder({ provider })
+        .addInput(aliceUtxos[0], placeholderP2PKHUnlocker(aliceAddress))
+        .addOutput({ to: aliceAddress, amount: 1000n })
+        .getTransactionSize();
+
+      const signedSize = new TransactionBuilder({ provider })
+        .addInput(aliceUtxos[0], new SignatureTemplate(alicePriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 1000n })
+        .getTransactionSize();
+
+      // the wallet signs with a 65-byte Schnorr signature, so the placeholder is sized exactly like the signed input
+      expect(placeholderSize).toBe(signedSize);
+    });
+
+    it('should pay exactly the fee rate once a placeholder input is signed', async () => {
+      const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
+
+      const builder = new TransactionBuilder({ provider })
+        .addInput(aliceUtxos[0], placeholderP2PKHUnlocker(aliceAddress))
+        .addOutput({ to: aliceAddress, amount: 1000n })
+        .addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1 });
+
+      const signedSize = new TransactionBuilder({ provider })
+        .addInput(aliceUtxos[0], new SignatureTemplate(alicePriv).unlockP2PKH())
+        .addOutputs(builder.outputs)
+        .getTransactionSize();
+
+      expect(builder.calculateTransactionFee().feeSats).toBe(signedSize);
+    });
+  });
+
   it('should not fail when validly spending from only P2PKH inputs', async () => {
     const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
     const sigTemplate = new SignatureTemplate(alicePriv);
