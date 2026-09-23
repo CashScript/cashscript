@@ -49,12 +49,12 @@
   },
   "devDependencies": {
     "@types/semver": "^7.8.0",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^5.0.1",
     "eslint": "^8.54.0",
     "p-queue": "^9.1.2",
     "p-retry": "^8.0.0",
     "typescript": "^5.9.2",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.1"
   },
   "gitHead": "bf02a4b641d5d03c035d052247a545109c17b708"
 }
