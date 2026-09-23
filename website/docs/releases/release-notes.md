@@ -28,6 +28,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :hammer_and_wrench: **BREAKING**: Remove the `bchForkId` parameter from `SignatureTemplate`'s `generateSignature()` method, since BCH consensus rules always require the fork ID flag.
 - :hammer_and_wrench: **BREAKING**: Rename the `HashType` enum to `SighashType`.
 - :hammer_and_wrench: **BREAKING**: The `TransactionBuilder` now requires UTXOs to include their `lockingBytecode`, and validates it against the provided unlocker.
+- :hammer_and_wrench: `ElectrumNetworkProvider` now negotiates Electrum protocol 1.5.0 (was 1.4.1) and uses `blockchain.headers.get_tip` in `getBlockHeight()`, so long-lived connections are no longer subscribed to new headers. Custom electrum clients should negotiate 1.5.0 or later.
 - :boom: **BREAKING**: Remove `generateLockingBytecode()` from the `Unlocker` interface.
 
 

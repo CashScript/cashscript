@@ -176,13 +176,15 @@ When initializing an `ElectrumNetworkProvider` you have the option in the constr
 
 If intending to use electrum-cash subscriptions, make sure to set `manualConnectionManagement` to true, so the `ElectrumNetworkProvider` does not disconnect after each request.
 
+The custom client must negotiate Electrum protocol 1.5.0 or later, since the provider's requests (the `include_tokens` UTXO filter and `blockchain.headers.get_tip`) were introduced in that version.
+
 #### Example
 
 ```ts
 import { ElectrumClient } from '@electrum-cash/network';
 import { ElectrumNetworkProvider } from 'cashscript';
 
-const electrum = new ElectrumClient('CashScript Application', '1.4.1', 'chipnet.bch.ninja');
+const electrum = new ElectrumClient('CashScript Application', '1.5.0', 'chipnet.bch.ninja');
 const provider = new ElectrumNetworkProvider('chipnet', {
   electrum, manualConnectionManagement: true
 });

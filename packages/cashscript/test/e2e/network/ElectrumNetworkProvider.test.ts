@@ -23,7 +23,7 @@ describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('ElectrumNetworkProvider'
   });
 
   it('should be able to pass in a custom electrum client', async () => {
-    const electrum = new ElectrumClient('CashScript Application', '1.4.1', 'chipnet.bch.ninja');
+    const electrum = new ElectrumClient('CashScript Application', '1.5.0', 'chipnet.bch.ninja');
     const provider = new ElectrumNetworkProvider(Network.CHIPNET, { electrum });
     const blockHeight = await provider.getBlockHeight();
     expect(blockHeight).toBeDefined();
