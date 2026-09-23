@@ -228,6 +228,7 @@
     ],
     "ignoreWords": [
         "addinput",
+        "Behavior",
         "bitcats",
         "bitcoincashjs",
         "branchup",

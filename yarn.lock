@@ -498,24 +498,31 @@
   dependencies:
     debug "^4.3.7"
 
-"@electrum-cash/network@^4.2.2":
-  version "4.2.2"
-  resolved "https://registry.yarnpkg.com/@electrum-cash/network/-/network-4.2.2.tgz#867b849938d196e887d56cf2cbecb8a1f2c9ea71"
-  integrity sha512-v2Wwt2o0VBBALPArx2dJEDvSqewKjiTW5KAd+jEXxxgdSxFygjJIrFcXryKOCv2CDbpE5+lXAogPAjx6FqW/nw==
+"@electrum-cash/network@^4.4.0":
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/@electrum-cash/network/-/network-4.4.0.tgz#cbceecde9db700609486c167c54ef7aebdce9cdd"
+  integrity sha512-MVZ9oy2qBb21xLHCtXHA6z0KXcmCVy9y0Fl2ZpPHO72O8SetnSjDYXyeOzhlTqXg3bdN1pj5fuLXbnFZnAreoA==
   dependencies:
     "@electrum-cash/debug-logs" "^1.0.0"
-    "@electrum-cash/web-socket" "^1.2.3"
+    "@electrum-cash/socket" "^4.1.0"
+    "@electrum-cash/web-socket" "^4.1.0"
     async-mutex "^0.5.0"
     debug "^4.3.2"
     eventemitter3 "^5.0.1"
     lossless-json "^4.0.1"
 
-"@electrum-cash/web-socket@^1.2.3":
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/@electrum-cash/web-socket/-/web-socket-1.2.3.tgz#473b6ddb4dba513e1c4e62b163da219205e7b31b"
-  integrity sha512-sFWujTt98mvsMvE6gWjG44evkF3PcZhG1JffkkEUAVan+c9X51wkiWr3hkjPeIW0WfNpMTrFkvpGqVYmRj1RCA==
+"@electrum-cash/socket@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@electrum-cash/socket/-/socket-4.1.0.tgz#ad89d874c299546a06d65a4d21743aec286f1825"
+  integrity sha512-3FNCuD3KpKxfjsbmrjSvIYHfRzHFk9tAYzqztu4RNT1bUP3wkF6Yaq6foTuy9MDgc1FW/CxdAV7viGc3WzNt+A==
+
+"@electrum-cash/web-socket@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@electrum-cash/web-socket/-/web-socket-4.1.0.tgz#a307785ad2bd41d9a2a243aea345426773a9b307"
+  integrity sha512-iql81GPPbLlDlOL7LnnE+wdAJhwzR2xEak3SMwbsX4TkdaNs0PJTwhHx5l++b92ixuTBTF/O2usUTQzTrJc2PQ==
   dependencies:
     "@electrum-cash/debug-logs" "^1.0.0"
+    "@electrum-cash/socket" "^4.1.0"
     "@monsterbitar/isomorphic-ws" "^5.3.0"
     "@types/ws" "^8.5.5"
     async-mutex "^0.5.0"
