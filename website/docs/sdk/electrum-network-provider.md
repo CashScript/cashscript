@@ -193,11 +193,11 @@ await electrum.connect();
 
 ### Browser visibility and connectivity
 
-In a browser, the underlying `@electrum-cash/web-socket` connection follows the page: when the page is hidden (for example the user switches tabs) or the browser goes offline, the connection is closed, and it is opened again when the page is visible and online. A long-lived client may also reconnect earlier through its own automatic reconnection. This does not happen in Node.js.
+In a browser, the underlying `@electrum-cash/web-socket` connection follows the page: when the page is hidden (for example when the user switches tabs) or the browser goes offline, the connection is closed, and it is opened again when the page is visible and online. A long-lived client may also reconnect earlier through its own automatic reconnection.
 
 With the default short-lived connections this only affects a request that is in flight at that moment, which fails with a connection error. For a custom electrum client with `manualConnectionManagement`, subscriptions are restored when the connection is opened again, and each one then receives a notification with its current status. Updates that happened while the page was hidden are not delivered one by one, only the latest status.
 
-To keep the connection open while the page is hidden, provide a custom electrum client built on an `ElectrumWebSocket` with `enforceConsistentBrowserBehavior` set to `false`. `@electrum-cash/web-socket` is installed as a dependency of `@electrum-cash/network`; add it to your own dependencies to import it.
+To keep the connection open while the page is hidden, you need to provide a custom electrum client built on an `ElectrumWebSocket` with `enforceConsistentBrowserBehavior` set to `false`.
 
 ```ts
 import { ElectrumClient } from '@electrum-cash/network';

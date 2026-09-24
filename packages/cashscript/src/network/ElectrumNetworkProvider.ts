@@ -33,7 +33,6 @@ type Options = OptionsBase | CustomHostNameOptions | CustomElectrumOptions;
 
 // Electrum protocol 1.5.0 introduced both the `include_tokens` filter on blockchain.scripthash.listunspent
 // and blockchain.headers.get_tip, so this is the lowest version the provider's requests are defined for.
-// Fulcrum also accepts both at 1.4.x, but other servers need not.
 const ELECTRUM_PROTOCOL_VERSION = '1.5.0';
 
 /**
@@ -110,7 +109,6 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   async getBlockHeight(): Promise<number> {
-    // get_tip rather than headers.subscribe, which would also subscribe a long-lived connection to every new header
     const { height } = await this.performRequest('blockchain.headers.get_tip') as BlockHeader;
     return height;
   }
