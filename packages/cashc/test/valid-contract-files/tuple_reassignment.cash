@@ -7,9 +7,9 @@ function swap(int x, int y) returns (int, int) {
     return y, x;
 }
 
-// returns a fresh scalar followed by the two updated accumulators
+// returns the two updated accumulators followed by a fresh scalar
 function step(int x, int y) returns (int, int, int) {
-    return x * x + 1, y, x;
+    return y, x, x * x + 1;
 }
 
 contract TupleReassignment() {
@@ -28,10 +28,10 @@ contract TupleReassignment() {
             (a, b) = swap(a, b);
         }
 
-        // mixed declaration + reassignment IN A LOOP: declarations-first compiles smallest
-        // (the reassignment values fold straight off the top of the stack)
+        // mixed declaration + reassignment IN A LOOP, reassignments first: the cheapest ordering (fresh
+        // declarations are parked on the altstack, reassignments roll values down into their slot)
         for (int j = 0; j < 4; j = j + 1) {
-            (int lo, a, b) = step(a, b);
+            (a, b, int lo) = step(a, b);
             require(lo >= 0);
         }
 
