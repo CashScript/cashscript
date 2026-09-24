@@ -20,6 +20,7 @@ export interface DebugInformation {
   requires: readonly RequireStatement[]; // messages for failing `require` statements
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
   functions?: readonly DebugFrame[]; // Debug metadata for each global definition (defined frames first, then inlined ones)
+  sources?: { readonly [sourceFile: string]: string }; // full text of each imported file, keyed by the frames' `sourceFile`
   inlineRanges?: string; // runs where inlined callables' bodies were emitted (see `generateInlineRanges`)
 }
 
@@ -31,7 +32,7 @@ export interface DebugFrame {
   bytecode: string; // hex of the function body bytecode (exactly what OP_DEFINE stores and the VM runs)
   sourceMap: string; // frame-local source map (ips starting from 0)
   sourceTags?: string; // frame-local semantic tags for opcodes (e.g. loop update/condition ranges)
-  source?: string; // full text of the defining file; absent means the function lives in the contract's own source file
+  source?: string; // deprecated, 0.14.0-next pre-releases only: text of the defining file, now kept once in `debug.sources`
   sourceFile?: string; // originating file name for imported functions; absent means the contract's file
   logs: readonly LogEntry[]; // frame-local log entries
   requires: readonly RequireStatement[]; // frame-local require statements
@@ -88,6 +89,14 @@ export interface Artifact {
   }
   updatedAt: string;
   fingerprint?: string; // SHA256 of the normalized bytecode pattern (BCH bytecode fingerprinting standard)
+}
+
+// Full text of the file an imported frame was defined in; undefined for frames from the contract's own file.
+// Artifacts from 0.14.0-next pre-releases carry the text on the frame itself rather than in `debug.sources`
+export function getDebugFrameSource(sources: DebugInformation['sources'], frame: DebugFrame): string | undefined {
+  if (frame.source !== undefined) return frame.source;
+  if (frame.sourceFile === undefined) return undefined;
+  return sources?.[frame.sourceFile];
 }
 
 export function formatArtifact(artifact: Artifact, format: 'json' | 'ts'): string {
@@ -165,7 +174,11 @@ function formatObject(
 
   if (entries.length === 0) return '{}';
 
-  const formatKey = (key: string): string => (format === 'json' ? JSON.stringify(key) : key);
+  // TS keys stay bare when they are identifiers; others (e.g. file names in `debug.sources`) are quoted
+  const formatKey = (key: string): string => {
+    if (format === 'json') return JSON.stringify(key);
+    return /^[A-Za-z_$][\w$]*$/.test(key) ? key : formatString(key, format);
+  };
   const formatted = entries.map(
     ([key, value]) => `${formatKey(key)}: ${stringify(value, format, indentationLevel + 1)}`,
   );

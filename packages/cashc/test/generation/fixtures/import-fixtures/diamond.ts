@@ -2,6 +2,11 @@ import fs from 'fs';
 import { URL } from 'url';
 import { Fixture } from '../../fixture-utils.js';
 
+const readImportFixture = (name: string): string => fs.readFileSync(
+  new URL(`../../../import-fixtures/${name}`, import.meta.url),
+  { encoding: 'utf-8' },
+);
+
 export const fixtures: Fixture[] = [
   {
     artifact: {
@@ -23,7 +28,6 @@ export const fixtures: Fixture[] = [
             inputs: [{ name: 'a', type: 'int' }],
             bytecode: '8b',
             sourceMap: '2:11:2:16:1',
-            source: fs.readFileSync(new URL('../../../import-fixtures/leaf.cash', import.meta.url), { encoding: 'utf-8' }),
             sourceFile: 'leaf.cash',
             logs: [],
             requires: [],
@@ -33,7 +37,6 @@ export const fixtures: Fixture[] = [
             inputs: [{ name: 'a', type: 'int' }],
             bytecode: '8b5295',
             sourceMap: '3:11:3:18:1;:21::22:0;:11:::1',
-            source: fs.readFileSync(new URL('../../../import-fixtures/mid1.cash', import.meta.url), { encoding: 'utf-8' }),
             sourceFile: 'mid1.cash',
             logs: [],
             requires: [],
@@ -44,13 +47,17 @@ export const fixtures: Fixture[] = [
             inputs: [{ name: 'a', type: 'int' }],
             bytecode: '8b5393',
             sourceMap: '3:11:3:18:1;:21::22:0;:11:::1',
-            source: fs.readFileSync(new URL('../../../import-fixtures/mid2.cash', import.meta.url), { encoding: 'utf-8' }),
             sourceFile: 'mid2.cash',
             logs: [],
             requires: [],
             inlineRanges: '0:0:leaf',
           },
         ],
+        sources: {
+          'leaf.cash': readImportFixture('leaf.cash'),
+          'mid1.cash': readImportFixture('mid1.cash'),
+          'mid2.cash': readImportFixture('mid2.cash'),
+        },
         inlineRanges: '1:3:m1;5:7:m2',
       },
     },
@@ -90,7 +97,6 @@ export const fixtures: Fixture[] = [
             sourceMap: '2:11:2:16:1',
             logs: [],
             requires: [],
-            source: fs.readFileSync(new URL('../../../import-fixtures/leaf.cash', import.meta.url), { encoding: 'utf-8' }),
             sourceFile: 'leaf.cash',
           },
           {
@@ -101,7 +107,6 @@ export const fixtures: Fixture[] = [
             sourceMap: '3:11:3:18:1;;:21::22:0;:11:::1',
             logs: [],
             requires: [],
-            source: fs.readFileSync(new URL('../../../import-fixtures/mid1.cash', import.meta.url), { encoding: 'utf-8' }),
             sourceFile: 'mid1.cash',
           },
           {
@@ -112,10 +117,14 @@ export const fixtures: Fixture[] = [
             sourceMap: '3:11:3:18:1;;:21::22:0;:11:::1',
             logs: [],
             requires: [],
-            source: fs.readFileSync(new URL('../../../import-fixtures/mid2.cash', import.meta.url), { encoding: 'utf-8' }),
             sourceFile: 'mid2.cash',
           },
         ],
+        sources: {
+          'leaf.cash': readImportFixture('leaf.cash'),
+          'mid1.cash': readImportFixture('mid1.cash'),
+          'mid2.cash': readImportFixture('mid2.cash'),
+        },
       },
       fingerprint: '316a3305152ec0695bf80303736c79dd1f9cc2f1dbccf57d9965094401363307',
     },

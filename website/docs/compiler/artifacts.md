@@ -28,6 +28,7 @@ interface Artifact {
     requires: RequireStatement[] // messages for failing `require` statements
     sourceTags?: string // semantic tags for opcodes (e.g. loop update/condition ranges)
     functions?: DebugFrame[] // debug metadata for each global definition (defined frames first, then inlined ones)
+    sources?: { [sourceFile: string]: string } // full source code of each imported file, stored once and referenced by the frames' `sourceFile`
     inlineRanges?: string // "startIp:endIp:name;..." — runs where inlined callables' bodies were emitted
   }
   updatedAt: string // Last datetime this artifact was updated (in ISO format)
@@ -71,7 +72,7 @@ interface DebugFrame {
   bytecode: string; // hex-encoded bytecode of the function body (exactly what OP_DEFINE stores)
   sourceMap: string; // source map of the function body (instruction pointers starting from 0)
   sourceTags?: string; // semantic tags for opcodes within the function body
-  source?: string; // full source code of the defining file (only present for imported functions)
+  source?: string; // deprecated: only written by 0.14.0-next pre-releases, newer artifacts keep the file's source once in `debug.sources`
   sourceFile?: string; // file name the function is imported from (absent for the contract's own file)
   logs: LogEntry[]; // log entries within the function body
   requires: RequireStatement[]; // messages for failing `require` statements within the function body

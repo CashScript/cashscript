@@ -291,9 +291,9 @@ describe('Inlining and shared definitions', () => {
     expect(artifact.debug?.functions).toContainEqual(expect.objectContaining({
       name: 'assertPositive',
       sourceFile: 'helpers.cash',
-      source: importedSource,
       requires: [expect.objectContaining({ line: 2, message: 'must be positive' })],
     }));
+    expect(artifact.debug?.sources).toEqual({ 'helpers.cash': importedSource });
     expect(artifact.debug?.functions?.[0].id).toBeUndefined();
     expect(artifact.debug?.inlineRanges).toMatch(/^\d+:\d+:assertPositive$/);
   });
@@ -368,9 +368,46 @@ describe('Global constants', () => {
     expect(artifact.debug?.functions?.[0]).toMatchObject({
       name: 'IMPORTED_HASH',
       kind: 'constant',
-      source: importedSource,
       sourceFile: 'constants.cash',
     });
+    expect(artifact.debug?.sources).toEqual({ 'constants.cash': importedSource });
+  });
+
+  it('keeps the text of an imported file once, however many of its definitions are used', () => {
+    const importedSource = `
+      int constant FIRST = 1;
+      int constant SECOND = 2;
+      int constant THIRD = 3;
+      function addFirst(int a) returns (int) { return a + FIRST; }`;
+    const source = `
+      import "./constants.cash";
+      contract Imported(int x) {
+        function spend() {
+          require(addFirst(x) == SECOND + THIRD);
+        }
+      }`;
+
+    const artifact = compileString(source, { files: { './constants.cash': importedSource } });
+    const frames = artifact.debug?.functions ?? [];
+    expect(frames.map((frame) => frame.name).sort()).toEqual(['FIRST', 'SECOND', 'THIRD', 'addFirst']);
+    frames.forEach((frame) => {
+      expect(frame.sourceFile).toBe('constants.cash');
+      expect(frame).not.toHaveProperty('source');
+    });
+    expect(artifact.debug?.sources).toEqual({ 'constants.cash': importedSource });
+    expect(JSON.stringify(artifact).split('SECOND = 2').length - 1).toBe(1);
+  });
+
+  it('omits debug sources when nothing is imported', () => {
+    const source = `
+      int constant LOCAL = 7;
+      contract Local(int x) {
+        function spend() {
+          require(x == LOCAL);
+        }
+      }`;
+
+    expect(compileString(source).debug?.sources).toBeUndefined();
   });
 
   it('folds constant definitions to literals at compile time', () => {

@@ -92,6 +92,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
   requires: RequireStatement[] = [];
   sourceTags: SourceTagEntry[] = [];
   frames: DebugFrame[] = [];
+  // Full text of each imported file that a frame refers to by its `sourceFile`
+  sources: Record<string, string> = {};
   finalStackUsage: Record<string, StackItem> = {};
 
   private scopeDepth = 0;
@@ -276,6 +278,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
     optimised: OptimiseBytecodeResult,
     functionId?: number,
   ): DebugFrame {
+    if (node.sourceFile !== undefined && node.sourceCode !== undefined) {
+      this.sources[node.sourceFile] = node.sourceCode;
+    }
+
     return {
       id: functionId,
       name: node.name,
@@ -284,7 +290,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
       bytecode: binToHex(scriptToBytecode(optimised.script)),
       sourceMap: generateSourceMap(optimised.locationData),
       sourceTags: generateSourceTags(optimised.sourceTags) || undefined,
-      source: node.sourceCode,
       sourceFile: node.sourceFile,
       logs: optimised.logs,
       requires: optimised.requires,

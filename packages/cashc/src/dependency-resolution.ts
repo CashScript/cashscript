@@ -21,6 +21,8 @@ export interface ImportResolver {
   read(canonicalPath: string): string | undefined;
   dirname(canonicalPath: string): string;
   sourceName(canonicalPath: string): string;
+  // A name no other file resolves to, used when two files share a `sourceName`
+  uniqueSourceName(canonicalPath: string): string;
 }
 
 export function createDiskResolver(rootDir: string): ImportResolver {
@@ -41,6 +43,9 @@ export function createDiskResolver(rootDir: string): ImportResolver {
       const relativePath = getPackageImportPath(canonicalPath) ?? path.relative(rootDir, canonicalPath);
       return relativePath.split(path.sep).join(path.posix.sep);
     },
+    // The path relative to the root is unique per file, unlike the package path, which a local file
+    // or another installed copy of the package can share
+    uniqueSourceName: (canonicalPath) => path.relative(rootDir, canonicalPath).split(path.sep).join(path.posix.sep),
   };
 }
 
@@ -59,6 +64,7 @@ export function createMemoryResolver(files: Record<string, string>): ImportResol
     read: (canonicalPath) => normalisedFiles[canonicalPath],
     dirname: (canonicalPath) => path.posix.dirname(canonicalPath),
     sourceName: (canonicalPath) => canonicalPath,
+    uniqueSourceName: (canonicalPath) => canonicalPath,
   };
 }
 
@@ -99,6 +105,7 @@ function collectImports(
 ): ImportedDefinitions {
   const visitedPaths = new Set<string>();
   const activePaths = new Set<string>();
+  const importedFiles: ImportedFile[] = [];
 
   const collect = (currentImports: ImportNode[], currentDir: string): ImportedDefinitions[] =>
     currentImports.flatMap((importNode) => {
@@ -126,15 +133,7 @@ function collectImports(
       const importedAst = parseCode(importedSource, errorListener);
       checkVersionConstraints(importedAst.pragmas, resolver.sourceName(canonicalPath));
 
-      // Record source provenance so debug frames can attribute to the imported file
-      importedAst.functions.forEach((func) => {
-        func.sourceCode = importedSource;
-        func.sourceFile = resolver.sourceName(canonicalPath);
-      });
-      importedAst.constants.forEach((constant) => {
-        constant.sourceCode = importedSource;
-        constant.sourceFile = resolver.sourceName(canonicalPath);
-      });
+      importedFiles.push({ canonicalPath, source: importedSource, ast: importedAst });
 
       activePaths.add(canonicalPath);
       const transitiveDefinitions = collect(importedAst.imports, resolver.dirname(canonicalPath));
@@ -147,12 +146,46 @@ function collectImports(
     });
 
   const collected = collect(imports, resolver.rootDir);
+  recordSourceProvenance(importedFiles, resolver);
   return {
     functions: collected.flatMap((definitions) => definitions.functions),
     constants: collected.flatMap((definitions) => definitions.constants),
   };
 }
 
+interface ImportedFile {
+  canonicalPath: string;
+  source: string;
+  ast: SourceFileNode;
+}
+
+// Record source provenance so debug frames can attribute to the imported file. The artifact keeps each
+// file's source once, keyed by this name, so two different files must never share one. Files start out
+// with their short name, and any name held by more than one file is replaced by each file's unique name,
+// repeated until no name is shared: a replacement can itself equal another file's short name when the
+// contract lives inside node_modules. Unique names never collide, so this ends
+function recordSourceProvenance(importedFiles: ImportedFile[], resolver: ImportResolver): void {
+  const names = new Map(importedFiles.map(({ canonicalPath }) => [canonicalPath, resolver.sourceName(canonicalPath)]));
+
+  const sharedNames = (): Set<string> => {
+    const counts = new Map<string, number>();
+    names.forEach((name) => counts.set(name, (counts.get(name) ?? 0) + 1));
+    return new Set([...counts].filter(([, count]) => count > 1).map(([name]) => name));
+  };
+
+  for (let shared = sharedNames(); shared.size > 0; shared = sharedNames()) {
+    names.forEach((name, canonicalPath) => {
+      if (shared.has(name)) names.set(canonicalPath, resolver.uniqueSourceName(canonicalPath));
+    });
+  }
+
+  importedFiles.forEach(({ canonicalPath, source, ast }) => {
+    [...ast.functions, ...ast.constants].forEach((definition) => {
+      definition.sourceCode = source;
+      definition.sourceFile = names.get(canonicalPath);
+    });
+  });
+}
 
 function isPackageImport(importPath: string): boolean {
   return !importPath.startsWith('./') && !importPath.startsWith('../') && !importPath.startsWith('/');

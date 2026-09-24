@@ -15,6 +15,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :hammer_and_wrench: Update `compileString` to take an optional `files` object for filesystem-free import resolution.
 - :hammer_and_wrench: Unused variables that are not marked `unused` now produce a compiler warning instead of a compilation error. Warnings are printed with `console.warn`, or passed to the new `warningListener` compiler option.
 - :hammer_and_wrench: Add a compiler warning for values assigned to a variable that are never read afterwards.
+- :hammer_and_wrench: Artifacts keep the source code of each imported file once, in `debug.sources`, which the debug frames of imported functions and constants refer to by their `sourceFile`.
 - :bug: Fix bug where date literal parsing was different per locale, it now uses UTC.
 - :racehorse: Add new `OP_SWAP OP_MUL`, `OP_NOT OP_NOT` and `TO_ALTSTACK OP_FROMALTSTACK` optimisations.
 - :racehorse: Greatly improve compiler speed for very large contracts.

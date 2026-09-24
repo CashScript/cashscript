@@ -1,0 +1,8 @@
+import "mathlib/math.cash";
+import "./mathlib/math.cash";
+
+contract NodeModulesClash() {
+    function spend(int x) {
+        require(nmAdd(localDouble(x), 3) == 13);
+    }
+}

@@ -19,6 +19,7 @@ import {
   artifactTestFunctionIntermediateResults,
   artifactTestImportedFunctionDebugging,
   artifactTestImportedFunctionDebuggingDefined,
+  artifactTestImportedFunctionDebuggingLegacy,
   artifactTestMultiReturn,
   artifactTestMultilineFunctionRequire,
   artifactTestNestedFunctions,
@@ -840,6 +841,9 @@ describe('Debugging tests - user-defined function frames', () => {
   const importedDefinedContract = new Contract(artifactTestImportedFunctionDebuggingDefined, [], { provider });
   const importedDefinedUtxo = provider.addUtxo(importedDefinedContract.address, randomUtxo());
 
+  const legacyContract = new Contract(artifactTestImportedFunctionDebuggingLegacy, [], { provider });
+  const legacyUtxo = provider.addUtxo(legacyContract.address, randomUtxo());
+
   it('attributes a console.log inside an inlined function to the function source line', () => {
     const transaction = new TransactionBuilder({ provider })
       .addInput(contractUtxo, contract.unlock.spend(5n))
@@ -998,6 +1002,21 @@ describe('Debugging tests - user-defined function frames', () => {
 
     expect(transaction).toFailRequireWith('function_helpers.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 3) with the following message: value must be positive.');
     expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
+  });
+
+  it('still debugs an artifact whose imported frames carry their own source, as 0.14.0-next pre-releases wrote them', () => {
+    expect(artifactTestImportedFunctionDebuggingLegacy.debug?.sources).toBeUndefined();
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(legacyUtxo, legacyContract.unlock.spend(0n))
+      .addOutput({ to: legacyContract.address, amount: 10000n });
+
+    expect(transaction).toFailRequireWith('function_helpers.cash:3 Require statement failed at input 0 in contract Test, function assertPositive (function_helpers.cash, line 3) with the following message: value must be positive.');
+    expect(transaction).toFailRequireWith('Failing statement: require(value > 0, "value must be positive")');
+
+    const lockScript = transaction.getLibauthTemplate().scripts[getLockScriptName(legacyContract)].script;
+    expect(lockScript).toContain('>>> imported from function_helpers.cash');
+    expect(lockScript).toContain('/* function assertPositive(int value) {');
   });
 
   it('binds multi-return values to destructuring targets in declared order', () => {

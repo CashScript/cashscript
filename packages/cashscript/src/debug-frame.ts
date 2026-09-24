@@ -16,6 +16,7 @@ import {
   RequireStatement,
   Script,
   bytecodeToScript,
+  getDebugFrameSource,
   parseAndResolveInlineRanges,
   sourceMapToLocationData,
 } from '@cashscript/utils';
@@ -68,7 +69,7 @@ const resolveFrameByBytecode = (artifact: Artifact, activeBytecode: string): Res
 
 const resolveDebugFrame = (artifact: Artifact, frame: DebugFrame): ResolvedFrame => ({
   sourceMap: frame.sourceMap,
-  source: frame.source ?? artifact.source,
+  source: getDebugFrameSource(artifact.debug?.sources, frame) ?? artifact.source,
   sourceName: frame.sourceFile ?? `${artifact.contractName}.cash`,
   ipOffset: 0, // function bodies have no constructor-arg prefix; their ips start at 0
   requires: frame.requires,

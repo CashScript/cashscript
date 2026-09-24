@@ -213,6 +213,41 @@ describe('Imports from node_modules (package imports)', () => {
       .toEqual(['mathlib/helper.cash', 'mathlib/main.cash']);
   });
 
+  it('gives two different files that share a package path distinct provenance', () => {
+    // clash/nm_clash_main.cash imports the package mathlib/math.cash and a local ./mathlib/math.cash,
+    // whose short names are both 'mathlib/math.cash'; each must keep its own source in the artifact
+    const artifact = compileFile(fixture('clash/nm_clash_main.cash'), { disableInlining: true });
+    const frames = artifact.debug?.functions ?? [];
+    const sourceFileOf = (name: string): string | undefined => frames.find((frame) => frame.name === name)?.sourceFile;
+
+    expect(sourceFileOf('localDouble')).toEqual('mathlib/math.cash');
+    expect(sourceFileOf('nmAdd')).toEqual('../node_modules/mathlib/math.cash');
+    expect(artifact.debug?.sources).toEqual({
+      'mathlib/math.cash': readFixture('clash/mathlib/math.cash'),
+      '../node_modules/mathlib/math.cash': readFixture('node_modules/mathlib/math.cash'),
+    });
+  });
+
+  it('keeps provenance distinct when a renamed file would take another file\'s name', () => {
+    // A contract inside node_modules names even its local files by package path. Its ./lib/x.cash and bar's
+    // nested copy of foo/lib/x.cash both start as 'foo/lib/x.cash'; renaming the local one to 'lib/x.cash'
+    // then meets the package lib/x.cash, which is renamed in turn
+    const artifact = compileFile(fixture('clash/node_modules/foo/main.cash'), { disableInlining: true });
+    const frames = artifact.debug?.functions ?? [];
+    const sourceFileOf = (name: string): string | undefined => frames.find((frame) => frame.name === name)?.sourceFile;
+
+    expect(sourceFileOf('localCheck')).toEqual('lib/x.cash');
+    expect(sourceFileOf('nestedCheck')).toEqual('../bar/node_modules/foo/lib/x.cash');
+    expect(sourceFileOf('packageCheck')).toEqual('node_modules/lib/x.cash');
+    expect(sourceFileOf('viaBar')).toEqual('bar/y.cash');
+    expect(artifact.debug?.sources).toEqual({
+      'lib/x.cash': readFixture('clash/node_modules/foo/lib/x.cash'),
+      '../bar/node_modules/foo/lib/x.cash': readFixture('clash/node_modules/bar/node_modules/foo/lib/x.cash'),
+      'node_modules/lib/x.cash': readFixture('clash/node_modules/foo/node_modules/lib/x.cash'),
+      'bar/y.cash': readFixture('clash/node_modules/bar/y.cash'),
+    });
+  });
+
   it('throws when a package import cannot be found in any node_modules directory', () => {
     expect(() => compileFile(fixture('nm_missing_main.cash'))).toThrow(ImportResolutionError);
     expect(() => compileFile(fixture('nm_missing_main.cash'))).toThrow(

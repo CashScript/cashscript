@@ -162,6 +162,7 @@ function compileCode(
     requires: optimisationResult.requires,
     sourceTags: generateSourceTags(optimisationResult.sourceTags) || undefined,
     functions: traversal.frames.length > 0 ? traversal.frames : undefined,
+    sources: Object.keys(traversal.sources).length > 0 ? traversal.sources : undefined,
     inlineRanges: generateInlineRanges(optimisationResult.inlineRanges) || undefined,
   };
 

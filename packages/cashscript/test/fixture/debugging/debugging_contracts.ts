@@ -1,3 +1,4 @@
+import { Artifact } from '@cashscript/utils';
 import { compileFile, compileString } from 'cashc/dist/internal.js';
 
 const CONTRACT_TEST_FUNCTION_DEBUGGING = `
@@ -621,4 +622,17 @@ export const artifactTestFunctionDebuggingDefined = compileString(
 export const artifactTestImportedFunctionDebuggingDefined = compileFile(
   new URL('./function_importer.cash', import.meta.url),
   { disableInlining: true },
+);
+
+// The same artifact in the layout of 0.14.0-next pre-releases, where every imported frame carried the full
+// text of its file rather than the artifact keeping it once in `debug.sources`
+const withSourcesOnFrames = (artifact: Artifact): Artifact => {
+  const { sources, ...debug } = artifact.debug!;
+  const functions = debug.functions?.map((frame) => (
+    frame.sourceFile === undefined ? frame : { ...frame, source: sources![frame.sourceFile] }
+  ));
+  return { ...artifact, debug: { ...debug, functions } };
+};
+export const artifactTestImportedFunctionDebuggingLegacy = withSourcesOnFrames(
+  artifactTestImportedFunctionDebuggingDefined,
 );
