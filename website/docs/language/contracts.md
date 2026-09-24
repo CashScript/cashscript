@@ -42,7 +42,7 @@ Upon initialization of the contract, constructor parameters are encoded and adde
 :::
 
 ## Functions
-The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using 'covenants it's possible to specify additional conditions — like restricting *where* money can be sent. To learn more about covenants, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
+The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using 'covenants it's possible to specify additional conditions — like restricting *where* money can be sent. To learn more about covenants, refer to the [CashScript Covenants Guide](/docs/design/covenants).
 
 #### Example
 ```solidity
@@ -152,7 +152,7 @@ contract Example() {
 }
 ```
 
-Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(int fresh, current, next) = step(current, next);`). Inside loops and branches, listing declarations before reassignments compiles to slightly smaller bytecode.
+Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(current, next, int fresh) = step(current, next);`). Inside loops and branches, listing reassignments before declarations compiles to smaller bytecode, as explained in the [optimization guide](/docs/design/optimization#5-reassign-before-you-declare).
 
 :::info
 `checkSig`, `checkMultiSig` and `this.activeBytecode` cannot be used inside a user-defined function, since they would apply to the function body rather than the contract. Use them in a contract function instead (`checkDataSig` is allowed).

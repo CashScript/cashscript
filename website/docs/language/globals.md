@@ -71,7 +71,7 @@ int tx.locktime
 Represents the `nLocktime` field of the transaction. This is similar to the [`tx.time`][tx.time] global variable but `tx.time` can only be used in `require` statements, not for variable declaration.
 
 :::tip
- The use case for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/guides/covenants#keeping-local-state-in-nfts).
+ The use case for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/design/covenants#keeping-local-state-in-nfts).
 :::
 
 Using `tx.locktime` in a contract requires a non-final sequence number on the spending input. A `require(tx.time >= ...)` check enforces a non-final sequence number. As a safety measure, the CashScript compiler automatically injects a check for this when no such check is present.
@@ -289,5 +289,5 @@ require(1 weeks == 7 days);
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [addInput()]: /docs/sdk/transaction-builder#addinput
 [setLocktime()]: /docs/sdk/transaction-builder#setlocktime
-[covenants-guide]: /docs/guides/covenants
+[covenants-guide]: /docs/design/covenants
 [tx.time]: #txtime

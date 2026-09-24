@@ -89,7 +89,7 @@ This retry pattern applies when the dapp or server broadcasts the transaction di
 
 ## Modular Contract Functions
 
-The [modular contract design](/docs/guides/optimization#modular-contract-design) pattern from the optimization guide also has significant concurrency benefits. By separating contract logic into independent function contracts (each identified by an NFT commitment), users only contend on the main covenant when they need to modify shared state. The function contract UTXOs can each be duplicated independently, so different operation types can run in parallel without blocking each other.
+The [function contract](/docs/design/modular#function-contracts) pattern from Modular Contract Design also has significant concurrency benefits. By separating contract logic into independent function contracts (each identified by an NFT commitment), users only contend on the main covenant when they need to modify shared state. The function contract UTXOs can each be duplicated independently, so different operation types can run in parallel without blocking each other.
 
 :::note
 This pattern is most valuable for complex contracts with many functions. For simpler contracts like a minting contract, putting all logic in one contract is perfectly fine.

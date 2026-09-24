@@ -34,6 +34,18 @@ Bitauth IDE: [link]
 
 Read the error message to see which line in the CashScript contract causes the transaction validation to fail. Investigate whether the contract function invocation is the issue (on the TypeScript SDK side) or whether the issue is in the CashScript contract itself (so you'd need to update your contract and recompile the artifact). If it is not clear **why** the CashScript contract is failing on that line, then you can use the following two strategies: console logging & Bitauth IDE stack trace.
 
+#### Call stacks
+
+When the failing `require` statement sits inside a [user-defined function](/docs/language/contracts#user-defined-functions), the error message also includes a call stack showing how execution reached it. The innermost frame is listed first, the contract function that started the call last.
+
+```bash
+Test.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (Test.cash, line 2) with the following message: value must be positive.
+Failing statement: require(value > 0, "value must be positive");
+  at assertPositive (Test.cash:2) — require(value > 0, "value must be positive");
+  at validate (Test.cash:6) — assertPositive(amount)
+  at Test.cash:12 — validate(x)
+```
+
 ### Console Logging
 
 To help with debugging you can add `console.log` statements to your CashScript contract file to log variables. This way you investigate whether the variables have the expected values when they get to the failing `require` statement in the CashScript file. After adding the `console.log` statements, recompile your contract so they are added to your contract's Artifact.

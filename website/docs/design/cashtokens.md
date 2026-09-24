@@ -69,7 +69,7 @@ The Jedex has a section on novel "[demonstrated concepts](https://github.com/bit
 The [Jedex demo](https://github.com/bitjson/jedex) also introduces very advanced concepts on multi-threading and MEV avoidance through batching. This core feature of 'joint-execution' is how the DEX got its name.
 :::
 
-Below we'll create a short list of the use cases which will be the most important to know about:
+Below is a short list of the use cases which are the most important to know about. Most of them are ways of splitting a system into multiple contracts that authenticate each other with tokens, which has its own page: [Modular Contract Design](/docs/design/modular).
 
 - **Covenant tracking tokens** - this is what enables unique authentication of contract deployments
 - **Commitment-based state management** - this is what `mutable` nfts are extremely useful for
