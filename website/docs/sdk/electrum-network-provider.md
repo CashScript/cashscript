@@ -176,18 +176,45 @@ When initializing an `ElectrumNetworkProvider` you have the option in the constr
 
 If intending to use electrum-cash subscriptions, make sure to set `manualConnectionManagement` to true, so the `ElectrumNetworkProvider` does not disconnect after each request.
 
+The custom client must negotiate Electrum protocol 1.5.0 or later, since the provider's requests (the `include_tokens` UTXO filter and `blockchain.headers.get_tip`) were introduced in that version.
+
 #### Example
 
 ```ts
 import { ElectrumClient } from '@electrum-cash/network';
 import { ElectrumNetworkProvider } from 'cashscript';
 
-const electrum = new ElectrumClient('CashScript Application', '1.4.1', 'chipnet.bch.ninja');
+const electrum = new ElectrumClient('CashScript Application', '1.5.0', 'chipnet.bch.ninja');
 const provider = new ElectrumNetworkProvider('chipnet', {
   electrum, manualConnectionManagement: true
 });
 await electrum.connect();
 ```
+
+### Browser visibility and connectivity
+
+In a browser, the underlying `@electrum-cash/web-socket` connection follows the page: when the page is hidden (for example when the user switches tabs) or the browser goes offline, the connection is closed, and it is opened again when the page is visible and online. A long-lived client may also reconnect earlier through its own automatic reconnection.
+
+With the default short-lived connections this only affects a request that is in flight at that moment, which fails with a connection error. For a custom electrum client with `manualConnectionManagement`, subscriptions are restored when the connection is opened again, and each one then receives a notification with its current status. Updates that happened while the page was hidden are not delivered one by one, only the latest status.
+
+To keep the connection open while the page is hidden, you need to provide a custom electrum client built on an `ElectrumWebSocket` with `enforceConsistentBrowserBehavior` set to `false`.
+
+```ts
+import { ElectrumClient } from '@electrum-cash/network';
+import { ElectrumWebSocket } from '@electrum-cash/web-socket';
+import { ElectrumNetworkProvider } from 'cashscript';
+
+const socket = new ElectrumWebSocket('chipnet.bch.ninja', { enforceConsistentBrowserBehavior: false });
+const electrum = new ElectrumClient('CashScript Application', '1.5.0', socket);
+const provider = new ElectrumNetworkProvider('chipnet', {
+  electrum, manualConnectionManagement: true
+});
+await electrum.connect();
+```
+
+:::caution
+Only use `enforceConsistentBrowserBehavior: false` in code that runs in a browser. In Node.js the same option also disables TLS certificate verification, so the connection would accept any certificate.
+:::
 
 [electrum-cash]: https://www.npmjs.com/package/@electrum-cash/network
 
