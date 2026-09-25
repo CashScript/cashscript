@@ -17,6 +17,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :hammer_and_wrench: Add a compiler warning for values assigned to a variable that are never read afterwards.
 - :bug: Fix bug where date literal parsing was different per locale, it now uses UTC.
 - :racehorse: Add new `OP_SWAP OP_MUL`, `OP_NOT OP_NOT` and `TO_ALTSTACK OP_FROMALTSTACK` optimisations.
+- :racehorse: Add new optimisations for loop counter updates, reassignments inside loops and order-independent operations (`OP_BOOLAND`, `OP_BOOLOR`, `OP_MIN`, `OP_MAX`).
 - :racehorse: Greatly improve compiler speed for very large contracts.
 
 #### CashScript SDK

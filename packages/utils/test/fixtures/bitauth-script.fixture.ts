@@ -231,31 +231,31 @@ contract ForWhileNested() {
     }
 }
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
-    asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_OVER OP_1ADD OP_ROT OP_DROP OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_4 OP_NUMEQUAL',
-    sourceMap: '3:18:3:19;5:21:5:22;:8:13:9;:24:5:25;:28::29;:24:::1;;;:42:13:9:0;6:20:6:21;8:12:12:13;:19:8:20;:23::24;:19:::1;;;:26:12:13:0;9:22:9:25;;:28::29;;:22:::1;:32::33:0;:22:::1;:16::34;;;;;;;10:20:10:21:0;:::25:1;:16::26;8:26:12:13;;:12;;5:35:5:36:0;:::40:1;:31;;::13:9;:42;;:8;;;15:23:15:24:0;:8::26:1',
-    sourceTags: '34:37:lc;38:42:fu;43:46:lc;47:47:sc',
+    asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_ROT OP_ROT OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_OVER OP_1ADD OP_ROT OP_DROP OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_4 OP_NUMEQUAL',
+    sourceMap: '3:18:3:19;5:21:5:22;:8:13:9;:24:5:25;:28::29;:24:::1;;;:42:13:9:0;6:20:6:21;8:12:12:13;:19:8:20;:23::24;:19:::1;;;:26:12:13:0;9:22:9:25;;:28::29;;:22:::1;:32::33:0;:22:::1;:16::34;;;;;10::10:26;8:26:12:13;;:12;;5:35:5:36:0;:::40:1;:31;;::13:9;:42;;:8;;;15:23:15:24:0;:8::26:1',
+    sourceTags: '30:33:lc;34:38:fu;39:42:lc;43:43:sc',
     expectedBitAuthScript: `
-                                                                                                                   /* contract ForWhileNested() {                                 */
-                                                                                                                   /*     function spend() {                                      */
-OP_0                                                                                                               /*         int sum = 0;                                        */
-                                                                                                                   /*                                                             */
-OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                                                   /*         for (int i = 0; i < 2; i = i + 1) {                 */
-OP_0                                                                                                               /*             int j = 0;                                      */
-                                                                                                                   /*                                                             */
-OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                                                        /*             while (j < 2) {                                 */
-OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK /*                 sum = sum + i + j;                          */
-OP_DUP OP_1ADD OP_NIP                                                                                              /*                 j = j + 1;                                  */
-                                                                                                                   /*                 console.log("sum:", sum, "i:", i, "j:", j); */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*                 >>> loop condition check                    */
-                                                                                                                   /*             }                                               */
-OP_OVER OP_1ADD OP_ROT OP_DROP OP_NIP                                                                              /*             >>> for-loop update (i = i + 1)                 */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*             >>> loop condition check                        */
-OP_DROP                                                                                                            /*             >>> scope cleanup                               */
-                                                                                                                   /*         }                                                   */
-                                                                                                                   /*                                                             */
-OP_4 OP_NUMEQUAL                                                                                                   /*         require(sum == 4);                                  */
-                                                                                                                   /*     }                                                       */
-                                                                                                                   /* }                                                           */
+                                                                                   /* contract ForWhileNested() {                                 */
+                                                                                   /*     function spend() {                                      */
+OP_0                                                                               /*         int sum = 0;                                        */
+                                                                                   /*                                                             */
+OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                   /*         for (int i = 0; i < 2; i = i + 1) {                 */
+OP_0                                                                               /*             int j = 0;                                      */
+                                                                                   /*                                                             */
+OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                        /*             while (j < 2) {                                 */
+OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_ROT OP_ROT /*                 sum = sum + i + j;                          */
+OP_1ADD                                                                            /*                 j = j + 1;                                  */
+                                                                                   /*                 console.log("sum:", sum, "i:", i, "j:", j); */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                           /*                 >>> loop condition check                    */
+                                                                                   /*             }                                               */
+OP_OVER OP_1ADD OP_ROT OP_DROP OP_NIP                                              /*             >>> for-loop update (i = i + 1)                 */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                           /*             >>> loop condition check                        */
+OP_DROP                                                                            /*             >>> scope cleanup                               */
+                                                                                   /*         }                                                   */
+                                                                                   /*                                                             */
+OP_4 OP_NUMEQUAL                                                                   /*         require(sum == 4);                                  */
+                                                                                   /*     }                                                       */
+                                                                                   /* }                                                           */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {
@@ -279,35 +279,35 @@ OP_4 OP_NUMEQUAL                                                                
         require(total + count == 12);
     }
 }`,
-    asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_DUP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_0 OP_BEGIN OP_DUP OP_1ADD OP_NIP OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL OP_ADD OP_12 OP_NUMEQUAL',
-    sourceMap: '3:20:3:21;5:21:5:22;:8:10:9;:24:5:25;:28::29;:24:::1;;;6:19:10:9:0;7:25:7:26;:12:9:13;:28:7:29;:32::33;:28:::1;;;:46:9:13:0;8:24:8:29;;:32::33;;:24:::1;:36::37:0;:24:::1;:16::38;;;;;;;7:39:7:40:0;:::44:1;:35;:46:9:13;;:12;;;6::6::0;:::17:1;5:31;6:19:10:9;;5:8;;;12:20:12:21:0;13:8:15:28;14:20:14:25;:::29:1;:12::30;15:17:15:22:0;:25::26;13:8::28:1;;17:16:17:29;:33::35:0;:8::37:1',
-    sourceTags: '31:33:fu;34:37:lc;38:38:sc;39:41:fu;42:45:lc;46:46:sc',
+    asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_ROT OP_ROT OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_0 OP_BEGIN OP_1ADD OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL OP_ADD OP_12 OP_NUMEQUAL',
+    sourceMap: '3:20:3:21;5:21:5:22;:8:10:9;:24:5:25;:28::29;:24:::1;;;6:19:10:9:0;7:25:7:26;:12:9:13;:28:7:29;:32::33;:28:::1;;;:46:9:13:0;8:24:8:29;;:32::33;;:24:::1;:36::37:0;:24:::1;:16::38;;;;;7:35:7:44;:46:9:13;;:12;;;5:31:6:17;6:19:10:9;;5:8;;;12:20:12:21:0;13:8:15:28;14:12:14:30:1;15:17:15:22:0;:25::26;13:8::28:1;;17:16:17:29;:33::35:0;:8::37:1',
+    sourceTags: '29:29:fu;30:33:lc;34:34:sc;35:35:fu;36:39:lc;40:40:sc',
     expectedBitAuthScript: `
-                                                                                                                   /* contract NestedForWithDoWhile() {               */
-                                                                                                                   /*     function spend() {                          */
-OP_0                                                                                                               /*         int total = 0;                          */
-                                                                                                                   /*                                                 */
-OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK                                                         /*         for (int i = 0; i < 3; i =              */
-OP_IF                                                                                                              /*             i + 1) {                            */
-OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                                                   /*             for (int j = 0; j < 2; j = j + 1) { */
-OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK /*                 total = total + i + j;          */
-OP_DUP OP_1ADD OP_NIP                                                                                              /*                 >>> for-loop update (j = j + 1) */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*                 >>> loop condition check        */
-OP_DROP                                                                                                            /*                 >>> scope cleanup               */
-                                                                                                                   /*             }                                   */
-OP_DUP OP_1ADD OP_NIP                                                                                              /*             >>> for-loop update (i + 1)         */
-OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                                                           /*             >>> loop condition check            */
-OP_DROP                                                                                                            /*             >>> scope cleanup                   */
-                                                                                                                   /*         }                                       */
-                                                                                                                   /*                                                 */
-OP_0                                                                                                               /*         int count = 0;                          */
-OP_BEGIN                                                                                                           /*         do {                                    */
-OP_DUP OP_1ADD OP_NIP                                                                                              /*             count = count + 1;                  */
-OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL                                                                         /*         } while (count < 3);                    */
-                                                                                                                   /*                                                 */
-OP_ADD OP_12 OP_NUMEQUAL                                                                                           /*         require(total + count == 12);           */
-                                                                                                                   /*     }                                           */
-                                                                                                                   /* }                                               */
+                                                                                   /* contract NestedForWithDoWhile() {               */
+                                                                                   /*     function spend() {                          */
+OP_0                                                                               /*         int total = 0;                          */
+                                                                                   /*                                                 */
+OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK                         /*         for (int i = 0; i < 3; i =              */
+OP_IF                                                                              /*             i + 1) {                            */
+OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF                   /*             for (int j = 0; j < 2; j = j + 1) { */
+OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_ADD OP_3 OP_ROLL OP_DROP OP_ROT OP_ROT /*                 total = total + i + j;          */
+OP_1ADD                                                                            /*                 >>> for-loop update (j = j + 1) */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                           /*                 >>> loop condition check        */
+OP_DROP                                                                            /*                 >>> scope cleanup               */
+                                                                                   /*             }                                   */
+OP_1ADD                                                                            /*             >>> for-loop update ()              */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                           /*             >>> loop condition check            */
+OP_DROP                                                                            /*             >>> scope cleanup                   */
+                                                                                   /*         }                                       */
+                                                                                   /*                                                 */
+OP_0                                                                               /*         int count = 0;                          */
+OP_BEGIN                                                                           /*         do {                                    */
+OP_1ADD                                                                            /*             count = count + 1;                  */
+OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL                                         /*         } while (count < 3);                    */
+                                                                                   /*                                                 */
+OP_ADD OP_12 OP_NUMEQUAL                                                           /*         require(total + count == 12);           */
+                                                                                   /*     }                                           */
+                                                                                   /* }                                               */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
   {
@@ -459,7 +459,7 @@ contract LocalFunctions() {
   OP_0                                                                                 /*     int sum = 0;                                 */
   OP_0 OP_BEGIN OP_DUP OP_3 OP_PICK OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF             /*     for (int i = 0; i < n; i = i + 1) {          */
   OP_2DUP OP_ADD OP_ROT OP_DROP OP_SWAP                                                /*         sum = sum + i;                           */
-  OP_DUP OP_1ADD OP_NIP                                                                /*         >>> for-loop update (i = i + 1)          */
+  OP_1ADD                                                                              /*         >>> for-loop update (i = i + 1)          */
   OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                             /*         >>> loop condition check                 */
   OP_DROP                                                                              /*         >>> scope cleanup                        */
                                                                                        /*     }                                            */
