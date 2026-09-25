@@ -1,0 +1,6 @@
+import "./util/leaf.cash";
+import "../../shared.cash";
+
+function alpha(int n) returns (int) {
+    return leaf(n) + shared(n);
+}

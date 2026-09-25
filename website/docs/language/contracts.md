@@ -42,7 +42,7 @@ Upon initialization of the contract, constructor parameters are encoded and adde
 :::
 
 ## Functions
-The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using 'covenants it's possible to specify additional conditions — like restricting *where* money can be sent. To learn more about covenants, refer to the [CashScript Covenants Guide](/docs/guides/covenants).
+The main construct in a CashScript contract is the function. A contract can contain one or multiple functions that can be executed to trigger transactions that spend money from the contract. At its core, the result of a function is just a yes or no answer to the question 'Can money be sent out of this contract?'. However, by using 'covenants it's possible to specify additional conditions — like restricting *where* money can be sent. To learn more about covenants, refer to the [CashScript Covenants Guide](/docs/design/covenants).
 
 #### Example
 ```solidity
@@ -60,7 +60,7 @@ contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) {
 ```
 
 :::note
-The functions described here are top-level contract functions, which act as the entry points for spending from the contract. CashScript does not yet support user-defined reusable functions that can be called from within other functions. Callable functions are likely coming in CashScript v0.14, which would also allow function calls inside loops and loops inside reusable functions.
+The functions described here are top-level contract functions, which act as the entry points for spending from the contract. CashScript also supports user-defined reusable functions that are declared at the top level of a file (outside the contract) and can be called from contract functions and from each other. See [User-defined functions](#user-defined-functions) below.
 :::
 
 ### Function Arguments
@@ -78,6 +78,164 @@ In CashScript the types for the function arguments are **not** enforced automati
 :::info
 The typings for function arguments are enforced by default for boolean values and bounded bytes types such as `bytes20` and `bytes32`.
 :::
+
+## User-defined functions
+Reusable functions are declared at the **top level** of a `.cash` file, outside the contract. The compiler chooses between inlining their bodies and sharing them with the BCH VM's native function opcodes (`OP_DEFINE`/`OP_INVOKE`), based on the resulting bytecode size. Single-use functions are inlined; recursive functions remain shared definitions.
+
+A function may return a **single value** using a `returns (T)` clause, and is called from contract functions or from other top-level functions:
+
+```solidity
+pragma cashscript ^0.14.0;
+
+function double(int a) returns (int) {
+    return a * 2;
+}
+
+function addThenDouble(int a, int b) returns (int) {
+    return double(a + b);
+}
+
+contract Example() {
+    function spend(int x) {
+        require(addThenDouble(x, 1) == 8);
+    }
+}
+```
+
+A function without a `returns` clause is a **void** function — it performs only `require` checks and is called as a statement:
+
+```solidity
+function requirePositive(int a) {
+    require(a > 0);
+}
+
+contract Example() {
+    function spend(int x) {
+        requirePositive(x);
+        require(x < 100);
+    }
+}
+```
+
+A function can also return **multiple values** by declaring `returns (T1, T2, ...)` and returning a comma-separated list. A call to such a function must be destructured into exactly one variable per return value:
+
+```solidity
+function divmod(int a, int b) returns (int, int) {
+    return a / b, a % b;
+}
+
+contract Example() {
+    function spend(int x) {
+        int quotient, int remainder = divmod(x, 3);
+        require(quotient == 4);
+        require(remainder == 1);
+    }
+}
+```
+
+You can also destructure the return value into existing variables instead of declaring new ones:
+
+```solidity
+function nextFib(int a, int b) returns (int, int) {
+    return b, a + b;
+}
+
+contract Example() {
+    function spend(int fib5) {
+        int current = 0;
+        int next = 1;
+        for (int i = 0; i < 5; i = i + 1) {
+            (current, next) = nextFib(current, next);
+        }
+        require(current == fib5);
+    }
+}
+```
+
+Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(current, next, int fresh) = step(current, next);`). Inside loops and branches, listing reassignments before declarations compiles to smaller bytecode, as explained in the [optimization guide](/docs/design/optimization#5-reassign-before-you-declare).
+
+:::info
+`checkSig`, `checkMultiSig` and `this.activeBytecode` cannot be used inside a user-defined function, since they would apply to the function body rather than the contract. Use them in a contract function instead (`checkDataSig` is allowed).
+:::
+
+### Limitations
+This first version of user-defined functions is intentionally limited in scope:
+
+- A value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
+- A void function must end with a `require` statement, just like contract functions (when it ends with an if-statement or loop, every branch must end with a `require`).
+
+:::note
+Recursive and mutually recursive functions are allowed and compile fine. At runtime the VM control stack is limited to 100 entries, shared between recursion depth and nested `if` and loop blocks, so excessively deep recursion will fail when the contract gets spent.
+:::
+
+## Global constants
+Global constants are declared at the **top level** of a `.cash` file, outside the contract, and can be used by contract functions and user-defined functions. Their initialiser is evaluated at compile time and must resolve to a single constant value: literals, references to previously declared constants, integer arithmetic (`+`, `-`, `*`, `/`, `%`) and string/bytes concatenation (`+`) are supported. Other expressions, such as casts, comparisons or function calls, are not.
+
+```solidity
+int constant MAX_ATTEMPTS = 3;
+int constant TIMEOUT = 2 hours;
+int constant EXTENDED_TIMEOUT = TIMEOUT + 30 minutes;
+bytes32 constant EMPTY_HASH = 0x0000000000000000000000000000000000000000000000000000000000000000;
+
+contract Example() {
+    function spend(int attempts) {
+        require(attempts < MAX_ATTEMPTS);
+        require(tx.time >= EXTENDED_TIMEOUT);
+    }
+}
+```
+
+The resolved value must be assignable to the declared type. Constants may reference other constants, as long as those are declared (or imported) before they are used. Global constants are immutable, and their names share the global namespace with user-defined functions and built-in symbols. Parameters and local variables cannot shadow them.
+
+Global constants do not become constructor arguments or mutable stack variables. The compiler treats them like zero-argument value-returning functions internally: small values and one-use constants are generally inlined, while larger values used repeatedly can be shared with `OP_DEFINE`/`OP_INVOKE`.
+
+## Importing functions and constants from other files
+Top-level functions and constants can be split across files and pulled in with an `import` directive, which makes the imported functions and constants available as if they were declared locally. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any constant, function or contract definitions. Cyclic imports are not allowed and result in a compile error.
+
+Import paths starting with `./`, `../` or `/` are resolved relative to the importing file: from the filesystem when compiling with [`compileFile`](/docs/compiler#compilefile), or from the `files` compiler option when using [`compileString`](/docs/compiler#compilestring).
+
+```solidity
+// math.cash
+int constant FACTOR = 2;
+
+function double(int a) returns (int) {
+    return a * FACTOR;
+}
+```
+
+```solidity
+// main.cash
+pragma cashscript ^0.14.0;
+import "./math.cash";
+
+contract Main() {
+    function spend(int x) {
+        require(double(x) == 8);
+    }
+}
+```
+
+Imported function and constant names share a single global namespace, so a name may only be defined once across the whole import graph. Files reached through more than one import path (diamond imports) are resolved once.
+
+Imported files can declare their own [`pragma` directives](#pragma), and every pragma across the whole import graph — the main file and all (transitively) imported files — must be satisfied by the compiler version.
+
+### Importing from npm packages
+Import paths that do *not* start with `./`, `../` or `/` are treated as package imports and are resolved from `node_modules`, mirroring Node.js module resolution. This makes it possible to publish reusable CashScript functions as npm packages and import them by package name. The import path must contain the full path of the `.cash` file within the package.
+
+```solidity
+pragma cashscript ^0.14.0;
+import "@example/math-lib/math.cash";
+
+contract Main() {
+    function spend(int x) {
+        require(double(x) == 8);
+    }
+}
+```
+
+Relative imports *inside* an imported package are resolved relative to the package's own files, so packages can split their functions across multiple internal files.
+
+When compiling with [`compileString`](/docs/compiler#compilestring), package imports are looked up verbatim in the `files` compiler option. The example above would require a `files` key of `@example/math-lib/math.cash`.
 
 ## Statements
 CashScript functions are made up of a collection of statements that determine whether money may be spent from the contract.
@@ -107,13 +265,32 @@ contract P2PKH(bytes20 pkh) {
 Variables can be declared by specifying their type and name. All variables need to be initialised at the time of their declaration, but can be reassigned later on — unless specifying the `constant` keyword. Since CashScript is strongly typed and has no type inference, it is not possible to use keywords such as `var` or `let` to declare variables.
 
 :::note
-CashScript disallows variable shadowing and unused variables.
+CashScript disallows variable shadowing, and the compiler emits a warning for unused variables unless they are explicitly marked `unused`.
 :::
 
 #### Example
 ```solidity
 int myNumber = 3000;
 string constant myString = 'Bitcoin Cash';
+```
+
+### Intentionally unused values
+
+A parameter or local variable that is declared but never used results in a compiler warning. If the variable is intended to be unused, this warning can be silenced by marking the variable as `unused`. Unused parameters and local variables are dropped from the stack immediately after their declaration, and no [parameter type enforcement](/docs/compiler#enforcefunctionparametertypes) is generated for unused parameters.
+
+Some use cases for intentionally unused values include padding the contract bytecode in order to get a higher opcost budget, or nonces in order to differentiate between similar contracts.
+
+The compiler also warns when a value is assigned to a variable that is never read afterwards, since such an assignment has no effect on the contract.
+
+#### Example
+
+```solidity
+contract Versioned(bytes unused reserved) {
+    function spend(int value, bytes unused padding) {
+        int unused discarded = value + 1;
+        require(value == 1);
+    }
+}
 ```
 
 ### Variable assignment
@@ -255,18 +432,18 @@ contract P2PKH(bytes20 pkh) {
 
 ## Scope
 
-CashScript uses nested scopes for parameters, variables and global functions. There cannot be two identical names within the same scope or within a nested scope.
+CashScript uses nested scopes for global constants, parameters, variables and global functions. There cannot be two identical names within the same scope or within a nested scope.
 
 There are the following scopes in the nesting order:
 
-- **Global scope** - contains global functions and global variables (e.g. `sha256`, `hash160`, `checkSig`, etc.)
+- **Global scope** - contains global constants, global functions and built-in symbols (e.g. `sha256`, `hash160`, `checkSig`, etc.)
 - **Contract scope** - contains contract parameters
 - **Function scope** - contains function parameters and local variables
 - **Local scope** - contains local variables introduced by control flow blocks (e.g. `if`, `else`)
 
 #### Example
 ```solidity
-// Global scope (contains global functions and global variables like sha256, hash160, checkSig, etc.)
+// Global scope (contains global constants, functions and built-in symbols like sha256, hash160, checkSig, etc.)
 
 // Contract scope (contains contract parameters - sender, recipient, timeout)
 contract TransferWithTimeout(

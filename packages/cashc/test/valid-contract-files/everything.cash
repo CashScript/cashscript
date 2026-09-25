@@ -7,7 +7,7 @@ contract Test(int x, string y) {
     // Line comments are a thing
     function hello(sig s, pubkey pk) {
         int i = 400 + x;
-        bytes b = 0x07364897987fe87 + bytes(y);
+        bytes b = 0x07364897987fe807 + bytes(y);
 
         int myVariable = 10 - int(false); // they can go at the end of the line
         int myOtherVariable = (i + myVariable) % 2;

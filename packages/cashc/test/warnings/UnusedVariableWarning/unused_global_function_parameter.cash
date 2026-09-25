@@ -1,0 +1,9 @@
+function withUnusedParameter(int a, int b) returns (int) {
+    return a;
+}
+
+contract UnusedGlobalFunctionParameter() {
+    function spend() {
+        require(withUnusedParameter(1, 2) == 1);
+    }
+}

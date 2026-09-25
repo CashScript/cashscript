@@ -128,4 +128,4 @@ Using `bytes20 placeholderPkh = toPaddedBytes(0, 20)` will generate a 20 byte ze
 :::
 
 [bip146]: https://github.com/bitcoin/bips/blob/master/bip-0146.mediawiki
-[local-state-guide]: /docs/guides/covenants#keeping-local-state-in-nfts
+[local-state-guide]: /docs/design/covenants#keeping-local-state-in-nfts

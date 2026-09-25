@@ -14,6 +14,11 @@ import {
   BranchNode,
   CastNode,
   FunctionCallNode,
+  FunctionCallStatementNode,
+  FunctionDefinitionNode,
+  ConstantDefinitionNode,
+  LiteralNode,
+  ParameterNode,
   UnaryOpNode,
   BinaryOpNode,
   IdentifierNode,
@@ -22,6 +27,7 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   Node,
   InstantiationNode,
   TupleAssignmentNode,
@@ -45,15 +51,26 @@ import {
   AssignTypeError,
   ArrayElementError,
   IndexOutOfBoundsError,
-  TupleAssignmentError,
   BitshiftBitcountNegativeError,
+  NullDataChunkTooLargeError,
+  UnusedFunctionReturnError,
+  ReturnTypeError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
-import { GlobalFunction } from '../ast/Globals.js';
+import { Class, GlobalFunction } from '../ast/Globals.js';
 import { Symbol } from '../ast/SymbolTable.js';
-import { resultingTypeForBinaryOp } from '../utils.js';
+import { functionReturnType, getCompileTimeByteLength, resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
+  private currentFunctionReturnTypes: Type[] = [];
+
+  visitConstantDefinition(node: ConstantDefinitionNode): Node {
+    // The constant's value has already been folded to a literal by SymbolTableTraversal
+    node.value = this.visit(node.value) as LiteralNode;
+    expectAssignable(node, node.value.type, node.type);
+    return node;
+  }
+
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
     expectAssignable(node, node.expression.type, node.type);
@@ -62,17 +79,18 @@ export default class TypeCheckTraversal extends AstTraversal {
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
-    if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
-      throw new TupleAssignmentError(node.tuple);
-    }
 
-    const assignmentType = new TupleType(node.left.type, node.right.type);
-
-    if (!implicitlyCastable(node.tuple.type, assignmentType)) {
-      const syntheticAssignment = new VariableDefinitionNode(assignmentType, [], node.left.name, node.tuple);
+    // Reassigned variables use their current type, which may have been narrowed by a preceding x.length == N check
+    const targetsType = new TupleType(node.targets.map((target) => (
+      target.isReassignment ? target.identifier.symbol!.type : target.type!
+    )));
+    if (!implicitlyCastable(node.tuple.type, targetsType)) {
+      const targetNames = node.targets.map((target) => target.identifier.name).join(', ');
+      const syntheticAssignment = new VariableDefinitionNode(targetsType, [], targetNames, node.tuple);
       syntheticAssignment.location = node.location;
       throw new AssignTypeError(syntheticAssignment);
     }
+
     return node;
   }
 
@@ -178,15 +196,47 @@ export default class TypeCheckTraversal extends AstTraversal {
     return node;
   }
 
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
+    if (node.functionCall.type !== PrimitiveType.VOID) {
+      throw new UnusedFunctionReturnError(node.functionCall);
+    }
+    return node;
+  }
+
+  visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    this.currentFunctionReturnTypes = node.returnTypes ?? [];
+    node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    node.body = this.visit(node.body) as BlockNode;
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
+    node.expressions = this.visitList(node.expressions);
+
+    // Every returned expression must be a single value: forwarding a tuple (e.g. `return pair()`
+    // from another multi-return function) would otherwise slip through the wrapped comparison below.
+    node.expressions.forEach((expression) => expectSingleValue(expression, expression.type));
+
+    const actualType = functionReturnType(node.expressions.map((expression) => expression.type!));
+    const expectedType = functionReturnType(this.currentFunctionReturnTypes);
+
+    if (!implicitlyCastable(actualType, expectedType)) {
+      throw new ReturnTypeError(node, actualType, expectedType);
+    }
+
+    return node;
+  }
+
   visitFunctionCall(node: FunctionCallNode): Node {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
-    const { definition, type } = node.identifier;
-    if (!definition || !definition.parameters) return node; // already checked in symbol table
+    const { symbol, type } = node.identifier;
+    if (!symbol || !symbol.parameters) return node; // already checked in symbol table
 
     const parameterTypes = node.parameters.map((p) => p.type!);
-    expectParameters(node, parameterTypes, definition.parameters);
+    expectParameters(node, parameterTypes, symbol.parameters);
 
     // Additional array length check for checkMultiSig
     if (node.identifier.name === GlobalFunction.CHECKMULTISIG) {
@@ -211,11 +261,15 @@ export default class TypeCheckTraversal extends AstTraversal {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     node.parameters = this.visitList(node.parameters);
 
-    const { definition, type } = node.identifier;
-    if (!definition || !definition.parameters) return node; // already checked in symbol table
+    const { symbol, type } = node.identifier;
+    if (!symbol || !symbol.parameters) return node; // already checked in symbol table
 
     const parameterTypes = node.parameters.map((p) => p.type!);
-    expectParameters(node, parameterTypes, definition.parameters);
+    expectParameters(node, parameterTypes, symbol.parameters);
+
+    if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
+      expectNullDataChunkSizes(node.parameters[0] as ArrayNode);
+    }
 
     node.type = type;
     return node;
@@ -226,11 +280,18 @@ export default class TypeCheckTraversal extends AstTraversal {
 
     expectTuple(node, node.tuple.type);
 
-    if (node.index !== 0 && node.index !== 1) {
+    // Tuple indexing is only supported on .split() results. A multi-return function call leaves all
+    // of its values on the stack, so it must be destructured instead (codegen has no partial binding).
+    if (!(node.tuple instanceof BinaryOpNode) || node.tuple.operator !== BinaryOperator.SPLIT) {
+      expectSingleValue(node.tuple, node.tuple.type);
+    }
+
+    const { elementTypes } = node.tuple.type as TupleType;
+    if (node.index < 0 || node.index >= elementTypes.length) {
       throw new IndexOutOfBoundsError(node);
     }
 
-    node.type = node.index === 0 ? (node.tuple.type as TupleType).leftType : (node.tuple.type as TupleType).rightType;
+    node.type = elementTypes[node.index];
     return node;
   }
 
@@ -283,6 +344,7 @@ export default class TypeCheckTraversal extends AstTraversal {
         return node;
       case BinaryOperator.EQ:
       case BinaryOperator.NE:
+        expectSingleValue(node.left, node.left.type);
         expectCompatibleBytesBounds(node, node.left.type, node.right.type);
         node.type = PrimitiveType.BOOL;
         return node;
@@ -405,8 +467,8 @@ export default class TypeCheckTraversal extends AstTraversal {
   }
 
   visitIdentifier(node: IdentifierNode): Node {
-    if (!node.definition) return node;
-    node.type = node.definition.type;
+    if (!node.symbol) return node;
+    node.type = node.symbol.type;
     return node;
   }
 }
@@ -452,12 +514,19 @@ function expectCompatibleBytesBounds(node: BinaryOpNode, left?: Type, right?: Ty
 function expectTuple(node: ExpectedNode, actual?: Type): void {
   if (!(actual instanceof TupleType)) {
     // We use a placeholder tuple to indicate that we're expecting *any* tuple at all
-    const placeholderTuple = new TupleType(new BytesType(), new BytesType());
+    const placeholderTuple = new TupleType([new BytesType(), new BytesType()]);
     throw new UnsupportedTypeError(node, actual, placeholderTuple);
   }
 }
 
-type AssigningNode = AssignNode | VariableDefinitionNode;
+function expectNullDataChunkSizes(chunks: ArrayNode): void {
+  chunks.elements.forEach((chunk) => {
+    const byteLength = getCompileTimeByteLength(chunk);
+    if (byteLength !== undefined && byteLength > 255) throw new NullDataChunkTooLargeError(chunk, byteLength);
+  });
+}
+
+type AssigningNode = AssignNode | VariableDefinitionNode | ConstantDefinitionNode;
 function expectAssignable(node: AssigningNode, actual?: Type, expected?: Type): void {
   if (!implicitlyCastable(actual, expected)) {
     throw new AssignTypeError(node);
@@ -479,7 +548,7 @@ function inferTupleType(node: BinaryOpNode): Type {
 
   // string.split() -> string, string
   if (node.left.type === PrimitiveType.STRING) {
-    return new TupleType(PrimitiveType.STRING, PrimitiveType.STRING);
+    return new TupleType([PrimitiveType.STRING, PrimitiveType.STRING]);
   }
 
   // If the expression is not a bytes type, then it must be a different compatible type (e.g. sig/pubkey)
@@ -488,14 +557,14 @@ function inferTupleType(node: BinaryOpNode): Type {
 
   // bytes.split(variable) -> bytes, bytes
   if (!(node.right instanceof IntLiteralNode)) {
-    return new TupleType(new BytesType(), new BytesType());
+    return new TupleType([new BytesType(), new BytesType()]);
   }
 
   const splitIndex = Number(node.right.value);
 
   // bytes.split(NumberLiteral) -> bytes(NumberLiteral), bytes
   if (expressionType.bound === undefined) {
-    return new TupleType(new BytesType(splitIndex), new BytesType());
+    return new TupleType([new BytesType(splitIndex), new BytesType()]);
   }
 
   if (splitIndex > expressionType.bound) {
@@ -503,10 +572,10 @@ function inferTupleType(node: BinaryOpNode): Type {
   }
 
   // bytesX.split(NumberLiteral) -> bytes(NumberLiteral), bytes(X - NumberLiteral)
-  return new TupleType(
+  return new TupleType([
     new BytesType(splitIndex),
     new BytesType(expressionType.bound! - splitIndex),
-  );
+  ]);
 }
 
 function inferSliceType(node: SliceNode): Type {
@@ -599,13 +668,13 @@ function extractSingleBytesNarrowing(expr: BinaryOpNode): Narrowing | undefined 
   const { sizeNode, literalNode } = match;
   if (!(sizeNode.expression instanceof IdentifierNode)) return undefined;
 
-  const { definition } = sizeNode.expression;
-  if (!definition || !(definition.type instanceof BytesType) || definition.type.bound !== undefined) return undefined;
+  const { symbol } = sizeNode.expression;
+  if (!symbol || !(symbol.type instanceof BytesType) || symbol.type.bound !== undefined) return undefined;
 
   const bound = Number(literalNode.value);
   if (bound <= 0) return undefined;
 
-  return { symbol: definition, bound };
+  return { symbol, bound };
 }
 
 // Matches expr.length <op> N or N <op> expr.length, returning the SIZE node and int literal.
@@ -624,3 +693,9 @@ function matchSizeLiteral(expr: BinaryOpNode): { sizeNode: UnaryOpNode, literalN
 const isSizeOp = (node: ExpressionNode): node is UnaryOpNode => (
   node instanceof UnaryOpNode && node.operator === UnaryOperator.SIZE
 );
+
+function expectSingleValue(node: Node, type?: Type): void {
+  if (type instanceof TupleType) {
+    throw new TypeError(node, type, undefined, `Found tuple '${type}' where a single value was expected`);
+  }
+}

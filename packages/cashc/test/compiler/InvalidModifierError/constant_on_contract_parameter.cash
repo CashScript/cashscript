@@ -1,0 +1,5 @@
+contract Test(int constant value) {
+    function spend() {
+        require(true);
+    }
+}

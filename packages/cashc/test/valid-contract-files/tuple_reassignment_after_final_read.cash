@@ -1,0 +1,31 @@
+// Regression coverage: a scoped tuple reassignment is itself the variable's latest use, so the
+// symbol pass must move the opRolls entry to it. Previously the last plain read kept the roll,
+// codegen rolled the variable off the stack model at that read, and the reassignment crashed with
+// a raw "Expected variable ... does not exist on the stack".
+
+function pair(int n) returns (int, int) {
+    return n * 2, n + 1;
+}
+
+contract ReassignAfterFinalRead() {
+    function ifBranch(int x) {
+        int p = 10;
+        int q = 0;
+        require(p == 10);
+        if (x == 1) {
+            (p, q) = pair(x);
+        }
+        require(q == 0 || q == 2);
+    }
+
+    function whileLoop(int x) {
+        int p = 10;
+        int q = 0;
+        require(p == 10);
+        while (x == 1) {
+            (p, q) = pair(x);
+            x = x + 1;
+        }
+        require(q == 0 || q == 2);
+    }
+}

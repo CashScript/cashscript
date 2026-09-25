@@ -2,10 +2,44 @@
 title: Release Notes
 ---
 
+## v0.14.0-next.5
+
+This release contains several breaking changes, please refer to the [migration notes](/docs/releases/migration-notes) for more information.
+
+#### cashc compiler
+- :sparkles: Add support for user-defined reusable functions, including multiple return values.
+- :sparkles: Add support for top-level global constants, including simple arithmetic / concatenation operations.
+- :sparkles: Add support for `import` directives to share user-defined functions across files, including imports from `node_modules`.
+- :sparkles: Add support for reassigning existing variables in tuple destructuring (e.g. `(a, b) = swap(a, b)`), optionally mixed with fresh declarations.
+- :sparkles: Add `unused` modifier for parameters or variables that are intentionally unused.
+- :hammer_and_wrench: Update `compileString` to take an optional `files` object for filesystem-free import resolution.
+- :hammer_and_wrench: Unused variables that are not marked `unused` now produce a compiler warning instead of a compilation error. Warnings are printed with `console.warn`, or passed to the new `warningListener` compiler option.
+- :hammer_and_wrench: Add a compiler warning for values assigned to a variable that are never read afterwards.
+- :bug: Fix bug where date literal parsing was different per locale, it now uses UTC.
+- :bug: Fix bug where `LockingBytecodeNullData` used an incorrect push opcode for empty chunks and chunks of 128-255 bytes, so it did not match the SDK's `addOpReturnOutput()`. Chunks with a value or length that is known at compile time now use a precomputed push opcode, which makes them smaller. This changes the bytecode of all contracts that use `LockingBytecodeNullData`.
+- :bug: Fix bug where hex literals with an odd number of digits (e.g. `0x123`) compiled to a different value (`0x1203`), they now cause a compile error.
+- :racehorse: Add new `OP_SWAP OP_MUL`, `OP_NOT OP_NOT` and `TO_ALTSTACK OP_FROMALTSTACK` optimisations.
+- :racehorse: Add new optimisations for loop counter updates, reassignments inside loops and order-independent operations (`OP_BOOLAND`, `OP_BOOLOR`, `OP_MIN`, `OP_MAX`).
+- :racehorse: Greatly improve compiler speed for very large contracts.
+
+#### CashScript SDK
+- :sparkles: Add support for debugging user-defined functions, including stack traces for nested functions.
+- :sparkles: Add a `validateTransactions` option (default: `true`) to the `MockNetworkProvider` to validate sent transactions against the BCH VM.
+- :hammer_and_wrench: MockNetworkProvider now warns instead of errors when resubmitting an already-seen transaction.
+- :hammer_and_wrench: Add `lockingBytecode` field to the `Utxo` interface, set automatically on all UTXOs returned by network providers.
+- :hammer_and_wrench: **BREAKING**: Replace the `SignatureTemplate`'s `getHashType()`, `getPublicKey()` and `getSignatureAlgorithm()` methods with the `sighashType`, `publicKey` and `signatureAlgorithm` properties.
+- :hammer_and_wrench: **BREAKING**: Remove the `bchForkId` parameter from `SignatureTemplate`'s `generateSignature()` method, since BCH consensus rules always require the fork ID flag.
+- :hammer_and_wrench: **BREAKING**: Rename the `HashType` enum to `SighashType`.
+- :hammer_and_wrench: **BREAKING**: The `TransactionBuilder` now requires UTXOs to include their `lockingBytecode`, and validates it against the provided unlocker.
+- :hammer_and_wrench: `ElectrumNetworkProvider` now negotiates Electrum protocol 1.5.0 (was 1.4.1) and uses `blockchain.headers.get_tip` in `getBlockHeight()`, so long-lived connections are no longer subscribed to new headers. Custom electrum clients should negotiate 1.5.0 or later.
+- :hammer_and_wrench: Update `@electrum-cash/network` to 4.4.0. In a browser, the `ElectrumNetworkProvider`'s connection is now also closed while the page is hidden (it was already closed while offline) and opened again afterwards, restoring any subscriptions (see [Browser visibility and connectivity](/docs/sdk/electrum-network-provider#browser-visibility-and-connectivity)).
+- :boom: **BREAKING**: Remove `generateLockingBytecode()` from the `Unlocker` interface.
+
+
 ## v0.13.3
 
 #### CashScript SDK
-- :bug: Fix issue where `getTransactionSize()` undersized inputs when using `placeholderP2PKHUnlocker()`
+- :bug: Fix issue where `getTransactionSize()` undersized inputs when using `placeholderP2PKHUnlocker()`.
 
 ## v0.13.2
 

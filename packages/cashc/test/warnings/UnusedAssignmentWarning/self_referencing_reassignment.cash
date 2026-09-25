@@ -1,0 +1,8 @@
+contract Test() {
+    function spend() {
+        int x = 1;
+        require(x == 1);
+        x = x + 1;
+        require(true);
+    }
+}

@@ -14,7 +14,7 @@ import {
   carolTokenAddress,
   alicePriv,
 } from './fixture/vars.js';
-import { Network } from '../src/interfaces.js';
+import { Network, SpendableUtxo, Utxo } from '../src/interfaces.js';
 import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo, isFungibleTokenUtxo } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
@@ -22,9 +22,11 @@ import { TransactionBuilder } from '../src/TransactionBuilder.js';
 import { addUtxo, getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
 import {
+  InputMissingLockingBytecodeError,
   OutputBchChangeLockedError,
   OutputTokenChangeLockedError,
   TokensToNonTokenAddressError,
+  UnlockerLockingBytecodeMismatchError,
 } from '../src/Errors.js';
 import { FailingMockNetworkProvider } from '../src/network/MockNetworkProvider.js';
 
@@ -223,6 +225,45 @@ describe('Transaction Builder', () => {
     });
   });
 
+  describe('UTXO / unlocker mismatch checks', () => {
+    it('should fail when spending a contract UTXO with an unlocker of a different contract', async () => {
+      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo);
+
+      expect(() => (
+        new TransactionBuilder({ provider })
+          .addInput(p2pkhUtxos[0], twtInstance.unlock.transfer(new SignatureTemplate(carolPriv)))
+      )).toThrow(UnlockerLockingBytecodeMismatchError);
+    });
+
+    it('should fail when spending a contract UTXO with an unlocker of the same contract with a different address type', async () => {
+      const p2sh20Instance = new Contract(p2pkhArtifact, [carolPkh], { provider, contractType: 'p2sh20' });
+      const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo);
+
+      expect(() => (
+        new TransactionBuilder({ provider })
+          .addInput(p2pkhUtxos[0], p2sh20Instance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      )).toThrow(UnlockerLockingBytecodeMismatchError);
+    });
+
+    it('should fail when spending a P2PKH UTXO with a SignatureTemplate for a different key', async () => {
+      const aliceUtxos = (await provider.getUtxos(aliceAddress)).filter(isNonTokenUtxo);
+
+      expect(() => (
+        new TransactionBuilder({ provider })
+          .addInput(aliceUtxos[0], new SignatureTemplate(bobPriv).unlockP2PKH())
+      )).toThrow(UnlockerLockingBytecodeMismatchError);
+    });
+
+    it('should fail when adding a UTXO without a lockingBytecode', async () => {
+      const utxoWithoutLockingBytecode = randomUtxo() as SpendableUtxo;
+
+      expect(() => (
+        new TransactionBuilder({ provider })
+          .addInput(utxoWithoutLockingBytecode, new SignatureTemplate(bobPriv).unlockP2PKH())
+      )).toThrow(InputMissingLockingBytecodeError);
+    });
+  });
+
   describe('test TransactionBuilder.generateWcTransactionObject', () => {
     it('should match the generateWcTransactionObjectFixture ', async () => {
       const p2pkhUtxos = (await p2pkhInstance.getUtxos()).filter(isNonTokenUtxo).sort(utxoComparator).reverse();
@@ -304,7 +345,7 @@ describe('Transaction Builder', () => {
   it('should preserve the Bitauth URI when broadcast fails', async () => {
     const failingProvider = new FailingMockNetworkProvider();
     const contract = new Contract(p2pkhArtifact, [carolPkh], { provider: failingProvider });
-    const utxo = randomUtxo({ satoshis: 100_000n });
+    const utxo = failingProvider.addUtxo(contract.address, randomUtxo({ satoshis: 100_000n }));
 
     const transaction = new TransactionBuilder({ provider: failingProvider })
       .addInput(utxo, contract.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
@@ -356,14 +397,18 @@ describe('Transaction Builder', () => {
       p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv))
     );
 
+    const randomContractUtxo = (defaults?: Partial<Utxo>): SpendableUtxo => (
+      randomUtxo({ ...defaults, lockingBytecode: p2pkhInstance.lockingBytecode })
+    );
+
     describe('BCH change lock', () => {
       it('should prevent further inputs or outputs after a BCH change output was added', () => {
         const builder = new TransactionBuilder({ provider })
-          .addInput(randomUtxo(), carolUnlocker())
+          .addInput(randomContractUtxo(), carolUnlocker())
           .addOutput({ to: bobAddress, amount: 1000n })
           .addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1.0 });
 
-        expect(() => builder.addInput(randomUtxo(), carolUnlocker())).toThrow(OutputBchChangeLockedError);
+        expect(() => builder.addInput(randomContractUtxo(), carolUnlocker())).toThrow(OutputBchChangeLockedError);
         expect(() => builder.addOutput({ to: bobAddress, amount: 1000n })).toThrow(OutputBchChangeLockedError);
         expect(() => builder.addOpReturnOutput(['hello'])).toThrow(OutputBchChangeLockedError);
       });
@@ -371,7 +416,7 @@ describe('Transaction Builder', () => {
       it('should still lock when no change output was added because the surplus would be dust', () => {
         // Output leaves only a few satoshis of surplus, well below dust — no change output is added
         const builder = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ satoshis: 2_000n }), carolUnlocker())
+          .addInput(randomContractUtxo({ satoshis: 2_000n }), carolUnlocker())
           .addOutput({ to: bobAddress, amount: 1_500n });
         const outputCountBefore = builder.outputs.length;
         builder.addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1.0 });
@@ -385,10 +430,10 @@ describe('Transaction Builder', () => {
       it('should prevent further inputs or outputs of the same category after a token change output was added', () => {
         const token = randomToken();
         const builder = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ token }), carolUnlocker())
+          .addInput(randomContractUtxo({ token }), carolUnlocker())
           .addTokenChangeOutputIfNeeded({ category: token.category, to: aliceTokenAddress });
 
-        expect(() => builder.addInput(randomUtxo({ token }), carolUnlocker())).toThrow(OutputTokenChangeLockedError);
+        expect(() => builder.addInput(randomContractUtxo({ token }), carolUnlocker())).toThrow(OutputTokenChangeLockedError);
         expect(() => builder.addOutput({
           to: bobTokenAddress, amount: 1000n, token: { amount: 100n, category: token.category },
         })).toThrow(OutputTokenChangeLockedError);
@@ -398,13 +443,13 @@ describe('Transaction Builder', () => {
         const tokenA = randomToken();
         const tokenB = randomToken();
         const builder = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ token: tokenA }), carolUnlocker())
+          .addInput(randomContractUtxo({ token: tokenA }), carolUnlocker())
           .addTokenChangeOutputIfNeeded({ category: tokenA.category, to: aliceTokenAddress });
 
         expect(() => {
-          builder.addInput(randomUtxo({ token: tokenB }), carolUnlocker());
+          builder.addInput(randomContractUtxo({ token: tokenB }), carolUnlocker());
           builder.addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 100n, category: tokenB.category } });
-          builder.addInput(randomUtxo(), carolUnlocker());
+          builder.addInput(randomContractUtxo(), carolUnlocker());
           builder.addOutput({ to: bobAddress, amount: 1000n });
           builder.addOpReturnOutput(['hello']);
         }).not.toThrow();
@@ -416,7 +461,7 @@ describe('Transaction Builder', () => {
         const token = randomToken({ amount: 1000n });
 
         const tx = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ token }), carolUnlocker())
+          .addInput(randomContractUtxo({ token }), carolUnlocker())
           .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 400n, category: token.category } })
           .addTokenChangeOutputIfNeeded({ category: token.category, to: aliceTokenAddress })
           .build();
@@ -431,14 +476,14 @@ describe('Transaction Builder', () => {
       it('should lock the category without adding an output when no change is needed', () => {
         const token = randomToken({ amount: 1000n });
         const builder = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ token }), carolUnlocker())
+          .addInput(randomContractUtxo({ token }), carolUnlocker())
           // Match input amount with an explicit output so there's no surplus
           .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 1000n, category: token.category } });
 
         const outputCountBefore = builder.outputs.length;
         builder.addTokenChangeOutputIfNeeded({ category: token.category, to: aliceTokenAddress });
         expect(builder.outputs.length).toBe(outputCountBefore);
-        expect(() => builder.addInput(randomUtxo({ token }), carolUnlocker())).toThrow(OutputTokenChangeLockedError);
+        expect(() => builder.addInput(randomContractUtxo({ token }), carolUnlocker())).toThrow(OutputTokenChangeLockedError);
       });
 
       it('should scope the change output to the configured category across multiple invocations', () => {
@@ -446,8 +491,8 @@ describe('Transaction Builder', () => {
         const tokenB = randomToken({ amount: 5000n });
 
         const tx = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ token: tokenA }), carolUnlocker())
-          .addInput(randomUtxo({ token: tokenB }), carolUnlocker())
+          .addInput(randomContractUtxo({ token: tokenA }), carolUnlocker())
+          .addInput(randomContractUtxo({ token: tokenB }), carolUnlocker())
           .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 700n, category: tokenA.category } })
           .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 2000n, category: tokenB.category } })
           .addTokenChangeOutputIfNeeded({ category: tokenA.category, to: aliceTokenAddress })
@@ -464,7 +509,7 @@ describe('Transaction Builder', () => {
       it('should fail when the change address does not support tokens', () => {
         const token = randomToken();
         const builder = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ token }), carolUnlocker());
+          .addInput(randomContractUtxo({ token }), carolUnlocker());
 
         expect(() => {
           builder.addTokenChangeOutputIfNeeded({ category: token.category, to: aliceAddress });
@@ -474,7 +519,7 @@ describe('Transaction Builder', () => {
       it('should fail when a BCH change output was already added', () => {
         const token = randomToken();
         const builder = new TransactionBuilder({ provider })
-          .addInput(randomUtxo({ token }), carolUnlocker())
+          .addInput(randomContractUtxo({ token }), carolUnlocker())
           .addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1.0 });
 
         expect(() => {

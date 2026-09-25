@@ -13,6 +13,7 @@ export function generateArtifact(
   fingerprint: string,
 ): Artifact {
   const { contract } = ast;
+  if (!contract) throw new Error('Internal error: cannot generate an artifact for a source file with no contract');
 
   const constructorInputs = contract.parameters
     .map((parameter) => ({ name: parameter.name, type: parameter.type.toString() }));

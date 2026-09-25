@@ -1,0 +1,5 @@
+pragma cashscript >=999.0.0;
+
+function bump(int a) returns (int) {
+    return a + 1;
+}

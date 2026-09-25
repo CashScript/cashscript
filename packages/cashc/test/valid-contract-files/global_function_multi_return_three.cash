@@ -1,0 +1,12 @@
+function spread(int a) returns (int, int, int) {
+    return a, a + 1, a + 2;
+}
+
+contract GlobalFunctionMultiReturnThree() {
+    function spend(int x) {
+        int p, int q, int r = spread(x);
+        require(p == 5);
+        require(q == 6);
+        require(r == 7);
+    }
+}

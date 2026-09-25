@@ -12,7 +12,7 @@
 import fs from 'fs';
 import { URL } from 'url';
 import { fixtures } from './fixtures.js';
-import { parseCode } from '../../src/compiler.js';
+import { parseCode } from '../../src/parser.js';
 import { readCashFiles } from '../test-utils.js';
 import { Ast } from '../../src/ast/AST.js';
 import OutputSourceCodeTraversal from '../../src/print/OutputSourceCodeTraversal.js';

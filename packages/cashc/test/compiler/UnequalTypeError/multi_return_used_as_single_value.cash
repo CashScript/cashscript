@@ -1,0 +1,9 @@
+function pair(int a) returns (int, int) {
+    return a, a + 1;
+}
+
+contract Test() {
+    function spend(int x) {
+        require(pair(x) == 3);
+    }
+}

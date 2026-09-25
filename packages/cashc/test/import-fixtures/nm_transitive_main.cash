@@ -1,0 +1,7 @@
+import "mathlib/main.cash";
+
+contract NodeModulesTransitive() {
+    function spend(int x) {
+        require(nmMain(x) == 16);
+    }
+}

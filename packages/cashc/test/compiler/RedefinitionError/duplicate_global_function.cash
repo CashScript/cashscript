@@ -1,0 +1,13 @@
+function foo(int a) returns (int) {
+    return a + 1;
+}
+
+function foo(int a) returns (int) {
+    return a + 2;
+}
+
+contract DuplicateGlobalFunction() {
+    function spend() {
+        require(foo(1) == 2);
+    }
+}

@@ -1,23 +1,32 @@
-import { hexToBin } from '@bitauth/libauth';
+import { binToHex, hexToBin } from '@bitauth/libauth';
 import {
   asmToScript,
   encodeBool,
   encodeInt,
+  encodeNullDataPushOpcode,
+  encodeNullDataScript,
   encodeString,
   Op,
   OpOrData,
   PrimitiveType,
   Script,
   scriptToAsm,
+  scriptToBytecode,
+  optimiseBytecode,
+  OptimiseBytecodeResult,
   generateSourceMap,
+  generateSourceTags,
+  generateInlineRanges,
+  parseSourceTags,
   FullLocationData,
+  DebugFrame,
   LogEntry,
   RequireStatement,
   PositionHint,
   SingleLocationData,
   StackItem,
   BytesType,
-  CompilerOptions,
+  TupleType,
   SourceTagEntry,
   SourceTagKind,
 } from '@cashscript/utils';
@@ -26,6 +35,7 @@ import {
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  FunctionKind,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -53,6 +63,7 @@ import {
   DoWhileNode,
   WhileNode,
   ForNode,
+  ExpressionNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
@@ -60,14 +71,22 @@ import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
   compileCast,
-  compileGlobalFunction,
   compileNullaryOp,
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
-import { isNumericType } from '../utils.js';
+import { getCompileTimeBytes, isNumericType } from '../utils.js';
+import { collectFunctionCalls, isRecursive, shouldInline } from './inlining.js';
+import type { InternalCompilerOptions } from '../compiler.js';
 
-export default class GenerateTargetTraversalWithLocation extends AstTraversal {
+interface InlineRange {
+  startIp: number;
+  endIp: number;
+  frame: DebugFrame;
+  line: number;
+}
+
+export default class GenerateTargetTraversal extends AstTraversal {
   private locationData: FullLocationData = []; // detailed location data needed for sourcemap creation
   sourceMap: string;
   output: Script = [];
@@ -75,13 +94,15 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   consoleLogs: LogEntry[] = [];
   requires: RequireStatement[] = [];
   sourceTags: SourceTagEntry[] = [];
+  frames: DebugFrame[] = [];
   finalStackUsage: Record<string, StackItem> = {};
 
   private scopeDepth = 0;
   private currentFunction: FunctionDefinitionNode;
   private constructorParameterCount: number;
+  inlineRanges: InlineRange[] = [];
 
-  constructor(private compilerOptions: CompilerOptions) {
+  constructor(private compilerOptions: InternalCompilerOptions) {
     super();
   }
 
@@ -133,7 +154,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitSourceFile(node: SourceFileNode): Node {
-    node.contract = this.visit(node.contract) as ContractNode;
+    this.defineGlobalFunctions(node);
+
+    // The contract is guaranteed to exist here (compileString throws MissingContractError otherwise).
+    node.contract = this.visit(node.contract!) as ContractNode;
+
+    this.mergeInlinedDebugInfo();
 
     // Minimally encode output by going Script -> ASM -> Script
     this.output = asmToScript(scriptToAsm(this.output));
@@ -143,11 +169,143 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     return node;
   }
 
+  private mergeInlinedDebugInfo(): void {
+    this.inlineRanges.forEach(({ startIp, frame, line }) => {
+      this.requires.push(...frame.requires.map((entry) => ({
+        ...entry,
+        ip: entry.ip + startIp,
+        line,
+      })));
+
+      this.consoleLogs.push(...frame.logs.map((entry) => ({
+        ...entry,
+        ip: entry.ip + startIp,
+        data: entry.data.map((item) => (typeof item === 'string' ? item : { ...item, ip: item.ip + startIp })),
+        line,
+      })));
+
+      // Source tags use opcode indices rather than ips, which excludes the constructor arguments
+      const startIndex = startIp - this.constructorParameterCount;
+      this.sourceTags.push(...parseSourceTags(frame.sourceTags ?? '').map((entry) => ({
+        ...entry,
+        startIndex: entry.startIndex + startIndex,
+        endIndex: entry.endIndex + startIndex,
+      })));
+    });
+
+    // Restore overall program order, since the merged entries were appended after this program's own
+    this.requires.sort((a, b) => a.ip - b.ip);
+    this.consoleLogs.sort((a, b) => a.ip - b.ip);
+    this.sourceTags.sort((a, b) => a.startIndex - b.startIndex);
+  }
+
+  private defineGlobalFunctions(node: SourceFileNode): void {
+    // Assign function IDs to recursive functions first
+    const recursiveFunctions = node.functions.filter(isRecursive);
+    recursiveFunctions.forEach((func, functionId) => {
+      node.symbolTable!.getFromThis(func.name)!.setFunctionId(functionId);
+    });
+
+    const reachableCalls = [node.contract!, ...node.functions].flatMap((n) => collectFunctionCalls(n));
+    const definedFunctions: Array<{ func: FunctionDefinitionNode, compiledResult: OptimiseBytecodeResult }> = [];
+    let nextFunctionId = recursiveFunctions.length;
+
+    node.functions.forEach((func) => {
+      const symbol = node.symbolTable!.getFromThis(func.name)!;
+      const compiledResult = this.compileGlobalFunctionBody(func);
+
+      // If the function should be inlined, we ONLY update the symbol
+      if (shouldInline(symbol, compiledResult, reachableCalls, nextFunctionId, this.compilerOptions)) {
+        symbol.setInlinedBytecode(compiledResult.script, this.buildDebugFrame(func, compiledResult));
+        return;
+      }
+
+      // If the function ID is not yet assigned, we assign it (skipped for recursive functions which were assigned above)
+      if (symbol.functionId === undefined) {
+        symbol.setFunctionId(nextFunctionId);
+        nextFunctionId += 1;
+      }
+
+      // Pre-assigned recursive functions and non-inlined functions should be defined
+      definedFunctions[symbol.functionId!] = { func, compiledResult };
+    });
+
+    // Emit definitions in ID order so debug.functions[n] corresponds to the n-th define site (id n).
+    definedFunctions.forEach(({ func, compiledResult }, functionId) => {
+      this.frames.push(this.buildDebugFrame(func, compiledResult, functionId));
+      const locationData = { location: func.location, positionHint: PositionHint.START };
+      this.emit(scriptToBytecode(compiledResult.script), locationData); // <function_body_bytes>
+      this.emit(encodeInt(BigInt(functionId)), locationData); // <function_identifier>
+      this.emit(Op.OP_DEFINE, { ...locationData, positionHint: PositionHint.END });
+    });
+
+    // Inlined callables are documented as id-less frames after the defined ones
+    node.functions
+      .flatMap((func) => node.symbolTable!.getFromThis(func.name)!.inlinedFrame ?? [])
+      .forEach((frame) => this.frames.push(frame));
+  }
+
+  private compileGlobalFunctionBody(node: FunctionDefinitionNode): OptimiseBytecodeResult {
+    const bodyTraversal = new GenerateTargetTraversal(this.compilerOptions);
+    bodyTraversal.currentFunction = node;
+    bodyTraversal.constructorParameterCount = 0;
+
+    // Seed the stack with parameters in reverse order so the last parameter is on top
+    // (similar to how builtin functions work)
+    for (let i = node.parameters.length - 1; i >= 0; i -= 1) {
+      bodyTraversal.visit(node.parameters[i]);
+    }
+    bodyTraversal.dropUnusedParameters(node.parameters);
+
+    bodyTraversal.visit(node.body);
+    bodyTraversal.cleanGlobalFunctionStack(node);
+    bodyTraversal.mergeInlinedDebugInfo();
+
+    const optimisedResult = optimiseBytecode(
+      bodyTraversal.output,
+      bodyTraversal.locationData,
+      bodyTraversal.consoleLogs,
+      bodyTraversal.requires,
+      bodyTraversal.sourceTags,
+      bodyTraversal.inlineRanges,
+      0,
+    );
+
+    return optimisedResult;
+  }
+
+  private buildDebugFrame(
+    node: FunctionDefinitionNode,
+    optimised: OptimiseBytecodeResult,
+    functionId?: number,
+  ): DebugFrame {
+    return {
+      id: functionId,
+      name: node.name,
+      kind: node.constant ? ('constant' as const) : undefined,
+      inputs: node.parameters.map((parameter) => ({ name: parameter.name, type: parameter.type.toString() })),
+      bytecode: binToHex(scriptToBytecode(optimised.script)),
+      sourceMap: generateSourceMap(optimised.locationData),
+      sourceTags: generateSourceTags(optimised.sourceTags) || undefined,
+      source: node.sourceCode,
+      sourceFile: node.sourceFile,
+      logs: optimised.logs,
+      requires: optimised.requires,
+      inlineRanges: generateInlineRanges(optimised.inlineRanges) || undefined,
+    };
+  }
+
+  cleanGlobalFunctionStack(node: FunctionDefinitionNode): void {
+    // Drop everything below the return values on top (or the entire frame for a void function)
+    this.cleanStack(node.body, node.returnTypes?.length ?? 0);
+  }
+
   visitContract(node: ContractNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
 
     // Keep track of constructor parameter count for instructor pointer calculation
     this.constructorParameterCount = node.parameters.length;
+    this.dropUnusedParameters(node.parameters);
 
     if (node.functions.length === 1) {
       node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
@@ -196,9 +354,14 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
+    if (node.kind !== FunctionKind.CONTRACT) {
+      throw new Error('Internal error: global functions are compiled via defineGlobalFunctions');
+    }
+
     this.currentFunction = node;
 
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
+    this.dropUnusedParameters(node.parameters);
 
     if (this.compilerOptions.enforceFunctionParameterTypes) {
       this.enforceFunctionParameterTypes(node);
@@ -245,15 +408,40 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     }
   }
 
-  cleanStack(functionBodyNode: Node): void {
-    // Keep final verification value, OP_NIP the other stack values
+  // Keep only the top `keepCount` values (a contract function's verification value, or a global
+  // function's return values), dropping everything below them while preserving their order.
+  cleanStack(functionBodyNode: Node, keepCount: number = 1): void {
+    this.dropFromStack(functionBodyNode, keepCount, this.stack.length - keepCount);
+  }
+
+  private dropFromStack(node: Node, keepCount: number, dropCount: number): void {
     const tagStartIndex = this.output.length;
-    const stackSize = this.stack.length;
-    for (let i = 0; i < stackSize - 1; i += 1) {
-      this.emit(Op.OP_NIP, { location: functionBodyNode.location, positionHint: PositionHint.END });
-      this.nipFromStack();
+    const locationData = { location: node.location, positionHint: PositionHint.END };
+
+    // Note that in case of keepCount = 1, this gets optimised to just OP_NIP, or for keepCount = 0 to OP_DROP
+    for (let i = 0; i < dropCount; i += 1) {
+      this.emit(encodeInt(BigInt(keepCount)), locationData);
+      this.emit(Op.OP_ROLL, locationData);
+      this.emit(Op.OP_DROP, locationData);
+      this.removeFromStack(keepCount);
     }
+
     this.tagScopeCleanup(tagStartIndex);
+  }
+
+  private dropUnusedParameters(parameters: ParameterNode[]): void {
+    parameters
+      .filter((parameter) => parameter.symbol!.isUnused())
+      .sort((a, b) => this.getStackIndex(a.name) - this.getStackIndex(b.name))
+      .forEach((parameter) => {
+        const stackIndex = this.getStackIndex(parameter.name);
+        const locationData = { location: parameter.location, positionHint: PositionHint.START };
+
+        this.emit(encodeInt(BigInt(stackIndex)), locationData);
+        this.emit(Op.OP_ROLL, locationData);
+        this.emit(Op.OP_DROP, locationData);
+        this.removeFromStack(stackIndex);
+      });
   }
 
   enforceFunctionParameterTypes(node: FunctionDefinitionNode): void {
@@ -296,6 +484,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
   }
 
   shouldEnforceFunctionParameterType(node: ParameterNode): boolean {
+    if (node.symbol!.isUnused()) return false;
     if (node.type === PrimitiveType.BOOL) return true;
     if (node.type instanceof BytesType && node.type.bound !== undefined) return true;
     return false;
@@ -308,6 +497,13 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
     node.expression = this.visit(node.expression);
+
+    if (node.symbol!.isUnused()) {
+      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
+      this.popFromStack();
+      return node;
+    }
+
     this.popFromStack();
     this.pushToStack(node.name);
     return node;
@@ -315,14 +511,66 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
-    this.popFromStack(2);
-    this.pushToStack(node.left.name);
-    this.pushToStack(node.right.name);
+
+    // Outside of a loop/branch, a reassignment is just a rename (the old value stays on the stack)
+    const scopedReassign = this.scopeDepth > 0 && node.targets.some((target) => target.isReassignment);
+    if (!scopedReassign) {
+      this.popFromStack(node.targets.length);
+      node.targets.forEach((target) => this.pushToStack(target.identifier.name));
+      this.dropUnusedTupleTargets(node);
+      return node;
+    }
+
+    const locationData = { location: node.location, positionHint: PositionHint.END };
+    const parkedDeclarations: string[] = [];
+
+    const reversedTargets = [...node.targets].reverse();
+    reversedTargets.forEach((target) => {
+      // Unused variables are never added the stack, so their defined or re-assigned value is dropped
+      if (target.identifier.symbol!.isUnused()) {
+        this.emit(Op.OP_DROP, locationData);
+      } else if (target.isReassignment) {
+        this.emitReplace(this.getStackIndex(target.identifier.name), node);
+      } else {
+        this.emit(Op.OP_TOALTSTACK, locationData);
+        parkedDeclarations.push(target.identifier.name);
+      }
+      this.popFromStack();
+    });
+
+    parkedDeclarations.reverse().forEach((name) => {
+      this.emit(Op.OP_FROMALTSTACK, locationData);
+      this.pushToStack(name);
+    });
+
     return node;
+  }
+
+  private dropUnusedTupleTargets(node: TupleAssignmentNode): void {
+    const locationData = { location: node.location, positionHint: PositionHint.END };
+
+    node.targets
+      .filter((target) => target.identifier.symbol!.isUnused())
+      .sort((a, b) => this.getStackIndex(a.identifier.name) - this.getStackIndex(b.identifier.name))
+      .forEach((target) => {
+        const stackIndex = this.getStackIndex(target.identifier.name);
+        this.emit(encodeInt(BigInt(stackIndex)), locationData);
+        this.emit(Op.OP_ROLL, locationData);
+        this.emit(Op.OP_DROP, locationData);
+        this.removeFromStack(stackIndex);
+      });
   }
 
   visitAssign(node: AssignNode): Node {
     node.expression = this.visit(node.expression);
+
+    // An unused variable never gets added to the stack, so the assigned value is dropped as well
+    if (node.identifier.symbol!.isUnused()) {
+      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
+      this.popFromStack();
+      return node;
+    }
+
     if (this.scopeDepth > 0) {
       this.emitReplace(this.getStackIndex(node.identifier.name), node);
       this.popFromStack();
@@ -402,7 +650,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
 
     const data = node.parameters.map((parameter: ConsoleParameterNode) => {
       if (parameter instanceof IdentifierNode) {
-        const symbol = parameter.definition!;
+        const symbol = parameter.symbol!;
 
         // If the variable is not on the stack, then we add the final stack usage to the console log
         const stackIndex = this.getStackIndex(parameter.name, true);
@@ -551,14 +799,9 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     });
   }
 
+  // Drop the values that a scope (a branch or loop body) added on top of the pre-scope stack.
   removeScopedVariables(depthBeforeScope: number, node: Node): void {
-    const tagStartIndex = this.output.length;
-    const dropCount = this.stack.length - depthBeforeScope;
-    for (let i = 0; i < dropCount; i += 1) {
-      this.emit(Op.OP_DROP, { location: node.location, positionHint: PositionHint.END });
-      this.popFromStack();
-    }
-    this.tagScopeCleanup(tagStartIndex);
+    this.dropFromStack(node, 0, this.stack.length - depthBeforeScope);
   }
 
   private tagScopeCleanup(tagStartIndex: number): void {
@@ -587,14 +830,25 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       return this.visitMultiSig(node);
     }
 
+    const symbol = node.identifier.symbol!;
     node.parameters = this.visitList(node.parameters);
 
-    this.emit(
-      compileGlobalFunction(node.identifier.name as GlobalFunction),
-      { location: node.location, positionHint: PositionHint.END },
-    );
+    const startIp = this.output.length + this.constructorParameterCount;
+    const endIp = startIp + symbol.bytecode!.length - 1;
+
+    this.emit(symbol.bytecode!, { location: node.location, positionHint: PositionHint.END });
+
+    if (symbol.inlinedFrame) {
+      this.inlineRanges.push({ startIp, endIp, frame: symbol.inlinedFrame, line: node.location.start.line });
+    }
+
     this.popFromStack(node.parameters.length);
-    this.pushToStack('(value)');
+
+    // The call leaves one value per declared return type (none for a void function); a multi-return
+    // function's values (a TupleType) are subsequently bound by visitTupleAssignment.
+    const returnValueCount = symbol.type === PrimitiveType.VOID ? 0
+      : symbol.type instanceof TupleType ? symbol.type.elementTypes.length : 1;
+    for (let i = 0; i < returnValueCount; i += 1) this.pushToStack('(value)');
 
     return node;
   }
@@ -647,44 +901,12 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
       this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
-      // Total script = OP_RETURN (<VarInt> <chunk>)+
+      // Total script = OP_RETURN (<push opcode> <chunk>)+
       // OP_RETURN
       this.emit(hexToBin('6a'), { location: node.location, positionHint: PositionHint.START });
       this.pushToStack('(value)');
       const { elements } = node.parameters[0] as ArrayNode;
-      // <VarInt data chunk size (dynamic)>
-      elements.forEach((element) => {
-        this.visit(element);
-
-        // The element comes first, then all other opcodes have PositionHint.END because they come after the element
-        const elementLocationData = { location: element.location, positionHint: PositionHint.END };
-
-        // Push the element's size (and calculate VarInt)
-        this.emit(Op.OP_SIZE, elementLocationData);
-        if (element instanceof HexLiteralNode) {
-          // If the argument is a literal, we know its size
-          if (element.value.byteLength > 75) {
-            this.emit(hexToBin('4c'), elementLocationData);
-            this.emit(Op.OP_SWAP, elementLocationData);
-            this.emit(Op.OP_CAT, elementLocationData);
-          }
-        } else {
-          // If the argument is not a literal, the script needs to check size
-          this.emit(Op.OP_DUP, elementLocationData);
-          this.emit(encodeInt(75n), elementLocationData);
-          this.emit(Op.OP_GREATERTHAN, elementLocationData);
-          this.emit(Op.OP_IF, elementLocationData);
-          this.emit(hexToBin('4c'), elementLocationData);
-          this.emit(Op.OP_SWAP, elementLocationData);
-          this.emit(Op.OP_CAT, elementLocationData);
-          this.emit(Op.OP_ENDIF, elementLocationData);
-        }
-        // Concat size and arguments
-        this.emit(Op.OP_SWAP, elementLocationData);
-        this.emit(Op.OP_CAT, elementLocationData);
-        this.emit(Op.OP_CAT, elementLocationData);
-        this.popFromStack();
-      });
+      elements.forEach((element) => this.emitNullDataChunk(element));
       this.popFromStack();
     } else {
       throw new Error(); // Should not happen
@@ -693,6 +915,60 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     this.pushToStack('(value)');
 
     return node;
+  }
+
+  // Appends <push opcode> <chunk> to the OP_RETURN script on top of the stack. The push opcode has to match
+  // encodeNullDataScript(): OP_PUSHBYTES_N for 1-75 bytes, and OP_PUSHDATA1 N for 0 or 76-255 bytes
+  private emitNullDataChunk(element: ExpressionNode): void {
+    const startLocationData = { location: element.location, positionHint: PositionHint.START };
+    const endLocationData = { location: element.location, positionHint: PositionHint.END };
+
+    // Chunks with a value known at compile time are pushed together with their push opcode
+    // (encodeNullDataScript() without an OP_RETURN encodes just the chunk, exactly like the SDK does)
+    const compileTimeValue = getCompileTimeBytes(element);
+    if (compileTimeValue !== undefined) {
+      this.emit(encodeNullDataScript([compileTimeValue]), startLocationData);
+      this.emit(Op.OP_CAT, endLocationData);
+      return;
+    }
+
+    // Chunks with a length known at compile time (e.g. bytes20) are preceded by a constant push opcode
+    if (element.type instanceof BytesType && element.type.bound !== undefined) {
+      this.emit(encodeNullDataPushOpcode(element.type.bound), startLocationData);
+      this.pushToStack('(value)');
+      this.visit(element);
+      this.emit(Op.OP_CAT, endLocationData);
+      this.emit(Op.OP_CAT, endLocationData);
+      this.popFromStack(2);
+      return;
+    }
+
+    // Otherwise the push opcode is computed from the chunk's size at runtime
+    this.visit(element);
+
+    // OP_SIZE is a signed VM number, so it is empty for empty elements, and has an extra 0x00 byte for 128-255 bytes.
+    // In those cases (and for 76-127 bytes) we convert it to a single byte, and prepend OP_PUSHDATA1.
+    this.emit(Op.OP_SIZE, endLocationData);
+    this.emit(Op.OP_DUP, endLocationData);
+    this.emit(encodeInt(1n), endLocationData);
+    this.emit(encodeInt(76n), endLocationData);
+    this.emit(Op.OP_WITHIN, endLocationData);
+    this.emit(Op.OP_NOTIF, endLocationData);
+    this.emit(encodeInt(2n), endLocationData);
+    this.emit(Op.OP_NUM2BIN, endLocationData);
+    this.emit(encodeInt(1n), endLocationData);
+    this.emit(Op.OP_SPLIT, endLocationData);
+    this.emit(Op.OP_DROP, endLocationData);
+    this.emit(hexToBin('4c'), endLocationData);
+    this.emit(Op.OP_SWAP, endLocationData);
+    this.emit(Op.OP_CAT, endLocationData);
+    this.emit(Op.OP_ENDIF, endLocationData);
+
+    // Concat push opcode and chunk to the OP_RETURN script
+    this.emit(Op.OP_SWAP, endLocationData);
+    this.emit(Op.OP_CAT, endLocationData);
+    this.emit(Op.OP_CAT, endLocationData);
+    this.popFromStack();
   }
 
   visitTupleIndexOp(node: TupleIndexOpNode): Node {
@@ -774,7 +1050,7 @@ export default class GenerateTargetTraversalWithLocation extends AstTraversal {
     // If the final use is inside an if-statement, we still OP_PICK it
     // We do this so that there's no difference in stack depths between execution paths
     if (this.isOpRoll(node)) {
-      const symbol = node.definition!;
+      const symbol = node.symbol!;
       this.finalStackUsage[node.name] = {
         type: symbol.type.toString(),
         stackIndex,

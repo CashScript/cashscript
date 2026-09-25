@@ -1,4 +1,11 @@
-import { Artifact, RequireStatement, sourceMapToLocationData, Type } from '@cashscript/utils';
+import { Artifact, RequireStatement, Type } from '@cashscript/utils';
+import {
+  CallStackEntry,
+  ResolvedFrame,
+  getLocationDataForFrame,
+  resolveInlineAttribution,
+  rootFrame,
+} from './debug-frame.js';
 
 export class TypeError extends Error {
   constructor(actual: string, expected: Type) {
@@ -9,6 +16,12 @@ export class TypeError extends Error {
 export class UndefinedInputError extends Error {
   constructor() {
     super('Input is undefined');
+  }
+}
+
+export class InputMissingLockingBytecodeError extends Error {
+  constructor() {
+    super('Input UTXO is missing its lockingBytecode. UTXOs fetched from a network provider include it automatically; when constructing UTXOs manually, set lockingBytecode to the hex-encoded locking script of the output.');
   }
 }
 
@@ -90,6 +103,17 @@ export class UnlockingBytecodeTooLargeError extends Error {
   }
 }
 
+export class UnlockerLockingBytecodeMismatchError extends Error {
+  constructor(
+    public inputIndex: number,
+    utxoLockScript: string,
+    unlockerLockScript: string,
+    unlockerDescription: string,
+  ) {
+    super(`Input #${inputIndex} is locked by ${utxoLockScript}, which does not match the provided unlocker (${unlockerDescription}, corresponding to ${unlockerLockScript}). This transaction would be rejected by the network. Make sure to use an unlocker that matches the address/contract holding the UTXO.`);
+  }
+}
+
 export class TransactionTooLargeError extends Error {
   constructor(size: number, maximumSize: number) {
     super(`Transaction size of ${size} is greater than the maximum standard transaction size of ${maximumSize}`);
@@ -134,12 +158,15 @@ export class FailedTransactionEvaluationError extends FailedTransactionError {
     public inputIndex: number,
     public bitauthUri: string,
     public libauthErrorMessage: string,
+    frame?: ResolvedFrame,
   ) {
     let message = `${artifact.contractName}.cash Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash.\nReason: ${libauthErrorMessage}`;
 
     if (artifact.debug) {
-      const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
-      message = `${artifact.contractName}.cash:${lineNumber} Error in transaction at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
+      const resolvedFrame = frame ?? rootFrame(artifact);
+      const { statement, lineNumber } = getLocationDataForFrame(resolvedFrame, failingInstructionPointer);
+      const context = formatFrameContext(resolvedFrame, artifact.contractName, lineNumber);
+      message = `${resolvedFrame.sourceName}:${lineNumber} Error in transaction at input ${inputIndex} ${context}.\nReason: ${libauthErrorMessage}\nFailing statement: ${statement}`;
     }
 
     super(message, bitauthUri);
@@ -154,42 +181,44 @@ export class FailedRequireError extends FailedTransactionError {
     public inputIndex: number,
     public bitauthUri: string,
     public libauthErrorMessage?: string,
+    frame?: ResolvedFrame,
+    public callStack: CallStackEntry[] = [],
   ) {
-    const { statement, lineNumber } = getLocationDataForInstructionPointer(artifact, failingInstructionPointer);
+    const resolvedFrame = frame ?? rootFrame(artifact);
 
-    const baseMessage = `${artifact.contractName}.cash:${lineNumber} Require statement failed at input ${inputIndex} in contract ${artifact.contractName}.cash at line ${lineNumber}`;
+    const inline = resolveInlineAttribution(artifact, resolvedFrame, requireStatement, 'requires');
+    const attributedFrame = inline?.frame ?? resolvedFrame;
+    const attributedIp = inline?.entry.ip ?? failingInstructionPointer;
+
+    const { statement, lineNumber } = getLocationDataForFrame(attributedFrame, attributedIp);
+    const context = formatFrameContext(attributedFrame, artifact.contractName, lineNumber);
+
+    const baseMessage = `${attributedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} ${context}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
     const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
 
     // Compiler-injected guards (e.g. the tx.locktime guard) have no user-written source, so the
     // extracted statement is empty — the require message fully describes the failure on its own.
-    const fullMessage = statement.trim() ? `${headline}\nFailing statement: ${statement}` : headline;
+    const statementMessage = statement.trim() ? `${headline}\nFailing statement: ${statement}` : headline;
 
-    super(fullMessage, bitauthUri);
+    // A single-entry call stack adds nothing over the headline, so it is only shown for nested calls
+    const callStackMessage = callStack.length >= 2 ? `\n${formatCallStack(callStack)}` : '';
+
+    super(statementMessage + callStackMessage, bitauthUri);
   }
 }
 
-const getLocationDataForInstructionPointer = (
-  artifact: Artifact,
-  instructionPointer: number,
-): { lineNumber: number, statement: string } => {
-  const locationData = sourceMapToLocationData(artifact.debug!.sourceMap);
+const formatFrameContext = (frame: ResolvedFrame, contractName: string, lineNumber: number): string => {
+  if (frame.functionName) {
+    return `in contract ${contractName}, function ${frame.functionName} (${frame.sourceName}, line ${lineNumber})`;
+  }
 
-  // We subtract the constructor inputs because these are present in the evaluation (and thus the instruction pointer)
-  // but they are not present in the source code (and thus the location data)
-  const modifiedInstructionPointer = instructionPointer - artifact.constructorInputs.length;
-
-  const { location } = locationData[modifiedInstructionPointer];
-
-  const failingLines = artifact.source.split('\n').slice(location.start.line - 1, location.end.line);
-
-  // Slice off the start and end of the statement's start and end lines to only return the failing part
-  // Note that we first slice off the end, to avoid shifting the end column index
-  failingLines[failingLines.length - 1] = failingLines[failingLines.length - 1].slice(0, location.end.column);
-  failingLines[0] = failingLines[0].slice(location.start.column);
-
-  const statement = failingLines.join('\n');
-  const lineNumber = location.start.line;
-
-  return { statement, lineNumber };
+  return `in contract ${contractName}.cash at line ${lineNumber}`;
 };
+
+const formatCallStack = (callStack: CallStackEntry[]): string => callStack
+  .map(({ functionName, sourceName, line, statement }) => {
+    const location = functionName ? `${functionName} (${sourceName}:${line})` : `${sourceName}:${line}`;
+    return `  at ${location} — ${statement}`;
+  })
+  .join('\n');

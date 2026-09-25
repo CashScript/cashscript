@@ -108,3 +108,6 @@ typings/
 manual-test.ts
 
 .claude/
+
+# Test fixtures that emulate installed packages (re-included despite the node_modules ignore above)
+!packages/cashc/test/import-fixtures/**/node_modules/

@@ -1,0 +1,20 @@
+function orderedPair(int a, int b, int c) returns (int, int) {
+    int lo = 0;
+    int hi = 0;
+    if (c > 0) {
+        lo = a;
+        hi = b;
+    } else {
+        lo = b;
+        hi = a;
+    }
+    return lo, hi;
+}
+
+contract GlobalFunctionAltStackCleanup() {
+    function spend(int x) {
+        int lo, int hi = orderedPair(1, 2, x);
+        require(lo == 1, "lo should be 1");
+        require(hi == 2, "hi should be 2");
+    }
+}

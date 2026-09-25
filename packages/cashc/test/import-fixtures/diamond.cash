@@ -1,0 +1,8 @@
+import "./mid1.cash";
+import "./mid2.cash";
+
+contract Diamond() {
+    function spend(int x) {
+        require(m1(x) + m2(x) == 18);
+    }
+}

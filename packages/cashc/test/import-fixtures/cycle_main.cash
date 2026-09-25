@@ -1,0 +1,7 @@
+import "./cycle_a.cash";
+
+contract Cycle() {
+    function spend(int x) {
+        require(a(x) + b(x) == 7);
+    }
+}

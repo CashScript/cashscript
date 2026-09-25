@@ -1,0 +1,8 @@
+int constant DERIVED = BASE + 1;
+int constant BASE = 41;
+
+contract GlobalConstantForwardReference() {
+    function spend() {
+        require(DERIVED == 42);
+    }
+}

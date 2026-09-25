@@ -1,0 +1,7 @@
+import "./math.cash";
+
+contract Main() {
+    function spend(int x) {
+        require(double(addOne(x)) == 8);
+    }
+}

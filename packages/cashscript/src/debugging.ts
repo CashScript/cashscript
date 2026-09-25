@@ -1,36 +1,14 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, AuthenticationVirtualMachine, ResolvedTransactionCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, createVirtualMachineBch2023, createVirtualMachineBch2025, createVirtualMachineBch2026, createVirtualMachineBchSpec, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogData, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
+import { attributeLogEntry, buildCallStack, getActiveBytecode, resolveFrame } from './debug-frame.js';
 import { getBitauthUri } from './libauth-template/LibauthTemplate.js';
+import { createVirtualMachine, VM } from './libauth-template/utils.js';
 import { VmTarget } from './interfaces.js';
 
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
-
-/* eslint-disable @typescript-eslint/indent */
-type VM = AuthenticationVirtualMachine<
-  ResolvedTransactionCommon,
-  AuthenticationProgramCommon,
-  AuthenticationProgramStateCommon
->;
-/* eslint-enable @typescript-eslint/indent */
-
-const createVirtualMachine = (vmTarget: VmTarget): VM => {
-  switch (vmTarget) {
-    case 'BCH_2023_05':
-      return createVirtualMachineBch2023();
-    case 'BCH_2025_05':
-      return createVirtualMachineBch2025();
-    case 'BCH_2026_05':
-      return createVirtualMachineBch2026();
-    case 'BCH_SPEC':
-      // TODO: This typecast is shitty, but it's hard to fix
-      return createVirtualMachineBchSpec() as unknown as VM;
-    default:
-      throw new Error(`Debugging is not supported for the ${vmTarget} virtual machine.`);
-  }
-};
 
 // debugs the template, optionally logging the execution data
 export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
@@ -72,7 +50,11 @@ const debugSingleScenario = (
 
   // P2SH executions have 3 phases, we only want the last one (locking script execution)
   // https://libauth.org/types/AuthenticationVirtualMachine.html#__type.debug
-  const lockingScriptDebugResult = fullDebugSteps.slice(findLastIndex(fullDebugSteps, (state) => state.ip === 0));
+  // We additionally require an empty control stack: an invoked function body (OP_INVOKE) also starts at
+  // ip 0, but always with a saved return frame on the control stack.
+  const lockingScriptDebugResult = fullDebugSteps.slice(
+    findLastIndex(fullDebugSteps, (state) => state.ip === 0 && state.controlStack.length === 0),
+  );
 
   // The controlStack determines whether the current debug step is in the executed branch
   // It also tracks loop / function usage, but for the purpose of determining whether a step was executed,
@@ -84,26 +66,30 @@ const debugSingleScenario = (
 
   // P2PKH inputs do not have an artifact, so we skip the console.log handling
   if (artifact) {
-    // Try to match each executed debug step to a log entry if it exists. Note that inside loops,
-    // the same log statement may be executed multiple times in different debug steps
-    // Also note that multiple log statements may exist for the same ip, so we need to handle all of them
+    // Try to match each executed debug step to a log entry if it exists. Notes:
+    // - inside loops, the same log statement may be executed multiple times in different debug steps
+    // - the same ip may be executed by multiple function frames, so they are matched against the active frame's logs.
+    // - multiple log statements may exist for the same ip, so we need to handle all of them.
     const executedLogs = executedDebugSteps
       .flatMap((debugStep, index) => {
-        const logEntries = artifact.debug?.logs?.filter((log) => log.ip === debugStep.ip);
-        if (!logEntries || logEntries.length === 0) return [];
+        const frame = resolveFrame(artifact, debugStep);
+        const logEntries = frame.logs.filter((log) => log.ip === debugStep.ip);
+        if (logEntries.length === 0) return [];
 
         const reversedPriorDebugSteps = executedDebugSteps.slice(0, index + 1).reverse();
+        const frameBytecode = getActiveBytecode(debugStep.instructions);
 
         return logEntries.map((logEntry) => {
           const decodedLogData = logEntry.data
-            .map((dataEntry) => decodeLogDataEntry(dataEntry, reversedPriorDebugSteps, vm));
-          return { logEntry, decodedLogData };
+            .map((dataEntry) => decodeLogDataEntry(dataEntry, reversedPriorDebugSteps, vm, frameBytecode));
+
+          return { ...attributeLogEntry(artifact, frame, logEntry), decodedLogData };
         });
       });
 
-    for (const { logEntry, decodedLogData } of executedLogs) {
+    for (const { logEntry, decodedLogData, sourceName } of executedLogs) {
       const inputIndex = extractInputIndexFromScenario(scenarioId);
-      logConsoleLogStatement(logEntry, decodedLogData, artifact.contractName, inputIndex);
+      logConsoleLogStatement(logEntry, decodedLogData, sourceName, inputIndex);
     }
   }
 
@@ -135,19 +121,21 @@ const debugSingleScenario = (
       throw new FailedTransactionError(error, getBitauthUri(template));
     }
 
-    const requireStatement = (artifact.debug?.requires ?? [])
-      .find((statement) => statement.ip === requireStatementIp);
+    const frame = resolveFrame(artifact, lastExecutedDebugStep);
+    const requireStatement = frame.requires.find((statement) => statement.ip === requireStatementIp);
 
     if (requireStatement) {
+      const callStack = buildCallStack(artifact, lastExecutedDebugStep, frame, requireStatement, failingIp);
+
       // Note that we use failingIp here rather than requireStatementIp, see comment above
       throw new FailedRequireError(
-        artifact, failingIp, requireStatement, inputIndex, getBitauthUri(template), error,
+        artifact, failingIp, requireStatement, inputIndex, getBitauthUri(template), error, frame, callStack,
       );
     }
 
     // Note that we use failingIp here rather than requireStatementIp, see comment above
     throw new FailedTransactionEvaluationError(
-      artifact, failingIp, inputIndex, getBitauthUri(template), error,
+      artifact, failingIp, inputIndex, getBitauthUri(template), error, frame,
     );
   }
 
@@ -175,17 +163,28 @@ const debugSingleScenario = (
       throw new FailedTransactionError(evaluationResult, getBitauthUri(template));
     }
 
-    const requireStatement = (artifact.debug?.requires ?? [])
-      .find((message) => message.ip === finalExecutedVerifyIp);
+    const frame = resolveFrame(artifact, lastExecutedDebugStep);
+    const requireStatement = frame.requires.find((message) => message.ip === finalExecutedVerifyIp);
 
     if (requireStatement) {
+      const callStack = buildCallStack(
+        artifact, lastExecutedDebugStep, frame, requireStatement, sourcemapInstructionPointer,
+      );
+
       throw new FailedRequireError(
-        artifact, sourcemapInstructionPointer, requireStatement, inputIndex, getBitauthUri(template),
+        artifact,
+        sourcemapInstructionPointer,
+        requireStatement,
+        inputIndex,
+        getBitauthUri(template),
+        undefined,
+        frame,
+        callStack,
       );
     }
 
     throw new FailedTransactionEvaluationError(
-      artifact, sourcemapInstructionPointer, inputIndex, getBitauthUri(template), evaluationResult,
+      artifact, sourcemapInstructionPointer, inputIndex, getBitauthUri(template), evaluationResult, frame,
     );
   }
 
@@ -236,20 +235,23 @@ const createProgram = (template: WalletTemplate, unlockingScriptId: string, scen
 const logConsoleLogStatement = (
   log: LogEntry,
   decodedLogData: Array<string | bigint | boolean>,
-  contractName: string,
+  sourceName: string,
   inputIndex: number,
 ): void => {
-  console.log(`[Input #${inputIndex}] ${contractName}.cash:${log.line} ${decodedLogData.join(' ')}`);
+  console.log(`[Input #${inputIndex}] ${sourceName}:${log.line} ${decodedLogData.join(' ')}`);
 };
 
 const decodeLogDataEntry = (
   dataEntry: LogData,
   reversedPriorDebugSteps: AuthenticationProgramStateCommon[],
   vm: VM,
+  frameBytecode: string,
 ): string | bigint | boolean => {
   if (typeof dataEntry === 'string') return dataEntry;
 
-  const dataEntryDebugStep = reversedPriorDebugSteps.find((step) => step.ip === dataEntry.ip);
+  const dataEntryDebugStep = reversedPriorDebugSteps.find(
+    (step) => step.ip === dataEntry.ip && getActiveBytecode(step.instructions) === frameBytecode,
+  );
 
   if (!dataEntryDebugStep) {
     throw new Error(`Should not happen: corresponding data entry debug step not found for entry at ip ${dataEntry.ip}`);

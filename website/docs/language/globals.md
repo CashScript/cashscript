@@ -71,7 +71,7 @@ int tx.locktime
 Represents the `nLocktime` field of the transaction. This is similar to the [`tx.time`][tx.time] global variable but `tx.time` can only be used in `require` statements, not for variable declaration.
 
 :::tip
- The use case for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/guides/covenants#keeping-local-state-in-nfts).
+ The use case for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/design/covenants#keeping-local-state-in-nfts).
 :::
 
 Using `tx.locktime` in a contract requires a non-final sequence number on the spending input. A `require(tx.time >= ...)` check enforces a non-final sequence number. As a safety measure, the CashScript compiler automatically injects a check for this when no such check is present.
@@ -247,7 +247,7 @@ Creates new P2SH32 locking bytecode for the script hash, where `scriptHash` is t
 new LockingBytecodeNullData(bytes[] chunks): bytes
 ```
 
-Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data.
+Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data. Each chunk is pushed the same way as in the SDK's `addOpReturnOutput()`: with `OP_PUSHDATA1` for empty chunks and chunks of 76-255 bytes, and with a direct push for chunks of 1-75 bytes. Chunks larger than 255 bytes are not supported, and cause a compile error when their size is known at compile time.
 
 :::note
 `LockingBytecodeNullData` outputs are provably unspendable, so any BCH sent there would be burned. For these outputs no dust-minimum is enforced so often `LockingBytecodeNullData` outputs have 0 BCH on them.
@@ -289,5 +289,5 @@ require(1 weeks == 7 days);
 [bip68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [addInput()]: /docs/sdk/transaction-builder#addinput
 [setLocktime()]: /docs/sdk/transaction-builder#setlocktime
-[covenants-guide]: /docs/guides/covenants
+[covenants-guide]: /docs/design/covenants
 [tx.time]: #txtime

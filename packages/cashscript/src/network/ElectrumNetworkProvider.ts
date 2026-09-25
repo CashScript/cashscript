@@ -5,7 +5,7 @@ import {
   type RequestResponse,
   type ElectrumClientEvents,
 } from '@electrum-cash/network';
-import { Utxo, Network } from '../interfaces.js';
+import { SpendableUtxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
 import {
@@ -30,6 +30,10 @@ interface CustomElectrumOptions extends OptionsBase {
 }
 
 type Options = OptionsBase | CustomHostNameOptions | CustomElectrumOptions;
+
+// Electrum protocol 1.5.0 introduced both the `include_tokens` filter on blockchain.scripthash.listunspent
+// and blockchain.headers.get_tip, so this is the lowest version the provider's requests are defined for.
+const ELECTRUM_PROTOCOL_VERSION = '1.5.0';
 
 /**
  * A `NetworkProvider` implementation backed by an Electrum Cash server. By default it manages
@@ -56,7 +60,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   private instantiateElectrumClient(network: Network, options: Options): ElectrumClient<ElectrumClientEvents> {
     if ('electrum' in options) return options.electrum;
     const server = 'hostname' in options ? options.hostname : this.getServerForNetwork(network);
-    return new ElectrumClient('CashScript Application', '1.4.1', server, { disableBrowserVisibilityHandling: true });
+    return new ElectrumClient('CashScript Application', ELECTRUM_PROTOCOL_VERSION, server);
   }
 
   // Get Electrum server based on network
@@ -75,12 +79,12 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     }
   }
 
-  async getUtxos(address: string): Promise<Utxo[]> {
+  async getUtxos(address: string): Promise<SpendableUtxo[]> {
     const lockingBytecode = addressToLockScript(address);
     return this.getUtxosForLockingBytecode(lockingBytecode);
   }
 
-  async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<Utxo[]> {
+  async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<SpendableUtxo[]> {
     if (typeof lockingBytecode === 'string' && !isHex(lockingBytecode)) {
       throw new Error(`Invalid locking bytecode: ${lockingBytecode} is not a valid hex string`);
     }
@@ -94,6 +98,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
       txid: utxo.tx_hash,
       vout: utxo.tx_pos,
       satoshis: BigInt(utxo.value),
+      lockingBytecode: binToHex(lockingBytecodeBin),
       token: utxo.token_data ? {
         ...utxo.token_data,
         amount: BigInt(utxo.token_data.amount),
@@ -104,7 +109,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
   }
 
   async getBlockHeight(): Promise<number> {
-    const { height } = await this.performRequest('blockchain.headers.subscribe') as BlockHeader;
+    const { height } = await this.performRequest('blockchain.headers.get_tip') as BlockHeader;
     return height;
   }
 

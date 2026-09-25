@@ -1,0 +1,6 @@
+contract Test() {
+    function test() {
+        bytes b = 0x123;
+        require(b == 0x1203);
+    }
+}

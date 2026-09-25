@@ -1,0 +1,7 @@
+import "./does-not-exist.cash";
+
+contract Missing() {
+    function spend() {
+        require(true);
+    }
+}
