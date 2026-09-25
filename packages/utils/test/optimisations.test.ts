@@ -6,12 +6,14 @@ import {
 import { optimisationReplacements } from '../src/optimisations.js';
 import { asmToBytecode } from '../src/script.js';
 
-// These optimisations remove the VM-number check of OP_NOT, so they are only equivalent when the original succeeds
-const NUMBER_CHECK_REMOVING_OPTIMISATIONS = [
+// These optimisations remove a check, so they are only equivalent when the original succeeds: the VM-number check of
+// OP_NOT, and the maximum stack item size check of an unused OP_CAT result
+const CHECK_REMOVING_OPTIMISATIONS = [
   'OP_NOT OP_IF',
   'OP_NOT OP_NOTIF',
   'OP_NOT OP_NOT OP_UNTIL',
   'OP_NOT OP_NOT OP_VERIFY',
+  'OP_CAT OP_DROP',
 ];
 
 const TRIALS_PER_OPTIMISATION = 100;
@@ -42,7 +44,7 @@ describe('Optimisations', () => {
       const random = createRandom(hashString(pattern));
       const patternInstructions = toInstructions(pattern);
       const replacementInstructions = toInstructions(replacement);
-      const onlyCheckSuccesses = NUMBER_CHECK_REMOVING_OPTIMISATIONS.includes(pattern);
+      const onlyCheckSuccesses = CHECK_REMOVING_OPTIMISATIONS.includes(pattern);
 
       for (let i = 0; i < TRIALS_PER_OPTIMISATION; i += 1) {
         const stack = createStack(random, STACK_DEPTH, i);

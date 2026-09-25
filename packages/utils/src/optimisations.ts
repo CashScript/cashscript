@@ -73,7 +73,8 @@ export const optimisationReplacements = [
   // Random optimisations (don't know what I'm targeting with this)
   ['OP_2DUP OP_DROP', 'OP_OVER'],
   ['OP_2DUP OP_NIP', 'OP_DUP'],
-  // Note: OP_CAT OP_DROP => OP_2DROP is not safe, since it removes OP_CAT's maximum element size check
+  // Note that this removes OP_CAT's maximum stack item size check, which only matters for unused concatenations
+  ['OP_CAT OP_DROP', 'OP_2DROP'],
   ['OP_NIP OP_DROP', 'OP_2DROP'],
 
   // Far-fetched stuff
