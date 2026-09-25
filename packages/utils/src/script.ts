@@ -134,15 +134,13 @@ export function encodeNullDataScript(chunks: OpOrData[]): Uint8Array {
         return new Uint8Array([chunk]);
       }
 
-      const pushdataOpcode = getPushDataOpcode(chunk);
+      const pushdataOpcode = encodeNullDataPushOpcode(chunk.byteLength);
       return new Uint8Array([...pushdataOpcode, ...chunk]);
     }),
   );
 }
 
-function getPushDataOpcode(data: Uint8Array): Uint8Array {
-  const { byteLength } = data;
-
+export function encodeNullDataPushOpcode(byteLength: number): Uint8Array {
   if (byteLength === 0) return Uint8Array.from([0x4c, 0x00]);
   if (byteLength < 76) return Uint8Array.from([byteLength]);
   if (byteLength < 256) return Uint8Array.from([0x4c, byteLength]);

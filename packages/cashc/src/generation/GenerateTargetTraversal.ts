@@ -3,6 +3,7 @@ import {
   asmToScript,
   encodeBool,
   encodeInt,
+  encodeNullDataPushOpcode,
   encodeNullDataScript,
   encodeString,
   Op,
@@ -74,7 +75,7 @@ import {
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
-import { isNumericType } from '../utils.js';
+import { getCompileTimeBytes, isNumericType } from '../utils.js';
 import { collectFunctionCalls, isRecursive, shouldInline } from './inlining.js';
 import type { InternalCompilerOptions } from '../compiler.js';
 
@@ -919,41 +920,54 @@ export default class GenerateTargetTraversal extends AstTraversal {
   // Appends <push opcode> <chunk> to the OP_RETURN script on top of the stack. The push opcode has to match
   // encodeNullDataScript(): OP_PUSHBYTES_N for 1-75 bytes, and OP_PUSHDATA1 N for 0 or 76-255 bytes
   private emitNullDataChunk(element: ExpressionNode): void {
-    // Literal chunks are pushed together with their push opcode, since both are known at compile time
+    const startLocationData = { location: element.location, positionHint: PositionHint.START };
+    const endLocationData = { location: element.location, positionHint: PositionHint.END };
+
+    // Chunks with a value known at compile time are pushed together with their push opcode
     // (encodeNullDataScript() without an OP_RETURN encodes just the chunk, exactly like the SDK does)
-    if (element instanceof HexLiteralNode) {
-      this.emit(encodeNullDataScript([element.value]), { location: element.location, positionHint: PositionHint.START });
-      this.emit(Op.OP_CAT, { location: element.location, positionHint: PositionHint.END });
+    const compileTimeValue = getCompileTimeBytes(element);
+    if (compileTimeValue !== undefined) {
+      this.emit(encodeNullDataScript([compileTimeValue]), startLocationData);
+      this.emit(Op.OP_CAT, endLocationData);
       return;
     }
 
-    this.visit(element);
+    // Chunks with a length known at compile time (e.g. bytes20) are preceded by a constant push opcode
+    if (element.type instanceof BytesType && element.type.bound !== undefined) {
+      this.emit(encodeNullDataPushOpcode(element.type.bound), startLocationData);
+      this.pushToStack('(value)');
+      this.visit(element);
+      this.emit(Op.OP_CAT, endLocationData);
+      this.emit(Op.OP_CAT, endLocationData);
+      this.popFromStack(2);
+      return;
+    }
 
-    // The element comes first, then all other opcodes have PositionHint.END because they come after the element
-    const locationData = { location: element.location, positionHint: PositionHint.END };
+    // Otherwise the push opcode is computed from the chunk's size at runtime
+    this.visit(element);
 
     // OP_SIZE is a signed VM number, so it is empty for empty elements, and has an extra 0x00 byte for 128-255 bytes.
     // In those cases (and for 76-127 bytes) we convert it to a single byte, and prepend OP_PUSHDATA1.
-    this.emit(Op.OP_SIZE, locationData);
-    this.emit(Op.OP_DUP, locationData);
-    this.emit(encodeInt(1n), locationData);
-    this.emit(encodeInt(76n), locationData);
-    this.emit(Op.OP_WITHIN, locationData);
-    this.emit(Op.OP_NOTIF, locationData);
-    this.emit(encodeInt(2n), locationData);
-    this.emit(Op.OP_NUM2BIN, locationData);
-    this.emit(encodeInt(1n), locationData);
-    this.emit(Op.OP_SPLIT, locationData);
-    this.emit(Op.OP_DROP, locationData);
-    this.emit(hexToBin('4c'), locationData);
-    this.emit(Op.OP_SWAP, locationData);
-    this.emit(Op.OP_CAT, locationData);
-    this.emit(Op.OP_ENDIF, locationData);
+    this.emit(Op.OP_SIZE, endLocationData);
+    this.emit(Op.OP_DUP, endLocationData);
+    this.emit(encodeInt(1n), endLocationData);
+    this.emit(encodeInt(76n), endLocationData);
+    this.emit(Op.OP_WITHIN, endLocationData);
+    this.emit(Op.OP_NOTIF, endLocationData);
+    this.emit(encodeInt(2n), endLocationData);
+    this.emit(Op.OP_NUM2BIN, endLocationData);
+    this.emit(encodeInt(1n), endLocationData);
+    this.emit(Op.OP_SPLIT, endLocationData);
+    this.emit(Op.OP_DROP, endLocationData);
+    this.emit(hexToBin('4c'), endLocationData);
+    this.emit(Op.OP_SWAP, endLocationData);
+    this.emit(Op.OP_CAT, endLocationData);
+    this.emit(Op.OP_ENDIF, endLocationData);
 
     // Concat push opcode and chunk to the OP_RETURN script
-    this.emit(Op.OP_SWAP, locationData);
-    this.emit(Op.OP_CAT, locationData);
-    this.emit(Op.OP_CAT, locationData);
+    this.emit(Op.OP_SWAP, endLocationData);
+    this.emit(Op.OP_CAT, endLocationData);
+    this.emit(Op.OP_CAT, endLocationData);
     this.popFromStack();
   }
 

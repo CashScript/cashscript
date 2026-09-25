@@ -20,8 +20,8 @@ import {
   ContractNode,
   SliceNode,
   IntLiteralNode,
-  HexLiteralNode,
   TupleAssignmentNode,
+  ExpressionNode,
 } from './ast/AST.js';
 import { SymbolType } from './ast/SymbolTable.js';
 import { Location } from './ast/Location.js';
@@ -331,9 +331,10 @@ export class IndexOutOfBoundsError extends CashScriptError {
 
 export class NullDataChunkTooLargeError extends CashScriptError {
   constructor(
-    node: HexLiteralNode,
+    node: ExpressionNode,
+    byteLength: number,
   ) {
-    super(node, `LockingBytecodeNullData chunks can be at most 255 bytes, but found ${node.value.byteLength} bytes`);
+    super(node, `LockingBytecodeNullData chunks can be at most 255 bytes, but found ${byteLength} bytes`);
   }
 }
 

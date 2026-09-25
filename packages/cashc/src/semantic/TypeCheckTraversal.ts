@@ -25,7 +25,6 @@ import {
   TimeOpNode,
   VariableDefinitionNode,
   ArrayNode,
-  HexLiteralNode,
   TupleIndexOpNode,
   RequireNode,
   ReturnNode,
@@ -60,7 +59,7 @@ import {
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
 import { Class, GlobalFunction } from '../ast/Globals.js';
 import { Symbol } from '../ast/SymbolTable.js';
-import { functionReturnType, resultingTypeForBinaryOp } from '../utils.js';
+import { functionReturnType, getCompileTimeByteLength, resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   private currentFunctionReturnTypes: Type[] = [];
@@ -521,10 +520,10 @@ function expectTuple(node: ExpectedNode, actual?: Type): void {
 }
 
 function expectNullDataChunkSizes(chunks: ArrayNode): void {
-  const tooLargeChunk = chunks.elements
-    .find((chunk) => chunk instanceof HexLiteralNode && chunk.value.byteLength > 255);
-
-  if (tooLargeChunk) throw new NullDataChunkTooLargeError(tooLargeChunk as HexLiteralNode);
+  chunks.elements.forEach((chunk) => {
+    const byteLength = getCompileTimeByteLength(chunk);
+    if (byteLength !== undefined && byteLength > 255) throw new NullDataChunkTooLargeError(chunk, byteLength);
+  });
 }
 
 type AssigningNode = AssignNode | VariableDefinitionNode | ConstantDefinitionNode;

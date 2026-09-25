@@ -247,7 +247,7 @@ Creates new P2SH32 locking bytecode for the script hash, where `scriptHash` is t
 new LockingBytecodeNullData(bytes[] chunks): bytes
 ```
 
-Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data. Each chunk is pushed the same way as in the SDK's `addOpReturnOutput()`: with `OP_PUSHDATA1` for empty chunks and chunks of 76-255 bytes, and with a direct push for chunks of 1-75 bytes. Chunks larger than 255 bytes are not supported, and cause a compile error when they are literals.
+Creates new OP_RETURN locking bytecode with `chunks` as its OP_RETURN data. Each chunk is pushed the same way as in the SDK's `addOpReturnOutput()`: with `OP_PUSHDATA1` for empty chunks and chunks of 76-255 bytes, and with a direct push for chunks of 1-75 bytes. Chunks larger than 255 bytes are not supported, and cause a compile error when their size is known at compile time.
 
 :::note
 `LockingBytecodeNullData` outputs are provably unspendable, so any BCH sent there would be burned. For these outputs no dust-minimum is enforced so often `LockingBytecodeNullData` outputs have 0 BCH on them.
