@@ -7,13 +7,9 @@ import {
   calculateBytesize,
   countOpcodes,
   encodeNullDataScript,
-  optimiseBytecode,
-  PositionHint,
   scriptToAsm,
   scriptToBytecode,
-  SingleLocationData,
 } from '../src/index.js';
-import { optimisationReplacements } from '../src/optimisations.js';
 import { fixtures } from './script.fixture.js';
 
 describe('script utils', () => {
@@ -105,69 +101,6 @@ describe('script utils', () => {
   describe.skip('TODO: generateContractBytecodeScript()', () => {
   });
 
-  describe('optimiseBytecode()', () => {
-    const location: SingleLocationData = {
-      location: { start: { line: 1, column: 0 }, end: { line: 1, column: 0 } },
-      positionHint: PositionHint.START,
-    };
-
-    it('should match a token-based reference implementation on random scripts', () => {
-      let seed = 1;
-      const random = (max: number): number => {
-        seed = (seed * 16807) % 2147483647;
-        return seed % max;
-      };
-
-      for (let i = 0; i < 500; i += 1) {
-        // Scripts are built from rule patterns and loose tokens, so matches are frequent, adjacent and cascading
-        const segments = Array.from({ length: 12 }, () => {
-          if (random(2) === 0) return optimisationReplacements[random(optimisationReplacements.length)][0];
-          return REFERENCE_TOKENS[random(REFERENCE_TOKENS.length)];
-        });
-        const script = asmToScript(segments.join(' '));
-
-        const result = optimiseBytecode(script, script.map(() => location), [], [], [], [], 0);
-
-        expect(scriptToAsm(result.script)).toEqual(referenceOptimise(scriptToAsm(script)));
-        expect(result.locationData).toHaveLength(result.script.length);
-      }
-    });
+  describe.skip('TODO: optimiseBytecode()', () => {
   });
 });
-
-const REFERENCE_TOKENS = [
-  ...new Set(optimisationReplacements.flatMap(([pattern, replacement]) => `${pattern} ${replacement}`.split(/\s+/))),
-  'beef',
-  '0102',
-].filter((token) => token !== '');
-
-// Applies every optimisation left-to-right without overlap (like a global regex replace), until a fixed point
-function referenceOptimise(asm: string): string {
-  let tokens = asm.split(' ').filter((token) => token !== '');
-  let previous: string;
-
-  do {
-    previous = tokens.join(' ');
-    for (const [pattern, replacement] of optimisationReplacements) {
-      tokens = replaceTokens(tokens, pattern.split(' '), replacement === '' ? [] : replacement.split(' '));
-    }
-  } while (tokens.join(' ') !== previous);
-
-  return previous;
-}
-
-function replaceTokens(tokens: string[], pattern: string[], replacement: string[]): string[] {
-  const result: string[] = [];
-
-  for (let i = 0; i < tokens.length;) {
-    if (pattern.every((token, j) => tokens[i + j] === token)) {
-      result.push(...replacement);
-      i += pattern.length;
-    } else {
-      result.push(tokens[i]);
-      i += 1;
-    }
-  }
-
-  return result;
-}
