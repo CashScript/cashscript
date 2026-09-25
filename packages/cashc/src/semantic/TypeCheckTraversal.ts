@@ -52,13 +52,14 @@ import {
   ArrayElementError,
   IndexOutOfBoundsError,
   BitshiftBitcountNegativeError,
+  NullDataChunkTooLargeError,
   UnusedFunctionReturnError,
   ReturnTypeError,
 } from '../Errors.js';
 import { BinaryOperator, NullaryOperator, UnaryOperator } from '../ast/Operator.js';
-import { GlobalFunction } from '../ast/Globals.js';
+import { Class, GlobalFunction } from '../ast/Globals.js';
 import { Symbol } from '../ast/SymbolTable.js';
-import { functionReturnType, resultingTypeForBinaryOp } from '../utils.js';
+import { functionReturnType, getCompileTimeByteLength, resultingTypeForBinaryOp } from '../utils.js';
 
 export default class TypeCheckTraversal extends AstTraversal {
   private currentFunctionReturnTypes: Type[] = [];
@@ -79,7 +80,10 @@ export default class TypeCheckTraversal extends AstTraversal {
   visitTupleAssignment(node: TupleAssignmentNode): Node {
     node.tuple = this.visit(node.tuple);
 
-    const targetsType = new TupleType(node.targets.map((target) => target.type!));
+    // Reassigned variables use their current type, which may have been narrowed by a preceding x.length == N check
+    const targetsType = new TupleType(node.targets.map((target) => (
+      target.isReassignment ? target.identifier.symbol!.type : target.type!
+    )));
     if (!implicitlyCastable(node.tuple.type, targetsType)) {
       const targetNames = node.targets.map((target) => target.identifier.name).join(', ');
       const syntheticAssignment = new VariableDefinitionNode(targetsType, [], targetNames, node.tuple);
@@ -262,6 +266,10 @@ export default class TypeCheckTraversal extends AstTraversal {
 
     const parameterTypes = node.parameters.map((p) => p.type!);
     expectParameters(node, parameterTypes, symbol.parameters);
+
+    if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
+      expectNullDataChunkSizes(node.parameters[0] as ArrayNode);
+    }
 
     node.type = type;
     return node;
@@ -509,6 +517,13 @@ function expectTuple(node: ExpectedNode, actual?: Type): void {
     const placeholderTuple = new TupleType([new BytesType(), new BytesType()]);
     throw new UnsupportedTypeError(node, actual, placeholderTuple);
   }
+}
+
+function expectNullDataChunkSizes(chunks: ArrayNode): void {
+  chunks.elements.forEach((chunk) => {
+    const byteLength = getCompileTimeByteLength(chunk);
+    if (byteLength !== undefined && byteLength > 255) throw new NullDataChunkTooLargeError(chunk, byteLength);
+  });
 }
 
 type AssigningNode = AssignNode | VariableDefinitionNode | ConstantDefinitionNode;
