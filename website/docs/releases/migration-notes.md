@@ -4,20 +4,6 @@ title: Migration Notes
 
 ## v0.13 to v0.14
 
-### cashc compiler
-
-#### Odd-length hex literals
-
-Hex literals must now have an even number of digits. Previously, an odd-length literal compiled to a different value than it seemed to represent, so these literals are now a compile error.
-
-```solidity
-// before
-bytes b = 0x123; // => 0x1203
-
-// after
-bytes b = 0x0123; // or 0x1203, depending on the intended value
-```
-
 ### CashScript SDK
 
 #### SignatureTemplate
