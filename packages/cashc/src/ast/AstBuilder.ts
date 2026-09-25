@@ -566,8 +566,13 @@ export default class AstBuilder
   }
 
   createHexLiteral(ctx: LiteralContext): HexLiteralNode {
-    const hexString = ctx.HexLiteral().getText();
-    const hexValue = hexToBin(hexString.substring(2));
+    const hexString = ctx.HexLiteral().getText().substring(2);
+
+    if (hexString.length % 2 !== 0) {
+      throw new ParseError(`Hex literal "0x${hexString}" should have an even number of digits`, Location.fromCtx(ctx));
+    }
+
+    const hexValue = hexToBin(hexString);
     const hexLiteral = new HexLiteralNode(hexValue);
     hexLiteral.location = Location.fromCtx(ctx);
     return hexLiteral;

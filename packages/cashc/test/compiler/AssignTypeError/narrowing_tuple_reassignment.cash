@@ -1,0 +1,8 @@
+contract Test() {
+    function hello(bytes data, bytes other) {
+        require(data.length == 20);
+        data, bytes rest = other.split(5);
+        bytes20 narrowed = data;
+        require(narrowed == data && rest.length > 0);
+    }
+}

@@ -53,9 +53,6 @@ export default class EnsureFinalRequireTraversal extends AstTraversal {
   }
 }
 
-// TODO: This code is a bit convoluted, but we're likely to make changes to allow early returns before a mainline release,
-// so we're leaving this code as-is for now.
-
 function ensureSingleTailReturn(body: BlockNode): void {
   const statements = body.statements ?? [];
   const finalStatement = statements[statements.length - 1];

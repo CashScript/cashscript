@@ -3,6 +3,7 @@ import {
   asmToScript,
   encodeBool,
   encodeInt,
+  encodeNullDataScript,
   encodeString,
   Op,
   OpOrData,
@@ -61,6 +62,7 @@ import {
   DoWhileNode,
   WhileNode,
   ForNode,
+  ExpressionNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { GlobalFunction, Class } from '../ast/Globals.js';
@@ -898,44 +900,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.emit(Op.OP_CAT, { location: node.location, positionHint: PositionHint.END });
       this.popFromStack(2);
     } else if (node.identifier.name === Class.LOCKING_BYTECODE_NULLDATA) {
-      // Total script = OP_RETURN (<VarInt> <chunk>)+
+      // Total script = OP_RETURN (<push opcode> <chunk>)+
       // OP_RETURN
       this.emit(hexToBin('6a'), { location: node.location, positionHint: PositionHint.START });
       this.pushToStack('(value)');
       const { elements } = node.parameters[0] as ArrayNode;
-      // <VarInt data chunk size (dynamic)>
-      elements.forEach((element) => {
-        this.visit(element);
-
-        // The element comes first, then all other opcodes have PositionHint.END because they come after the element
-        const elementLocationData = { location: element.location, positionHint: PositionHint.END };
-
-        // Push the element's size (and calculate VarInt)
-        this.emit(Op.OP_SIZE, elementLocationData);
-        if (element instanceof HexLiteralNode) {
-          // If the argument is a literal, we know its size
-          if (element.value.byteLength > 75) {
-            this.emit(hexToBin('4c'), elementLocationData);
-            this.emit(Op.OP_SWAP, elementLocationData);
-            this.emit(Op.OP_CAT, elementLocationData);
-          }
-        } else {
-          // If the argument is not a literal, the script needs to check size
-          this.emit(Op.OP_DUP, elementLocationData);
-          this.emit(encodeInt(75n), elementLocationData);
-          this.emit(Op.OP_GREATERTHAN, elementLocationData);
-          this.emit(Op.OP_IF, elementLocationData);
-          this.emit(hexToBin('4c'), elementLocationData);
-          this.emit(Op.OP_SWAP, elementLocationData);
-          this.emit(Op.OP_CAT, elementLocationData);
-          this.emit(Op.OP_ENDIF, elementLocationData);
-        }
-        // Concat size and arguments
-        this.emit(Op.OP_SWAP, elementLocationData);
-        this.emit(Op.OP_CAT, elementLocationData);
-        this.emit(Op.OP_CAT, elementLocationData);
-        this.popFromStack();
-      });
+      elements.forEach((element) => this.emitNullDataChunk(element));
       this.popFromStack();
     } else {
       throw new Error(); // Should not happen
@@ -944,6 +914,47 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.pushToStack('(value)');
 
     return node;
+  }
+
+  // Appends <push opcode> <chunk> to the OP_RETURN script on top of the stack. The push opcode has to match
+  // encodeNullDataScript(): OP_PUSHBYTES_N for 1-75 bytes, and OP_PUSHDATA1 N for 0 or 76-255 bytes
+  private emitNullDataChunk(element: ExpressionNode): void {
+    // Literal chunks are pushed together with their push opcode, since both are known at compile time
+    // (encodeNullDataScript() without an OP_RETURN encodes just the chunk, exactly like the SDK does)
+    if (element instanceof HexLiteralNode) {
+      this.emit(encodeNullDataScript([element.value]), { location: element.location, positionHint: PositionHint.START });
+      this.emit(Op.OP_CAT, { location: element.location, positionHint: PositionHint.END });
+      return;
+    }
+
+    this.visit(element);
+
+    // The element comes first, then all other opcodes have PositionHint.END because they come after the element
+    const locationData = { location: element.location, positionHint: PositionHint.END };
+
+    // OP_SIZE is a signed VM number, so it is empty for empty elements, and has an extra 0x00 byte for 128-255 bytes.
+    // In those cases (and for 76-127 bytes) we convert it to a single byte, and prepend OP_PUSHDATA1.
+    this.emit(Op.OP_SIZE, locationData);
+    this.emit(Op.OP_DUP, locationData);
+    this.emit(encodeInt(1n), locationData);
+    this.emit(encodeInt(76n), locationData);
+    this.emit(Op.OP_WITHIN, locationData);
+    this.emit(Op.OP_NOTIF, locationData);
+    this.emit(encodeInt(2n), locationData);
+    this.emit(Op.OP_NUM2BIN, locationData);
+    this.emit(encodeInt(1n), locationData);
+    this.emit(Op.OP_SPLIT, locationData);
+    this.emit(Op.OP_DROP, locationData);
+    this.emit(hexToBin('4c'), locationData);
+    this.emit(Op.OP_SWAP, locationData);
+    this.emit(Op.OP_CAT, locationData);
+    this.emit(Op.OP_ENDIF, locationData);
+
+    // Concat push opcode and chunk to the OP_RETURN script
+    this.emit(Op.OP_SWAP, locationData);
+    this.emit(Op.OP_CAT, locationData);
+    this.emit(Op.OP_CAT, locationData);
+    this.popFromStack();
   }
 
   visitTupleIndexOp(node: TupleIndexOpNode): Node {

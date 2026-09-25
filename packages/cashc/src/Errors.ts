@@ -20,6 +20,7 @@ import {
   ContractNode,
   SliceNode,
   IntLiteralNode,
+  HexLiteralNode,
   TupleAssignmentNode,
 } from './ast/AST.js';
 import { SymbolType } from './ast/SymbolTable.js';
@@ -325,6 +326,14 @@ export class IndexOutOfBoundsError extends CashScriptError {
     } else {
       super(node, 'Index out of bounds');
     }
+  }
+}
+
+export class NullDataChunkTooLargeError extends CashScriptError {
+  constructor(
+    node: HexLiteralNode,
+  ) {
+    super(node, `LockingBytecodeNullData chunks can be at most 255 bytes, but found ${node.value.byteLength} bytes`);
   }
 }
 

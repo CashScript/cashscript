@@ -78,7 +78,7 @@ The script will fail if `split()` or `slice()` is called with an index that is o
 :::
 
 ## Bytes
-`bytes`: Byte sequence. Prefixed with `0x` to indicate hexadecimal sequence. Can optionally be bound to a byte length by specifying e.g. `bytes4`, `bytes32`, `bytes64`. It is also possible to use `byte` as an alias for `bytes1`.
+`bytes`: Byte sequence. Prefixed with `0x` to indicate hexadecimal sequence, which must have an even number of digits. Can optionally be bound to a byte length by specifying e.g. `bytes4`, `bytes32`, `bytes64`. It is also possible to use `byte` as an alias for `bytes1`.
 
 Operators:
 
