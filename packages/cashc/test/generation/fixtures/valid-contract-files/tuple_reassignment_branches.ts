@@ -38,7 +38,7 @@ export const fixtures: Fixture[] = [
         + 'OP_OVER OP_10 OP_GREATERTHAN OP_IF '
         // (total, int extra) = branchPair(a + 1) — call, park extra's value on the altstack,
         // fold total's value into its slot (OP_NIP), restore extra's value
-        + 'OP_OVER OP_1ADD OP_0 OP_INVOKE OP_TOALTSTACK OP_NIP OP_FROMALTSTACK '
+        + 'OP_OVER OP_1ADD OP_0 OP_INVOKE OP_ROT OP_DROP '
         // require(extra != 0)
         + 'OP_DUP OP_0 OP_NUMNOTEQUAL OP_VERIFY '
         // scope cleanup (drop extra)
@@ -46,16 +46,16 @@ export const fixtures: Fixture[] = [
         // require(total >= 0) + cleanup
         + 'OP_0 OP_GREATERTHANOREQUAL OP_NIP OP_ENDIF',
       debug: {
-        bytecode: '127653957857979378529693768b7c52957b94008976009c630052795aa0635279008a7b757c76009e69756800a2777767519d00785aa063788b008a6b776c76009e69756800a27768',
-        sourceMap: '7::10:1;;::::1;14:4:21:5:0;;;;15:20:15:21;16:12:16:13;;:16::18;:12:::1;:20:19:9:0;17:38:17:39;;:27::40:1;;:12::41;;;18:20:18:21:0;:25::26;:20:::1;:12::28;16:20:19:9;;20:25:20:26:0;:8::28:1;14:37:21:5;;:4;25::32::0;;26:20:26:21;27:12:27:13;:16::18;:12:::1;:20:30:9:0;28:44:28:45;:::49:1;:33::50;;:12::51;;;29:20:29:25:0;:29::30;:20:::1;:12::32;27:20:30:9;;31:25:31:26:0;:8::28:1;25:38:32:5;12:0:33:1',
+        bytecode: '127653957857979378529693768b7c52957b94008976009c630052795aa0635279008a7b757c76009e69756800a2777767519d00785aa063788b008a7b7576009e69756800a27768',
+        sourceMap: '7::10:1;;::::1;14:4:21:5:0;;;;15:20:15:21;16:12:16:13;;:16::18;:12:::1;:20:19:9:0;17:38:17:39;;:27::40:1;;:12::41;;;18:20:18:21:0;:25::26;:20:::1;:12::28;16:20:19:9;;20:25:20:26:0;:8::28:1;14:37:21:5;;:4;25::32::0;;26:20:26:21;27:12:27:13;:16::18;:12:::1;:20:30:9:0;28:44:28:45;:::49:1;:33::50;;:12::51;;29:20:29:25:0;:29::30;:20:::1;:12::32;27:20:30:9;;31:25:31:26:0;:8::28:1;25:38:32:5;12:0:33:1',
         logs: [],
         requires: [
           { ip: 23, line: 18 },
           { ip: 28, line: 20 },
-          { ip: 48, line: 29 },
-          { ip: 53, line: 31 },
+          { ip: 47, line: 29 },
+          { ip: 52, line: 31 },
         ],
-        sourceTags: '24:24:sc;28:29:sc;49:49:sc;53:53:sc',
+        sourceTags: '24:24:sc;28:29:sc;48:48:sc;52:52:sc',
         functions: [
           {
             id: 0,
@@ -68,7 +68,7 @@ export const fixtures: Fixture[] = [
           },
         ],
       },
-      fingerprint: 'da4982948327a26f2c708b13af6977715747aa0b5c64bc00b04e3ddbc11ca67d',
+      fingerprint: '8d4e93cb8ad5d2bae6e6bf508bc0f5cd008120352e9a434f80b0af47241e67c0',
     },
   },
 ];

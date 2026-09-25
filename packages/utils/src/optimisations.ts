@@ -73,7 +73,7 @@ export const optimisationReplacements = [
   // Random optimisations (don't know what I'm targeting with this)
   ['OP_2DUP OP_DROP', 'OP_OVER'],
   ['OP_2DUP OP_NIP', 'OP_DUP'],
-  ['OP_CAT OP_DROP', 'OP_2DROP'],
+  // Note: OP_CAT OP_DROP => OP_2DROP is not safe, since it removes OP_CAT's maximum element size check
   ['OP_NIP OP_DROP', 'OP_2DROP'],
 
   // Far-fetched stuff
@@ -123,6 +123,9 @@ export const optimisationReplacements = [
   ['OP_SIZE OP_SPLIT OP_DROP', ''],
 
   // Hardcoded arithmetic
+  // Note that OP_NOT does a VM-number check that OP_NOTIF does not, which gets removed by this optimisation. Compiled
+  // bools are always valid VM numbers unless they come from unsafe_bool() or unenforced function parameter types.
+  // This is also why OP_0 OP_NUMEQUAL => OP_NOT is not safe: it would remove the function selector's number check
   ['OP_NOT OP_IF', 'OP_NOTIF'],
 
   // Merge OP_VERIFY
@@ -153,4 +156,20 @@ export const optimisationReplacements = [
   ['OP_NOT OP_NOT OP_UNTIL', 'OP_UNTIL'],
   ['OP_NOT OP_NOTIF', 'OP_IF'],
   ['OP_NOT OP_NOT OP_VERIFY', 'OP_VERIFY'],
+
+  // Remove extraneous OP_DUP/OP_NIP around in-place increments (e.g. for-loop updates)
+  ['OP_DUP OP_1ADD OP_NIP', 'OP_1ADD'],
+  ['OP_DUP OP_1SUB OP_NIP', 'OP_1SUB'],
+
+  // Replace alt stack round trips (e.g. from reassignments inside loops) with regular stack ops
+  ['OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK', 'OP_ROT OP_ROT'],
+  ['OP_TOALTSTACK OP_NIP OP_FROMALTSTACK', 'OP_ROT OP_DROP'],
+  ['OP_ROT OP_ROT OP_2DROP', 'OP_NIP OP_NIP'],
+
+  // Remove extraneous OP_SWAP before order-independent operations
+  ['OP_SWAP OP_BOOLOR', 'OP_BOOLOR'],
+  ['OP_SWAP OP_BOOLAND', 'OP_BOOLAND'],
+  ['OP_SWAP OP_MIN', 'OP_MIN'],
+  ['OP_SWAP OP_MAX', 'OP_MAX'],
+  ['OP_SWAP OP_2DROP', 'OP_2DROP'],
 ] as [string, string][];
