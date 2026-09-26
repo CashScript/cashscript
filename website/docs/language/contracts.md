@@ -192,7 +192,7 @@ Global constants do not become constructor arguments or mutable stack variables.
 ## Importing functions and constants from other files
 Top-level functions and constants can be split across files and pulled in with an `import` directive, which makes the imported functions and constants available as if they were declared locally. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any constant, function or contract definitions. Cyclic imports are not allowed and result in a compile error.
 
-Import paths starting with `./`, `../` or `/` are resolved relative to the importing file: from the filesystem when compiling with [`compileFile`](/docs/compiler#compilefile), or from the `files` compiler option when using [`compileString`](/docs/compiler#compilestring).
+Import paths starting with `./` or `../` are resolved relative to the importing file: from the filesystem when compiling with [`compileFile`](/docs/compiler#compilefile), or from the `files` compiler option when using [`compileString`](/docs/compiler#compilestring). Absolute import paths (starting with `/`) are not supported.
 
 ```solidity
 // math.cash
@@ -220,7 +220,7 @@ Imported function and constant names share a single global namespace, so a name 
 Imported files can declare their own [`pragma` directives](#pragma), and every pragma across the whole import graph — the main file and all (transitively) imported files — must be satisfied by the compiler version.
 
 ### Importing from npm packages
-Import paths that do *not* start with `./`, `../` or `/` are treated as package imports and are resolved from `node_modules`, mirroring Node.js module resolution. This makes it possible to publish reusable CashScript functions as npm packages and import them by package name. The import path must contain the full path of the `.cash` file within the package.
+Other import paths are treated as package imports and are resolved from `node_modules`, mirroring Node.js module resolution. This makes it possible to publish reusable CashScript functions as npm packages and import them by package name. The import path must contain the full path of the `.cash` file within the package.
 
 ```solidity
 pragma cashscript ^0.14.0;
@@ -233,9 +233,9 @@ contract Main() {
 }
 ```
 
-Relative imports *inside* an imported package are resolved relative to the package's own files, so packages can split their functions across multiple internal files.
+Relative imports *inside* an imported package are resolved relative to the package's own files, so packages can split their functions across multiple internal files. Like in Node.js, symlinks are followed to the package's actual location, so packages installed with pnpm or linked with `npm link` resolve their own dependencies from where they are installed.
 
-When compiling with [`compileString`](/docs/compiler#compilestring), package imports are looked up verbatim in the `files` compiler option. The example above would require a `files` key of `@example/math-lib/math.cash`.
+When compiling with [`compileString`](/docs/compiler#compilestring), package files are provided in the `files` compiler option under their import path prefixed with `package:`. The example above would require a `files` key of `package:@example/math-lib/math.cash`.
 
 ## Statements
 CashScript functions are made up of a collection of statements that determine whether money may be spent from the contract.
