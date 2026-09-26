@@ -291,9 +291,9 @@ describe('Inlining and shared definitions', () => {
     expect(artifact.debug?.functions).toContainEqual(expect.objectContaining({
       name: 'assertPositive',
       sourceFile: 'helpers.cash',
-      source: importedSource,
       requires: [expect.objectContaining({ line: 2, message: 'must be positive' })],
     }));
+    expect(artifact.debug?.sources).toEqual({ 'helpers.cash': importedSource });
     expect(artifact.debug?.functions?.[0].id).toBeUndefined();
     expect(artifact.debug?.inlineRanges).toMatch(/^\d+:\d+:assertPositive$/);
   });
@@ -368,9 +368,9 @@ describe('Global constants', () => {
     expect(artifact.debug?.functions?.[0]).toMatchObject({
       name: 'IMPORTED_HASH',
       kind: 'constant',
-      source: importedSource,
       sourceFile: 'constants.cash',
     });
+    expect(artifact.debug?.sources).toEqual({ 'constants.cash': importedSource });
   });
 
   it('folds constant definitions to literals at compile time', () => {

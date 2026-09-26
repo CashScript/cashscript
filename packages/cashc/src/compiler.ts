@@ -67,7 +67,7 @@ export const compileString: (code: string, compilerOptions?: CompileStringOption
 /**
  * Read a `.cash` source file from disk and compile it to an `Artifact`.
  *
- * Import directives are resolved from the filesystem: file paths (starting with './', '../' or '/')
+ * Import directives are resolved from the filesystem: file paths (starting with './' or '../')
  * relative to the importing file's directory, and package imports (e.g. 'pkg/math.cash')
  * from node_modules directories, walking up from the importing file's directory.
  *
@@ -115,7 +115,7 @@ function compileCode(
   let ast = parseCode(code, errorListener);
   checkVersionConstraints(ast.pragmas);
 
-  ast = resolveDependencies(ast, resolver, errorListener) as Ast;
+  const sources = resolveDependencies(ast, resolver, errorListener);
   if (!ast.contract) throw new MissingContractError();
 
   const constructorParamLength = ast.contract.parameters.length;
@@ -162,6 +162,7 @@ function compileCode(
     requires: optimisationResult.requires,
     sourceTags: generateSourceTags(optimisationResult.sourceTags) || undefined,
     functions: traversal.frames.length > 0 ? traversal.frames : undefined,
+    sources: Object.keys(sources).length > 0 ? sources : undefined,
     inlineRanges: generateInlineRanges(optimisationResult.inlineRanges) || undefined,
   };
 
