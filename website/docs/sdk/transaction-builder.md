@@ -207,7 +207,7 @@ Sets the locktime for the transaction to set a transaction-level absolute timelo
 #### Example
 ```ts
 // Set locktime one day from now
-transactionBuilder.setLocktime((Date.now() / 1000) + 24 * 60 * 60);
+transactionBuilder.setLocktime(Math.floor(Date.now() / 1000) + 24 * 60 * 60);
 ```
 
 ### getTransactionSize()

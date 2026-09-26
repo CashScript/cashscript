@@ -34,6 +34,14 @@ This release contains several breaking changes, please refer to the [migration n
 - :hammer_and_wrench: `ElectrumNetworkProvider` now negotiates Electrum protocol 1.5.0 (was 1.4.1) and uses `blockchain.headers.get_tip` in `getBlockHeight()`, so long-lived connections are no longer subscribed to new headers. Custom electrum clients should negotiate 1.5.0 or later.
 - :hammer_and_wrench: Update `@electrum-cash/network` to 4.4.0. In a browser, the `ElectrumNetworkProvider`'s connection is now also closed while the page is hidden (it was already closed while offline) and opened again afterwards, restoring any subscriptions (see [Browser visibility and connectivity](/docs/sdk/electrum-network-provider#browser-visibility-and-connectivity)).
 - :boom: **BREAKING**: Remove `generateLockingBytecode()` from the `Unlocker` interface.
+- :bug: Fix bug where hex string arguments with an odd number of digits or non-hex characters silently encoded to different bytes, they now throw an error. `pubkey` arguments are also checked to be 33 or 65 bytes.
+- :bug: Fix bug where the `ElectrumNetworkProvider` stopped connecting for new requests after a request failed, when using automatic connection management.
+- :bug: Fix bug where the minimum and maximum fee per byte checks rounded the fee per byte before comparing, so e.g. 0.998 sat/byte was accepted.
+- :bug: Fix bug where `setLocktime()` accepted values that are not an unsigned 32-bit integer, it now throws an error.
+- :bug: Fix bug where `send()` threw a `FailedTransactionError` when the transaction was broadcast successfully, but could not be retrieved afterwards.
+- :bug: Fix bug where a failing final `require(variable)` statement was reported at the line of the previous statement.
+- :bug: Fix missing types for the `toLog()`, `toFailRequire()` and `toFailRequireWith()` test matchers when importing `cashscript/vitest` with Vitest 5.
+- :bug: The `MockNetworkProvider` now also validates transactions when `updateUtxoSet` is `false`, rejects transactions with a block height locktime above the mock block height, and compares hex strings case-insensitively.
 
 
 ## v0.13.3

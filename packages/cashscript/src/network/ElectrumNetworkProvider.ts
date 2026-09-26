@@ -178,14 +178,14 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
     try {
       result = await this.electrum.request(name, ...parameters);
     } finally {
+      this.concurrentRequests -= 1;
+
       // Always disconnect the electrum client, also if the request fails
       // as long as no other concurrent requests are running
       if (this.shouldDisconnect()) {
         await this.electrum.disconnect();
       }
     }
-
-    this.concurrentRequests -= 1;
 
     if (result instanceof Error) throw result;
 
@@ -200,7 +200,7 @@ export default class ElectrumNetworkProvider implements NetworkProvider {
 
   private shouldDisconnect(): boolean {
     if (this.manualConnectionManagement) return false;
-    if (this.concurrentRequests !== 1) return false;
+    if (this.concurrentRequests !== 0) return false;
     return true;
   }
 }

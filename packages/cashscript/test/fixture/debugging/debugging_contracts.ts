@@ -308,6 +308,15 @@ contract Test() {
   }
 }`;
 
+const CONTRACT_TEST_FINAL_REQUIRE_VARIABLE = `
+contract Test() {
+  function test_final_require_variable(int x) {
+    bool isLarge = x > 5;
+    require(isLarge);
+  }
+}
+`;
+
 const CONTRACT_TEST_MULTILINE_REQUIRES = `
 contract Test() {
   // We test this because the cleanup looks different and the final OP_VERIFY isn't removed for these kinds of functions
@@ -586,6 +595,7 @@ contract Test(pubkey owner, int num, int num2, int num3, int num4, int num5) {
 export const artifactTestRequires = compileString(CONTRACT_TEST_REQUIRES);
 export const artifactTestSingleFunction = compileString(CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION);
 export const artifactTestMultilineRequires = compileString(CONTRACT_TEST_MULTILINE_REQUIRES);
+export const artifactTestFinalRequireVariable = compileString(CONTRACT_TEST_FINAL_REQUIRE_VARIABLE);
 export const artifactTestZeroHandling = compileString(CONTRACT_TEST_ZERO_HANDLING);
 export const artifactTestLogs = compileString(CONTRACT_TEST_LOGS);
 export const artifactTestConsecutiveLogs = compileString(CONTRACT_TEST_CONSECUTIVE_LOGS);

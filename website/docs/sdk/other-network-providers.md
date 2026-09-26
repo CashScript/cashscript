@@ -43,7 +43,7 @@ interface MockNetworkProviderOptions {
 ```
 
 - `updateUtxoSet` (default `true`) — update the in-memory UTXO set after a transaction is sent, consuming the spent UTXOs and adding the transaction's outputs.
-- `validateTransactions` (default `true`) — evaluate sent transactions against the BCH VM using the actual locking bytecode of the spent UTXOs, rejecting transactions that a real node would reject. Requires `updateUtxoSet`.
+- `validateTransactions` (default `true`) — evaluate sent transactions against the BCH VM using the actual locking bytecode of the spent UTXOs, rejecting transactions that a real node would reject. Transactions with a block height locktime above the mock block height (see `setBlockHeight()`) are rejected as non-final. Time-based locktimes and relative timelocks (sequence numbers) are not checked, since the mock network has no block times or UTXO confirmation heights.
 - `vmTarget` (default `BCH_2026_05`) — the BCH virtual machine version used for local debugging and transaction validation.
 
 #### Example

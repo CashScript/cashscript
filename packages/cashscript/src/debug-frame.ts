@@ -234,6 +234,21 @@ const toCallStackEntry = (frame: ResolvedFrame, instructionPointer: number): Cal
   };
 };
 
+// A require statement's own opcodes can be optimised away (e.g. a final `require(ok)` where `ok` is already on top of
+// the stack), in which case the failing opcode belongs to an earlier statement. We then use the require's own line.
+export const getRequireLocationDataForFrame = (
+  frame: ResolvedFrame,
+  instructionPointer: number,
+  requireLine: number,
+): { lineNumber: number, statement: string } => {
+  const locationData = getLocationDataForFrame(frame, instructionPointer);
+  const statementEndLine = locationData.lineNumber + locationData.statement.split('\n').length - 1;
+  if (statementEndLine >= requireLine) return locationData;
+
+  const statement = frame.source.split('\n')[requireLine - 1].trim().replace(/;$/, '');
+  return { lineNumber: requireLine, statement };
+};
+
 export const getLocationDataForFrame = (
   frame: ResolvedFrame,
   instructionPointer: number,

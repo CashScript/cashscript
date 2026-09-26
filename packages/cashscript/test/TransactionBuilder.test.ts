@@ -22,6 +22,7 @@ import { TransactionBuilder } from '../src/TransactionBuilder.js';
 import { addUtxo, getTxOutputs } from './test-util.js';
 import { generateWcTransactionObjectFixture } from './fixture/walletconnect/fixtures.js';
 import {
+  FailedTransactionError,
   InputMissingLockingBytecodeError,
   OutputBchChangeLockedError,
   OutputTokenChangeLockedError,
@@ -168,6 +169,24 @@ describe('Transaction Builder', () => {
         .build();
 
       expect(tx).toBeDefined();
+    });
+
+    it('should fail when fee per byte is lower than 1, even when it rounds to 1', async () => {
+      const mockProvider = new MockNetworkProvider();
+      const utxo = mockProvider.addUtxo(carolAddress, randomUtxo({ satoshis: 100_000n }));
+      const createTransaction = (fee: bigint): TransactionBuilder => new TransactionBuilder({ provider: mockProvider })
+        .addInput(utxo, new SignatureTemplate(carolPriv).unlockP2PKH())
+        .addOutput({ to: carolAddress, amount: 100_000n - fee })
+        .addOpReturnOutput([`0x${'00'.repeat(100)}`]);
+      const buildWithFee = (fee: bigint): string => createTransaction(fee).build();
+
+      // The OP_RETURN output makes the transaction large enough that a fee of (size - 1) satoshis is just below
+      // 1 sat/byte, but rounds to 1.00, which previously passed the minimum fee check
+      const size = createTransaction(0n).getTransactionSize();
+      expect(Number(size - 1n) / Number(size)).toBeGreaterThan(0.995);
+
+      expect(() => buildWithFee(size - 1n)).toThrow(/Transaction fee per byte of 0\.99 is lower than the standard minimum/);
+      expect(() => buildWithFee(size)).not.toThrow();
     });
 
     // TODO: Consider improving error messages checked below to also include the input/output index
@@ -340,6 +359,40 @@ describe('Transaction Builder', () => {
       .addOutput({ to: aliceAddress, amount: change });
 
     await expect(transaction.send()).resolves.not.toThrow();
+  });
+
+  it('should only accept unsigned 32-bit integer locktimes', () => {
+    const transaction = new TransactionBuilder({ provider });
+
+    expect(() => transaction.setLocktime(-1)).toThrow('Locktime -1 should be an integer between 0 and 4294967295');
+    expect(() => transaction.setLocktime(2 ** 32)).toThrow('should be an integer between 0 and 4294967295');
+    expect(() => transaction.setLocktime(1.5)).toThrow('should be an integer between 0 and 4294967295');
+    expect(transaction.setLocktime(2 ** 32 - 1).locktime).toBe(2 ** 32 - 1);
+  });
+
+  it('should not report a failed transaction when the transaction cannot be retrieved after broadcasting', async () => {
+    class LookupFailingMockNetworkProvider extends MockNetworkProvider {
+      async getRawTransaction(): Promise<string> {
+        throw new Error('not found');
+      }
+    }
+
+    const lookupFailingProvider = new LookupFailingMockNetworkProvider();
+    const contract = new Contract(p2pkhArtifact, [carolPkh], { provider: lookupFailingProvider });
+    const utxo = lookupFailingProvider.addUtxo(contract.address, randomUtxo({ satoshis: 100_000n }));
+
+    const transaction = new TransactionBuilder({ provider: lookupFailingProvider })
+      .addInput(utxo, contract.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: carolAddress, amount: 1_000n });
+
+    // Retrieving the transaction is retried for 10 minutes
+    vi.useFakeTimers();
+    const error = transaction.send().catch((e) => e);
+    await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+    vi.useRealTimers();
+
+    expect(await error).not.toBeInstanceOf(FailedTransactionError);
+    expect((await error).message).toMatch(/^Transaction [0-9a-f]{64} was broadcast, but its details could not be retrieved/);
   });
 
   it('should preserve the Bitauth URI when broadcast fails', async () => {

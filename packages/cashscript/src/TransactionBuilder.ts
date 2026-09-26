@@ -319,8 +319,13 @@ export class TransactionBuilder {
    *
    * @param locktime - The absolute locktime to use (block height or UNIX timestamp).
    * @returns This builder for chaining.
+   * @throws If the locktime is not an unsigned 32-bit integer.
    */
   setLocktime(locktime: number): this {
+    if (!Number.isInteger(locktime) || locktime < 0 || locktime > 0xffffffff) {
+      throw new Error(`Locktime ${locktime} should be an integer between 0 and 4294967295`);
+    }
+
     this.locktime = locktime;
     return this;
   }
@@ -508,9 +513,9 @@ export class TransactionBuilder {
       this.debug();
     }
 
+    let txid: string;
     try {
-      const txid = await this.provider.sendRawTransaction(tx);
-      return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
+      txid = await this.provider.sendRawTransaction(tx);
     } catch (e: any) {
       const reason = e.error ?? e.message;
 
@@ -524,6 +529,9 @@ export class TransactionBuilder {
 
       throw new FailedTransactionError(reason, getBitauthUriWithFallback());
     }
+
+    // The transaction was broadcast successfully, so failing to retrieve it afterwards is not a failed transaction
+    return raw ? this.getTxDetails(txid, raw) : this.getTxDetails(txid);
   }
 
   private async getTxDetails(txid: string): Promise<TransactionDetails>;
@@ -543,8 +551,7 @@ export class TransactionBuilder {
       }
     }
 
-    // Should not happen
-    throw new Error('Could not retrieve transaction details for over 10 minutes');
+    throw new Error(`Transaction ${txid} was broadcast, but its details could not be retrieved for over 10 minutes`);
   }
 
   /**
@@ -578,19 +585,20 @@ export class TransactionBuilder {
     const transactionSize = this.getEncodedTransactionSize(transaction);
 
     const fee = totalInputAmount - totalOutputAmount;
-    const feePerByte = Number((Number(fee) / transactionSize).toFixed(2));
+    const feePerByte = Number(fee) / transactionSize;
 
     if (this.options.maximumFeeSatoshis && fee > this.options.maximumFeeSatoshis) {
       throw new TransactionFeeTooHighError(fee, this.options.maximumFeeSatoshis);
     }
 
+    // The limits are checked against the exact fee per byte, which is only rounded (away from the limit) for display
     if (this.options.maximumFeeSatsPerByte && feePerByte > this.options.maximumFeeSatsPerByte) {
-      throw new TransactionFeePerByteTooHighError(feePerByte, this.options.maximumFeeSatsPerByte);
+      throw new TransactionFeePerByteTooHighError(Math.ceil(feePerByte * 100) / 100, this.options.maximumFeeSatsPerByte);
     }
 
     const STANDARD_MIN_FEE_PER_BYTE = 1.0;
     if (feePerByte < STANDARD_MIN_FEE_PER_BYTE) {
-      throw new TransactionFeePerByteTooLowError(feePerByte, STANDARD_MIN_FEE_PER_BYTE);
+      throw new TransactionFeePerByteTooLowError(Math.floor(feePerByte * 100) / 100, STANDARD_MIN_FEE_PER_BYTE);
     }
   }
 

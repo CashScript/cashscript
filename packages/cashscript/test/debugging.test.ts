@@ -11,6 +11,7 @@ import {
   artifactTestRequires,
   artifactTestSingleFunction,
   artifactTestMultilineRequires,
+  artifactTestFinalRequireVariable,
   artifactTestZeroHandling,
   artifactTestRequireInsideLoop,
   artifactTestLogInsideLoop,
@@ -270,6 +271,20 @@ describe('Debugging tests', () => {
 
       expect(transaction).toFailRequireWith('Test.cash:4 Require statement failed at input 0 in contract Test.cash at line 4 with the following message: should have 1 output.');
       expect(transaction).toFailRequireWith('Failing statement: require(tx.outputs.length == 1, "should have 1 output")');
+    });
+
+    // test_final_require_variable
+    it('should fail at the require statement when a final require only checks a variable', async () => {
+      // The require's own opcodes are optimised away, since the variable is already on top of the stack
+      const contractFinalRequireVariable = new Contract(artifactTestFinalRequireVariable, [], { provider });
+      const contractFinalRequireVariableUtxo = provider.addUtxo(contractFinalRequireVariable.address, randomUtxo());
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractFinalRequireVariableUtxo, contractFinalRequireVariable.unlock.test_final_require_variable(1n))
+        .addOutput({ to: contractFinalRequireVariable.address, amount: 1000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:5 Require statement failed at input 0 in contract Test.cash at line 5.');
+      expect(transaction).toFailRequireWith('Failing statement: require(isLarge)');
     });
 
     // test_multiple_require_statements
