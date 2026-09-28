@@ -81,7 +81,11 @@ function encodeRelativeTimelock(literal: IntLiteralNode): IntLiteralNode {
     );
   }
 
-  return literal;
+  // A fresh literal, like the encoded duration above: a literal that still refers to its global constant is lowered to
+  // a constant function call later on, which code generation would treat as a runtime value and check again
+  const validatedLiteral = new IntLiteralNode(literal.value);
+  validatedLiteral.location = literal.location;
+  return validatedLiteral;
 }
 
 // Durations can only be encoded at compile time, so a runtime this.age value cannot contain any time units
