@@ -1,4 +1,4 @@
-import { hexToBin } from '@bitauth/libauth';
+import { hexToBin, isHex } from '@bitauth/libauth';
 import {
   AbiFunction,
   Artifact,
@@ -27,14 +27,14 @@ export type EncodeFunction = (arg: FunctionArgument, typeStr: string) => Encoded
  * - `bool`, `int`, `string` → encoded via their CashScript primitive encoders.
  * - `sig` passed as a `SignatureTemplate` → returned as-is so the transaction builder can
  *   produce the signature at build time.
- * - `sig` / `datasig` / `bytes[N]` passed as a `Uint8Array` or hex string → byte-checked and
+ * - `sig` / `datasig` / `pubkey` / `bytes[N]` passed as a `Uint8Array` or hex string → byte-checked and
  *   returned as bytes.
  *
  * @param argument - The runtime argument value provided by the caller.
  * @param typeStr - The CashScript type string from the contract ABI (e.g. `int`, `bytes20`, `sig`).
  * @returns The encoded argument, ready for inclusion in an unlocking script.
  * @throws A `TypeError` when the JS type does not match the expected CashScript type, or when a
- *   bounded bytes type receives a value of the wrong length.
+ *   bounded bytes type receives a value of the wrong length. An `Error` when a hex string is not valid hex.
  */
 export function encodeFunctionArgument(argument: FunctionArgument, typeStr: string): EncodedFunctionArgument {
   let type = parseType(typeStr);
@@ -64,11 +64,13 @@ export function encodeFunctionArgument(argument: FunctionArgument, typeStr: stri
 
   // Convert hex string to Uint8Array
   if (typeof argument === 'string') {
-    if (argument.startsWith('0x')) {
-      argument = argument.slice(2);
+    const hex = argument.startsWith('0x') ? argument.slice(2) : argument;
+
+    if (!isHex(hex)) {
+      throw Error(`Value for type ${type} should be a valid hex string with an even number of digits, found '${argument}'`);
     }
 
-    argument = hexToBin(argument);
+    argument = hexToBin(hex);
   }
 
   if (!(argument instanceof Uint8Array)) {
@@ -78,6 +80,14 @@ export function encodeFunctionArgument(argument: FunctionArgument, typeStr: stri
   // Redefine SIG as a bytes65 (Schnorr) or bytes71, bytes72, bytes73 (ECDSA) or bytes0 (for NULLFAIL)
   if (type === PrimitiveType.SIG) {
     if (![0, 65, 71, 72, 73].includes(argument.byteLength)) {
+      throw new TypeError(`bytes${argument.byteLength}`, type);
+    }
+    type = new BytesType(argument.byteLength);
+  }
+
+  // Redefine PUBKEY as a bytes33 (compressed) or bytes65 (uncompressed)
+  if (type === PrimitiveType.PUBKEY) {
+    if (![33, 65].includes(argument.byteLength)) {
       throw new TypeError(`bytes${argument.byteLength}`, type);
     }
     type = new BytesType(argument.byteLength);

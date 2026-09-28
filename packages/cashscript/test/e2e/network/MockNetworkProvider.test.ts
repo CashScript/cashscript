@@ -1,5 +1,5 @@
 import { binToHex } from '@bitauth/libauth';
-import { Contract, MockNetworkProvider, SignatureTemplate } from '../../../src/index.js';
+import { Contract, MockNetworkProvider, NetworkProviderAbsoluteTimelockError, SignatureTemplate } from '../../../src/index.js';
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
 import { addressToLockScript, randomUtxo } from '../../../src/utils.js';
 import p2pkhArtifact from '../../fixture/p2pkh.artifact.js';
@@ -122,6 +122,59 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
         .build();
 
       await expect(nonValidatingProvider.sendRawTransaction(transaction)).resolves.toBeTruthy();
+    });
+
+    it('should also validate transactions when updateUtxoSet is set to false', async () => {
+      const staticProvider = new MockNetworkProvider({ updateUtxoSet: false });
+      const bobLockingBytecode = binToHex(addressToLockScript(bobAddress));
+      const utxo = { ...staticProvider.addUtxo(aliceAddress, randomUtxo()), lockingBytecode: bobLockingBytecode };
+
+      const transaction = new TransactionBuilder({ provider: staticProvider })
+        .addInput(utxo, new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(staticProvider.sendRawTransaction(transaction)).rejects.toThrow();
+    });
+
+    it('should reject transactions with a block height locktime above the current block height', async () => {
+      const heightProvider = new MockNetworkProvider();
+      heightProvider.setBlockHeight(1000);
+
+      const buildWithLocktime = (locktime: number, sequence?: number): string => {
+        const utxo = heightProvider.addUtxo(aliceAddress, randomUtxo());
+        return new TransactionBuilder({ provider: heightProvider })
+          .setLocktime(locktime)
+          .addInput(utxo, new SignatureTemplate(alicePriv).unlockP2PKH(), { sequence })
+          .addOutput({ to: aliceAddress, amount: 5000n })
+          .build();
+      };
+
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(1001)))
+        .rejects.toThrow(NetworkProviderAbsoluteTimelockError);
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(1000))).resolves.toBeTruthy();
+
+      // Final sequence numbers disable the locktime, and time-based locktimes are not checked
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(1001, 0xffffffff))).resolves.toBeTruthy();
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(2_000_000_000))).resolves.toBeTruthy();
+    });
+
+    it('should compare hex strings case-insensitively', async () => {
+      const aliceLockingBytecode = binToHex(addressToLockScript(aliceAddress));
+      const randomTxid = randomUtxo().txid;
+      provider.addUtxo(aliceLockingBytecode.toUpperCase(), { ...randomUtxo(), txid: randomTxid.toUpperCase() });
+
+      const [utxo] = await provider.getUtxosForLockingBytecode(aliceLockingBytecode);
+      expect(utxo).toBeDefined();
+      expect(await provider.getUtxosForLockingBytecode(aliceLockingBytecode.toUpperCase())).toHaveLength(1);
+
+      // The spent UTXO is found although its txid was added in upper case
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, new SignatureTemplate(alicePriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(provider.sendRawTransaction(transaction)).resolves.toBeTruthy();
     });
   });
 

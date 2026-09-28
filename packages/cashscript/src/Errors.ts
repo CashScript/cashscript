@@ -3,6 +3,7 @@ import {
   CallStackEntry,
   ResolvedFrame,
   getLocationDataForFrame,
+  getRequireLocationDataForFrame,
   resolveInlineAttribution,
   rootFrame,
 } from './debug-frame.js';
@@ -189,8 +190,9 @@ export class FailedRequireError extends FailedTransactionError {
     const inline = resolveInlineAttribution(artifact, resolvedFrame, requireStatement, 'requires');
     const attributedFrame = inline?.frame ?? resolvedFrame;
     const attributedIp = inline?.entry.ip ?? failingInstructionPointer;
+    const requireLine = inline?.entry.line ?? requireStatement.line;
 
-    const { statement, lineNumber } = getLocationDataForFrame(attributedFrame, attributedIp);
+    const { statement, lineNumber } = getRequireLocationDataForFrame(attributedFrame, attributedIp, requireLine);
     const context = formatFrameContext(attributedFrame, artifact.contractName, lineNumber);
 
     const baseMessage = `${attributedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} ${context}`;

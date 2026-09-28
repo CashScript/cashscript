@@ -1,5 +1,5 @@
 {
   "type": "module",
-  "types": "../dist/test/TestExtensions.d.ts",
-  "main": "../dist/test/TestExtensions.js"
+  "types": "../dist/test/JestExtensions.d.ts",
+  "main": "../dist/test/JestExtensions.js"
 }

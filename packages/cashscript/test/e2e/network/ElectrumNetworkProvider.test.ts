@@ -1,5 +1,5 @@
 import { ElectrumNetworkProvider, Network } from '../../../src/index.js';
-import { ElectrumClient } from '@electrum-cash/network';
+import { ElectrumClient, type ElectrumClientEvents } from '@electrum-cash/network';
 
 describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('ElectrumNetworkProvider', () => {
   // TODO: Test more of the API
@@ -58,3 +58,22 @@ describe.runIf(Boolean(process.env.TESTS_USE_CHIPNET))('ElectrumNetworkProvider'
   });
 });
 
+describe('ElectrumNetworkProvider automatic connection management', () => {
+  it('should connect and disconnect again for requests after a failed request', async () => {
+    const electrum = {
+      connect: vi.fn(async () => {}),
+      disconnect: vi.fn(async () => true),
+      request: vi.fn(async () => { throw new Error('request failed'); }),
+    };
+    const provider = new ElectrumNetworkProvider(Network.CHIPNET, {
+      electrum: electrum as unknown as ElectrumClient<ElectrumClientEvents>,
+    });
+
+    await expect(provider.getBlockHeight()).rejects.toThrow('request failed');
+    await expect(provider.getBlockHeight()).rejects.toThrow('request failed');
+
+    // A failed request should not leave the provider thinking that a request is still running
+    expect(electrum.connect).toHaveBeenCalledTimes(2);
+    expect(electrum.disconnect).toHaveBeenCalledTimes(2);
+  });
+});

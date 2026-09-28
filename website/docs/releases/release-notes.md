@@ -33,7 +33,14 @@ This release contains several breaking changes, please refer to the [migration n
 - :hammer_and_wrench: **BREAKING**: The `TransactionBuilder` now requires UTXOs to include their `lockingBytecode`, and validates it against the provided unlocker.
 - :hammer_and_wrench: `ElectrumNetworkProvider` now negotiates Electrum protocol 1.5.0 (was 1.4.1) and uses `blockchain.headers.get_tip` in `getBlockHeight()`, so long-lived connections are no longer subscribed to new headers. Custom electrum clients should negotiate 1.5.0 or later.
 - :hammer_and_wrench: Update `@electrum-cash/network` to 4.4.0. In a browser, the `ElectrumNetworkProvider`'s connection is now also closed while the page is hidden (it was already closed while offline) and opened again afterwards, restoring any subscriptions (see [Browser visibility and connectivity](/docs/sdk/electrum-network-provider#browser-visibility-and-connectivity)).
+- :hammer_and_wrench: Make `cashscript/vitest` types compatible with Vitest 5.
 - :boom: **BREAKING**: Remove `generateLockingBytecode()` from the `Unlocker` interface.
+- :bug: Fix bug where invalid hex strings were silently encoded to different bytes.
+- :bug: Fix bug where `pubkey` arguments were not checked to be 33 or 65 bytes.
+- :bug: Fix bug in `ElectrumNetworkProvider` automatic connection management.
+- :bug: Fix minimum fee check rounding bug.
+- :bug: Fix bug where `setLocktime()` accepted invalid values.
+- :bug: Fix edge case bug where a failing final `require(variable)` statement was reported incorrectly in debugging.
 
 
 ## v0.13.3

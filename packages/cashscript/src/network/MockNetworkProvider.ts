@@ -4,6 +4,7 @@ import { SpendableUtxo, Utxo, Network, VmTarget } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript, cashScriptOutputToLibauthOutput, libauthTokenDetailsToCashScriptTokenDetails } from '../utils.js';
 import { createVirtualMachine, DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
+import { NetworkProviderAbsoluteTimelockError } from './errors.js';
 
 /**
  * Options accepted by the `MockNetworkProvider` constructor.
@@ -18,8 +19,9 @@ export interface MockNetworkProviderOptions {
   /**
    * When `true` (default), broadcasting a transaction via `sendRawTransaction` evaluates it
    * against the BCH VM using the *actual* locking bytecode of the spent UTXOs (like a real node
-   * would), rejecting invalid transactions. Requires `updateUtxoSet` to be enabled, since spent
-   * UTXOs are only looked up when the UTXO set is tracked.
+   * would), rejecting invalid transactions. Transactions with a block height locktime above the mock
+   * block height are rejected as non-final. Time-based locktimes and relative timelocks (sequence
+   * numbers) are not checked, since the mock network has no block times or UTXO confirmation heights.
    */
   validateTransactions?: boolean;
   /** The BCH VM target used for local debugging and transaction validation. Defaults to the current stable VM. */
@@ -57,7 +59,7 @@ export default class MockNetworkProvider implements NetworkProvider {
   }
 
   async getUtxosForLockingBytecode(lockingBytecode: Uint8Array | string): Promise<SpendableUtxo[]> {
-    const lockingBytecodeHex = typeof lockingBytecode === 'string' ? lockingBytecode : binToHex(lockingBytecode);
+    const lockingBytecodeHex = typeof lockingBytecode === 'string' ? lockingBytecode.toLowerCase() : binToHex(lockingBytecode);
     return this.utxoSet.filter(([key]) => key === lockingBytecodeHex).map(([, utxo]) => utxo);
   }
 
@@ -88,8 +90,8 @@ export default class MockNetworkProvider implements NetworkProvider {
       return txid;
     }
 
-    // If updateUtxoSet is false, we don't track spent UTXOs, so we cannot validate the transaction either
-    if (!this.options.updateUtxoSet) {
+    // Without validation or UTXO set updates, the spent UTXOs are not needed (so they don't need to exist either)
+    if (!this.options.validateTransactions && !this.options.updateUtxoSet) {
       this.transactionMap[txid] = txHex;
       return txid;
     }
@@ -102,6 +104,10 @@ export default class MockNetworkProvider implements NetworkProvider {
     }
 
     this.transactionMap[txid] = txHex;
+
+    // If updateUtxoSet is false, the UTXO set stays the same
+    if (!this.options.updateUtxoSet) return txid;
+
     this.utxoSet = this.utxoSet.filter((entry) => !spentUtxoEntries.includes(entry));
 
     decodedTransaction.outputs.forEach((output, vout) => {
@@ -120,9 +126,9 @@ export default class MockNetworkProvider implements NetworkProvider {
     const remainingUtxoEntries = [...this.utxoSet];
 
     return transaction.inputs.map((input) => {
-      const utxoIndex = remainingUtxoEntries.findIndex(
-        ([, utxo]) => utxo.txid === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex,
-      );
+      const utxoIndex = remainingUtxoEntries.findIndex(([, utxo]) => (
+        utxo.txid.toLowerCase() === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex
+      ));
 
       // TODO: we should check what error a BCHN node throws, so we can throw the same error here
       if (utxoIndex === -1) {
@@ -135,6 +141,8 @@ export default class MockNetworkProvider implements NetworkProvider {
 
   // Evaluates the transaction against the BCH VM using the spent UTXOs (like a real node would)
   private validateTransaction(transaction: LibauthTransaction, spentUtxoEntries: Array<[string, SpendableUtxo]>): void {
+    this.validateLocktime(transaction);
+
     const sourceOutputs = spentUtxoEntries.map(([lockingBytecode, utxo]) => cashScriptOutputToLibauthOutput({
       to: hexToBin(lockingBytecode),
       amount: utxo.satoshis,
@@ -147,6 +155,20 @@ export default class MockNetworkProvider implements NetworkProvider {
     if (verificationResult !== true) {
       throw new Error(verificationResult);
     }
+  }
+
+  // A real node only accepts transactions that are final in the next block: a block height locktime must not be above
+  // the current block height, unless all inputs have a final sequence number (which disables the locktime)
+  private validateLocktime(transaction: LibauthTransaction): void {
+    const LOCKTIME_THRESHOLD = 500_000_000;
+    const SEQUENCE_FINAL = 0xffffffff;
+
+    if (transaction.locktime >= LOCKTIME_THRESHOLD || transaction.locktime <= this.blockHeight) return;
+    if (transaction.inputs.every((input) => input.sequenceNumber === SEQUENCE_FINAL)) return;
+
+    throw new NetworkProviderAbsoluteTimelockError(
+      `non-final: locktime ${transaction.locktime} is above the current block height ${this.blockHeight}`,
+    );
   }
 
   // Note: the user can technically add the same UTXO multiple times (txid + vout), to the same or different addresses
@@ -162,7 +184,7 @@ export default class MockNetworkProvider implements NetworkProvider {
    */
   addUtxo(addressOrLockingBytecode: string, utxo: Utxo): SpendableUtxo {
     const lockingBytecode = isHex(addressOrLockingBytecode) ?
-      addressOrLockingBytecode : binToHex(addressToLockScript(addressOrLockingBytecode));
+      addressOrLockingBytecode.toLowerCase() : binToHex(addressToLockScript(addressOrLockingBytecode));
 
     const annotatedUtxo = { ...utxo, lockingBytecode };
     this.utxoSet.push([lockingBytecode, annotatedUtxo]);

@@ -11,7 +11,7 @@ import {
 } from '../src/index.js';
 import {
   aliceAddress,
-  alicePkh, alicePriv, alicePub, bobPriv,
+  alicePkh, alicePriv, alicePub, bobPriv, bobPub,
 } from './fixture/vars.js';
 import { addUtxo } from './test-util.js';
 import { generateLibauthSourceOutputs } from '../src/utils.js';
@@ -37,6 +37,14 @@ describe('Contract', () => {
       ).toThrow();
       expect(() => new Contract(p2pkhArtifact, [placeholder(19)], { provider })).toThrow();
       expect(() => new Contract(p2pkhArtifact, [placeholder(21)], { provider })).toThrow();
+    });
+
+    it('should fail with malformed hex string constructor args', () => {
+      const provider = new MockNetworkProvider();
+
+      // An odd number of digits or non-hex characters would otherwise silently produce different bytes
+      expect(() => new Contract(p2pkhArtifact, [`0x${'ab'.repeat(19)}a`], { provider })).toThrow(/valid hex string/);
+      expect(() => new Contract(p2pkhArtifact, ['zz'.repeat(20)], { provider })).toThrow(/valid hex string/);
     });
 
     it('should fail with artifact compiled with unsupported compiler version', async () => {
@@ -168,11 +176,13 @@ describe('Contract', () => {
       expect(() => instance.unlock.spend(alicePub, new SignatureTemplate(alicePriv), 0n)).toThrow();
       expect(() => bbInstance.unlock.spend(hexToBin('e803'), 1000n)).toThrow();
       expect(() => bbInstance.unlock.spend(hexToBin('e803000000'), 1000n)).toThrow();
+      expect(() => instance.unlock.spend(alicePkh, placeholder(65)))
+        .toThrow("Found type 'bytes20' where type 'pubkey' was expected");
     });
 
     it('can call spend with incorrect arguments', () => {
       expect(() => instance.unlock.spend(alicePub, new SignatureTemplate(bobPriv))).not.toThrow();
-      expect(() => instance.unlock.spend(alicePkh, placeholder(65))).not.toThrow();
+      expect(() => instance.unlock.spend(bobPub, placeholder(65))).not.toThrow();
       expect(() => bbInstance.unlock.spend(hexToBin('e8031234'), 1000n)).not.toThrow();
     });
 

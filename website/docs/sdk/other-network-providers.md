@@ -43,7 +43,7 @@ interface MockNetworkProviderOptions {
 ```
 
 - `updateUtxoSet` (default `true`) — update the in-memory UTXO set after a transaction is sent, consuming the spent UTXOs and adding the transaction's outputs.
-- `validateTransactions` (default `true`) — evaluate sent transactions against the BCH VM using the actual locking bytecode of the spent UTXOs, rejecting transactions that a real node would reject. Requires `updateUtxoSet`.
+- `validateTransactions` (default `true`) — evaluate sent transactions against the BCH VM using the actual locking bytecode of the spent UTXOs, rejecting transactions that a real node would reject.
 - `vmTarget` (default `BCH_2026_05`) — the BCH virtual machine version used for local debugging and transaction validation.
 
 #### Example
