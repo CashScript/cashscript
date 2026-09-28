@@ -46,7 +46,7 @@ contract HeavyComputation(pubkey pk, bytes unused fixedPadding) {
 ```
 
 :::tip
-Due to compiler optimisations, it is most efficient to place `unused` parameters at the end of the parameter list.
+Due to compiler optimisations, it is most efficient to place `unused` parameters at the start of the parameter list.
 :::
 
 ### Other contract-related limits

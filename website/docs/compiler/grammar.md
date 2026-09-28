@@ -41,7 +41,11 @@ topLevelDefinition
     ;
 
 globalFunctionDefinition
-    : 'function' Identifier parameterList ('returns' '(' typeName ')')? functionBody
+    : 'function' Identifier parameterList ('returns' '(' typeName (',' typeName)* ')')? functionBody
+    ;
+
+constantDefinition
+    : typeName 'constant' Identifier '=' expression ';'
     ;
 
 contractDefinition
@@ -90,7 +94,7 @@ functionCallStatement
     ;
 
 returnStatement
-    : 'return' expression
+    : 'return' expression (',' expression)*
     ;
 
 controlStatement
@@ -108,7 +112,7 @@ tupleAssignment
     ;
 
 tupleTarget
-    : typeName Identifier
+    : typeName modifier* Identifier
     | Identifier
     ;
 
@@ -232,10 +236,6 @@ typeCast
     : PrimitiveType
     | UnboundedBytes
     | UnsafeCast
-    ;
-
-constantDefinition
-    : typeName 'constant' Identifier '=' expression ';'
     ;
 
 VersionLiteral

@@ -163,6 +163,7 @@ This first version of user-defined functions is intentionally limited in scope:
 
 - A value-returning function must end with a single `return` statement (no early or conditional returns — compute into a variable and return it at the end).
 - A void function must end with a `require` statement, just like contract functions (when it ends with an if-statement or loop, every branch must end with a `require`).
+- A contract function cannot end with a call to a void function, it must still end with a `require` statement itself.
 
 :::note
 Recursive and mutually recursive functions are allowed and compile fine. At runtime the VM control stack is limited to 100 entries, shared between recursion depth and nested `if` and loop blocks, so excessively deep recursion will fail when the contract gets spent.
@@ -190,7 +191,7 @@ The resolved value must be assignable to the declared type. Constants may refere
 Global constants do not become constructor arguments or mutable stack variables. The compiler treats them like zero-argument value-returning functions internally: small values and one-use constants are generally inlined, while larger values used repeatedly can be shared with `OP_DEFINE`/`OP_INVOKE`.
 
 ## Importing functions and constants from other files
-Top-level functions and constants can be split across files and pulled in with an `import` directive, which makes the imported functions and constants available as if they were declared locally. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any constant, function or contract definitions. Cyclic imports are not allowed and result in a compile error.
+Top-level functions and constants can be split across files and pulled in with an `import` directive, which makes the imported functions and constants available as if they were declared locally. A contract in an imported file is ignored. All `import` directives must appear at the **top of the file** after any `pragma` directives and before any constant, function or contract definitions. Cyclic imports are not allowed and result in a compile error.
 
 Import paths starting with `./` or `../` are resolved relative to the importing file: from the filesystem when compiling with [`compileFile`](/docs/compiler#compilefile), or from the `files` compiler option when using [`compileString`](/docs/compiler#compilestring). Absolute import paths (starting with `/`) are not supported.
 

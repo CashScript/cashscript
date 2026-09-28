@@ -34,6 +34,8 @@ Note the lack of the `**` (exponentiation).
 
 The shift operators `<<` and `>>` when applied to `int` are arithmetic shifts, which means that the value is multiplied or divided by `2^n` where `n` is the number of bits to shift. See [Bitshift and arithmetic shift](#bitshift-and-arithmetic-shift) for more details.
 
+Note that `>>` rounds down (towards negative infinity), while `/` rounds towards zero. So for negative numbers, the results can differ: `-7 >> 1` is `-4`, while `-7 / 2` is `-3`.
+
 #### Number Formatting
 
 Underscores can be used to separate the digits of a numeric literal to aid readability, e.g. `1_000_000`. Numbers can also be formatted in scientific notation, e.g. `1e6` or `1E6`. These can also be combined, e.g. `1_000e6`.
@@ -53,7 +55,7 @@ Dates and times are always represented as integers. To get the UTC timestamp of 
 
 ```solidity
 int timestamp = date("2021-02-17T01:30:00");
-require(timestamp == 1613554200);
+require(timestamp == 1613525400);
 ```
 
 
