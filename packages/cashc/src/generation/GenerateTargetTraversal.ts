@@ -486,6 +486,10 @@ export default class GenerateTargetTraversal extends AstTraversal {
     if (node.symbol!.isUnused()) return false;
     if (node.type === PrimitiveType.BOOL) return true;
     if (node.type instanceof BytesType && node.type.bound !== undefined) return true;
+
+    // int parameters are deliberately not enforced: every numeric operation already fails on a value that is not a
+    // valid VM number. Only an int that is never used numerically (e.g. only in `bytes(x)`) can hold other values,
+    // which is too niche to justify adding a check to every contract with int parameters.
     return false;
   }
 
