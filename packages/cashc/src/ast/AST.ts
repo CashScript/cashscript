@@ -489,6 +489,8 @@ export class BoolLiteralNode extends LiteralNode<boolean> {
 export class IntLiteralNode extends LiteralNode<bigint> {
   constructor(
     public value: bigint,
+    // Set when the value is a number of seconds, written with a time unit (e.g. `30 days`)
+    public hasTimeUnit: boolean = false,
   ) {
     super();
     this.type = PrimitiveType.INT;

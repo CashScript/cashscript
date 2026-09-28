@@ -71,7 +71,7 @@ export class FoldGlobalConstantsTraversal extends AstTraversal {
       throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.INT);
     }
 
-    return withLocation(new IntLiteralNode(-node.expression.value), node);
+    return withLocation(new IntLiteralNode(-node.expression.value, node.expression.hasTimeUnit), node);
   }
 
   visitBinaryOp(node: BinaryOpNode): Node {
@@ -102,7 +102,7 @@ function foldPlus(node: BinaryOpNode): LiteralNode {
   const { left, right } = node;
 
   if (left instanceof IntLiteralNode && right instanceof IntLiteralNode) {
-    return withLocation(new IntLiteralNode(left.value + right.value), node);
+    return withLocation(new IntLiteralNode(left.value + right.value, hasTimeUnit(left, right)), node);
   }
 
   if (left instanceof StringLiteralNode && right instanceof StringLiteralNode) {
@@ -127,14 +127,24 @@ function foldIntArithmetic(node: BinaryOpNode): LiteralNode {
     throw new DivisionByZeroError(node);
   }
 
-  switch (operator) {
-    case BinaryOperator.MINUS: return withLocation(new IntLiteralNode(left.value - right.value), node);
-    case BinaryOperator.MUL: return withLocation(new IntLiteralNode(left.value * right.value), node);
+  const value = applyIntArithmetic(node, left.value, right.value);
+  return withLocation(new IntLiteralNode(value, hasTimeUnit(left, right)), node);
+}
+
+function applyIntArithmetic(node: BinaryOpNode, left: bigint, right: bigint): bigint {
+  switch (node.operator) {
+    case BinaryOperator.MINUS: return left - right;
+    case BinaryOperator.MUL: return left * right;
     // Note: BigInt division and modulo truncate towards zero, matching OP_DIV / OP_MOD semantics
-    case BinaryOperator.DIV: return withLocation(new IntLiteralNode(left.value / right.value), node);
-    case BinaryOperator.MOD: return withLocation(new IntLiteralNode(left.value % right.value), node);
+    case BinaryOperator.DIV: return left / right;
+    case BinaryOperator.MOD: return left % right;
     default: throw new InvalidConstantExpressionError(node);
   }
+}
+
+// A value computed from a number of seconds (e.g. `2 hours + 30 minutes` or `2 * 1 days`) is also a number of seconds
+function hasTimeUnit(left: IntLiteralNode, right: IntLiteralNode): boolean {
+  return left.hasTimeUnit || right.hasTimeUnit;
 }
 
 function typeMismatchError(node: BinaryOpNode, expected: PrimitiveType): CashScriptError {

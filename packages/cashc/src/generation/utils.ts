@@ -18,6 +18,17 @@ export function compileTimeOp(op: TimeOp): Script {
   return mapping[op];
 }
 
+// Verifies that the this.age value on top of the stack is a BIP68 relative timelock, so that none of its bits are ignored
+// and it does not disable the timelock. That is the case if its value shifted right by 16 bits is either 0 (a number of
+// blocks) or 64 (the type flag for a number of 512-second units), so if (x >> 16) * ((x >> 16) - 64) is 0.
+export function compileRelativeTimelockCheck(): Script {
+  return [
+    Op.OP_DUP, encodeInt(16n), Op.OP_RSHIFTNUM,
+    Op.OP_DUP, encodeInt(64n), Op.OP_SUB, Op.OP_MUL,
+    Op.OP_NOT, Op.OP_VERIFY,
+  ];
+}
+
 export function compileCast(from: Type, to: Type, isUnsafe: boolean): Script {
   if (isUnsafe) return [];
 

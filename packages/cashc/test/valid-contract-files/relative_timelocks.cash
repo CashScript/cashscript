@@ -1,0 +1,23 @@
+int constant CLAIM_PERIOD = 2 hours + 30 minutes;
+
+contract RelativeTimelocks(int period) {
+    function afterBlocks() {
+        require(this.age >= 10);
+    }
+
+    function afterDuration() {
+        require(this.age >= 1 days);
+    }
+
+    function afterConstantDuration() {
+        require(this.age >= CLAIM_PERIOD);
+    }
+
+    function afterEncodedDuration() {
+        require(this.age >= 4194473);
+    }
+
+    function afterPeriod() {
+        require(this.age >= period);
+    }
+}

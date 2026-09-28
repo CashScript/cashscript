@@ -17,6 +17,8 @@ It can be difficult to fully grasp the intricacies of time locks, so if you're s
 require(tx.time >= <expression>);
 ```
 
+Since `nLocktime` is a 32-bit number, the compiler rejects values outside the range `0` to `4,294,967,295`. It also rejects durations written with [time units](#time-units) that are below `500,000,000` (e.g. `2 hours`), because these would be treated as a block number rather than a time.
+
 :::note
 To access the value of the `nLocktime` field for assignment, use the `tx.locktime` introspection variable.
 :::
@@ -24,19 +26,26 @@ To access the value of the `nLocktime` field for assignment, use the `tx.locktim
 Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done with the CashScript SDK by calling [`setLocktime()`][setLocktime()] on the `TransactionBuilder` instance.
 
 ### this.age
-`this.age` is used to create a *relative* time lock on a UTXO. The value of `this.age` can either represent a number of blocks, or a number of *chunks*, which are 512 seconds. The corresponding *transaction level* time lock determines which of the two options is used.
-
-`this.age` corresponds to the `nSequence` field of the current evaluated *UTXO* using the `OP_CHECKSEQUENCEVERIFY` opcode. Because of this `this.age` can only be used in the following way:
+`this.age` is used to create a *relative* time lock on a UTXO. `this.age` corresponds to the `nSequence` field of the current evaluated *UTXO* using the `OP_CHECKSEQUENCEVERIFY` opcode. Because of this `this.age` can only be used in the following way:
 
 ```solidity
 require(this.age >= <expression>);
 ```
 
+The value of `this.age` can either represent a number of blocks, or an amount of time. A plain number is a number of blocks, up to `65,535` blocks. A duration written with [time units](#time-units) (e.g. `30 days`), or a global constant holding one, is encoded as a number of *chunks* of 512 seconds ([BIP68][bip68]). Durations are rounded up to a whole number of chunks, so the time lock is never shorter than the duration, and can be up to `33,553,920` seconds (about 388 days).
+
+```solidity
+require(this.age >= 144); // 144 blocks
+require(this.age >= 1 days); // 169 chunks of 512 seconds (86,528 seconds)
+```
+
+The compiler checks values that are known at compile time. Other values, such as a constructor parameter, are checked when the contract is spent: they must be a number of blocks up to `65,535`, or a number of chunks that is already encoded with the BIP68 type flag (`4,194,304 + chunks`). Since durations can only be encoded at compile time, time units cannot be used in a larger `this.age` expression.
+
 :::note
 To access the value of the `nSequence` field for variable assignment, use the [`sequenceNumber` introspection variable](#txinputsisequencenumber).
 :::
 
-Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done in the CashScript SDK through [`addInput()`][addInput()] by passing the `sequence` as optional argument. However, the value passed into this function will always be treated as a number of blocks, so **it is currently not supported to use `this.age` as a number of second chunks**.
+Because of the way time locks work, **a corresponding time lock needs to be added to the transaction**. This can be done in the CashScript SDK through [`addInput()`][addInput()] by passing the same number of `blocks` or `seconds` as the input's `sequence`, for example `{ sequence: { seconds: 86400 } }` for `require(this.age >= 1 days)`.
 
 ## Introspection variables
 Introspection functionality is used to create *covenant* contracts. Covenants are a technique used to put constraints on spending the money inside a smart contract. The main use case of this is limiting the addresses where money can be sent and the amount sent. To explore the possible uses of covenants inside smart contracts, read the [CashScript Covenants Guide][covenants-guide].
@@ -74,7 +83,7 @@ Represents the `nLocktime` field of the transaction. This is similar to the [`tx
  The use case for `tx.locktime` is to read the `nLocktime` value and add to the local state. Example usage for this is demonstrated in the [Sablier example](/docs/design/covenants#keeping-local-state-in-nfts).
 :::
 
-Using `tx.locktime` in a contract requires a non-final sequence number on the spending input. A `require(tx.time >= ...)` check enforces a non-final sequence number. As a safety measure, the CashScript compiler automatically injects a check for this when no such check is present.
+Using `tx.locktime` in a contract requires a non-final sequence number on the spending input. A `require(tx.time >= ...)` or `require(this.age >= ...)` check enforces a non-final sequence number. As a safety measure, the CashScript compiler automatically injects a check for this when no such check is present.
 
 :::info
 The automatically injected check uses a synthetic `require(tx.time >= tx.locktime, "Using tx.locktime requires a non-final sequence number on the spending input.")`. This automatically enforces a non-final sequence number when `tx.locktime` is used.

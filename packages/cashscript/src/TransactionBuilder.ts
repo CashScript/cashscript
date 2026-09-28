@@ -35,6 +35,8 @@ import {
   validateInput,
   validateOutput,
   validateUnlocker,
+  toSequenceNumber,
+  validateInputOptions,
 } from './utils.js';
 import {
   FailedTransactionError,
@@ -136,6 +138,7 @@ export class TransactionBuilder {
 
   addInputs(utxos: SpendableUtxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
     utxos.forEach((utxo) => validateInput(utxo, this.changeLocks));
+    utxos.forEach((utxo) => validateInputOptions(unlocker ? options : (utxo as UnlockableUtxo).options));
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
       || (unlocker && utxos.some((utxo) => isUnlockableUtxo(utxo)))
@@ -352,7 +355,7 @@ export class TransactionBuilder {
     const inputs: LibauthTransaction['inputs'] = this.inputs.map((utxo) => ({
       outpointIndex: utxo.vout,
       outpointTransactionHash: hexToBin(utxo.txid),
-      sequenceNumber: utxo.options?.sequence ?? DEFAULT_SEQUENCE,
+      sequenceNumber: toSequenceNumber(utxo.options?.sequence ?? DEFAULT_SEQUENCE),
       unlockingBytecode: new Uint8Array(),
     }));
 

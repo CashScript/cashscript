@@ -347,6 +347,8 @@ export class BitshiftBitcountNegativeError extends CashScriptError {
   }
 }
 
+export class InvalidTimelockError extends CashScriptError { }
+
 export class VersionError extends Error {
   constructor(
     readonly actual: string,

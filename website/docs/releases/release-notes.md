@@ -18,6 +18,9 @@ This release contains several breaking changes, please refer to the [migration n
 - :bug: Fix bug where date literal parsing was different per locale, it now uses UTC.
 - :bug: Fix bug where `LockingBytecodeNullData` used an incorrect push opcode for empty chunks and chunks of 128-255 bytes, so it did not match the SDK's `addOpReturnOutput()`. Chunks with a value or length that is known at compile time now use a precomputed push opcode, which makes them smaller. This changes the bytecode of all contracts that use `LockingBytecodeNullData`.
 - :bug: Fix bug where hex literals with an odd number of digits (e.g. `0x123`) compiled to a different value (`0x1203`), they now cause a compile error.
+- :bug: Fix bug where `this.age` durations written with time units (e.g. `30 days`) were compared as a number of blocks. They are now encoded as BIP68 512-second chunks (rounded up), which changes the bytecode of contracts that use them.
+- :bug: Fix bug where `this.age` values that are not a valid BIP68 relative timelock were silently truncated or disabled the timelock. Compile-time values now cause a compile error, and runtime values are checked when the contract is spent.
+- :bug: Fix bug where `tx.time` values outside the 32-bit locktime range or written as a duration (e.g. `2 hours`) compiled but could never be satisfied as intended, they now cause a compile error.
 - :racehorse: Add new `OP_SWAP OP_MUL`, `OP_NOT OP_NOT` and `OP_TOALTSTACK OP_FROMALTSTACK` optimisations.
 - :racehorse: Add new optimisations for loop counter updates, reassignments inside loops and order-independent operations (`OP_BOOLAND`, `OP_BOOLOR`, `OP_MIN`, `OP_MAX`).
 - :racehorse: Greatly improve compiler speed for very large contracts.
@@ -25,6 +28,7 @@ This release contains several breaking changes, please refer to the [migration n
 #### CashScript SDK
 - :sparkles: Add support for debugging user-defined functions, including stack traces for nested functions.
 - :sparkles: Add a `validateTransactions` option (default: `true`) to the `MockNetworkProvider` to validate sent transactions against the BCH VM.
+- :sparkles: Add support for passing a relative timelock as `{ blocks }` or `{ seconds }` to the `sequence` input option, which is encoded as a BIP68 sequence number.
 - :hammer_and_wrench: MockNetworkProvider now warns instead of errors when resubmitting an already-seen transaction.
 - :hammer_and_wrench: Add `lockingBytecode` field to the `Utxo` interface, set automatically on all UTXOs returned by network providers.
 - :hammer_and_wrench: **BREAKING**: Replace the `SignatureTemplate`'s `getHashType()`, `getPublicKey()` and `getSignatureAlgorithm()` methods with the `sighashType`, `publicKey` and `signatureAlgorithm` properties.
@@ -34,6 +38,8 @@ This release contains several breaking changes, please refer to the [migration n
 - :hammer_and_wrench: `ElectrumNetworkProvider` now negotiates Electrum protocol 1.5.0 (was 1.4.1) and uses `blockchain.headers.get_tip` in `getBlockHeight()`, so long-lived connections are no longer subscribed to new headers. Custom electrum clients should negotiate 1.5.0 or later.
 - :hammer_and_wrench: Update `@electrum-cash/network` to 4.4.0. In a browser, the `ElectrumNetworkProvider`'s connection is now also closed while the page is hidden (it was already closed while offline) and opened again afterwards, restoring any subscriptions (see [Browser visibility and connectivity](/docs/sdk/electrum-network-provider#browser-visibility-and-connectivity)).
 - :hammer_and_wrench: Make `cashscript/vitest` types compatible with Vitest 5.
+- :hammer_and_wrench: Reject `sequence` input options that enable a relative timelock with bits that BIP68 ignores.
+- :hammer_and_wrench: Show the underlying reason when a require statement fails for another reason than a false condition, such as a `this.age` check with a missing sequence number.
 - :boom: **BREAKING**: Remove `generateLockingBytecode()` from the `Unlocker` interface.
 - :bug: Fix bug where invalid hex strings were silently encoded to different bytes.
 - :bug: Fix bug where `pubkey` arguments were not checked to be 33 or 65 bytes.

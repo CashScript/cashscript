@@ -1,0 +1,5 @@
+contract Test(int extraBlocks) {
+    function spend() {
+        require(this.age >= extraBlocks + 1 days);
+    }
+}

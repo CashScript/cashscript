@@ -1,0 +1,8 @@
+int constant TIMEOUT = 2 hours;
+int constant EXTENDED_TIMEOUT = TIMEOUT + 30 minutes;
+
+contract Test() {
+    function spend() {
+        require(tx.time >= EXTENDED_TIMEOUT);
+    }
+}
