@@ -592,6 +592,21 @@ contract Test(pubkey owner, int num, int num2, int num3, int num4, int num5) {
 }
 `;
 
+// The loop spends most of the operation cost budget, and the padding sets how much budget the input gets, so a test can
+// move the point where it runs out across the instructions of the require statements after the loop
+const CONTRACT_TEST_OPERATION_COST_OVERRUN = `
+contract Test() {
+  function spend(int rounds, bytes unused padding) {
+    bytes32 digest = sha256(0x00);
+    for (int i = 0; i < rounds; i = i + 1) {
+      digest = sha256(digest);
+    }
+    require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode, "Output 0 must pay back to the contract");
+    require(tx.outputs[0].value >= 1000, "Output 0 must keep 1000 sats");
+  }
+}
+`;
+
 export const artifactTestRequires = compileString(CONTRACT_TEST_REQUIRES);
 export const artifactTestSingleFunction = compileString(CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION);
 export const artifactTestMultilineRequires = compileString(CONTRACT_TEST_MULTILINE_REQUIRES);
@@ -618,6 +633,7 @@ export const artifactTestNestedImportedFunctions = compileString(
 );
 export const artifactTestMixedNestedFunctions = compileString(CONTRACT_TEST_MIXED_NESTED_FUNCTIONS);
 export const artifactTestInlinedCallingDefined = compileString(CONTRACT_TEST_INLINED_CALLING_DEFINED);
+export const artifactTestOperationCostOverrun = compileString(CONTRACT_TEST_OPERATION_COST_OVERRUN);
 
 // Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
 export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));

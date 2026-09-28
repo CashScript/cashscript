@@ -1,4 +1,4 @@
-import { AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
+import { AuthenticationErrorBch2025Additions, AuthenticationErrorCommon, AuthenticationInstruction, AuthenticationProgramCommon, AuthenticationProgramStateCommon, WalletTemplate, WalletTemplateScriptUnlocking, binToHex, createCompiler, decodeAuthenticationInstructions, encodeAuthenticationInstruction, walletTemplateToCompilerConfiguration } from '@bitauth/libauth';
 import { Artifact, LogData, LogEntry, Op, PrimitiveType, StackItem, asmToBytecode, bytecodeToAsm, decodeBool, decodeInt, decodeString } from '@cashscript/utils';
 import { findLastIndex, toRegExp } from './utils.js';
 import { FailedRequireError, FailedTransactionError, FailedTransactionEvaluationError } from './Errors.js';
@@ -93,7 +93,10 @@ const debugSingleScenario = (
     }
   }
 
-  const lastExecutedDebugStep = executedDebugSteps[executedDebugSteps.length - 1];
+  // Instructions in a branch that is not taken are skipped, but still cost operations, so a resource limit can be reached on
+  // one of them. Evaluation stops at the step that raised an error, so that step is kept even if it was skipped.
+  const finalDebugStep = lockingScriptDebugResult[lockingScriptDebugResult.length - 1];
+  const lastExecutedDebugStep = finalDebugStep?.error ? finalDebugStep : executedDebugSteps[executedDebugSteps.length - 1];
 
   // If an error is present in the last step, that means a require statement in the middle of the function failed
   if (lastExecutedDebugStep.error) {
@@ -122,7 +125,11 @@ const debugSingleScenario = (
     }
 
     const frame = resolveFrame(artifact, lastExecutedDebugStep);
-    const requireStatement = frame.requires.find((statement) => statement.ip === requireStatementIp);
+    // A resource limit can run out on any instruction, including the one a require statement ends in, so it is never
+    // attributed to that require: its condition did not fail, the transaction ran out of budget
+    const requireStatement = isResourceLimitError(error)
+      ? undefined
+      : frame.requires.find((statement) => statement.ip === requireStatementIp);
 
     if (requireStatement) {
       const callStack = buildCallStack(artifact, lastExecutedDebugStep, frame, requireStatement, failingIp);
@@ -395,3 +402,13 @@ const verifyFullTransaction = (template: WalletTemplate): void => {
 const isSignatureCheckWithoutVerify = (instruction: AuthenticationInstruction): boolean => {
   return [Op.OP_CHECKSIG, Op.OP_CHECKMULTISIG, Op.OP_CHECKDATASIG].includes(instruction.opcode);
 };
+
+// Budgets that are counted per operation, so they can run out on the instruction a require statement ends in
+const RESOURCE_LIMIT_ERRORS: string[] = [
+  AuthenticationErrorBch2025Additions.excessiveOperationCost,
+  AuthenticationErrorBch2025Additions.excessiveHashing,
+  AuthenticationErrorCommon.exceededMaximumSignatureCheckCount,
+  AuthenticationErrorCommon.exceededMaximumOperationCount,
+];
+
+const isResourceLimitError = (error: string): boolean => RESOURCE_LIMIT_ERRORS.some((limit) => error.includes(limit));
