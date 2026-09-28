@@ -20,6 +20,7 @@ export interface DebugInformation {
   requires: readonly RequireStatement[]; // messages for failing `require` statements
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
   functions?: readonly DebugFrame[]; // Debug metadata for each global definition (defined frames first, then inlined ones)
+  sources?: { readonly [logicalPath: string]: string }; // every imported file's source code (compileString's `files`)
   inlineRanges?: string; // runs where inlined callables' bodies were emitted (see `generateInlineRanges`)
 }
 
@@ -31,8 +32,7 @@ export interface DebugFrame {
   bytecode: string; // hex of the function body bytecode (exactly what OP_DEFINE stores and the VM runs)
   sourceMap: string; // frame-local source map (ips starting from 0)
   sourceTags?: string; // frame-local semantic tags for opcodes (e.g. loop update/condition ranges)
-  source?: string; // full text of the defining file; absent means the function lives in the contract's own source file
-  sourceFile?: string; // originating file name for imported functions; absent means the contract's file
+  sourceFile?: string; // key of the defining file in `debug.sources`; absent means the function lives in the contract's file
   logs: readonly LogEntry[]; // frame-local log entries
   requires: readonly RequireStatement[]; // frame-local require statements
   inlineRanges?: string; // runs where inlined callables' bodies were emitted within this body (frame-local ips)
@@ -165,7 +165,11 @@ function formatObject(
 
   if (entries.length === 0) return '{}';
 
-  const formatKey = (key: string): string => (format === 'json' ? JSON.stringify(key) : key);
+  // TS keys stay bare when they are identifiers, others (e.g. the file names in `debug.sources`) are quoted
+  const formatKey = (key: string): string => {
+    if (format === 'json') return JSON.stringify(key);
+    return /^[A-Za-z_$][\w$]*$/.test(key) ? key : formatString(key, format);
+  };
   const formatted = entries.map(
     ([key, value]) => `${formatKey(key)}: ${stringify(value, format, indentationLevel + 1)}`,
   );

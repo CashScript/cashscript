@@ -91,7 +91,6 @@ function createConstantFunction(constant: ConstantDefinitionNode): FunctionDefin
   const definition = new FunctionDefinitionNode(FunctionKind.GLOBAL, constant.name, [], body, [constant.type]);
   definition.constant = constant;
   definition.location = constant.location;
-  definition.sourceCode = constant.sourceCode;
   definition.sourceFile = constant.sourceFile;
   return definition;
 }

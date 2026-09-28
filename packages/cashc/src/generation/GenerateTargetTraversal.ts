@@ -287,7 +287,6 @@ export default class GenerateTargetTraversal extends AstTraversal {
       bytecode: binToHex(scriptToBytecode(optimised.script)),
       sourceMap: generateSourceMap(optimised.locationData),
       sourceTags: generateSourceTags(optimised.sourceTags) || undefined,
-      source: node.sourceCode,
       sourceFile: node.sourceFile,
       logs: optimised.logs,
       requires: optimised.requires,

@@ -13,6 +13,7 @@ export function formatBitAuthScript(debug: DebugInformation, sourceCode: string)
     sourceMap: debug.sourceMap,
     sourceTags: debug.sourceTags,
     functions: debug.functions,
+    sources: debug.sources,
     sourceLines,
     startLine: 1,
     endLine: sourceLines.length,
@@ -27,6 +28,7 @@ interface WalkParams {
   sourceMap: string;
   sourceTags?: string;
   functions?: readonly DebugFrame[];
+  sources?: DebugInformation['sources'];
   sourceLines: string[];
   startLine: number;
   endLine: number;
@@ -155,7 +157,7 @@ function renderSegments(segments: Segment[], params: WalkParams): Row[] {
 
 function deriveFunctionSectionLines(segments: Segment[], sourceLines: string[]): Set<number> {
   const localFunctionSegments = segments.filter(
-    (segment): segment is FunctionDefinitionSegment => segment.kind === 'functionDefinition' && segment.frame.source === undefined,
+    (segment): segment is FunctionDefinitionSegment => segment.kind === 'functionDefinition' && segment.frame.sourceFile === undefined,
   );
 
   return new Set(localFunctionSegments.flatMap(({ location }) => {
@@ -202,7 +204,7 @@ function renderFunctionDefinition(
 ): RenderState {
   const { frame, location } = segment;
   const isImported = frame.sourceFile !== undefined;
-  const sourceLines = isImported ? frame.source!.split('\n') : context.sourceLines;
+  const sourceLines = isImported ? context.sources![frame.sourceFile!].split('\n') : context.sourceLines;
 
   const headerRows = isImported
     ? [{ asm: '', comment: `>>> imported from ${frame.sourceFile}` }]

@@ -124,8 +124,14 @@ const Doubler = compileString(source, { files: { './math.cash': mathSource } });
 ```
 
 :::note
-Imports inside imported files are resolved relative to the *importing* file, but their keys in `files` remain relative to the main source. For example, if `lib/a.cash` contains `import "./b.cash";`, that file must be provided under the key `lib/b.cash`. Package imports such as `import "@example/math-lib/math.cash"` are looked up verbatim, so they must be provided under exactly that key.
+Imports inside imported files are resolved relative to the *importing* file, but their keys in `files` remain relative to the main source. For example, if `lib/a.cash` contains `import "./b.cash";`, that file must be provided under the key `lib/b.cash`. Files from [npm packages](/docs/language/contracts#importing-from-npm-packages) are provided under their package import path prefixed with `package:`, so `import "@example/math-lib/math.cash";` requires a key of `package:@example/math-lib/math.cash`. Relative imports inside a package file stay inside that package, so if that file contains `import "./utils.cash";`, it must be provided as `package:@example/math-lib/utils.cash`.
 :::
+
+Artifacts store the source code of every imported file in `debug.sources`, using the same keys as the `files` option. So a contract with imports can always be recompiled from its artifact, for example to verify that an artifact matches its source code:
+
+```ts
+const recompiled = compileString(artifact.source, { ...artifact.compiler.options, files: artifact.debug?.sources });
+```
 
 ### Compilation Warnings
 

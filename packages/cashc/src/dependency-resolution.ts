@@ -11,63 +11,81 @@ import type { CashScriptErrorListener } from './ast/error-listeners.js';
 import { ImportResolutionError } from './Errors.js';
 import { parseCode } from './parser.js';
 
-// A minimal virtual filesystem used to resolve import directives. Canonical paths are opaque keys:
-// absolute filesystem paths for the disk resolver, normalised POSIX paths relative to the main
-// source for the in-memory resolver. `resolve` returns undefined when a package import
-// cannot be located.
+// A minimal virtual filesystem used to locate and read imported files. Imported files are identified by their
+// logical path (see below), while their location is where a resolver reads them from: their real (symlink-resolved)
+// path on disk, or their logical path in memory. `locate` returns undefined when a package import cannot be found.
 export interface ImportResolver {
-  rootDir: string;
-  resolve(fromDir: string, importPath: string): string | undefined;
-  read(canonicalPath: string): string | undefined;
-  dirname(canonicalPath: string): string;
-  sourceName(canonicalPath: string): string;
+  // Locates an import from the file at `importerLocation` (undefined for the main source)
+  locate(importerLocation: string | undefined, importPath: string): string | undefined;
+  read(location: string): string | undefined;
 }
 
 export function createDiskResolver(rootDir: string): ImportResolver {
+  const realRootDir = toRealPath(rootDir);
+
   return {
-    rootDir,
-    resolve: (fromDir, importPath) => (isPackageImport(importPath)
-      ? resolveFromNodeModules(fromDir, importPath)
-      : path.resolve(fromDir, importPath)),
-    read: (canonicalPath) => {
+    locate: (importerLocation, importPath) => {
+      const fromDir = importerLocation === undefined ? realRootDir : path.dirname(importerLocation);
+      const filePath = isPackageImport(importPath)
+        ? resolveFromNodeModules(fromDir, importPath)
+        : path.resolve(fromDir, importPath);
+
+      return filePath === undefined ? undefined : toRealPath(filePath);
+    },
+    read: (location) => {
       try {
-        return fs.readFileSync(canonicalPath, { encoding: 'utf-8' });
+        return fs.readFileSync(location, { encoding: 'utf-8' });
       } catch {
         return undefined;
       }
     },
-    dirname: (canonicalPath) => path.dirname(canonicalPath),
-    sourceName: (canonicalPath) => {
-      const relativePath = getPackageImportPath(canonicalPath) ?? path.relative(rootDir, canonicalPath);
-      return relativePath.split(path.sep).join(path.posix.sep);
-    },
   };
+}
+
+function toRealPath(filePath: string): string {
+  try {
+    return fs.realpathSync(filePath);
+  } catch {
+    return filePath;
+  }
 }
 
 export function createMemoryResolver(files: Record<string, string>): ImportResolver {
   // Normalise keys so that './utils.cash' and 'utils.cash' address the same file
   const normalisedFiles = Object.fromEntries(
-    Object.entries(files).map(([filePath, source]) => [path.posix.normalize(filePath), source]),
+    Object.entries(files).map(([filePath, source]) => [normaliseLogicalPath(filePath), source]),
   );
 
   return {
-    rootDir: '.',
-    // Package imports are looked up verbatim ('pkg/math.cash'), regardless of the importing file
-    resolve: (fromDir, importPath) => (isPackageImport(importPath)
-      ? path.posix.normalize(importPath)
-      : path.posix.normalize(path.posix.join(fromDir, importPath))),
-    read: (canonicalPath) => normalisedFiles[canonicalPath],
-    dirname: (canonicalPath) => path.posix.dirname(canonicalPath),
-    sourceName: (canonicalPath) => canonicalPath,
+    locate: resolveLogicalPath,
+    read: (logicalPath) => normalisedFiles[logicalPath],
   };
+}
+
+const PACKAGE_PREFIX = 'package:';
+
+function resolveLogicalPath(importerLogicalPath: string | undefined, importPath: string): string {
+  if (isPackageImport(importPath)) return normaliseLogicalPath(`${PACKAGE_PREFIX}${importPath}`);
+
+  const importerDir = importerLogicalPath === undefined ? '.' : mapLogicalPath(importerLogicalPath, path.posix.dirname);
+  return mapLogicalPath(importerDir, (dir) => path.posix.join(dir, importPath));
+}
+
+function normaliseLogicalPath(logicalPath: string): string {
+  return mapLogicalPath(logicalPath, path.posix.normalize);
+}
+
+function mapLogicalPath(logicalPath: string, operation: (filePath: string) => string): string {
+  if (!logicalPath.startsWith(PACKAGE_PREFIX)) return operation(logicalPath);
+  return `${PACKAGE_PREFIX}${operation(logicalPath.slice(PACKAGE_PREFIX.length))}`;
 }
 
 export function resolveDependencies(
   ast: SourceFileNode,
   resolver: ImportResolver | undefined,
   errorListener?: CashScriptErrorListener,
-): SourceFileNode {
-  if (ast.imports.length === 0) return ast;
+): Record<string, string> {
+  if (ast.imports.length === 0) return {};
 
   if (resolver === undefined) {
     throw new ImportResolutionError(
@@ -76,12 +94,12 @@ export function resolveDependencies(
     );
   }
 
-  const importedDefinitions = collectImports(ast.imports, resolver, errorListener);
-  ast.functions = [...importedDefinitions.functions, ...ast.functions];
-  ast.constants = [...importedDefinitions.constants, ...ast.constants];
+  const { functions, constants, sources } = collectImports(ast.imports, resolver, errorListener);
+  ast.functions = [...functions, ...ast.functions];
+  ast.constants = [...constants, ...ast.constants];
   ast.imports = [];
 
-  return ast;
+  return sources;
 }
 
 interface ImportedDefinitions {
@@ -89,56 +107,87 @@ interface ImportedDefinitions {
   constants: ConstantDefinitionNode[];
 }
 
-// Depth-first walk of the import graph, returning every global definition it reaches. `visitedPaths`
-// de-duplicates files by canonical path so a diamond's shared leaf is read once, while `activePaths`
-// tracks the files currently being resolved so cyclic imports are rejected.
+interface CollectedImports extends ImportedDefinitions {
+  sources: Record<string, string>;
+}
+
+interface ImportedFile {
+  logicalPath: string;
+  location: string;
+}
+
+// Depth-first walk of the import graph, returning every global definition it reaches and every imported file's source
+// code. Files are de-duplicated by logical path so a diamond's shared leaf is read once, while `activePaths` tracks
+// the files currently being resolved so cyclic imports are rejected.
 function collectImports(
   imports: ImportNode[],
   resolver: ImportResolver,
   errorListener?: CashScriptErrorListener,
-): ImportedDefinitions {
-  const visitedPaths = new Set<string>();
+): CollectedImports {
+  const sources: Record<string, string> = {};
+  const locations = new Map<string, string>();
   const activePaths = new Set<string>();
 
-  const collect = (currentImports: ImportNode[], currentDir: string): ImportedDefinitions[] =>
+  // A logical path must always refer to the same file, so that the imported sources can be used to recompile the
+  // contract. This is not the case when different copies of a package are imported (e.g. nested in node_modules).
+  const locateImport = (importNode: ImportNode, importer?: ImportedFile): ImportedFile => {
+    // Absolute paths only work on a single machine, and would end up in the artifact's `debug.sources`
+    if (importNode.path.startsWith('/')) {
+      throw new ImportResolutionError(
+        importNode,
+        `Absolute import paths are not supported, use a relative path or a package import instead of '${importNode.path}'`,
+      );
+    }
+
+    const logicalPath = resolveLogicalPath(importer?.logicalPath, importNode.path);
+    const location = resolver.locate(importer?.location, importNode.path);
+    if (location === undefined) {
+      throw new ImportResolutionError(
+        importNode,
+        `Could not find imported file '${importNode.path}' in any node_modules directory`,
+      );
+    }
+
+    const knownLocation = locations.get(logicalPath);
+    if (knownLocation !== undefined && knownLocation !== location) {
+      throw new ImportResolutionError(
+        importNode,
+        `Imported file '${importNode.path}' resolves to '${location}', but '${logicalPath}' was already imported from '${knownLocation}'. Importing multiple copies of a package is not supported`,
+      );
+    }
+
+    locations.set(logicalPath, location);
+    return { logicalPath, location };
+  };
+
+  const collect = (currentImports: ImportNode[], importer?: ImportedFile): ImportedDefinitions[] =>
     currentImports.flatMap((importNode) => {
-      const canonicalPath = resolver.resolve(currentDir, importNode.path);
-      if (canonicalPath === undefined) {
-        throw new ImportResolutionError(
-          importNode,
-          `Could not find imported file '${importNode.path}' in any node_modules directory`,
-        );
-      }
-      if (activePaths.has(canonicalPath)) {
+      const file = locateImport(importNode, importer);
+      if (activePaths.has(file.logicalPath)) {
         throw new ImportResolutionError(importNode, `Cyclic import of '${importNode.path}'`);
       }
-      if (visitedPaths.has(canonicalPath)) return [];
-      visitedPaths.add(canonicalPath);
+      if (sources[file.logicalPath] !== undefined) return [];
 
-      const importedSource = resolver.read(canonicalPath);
+      const importedSource = resolver.read(file.location);
       if (importedSource === undefined) {
         throw new ImportResolutionError(
           importNode,
-          `Could not read imported file '${importNode.path}' (resolved to '${canonicalPath}')`,
+          `Could not read imported file '${importNode.path}' (resolved to '${file.location}')`,
         );
       }
+      sources[file.logicalPath] = importedSource;
 
       const importedAst = parseCode(importedSource, errorListener);
-      checkVersionConstraints(importedAst.pragmas, resolver.sourceName(canonicalPath));
+      checkVersionConstraints(importedAst.pragmas, file.logicalPath);
 
       // Record source provenance so debug frames can attribute to the imported file
-      importedAst.functions.forEach((func) => {
-        func.sourceCode = importedSource;
-        func.sourceFile = resolver.sourceName(canonicalPath);
-      });
-      importedAst.constants.forEach((constant) => {
-        constant.sourceCode = importedSource;
-        constant.sourceFile = resolver.sourceName(canonicalPath);
+      [...importedAst.functions, ...importedAst.constants].forEach((definition) => {
+        definition.sourceFile = file.logicalPath;
       });
 
-      activePaths.add(canonicalPath);
-      const transitiveDefinitions = collect(importedAst.imports, resolver.dirname(canonicalPath));
-      activePaths.delete(canonicalPath);
+      activePaths.add(file.logicalPath);
+      const transitiveDefinitions = collect(importedAst.imports, file);
+      activePaths.delete(file.logicalPath);
 
       return [
         ...transitiveDefinitions,
@@ -146,13 +195,13 @@ function collectImports(
       ];
     });
 
-  const collected = collect(imports, resolver.rootDir);
+  const collected = collect(imports);
   return {
     functions: collected.flatMap((definitions) => definitions.functions),
     constants: collected.flatMap((definitions) => definitions.constants),
+    sources,
   };
 }
-
 
 function isPackageImport(importPath: string): boolean {
   return !importPath.startsWith('./') && !importPath.startsWith('../') && !importPath.startsWith('/');
@@ -178,12 +227,4 @@ function isValidCandidate(nodeModulesDir: string, candidate: string): boolean {
   if (!candidate.startsWith(nodeModulesDir + path.sep)) return false;
   const stats = fs.statSync(candidate, { throwIfNoEntry: false });
   return stats?.isFile() ?? false;
-}
-
-// A file inside node_modules is named by its package import path ('pkg/math.cash')
-function getPackageImportPath(canonicalPath: string): string | undefined {
-  const nodeModulesSegment = `${path.sep}node_modules${path.sep}`;
-  const nodeModulesIndex = canonicalPath.lastIndexOf(nodeModulesSegment);
-  if (nodeModulesIndex === -1) return undefined;
-  return canonicalPath.slice(nodeModulesIndex + nodeModulesSegment.length);
 }

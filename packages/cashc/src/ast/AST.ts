@@ -47,7 +47,6 @@ export class SourceFileNode extends Node {
 
 export class ConstantDefinitionNode extends Node implements Named, Typed {
   // Source provenance for debugging. Set on imported constants, left undefined for constants in the contract's own file.
-  sourceCode?: string;
   sourceFile?: string;
 
   modifiers = [Modifier.CONSTANT];
@@ -101,7 +100,6 @@ export class FunctionDefinitionNode extends Node implements Named {
   constant?: ConstantDefinitionNode;
 
   // Source provenance for debugging. Set on imported functions, left undefined for functions in the contract's own file.
-  sourceCode?: string;
   sourceFile?: string;
 
   constructor(
