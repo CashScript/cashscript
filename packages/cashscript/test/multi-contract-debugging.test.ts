@@ -16,7 +16,7 @@ import {
 } from './fixture/vars.js';
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import bigintArtifact from './fixture/bigint.artifact.js';
-import { ARTIFACT_FUNCTION_NAME_COLLISION, ARTIFACT_NAME_COLLISION, ARTIFACT_CONTRACT_NAME_COLLISION, ARTIFACT_SAME_NAME_DIFFERENT_PATH } from './fixture/debugging/multi_contract_debugging_contracts.js';
+import { ARTIFACT_FUNCTION_NAME_COLLISION, ARTIFACT_NAME_COLLISION, ARTIFACT_CONTRACT_NAME_COLLISION, ARTIFACT_SAME_NAME_DIFFERENT_PATH, ARTIFACT_PREFIX_NAME, ARTIFACT_PREFIXED_NAME } from './fixture/debugging/multi_contract_debugging_contracts.js';
 import { addressToLockScript } from '../src/utils.js';
 import SiblingIntrospectionArtifact from './fixture/SiblingIntrospection.artifact.js';
 
@@ -336,6 +336,38 @@ describe('Multi-Contract-Debugging tests', () => {
         .addOutput({ to: p2pkhContract1.address, amount: 10000n });
 
       expect(transaction2).toFailRequireWith('SameNameDifferentPath.cash:6 Require statement failed at input 0 in contract SameNameDifferentPath.cash at line 6 with the following message: b should be 0.');
+    });
+  });
+
+  // Each input is debugged with the artifact of its own contract, also if one contract name is a prefix of the other
+  describe('Contract names that are a prefix of each other', () => {
+    const vault = new Contract(ARTIFACT_PREFIX_NAME, [1n], { provider });
+    const sidecar = new Contract(ARTIFACT_PREFIXED_NAME, [], { provider });
+
+    const createTransaction = (vaultFirst: boolean, c: bigint, d: bigint): TransactionBuilder => {
+      const vaultInput = { ...provider.addUtxo(vault.address, randomUtxo()), unlocker: vault.unlock.spend(1n) };
+      const sidecarInput = { ...provider.addUtxo(sidecar.address, randomUtxo()), unlocker: sidecar.unlock.spend(c, d) };
+
+      return new TransactionBuilder({ provider })
+        .addInputs(vaultFirst ? [vaultInput, sidecarInput] : [sidecarInput, vaultInput])
+        .addOutput({ to: vault.address, amount: 10000n });
+    };
+
+    it.each([true, false])('should only log the console.log statements of the executed contract (vault first: %s)', async (vaultFirst) => {
+      const transaction = createTransaction(vaultFirst, 6n, 4n);
+      const vaultInputIndex = vaultFirst ? 0 : 1;
+      const sidecarInputIndex = vaultFirst ? 1 : 0;
+
+      expect(transaction).toLog(`[Input #${vaultInputIndex}] Vault.cash:4 vault b is 1`);
+      expect(transaction).not.toLog(`Input #${sidecarInputIndex}`);
+      await expect(transaction.send()).resolves.toBeDefined();
+    });
+
+    it.each([true, false])('should fail with the require statement of the failing contract (vault first: %s)', (vaultFirst) => {
+      const transaction = createTransaction(vaultFirst, 4n, 6n);
+
+      expect(transaction).toFailRequireWith('VaultSidecar.cash:5 Require statement failed at input');
+      expect(transaction).toFailRequireWith('Failing statement: require(c > d, "c should be larger than d")');
     });
   });
 

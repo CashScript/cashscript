@@ -13,6 +13,9 @@ import {
   artifactTestSingleFunction,
   artifactTestMultilineRequires,
   artifactTestFinalRequireVariable,
+  artifactTestFinalRequireDefinedFunction,
+  artifactTestLogAfterFailure,
+  artifactTestOnlyParameterCheck,
   artifactTestZeroHandling,
   artifactTestRequireInsideLoop,
   artifactTestLogInsideLoop,
@@ -227,6 +230,33 @@ describe('Debugging tests', () => {
       expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:29 for i: 2 sum: 3$'));
     });
 
+    it('should not log console.log statements after a failing require statement', async () => {
+      const contract = new Contract(artifactTestLogAfterFailure, [], { provider });
+      const utxo = provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, contract.unlock.test_log_after_failed_require(1n))
+        .addOutput({ to: contract.address, amount: 10000n });
+
+      expect(transaction).not.toLog();
+      expect(transaction).toFailRequireWith('Failing statement: require(x > 5, "x big")');
+    });
+
+    it('should not log console.log statements after a division by zero', async () => {
+      const contract = new Contract(artifactTestLogAfterFailure, [], { provider });
+      const utxo = provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, contract.unlock.test_log_after_division_by_zero(0n))
+        .addOutput({ to: contract.address, amount: 10000n });
+
+      expect(transaction).not.toLog();
+      // The division by zero is reported as the failure (a FailedTransactionEvaluationError)
+      expect(() => transaction.debug()).toThrow(expect.objectContaining({
+        libauthErrorMessage: expect.stringContaining(AuthenticationErrorCommon.divisionByZero),
+      }));
+    });
+
     it.todo('should log intermediate results that get optimised out inside a loop');
   });
 
@@ -286,6 +316,19 @@ describe('Debugging tests', () => {
 
       expect(transaction).toFailRequireWith('Test.cash:5 Require statement failed at input 0 in contract Test.cash at line 5.');
       expect(transaction).toFailRequireWith('Failing statement: require(isLarge)');
+    });
+
+    it('should fail at the require statement when a final require checks the result of a defined function', async () => {
+      // With inlining disabled, isPositive is defined with OP_DEFINE, so it is evaluated in its own frame
+      const contract = new Contract(artifactTestFinalRequireDefinedFunction, [], { provider });
+      const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contract.unlock.spend(-1n))
+        .addOutput({ to: contract.address, amount: 1000n });
+
+      expect(transaction).toFailRequireWith('Test.cash:14 Require statement failed at input 0 in contract Test.cash at line 14 with the following message: x must be positive.');
+      expect(transaction).toFailRequireWith('Failing statement: require(isPositive(x), "x must be positive")');
     });
 
     // test_multiple_require_statements
@@ -691,6 +734,22 @@ describe('Debugging tests', () => {
 
       expect(transaction).not.toFailRequire();
     });
+  });
+
+  // The function body compiles to nothing but the parameter type check, so the BitAuth script (which is also used
+  // for debugging) has no opcode after the parameter prologue
+  it('should debug and send a function that only consists of a parameter type check', async () => {
+    const provider = new MockNetworkProvider();
+    const contract = new Contract(artifactTestOnlyParameterCheck, [], { provider });
+    const contractUtxo = provider.addUtxo(contract.address, randomUtxo());
+
+    const transaction = new TransactionBuilder({ provider })
+      .addInput(contractUtxo, contract.unlock.spend(true))
+      .addOutput({ to: contract.address, amount: 1000n });
+
+    expect(() => transaction.getLibauthTemplate()).not.toThrow();
+    expect(transaction).not.toFailRequire();
+    await expect(transaction.send()).resolves.toBeDefined();
   });
 
   describe('TestExtensions', () => {
