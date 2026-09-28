@@ -20,6 +20,7 @@ import {
   BinaryOpNode,
   BoolLiteralNode,
   IntLiteralNode,
+  TimeUnit,
   HexLiteralNode,
   StringLiteralNode,
   ExpressionNode,
@@ -532,8 +533,8 @@ export default class AstBuilder
     const numberString = numberCtx.NumberLiteral().getText();
     const numberUnit = numberCtx.NumberUnit()?.getText().toUpperCase();
     const numberValue = parseNumberString(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit] : 1);
-    const hasTimeUnit = numberUnit !== undefined && TIME_UNITS.includes(numberUnit);
-    const intLiteral = new IntLiteralNode(numberValue, hasTimeUnit);
+    const timeUnit = numberUnit !== undefined && TIME_UNITS.includes(numberUnit) ? TimeUnit.SECONDS : TimeUnit.NONE;
+    const intLiteral = new IntLiteralNode(numberValue, timeUnit);
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
   }

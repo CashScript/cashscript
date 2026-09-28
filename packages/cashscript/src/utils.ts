@@ -84,7 +84,14 @@ export function validateInputOptions(options?: InputOptions): void {
 // A sequence number without the disable flag enables a BIP68 relative timelock, so it may not set any of the bits that
 // BIP68 ignores, since that would enforce a different timelock than intended
 export function toSequenceNumber(sequence: number | RelativeTimelock): number {
-  if (typeof sequence === 'object') return encodeBip68(sequence);
+  if (typeof sequence === 'object') {
+    // encodeBip68 returns a final sequence number when neither field is set, which would silently disable the timelock
+    const { blocks, seconds } = (sequence ?? {}) as { blocks?: unknown; seconds?: unknown };
+    if ((blocks === undefined) === (seconds === undefined)) {
+      throw new Error('A relative timelock needs exactly one of blocks or seconds');
+    }
+    return encodeBip68(sequence);
+  }
 
   const hasDisableFlag = Number.isInteger(sequence) && sequence >= 0x80000000 && sequence <= 0xffffffff;
   if (!hasDisableFlag && !isBip68RelativeTimelock(sequence)) {

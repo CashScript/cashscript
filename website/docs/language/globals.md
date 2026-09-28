@@ -39,7 +39,7 @@ require(this.age >= 144); // 144 blocks
 require(this.age >= 1 days); // 169 chunks of 512 seconds (86,528 seconds)
 ```
 
-The compiler checks values that are known at compile time. Other values, such as a constructor parameter, are checked when the contract is spent: they must be a number of blocks up to `65,535`, or a number of chunks that is already encoded with the BIP68 type flag (`4,194,304 + chunks`). Since durations can only be encoded at compile time, time units cannot be used in a larger `this.age` expression.
+The compiler checks values that are known at compile time. Other values, such as a constructor parameter, are checked when the contract is spent: they must be a number of blocks up to `65,535`, or a number of chunks that is already encoded with the BIP68 type flag (`4,194,304 + chunks`). Since durations can only be encoded at compile time, time units cannot be used in a larger `this.age` expression. In a global constant, a sum, difference or remainder of durations is a duration, and so is a duration multiplied or divided by a plain number (e.g. `3 * 1 days` or `1 days / 2`). A ratio of two durations is a plain number (e.g. `1 days / 10 minutes` is `144` blocks). Other combinations, such as a duration plus a plain number (`1 days + 511`), have no clear unit and are rejected in `this.age`, and in `tx.time` when the result is below `500,000,000`.
 
 :::note
 To access the value of the `nSequence` field for variable assignment, use the [`sequenceNumber` introspection variable](#txinputsisequencenumber).

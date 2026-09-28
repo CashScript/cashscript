@@ -1,5 +1,6 @@
 int constant CLAIM_PERIOD = 2 hours + 30 minutes;
-int constant CLAIM_BLOCKS = 144;
+int constant BLOCKS_PER_DAY = 1 days / 10 minutes;
+int constant CLAIM_BLOCKS = BLOCKS_PER_DAY * 7;
 
 contract RelativeTimelocks(int period) {
     function afterBlocks() {

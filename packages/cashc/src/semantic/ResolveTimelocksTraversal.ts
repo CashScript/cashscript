@@ -6,6 +6,7 @@ import {
   IntLiteralNode,
   Node,
   TimeOpNode,
+  TimeUnit,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 import { TimeOp } from '../ast/Globals.js';
@@ -54,16 +55,33 @@ function validateAbsoluteTimelock(literal: IntLiteralNode): void {
     throw new InvalidTimelockError(literal, `tx.time value must be between 0 and ${LOCKTIME_MAX}, but found ${literal.value}`);
   }
 
-  // A duration such as `2 hours` is not a UNIX timestamp, and values below 500,000,000 are treated as a block height
-  if (literal.hasTimeUnit && literal.value < LOCKTIME_THRESHOLD) {
+  // A duration such as `2 hours` is not a UNIX timestamp, and values below 500,000,000 are treated as a block height.
+  // A value at or above it is a timestamp, even if it is computed from a time unit (e.g. a date plus a duration).
+  if (literal.timeUnit === TimeUnit.SECONDS && literal.value < LOCKTIME_THRESHOLD) {
     throw new InvalidTimelockError(
       literal, `tx.time value must be a block height or a UNIX timestamp, but found a duration of ${literal.value} seconds`,
+    );
+  }
+
+  if (literal.timeUnit === TimeUnit.AMBIGUOUS && literal.value < LOCKTIME_THRESHOLD) {
+    throw new InvalidTimelockError(
+      literal,
+      `tx.time value ${literal.value} is computed from a time unit but is below ${LOCKTIME_THRESHOLD}, `
+      + 'so it is neither a block height nor a UNIX timestamp',
     );
   }
 }
 
 function encodeRelativeTimelock(literal: IntLiteralNode): IntLiteralNode {
-  if (literal.hasTimeUnit) {
+  if (literal.timeUnit === TimeUnit.AMBIGUOUS) {
+    throw new InvalidTimelockError(
+      literal,
+      `this.age value ${literal.value} is computed from a time unit but is not a clear duration or number of blocks, `
+      + 'use a duration (e.g. `1 days`), a number of blocks or a BIP68-encoded value',
+    );
+  }
+
+  if (literal.timeUnit === TimeUnit.SECONDS) {
     if (literal.value < 0n || literal.value > BigInt(BIP68_SECONDS_MAX)) {
       throw new InvalidTimelockError(
         literal, `this.age duration must be between 0 and ${BIP68_SECONDS_MAX} seconds, but found ${literal.value} seconds`,
@@ -104,13 +122,13 @@ class TimeUnitFinder extends AstTraversal {
   timeUnitLiteral?: IntLiteralNode;
 
   visitIntLiteral(node: IntLiteralNode): Node {
-    if (node.hasTimeUnit) this.timeUnitLiteral ??= node;
+    if (node.timeUnit !== TimeUnit.NONE) this.timeUnitLiteral ??= node;
     return node;
   }
 
   visitIdentifier(node: IdentifierNode): Node {
     const literal = resolveCompileTimeInt(node);
-    if (literal?.hasTimeUnit) this.timeUnitLiteral ??= literal;
+    if (literal && literal.timeUnit !== TimeUnit.NONE) this.timeUnitLiteral ??= literal;
     return node;
   }
 }

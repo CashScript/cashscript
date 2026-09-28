@@ -6,6 +6,7 @@ import {
   HexLiteralNode,
   IdentifierNode,
   IntLiteralNode,
+  TimeUnit,
   LiteralNode,
   Node,
   SourceFileNode,
@@ -71,7 +72,7 @@ export class FoldGlobalConstantsTraversal extends AstTraversal {
       throw new UnsupportedTypeError(node, node.expression.type, PrimitiveType.INT);
     }
 
-    return withLocation(new IntLiteralNode(-node.expression.value, node.expression.hasTimeUnit), node);
+    return withLocation(new IntLiteralNode(-node.expression.value, node.expression.timeUnit), node);
   }
 
   visitBinaryOp(node: BinaryOpNode): Node {
@@ -102,7 +103,7 @@ function foldPlus(node: BinaryOpNode): LiteralNode {
   const { left, right } = node;
 
   if (left instanceof IntLiteralNode && right instanceof IntLiteralNode) {
-    return withLocation(new IntLiteralNode(left.value + right.value, hasTimeUnit(left, right)), node);
+    return withLocation(new IntLiteralNode(left.value + right.value, foldedTimeUnit(node.operator, left, right)), node);
   }
 
   if (left instanceof StringLiteralNode && right instanceof StringLiteralNode) {
@@ -128,7 +129,7 @@ function foldIntArithmetic(node: BinaryOpNode): LiteralNode {
   }
 
   const value = applyIntArithmetic(node, left.value, right.value);
-  return withLocation(new IntLiteralNode(value, hasTimeUnit(left, right)), node);
+  return withLocation(new IntLiteralNode(value, foldedTimeUnit(operator, left, right)), node);
 }
 
 function applyIntArithmetic(node: BinaryOpNode, left: bigint, right: bigint): bigint {
@@ -142,9 +143,29 @@ function applyIntArithmetic(node: BinaryOpNode, left: bigint, right: bigint): bi
   }
 }
 
-// A value computed from a number of seconds (e.g. `2 hours + 30 minutes` or `2 * 1 days`) is also a number of seconds
-function hasTimeUnit(left: IntLiteralNode, right: IntLiteralNode): boolean {
-  return left.hasTimeUnit || right.hasTimeUnit;
+// The unit of a folded value follows from its operands: a sum or difference of durations is a duration
+// (`2 hours + 30 minutes`), scaling a duration keeps it one (`2 * 1 days`, `1 days / 2`), and dividing two durations gives
+// a plain ratio (`1 days / 10 minutes` is a number of blocks). Anything else that involves a duration, such as adding a
+// plain number to it (`1 days + 511`), is no longer clearly seconds or not.
+function foldedTimeUnit(operator: BinaryOperator, left: IntLiteralNode, right: IntLiteralNode): TimeUnit {
+  if (left.timeUnit === TimeUnit.NONE && right.timeUnit === TimeUnit.NONE) return TimeUnit.NONE;
+  if (left.timeUnit === TimeUnit.AMBIGUOUS || right.timeUnit === TimeUnit.AMBIGUOUS) return TimeUnit.AMBIGUOUS;
+
+  // From here on, each operand is either seconds or plain, and at least one is seconds
+  const bothSeconds = left.timeUnit === TimeUnit.SECONDS && right.timeUnit === TimeUnit.SECONDS;
+  switch (operator) {
+    case BinaryOperator.PLUS:
+    case BinaryOperator.MINUS:
+    case BinaryOperator.MOD:
+      return bothSeconds ? TimeUnit.SECONDS : TimeUnit.AMBIGUOUS;
+    case BinaryOperator.MUL:
+      return bothSeconds ? TimeUnit.AMBIGUOUS : TimeUnit.SECONDS;
+    case BinaryOperator.DIV:
+      if (bothSeconds) return TimeUnit.NONE;
+      return left.timeUnit === TimeUnit.SECONDS ? TimeUnit.SECONDS : TimeUnit.AMBIGUOUS;
+    default:
+      return TimeUnit.AMBIGUOUS;
+  }
 }
 
 function typeMismatchError(node: BinaryOpNode, expected: PrimitiveType): CashScriptError {

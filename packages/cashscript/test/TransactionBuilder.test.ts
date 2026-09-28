@@ -390,6 +390,12 @@ describe('Transaction Builder', () => {
     expect(() => getSequenceNumber(70000)).toThrow('Sequence number 70000 is not a valid BIP68 relative timelock');
     expect(() => getSequenceNumber(-1)).toThrow('Sequence number -1 is not a valid BIP68 relative timelock');
     expect(() => getSequenceNumber({ blocks: 70000 })).toThrow('Expected blocks to be an integer between 0 and 65535');
+
+    // Plain JavaScript can pass an object without a timelock, which must not silently become a final sequence number
+    const relativeTimelockError = 'A relative timelock needs exactly one of blocks or seconds';
+    expect(() => getSequenceNumber({} as InputOptions['sequence'])).toThrow(relativeTimelockError);
+    expect(() => getSequenceNumber({ blocks: undefined } as unknown as InputOptions['sequence'])).toThrow(relativeTimelockError);
+    expect(() => getSequenceNumber({ blocks: 1, seconds: 512 } as InputOptions['sequence'])).toThrow(relativeTimelockError);
   });
 
   it('should not report a failed transaction when the transaction cannot be retrieved after broadcasting', async () => {
