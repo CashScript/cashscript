@@ -20,6 +20,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :bug: Fix bug where hex literals with an odd number of digits (e.g. `0x123`) compiled to a different value (`0x1203`), they now cause a compile error.
 - :racehorse: Add new `OP_SWAP OP_MUL`, `OP_NOT OP_NOT` and `OP_TOALTSTACK OP_FROMALTSTACK` optimisations.
 - :racehorse: Add new optimisations for loop counter updates, reassignments inside loops and order-independent operations (`OP_BOOLAND`, `OP_BOOLOR`, `OP_MIN`, `OP_MAX`).
+- :racehorse: Add new optimisations for increments and decrements of variables deeper in the stack, scope cleanup, stack shuffles (using `OP_TUCK`, `OP_3DUP` and `OP_2SWAP`) and `OP_SIZE` on a duplicated value.
 - :racehorse: Greatly improve compiler speed for very large contracts.
 
 #### CashScript SDK
