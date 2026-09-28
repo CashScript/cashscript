@@ -157,7 +157,7 @@ transactionBuilder.addOutputs([
 transactionBuilder.addOpReturnOutput(chunks: string[]): this
 ```
 
-Adds an OP_RETURN output to the transaction with the provided data chunks in string format. If the string is `0x`-prefixed, it is treated as a hex string. Otherwise it is treated as a UTF-8 string.
+Adds an OP_RETURN output to the transaction with the provided data chunks in string format. If the string is `0x`-prefixed, it is treated as a hex string, and an error is thrown if it is not valid hex. Otherwise it is treated as a UTF-8 string.
 
 #### Example
 ```ts
@@ -173,6 +173,8 @@ transactionBuilder.addBchChangeOutputIfNeeded(changeOutputOptions: BchChangeOutp
 Adds a change output to the transaction if the transaction has enough funds to cover the transaction fee rate. The `changeOutputOptions` object can be used to specify the fee rate for the change output. Note that this is only for BCH change. Use `addTokenChangeOutputIfNeeded()` to add a fungible token change output.
 
 After a BCH change output has been added, no more inputs or outputs can be added to the transaction. This is enforced by the SDK to prevent accidentally invalidating the change calculation.
+
+The fee is calculated as if every ECDSA signature in the transaction has its maximum length (73 bytes), since ECDSA signatures vary in length and are generated again once the change output is added. Inputs with a `placeholderP2PKHUnlocker()` are sized for a 65-byte Schnorr signature, so a wallet that signs them with ECDSA makes the transaction larger than the fee was calculated for.
 
 ```ts
 interface BchChangeOutputOptions {
@@ -431,5 +433,7 @@ interface FailedRequireError {
 ```
 
 If you are using an artifact compiled with an older version of `cashc`, the error will always be of the type `FailedTransactionError`. In this case, you can use the `reason` property of the error to determine the reason for the failure.
+
+When the network provider rejects the transaction with a `NetworkProviderError` or one of its subclasses (see [Error Handling](/docs/sdk/electrum-network-provider#error-handling)), `send()` throws that error as it is, e.g. a `NetworkProviderMissingInputsError` when an input was already spent. Other errors while broadcasting are thrown as a `FailedTransactionError`.
 
 [bitcoin-wiki-timelocks]: https://en.bitcoin.it/wiki/Timelock

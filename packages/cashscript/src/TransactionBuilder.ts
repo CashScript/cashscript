@@ -1,5 +1,6 @@
 import {
   binToHex,
+  decodeAuthenticationInstructions,
   decodeTransaction,
   decodeTransactionUnsafe,
   encodeTransaction,
@@ -19,12 +20,15 @@ import {
   StandardUnlockableUtxo,
   VmResourceUsage,
   isContractUnlocker,
+  isP2PKHUnlocker,
   isPlaceholderUnlocker,
+  SignatureAlgorithm,
   BchChangeOutputOptions,
   TokenChangeOutputOptions,
 } from './interfaces.js';
 import { PLACEHOLDER_P2PKH_UNLOCKING_SIZE } from './constants.js';
 import { NetworkProvider } from './network/index.js';
+import { NetworkProviderError } from './network/errors.js';
 import {
   calculateDust,
   cashScriptOutputToLibauthOutput,
@@ -47,6 +51,7 @@ import {
   TransactionTooLargeError,
 } from './Errors.js';
 import { DebugResults } from './debugging.js';
+import SignatureTemplate from './SignatureTemplate.js';
 import { debugLibauthTemplate, getLibauthTemplate, getBitauthUri } from './libauth-template/LibauthTemplate.js';
 import { getWcContractInfo, WcSourceOutput, WcTransactionOptions } from './walletconnect-utils.js';
 import semver from 'semver';
@@ -188,6 +193,7 @@ export class TransactionBuilder {
    *
    * @param chunks - The data chunks to include after the `OP_RETURN` opcode.
    * @returns This builder for chaining.
+   * @throws If a `0x`-prefixed chunk is not a valid hex string.
    */
   addOpReturnOutput(chunks: string[]): this {
     this.addOutput(createOpReturnOutput(chunks));
@@ -211,7 +217,13 @@ export class TransactionBuilder {
     const totalBchOutputAmount = this.outputs.reduce((total, output) => total + output.amount, 0n);
 
     const tentativeSurplus = totalBchInputAmount - totalBchOutputAmount;
-    const tentativeTransactionSize = this.getTransactionSize();
+
+    // ECDSA signatures vary in length, and are generated again once the change output is added, so the fee is
+    // calculated as if every ECDSA signature has its maximum length
+    const tentativeTransaction = this.buildLibauthTransaction(true);
+    const tentativeTransactionSize = BigInt(
+      this.getEncodedTransactionSize(tentativeTransaction) + this.getEcdsaSignatureSizeMargin(tentativeTransaction),
+    );
     const tentativeFee = BigInt(Math.ceil(changeOutputOptions.feeRate * Number(tentativeTransactionSize)));
     const tentativeChangeAmount = tentativeSurplus - tentativeFee;
 
@@ -255,14 +267,16 @@ export class TransactionBuilder {
    * or BCH change output was already added.
    */
   addTokenChangeOutputIfNeeded(changeOutputOptions: TokenChangeOutputOptions): this {
-    const { category, to } = changeOutputOptions;
+    // Token categories are hex strings, which are compared case-insensitively
+    const category = changeOutputOptions.category.toLowerCase();
+    const { to } = changeOutputOptions;
 
     const inputAmount = this.inputs
-      .filter((input) => input.token?.category === category)
+      .filter((input) => input.token?.category.toLowerCase() === category)
       .reduce((total, input) => total + input.token!.amount, 0n);
 
     const outputAmount = this.outputs
-      .filter((output) => output.token?.category === category)
+      .filter((output) => output.token?.category.toLowerCase() === category)
       .reduce((total, output) => total + output.token!.amount, 0n);
 
     const changeAmount = inputAmount - outputAmount;
@@ -298,6 +312,24 @@ export class TransactionBuilder {
   private getEncodedTransactionSize(transaction: LibauthTransaction): number {
     const placeholderInputCount = this.inputs.filter((input) => isPlaceholderUnlocker(input.unlocker)).length;
     return encodeTransaction(transaction).byteLength + placeholderInputCount * PLACEHOLDER_P2PKH_UNLOCKING_SIZE;
+  }
+
+  // The number of bytes that the transaction's ECDSA signatures are shorter than their maximum length
+  private getEcdsaSignatureSizeMargin(transaction: LibauthTransaction): number {
+    // 72-byte DER signature + sighash byte
+    const MAX_ECDSA_SIGNATURE_SIZE = 73;
+
+    return this.inputs.reduce((margin, input, inputIndex) => {
+      const signatureIndices = getEcdsaSignaturePushIndices(input.unlocker);
+      if (signatureIndices.length === 0) return margin;
+
+      const instructions = decodeAuthenticationInstructions(transaction.inputs[inputIndex].unlockingBytecode);
+      return signatureIndices.reduce((total, index) => {
+        const instruction = instructions[index];
+        const signatureSize = instruction && 'data' in instruction ? instruction.data.length : MAX_ECDSA_SIGNATURE_SIZE;
+        return total + MAX_ECDSA_SIGNATURE_SIZE - signatureSize;
+      }, margin);
+    }, 0);
   }
 
   /**
@@ -489,7 +521,8 @@ export class TransactionBuilder {
    * require statements or VM errors surface with descriptive messages.
    *
    * @returns The decoded transaction details (including txid and raw hex).
-   * @throws A `FailedTransactionError` if the network rejects the transaction, or any of the
+   * @throws A `NetworkProviderError` (or one of its subclasses) if the network provider rejects the transaction,
+   *   a `FailedTransactionError` if broadcasting fails otherwise, or any of the
    *   build / local evaluation errors (e.g. fee cap, implicit burn, failing require statement).
    */
   async send(): Promise<TransactionDetails>;
@@ -500,7 +533,8 @@ export class TransactionBuilder {
    *
    * @param raw - Pass `true` to receive the raw transaction hex instead of decoded details.
    * @returns The raw transaction hex as retrieved from the network after broadcast.
-   * @throws A `FailedTransactionError` if the network rejects the transaction, or any of the
+   * @throws A `NetworkProviderError` (or one of its subclasses) if the network provider rejects the transaction,
+   *   a `FailedTransactionError` if broadcasting fails otherwise, or any of the
    *   build / local evaluation errors (e.g. fee cap, implicit burn, failing require statement).
    */
   async send(raw: true): Promise<string>;
@@ -517,6 +551,9 @@ export class TransactionBuilder {
     try {
       txid = await this.provider.sendRawTransaction(tx);
     } catch (e: any) {
+      // Network provider errors describe why the network rejected the transaction, so they are thrown as they are
+      if (e instanceof NetworkProviderError) throw e;
+
       const reason = e.error ?? e.message;
 
       const getBitauthUriWithFallback = (): string => {
@@ -608,14 +645,17 @@ export class TransactionBuilder {
     const tokenInputAmounts: Record<string, bigint> = {};
     const tokenOutputAmounts: Record<string, bigint> = {};
 
+    // Token categories are hex strings, which are compared case-insensitively
     for (const input of this.inputs) {
       if (input.token?.amount) {
-        tokenInputAmounts[input.token.category] = (tokenInputAmounts[input.token.category] || 0n) + input.token.amount;
+        const category = input.token.category.toLowerCase();
+        tokenInputAmounts[category] = (tokenInputAmounts[category] || 0n) + input.token.amount;
       }
     }
     for (const output of this.outputs) {
       if (output.token?.amount) {
-        tokenOutputAmounts[output.token.category] = (tokenOutputAmounts[output.token.category] || 0n) + output.token.amount;
+        const category = output.token.category.toLowerCase();
+        tokenOutputAmounts[category] = (tokenOutputAmounts[category] || 0n) + output.token.amount;
       }
     }
 
@@ -652,4 +692,21 @@ export class TransactionBuilder {
       throw new TransactionTooLargeError(transactionSize, TX_MAX_STANDARD_SIZE);
     }
   }
+}
+
+// The positions of the pushes in the unlocking bytecode that hold an ECDSA signature generated by a SignatureTemplate
+function getEcdsaSignaturePushIndices(unlocker: Unlocker): number[] {
+  const isEcdsaTemplate = (param: unknown): boolean => (
+    param instanceof SignatureTemplate && param.signatureAlgorithm === SignatureAlgorithm.ECDSA
+  );
+
+  // P2PKH unlocking bytecode is <signature> <public key>
+  if (isP2PKHUnlocker(unlocker)) return isEcdsaTemplate(unlocker.template) ? [0] : [];
+
+  // Contract function arguments are pushed in reverse order
+  if (isContractUnlocker(unlocker)) {
+    return unlocker.params.flatMap((param, i, params) => (isEcdsaTemplate(param) ? [params.length - 1 - i] : []));
+  }
+
+  return [];
 }

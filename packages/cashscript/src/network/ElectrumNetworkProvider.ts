@@ -9,6 +9,7 @@ import { SpendableUtxo, Network } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript } from '../utils.js';
 import {
+  NetworkProviderError,
   NetworkProviderMissingInputsError,
   NetworkProviderMempoolConflictError,
   NetworkProviderTransactionAlreadySubmittedError,
@@ -249,7 +250,7 @@ const RELATIVE_TIMELOCK_PATTERNS = [
   'non-BIP68-final',
 ];
 
-function classifyNetworkProviderError(errorMessage: string): Error {
+function classifyNetworkProviderError(errorMessage: string): NetworkProviderError {
   if (MISSING_INPUTS_PATTERNS.some((pattern) => errorMessage.includes(pattern))) {
     return new NetworkProviderMissingInputsError(errorMessage);
   }
@@ -270,7 +271,7 @@ function classifyNetworkProviderError(errorMessage: string): Error {
     return new NetworkProviderRelativeTimelockError(errorMessage);
   }
 
-  return new Error(errorMessage);
+  return new NetworkProviderError(errorMessage, errorMessage);
 }
 
 function lockingBytecodeToElectrumScriptHash(lockingBytecode: Uint8Array): string {
