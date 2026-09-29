@@ -751,7 +751,13 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
   visitFor(node: ForNode): Node {
     const forScopeStackDepth = this.stack.length;
+
+    // If the init is a re-assignment, we need to increment the scope depth so it gets treated as a scoped reassignment
+    // (and therefore the stack value gets properly replaced)
+    const isReassignment = node.init instanceof AssignNode;
+    if (isReassignment) this.scopeDepth += 1;
     node.init = this.visit(node.init) as VariableDefinitionNode | AssignNode;
+    if (isReassignment) this.scopeDepth -= 1;
 
     this.scopeDepth += 1;
     this.emit(Op.OP_BEGIN, { location: node.location, positionHint: PositionHint.START });
