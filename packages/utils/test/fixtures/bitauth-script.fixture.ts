@@ -403,6 +403,44 @@ OP_0 OP_GREATERTHAN                  /*         require(x > 0);       */
                                      /* }                             */
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
   },
+  {
+    // The optimiser merges the loop variable drop with the if-block drops (OP_DROP OP_DROP OP_DROP -> OP_2DROP OP_DROP),
+    // so both scope cleanups share the OP_2DROP and are merged into a single tag
+    name: 'OverlappingScopeCleanup (merged cleanup of nested scopes)',
+    sourceCode: `contract OverlappingScopeCleanup() {
+    function spend(int a, int b) {
+        if (a > 0) {
+            int x = a + 1;
+            int y = a + 2;
+            for (int i = 0; i < 2; i = i + 1) {
+                require(x + y > i);
+            }
+        }
+        require(b == 7);
+    }
+}`,
+    asmBytecode: 'OP_DUP OP_0 OP_GREATERTHAN OP_IF OP_DUP OP_1ADD OP_OVER OP_2 OP_ADD OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_GREATERTHAN OP_VERIFY OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_2DROP OP_DROP OP_ENDIF OP_SWAP OP_7 OP_NUMEQUAL OP_NIP',
+    sourceMap: '3:12:3:13;:16::17;:12:::1;:19:9:9:0;4:20:4:21;:::25:1;5::5:21:0;:24::25;:20:::1;6:25:6:26:0;:12:8:13;:28:6:29;:32::33;:28:::1;;;:46:8:13:0;7:24:7:25;;:28::29;;:24:::1;:32::33:0;:24:::1;:16::35;6:35:6:44;:46:8:13;;:12;;3:19:9:9;;;10:16:10:17:0;:21::22;:8::24:1;2:33:11:5',
+    sourceTags: '25:25:fu;26:29:lc;30:31:sc;36:36:sc',
+    expectedBitAuthScript: `
+                                                                  /* contract OverlappingScopeCleanup() {            */
+                                                                  /*     function spend(int a, int b) {              */
+OP_DUP OP_0 OP_GREATERTHAN OP_IF                                  /*         if (a > 0) {                            */
+OP_DUP OP_1ADD                                                    /*             int x = a + 1;                      */
+OP_OVER OP_2 OP_ADD                                               /*             int y = a + 2;                      */
+OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF  /*             for (int i = 0; i < 2; i = i + 1) { */
+OP_2 OP_PICK OP_2 OP_PICK OP_ADD OP_OVER OP_GREATERTHAN OP_VERIFY /*                 require(x + y > i);             */
+OP_1ADD                                                           /*                 >>> for-loop update (i = i + 1) */
+OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                          /*                 >>> loop condition check        */
+                                                                  /*             }                                   */
+OP_2DROP OP_DROP                                                  /*             >>> scope cleanup                   */
+OP_ENDIF                                                          /*         }                                       */
+OP_SWAP OP_7 OP_NUMEQUAL                                          /*         require(b == 7);                        */
+OP_NIP                                                            /*         >>> scope cleanup                       */
+                                                                  /*     }                                           */
+                                                                  /* }                                               */
+`.replace(/^\n+/, '').replace(/\n+$/, ''),
+  },
 ];
 
 // Contracts with user-defined functions render each definition as a source-mapped `<...>` push group.
