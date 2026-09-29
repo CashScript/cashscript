@@ -950,7 +950,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.visit(element);
 
     // OP_SIZE is a signed VM number, so it is empty for empty elements, and has an extra 0x00 byte for 128-255 bytes.
-    // In those cases (and for 76-127 bytes) we convert it to a single byte, and prepend OP_PUSHDATA1.
+    // In those cases (and for 76-127 bytes) we convert it to a single byte, and prepend OP_PUSHDATA1. Chunks over 255
+    // bytes are not supported, so the size's high byte has to be 0x00 (an OP_0 would be empty and never match it).
     this.emit(Op.OP_SIZE, endLocationData);
     this.emit(Op.OP_DUP, endLocationData);
     this.emit(encodeInt(1n), endLocationData);
@@ -961,7 +962,8 @@ export default class GenerateTargetTraversal extends AstTraversal {
     this.emit(Op.OP_NUM2BIN, endLocationData);
     this.emit(encodeInt(1n), endLocationData);
     this.emit(Op.OP_SPLIT, endLocationData);
-    this.emit(Op.OP_DROP, endLocationData);
+    this.emit(hexToBin('00'), endLocationData);
+    this.emit(Op.OP_EQUALVERIFY, endLocationData);
     this.emit(hexToBin('4c'), endLocationData);
     this.emit(Op.OP_SWAP, endLocationData);
     this.emit(Op.OP_CAT, endLocationData);
