@@ -18,6 +18,7 @@ import {
   ConsoleStatementNode,
   ConsoleParameterNode,
   ForNode,
+  SliceNode,
   TupleAssignmentTarget,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
@@ -199,6 +200,15 @@ export default class SymbolTableTraversal extends AstTraversal {
     node.identifier = this.visit(node.identifier) as IdentifierNode;
     this.expectedSymbolType = SymbolType.VARIABLE;
     node.parameters = this.visitList(node.parameters);
+    return node;
+  }
+
+  // Code generation evaluates the end before the start (element.split(end)[0].split(start)[1]), so the final use
+  // of a variable (where it is rolled instead of picked) has to be tracked in that same order
+  visitSlice(node: SliceNode): Node {
+    node.element = this.visit(node.element);
+    node.end = this.visit(node.end);
+    node.start = this.visit(node.start);
     return node;
   }
 
