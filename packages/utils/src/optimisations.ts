@@ -184,6 +184,10 @@ export const optimisationReplacements = [
   ['OP_2 OP_PICK OP_OVER', 'OP_3DUP OP_NIP'],
   ['OP_2 OP_PICK OP_NIP', 'OP_DROP OP_OVER'],
   ['OP_TOALTSTACK OP_ROT OP_ROT OP_FROMALTSTACK', 'OP_2SWAP OP_ROT'],
+
+  // NOTE: these optimisations (as well as some others above) are currently hardcoded, but should become dynamic.
+  // This is something we want to properly implement in v0.15
+  
   // OP_TUCK leaves the two operands in the opposite order, so this only holds for order-independent comparisons
   ['OP_DUP OP_ROT OP_NUMEQUALVERIFY', 'OP_TUCK OP_NUMEQUALVERIFY'],
 
@@ -219,6 +223,7 @@ export const optimisationReplacements = [
   ['OP_13 OP_PICK OP_1SUB OP_14 OP_ROLL OP_DROP', 'OP_13 OP_ROLL OP_1SUB'],
   ['OP_14 OP_PICK OP_1SUB OP_15 OP_ROLL OP_DROP', 'OP_14 OP_ROLL OP_1SUB'],
   ['OP_15 OP_PICK OP_1SUB OP_16 OP_ROLL OP_DROP', 'OP_15 OP_ROLL OP_1SUB'],
+  /////////////////////////////////////////////////////////////////////////
 
   // Replace drops of items deeper in the stack (e.g. from scope cleanup) with shorter equivalents
   ['OP_ROT OP_DROP OP_NIP', 'OP_NIP OP_NIP'],
