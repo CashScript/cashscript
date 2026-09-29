@@ -9,7 +9,7 @@
 import { execFileSync } from 'node:child_process';
 
 type Area = 'compiler' | 'sdk' | 'utils' | 'website' | 'examples' | 'repository';
-type Kind = 'source' | 'tests' | 'docs' | 'dependencies' | 'config' | 'generated';
+type Kind = 'source' | 'tests' | 'docs' | 'dependencies' | 'config' | 'version' | 'generated';
 
 interface FileChange {
   filePath: string;
@@ -40,16 +40,18 @@ const kindRules: { kind: Kind; matches: (filePath: string) => boolean }[] = [
   },
   { kind: 'dependencies', matches: (filePath) => baseName(filePath) === 'package.json' },
   { kind: 'tests', matches: (filePath) => filePath.includes('/test/') || filePath.endsWith('.test.ts') },
-  {
-    kind: 'docs',
-    matches: (filePath) => /\.mdx?$/.test(filePath) || /^website\/(docs|static)\//.test(filePath),
-  },
+  // Agent instructions are tooling configuration rather than documentation for readers, despite being markdown.
   {
     kind: 'config',
     matches: (filePath) => filePath.startsWith('.github/')
       || baseName(filePath).startsWith('.')
       || /^(tsconfig.*\.json|vitest\.(config|setup)\.ts|lerna\.json|docusaurus\.config\.ts|sidebars\.ts)$/
-        .test(baseName(filePath)),
+        .test(baseName(filePath))
+      || ['AGENTS.md', 'CLAUDE.md'].includes(baseName(filePath)),
+  },
+  {
+    kind: 'docs',
+    matches: (filePath) => /\.mdx?$/.test(filePath) || /^website\/(docs|static)\//.test(filePath),
   },
 ];
 
@@ -68,17 +70,21 @@ const kindLabels: Record<Kind, string> = {
   docs: 'Docs',
   dependencies: 'Deps',
   config: 'Config',
+  version: 'Version',
   generated: 'Generated',
 };
 
 const areaOrder: Area[] = ['compiler', 'sdk', 'utils', 'website', 'examples', 'repository'];
-const kindOrder: Kind[] = ['source', 'tests', 'docs', 'dependencies', 'config', 'generated'];
+const kindOrder: Kind[] = ['source', 'tests', 'docs', 'dependencies', 'config', 'version', 'generated'];
 
-// Generated files are left out of the totals: a lockfile update would otherwise dwarf everything else.
-const excludedFromTotal: Kind[] = ['generated'];
+// Version bumps and generated files are left out of the totals: there is nothing in them to review, and a
+// lock file update would otherwise dwarf everything else.
+const excludedFromTotal: Kind[] = ['version', 'generated'];
 
-// Workspace packages are bumped together on every release, which is not worth listing as a dependency change.
+// Workspace packages are bumped together on every release. Their version lines count as version bumps
+// rather than dependency changes, and are summarised once instead of listed per package.json.
 const workspacePackages = ['cashc', 'cashscript', '@cashscript/utils'];
+const versionConstantPath = 'packages/cashc/src/index.ts';
 
 const releaseNotesPath = 'website/docs/releases/release-notes.md';
 const publishedAreas: Area[] = ['compiler', 'sdk', 'utils'];
@@ -89,7 +95,8 @@ const [baseRevision, headRevision] = requireRevisions();
 // was opened out of the numbers.
 const mergeBase = git(['merge-base', baseRevision, headRevision]).trim();
 
-console.log(renderReport(parseLineCounts(git(['diff', '--numstat', '--no-renames', mergeBase, headRevision]))));
+const lineCounts = git(['diff', '--numstat', '--no-renames', mergeBase, headRevision]);
+console.log(renderReport(parseLineCounts(lineCounts).flatMap(splitVersionLines)));
 
 function renderReport(changes: FileChange[]): string {
   if (changes.length === 0) return 'No line changes in this pull request.';
@@ -100,6 +107,7 @@ function renderReport(changes: FileChange[]): string {
     ...renderTable(changes),
     '',
     ...renderSummary(changes),
+    ...renderVersionBump(changes),
     ...renderDependencyChanges(changes),
     ...renderNewFiles(),
     ...renderReleaseNotesReminder(changes),
@@ -111,8 +119,8 @@ function renderTable(changes: FileChange[]): string[] {
   const kinds = kindOrder.filter((kind) => changes.some((change) => change.kind === kind));
   const reviewableChurn = churnOf(reviewable(changes));
 
-  const header = `| | ${kinds.map((kind) => kindLabels[kind]).join(' | ')} | Total | Share |`;
-  const separator = `|---|${kinds.map(() => '---:|').join('')}---:|---:|`;
+  const header = `| | ${kinds.map((kind) => kindLabels[kind]).join(' | ')} | Total | Net | Share |`;
+  const separator = `|---|${kinds.map(() => '---:|').join('')}---:|---:|---:|`;
   const rows = areas.map((area) => {
     const inArea = changes.filter((change) => change.area === area);
     return renderRow(areaLabels[area], inArea, kinds, reviewableChurn);
@@ -126,11 +134,15 @@ function renderRow(label: string, changes: FileChange[], kinds: Kind[], reviewab
   const cells = kinds.map((kind) => formatChurn(churnOf(changes.filter((change) => change.kind === kind))));
   const total = churnOf(reviewable(changes));
   const share = sizeOf(reviewableChurn) === 0 ? '—' : formatPercentage(sizeOf(total) / sizeOf(reviewableChurn));
-  return `| ${label} | ${cells.join(' | ')} | ${formatChurn(total)} | ${share} |`;
+  return `| ${label} | ${cells.join(' | ')} | ${formatChurn(total)} | ${formatNet(total)} | ${share} |`;
 }
 
 function renderSummary(changes: FileChange[]): string[] {
-  const lines = [`Reviewable churn: ${sizeOf(churnOf(reviewable(changes)))} lines, generated files excluded.`];
+  const reviewableChurn = churnOf(reviewable(changes));
+  const net = sizeOf(reviewableChurn) === 0 ? '' : ` (net ${formatNet(reviewableChurn)})`;
+  const lines = [
+    `Reviewable churn: ${sizeOf(reviewableChurn)} lines${net}, version bumps and generated files excluded.`,
+  ];
 
   const sourceChurn = sizeOf(churnOf(changes.filter((change) => change.kind === 'source')));
   const testChurn = sizeOf(churnOf(changes.filter((change) => change.kind === 'tests')));
@@ -139,7 +151,8 @@ function renderSummary(changes: FileChange[]): string[] {
   // Only source files are read line by line, which keeps lock files and fixtures out of the comment share.
   const addedSourceLines = changes
     .filter((change) => change.kind === 'source')
-    .flatMap((change) => addedLinesOf(change.filePath));
+    .flatMap((change) => addedLinesOf(change.filePath))
+    .filter((line) => !isVersionLine(line));
   const comments = addedSourceLines.filter(isComment).length;
   const nonBlank = addedSourceLines.filter((line) => line.trim() !== '').length;
   if (nonBlank > 0) {
@@ -147,6 +160,22 @@ function renderSummary(changes: FileChange[]): string[] {
   }
 
   return lines;
+}
+
+// A release bumps every package.json at once, which reads best as one line rather than one per file.
+function renderVersionBump(changes: FileChange[]): string[] {
+  const bumps = new Map<string, string[]>();
+
+  for (const change of changes.filter((entry) => entry.kind === 'version' && baseName(entry.filePath) === 'package.json')) {
+    const before = packageManifest(fileAt(mergeBase, change.filePath));
+    const after = packageManifest(fileAt(headRevision, change.filePath));
+    if (!before.version || !after.version || before.version === after.version) continue;
+
+    const bump = `${before.version} → ${after.version}`;
+    bumps.set(bump, [...(bumps.get(bump) ?? []), `\`${after.name ?? change.filePath}\``]);
+  }
+
+  return [...bumps].map(([bump, packages]) => `Version bump: ${bump} in ${packages.join(', ')}.`);
 }
 
 // Which packages the pull request brings in or drops, as opposed to how many lines of package.json moved.
@@ -207,6 +236,38 @@ function requireRevisions(): [string, string] {
   return [base, head];
 }
 
+// Version lines in files that hold a version are split off from the rest of the file's changes, so a release
+// bump does not read as dependency or source changes.
+function splitVersionLines(change: FileChange): FileChange[] {
+  if (!isVersionedFile(change.filePath)) return [change];
+
+  const changedLines = changedLinesOf(change.filePath);
+  const versionLines = changedLines.filter((line) => isVersionLine(line.slice(1)));
+  const otherLines = changedLines.filter((line) => !isVersionLine(line.slice(1)));
+
+  return [
+    { ...change, kind: 'version' as Kind, ...countLines(versionLines) },
+    { ...change, ...countLines(otherLines) },
+  ].filter((entry) => sizeOf(entry) > 0);
+}
+
+function isVersionedFile(filePath: string): boolean {
+  return ['package.json', 'lerna.json'].includes(baseName(filePath)) || filePath === versionConstantPath;
+}
+
+// A package's own version, a workspace package's version in a dependency list, or the compiler's version constant.
+function isVersionLine(line: string): boolean {
+  const workspaceDependency = workspacePackages.some((name) => line.trim().startsWith(`"${name}":`));
+  return /^\s*"version":/.test(line) || /^export const version = /.test(line) || workspaceDependency;
+}
+
+function countLines(changedLines: string[]): Churn {
+  return {
+    added: changedLines.filter((line) => line.startsWith('+')).length,
+    removed: changedLines.filter((line) => line.startsWith('-')).length,
+  };
+}
+
 // Parses the output of `git diff --numstat`, one "<added>\t<removed>\t<path>" line per file.
 // Binary files report "-" for both counts and are left out.
 function parseLineCounts(lineCounts: string): FileChange[] {
@@ -256,6 +317,13 @@ function formatChurn(churn: Churn): string {
   return sizeOf(churn) === 0 ? '' : `+${churn.added} −${churn.removed}`;
 }
 
+function formatNet(churn: Churn): string {
+  const net = churn.added - churn.removed;
+  if (sizeOf(churn) === 0) return '';
+  if (net === 0) return '±0';
+  return net > 0 ? `+${net}` : `−${-net}`;
+}
+
 function formatPercentage(fraction: number): string {
   if (fraction > 0 && fraction < 0.01) return '<1%';
   return `${Math.round(fraction * 100)}%`;
@@ -269,17 +337,35 @@ function isComment(line: string): boolean {
 }
 
 function addedLinesOf(filePath: string): string[] {
-  return git(['diff', '-U0', '--no-renames', mergeBase, headRevision, '--', filePath])
-    .split('\n')
-    .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
-    .map((line) => line.slice(1));
+  return changedLinesOf(filePath).filter((line) => line.startsWith('+')).map((line) => line.slice(1));
+}
+
+// The added and removed lines of a file, each still carrying its "+" or "-" prefix. Without context lines,
+// everything after the file header is a hunk header or a changed line.
+function changedLinesOf(filePath: string): string[] {
+  const diffLines = git(['diff', '-U0', '--no-renames', mergeBase, headRevision, '--', filePath]).split('\n');
+  const firstHunk = diffLines.findIndex((line) => line.startsWith('@@'));
+  return firstHunk === -1 ? [] : diffLines.slice(firstHunk).filter((line) => /^[+-]/.test(line));
+}
+
+interface PackageManifest {
+  name?: string;
+  version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 }
 
 function declaredDependencies(content: string): Record<string, string> {
+  const manifest = packageManifest(content);
+  return { ...manifest.dependencies, ...manifest.devDependencies, ...manifest.peerDependencies };
+}
+
+// Returns an empty manifest for a missing or invalid package.json.
+function packageManifest(content: string): PackageManifest {
   if (content === '') return {};
   try {
-    const parsed = JSON.parse(content) as Record<string, Record<string, string> | undefined>;
-    return { ...parsed.dependencies, ...parsed.devDependencies, ...parsed.peerDependencies };
+    return JSON.parse(content) as PackageManifest;
   } catch {
     return {};
   }
