@@ -1,11 +1,12 @@
-import { Contract, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, UnlockerLockingBytecodeMismatchError, VmTarget } from '../src/index.js';
+import { Contract, FailedTransactionEvaluationError, MockNetworkProvider, SignatureAlgorithm, SignatureTemplate, TransactionBuilder, UnlockerLockingBytecodeMismatchError, VmTarget } from '../src/index.js';
 import { DEFAULT_VM_TARGET, getLockScriptName } from '../src/libauth-template/utils.js';
 import { aliceAddress, alicePriv, alicePub, bobPriv, bobPub } from './fixture/vars.js';
 import { randomUtxo } from '../src/utils.js';
-import { AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
+import { AuthenticationErrorBch2025Additions, AuthenticationErrorCommon, binToHex, hexToBin } from '@bitauth/libauth';
 import {
   artifactTestMultipleConstructorParameters,
   artifactTestLogs,
+  artifactTestOperationCostOverrun,
   artifactTestConsecutiveLogs,
   artifactTestMultipleLogs,
   artifactTestRequires,
@@ -637,6 +638,42 @@ describe('Debugging tests', () => {
         5
       ].value`);
       expect(() => transaction.debug()).toThrow(`Reason: ${AuthenticationErrorCommon.invalidTransactionOutputIndex}`);
+    });
+
+    // An operation cost overrun can stop evaluation on any instruction: the one a require statement ends in, or one in a
+    // skipped branch, which still costs operations
+    it('should report an operation cost overrun as such, not as a failed require statement', async () => {
+      const contract = new Contract(artifactTestOperationCostOverrun, [], { provider });
+      const requireIps = artifactTestOperationCostOverrun.debug!.requires.map((statement) => statement.ip);
+      let overrunsOnRequires = 0;
+
+      // The rounds spend most of the budget and the padding sets how large it is, so scanning both moves the point where
+      // it runs out across the instructions of the loop and of the require statements after it
+      for (let rounds = 37n; rounds <= 45n; rounds++) {
+        for (let padding = 0; ; padding++) {
+          const utxo = provider.addUtxo(contract.address, randomUtxo());
+          const transaction = new TransactionBuilder({ provider })
+            .addInput(utxo, contract.unlock.spend(rounds, new Uint8Array(padding)))
+            .addOutput({ to: contract.address, amount: 1000n });
+
+          let failure: unknown;
+          try {
+            transaction.debug();
+            break;
+          } catch (error) {
+            failure = error;
+          }
+
+          // The require conditions all hold, so every failure is the overrun
+          expect(failure).toBeInstanceOf(FailedTransactionEvaluationError);
+          const { libauthErrorMessage, failingInstructionPointer } = failure as FailedTransactionEvaluationError;
+          expect(libauthErrorMessage).toContain(AuthenticationErrorBch2025Additions.excessiveOperationCost);
+          if (requireIps.includes(failingInstructionPointer)) overrunsOnRequires++;
+        }
+      }
+
+      // The scan has to hit the case #456 is about: the budget running out on a require statement's own instruction
+      expect(overrunsOnRequires).toBeGreaterThan(0);
     });
   });
 

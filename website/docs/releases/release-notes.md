@@ -38,6 +38,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :bug: Fix bug where invalid hex strings were silently encoded to different bytes.
 - :bug: Fix bug where `pubkey` arguments were not checked to be 33 or 65 bytes.
 - :bug: Fix bug in `ElectrumNetworkProvider` automatic connection management.
+- :bug: Fix bug where debugging reported a VM resource limit as a failed require statement.
 - :bug: Fix minimum fee check rounding bug.
 - :bug: Fix bug where `setLocktime()` accepted invalid values.
 - :bug: Fix edge case bug where a failing final `require(variable)` statement was reported incorrectly in debugging.
