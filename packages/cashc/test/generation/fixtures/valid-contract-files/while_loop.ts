@@ -9,7 +9,7 @@ export const fixtures: Fixture[] = [
       bytecode: 'OP_0 OP_BEGIN OP_DUP OP_TXINPUTCOUNT OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_2 OP_GREATERTHAN',
       debug: {
         bytecode: '006576c39f766b638b686c916652a0',
-        sourceMap: '3:16:3:17;5:8:7:9;:15:5:16;:19::35;:15:::1;;;:37:7:9:0;6:12:6:22:1;5:37:7:9;;:8;;10:20:10:21:0;:8::23:1',
+        sourceMap: '3:16:3:17;5:8:7:9;:15:5:16;:19::35;:15:::1;;;:37:7:9:0;6:16:6:21:1;5:37:7:9;;:8;;10:20:10:21:0;:8::23:1',
         logs: [
           { ip: 13, line: 9, data: [{ stackIndex: 0, type: 'int', ip: 13 }] },
         ],

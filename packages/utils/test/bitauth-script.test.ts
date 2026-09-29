@@ -52,12 +52,12 @@ describe('Libauth Script formatting', () => {
     });
 
     it('should emit every opcode once when source tags overlap', () => {
-      // Two scope cleanups sharing the OP_2DROP (30:30 and 30:31) must not render the shared opcode twice
+      // Two scope cleanups sharing the OP_2DROP (28:28 and 28:29) must not render the shared opcode twice
       const fixture = fixtures.find((f) => f.name.startsWith('OverlappingScopeCleanup'))!;
       const debugInformation = {
         bytecode: binToHex(scriptToBytecode(asmToScript(fixture.asmBytecode))),
         sourceMap: fixture.sourceMap,
-        sourceTags: '25:25:fu;26:29:lc;30:30:sc;30:31:sc;36:36:sc',
+        sourceTags: '23:23:fu;24:27:lc;28:28:sc;28:29:sc;34:34:sc',
         logs: [],
         requires: [],
       };
