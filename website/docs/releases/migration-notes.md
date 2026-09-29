@@ -48,7 +48,7 @@ const signatureTemplate = new SignatureTemplate(wif, SighashType.SIGHASH_ALL | S
 
 UTXOs returned by network providers now include a `lockingBytecode` field with the actual locking bytecode of the UTXO, and input UTXOs passed to the `TransactionBuilder` are required to include this field.
 
-If you fetch UTXOs from a standard network provider, no code changes are needed. If you construct UTXOs manually (e.g. from your own indexer or persisted data), you need to add the `lockingBytecode` field:
+If you fetch UTXOs from a standard network provider, no code changes are needed. If you construct UTXOs manually (e.g. from your own indexer or persisted data) or implement a custom network provider, you need to add the `lockingBytecode` field:
 
 ```ts
 // before
@@ -59,6 +59,14 @@ const utxo = { txid, vout, satoshis, lockingBytecode };
 ```
 
 Since the spent UTXO's `lockingBytecode` is now the source of truth for the locking script, the `generateLockingBytecode()` method was removed from the `Unlocker` interface. If you implement custom unlockers, remove the `generateLockingBytecode()` method from your implementation.
+
+#### MockNetworkProvider transaction validation
+
+The `MockNetworkProvider` now validates sent transactions against the BCH VM by default, so tests that send invalid transactions (e.g. with placeholder signatures, or with a locktime above the mock block height) now fail. The spent UTXOs also need to exist in the mock UTXO set, even when `updateUtxoSet` is `false`. If you want to keep the old behaviour, set `validateTransactions` to `false`:
+
+```ts
+const provider = new MockNetworkProvider({ validateTransactions: false });
+```
 
 ## v0.12 to v0.13
 
