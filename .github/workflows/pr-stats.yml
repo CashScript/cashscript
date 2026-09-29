@@ -1,0 +1,47 @@
+# Comments a breakdown of the pull request's changed lines per package (compiler, SDK, utils, website, ...)
+# and per kind of change (source, tests, docs, dependencies, ...), so the size of a change is readable at a glance.
+name: pr-stats
+
+on:
+  # pull_request_target runs with a token that can comment on pull requests from forks as well. It checks
+  # out the base branch, so only the trusted script from the base branch runs: the pull request's commits
+  # are fetched as git data and diffed, never checked out or executed.
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-stats:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the diff needs history back to the merge base
+
+      - name: Fetch pull request head
+        run: git fetch --no-tags origin "refs/pull/$NUMBER/head"
+        env:
+          NUMBER: ${{ github.event.pull_request.number }}
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24  # runs the TypeScript directly, the script has no dependencies
+
+      - name: Compute stats
+        run: node .github/scripts/pr-stats.ts "$BASE_SHA" "$HEAD_SHA" > stats.md
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+      - name: Comment on pull request
+        run: gh pr comment "$NUMBER" --repo "$REPOSITORY" --body-file stats.md --edit-last --create-if-none
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
