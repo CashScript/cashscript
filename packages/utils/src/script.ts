@@ -8,7 +8,7 @@ import {
   OpcodesBch,
   AuthenticationInstruction,
 } from '@bitauth/libauth';
-import { optimisationReplacements } from './optimisations.js';
+import { OptimisationMatch, OptimisationMatcher, OptimisationPart, optimisationMatchers } from './optimisations.js';
 import { range } from './data.js';
 import { FullLocationData, PositionHint, SingleLocationData, SourceTagEntry, SourceTagKind } from './types.js';
 import { InlineRange, LogEntry, RequireStatement } from './artifact.js';
@@ -172,7 +172,7 @@ export function optimiseBytecode(
 ): OptimiseBytecodeResult {
   for (let i = 0; i < runs; i += 1) {
     const result = replaceOps(
-      script, locationData, logs, requires, sourceTags, inlineRanges, constructorParamLength, optimisationReplacements,
+      script, locationData, logs, requires, sourceTags, inlineRanges, constructorParamLength, optimisationMatchers,
     );
 
     // Break on fixed point
@@ -181,8 +181,11 @@ export function optimiseBytecode(
     ({ script, locationData, logs, requires, sourceTags, inlineRanges } = result);
   }
 
+  // A tag whose opcodes were all optimised away leaves no range
+  const remainingSourceTags = sourceTags.filter((tag) => tag.endIndex >= tag.startIndex);
+
   return {
-    script, locationData, logs, requires, sourceTags: reconcileScopeCleanupTags(script, sourceTags), inlineRanges,
+    script, locationData, logs, requires, sourceTags: reconcileScopeCleanupTags(script, remainingSourceTags), inlineRanges,
   };
 }
 
@@ -237,145 +240,189 @@ function replaceOps(
   sourceTags: SourceTagEntry[],
   inlineRanges: InlineRange[],
   constructorParamLength: number,
-  optimisations: [string, string][],
+  optimisations: OptimisationMatcher[],
 ): ReplaceOpsResult {
   const originalAsm = scriptToAsm(script);
-  let asm = originalAsm;
-  const newLocationData = [...locationData];
-  let newLogs = [...logs];
-  let newRequires = [...requires];
-  let newSourceTags = [...sourceTags];
-  let newInlineRanges = [...inlineRanges];
+  const state: ReplaceOpsState = {
+    tokens: originalAsm === '' ? [] : originalAsm.split(' '),
+    locationData: [...locationData],
+    logs,
+    requires,
+    sourceTags,
+    inlineRanges,
+    constructorParamLength,
+  };
 
-  optimisations.forEach(([pattern, replacement]) => {
-    const patternTokens = pattern.split(/\s+/);
-    const patternLength = patternTokens.length;
-    const replacementLength = replacement === '' ? 0 : replacement.split(/\s+/).length;
-    const lengthDiff = patternLength - replacementLength;
-
-    // (?<!\S) and (?!\S) require the pattern to start and end at a token boundary (no partial matches)
-    // without consuming the separators
-    const regex = new RegExp(`(?<!\\S)${pattern}(?!\\S)`, 'g');
-
-    // Most rules match nothing on any given script, and must leave the ASM untouched.
-    const matches = [...asm.matchAll(regex)];
-    if (matches.length === 0) return;
-
-    // Make a mapping *once* that maps the character offset of every opcode/token to its script index
-    const scriptIndexAtCharacterOffset = new Map<number, number>();
-    asm.split(' ').reduce((characterOffset, token, scriptIndex) => {
-      scriptIndexAtCharacterOffset.set(characterOffset, scriptIndex);
-      return characterOffset + token.length + 1;
-    }, 0);
-
+  optimisations.forEach((optimisation) => {
     // Process the matches right to left: replacing a pattern only shifts the metadata positions
     // that come after it, so the indices of the remaining (earlier) matches stay valid as-is.
-    for (const match of matches.reverse()) {
-      const scriptIndex = scriptIndexAtCharacterOffset.get(match.index)!;
-
-      // We get the locationData entries for every opcode in the pattern
-      const patternLocations = newLocationData.slice(scriptIndex, scriptIndex + patternLength);
-
-      // We get the lowest start location and highest end location of the pattern
-      const lowestStart = getLowestStartLocation(patternLocations);
-      const highestEnd = getHighestEndLocation(patternLocations);
-
-      // Initially we set the position hint to END if any of the pattern locations have a position hint of END
-      // It turned out that this was not the correct approach in the case of OP_NOT OP_IF => OP_NOTIF,
-      // because OP_IF and OP_NOTIF are START opcodes, and OP_NOT is an END opcode.
-      // After reviewing the entire list of optimisations, we set the position hint to the last location's position hint
-      // which we believe to be the correct approach, but it is hard to reason about.
-      // We've also consulted with AI (o3-max) to help us reason about this, and it seems to be the correct approach.
-      const positionHint = patternLocations.at(-1)?.positionHint ?? PositionHint.START;
-
-      // We merge the lowest start and highest end locations into a single location data entry
-      const mergedLocation = {
-        location: {
-          start: lowestStart.location.start,
-          end: highestEnd.location.end,
-        },
-        positionHint,
-      };
-
-      // We replace the pattern locations with the merged location
-      // (note that every opcode in the replacement has the same location)
-      const replacementLocations = new Array<SingleLocationData>(replacementLength).fill(mergedLocation);
-      newLocationData.splice(scriptIndex, patternLength, ...replacementLocations);
-
-      // The IP of an opcode in the script is its index within the script + the constructor parameters, because
-      // the constructor parameters still have to get added to the front of the script when a new Contract is created.
-      const scriptIp = scriptIndex + constructorParamLength;
-
-      // Positions after the replaced pattern shift back by the length difference; positions inside
-      // the replaced pattern clamp to the pattern's start. (Positions inside a pattern are impossible
-      // for the current set of optimisations, but the clamp future-proofs the code.)
-      const adjustPosition = (position: number, patternStart: number): number => (
-        position >= patternStart ? Math.max(patternStart, position - lengthDiff) : position
-      );
-
-      newRequires = newRequires.map((require) => ({
-        ...require,
-        ip: adjustPosition(require.ip, scriptIp),
-      }));
-
-      newLogs = newLogs.map((log) => {
-        return {
-          ip: adjustPosition(log.ip, scriptIp),
-          line: log.line,
-          data: log.data.map((data) => {
-            if (typeof data === 'string') return data;
-
-            // If the log is completely before the pattern, we don't need to change anything
-            if (data.ip <= scriptIp) return data;
-
-            // If the log is completely after the pattern, we just need to offset the ip by the length diff
-            if (data.ip >= scriptIp + patternLength) {
-              const newCalculatedDataIp = data.ip - lengthDiff;
-              return { ...data, ip: newCalculatedDataIp };
-            }
-
-            const addedTransformationsCount = data.ip - scriptIp;
-            const addedTransformations = patternTokens.slice(0, addedTransformationsCount).join(' ');
-            const newTransformations = data.transformations ? `${addedTransformations} ${data.transformations}` : addedTransformations;
-
-            return {
-              ...data,
-              ip: scriptIp,
-              transformations: newTransformations,
-            };
-          }),
-        };
-      });
-
-      // Source tags use raw script indices (no constructor offset), so they adjust against scriptIndex
-      newSourceTags = newSourceTags.map((tag) => ({
-        ...tag,
-        startIndex: adjustPosition(tag.startIndex, scriptIndex),
-        endIndex: adjustPosition(tag.endIndex, scriptIndex),
-      }));
-
-      // Inline ranges use ip coordinates (like requires), so both bounds adjust against scriptIp
-      newInlineRanges = newInlineRanges.map((inlineRange) => ({
-        ...inlineRange,
-        startIp: adjustPosition(inlineRange.startIp, scriptIp),
-        endIp: adjustPosition(inlineRange.endIp, scriptIp),
-      }));
-
-    }
-
-    asm = asm.replace(regex, replacement).replace(/\s+/g, ' ').trim();
+    findMatches(state.tokens, optimisation).reverse().forEach((match) => replaceMatch(state, match));
   });
+
+  const asm = state.tokens.join(' ');
 
   return {
     script: asmToScript(asm),
     changed: asm !== originalAsm,
-    locationData: newLocationData,
-    logs: newLogs,
-    requires: newRequires,
-    sourceTags: newSourceTags,
-    inlineRanges: newInlineRanges,
+    locationData: state.locationData,
+    logs: state.logs,
+    requires: state.requires,
+    sourceTags: state.sourceTags,
+    inlineRanges: state.inlineRanges,
   };
 }
+
+// The script (as ASM tokens) and metadata that replaceOps updates with every replaced match
+interface ReplaceOpsState extends Omit<OptimiseBytecodeResult, 'script'> {
+  tokens: string[];
+  constructorParamLength: number;
+}
+
+interface IndexedOptimisationMatch {
+  index: number;
+  parts: OptimisationMatch;
+}
+
+// Scan left to right, and continue after each match so that the matches of one optimisation never overlap
+function findMatches(tokens: string[], optimisation: OptimisationMatcher): IndexedOptimisationMatch[] {
+  const matches = [];
+
+  for (let index = 0; index < tokens.length;) {
+    const parts = optimisation(tokens, index);
+
+    if (parts) {
+      matches.push({ index, parts });
+      index += sumLengths(parts.map((part) => part.length));
+    } else {
+      index += 1;
+    }
+  }
+
+  return matches;
+}
+
+function replaceMatch(state: ReplaceOpsState, { index, parts }: IndexedOptimisationMatch): void {
+  const patternLength = sumLengths(parts.map((part) => part.length));
+  const replacementLength = sumLengths(parts.map((part) => part.replacement.length));
+  const patternTokens = state.tokens.slice(index, index + patternLength);
+
+  // The IP of an opcode in the script is its index within the script + the constructor parameters, because
+  // the constructor parameters still have to get added to the front of the script when a new Contract is created.
+  const scriptIp = index + state.constructorParamLength;
+
+  // Log data reads the stack, which every part of the match can rearrange, so it adjusts against the whole match
+  state.logs = state.logs.map((log) => ({
+    ...log,
+    data: log.data.map((data) => {
+      if (typeof data === 'string') return data;
+
+      // If the log is completely before the pattern, we don't need to change anything
+      if (data.ip <= scriptIp) return data;
+
+      // If the log is completely after the pattern, we just need to offset the ip by the length diff
+      if (data.ip >= scriptIp + patternLength) {
+        const newCalculatedDataIp = data.ip - (patternLength - replacementLength);
+        return { ...data, ip: newCalculatedDataIp };
+      }
+
+      const addedTransformationsCount = data.ip - scriptIp;
+      const addedTransformations = patternTokens.slice(0, addedTransformationsCount).join(' ');
+      const newTransformations = data.transformations ? `${addedTransformations} ${data.transformations}` : addedTransformations;
+
+      return {
+        ...data,
+        ip: scriptIp,
+        transformations: newTransformations,
+      };
+    }),
+  }));
+
+  // Replace the parts right to left as well, so that each part only shifts the positions of the parts after it
+  let partIndex = index + patternLength;
+  [...parts].reverse().forEach((part) => {
+    partIndex -= part.length;
+    replacePart(state, partIndex, part);
+  });
+}
+
+function replacePart(
+  state: ReplaceOpsState,
+  scriptIndex: number,
+  { length: patternLength, replacement }: OptimisationPart,
+): void {
+  const replacementLength = replacement.length;
+  const lengthDiff = patternLength - replacementLength;
+
+  state.tokens.splice(scriptIndex, patternLength, ...replacement);
+
+  // We get the locationData entries for every opcode in the pattern
+  const patternLocations = state.locationData.slice(scriptIndex, scriptIndex + patternLength);
+
+  // We get the lowest start location and highest end location of the pattern
+  const lowestStart = getLowestStartLocation(patternLocations);
+  const highestEnd = getHighestEndLocation(patternLocations);
+
+  // Initially we set the position hint to END if any of the pattern locations have a position hint of END
+  // It turned out that this was not the correct approach in the case of OP_NOT OP_IF => OP_NOTIF,
+  // because OP_IF and OP_NOTIF are START opcodes, and OP_NOT is an END opcode.
+  // After reviewing the entire list of optimisations, we set the position hint to the last location's position hint
+  // which we believe to be the correct approach, but it is hard to reason about.
+  // We've also consulted with AI (o3-max) to help us reason about this, and it seems to be the correct approach.
+  const positionHint = patternLocations.at(-1)?.positionHint ?? PositionHint.START;
+
+  // We merge the lowest start and highest end locations into a single location data entry
+  const mergedLocation = {
+    location: {
+      start: lowestStart.location.start,
+      end: highestEnd.location.end,
+    },
+    positionHint,
+  };
+
+  // We replace the pattern locations with the merged location
+  // (note that every opcode in the part's replacement has the same location)
+  const replacementLocations = new Array<SingleLocationData>(replacementLength).fill(mergedLocation);
+  state.locationData.splice(scriptIndex, patternLength, ...replacementLocations);
+
+  const scriptIp = scriptIndex + state.constructorParamLength;
+
+  // Positions after the replaced pattern shift back by the length difference; positions inside
+  // the replaced pattern clamp to the pattern's start.
+  const adjustPosition = (position: number, patternStart: number): number => (
+    position >= patternStart ? Math.max(patternStart, position - lengthDiff) : position
+  );
+
+  // The (inclusive) end of a range inside a pattern that is removed entirely moves to the opcode before the pattern
+  const adjustEndPosition = (position: number, patternStart: number): number => (
+    replacementLength === 0 ? adjustPosition(position + 1, patternStart) - 1 : adjustPosition(position, patternStart)
+  );
+
+  state.requires = state.requires.map((require) => ({
+    ...require,
+    ip: adjustPosition(require.ip, scriptIp),
+  }));
+
+  state.logs = state.logs.map((log) => ({
+    ...log,
+    ip: adjustPosition(log.ip, scriptIp),
+  }));
+
+  // Source tags use raw script indices (no constructor offset), so they adjust against scriptIndex
+  state.sourceTags = state.sourceTags.map((tag) => ({
+    ...tag,
+    startIndex: adjustPosition(tag.startIndex, scriptIndex),
+    endIndex: adjustEndPosition(tag.endIndex, scriptIndex),
+  }));
+
+  // Inline ranges use ip coordinates (like requires), so both bounds adjust against scriptIp
+  state.inlineRanges = state.inlineRanges.map((inlineRange) => ({
+    ...inlineRange,
+    startIp: adjustPosition(inlineRange.startIp, scriptIp),
+    endIp: adjustEndPosition(inlineRange.endIp, scriptIp),
+  }));
+}
+
+const sumLengths = (lengths: number[]): number => lengths.reduce((total, length) => total + length, 0);
 
 const getHighestEndLocation = (locations: SingleLocationData[]): SingleLocationData => {
   return locations.reduce((highest, current) => {

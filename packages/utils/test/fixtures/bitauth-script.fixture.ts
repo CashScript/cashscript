@@ -232,7 +232,7 @@ contract ForWhileNested() {
 }
 `.replace(/^\n+/, '').replace(/\n+$/, ''),
     asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_3DUP OP_DROP OP_ADD OP_OVER OP_ADD OP_2SWAP OP_NIP OP_ROT OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_SWAP OP_1ADD OP_NIP OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_4 OP_NUMEQUAL',
-    sourceMap: '3:18:3:19;5:21:5:22;:8:13:9;:24:5:25;:28::29;:24:::1;;;:42:13:9:0;6:20:6:21;8:12:12:13;:19:8:20;:23::24;:19:::1;;;:26:12:13:0;9:22:9:29;;::::1;:32::33:0;:22:::1;:16::34;;;10::10:26;8:26:12:13;;:12;;5:31:5:40;;::13:9;:42;;:8;;;15:23:15:24:0;:8::26:1',
+    sourceMap: '3:18:3:19;5:21:5:22;:8:13:9;:24:5:25;:28::29;:24:::1;;;:42:13:9:0;6:20:6:21;8:12:12:13;:19:8:20;:23::24;:19:::1;;;:26:12:13:0;9:22:9:29;;::::1;:32::33:0;:22:::1;:16::34;;;10:20:10:25;8:26:12:13;;:12;;5:35:5:36:0;:::40:1;:31:13:9;:42;;:8;;;15:23:15:24:0;:8::26:1',
     sourceTags: '26:29:lc;30:32:fu;33:36:lc;37:37:sc',
     expectedBitAuthScript: `
                                                                  /* contract ForWhileNested() {                                 */
@@ -248,7 +248,7 @@ OP_1ADD                                                          /*             
                                                                  /*                 console.log("sum:", sum, "i:", i, "j:", j); */
 OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                         /*                 >>> loop condition check                    */
                                                                  /*             }                                               */
-OP_SWAP OP_1ADD OP_NIP                                           /*             >>> for-loop update (i = i + 1)                 */
+OP_SWAP OP_1ADD OP_NIP                                           /*             >>> for-loop update (i + 1)                     */
 OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                         /*             >>> loop condition check                        */
 OP_DROP                                                          /*             >>> scope cleanup                               */
                                                                  /*         }                                                   */
@@ -280,7 +280,7 @@ OP_4 OP_NUMEQUAL                                                 /*         requ
     }
 }`,
     asmBytecode: 'OP_0 OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF OP_3DUP OP_DROP OP_ADD OP_OVER OP_ADD OP_2SWAP OP_NIP OP_ROT OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_1ADD OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL OP_DROP OP_0 OP_BEGIN OP_1ADD OP_DUP OP_3 OP_GREATERTHANOREQUAL OP_UNTIL OP_ADD OP_12 OP_NUMEQUAL',
-    sourceMap: '3:20:3:21;5:21:5:22;:8:10:9;:24:5:25;:28::29;:24:::1;;;6:19:10:9:0;7:25:7:26;:12:9:13;:28:7:29;:32::33;:28:::1;;;:46:9:13:0;8:24:8:33;;::::1;:36::37:0;:24:::1;:16::38;;;7:35:7:44;:46:9:13;;:12;;;5:31:6:17;6:19:10:9;;5:8;;;12:20:12:21:0;13:8:15:28;14:12:14:30:1;15:17:15:22:0;:25::26;13:8::28:1;;17:16:17:29;:33::35:0;:8::37:1',
+    sourceMap: '3:20:3:21;5:21:5:22;:8:10:9;:24:5:25;:28::29;:24:::1;;;6:19:10:9:0;7:25:7:26;:12:9:13;:28:7:29;:32::33;:28:::1;;;:46:9:13:0;8:24:8:33;;::::1;:36::37:0;:24:::1;:16::38;;;7:39:7:44;:46:9:13;;:12;;;6::6:17;:19:10:9;;5:8;;;12:20:12:21:0;13:8:15:28;14:20:14:29:1;15:17:15:22:0;:25::26;13:8::28:1;;17:16:17:29;:33::35:0;:8::37:1',
     sourceTags: '25:25:fu;26:29:lc;30:30:sc;31:31:fu;32:35:lc;36:36:sc',
     expectedBitAuthScript: `
                                                                  /* contract NestedForWithDoWhile() {               */
@@ -291,11 +291,11 @@ OP_0 OP_BEGIN OP_DUP OP_3 OP_LESSTHAN OP_DUP OP_TOALTSTACK       /*         for 
 OP_IF                                                            /*             i + 1) {                            */
 OP_0 OP_BEGIN OP_DUP OP_2 OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF /*             for (int j = 0; j < 2; j = j + 1) { */
 OP_3DUP OP_DROP OP_ADD OP_OVER OP_ADD OP_2SWAP OP_NIP OP_ROT     /*                 total = total + i + j;          */
-OP_1ADD                                                          /*                 >>> for-loop update (j = j + 1) */
+OP_1ADD                                                          /*                 >>> for-loop update (j + 1)     */
 OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                         /*                 >>> loop condition check        */
 OP_DROP                                                          /*                 >>> scope cleanup               */
                                                                  /*             }                                   */
-OP_1ADD                                                          /*             >>> for-loop update ()              */
+OP_1ADD                                                          /*             >>> for-loop update (i + 1)         */
 OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                         /*             >>> loop condition check            */
 OP_DROP                                                          /*             >>> scope cleanup                   */
                                                                  /*         }                                       */
@@ -497,7 +497,7 @@ contract LocalFunctions() {
   OP_0                                                                                 /*     int sum = 0;                                 */
   OP_0 OP_BEGIN OP_DUP OP_3 OP_PICK OP_LESSTHAN OP_DUP OP_TOALTSTACK OP_IF             /*     for (int i = 0; i < n; i = i + 1) {          */
   OP_2DUP OP_ADD OP_ROT OP_DROP OP_SWAP                                                /*         sum = sum + i;                           */
-  OP_1ADD                                                                              /*         >>> for-loop update (i = i + 1)          */
+  OP_1ADD                                                                              /*         >>> for-loop update (i + 1)              */
   OP_ENDIF OP_FROMALTSTACK OP_NOT OP_UNTIL                                             /*         >>> loop condition check                 */
   OP_DROP                                                                              /*         >>> scope cleanup                        */
                                                                                        /*     }                                            */
