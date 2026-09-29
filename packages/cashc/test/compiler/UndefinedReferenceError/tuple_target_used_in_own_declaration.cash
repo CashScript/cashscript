@@ -1,0 +1,7 @@
+contract Test() {
+    function spend(bytes x) {
+        // `a` is declared by this statement, so it cannot be used on its right-hand side
+        bytes a, bytes b = a.split(1);
+        require(a + b == x);
+    }
+}

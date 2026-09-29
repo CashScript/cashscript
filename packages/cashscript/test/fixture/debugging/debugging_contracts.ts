@@ -468,6 +468,14 @@ contract Test(pubkey owner) {
       require(tx.outputs[this.activeInputIndex].value == inputValue - 1000);
     }
   }
+
+  function test_log_reassigned_after_final_use(int a) {
+    int v = a;
+    v = v + 1;
+    require(v == 2);
+    console.log('v:', v);
+    require(a == 1);
+  }
 }
 `;
 
