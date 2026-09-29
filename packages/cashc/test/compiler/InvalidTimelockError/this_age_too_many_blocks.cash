@@ -1,0 +1,5 @@
+contract Test() {
+    function spend() {
+        require(this.age >= 65536);
+    }
+}

@@ -1,0 +1,7 @@
+int constant CHUNKS = 4194304 + (1 days + 511) / 512;
+
+contract Test() {
+    function spend() {
+        require(this.age >= CHUNKS);
+    }
+}

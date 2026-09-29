@@ -1,0 +1,7 @@
+int constant TIMEOUT = 52 weeks + 30 days;
+
+contract Test() {
+    function spend() {
+        require(this.age >= TIMEOUT);
+    }
+}

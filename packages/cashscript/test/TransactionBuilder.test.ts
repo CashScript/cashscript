@@ -14,7 +14,7 @@ import {
   carolTokenAddress,
   alicePriv,
 } from './fixture/vars.js';
-import { Network, SpendableUtxo, Utxo } from '../src/interfaces.js';
+import { InputOptions, Network, SpendableUtxo, Utxo } from '../src/interfaces.js';
 import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo, isFungibleTokenUtxo } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
@@ -368,6 +368,34 @@ describe('Transaction Builder', () => {
     expect(() => transaction.setLocktime(2 ** 32)).toThrow('should be an integer between 0 and 4294967295');
     expect(() => transaction.setLocktime(1.5)).toThrow('should be an integer between 0 and 4294967295');
     expect(transaction.setLocktime(2 ** 32 - 1).locktime).toBe(2 ** 32 - 1);
+  });
+
+  it('should encode relative timelocks and reject sequence numbers with bits that BIP68 ignores', () => {
+    const mockProvider = new MockNetworkProvider();
+    const contract = new Contract(p2pkhArtifact, [carolPkh], { provider: mockProvider });
+    const unlocker = contract.unlock.spend(carolPub, new SignatureTemplate(carolPriv));
+    const getSequenceNumber = (sequence: InputOptions['sequence']): number => {
+      const utxo = mockProvider.addUtxo(contract.address, randomUtxo());
+      const transaction = new TransactionBuilder({ provider: mockProvider }).addInput(utxo, unlocker, { sequence });
+      return decodeTransactionUnsafe(hexToBin(transaction.addOutput({ to: carolAddress, amount: 1_000n }).build()))
+        .inputs[0].sequenceNumber;
+    };
+
+    expect(getSequenceNumber(undefined)).toBe(0xfffffffe);
+    expect(getSequenceNumber({ blocks: 144 })).toBe(144);
+    expect(getSequenceNumber({ seconds: 86400 })).toBe(0x4000a9);
+    expect(getSequenceNumber(0x4000a9)).toBe(0x4000a9);
+    expect(getSequenceNumber(0xffffffff)).toBe(0xffffffff);
+
+    expect(() => getSequenceNumber(70000)).toThrow('Sequence number 70000 is not a valid BIP68 relative timelock');
+    expect(() => getSequenceNumber(-1)).toThrow('Sequence number -1 is not a valid BIP68 relative timelock');
+    expect(() => getSequenceNumber({ blocks: 70000 })).toThrow('Expected blocks to be an integer between 0 and 65535');
+
+    // Plain JavaScript can pass an object without a timelock, which must not silently become a final sequence number
+    const relativeTimelockError = 'A relative timelock needs exactly one of blocks or seconds';
+    expect(() => getSequenceNumber({} as InputOptions['sequence'])).toThrow(relativeTimelockError);
+    expect(() => getSequenceNumber({ blocks: undefined } as unknown as InputOptions['sequence'])).toThrow(relativeTimelockError);
+    expect(() => getSequenceNumber({ blocks: 1, seconds: 512 } as InputOptions['sequence'])).toThrow(relativeTimelockError);
   });
 
   it('should not report a failed transaction when the transaction cannot be retrieved after broadcasting', async () => {

@@ -1,0 +1,13 @@
+contract RelativeTimelock(int period) {
+    function afterBlocks() {
+        require(this.age >= 10);
+    }
+
+    function afterDuration() {
+        require(this.age >= 1 days);
+    }
+
+    function afterPeriod() {
+        require(this.age >= period);
+    }
+}

@@ -1,0 +1,7 @@
+int constant AREA = 1 days * 1 days;
+
+contract Test() {
+    function spend() {
+        require(this.age >= AREA);
+    }
+}

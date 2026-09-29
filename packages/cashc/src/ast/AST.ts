@@ -486,9 +486,18 @@ export class BoolLiteralNode extends LiteralNode<boolean> {
   }
 }
 
+// Whether an int literal is a number of seconds: written with a time unit (e.g. `30 days`), or folded from one
+export enum TimeUnit {
+  NONE = 'none',
+  SECONDS = 'seconds',
+  // Folded from a time unit in a way that leaves no clear unit (e.g. `1 days + 511`), so it cannot be used as a timelock
+  AMBIGUOUS = 'ambiguous',
+}
+
 export class IntLiteralNode extends LiteralNode<bigint> {
   constructor(
     public value: bigint,
+    public timeUnit: TimeUnit = TimeUnit.NONE,
   ) {
     super();
     this.type = PrimitiveType.INT;

@@ -25,6 +25,8 @@ import {
   Script,
   scriptToBytecode,
   encodeNullDataScript,
+  encodeBip68,
+  isBip68RelativeTimelock,
 } from '@cashscript/utils';
 import {
   Utxo,
@@ -42,6 +44,8 @@ import {
   isContractUnlocker,
   isP2PKHUnlocker,
   isPlaceholderUnlocker,
+  RelativeTimelock,
+  InputOptions,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
@@ -71,6 +75,30 @@ export function validateInput(utxo: Utxo, changeLocks: Record<string, boolean>):
   }
 
   validateChangeLocks(changeLocks, utxo.token?.category);
+}
+
+export function validateInputOptions(options?: InputOptions): void {
+  if (options?.sequence !== undefined) toSequenceNumber(options.sequence);
+}
+
+// A sequence number without the disable flag enables a BIP68 relative timelock, so it may not set any of the bits that
+// BIP68 ignores, since that would enforce a different timelock than intended
+export function toSequenceNumber(sequence: number | RelativeTimelock): number {
+  if (typeof sequence === 'object') {
+    // encodeBip68 returns a final sequence number when neither field is set, which would silently disable the timelock
+    const { blocks, seconds } = (sequence ?? {}) as { blocks?: unknown; seconds?: unknown };
+    if ((blocks === undefined) === (seconds === undefined)) {
+      throw new Error('A relative timelock needs exactly one of blocks or seconds');
+    }
+    return encodeBip68(sequence);
+  }
+
+  const hasDisableFlag = Number.isInteger(sequence) && sequence >= 0x80000000 && sequence <= 0xffffffff;
+  if (!hasDisableFlag && !isBip68RelativeTimelock(sequence)) {
+    throw new Error(`Sequence number ${sequence} is not a valid BIP68 relative timelock, use { blocks } or { seconds } instead`);
+  }
+
+  return sequence;
 }
 
 // A UTXO/unlocker mismatch would be rejected by the network, so we catch it locally with a descriptive error

@@ -66,12 +66,13 @@ import {
   ExpressionNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
-import { GlobalFunction, Class } from '../ast/Globals.js';
+import { GlobalFunction, Class, TimeOp } from '../ast/Globals.js';
 import { BinaryOperator } from '../ast/Operator.js';
 import {
   compileBinaryOp,
   compileCast,
   compileNullaryOp,
+  compileRelativeTimelockCheck,
   compileTimeOp,
   compileUnaryOp,
 } from './utils.js';
@@ -606,6 +607,12 @@ export default class GenerateTargetTraversal extends AstTraversal {
   visitTimeOp(node: TimeOpNode): Node {
     const tagStartIndex = this.output.length;
     node.expression = this.visit(node.expression);
+
+    // this.age values that are not known at compile time are validated at runtime (see ResolveTimelocksTraversal)
+    if (node.timeOp === TimeOp.CHECK_SEQUENCE && !(node.expression instanceof IntLiteralNode)) {
+      this.emitRelativeTimelockCheck(node);
+    }
+
     this.emit(compileTimeOp(node.timeOp), { location: node.location, positionHint: PositionHint.END });
 
     this.requires.push({
@@ -628,6 +635,16 @@ export default class GenerateTargetTraversal extends AstTraversal {
 
     this.popFromStack();
     return node;
+  }
+
+  private emitRelativeTimelockCheck(node: TimeOpNode): void {
+    this.emit(compileRelativeTimelockCheck(), { location: node.location, positionHint: PositionHint.END });
+
+    this.requires.push({
+      ip: this.getMostRecentInstructionPointer(),
+      line: node.location.start.line,
+      message: 'this.age value must be a number of blocks between 0 and 65535 (or a BIP68-encoded relative timelock)',
+    });
   }
 
   visitRequire(node: RequireNode): Node {

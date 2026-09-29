@@ -35,8 +35,14 @@ export function isStandardUnlockableUtxo(utxo: UnlockableUtxo): utxo is Standard
 }
 
 export interface InputOptions {
-  sequence?: number;
+  /**
+   * The input's sequence number, or a relative timelock (for `require(this.age >= ...)` checks) that is encoded as a
+   * BIP68 sequence number. Seconds are rounded up to a multiple of 512. Defaults to `0xfffffffe`.
+   */
+  sequence?: number | RelativeTimelock;
 }
+
+export type RelativeTimelock = { blocks: number } | { seconds: number };
 
 export interface GenerateUnlockingBytecodeOptions {
   transaction: Transaction;

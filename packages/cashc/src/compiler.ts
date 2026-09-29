@@ -34,6 +34,7 @@ import TypeCheckTraversal from './semantic/TypeCheckTraversal.js';
 import EnsureFinalRequireTraversal from './semantic/EnsureFinalRequireTraversal.js';
 import EnsureFunctionsSafeTraversal from './semantic/EnsureFunctionsSafeTraversal.js';
 import InjectLocktimeGuardTraversal from './semantic/InjectLocktimeGuardTraversal.js';
+import ResolveTimelocksTraversal from './semantic/ResolveTimelocksTraversal.js';
 import DeadCodeEliminationTraversal from './semantic/DeadCodeEliminationTraversal.js';
 import { LowerGlobalConstantsTraversal } from './semantic/LowerGlobalConstantsTraversal.js';
 
@@ -127,6 +128,7 @@ function compileCode(
   ast = ast.accept(new UnusedCodeWarningsTraversal(warningListener ?? defaultWarningListener)) as Ast;
 
   ast = ast.accept(new TypeCheckTraversal()) as Ast;
+  ast = ast.accept(new ResolveTimelocksTraversal()) as Ast;
   ast = ast.accept(new EnsureFunctionsSafeTraversal()) as Ast;
   ast = ast.accept(new EnsureFinalRequireTraversal()) as Ast;
   if (mergedCompilerOptions.enforceLocktimeGuard) {

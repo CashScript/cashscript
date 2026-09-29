@@ -4,7 +4,6 @@ import {
   ContractNode,
   FunctionCallNode,
   FunctionDefinitionNode,
-  IntLiteralNode,
   Node,
   NullaryOpNode,
   SourceFileNode,
@@ -16,9 +15,9 @@ import { Location } from '../ast/Location.js';
 import { NullaryOperator } from '../ast/Operator.js';
 
 // Per BCH consensus, `tx.locktime` is only protocol-enforced if at least one input has a non-final
-// sequence number. A require(tx.time >= ...) check — or a require(this.age >= ...) with a compile-time
-// int literal below 2^31 — forces that non-finality. When a spending path uses `tx.locktime` without
-// such a check, we inject a synthetic require(tx.time >= tx.locktime) guard at the start of the function.
+// sequence number. A require(tx.time >= ...) or require(this.age >= ...) check forces that non-finality.
+// When a spending path uses `tx.locktime` without such a check, we inject a synthetic
+// require(tx.time >= tx.locktime) guard at the start of the function.
 export default class InjectLocktimeGuardTraversal extends AstTraversal {
   // Keep track of which global functions require a locktime guard when called.
   private globalFunctionRequiresLocktimeGuard = new Map<FunctionDefinitionNode, boolean>();
@@ -101,16 +100,10 @@ class LocktimeGuardRequirementAnalyser extends AstTraversal {
   }
 }
 
-// Note that `require(tx.time >= ...)` checks are always sufficient to enforce the non-finality of the spending input,
-// while `require(this.age >= ...)` checks are only sufficient when the operand is a compile-time int literal below 2^31.
+// Note that `require(this.age >= ...)` checks also enforce the non-finality of the spending input, since their value is
+// always a BIP68 relative timelock without the disable flag (see ResolveTimelocksTraversal).
 function isLocktimeCheck(statement: Node): boolean {
-  if (statement instanceof TimeOpNode) {
-    if (statement.timeOp === TimeOp.CHECK_LOCKTIME) return true;
-    if (statement.timeOp === TimeOp.CHECK_SEQUENCE) {
-      return statement.expression instanceof IntLiteralNode && statement.expression.value < 2_147_483_648;
-    }
-  }
-  return false;
+  return statement instanceof TimeOpNode;
 }
 
 function createLocktimeGuard(funcNode: FunctionDefinitionNode): TimeOpNode {

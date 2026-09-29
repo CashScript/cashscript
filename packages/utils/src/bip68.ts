@@ -11,7 +11,7 @@ const SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
 
 const BLOCKS_MAX = SEQUENCE_LOCKTIME_MASK;
 const SECONDS_MOD = 1 << SEQUENCE_LOCKTIME_GRANULARITY;
-const SECONDS_MAX = SEQUENCE_LOCKTIME_MASK << SEQUENCE_LOCKTIME_GRANULARITY;
+export const BIP68_SECONDS_MAX = SEQUENCE_LOCKTIME_MASK << SEQUENCE_LOCKTIME_GRANULARITY;
 
 interface DecodedSequence {
   blocks?: number;
@@ -38,23 +38,32 @@ export function decodeBip68(sequence: number): DecodedSequence {
 export function encodeBip68({ blocks, seconds }: DecodedSequence): number {
   if (blocks !== undefined && seconds !== undefined) throw new TypeError('Cannot encode blocks AND seconds');
 
-  // If the input is correct, we encode it as a sequence in seconds (using the SEQUENCE_LOCKTIME_TYPE_FLAG)
+  // If the input is correct, we encode it as a sequence in seconds (using the SEQUENCE_LOCKTIME_TYPE_FLAG).
+  // Seconds are rounded up to a multiple of 512, so the encoded timelock is never shorter than the requested one.
   if (seconds !== undefined) {
-    if (!Number.isFinite(seconds)) throw new TypeError('Expected Number seconds');
-    if (seconds > SECONDS_MAX) throw new TypeError('Expected Number seconds <= ' + SECONDS_MAX);
-    if (seconds % SECONDS_MOD !== 0) throw new TypeError('Expected Number seconds as a multiple of ' + SECONDS_MOD);
+    if (!Number.isInteger(seconds) || seconds < 0 || seconds > BIP68_SECONDS_MAX) {
+      throw new TypeError(`Expected seconds to be an integer between 0 and ${BIP68_SECONDS_MAX}, but got ${seconds}`);
+    }
 
-    return SEQUENCE_LOCKTIME_TYPE_FLAG | (seconds >> SEQUENCE_LOCKTIME_GRANULARITY);
+    return SEQUENCE_LOCKTIME_TYPE_FLAG | Math.ceil(seconds / SECONDS_MOD);
   }
 
   // If the input is correct, we return the blocks (no further encoding needed)
   if (blocks !== undefined) {
-    if (!Number.isFinite(blocks)) throw new TypeError('Expected Number blocks');
-    if (blocks > SEQUENCE_LOCKTIME_MASK) throw new TypeError('Expected Number blocks <= ' + BLOCKS_MAX);
+    if (!Number.isInteger(blocks) || blocks < 0 || blocks > BLOCKS_MAX) {
+      throw new TypeError(`Expected blocks to be an integer between 0 and ${BLOCKS_MAX}, but got ${blocks}`);
+    }
 
     return blocks;
   }
 
   // If neither blocks nor seconds are provided, we assume the sequence is final
   return SEQUENCE_FINAL;
+}
+
+// Whether the value is an encoded BIP68 relative timelock (a number of blocks, or a number of 512-second units with the
+// SEQUENCE_LOCKTIME_TYPE_FLAG), without the disable flag or any of the bits that BIP68 ignores
+export function isBip68RelativeTimelock(value: number): boolean {
+  const usedBits = SEQUENCE_LOCKTIME_TYPE_FLAG | SEQUENCE_LOCKTIME_MASK;
+  return Number.isInteger(value) && value >= 0 && value <= usedBits && (value & ~usedBits) === 0;
 }

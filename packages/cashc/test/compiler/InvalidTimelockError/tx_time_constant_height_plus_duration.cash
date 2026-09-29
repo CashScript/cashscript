@@ -1,0 +1,7 @@
+int constant DEADLINE = 800000 + 1 days;
+
+contract Test() {
+    function spend() {
+        require(tx.time >= DEADLINE);
+    }
+}

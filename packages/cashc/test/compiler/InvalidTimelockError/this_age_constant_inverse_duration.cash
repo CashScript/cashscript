@@ -1,0 +1,7 @@
+int constant RATE = 1 / 1 days;
+
+contract Test() {
+    function spend() {
+        require(this.age >= RATE);
+    }
+}

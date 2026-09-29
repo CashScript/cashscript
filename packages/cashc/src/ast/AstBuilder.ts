@@ -20,6 +20,7 @@ import {
   BinaryOpNode,
   BoolLiteralNode,
   IntLiteralNode,
+  TimeUnit,
   HexLiteralNode,
   StringLiteralNode,
   ExpressionNode,
@@ -94,6 +95,7 @@ import { Location } from './Location.js';
 import {
   Modifier,
   NumberUnit,
+  TIME_UNITS,
   TimeOp,
 } from './Globals.js';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma.js';
@@ -529,9 +531,10 @@ export default class AstBuilder
   createIntLiteral(ctx: LiteralContext): IntLiteralNode {
     const numberCtx = ctx.numberLiteral();
     const numberString = numberCtx.NumberLiteral().getText();
-    const numberUnit = numberCtx.NumberUnit()?.getText();
-    const numberValue = parseNumberString(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit.toUpperCase()] : 1);
-    const intLiteral = new IntLiteralNode(numberValue);
+    const numberUnit = numberCtx.NumberUnit()?.getText().toUpperCase();
+    const numberValue = parseNumberString(numberString) * BigInt(numberUnit ? NumberUnit[numberUnit] : 1);
+    const timeUnit = numberUnit !== undefined && TIME_UNITS.includes(numberUnit) ? TimeUnit.SECONDS : TimeUnit.NONE;
+    const intLiteral = new IntLiteralNode(numberValue, timeUnit);
     intLiteral.location = Location.fromCtx(ctx);
     return intLiteral;
   }

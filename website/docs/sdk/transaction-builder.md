@@ -59,6 +59,14 @@ transactionBuilder.addInput(utxo: SpendableUtxo, unlocker: Unlocker, options?: I
 
 Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input. The default sequence number is `0xfffffffe` (non-final sequence number).
 
+```ts
+interface InputOptions {
+  sequence?: number | { blocks: number } | { seconds: number };
+}
+```
+
+To satisfy a [`require(this.age >= ...)`](/docs/language/globals#thisage) check, pass the same number of `blocks` or `seconds` as the `sequence`, which is then encoded as a [BIP68](https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki) relative time lock (rounding seconds up to a multiple of 512, just like the compiler). A raw sequence number can also be passed, but a sequence number that enables a relative time lock may not set any of the bits that BIP68 ignores.
+
 :::note
 It is possible to create custom unlockers by implementing the `Unlocker` interface. Most use cases however are covered by the `SignatureTemplate` and `Contract` classes.
 :::
@@ -72,6 +80,9 @@ const aliceUtxos = await provider.getUtxos(aliceAddress);
 
 transactionBuilder.addInput(contractUtxos[0], contract.unlock.spend());
 transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
+
+// Add an input to a contract function that uses require(this.age >= 1 days)
+transactionBuilder.addInput(contractUtxos[1], contract.unlock.claim(), { sequence: { seconds: 86400 } });
 ```
 
 ### addInputs()

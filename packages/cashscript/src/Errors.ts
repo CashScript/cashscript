@@ -1,3 +1,4 @@
+import { AuthenticationErrorCommon } from '@bitauth/libauth';
 import { Artifact, RequireStatement, Type } from '@cashscript/utils';
 import {
   CallStackEntry,
@@ -197,7 +198,7 @@ export class FailedRequireError extends FailedTransactionError {
 
     const baseMessage = `${attributedFrame.sourceName}:${lineNumber} Require statement failed at input ${inputIndex} ${context}`;
     const baseMessageWithRequireMessage = `${baseMessage} with the following message: ${requireStatement.message}`;
-    const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.`;
+    const headline = `${requireStatement.message ? baseMessageWithRequireMessage : baseMessage}.${formatFailureReason(libauthErrorMessage)}`;
 
     // Compiler-injected guards (e.g. the tx.locktime guard) have no user-written source, so the
     // extracted statement is empty — the require message fully describes the failure on its own.
@@ -209,6 +210,18 @@ export class FailedRequireError extends FailedTransactionError {
     super(statementMessage + callStackMessage, bitauthUri);
   }
 }
+
+// A require statement usually fails because its condition is false, but it can also fail for another reason, such as a
+// tx.time or this.age check on a transaction without the right locktime or sequence number
+const formatFailureReason = (libauthErrorMessage?: string): string => {
+  if (!libauthErrorMessage || FALSE_CONDITION_ERRORS.some((error) => libauthErrorMessage.includes(error))) return '';
+  return `\nReason: ${libauthErrorMessage}`;
+};
+
+const FALSE_CONDITION_ERRORS: string[] = [
+  AuthenticationErrorCommon.failedVerify,
+  AuthenticationErrorCommon.nonNullSignatureFailure,
+];
 
 const formatFrameContext = (frame: ResolvedFrame, contractName: string, lineNumber: number): string => {
   if (frame.functionName) {

@@ -14,6 +14,8 @@ export const NumberUnit: { [index: string]: number } = {
   WEEKS: 604800,
 };
 
+export const TIME_UNITS = ['SECONDS', 'MINUTES', 'HOURS', 'DAYS', 'WEEKS'];
+
 export enum GlobalFunction {
   ABS = 'abs',
   MIN = 'min',

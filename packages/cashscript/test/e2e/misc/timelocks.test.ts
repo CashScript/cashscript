@@ -1,4 +1,12 @@
-import { Contract, SignatureTemplate, ElectrumNetworkProvider, MockNetworkProvider } from '../../../src/index.js';
+import {
+  Contract,
+  SignatureTemplate,
+  ElectrumNetworkProvider,
+  MockNetworkProvider,
+  FailedRequireError,
+  InputOptions,
+  Unlocker,
+} from '../../../src/index.js';
 import {
   bobAddress,
   bobPub,
@@ -11,6 +19,7 @@ import { Network } from '../../../src/interfaces.js';
 import { utxoComparator, calculateDust, randomUtxo, isNonTokenUtxo } from '../../../src/utils.js';
 import p2pkhArtifact from '../../fixture/p2pkh.artifact.js';
 import twtArtifact from '../../fixture/transfer_with_timeout.artifact.js';
+import relativeTimelockArtifact from '../../fixture/relative_timelock.artifact.js';
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
 import { addUtxo, getTxOutputs } from '../../test-util.js';
 
@@ -85,7 +94,61 @@ describe('Timelocks', () => {
     });
   });
 
-  // bip68 relative timelock
-  it.todo('test sequence numbers');
-  // Get utxo age on chipnet with provider.performRequest('blockchain.utxo.get_info', utxo.txid, utxo.vout);
+  // Note: the mock network does not check the age of the spent UTXO (BIP68), only the contract's this.age checks
+  describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('Sequence numbers', () => {
+    const mockProvider = new MockNetworkProvider();
+    const timelockInstance = new Contract(relativeTimelockArtifact, [10n], { provider: mockProvider });
+    const invalidPeriodInstance = new Contract(relativeTimelockArtifact, [70000n], { provider: mockProvider });
+
+    const spend = (instance: Contract, unlocker: Unlocker, sequence?: InputOptions['sequence']): Promise<unknown> => {
+      const utxo = mockProvider.addUtxo(instance.address, randomUtxo());
+      return new TransactionBuilder({ provider: mockProvider })
+        .addInput(utxo, unlocker, { sequence })
+        .addOutput({ to: instance.address, amount: utxo.satoshis - 1000n })
+        .send();
+    };
+
+    it('should succeed when the sequence number satisfies this.age in blocks', async () => {
+      await expect(spend(timelockInstance, timelockInstance.unlock.afterBlocks(), { blocks: 10 })).resolves.toBeDefined();
+    });
+
+    it('should fail when the sequence number does not satisfy this.age in blocks', async () => {
+      const txPromise = spend(timelockInstance, timelockInstance.unlock.afterBlocks(), { blocks: 9 });
+
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('Reason: Program called an OP_CHECKSEQUENCEVERIFY operation that requires a sequence number greater than the input\'s sequence number.');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(this.age >= 10)');
+    });
+
+    it('should fail when the input does not enable a relative timelock', async () => {
+      const txPromise = spend(timelockInstance, timelockInstance.unlock.afterBlocks());
+
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('Reason: Program called an OP_CHECKSEQUENCEVERIFY operation requiring the disable flag, but the input\'s sequence number is missing the disable flag.');
+    });
+
+    it('should succeed when the sequence number satisfies this.age in seconds', async () => {
+      const txPromise = spend(timelockInstance, timelockInstance.unlock.afterDuration(), { seconds: 86400 });
+      await expect(txPromise).resolves.toBeDefined();
+    });
+
+    it('should fail when this.age in seconds is spent with a sequence number in blocks', async () => {
+      const txPromise = spend(timelockInstance, timelockInstance.unlock.afterDuration(), { blocks: 169 });
+
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('Reason: Program called an OP_CHECKSEQUENCEVERIFY operation with an incompatible sequence type flag.');
+    });
+
+    it('should succeed when a runtime this.age value is a valid relative timelock', async () => {
+      await expect(spend(timelockInstance, timelockInstance.unlock.afterPeriod(), { blocks: 10 })).resolves.toBeDefined();
+    });
+
+    it('should fail when a runtime this.age value is not a valid relative timelock', async () => {
+      const txPromise = spend(invalidPeriodInstance, invalidPeriodInstance.unlock.afterPeriod(), { blocks: 65535 });
+
+      await expect(txPromise).rejects.toThrow(FailedRequireError);
+      await expect(txPromise).rejects.toThrow('with the following message: this.age value must be a number of blocks between 0 and 65535 (or a BIP68-encoded relative timelock).');
+      await expect(txPromise).rejects.toThrow('Failing statement: require(this.age >= period)');
+    });
+  });
 });

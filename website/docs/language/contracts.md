@@ -181,7 +181,7 @@ bytes32 constant EMPTY_HASH = 0x000000000000000000000000000000000000000000000000
 contract Example() {
     function spend(int attempts) {
         require(attempts < MAX_ATTEMPTS);
-        require(tx.time >= EXTENDED_TIMEOUT);
+        require(this.age >= EXTENDED_TIMEOUT);
     }
 }
 ```
