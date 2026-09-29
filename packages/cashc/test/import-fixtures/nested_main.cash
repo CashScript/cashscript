@@ -1,0 +1,7 @@
+import "./nested/helper.cash";
+
+contract Nested() {
+    function spend(int x) {
+        require(nestedHelper(x) == 8);
+    }
+}

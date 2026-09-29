@@ -19,6 +19,29 @@ export interface DebugInformation {
   logs: readonly LogEntry[]; // log entries generated from `console.log` statements
   requires: readonly RequireStatement[]; // messages for failing `require` statements
   sourceTags?: string; // semantic tags for opcodes (e.g. loop update/condition ranges)
+  functions?: readonly DebugFrame[]; // Debug metadata for each global definition (defined frames first, then inlined ones)
+  sources?: { readonly [logicalPath: string]: string }; // every imported file's source code (compileString's `files`)
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted (see `generateInlineRanges`)
+}
+
+export interface DebugFrame {
+  id?: number; // the function's id, as used with OP_DEFINE and OP_INVOKE in the bytecode; absent for inlined callables
+  name: string; // the function/constant's name
+  kind?: 'constant'; // present when the VM function is the lowered form of a global constant; absent for regular functions
+  inputs: readonly AbiInput[]; // the function's parameters (name and type), mirroring the ABI; for reference
+  bytecode: string; // hex of the function body bytecode (exactly what OP_DEFINE stores and the VM runs)
+  sourceMap: string; // frame-local source map (ips starting from 0)
+  sourceTags?: string; // frame-local semantic tags for opcodes (e.g. loop update/condition ranges)
+  sourceFile?: string; // key of the defining file in `debug.sources`; absent means the function lives in the contract's file
+  logs: readonly LogEntry[]; // frame-local log entries
+  requires: readonly RequireStatement[]; // frame-local require statements
+  inlineRanges?: string; // runs where inlined callables' bodies were emitted within this body (frame-local ips)
+}
+
+export interface InlineRange {
+  startIp: number; // first ip of the emitted body (inclusive)
+  endIp: number; // last ip of the emitted body (inclusive)
+  frame: DebugFrame; // the inlined callable's debug frame
 }
 
 export interface LogEntry {
@@ -47,6 +70,9 @@ export interface RequireStatement {
   line: number; // line in the source code
   message?: string; // custom message for failing `require` statement
 }
+
+// Any debug entry that lives at an instruction pointer and attributes to a source line
+export type DebugEntry = RequireStatement | LogEntry;
 
 export interface Artifact {
   contractName: string;
@@ -139,7 +165,11 @@ function formatObject(
 
   if (entries.length === 0) return '{}';
 
-  const formatKey = (key: string): string => (format === 'json' ? JSON.stringify(key) : key);
+  // TS keys stay bare when they are identifiers, others (e.g. the file names in `debug.sources`) are quoted
+  const formatKey = (key: string): string => {
+    if (format === 'json') return JSON.stringify(key);
+    return /^[A-Za-z_$][\w$]*$/.test(key) ? key : formatString(key, format);
+  };
   const formatted = entries.map(
     ([key, value]) => `${formatKey(key)}: ${stringify(value, format, indentationLevel + 1)}`,
   );

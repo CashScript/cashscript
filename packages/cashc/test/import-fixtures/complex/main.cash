@@ -1,0 +1,9 @@
+import "./lib/a.cash";
+import "./lib/b.cash";
+import "../shared.cash";
+
+contract Complex() {
+    function spend(int x) {
+        require(alpha(x) + beta(x) + shared(x) == 42);
+    }
+}

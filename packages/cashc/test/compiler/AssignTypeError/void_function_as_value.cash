@@ -1,0 +1,10 @@
+function check(int a) {
+    require(a > 0);
+}
+
+contract Test() {
+    function spend(int x) {
+        int y = check(x);
+        require(y == 0);
+    }
+}

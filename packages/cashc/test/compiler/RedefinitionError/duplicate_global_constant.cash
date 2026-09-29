@@ -1,0 +1,8 @@
+int constant VALUE = 1;
+int constant VALUE = 2;
+
+contract DuplicateGlobalConstant() {
+    function spend() {
+        require(VALUE == 1);
+    }
+}

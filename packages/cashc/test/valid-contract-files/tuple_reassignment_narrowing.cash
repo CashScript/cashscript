@@ -1,0 +1,9 @@
+contract TupleReassignmentNarrowing() {
+    function spend(bytes data, bytes other) {
+        require(data.length == 20);
+        // Reassigning a narrowed variable keeps its narrowed type, so the new value must have the same bound
+        data, bytes rest = other.split(20);
+        bytes20 narrowed = data;
+        require(narrowed == data && rest.length > 0);
+    }
+}

@@ -1,0 +1,13 @@
+function addOne(int a) returns (int) {
+    return a + 1;
+}
+
+function doubleIncremented(int a) returns (int) {
+    return addOne(a) * 2;
+}
+
+contract GlobalFunctionNested() {
+    function spend(int x) {
+        require(doubleIncremented(x) == 8);
+    }
+}

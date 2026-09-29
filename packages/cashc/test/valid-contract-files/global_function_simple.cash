@@ -1,0 +1,9 @@
+function double(int a) returns (int) {
+    return a * 2;
+}
+
+contract GlobalFunctionSimple() {
+    function spend(int x) {
+        require(double(x) == 6);
+    }
+}

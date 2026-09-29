@@ -1,0 +1,11 @@
+function helper(int a) returns (int) {
+    return a + 1;
+}
+
+import "./other.cash";
+
+contract Test() {
+    function spend(int x) {
+        require(helper(x) == 2);
+    }
+}

@@ -1,0 +1,7 @@
+function addOne(int a) returns (int) {
+    return a + 1;
+}
+
+function double(int a) returns (int) {
+    return a * 2;
+}

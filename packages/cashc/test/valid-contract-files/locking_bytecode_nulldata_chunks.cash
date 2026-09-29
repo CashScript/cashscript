@@ -1,0 +1,6 @@
+contract LockingBytecodeNullDataChunks() {
+    function spend(bytes20 pkh, bytes data) {
+        // A hex literal, a string literal, a chunk with a known length and a chunk with an unknown length
+        require(tx.outputs[0].lockingBytecode == new LockingBytecodeNullData([0x6d02, bytes('memo'), pkh, data]));
+    }
+}

@@ -1,7 +1,7 @@
 grammar CashScript;
 
 sourceFile
-    : pragmaDirective* contractDefinition EOF
+    : pragmaDirective* importDirective* topLevelDefinition* EOF
     ;
 
 pragmaDirective
@@ -24,11 +24,29 @@ versionOperator
     : '^' | '~' | '>=' | '>' | '<' | '<=' | '='
     ;
 
-contractDefinition
-    : 'contract' Identifier parameterList '{' functionDefinition* '}'
+importDirective
+    : 'import' StringLiteral ';'
     ;
 
-functionDefinition
+topLevelDefinition
+    : globalFunctionDefinition
+    | constantDefinition
+    | contractDefinition
+    ;
+
+globalFunctionDefinition
+    : 'function' Identifier parameterList ('returns' '(' typeName (',' typeName)* ')')? functionBody
+    ;
+
+constantDefinition
+    : typeName 'constant' Identifier '=' expression ';'
+    ;
+
+contractDefinition
+    : 'contract' Identifier parameterList '{' contractFunctionDefinition* '}'
+    ;
+
+contractFunctionDefinition
     : 'function' Identifier parameterList functionBody
     ;
 
@@ -41,7 +59,7 @@ parameterList
     ;
 
 parameter
-    : typeName Identifier
+    : typeName modifier* Identifier
     ;
 
 block
@@ -60,7 +78,17 @@ nonControlStatement
     | assignStatement
     | timeOpStatement
     | requireStatement
+    | functionCallStatement
     | consoleStatement
+    | returnStatement
+    ;
+
+functionCallStatement
+    : functionCall
+    ;
+
+returnStatement
+    : 'return' expression (',' expression)*
     ;
 
 controlStatement
@@ -73,7 +101,13 @@ variableDefinition
     ;
 
 tupleAssignment
-    : typeName Identifier ',' typeName Identifier '=' expression
+    : tupleTarget (',' tupleTarget)+ '=' expression
+    | '(' tupleTarget (',' tupleTarget)+ ')' '=' expression
+    ;
+
+tupleTarget
+    : typeName modifier* Identifier
+    | Identifier
     ;
 
 assignStatement
@@ -134,7 +168,7 @@ consoleParameterList
     ;
 
 functionCall
-    : Identifier expressionList // Only built-in functions are accepted
+    : Identifier expressionList // Built-in global functions and user-defined global functions
     ;
 
 expressionList
@@ -171,6 +205,7 @@ expression
 
 modifier
     : 'constant'
+    | 'unused'
     ;
 
 literal
@@ -186,8 +221,8 @@ numberLiteral
     ;
 
 typeName
-    : PrimitiveType 
-    | BoundedBytes 
+    : PrimitiveType
+    | BoundedBytes
     | UnboundedBytes
     ;
 

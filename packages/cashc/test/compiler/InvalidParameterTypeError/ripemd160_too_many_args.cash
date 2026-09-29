@@ -1,5 +1,5 @@
 contract Test() {
     function hello(bool b) {
-        require(ripemd160(true, b) == 0x0);
+        require(ripemd160(true, b) == 0x00);
     }
 }

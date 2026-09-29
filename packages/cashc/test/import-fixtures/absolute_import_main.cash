@@ -1,0 +1,7 @@
+import "/absolute/path/math.cash";
+
+contract AbsoluteImport() {
+    function spend(int x) {
+        require(x == 1);
+    }
+}

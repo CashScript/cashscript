@@ -54,7 +54,7 @@ The `allowImplicitFungibleTokenBurn` option is used to specify whether implicit 
 
 ### addInput()
 ```ts
-transactionBuilder.addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this
+transactionBuilder.addInput(utxo: SpendableUtxo, unlocker: Unlocker, options?: InputOptions): this
 ```
 
 Adds a single input UTXO to the transaction that can be unlocked using the provided unlocker. The unlocker can be derived from a `SignatureTemplate` or a `Contract` instance's spending functions. The `InputOptions` object can be used to specify the sequence number of the input. The default sequence number is `0xfffffffe` (non-final sequence number).
@@ -76,12 +76,12 @@ transactionBuilder.addInput(aliceUtxos[0], aliceTemplate.unlockP2PKH());
 
 ### addInputs()
 ```ts
-transactionBuilder.addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this
+transactionBuilder.addInputs(utxos: SpendableUtxo[], unlocker: Unlocker, options?: InputOptions): this
 transactionBuilder.addInputs(utxos: UnlockableUtxo[]): this
 ```
 
 ```ts
-interface UnlockableUtxo extends Utxo {
+interface UnlockableUtxo extends SpendableUtxo {
   unlocker: Unlocker;
   options?: InputOptions;
 }
@@ -207,7 +207,7 @@ Sets the locktime for the transaction to set a transaction-level absolute timelo
 #### Example
 ```ts
 // Set locktime one day from now
-transactionBuilder.setLocktime((Date.now() / 1000) + 24 * 60 * 60);
+transactionBuilder.setLocktime(Math.floor(Date.now() / 1000) + 24 * 60 * 60);
 ```
 
 ### getTransactionSize()

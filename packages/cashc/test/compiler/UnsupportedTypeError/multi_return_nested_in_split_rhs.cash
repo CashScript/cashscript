@@ -1,0 +1,12 @@
+function pair() returns (bytes, bytes) {
+    return 0x0102, 0x030405;
+}
+
+contract Test() {
+    function spend() {
+        // pair() is nested inside the RHS, not the RHS itself: its first return value
+        // would be silently discarded
+        bytes a, bytes b = pair().split(1);
+        require(a != b);
+    }
+}

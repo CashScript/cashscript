@@ -1,0 +1,15 @@
+function count(int n) returns (int) {
+    int i = 0;
+
+    for (i = 0; i < n; i++) {
+        require(i < 10);
+    }
+
+    return i;
+}
+
+contract GlobalFunctionForLoopReassignedInit() {
+    function spend(int n) {
+        require(count(n) == n);
+    }
+}

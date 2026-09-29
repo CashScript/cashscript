@@ -2,6 +2,72 @@
 title: Migration Notes
 ---
 
+## v0.13 to v0.14
+
+### CashScript SDK
+
+#### SignatureTemplate
+
+The `getHashType()`, `getPublicKey()` and `getSignatureAlgorithm()` are now simple `sighashType`, `publicKey` and `signatureAlgorithm` properties.
+
+```ts
+// before
+const hashType = signatureTemplate.getHashType();
+const publicKey = signatureTemplate.getPublicKey();
+const signatureAlgorithm = signatureTemplate.getSignatureAlgorithm();
+
+// after
+const sighashType = signatureTemplate.sighashType;
+const publicKey = signatureTemplate.publicKey;
+const signatureAlgorithm = signatureTemplate.signatureAlgorithm;
+```
+
+Note that `getHashType()` returned the sighash type with the BCH fork ID flag applied, while the `sighashType` property returns the configured sighash type as it was passed to the constructor.
+
+The `bchForkId` parameter has been removed from `generateSignature()`. A signature without the BCH fork ID flag is invalid under BCH consensus rules, so the flag is now always applied when signing.
+
+```ts
+// before
+const signature = signatureTemplate.generateSignature(sighash, bchForkId);
+
+// after
+const signature = signatureTemplate.generateSignature(sighash);
+```
+
+The `HashType` enum has been renamed to `SighashType`.
+
+```ts
+// before
+const signatureTemplate = new SignatureTemplate(wif, HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS);
+
+// after
+const signatureTemplate = new SignatureTemplate(wif, SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS);
+```
+
+#### UTXOs must include their locking bytecode
+
+UTXOs returned by network providers now include a `lockingBytecode` field with the actual locking bytecode of the UTXO, and input UTXOs passed to the `TransactionBuilder` are required to include this field.
+
+If you fetch UTXOs from a standard network provider, no code changes are needed. If you construct UTXOs manually (e.g. from your own indexer or persisted data) or implement a custom network provider, you need to add the `lockingBytecode` field:
+
+```ts
+// before
+const utxo = { txid, vout, satoshis };
+
+// after
+const utxo = { txid, vout, satoshis, lockingBytecode };
+```
+
+Since the spent UTXO's `lockingBytecode` is now the source of truth for the locking script, the `generateLockingBytecode()` method was removed from the `Unlocker` interface. If you implement custom unlockers, remove the `generateLockingBytecode()` method from your implementation.
+
+#### MockNetworkProvider transaction validation
+
+The `MockNetworkProvider` now validates sent transactions against the BCH VM by default, so tests that send invalid transactions (e.g. with placeholder signatures, or with a locktime above the mock block height) now fail. The spent UTXOs also need to exist in the mock UTXO set, even when `updateUtxoSet` is `false`. If you want to keep the old behaviour, set `validateTransactions` to `false`:
+
+```ts
+const provider = new MockNetworkProvider({ validateTransactions: false });
+```
+
 ## v0.12 to v0.13
 
 ### cashc compiler
@@ -311,7 +377,7 @@ You can no longer use `number` inputs for constructor arguments, function argume
 ### cashc compiler
 The older *preimage-based* introspection/covenants have been replaced with the newly supported *native* introspection/covenants. This has significant consequences for any existing covenant contracts, but in general this native introspection makes covenants more accessible, flexible and efficient. See below for a list of changes. In some cases there is no one to one mapping between the old introspection and the new introspection methods, so the logic of the smart contracts will need to be refactored as well.
 
-Most importantly, it is now possible to access specific data for all individual inputs and outputs, rather than e.g. working with hashes of the outputs (`tx.hashOutputs`). This offers more flexibility around the data you want to enforce. For more information about this new *native* introspection functionality, refer to the [Global covenant variables](/docs/language/globals#introspection-variables) section of the documentation, the [Covenants guide](/docs/guides/covenants/) and the [Native Introspection CHIP](https://gitlab.com/GeneralProtocols/research/chips/-/blob/master/CHIP-2021-02-Add-Native-Introspection-Opcodes.md).
+Most importantly, it is now possible to access specific data for all individual inputs and outputs, rather than e.g. working with hashes of the outputs (`tx.hashOutputs`). This offers more flexibility around the data you want to enforce. For more information about this new *native* introspection functionality, refer to the [Global covenant variables](/docs/language/globals#introspection-variables) section of the documentation, the [Covenants guide](/docs/design/covenants) and the [Native Introspection CHIP](https://gitlab.com/GeneralProtocols/research/chips/-/blob/master/CHIP-2021-02-Add-Native-Introspection-Opcodes.md).
 
 #### Covenant variables
 - `tx.version` and `tx.locktime` used to be `bytes4`, but are now `int`.

@@ -28,12 +28,11 @@ export class BytesType {
 
 export class TupleType {
   constructor(
-    public leftType: Type,
-    public rightType: Type,
+    public elementTypes: Type[],
   ) { }
 
   toString(): string {
-    return `(${this.leftType}, ${this.rightType})`;
+    return `(${this.elementTypes.join(', ')})`;
   }
 }
 
@@ -46,6 +45,7 @@ export enum PrimitiveType {
   SIG = 'sig',
   DATASIG = 'datasig',
   ANY = 'any',
+  VOID = 'void',
 }
 
 const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[] } = {
@@ -56,10 +56,14 @@ const ExplicitlyCastableTo: { [key in PrimitiveType]: PrimitiveType[] } = {
   [PrimitiveType.SIG]: [PrimitiveType.SIG],
   [PrimitiveType.DATASIG]: [PrimitiveType.DATASIG],
   [PrimitiveType.ANY]: [],
+  [PrimitiveType.VOID]: [],
 };
 
 export function explicitlyCastable(from?: Type, to?: Type): boolean {
   if (!from || !to) return false;
+
+  // `void` is not a real value type, so it can never participate in a cast
+  if (from === PrimitiveType.VOID || to === PrimitiveType.VOID) return false;
 
   // Tuples can't be cast
   if (from instanceof TupleType || to instanceof TupleType) return false;
@@ -111,10 +115,12 @@ export function explicitlyCastable(from?: Type, to?: Type): boolean {
 export function implicitlyCastable(actual?: Type, expected?: Type): boolean {
   if (!actual || !expected) return false;
 
+  // `void` is not a real value type, so it can never be assigned to or from (not even to `any`)
+  if (actual === PrimitiveType.VOID || expected === PrimitiveType.VOID) return false;
+
   if (actual instanceof TupleType && expected instanceof TupleType) {
-    const leftIsCompatible = implicitlyCastable(actual.leftType, expected.leftType);
-    const rightIsCompatible = implicitlyCastable(actual.rightType, expected.rightType);
-    return leftIsCompatible && rightIsCompatible;
+    return actual.elementTypes.length === expected.elementTypes.length
+      && actual.elementTypes.every((elementType, i) => implicitlyCastable(elementType, expected.elementTypes[i]));
   }
 
   // Can't cast between Tuple and non-Tuple

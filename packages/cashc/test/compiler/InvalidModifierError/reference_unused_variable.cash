@@ -1,0 +1,6 @@
+contract Test() {
+    function spend(int value) {
+        int unused scratch = value + 1;
+        require(scratch == 1);
+    }
+}

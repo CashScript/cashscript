@@ -1,0 +1,9 @@
+import "./multi_return_lib.cash";
+
+contract MultiReturnMain() {
+    function spend(int x) {
+        int q, int r = divmod(x, 3);
+        require(q == 4);
+        require(r == 1);
+    }
+}

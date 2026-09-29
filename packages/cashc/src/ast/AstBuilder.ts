@@ -1,14 +1,16 @@
 import { ParseTree, ParseTreeVisitor } from 'antlr4';
 import { hexToBin } from '@bitauth/libauth';
-import { parseType } from '@cashscript/utils';
-import semver from 'semver';
+import { parseType, Type } from '@cashscript/utils';
 import {
   Node,
   SourceFileNode,
+  ImportNode,
   ContractNode,
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
+  FunctionKind,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -28,11 +30,13 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
   WhileNode,
@@ -40,8 +44,13 @@ import {
 } from './AST.js';
 import { UnaryOperator, BinaryOperator, NullaryOperator } from './Operator.js';
 import type {
+  ImportDirectiveContext,
   ContractDefinitionContext,
-  FunctionDefinitionContext,
+  ContractFunctionDefinitionContext,
+  GlobalFunctionDefinitionContext,
+  ConstantDefinitionContext,
+  ReturnStatementContext,
+  FunctionCallStatementContext,
   VariableDefinitionContext,
   TupleAssignmentContext,
   ParameterContext,
@@ -83,12 +92,12 @@ import type {
 import CashScriptVisitor from '../grammar/CashScriptVisitor.js';
 import { Location } from './Location.js';
 import {
+  Modifier,
   NumberUnit,
   TimeOp,
 } from './Globals.js';
 import { getPragmaName, PragmaName, getVersionOpFromCtx } from './Pragma.js';
-import { version } from '../index.js';
-import { ParseError, VersionError } from '../Errors.js';
+import { ParseError } from '../Errors.js';
 
 export default class AstBuilder
   extends ParseTreeVisitor<Node>
@@ -106,46 +115,88 @@ export default class AstBuilder
   }
 
   visitSourceFile(ctx: SourceFileContext): SourceFileNode {
-    ctx.pragmaDirective_list().forEach((pragma) => {
-      this.processPragma(pragma);
+    const pragmas = ctx.pragmaDirective_list().flatMap((pragma) => this.extractVersionConstraints(pragma));
+
+    const imports = ctx.importDirective_list().map((directive) => this.visit(directive) as ImportNode);
+
+    const functions: FunctionDefinitionNode[] = [];
+    const constants: ConstantDefinitionNode[] = [];
+    let contract: ContractNode | undefined;
+
+    ctx.topLevelDefinition_list().forEach((def) => {
+      if (def.globalFunctionDefinition()) {
+        functions.push(this.visit(def.globalFunctionDefinition()) as FunctionDefinitionNode);
+      } else if (def.constantDefinition()) {
+        constants.push(this.visit(def.constantDefinition()) as ConstantDefinitionNode);
+      } else if (def.contractDefinition()) {
+        if (contract) {
+          throw new ParseError('A source file may define at most one contract', Location.fromCtx(def.contractDefinition()));
+        }
+        contract = this.visit(def.contractDefinition()) as ContractNode;
+      }
     });
 
-    const contract = this.visit(ctx.contractDefinition()) as ContractNode;
-    const sourceFileNode = new SourceFileNode(contract);
+    const sourceFileNode = new SourceFileNode(contract, functions, constants, imports, pragmas);
     sourceFileNode.location = Location.fromCtx(ctx);
     return sourceFileNode;
   }
 
-  processPragma(ctx: PragmaDirectiveContext): void {
+  visitConstantDefinition(ctx: ConstantDefinitionContext): ConstantDefinitionNode {
+    const type = parseType(ctx.typeName().getText());
+    const name = ctx.Identifier().getText();
+    const value = this.visit(ctx.expression()) as ExpressionNode;
+    const constantDefinition = new ConstantDefinitionNode(type, name, value);
+    constantDefinition.location = Location.fromCtx(ctx);
+    return constantDefinition;
+  }
+
+  visitImportDirective(ctx: ImportDirectiveContext): ImportNode {
+    const raw = ctx.StringLiteral().getText();
+    const importNode = new ImportNode(raw.substring(1, raw.length - 1));
+    importNode.location = Location.fromCtx(ctx);
+    return importNode;
+  }
+
+  extractVersionConstraints(ctx: PragmaDirectiveContext): string[] {
     const pragmaName = getPragmaName(ctx.pragmaName().getText());
     if (pragmaName !== PragmaName.CASHSCRIPT) throw new Error(); // Shouldn't happen
 
-    // Strip any -beta tags
-    const actualVersion = version.replace(/-.*/g, '');
-
-    ctx.pragmaValue().versionConstraint_list().forEach((constraint) => {
+    return ctx.pragmaValue().versionConstraint_list().map((constraint) => {
       const op = getVersionOpFromCtx(constraint.versionOperator());
-      const versionConstraint = `${op}${constraint.VersionLiteral().getText()}`;
-      if (!semver.satisfies(actualVersion, versionConstraint)) {
-        throw new VersionError(actualVersion, versionConstraint);
-      }
+      return `${op}${constraint.VersionLiteral().getText()}`;
     });
   }
 
   visitContractDefinition(ctx: ContractDefinitionContext): ContractNode {
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
-    const functions = ctx.functionDefinition_list().map((f) => this.visit(f) as FunctionDefinitionNode);
+    const functions = ctx.contractFunctionDefinition_list()
+      .map((f) => this.visit(f) as FunctionDefinitionNode);
     const contract = new ContractNode(name, parameters, functions);
     contract.location = Location.fromCtx(ctx);
     return contract;
   }
 
-  visitFunctionDefinition(ctx: FunctionDefinitionContext): FunctionDefinitionNode {
+  visitContractFunctionDefinition(ctx: ContractFunctionDefinitionContext): FunctionDefinitionNode {
+    return this.buildFunctionDefinition(ctx, FunctionKind.CONTRACT);
+  }
+
+  visitGlobalFunctionDefinition(ctx: GlobalFunctionDefinitionContext): FunctionDefinitionNode {
+    const returnTypes = ctx.typeName_list().length > 0
+      ? ctx.typeName_list().map((typeName) => parseType(typeName.getText()))
+      : undefined;
+    return this.buildFunctionDefinition(ctx, FunctionKind.GLOBAL, returnTypes);
+  }
+
+  private buildFunctionDefinition(
+    ctx: ContractFunctionDefinitionContext | GlobalFunctionDefinitionContext,
+    kind: FunctionKind,
+    returnTypes?: Type[],
+  ): FunctionDefinitionNode {
     const name = ctx.Identifier().getText();
     const parameters = ctx.parameterList().parameter_list().map((p) => this.visit(p) as ParameterNode);
-    const body = this.visit(ctx.functionBody());
-    const functionDefinition = new FunctionDefinitionNode(name, parameters, body);
+    const body = this.visit(ctx.functionBody()) as BlockNode;
+    const functionDefinition = new FunctionDefinitionNode(kind, name, parameters, body, returnTypes);
     functionDefinition.location = Location.fromCtx(ctx);
     return functionDefinition;
   }
@@ -159,8 +210,9 @@ export default class AstBuilder
 
   visitParameter(ctx: ParameterContext): ParameterNode {
     const type = parseType(ctx.typeName().getText());
+    const modifiers = ctx.modifier_list().map((modifier) => modifier.getText() as Modifier);
     const name = ctx.Identifier().getText();
-    const parameter = new ParameterNode(type, name);
+    const parameter = new ParameterNode(type, modifiers, name);
     parameter.location = Location.fromCtx(ctx);
     return parameter;
   }
@@ -187,7 +239,7 @@ export default class AstBuilder
 
   visitVariableDefinition(ctx: VariableDefinitionContext): VariableDefinitionNode {
     const type = parseType(ctx.typeName().getText());
-    const modifiers = ctx.modifier_list().map((modifier) => modifier.getText());
+    const modifiers = ctx.modifier_list().map((modifier) => modifier.getText() as Modifier);
     const name = ctx.Identifier().getText();
     const expression = this.visit(ctx.expression());
     const variableDefinition = new VariableDefinitionNode(type, modifiers, name, expression);
@@ -197,13 +249,18 @@ export default class AstBuilder
 
   visitTupleAssignment(ctx: TupleAssignmentContext): TupleAssignmentNode {
     const expression = this.visit(ctx.expression());
-    const names = ctx.Identifier_list();
-    const types = ctx.typeName_list();
-    const [var1, var2] = names.map((name, i) => ({
-      name: name.getText(),
-      type: parseType(types[i].getText()),
-    }));
-    const tupleAssignment = new TupleAssignmentNode(var1, var2, expression);
+    const targets = ctx.tupleTarget_list().map((target) => {
+      const typeName = target.typeName();
+      const identifier = new IdentifierNode(target.Identifier().getText());
+      identifier.location = Location.fromToken(target.Identifier().symbol);
+      return {
+        identifier,
+        type: typeName ? parseType(typeName.getText()) : undefined,
+        modifiers: target.modifier_list().map((modifier) => modifier.getText() as Modifier),
+        isReassignment: !typeName,
+      };
+    });
+    const tupleAssignment = new TupleAssignmentNode(targets, expression);
     tupleAssignment.location = Location.fromCtx(ctx);
     return tupleAssignment;
   }
@@ -258,6 +315,20 @@ export default class AstBuilder
     const require = new RequireNode(expression, message);
     require.location = Location.fromCtx(ctx);
     return require;
+  }
+
+  visitReturnStatement(ctx: ReturnStatementContext): ReturnNode {
+    const expressions = ctx.expression_list().map((expression) => this.visit(expression) as ExpressionNode);
+    const returnNode = new ReturnNode(expressions);
+    returnNode.location = Location.fromCtx(ctx);
+    return returnNode;
+  }
+
+  visitFunctionCallStatement(ctx: FunctionCallStatementContext): FunctionCallStatementNode {
+    const functionCall = this.visit(ctx.functionCall()) as FunctionCallNode;
+    const node = new FunctionCallStatementNode(functionCall);
+    node.location = Location.fromCtx(ctx);
+    return node;
   }
 
   visitIfStatement(ctx: IfStatementContext): BranchNode {
@@ -482,7 +553,8 @@ export default class AstBuilder
       throw new ParseError('Date should be in format `YYYY-MM-DDThh:mm:ss`', Location.fromCtx(ctx));
     }
 
-    const timestamp = Math.round(Date.parse(stringValue) / 1000);
+    // Date literals should always be in UTC, so we append 'Z' to the string
+    const timestamp = Math.round(Date.parse(`${stringValue}Z`) / 1000);
 
     if (Number.isNaN(timestamp)) {
       throw new ParseError(`Incorrectly formatted date "${stringValue}"`, Location.fromCtx(ctx));
@@ -494,8 +566,13 @@ export default class AstBuilder
   }
 
   createHexLiteral(ctx: LiteralContext): HexLiteralNode {
-    const hexString = ctx.HexLiteral().getText();
-    const hexValue = hexToBin(hexString.substring(2));
+    const hexString = ctx.HexLiteral().getText().substring(2);
+
+    if (hexString.length % 2 !== 0) {
+      throw new ParseError(`Hex literal "0x${hexString}" should have an even number of digits`, Location.fromCtx(ctx));
+    }
+
+    const hexValue = hexToBin(hexString);
     const hexLiteral = new HexLiteralNode(hexValue);
     hexLiteral.location = Location.fromCtx(ctx);
     return hexLiteral;

@@ -1,0 +1,11 @@
+function increment(int x) {
+    x = x + 1;
+    console.log("incremented", x);
+}
+
+contract VoidGlobalFunctionWithoutRequire() {
+    function spend(int n) {
+        increment(n);
+        require(n < 100);
+    }
+}

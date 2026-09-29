@@ -119,7 +119,7 @@ const provider = new MockNetworkProvider();
     const contract = new Contract(p2pkhArtifact, [alicePkh], { provider });
 
     // it('should not give type errors when using correct function inputs')
-    contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv)).generateLockingBytecode();
+    contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv)).generateUnlockingBytecode;
 
     // it('should give type errors when calling a function that does not exist')
     // @ts-expect-error
@@ -137,14 +137,14 @@ const provider = new MockNetworkProvider();
 
     // it('should not perform type checking when cast to any')
     const contractAsAny = new Contract(p2pkhArtifact as any, [alicePkh, 1000n], { provider });
-    contractAsAny.unlock.notAFunction().generateLockingBytecode();
+    contractAsAny.unlock.notAFunction().generateUnlockingBytecode;
     contractAsAny.unlock.spend();
     contractAsAny.unlock.spend(1000n, true);
 
     // it('should not perform type checking when cannot infer type')
     // Note: would be very nice if it *could* infer the type from static json
     const contractFromUnknown = new Contract(p2pkhArtifactJsonNotConst, [alicePkh, 1000n], { provider });
-    contractFromUnknown.unlock.notAFunction().generateLockingBytecode();
+    contractFromUnknown.unlock.notAFunction().generateUnlockingBytecode;
     contractFromUnknown.unlock.spend();
     contractFromUnknown.unlock.spend(1000n, true);
 

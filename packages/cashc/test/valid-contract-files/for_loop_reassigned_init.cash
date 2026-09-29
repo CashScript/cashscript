@@ -1,0 +1,11 @@
+contract ForLoopReassignedInit() {
+    function spend(int n) {
+        int i = 0;
+
+        for (i = 0; i < n; i++) {
+            require(tx.outputs[i].value >= 1000);
+        }
+
+        require(i == tx.outputs.length);
+    }
+}

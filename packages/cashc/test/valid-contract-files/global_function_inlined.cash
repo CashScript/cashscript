@@ -1,0 +1,11 @@
+function checked(int x) returns (int) {
+    console.log("checking", x);
+    require(x > 0, "positive");
+    return x;
+}
+
+contract GlobalFunctionInlined() {
+    function spend(int n) {
+        require(checked(n) == n);
+    }
+}

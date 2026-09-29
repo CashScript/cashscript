@@ -1,12 +1,53 @@
-import { AbiFunction, AbiInput, Artifact, bytecodeToScript, formatBitAuthScript, sha256 } from '@cashscript/utils';
-import { HashType, LibauthTokenDetails, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
-import { hexToBin, binToHex, isHex, decodeCashAddress, Input, assertSuccess, decodeAuthenticationInstructions, AuthenticationInstructionPush } from '@bitauth/libauth';
+import { AbiFunction, AbiInput, Artifact, formatBitAuthScript, sha256 } from '@cashscript/utils';
+import { LibauthTokenDetails, SighashType, SignatureAlgorithm, TokenDetails, VmTarget } from '../interfaces.js';
+import {
+  hexToBin,
+  binToHex,
+  isHex,
+  decodeCashAddress,
+  Input,
+  assertSuccess,
+  decodeAuthenticationInstructions,
+  AuthenticationInstructionPush,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon,
+  AuthenticationVirtualMachine,
+  ResolvedTransactionCommon,
+  createVirtualMachineBch2023,
+  createVirtualMachineBch2025,
+  createVirtualMachineBch2026,
+  createVirtualMachineBchSpec,
+} from '@bitauth/libauth';
 import { EncodedFunctionArgument } from '../Argument.js';
 import { zip } from '../utils.js';
 import SignatureTemplate from '../SignatureTemplate.js';
 import { Contract } from '../Contract.js';
 
 export const DEFAULT_VM_TARGET = VmTarget.BCH_2026_05;
+
+/* eslint-disable @typescript-eslint/indent */
+export type VM = AuthenticationVirtualMachine<
+  ResolvedTransactionCommon,
+  AuthenticationProgramCommon,
+  AuthenticationProgramStateCommon
+>;
+/* eslint-enable @typescript-eslint/indent */
+
+export const createVirtualMachine = (vmTarget: VmTarget): VM => {
+  switch (vmTarget) {
+    case 'BCH_2023_05':
+      return createVirtualMachineBch2023();
+    case 'BCH_2025_05':
+      return createVirtualMachineBch2025();
+    case 'BCH_2026_05':
+      return createVirtualMachineBch2026();
+    case 'BCH_SPEC':
+      // TODO: This typecast is shitty, but it's hard to fix
+      return createVirtualMachineBchSpec() as unknown as VM;
+    default:
+      throw new Error(`Evaluation is not supported for the ${vmTarget} virtual machine.`);
+  }
+};
 
 export const getLockScriptName = (contract: Contract): string => {
   if (contract.contractType === 'p2s') {
@@ -32,23 +73,23 @@ export const getSignatureAlgorithmName = (signatureAlgorithm: SignatureAlgorithm
   return signatureAlgorithmNames[signatureAlgorithm];
 };
 
-export const getHashTypeName = (hashType: HashType): string => {
-  const hashtypeNames = {
-    [HashType.SIGHASH_ALL]: 'all_outputs',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
-    [HashType.SIGHASH_ALL | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_SINGLE]: 'corresponding_output',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
-    [HashType.SIGHASH_SINGLE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
-    [HashType.SIGHASH_NONE]: 'no_outputs',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
-    [HashType.SIGHASH_NONE | HashType.SIGHASH_ANYONECANPAY | HashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
+export const getSighashTypeName = (sighashType: SighashType): string => {
+  const sighashTypeNames = {
+    [SighashType.SIGHASH_ALL]: 'all_outputs',
+    [SighashType.SIGHASH_ALL | SighashType.SIGHASH_ANYONECANPAY]: 'all_outputs_single_input',
+    [SighashType.SIGHASH_ALL | SighashType.SIGHASH_UTXOS]: 'all_outputs_all_utxos',
+    [SighashType.SIGHASH_ALL | SighashType.SIGHASH_ANYONECANPAY | SighashType.SIGHASH_UTXOS]: 'all_outputs_single_input_INVALID_all_utxos',
+    [SighashType.SIGHASH_SINGLE]: 'corresponding_output',
+    [SighashType.SIGHASH_SINGLE | SighashType.SIGHASH_ANYONECANPAY]: 'corresponding_output_single_input',
+    [SighashType.SIGHASH_SINGLE | SighashType.SIGHASH_UTXOS]: 'corresponding_output_all_utxos',
+    [SighashType.SIGHASH_SINGLE | SighashType.SIGHASH_ANYONECANPAY | SighashType.SIGHASH_UTXOS]: 'corresponding_output_single_input_INVALID_all_utxos',
+    [SighashType.SIGHASH_NONE]: 'no_outputs',
+    [SighashType.SIGHASH_NONE | SighashType.SIGHASH_ANYONECANPAY]: 'no_outputs_single_input',
+    [SighashType.SIGHASH_NONE | SighashType.SIGHASH_UTXOS]: 'no_outputs_all_utxos',
+    [SighashType.SIGHASH_NONE | SighashType.SIGHASH_ANYONECANPAY | SighashType.SIGHASH_UTXOS]: 'no_outputs_single_input_INVALID_all_utxos',
   };
 
-  return hashtypeNames[hashType];
+  return sighashTypeNames[sighashType];
 };
 
 export const addHexPrefixExceptEmpty = (value: string): string => {
@@ -63,9 +104,9 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
 
   return typesAndArguments.map(([input, arg]) => {
     if (arg instanceof SignatureTemplate) {
-      const signatureAlgorithmName = getSignatureAlgorithmName(arg.getSignatureAlgorithm());
-      const hashtypeName = getHashTypeName(arg.getHashType(false));
-      return `<${input.name}.${signatureAlgorithmName}.${hashtypeName}> // ${input.type}`;
+      const signatureAlgorithmName = getSignatureAlgorithmName(arg.signatureAlgorithm);
+      const sighashTypeName = getSighashTypeName(arg.sighashType);
+      return `<${input.name}.${signatureAlgorithmName}.${sighashTypeName}> // ${input.type}`;
     }
 
     const typeStr = input.type === 'bytes' ? `bytes${arg.length}` : input.type;
@@ -77,6 +118,7 @@ export const formatParametersForDebugging = (types: readonly AbiInput[], args: E
 };
 
 export const formatBytecodeForDebugging = (artifact: Artifact): string => {
+  // Old artifacts carry no debug information, so we render the raw bytecode in execution order
   if (!artifact.debug) {
     return artifact.bytecode
       .split(' ')
@@ -84,12 +126,7 @@ export const formatBytecodeForDebugging = (artifact: Artifact): string => {
       .join('\n');
   }
 
-  return formatBitAuthScript(
-    bytecodeToScript(hexToBin(artifact.debug.bytecode)),
-    artifact.debug.sourceMap,
-    artifact.source,
-    artifact.debug.sourceTags,
-  );
+  return formatBitAuthScript(artifact.debug, artifact.source);
 };
 
 export const serialiseTokenDetails = (

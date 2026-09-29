@@ -1,0 +1,11 @@
+function pair(int a) returns (int, int) {
+    return a, a + 1;
+}
+
+contract Test() {
+    function spend(int x) {
+        // Tuple indexing is only supported on .split() results; a multi-return call
+        // must be destructured
+        require(pair(x)[0] == 1);
+    }
+}

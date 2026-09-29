@@ -1,4 +1,4 @@
 import { inspect } from 'util';
-import './src/test/TestExtensions.js';
+import './src/test/VitestExtensions.js';
 
 inspect.defaultOptions.depth = 10;

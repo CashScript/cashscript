@@ -1,5 +1,5 @@
 import { binToHex } from '@bitauth/libauth';
-import { Contract, MockNetworkProvider, SignatureTemplate } from '../../../src/index.js';
+import { Contract, MockNetworkProvider, NetworkProviderAbsoluteTimelockError, SignatureTemplate } from '../../../src/index.js';
 import { TransactionBuilder } from '../../../src/TransactionBuilder.js';
 import { addressToLockScript, randomUtxo } from '../../../src/utils.js';
 import p2pkhArtifact from '../../fixture/p2pkh.artifact.js';
@@ -9,6 +9,7 @@ import {
   alicePriv,
   alicePub,
   bobAddress,
+  bobPriv,
 } from '../../fixture/vars.js';
 
 describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', () => {
@@ -55,7 +56,7 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
       await expect(provider.sendRawTransaction(tx.slice(0, -2))).rejects.toThrow('Error reading transaction.');
 
       // send valid transaction
-      await expect(provider.sendRawTransaction(tx)).resolves.not.toThrow();
+      const txid = await provider.sendRawTransaction(tx);
 
       // utxos should be removed from the provider
       expect(await provider.getUtxos(aliceAddress)).toHaveLength(0);
@@ -64,7 +65,116 @@ describe.skipIf(Boolean(process.env.TESTS_USE_CHIPNET))('MockNetworkProvider', (
       // utxo should be added to bob
       expect(await provider.getUtxos(bobAddress)).toHaveLength(1);
 
-      await expect(provider.sendRawTransaction(tx)).rejects.toThrow('already submitted');
+      // resubmission resolves with the same txid and doesn't change the utxo set
+      await expect(provider.sendRawTransaction(tx)).resolves.toBe(txid);
+      expect(await provider.getUtxos(aliceAddress)).toHaveLength(0);
+      expect(await provider.getUtxos(p2pkhInstance.address)).toHaveLength(0);
+      expect(await provider.getUtxos(bobAddress)).toHaveLength(1);
+    });
+  });
+
+  describe('transaction validation', () => {
+    const provider = new MockNetworkProvider();
+
+    beforeEach(() => {
+      provider.reset();
+    });
+
+    it('should annotate UTXOs with the locking bytecode they were added under', async () => {
+      const aliceLockingBytecode = binToHex(addressToLockScript(aliceAddress));
+      const addedUtxo = provider.addUtxo(aliceAddress, randomUtxo());
+
+      expect(addedUtxo.lockingBytecode).toBe(aliceLockingBytecode);
+
+      const fetchedUtxos = await provider.getUtxos(aliceAddress);
+      expect(fetchedUtxos[0].lockingBytecode).toBe(aliceLockingBytecode);
+    });
+
+    it('should reject a transaction that spends a UTXO with a mismatched unlocker', async () => {
+      // We deliberately set the lockingBytecode to bob's lock script so the TransactionBuilder
+      // mismatch check does not trigger, allowing us to build a transaction that spends alice's
+      // UTXO with bob's key
+      const bobLockingBytecode = binToHex(addressToLockScript(bobAddress));
+      const utxo = { ...provider.addUtxo(aliceAddress, randomUtxo()), lockingBytecode: bobLockingBytecode };
+
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(provider.sendRawTransaction(transaction)).rejects.toThrow();
+
+      // the failed transaction should not have updated the utxo set
+      expect(await provider.getUtxos(aliceAddress)).toHaveLength(1);
+    });
+
+    it('should accept invalid transactions when validateTransactions is set to false', async () => {
+      const nonValidatingProvider = new MockNetworkProvider({ validateTransactions: false });
+      const bobLockingBytecode = binToHex(addressToLockScript(bobAddress));
+      const utxo = {
+        ...nonValidatingProvider.addUtxo(aliceAddress, randomUtxo()),
+        lockingBytecode: bobLockingBytecode,
+      };
+
+      const transaction = new TransactionBuilder({ provider: nonValidatingProvider })
+        .addInput(utxo, new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(nonValidatingProvider.sendRawTransaction(transaction)).resolves.toBeTruthy();
+    });
+
+    it('should also validate transactions when updateUtxoSet is set to false', async () => {
+      const staticProvider = new MockNetworkProvider({ updateUtxoSet: false });
+      const bobLockingBytecode = binToHex(addressToLockScript(bobAddress));
+      const utxo = { ...staticProvider.addUtxo(aliceAddress, randomUtxo()), lockingBytecode: bobLockingBytecode };
+
+      const transaction = new TransactionBuilder({ provider: staticProvider })
+        .addInput(utxo, new SignatureTemplate(bobPriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(staticProvider.sendRawTransaction(transaction)).rejects.toThrow();
+    });
+
+    it('should reject transactions with a block height locktime above the current block height', async () => {
+      const heightProvider = new MockNetworkProvider();
+      heightProvider.setBlockHeight(1000);
+
+      const buildWithLocktime = (locktime: number, sequence?: number): string => {
+        const utxo = heightProvider.addUtxo(aliceAddress, randomUtxo());
+        return new TransactionBuilder({ provider: heightProvider })
+          .setLocktime(locktime)
+          .addInput(utxo, new SignatureTemplate(alicePriv).unlockP2PKH(), { sequence })
+          .addOutput({ to: aliceAddress, amount: 5000n })
+          .build();
+      };
+
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(1001)))
+        .rejects.toThrow(NetworkProviderAbsoluteTimelockError);
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(1000))).resolves.toBeTruthy();
+
+      // Final sequence numbers disable the locktime, and time-based locktimes are not checked
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(1001, 0xffffffff))).resolves.toBeTruthy();
+      await expect(heightProvider.sendRawTransaction(buildWithLocktime(2_000_000_000))).resolves.toBeTruthy();
+    });
+
+    it('should compare hex strings case-insensitively', async () => {
+      const aliceLockingBytecode = binToHex(addressToLockScript(aliceAddress));
+      const randomTxid = randomUtxo().txid;
+      provider.addUtxo(aliceLockingBytecode.toUpperCase(), { ...randomUtxo(), txid: randomTxid.toUpperCase() });
+
+      const [utxo] = await provider.getUtxosForLockingBytecode(aliceLockingBytecode);
+      expect(utxo).toBeDefined();
+      expect(await provider.getUtxosForLockingBytecode(aliceLockingBytecode.toUpperCase())).toHaveLength(1);
+
+      // The spent UTXO is found although its txid was added in upper case
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(utxo, new SignatureTemplate(alicePriv).unlockP2PKH())
+        .addOutput({ to: aliceAddress, amount: 5000n })
+        .build();
+
+      await expect(provider.sendRawTransaction(transaction)).resolves.toBeTruthy();
     });
   });
 
