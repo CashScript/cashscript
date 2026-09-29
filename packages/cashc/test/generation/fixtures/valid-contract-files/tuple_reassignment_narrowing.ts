@@ -10,7 +10,7 @@ export const fixtures: Fixture[] = [
       ],
       bytecode:
         // require(data.length == 20);
-        'OP_DUP OP_SIZE OP_NIP 14 OP_NUMEQUALVERIFY '
+        'OP_SIZE 14 OP_NUMEQUALVERIFY '
         // data, bytes rest = other.split(20);
         + 'OP_SWAP 14 OP_SPLIT '
         // bytes20 narrowed = data;
@@ -20,16 +20,16 @@ export const fixtures: Fixture[] = [
         // Cleanup
         + 'OP_NIP',
       debug: {
-        bytecode: '76827701149d7c01147f787b877c827700a09a77',
-        sourceMap: '3:16:3:20;:::27:1;;:31::33:0;:8::35:1;5:27:5:32:0;:39::41;:27::42:1;6::6:31:0;7:28:7:32;:16:::1;:36::40:0;:::47:1;;:50::51:0;:36:::1;:8::53;2:44:8:5',
+        bytecode: '8201149d7c01147f787b877c827700a09a77',
+        sourceMap: '3:16:3:27:1;:31::33:0;:8::35:1;5:27:5:32:0;:39::41;:27::42:1;6::6:31:0;7:28:7:32;:16:::1;:36::40:0;:::47:1;;:50::51:0;:36:::1;:8::53;2:44:8:5',
         logs: [],
         requires: [
-          { ip: 4, line: 3 },
-          { ip: 17, line: 7 },
+          { ip: 2, line: 3 },
+          { ip: 15, line: 7 },
         ],
-        sourceTags: '17:17:sc',
+        sourceTags: '15:15:sc',
       },
-      fingerprint: '1a51d44cecfd534a1332d599fee5890353c16bc9bcb4514ab7f46a86747640d8',
+      fingerprint: '74422e75c6073e2286b54220945a63fe2ff12f917d486f34e8529363ce522cf8',
     },
   },
 ];

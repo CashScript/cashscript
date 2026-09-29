@@ -173,4 +173,61 @@ export const optimisationReplacements = [
   ['OP_SWAP OP_MIN', 'OP_MIN'],
   ['OP_SWAP OP_MAX', 'OP_MAX'],
   ['OP_SWAP OP_2DROP', 'OP_2DROP'],
+
+  // Remove extraneous OP_DUP before OP_SIZE, which leaves its input on the stack
+  ['OP_DUP OP_SIZE OP_NIP', 'OP_SIZE'],
+
+  // Replace stack shuffles with shorter equivalents
+  ['OP_SWAP OP_OVER', 'OP_TUCK'],
+  // Note that OP_3DUP also copies an item that is then dropped, which raises the operation cost when that item is large
+  ['OP_2 OP_PICK OP_2 OP_PICK', 'OP_3DUP OP_DROP'],
+  ['OP_2 OP_PICK OP_OVER', 'OP_3DUP OP_NIP'],
+  ['OP_2 OP_PICK OP_NIP', 'OP_DROP OP_OVER'],
+  ['OP_TOALTSTACK OP_ROT OP_ROT OP_FROMALTSTACK', 'OP_2SWAP OP_ROT'],
+
+  // NOTE: these optimisations (as well as some others above) are currently hardcoded, but should become dynamic.
+  // This is something we want to properly implement in v0.15
+  
+  // OP_TUCK leaves the two operands in the opposite order, so this only holds for order-independent comparisons
+  ['OP_DUP OP_ROT OP_NUMEQUALVERIFY', 'OP_TUCK OP_NUMEQUALVERIFY'],
+
+  // Replace copy-and-drop around in-place increments and decrements of a deeper variable (e.g. x = x + 1 inside a branch)
+  // These come before the deeper drop rules below, which would otherwise match the end of these patterns first
+  ['OP_OVER OP_1ADD OP_ROT OP_DROP', 'OP_SWAP OP_1ADD'],
+  ['OP_2 OP_PICK OP_1ADD OP_3 OP_ROLL OP_DROP', 'OP_ROT OP_1ADD'],
+  ['OP_3 OP_PICK OP_1ADD OP_4 OP_ROLL OP_DROP', 'OP_3 OP_ROLL OP_1ADD'],
+  ['OP_4 OP_PICK OP_1ADD OP_5 OP_ROLL OP_DROP', 'OP_4 OP_ROLL OP_1ADD'],
+  ['OP_5 OP_PICK OP_1ADD OP_6 OP_ROLL OP_DROP', 'OP_5 OP_ROLL OP_1ADD'],
+  ['OP_6 OP_PICK OP_1ADD OP_7 OP_ROLL OP_DROP', 'OP_6 OP_ROLL OP_1ADD'],
+  ['OP_7 OP_PICK OP_1ADD OP_8 OP_ROLL OP_DROP', 'OP_7 OP_ROLL OP_1ADD'],
+  ['OP_8 OP_PICK OP_1ADD OP_9 OP_ROLL OP_DROP', 'OP_8 OP_ROLL OP_1ADD'],
+  ['OP_9 OP_PICK OP_1ADD OP_10 OP_ROLL OP_DROP', 'OP_9 OP_ROLL OP_1ADD'],
+  ['OP_10 OP_PICK OP_1ADD OP_11 OP_ROLL OP_DROP', 'OP_10 OP_ROLL OP_1ADD'],
+  ['OP_11 OP_PICK OP_1ADD OP_12 OP_ROLL OP_DROP', 'OP_11 OP_ROLL OP_1ADD'],
+  ['OP_12 OP_PICK OP_1ADD OP_13 OP_ROLL OP_DROP', 'OP_12 OP_ROLL OP_1ADD'],
+  ['OP_13 OP_PICK OP_1ADD OP_14 OP_ROLL OP_DROP', 'OP_13 OP_ROLL OP_1ADD'],
+  ['OP_14 OP_PICK OP_1ADD OP_15 OP_ROLL OP_DROP', 'OP_14 OP_ROLL OP_1ADD'],
+  ['OP_15 OP_PICK OP_1ADD OP_16 OP_ROLL OP_DROP', 'OP_15 OP_ROLL OP_1ADD'],
+  ['OP_OVER OP_1SUB OP_ROT OP_DROP', 'OP_SWAP OP_1SUB'],
+  ['OP_2 OP_PICK OP_1SUB OP_3 OP_ROLL OP_DROP', 'OP_ROT OP_1SUB'],
+  ['OP_3 OP_PICK OP_1SUB OP_4 OP_ROLL OP_DROP', 'OP_3 OP_ROLL OP_1SUB'],
+  ['OP_4 OP_PICK OP_1SUB OP_5 OP_ROLL OP_DROP', 'OP_4 OP_ROLL OP_1SUB'],
+  ['OP_5 OP_PICK OP_1SUB OP_6 OP_ROLL OP_DROP', 'OP_5 OP_ROLL OP_1SUB'],
+  ['OP_6 OP_PICK OP_1SUB OP_7 OP_ROLL OP_DROP', 'OP_6 OP_ROLL OP_1SUB'],
+  ['OP_7 OP_PICK OP_1SUB OP_8 OP_ROLL OP_DROP', 'OP_7 OP_ROLL OP_1SUB'],
+  ['OP_8 OP_PICK OP_1SUB OP_9 OP_ROLL OP_DROP', 'OP_8 OP_ROLL OP_1SUB'],
+  ['OP_9 OP_PICK OP_1SUB OP_10 OP_ROLL OP_DROP', 'OP_9 OP_ROLL OP_1SUB'],
+  ['OP_10 OP_PICK OP_1SUB OP_11 OP_ROLL OP_DROP', 'OP_10 OP_ROLL OP_1SUB'],
+  ['OP_11 OP_PICK OP_1SUB OP_12 OP_ROLL OP_DROP', 'OP_11 OP_ROLL OP_1SUB'],
+  ['OP_12 OP_PICK OP_1SUB OP_13 OP_ROLL OP_DROP', 'OP_12 OP_ROLL OP_1SUB'],
+  ['OP_13 OP_PICK OP_1SUB OP_14 OP_ROLL OP_DROP', 'OP_13 OP_ROLL OP_1SUB'],
+  ['OP_14 OP_PICK OP_1SUB OP_15 OP_ROLL OP_DROP', 'OP_14 OP_ROLL OP_1SUB'],
+  ['OP_15 OP_PICK OP_1SUB OP_16 OP_ROLL OP_DROP', 'OP_15 OP_ROLL OP_1SUB'],
+  /////////////////////////////////////////////////////////////////////////
+
+  // Replace drops of items deeper in the stack (e.g. from scope cleanup) with shorter equivalents
+  ['OP_ROT OP_DROP OP_NIP', 'OP_NIP OP_NIP'],
+  ['OP_3 OP_ROLL OP_DROP OP_ROT', 'OP_2SWAP OP_NIP'],
+  ['OP_ROT OP_ROT OP_DROP', 'OP_NIP OP_SWAP'],
+  ['OP_3 OP_ROLL OP_DROP OP_NIP OP_NIP', 'OP_NIP OP_NIP OP_NIP'],
 ] as [string, string][];
