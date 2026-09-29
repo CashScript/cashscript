@@ -193,17 +193,36 @@ const SCOPE_CLEANUP_OPCODES = [Op.OP_DROP, Op.OP_NIP, Op.OP_2DROP];
 function reconcileScopeCleanupTags(script: Script, sourceTags: SourceTagEntry[]): SourceTagEntry[] {
   const otherTags = sourceTags.filter((tag) => tag.kind !== SourceTagKind.SCOPE_CLEANUP);
 
-  return sourceTags.filter((tag) => {
-    if (tag.kind !== SourceTagKind.SCOPE_CLEANUP) return true;
+  const cleanupTags = sourceTags.filter((tag) => {
+    if (tag.kind !== SourceTagKind.SCOPE_CLEANUP) return false;
 
     const isOnlyCleanupOpcodes = range(tag.startIndex, tag.endIndex)
       .every((index) => SCOPE_CLEANUP_OPCODES.includes(script[index] as Op));
     if (!isOnlyCleanupOpcodes) return false;
 
-    const overlapsOtherTag = otherTags
-      .some((other) => tag.startIndex <= other.endIndex && other.startIndex <= tag.endIndex);
+    const overlapsOtherTag = otherTags.some((other) => tagsOverlap(tag, other));
     return !overlapsOtherTag;
   });
+
+  const mergedCleanupTags = mergeOverlappingTags(cleanupTags);
+  const allTags = [...otherTags, ...mergedCleanupTags];
+  return allTags.sort((a, b) => a.startIndex - b.startIndex);
+}
+
+function mergeOverlappingTags(tags: SourceTagEntry[]): SourceTagEntry[] {
+  const sortedTags = [...tags].sort((a, b) => a.startIndex - b.startIndex);
+
+  return sortedTags.reduce<SourceTagEntry[]>((mergedTags, tag) => {
+    const previousTag = mergedTags.at(-1);
+    if (!previousTag || !tagsOverlap(previousTag, tag)) return [...mergedTags, tag];
+
+    const mergedTag = { ...previousTag, endIndex: Math.max(previousTag.endIndex, tag.endIndex) };
+    return [...mergedTags.slice(0, -1), mergedTag];
+  }, []);
+}
+
+function tagsOverlap(a: SourceTagEntry, b: SourceTagEntry): boolean {
+  return a.startIndex <= b.endIndex && b.startIndex <= a.endIndex;
 }
 
 interface ReplaceOpsResult extends OptimiseBytecodeResult {

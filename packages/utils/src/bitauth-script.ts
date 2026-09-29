@@ -82,7 +82,9 @@ function segmentScript(params: WalkParams): Segment[] {
 
     const tag = findTagAt(tags, index);
     if (tag) {
-      segments.push(annotationSegment(script, tag, tags, locationData, sourceLines));
+      // The rendered output is executed, so an overlapping tag must never re-emit opcodes that were already rendered
+      const remainingTag = { ...tag, startIndex: index };
+      segments.push(annotationSegment(script, remainingTag, tags, locationData, sourceLines));
       index = tag.endIndex + 1;
       continue;
     }
