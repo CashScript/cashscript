@@ -126,6 +126,7 @@
         "numequal",
         "numequalverify",
         "numnotequal",
+        "numstat",
         "NOTEQUAL",
         "op",
         "opcode",
