@@ -108,8 +108,8 @@ function compileCode(
   resolver: ImportResolver,
   compilerOptions: CompileOptions & InternalCompilerOptions,
 ): Artifact {
-  const { errorListener, warningListener, disableInlining, ...artifactCompilerOptions } = compilerOptions;
-  const mergedCompilerOptions = { ...DEFAULT_COMPILER_OPTIONS, ...artifactCompilerOptions };
+  const { errorListener, warningListener, disableInlining } = compilerOptions;
+  const mergedCompilerOptions = mergeCompilerOptions(compilerOptions);
 
   // Lexing + parsing
   let ast = parseCode(code, errorListener);
@@ -169,4 +169,14 @@ function compileCode(
   const fingerprint = computeBytecodeFingerprintWithConstructorArgs(optimisationResult.script, constructorParamLength);
 
   return generateArtifact(ast, optimisationResult.script, code, debug, mergedCompilerOptions, fingerprint);
+}
+
+// Only the known compiler options are recorded in the artifact, and an option that is passed as undefined
+// falls back to its default value (rather than disabling it)
+function mergeCompilerOptions(compilerOptions: CompilerOptions): CompilerOptions {
+  return {
+    enforceFunctionParameterTypes:
+      compilerOptions.enforceFunctionParameterTypes ?? DEFAULT_COMPILER_OPTIONS.enforceFunctionParameterTypes,
+    enforceLocktimeGuard: compilerOptions.enforceLocktimeGuard ?? DEFAULT_COMPILER_OPTIONS.enforceLocktimeGuard,
+  };
 }

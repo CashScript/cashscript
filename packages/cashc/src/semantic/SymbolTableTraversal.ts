@@ -164,7 +164,15 @@ export default class SymbolTableTraversal extends AstTraversal {
       if (target.isReassignment) {
         target.identifier.symbol = this.resolveAssignmentTarget(node, target.identifier);
         target.type = target.identifier.symbol.type;
-      } else {
+      }
+    });
+
+    // The new targets are only declared after the right-hand side, so they cannot be used in their own declaration
+    node.tuple = this.visit(node.tuple);
+
+    node.targets
+      .filter((target) => !target.isReassignment)
+      .forEach((target) => {
         const definition = createTupleVariableDefinition(node, target);
 
         if (this.symbolTables[0].get(target.identifier.name)) {
@@ -175,10 +183,7 @@ export default class SymbolTableTraversal extends AstTraversal {
 
         target.identifier.symbol = Symbol.variable(definition);
         this.symbolTables[0].set(target.identifier.symbol);
-      }
-    });
-
-    node.tuple = this.visit(node.tuple);
+      });
 
     node.targets
       .filter((target) => target.isReassignment)

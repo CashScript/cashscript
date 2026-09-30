@@ -75,6 +75,14 @@ describe('Debugging tests', () => {
       expect(transaction).not.toLog(expectedLog);
     });
 
+    it('should log the current value of a reassigned variable after its final use', async () => {
+      const transaction = new TransactionBuilder({ provider })
+        .addInput(contractUtxo, contractTestLogs.unlock.test_log_reassigned_after_final_use(1n))
+        .addOutput({ to: contractTestLogs.address, amount: 10000n });
+
+      expect(transaction).toLog(new RegExp('^\\[Input #0] Test.cash:63 v: 2$'));
+    });
+
     it('should only log console.log statements from the called function', async () => {
       const transaction = new TransactionBuilder({ provider })
         .addInput(contractUtxo, contractTestLogs.unlock.secondFunction())

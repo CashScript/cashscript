@@ -3,7 +3,7 @@ import { getSubdirectories, readCashFiles } from '../test-utils.js';
 import * as Errors from '../../src/Errors.js';
 import * as Warnings from '../../src/Warnings.js';
 import { compileString } from '../../src/index.js';
-import type { CashScriptErrorListener } from '../../src/index.js';
+import type { CashScriptErrorListener, CompileStringOptions } from '../../src/index.js';
 
 const VALID_SOURCE = `
 contract Test() {
@@ -100,6 +100,39 @@ describe('Compiler', () => {
       };
 
       const compileOptions = { enforceLocktimeGuard: false, errorListener, warningListener: () => {} };
+      const artifact = compileString(VALID_SOURCE, compileOptions);
+
+      expect(artifact.compiler.options).toEqual({
+        enforceFunctionParameterTypes: true,
+        enforceLocktimeGuard: false,
+      });
+    });
+  });
+
+  describe('Compiler options', () => {
+    const LOCKTIME_SOURCE = `
+contract Test() {
+  function unlock() {
+    require(tx.locktime >= 1);
+  }
+}
+`;
+
+    it('uses the default value for options that are passed as undefined', () => {
+      const artifact = compileString(LOCKTIME_SOURCE, {
+        enforceFunctionParameterTypes: undefined,
+        enforceLocktimeGuard: undefined,
+      });
+
+      expect(artifact.bytecode).toEqual(compileString(LOCKTIME_SOURCE).bytecode);
+      expect(artifact.compiler.options).toEqual({
+        enforceFunctionParameterTypes: true,
+        enforceLocktimeGuard: true,
+      });
+    });
+
+    it('only includes known options in compiler artifact options', () => {
+      const compileOptions = { enforceLocktimeGuard: false, unknownOption: true } as CompileStringOptions;
       const artifact = compileString(VALID_SOURCE, compileOptions);
 
       expect(artifact.compiler.options).toEqual({
