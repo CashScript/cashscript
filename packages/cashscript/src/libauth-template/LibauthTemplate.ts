@@ -66,12 +66,15 @@ export const getLibauthTemplate = (
 };
 
 export const debugLibauthTemplate = (template: WalletTemplate, transaction: TransactionBuilder): DebugResults => {
-  const allArtifacts = transaction.inputs
-    .map(input => isContractUnlocker(input.unlocker) ? input.unlocker.contract : undefined)
-    .filter((contract): contract is Contract => Boolean(contract))
-    .map(contract => contract.artifact);
+  // Artifacts are matched to inputs by the exact unlocking script ID (P2PKH inputs do not have an artifact)
+  const artifactEntries = transaction.inputs.flatMap((input, inputIndex): Array<[string, Artifact]> => {
+    if (!isContractUnlocker(input.unlocker)) return [];
 
-  return debugTemplate(template, allArtifacts);
+    const { contract, abiFunction } = input.unlocker;
+    return [[getUnlockScriptName(contract, abiFunction, inputIndex), contract.artifact]];
+  });
+
+  return debugTemplate(template, Object.fromEntries(artifactEntries));
 };
 
 export const getBitauthUri = (template: WalletTemplate): string => {

@@ -317,6 +317,50 @@ contract Test() {
 }
 `;
 
+// With inlining disabled, isPositive is defined with OP_DEFINE, so the final require evaluates its result
+const CONTRACT_TEST_FINAL_REQUIRE_DEFINED_FUNCTION = `
+function isPositive(int value) returns (bool) {
+  return value > 0;
+}
+
+contract Test() {
+  function other(int y) {
+    require(y == 5, "y should be 5");
+    require(y != 6, "y should not be 6");
+  }
+
+  function spend(int x) {
+    require(x < 100, "x must be small");
+    require(isPositive(x), "x must be positive");
+  }
+}
+`;
+
+const CONTRACT_TEST_LOG_AFTER_FAILURE = `
+contract Test() {
+  function test_log_after_failed_require(int x) {
+    require(x > 5, "x big");
+    console.log("after", x);
+    require(x < 100, "x small");
+  }
+
+  function test_log_after_division_by_zero(int x) {
+    int y = 10 / x;
+    console.log("after", y);
+    require(y > 1, "y big");
+  }
+}
+`;
+
+// Nothing follows the parameter type check, so the function body compiles to no opcodes of its own
+const CONTRACT_TEST_ONLY_PARAMETER_CHECK = `
+contract Test() {
+  function spend(bool b) {
+    require(b);
+  }
+}
+`;
+
 const CONTRACT_TEST_MULTILINE_REQUIRES = `
 contract Test() {
   // We test this because the cleanup looks different and the final OP_VERIFY isn't removed for these kinds of functions
@@ -611,6 +655,12 @@ export const artifactTestRequires = compileString(CONTRACT_TEST_REQUIRES);
 export const artifactTestSingleFunction = compileString(CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION);
 export const artifactTestMultilineRequires = compileString(CONTRACT_TEST_MULTILINE_REQUIRES);
 export const artifactTestFinalRequireVariable = compileString(CONTRACT_TEST_FINAL_REQUIRE_VARIABLE);
+export const artifactTestFinalRequireDefinedFunction = compileString(
+  CONTRACT_TEST_FINAL_REQUIRE_DEFINED_FUNCTION,
+  { disableInlining: true },
+);
+export const artifactTestLogAfterFailure = compileString(CONTRACT_TEST_LOG_AFTER_FAILURE);
+export const artifactTestOnlyParameterCheck = compileString(CONTRACT_TEST_ONLY_PARAMETER_CHECK);
 export const artifactTestZeroHandling = compileString(CONTRACT_TEST_ZERO_HANDLING);
 export const artifactTestLogs = compileString(CONTRACT_TEST_LOGS);
 export const artifactTestConsecutiveLogs = compileString(CONTRACT_TEST_CONSECUTIVE_LOGS);

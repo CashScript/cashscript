@@ -1,6 +1,7 @@
 import {
   encodeDataPush,
   hexToBin,
+  isHex,
   disassembleBytecodeBch,
   flattenBinArray,
   encodeAuthenticationInstructions,
@@ -68,14 +69,21 @@ export function asmToBytecode(asm: string): Uint8Array {
   if (asm === '') return new Uint8Array();
 
   // Convert the ASM tokens to AuthenticationInstructions
+  // Unknown opcodes and invalid hex would otherwise silently be encoded as different bytecode
   const instructions = asm.split(' ').map((token) => {
-    // Even though the OpcodesBch type allows for { [key: number]: string }, we know that the keys are always the opcodes
-    // so we can safely cast to the AuthenticationInstruction type
     if (token.startsWith('OP_')) {
-      return { opcode: Op[token as keyof typeof Op] } as AuthenticationInstruction;
+      const opcode = Op[token as keyof typeof Op];
+      if (typeof opcode !== 'number') {
+        throw new Error(`Unknown opcode '${token}' in ASM`);
+      }
+
+      return { opcode } as AuthenticationInstruction;
     }
 
     const data = token.replace(/<|>/g, '').replace(/^0x/, '');
+    if (!isHex(data)) {
+      throw new Error(`Invalid data '${token}' in ASM, expected a hex string with an even number of digits`);
+    }
 
     return decodeAuthenticationInstructions(encodeDataPush(hexToBin(data)))[0];
   });

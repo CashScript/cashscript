@@ -4,7 +4,7 @@ import { SpendableUtxo, Utxo, Network, VmTarget } from '../interfaces.js';
 import NetworkProvider from './NetworkProvider.js';
 import { addressToLockScript, cashScriptOutputToLibauthOutput, libauthTokenDetailsToCashScriptTokenDetails } from '../utils.js';
 import { createVirtualMachine, DEFAULT_VM_TARGET } from '../libauth-template/utils.js';
-import { NetworkProviderAbsoluteTimelockError } from './errors.js';
+import { NetworkProviderAbsoluteTimelockError, NetworkProviderMissingInputsError } from './errors.js';
 
 /**
  * Options accepted by the `MockNetworkProvider` constructor.
@@ -130,9 +130,8 @@ export default class MockNetworkProvider implements NetworkProvider {
         utxo.txid.toLowerCase() === binToHex(input.outpointTransactionHash) && utxo.vout === input.outpointIndex
       ));
 
-      // TODO: we should check what error a BCHN node throws, so we can throw the same error here
       if (utxoIndex === -1) {
-        throw new Error(`UTXO not found for input ${input.outpointIndex} of transaction ${txid}`);
+        throw new NetworkProviderMissingInputsError(`UTXO not found for input ${input.outpointIndex} of transaction ${txid}`);
       }
 
       return remainingUtxoEntries.splice(utxoIndex, 1)[0];

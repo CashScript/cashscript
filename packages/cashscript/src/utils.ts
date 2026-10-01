@@ -76,7 +76,8 @@ export function validateInput(utxo: Utxo, changeLocks: Record<string, boolean>):
 // A UTXO/unlocker mismatch would be rejected by the network, so we catch it locally with a descriptive error
 export function validateUnlocker(utxo: SpendableUtxo, unlocker: Unlocker, inputIndex: number, network: Network): void {
   const unlockerLockingBytecode = getUnlockerLockingBytecode(unlocker);
-  if (unlockerLockingBytecode === undefined || utxo.lockingBytecode === unlockerLockingBytecode) return;
+  if (unlockerLockingBytecode === undefined) return;
+  if (utxo.lockingBytecode.toLowerCase() === unlockerLockingBytecode.toLowerCase()) return;
 
   throw new UnlockerLockingBytecodeMismatchError(
     inputIndex,
@@ -171,7 +172,8 @@ function validateChangeLocks(changeLocks: Record<string, boolean>, category?: st
     throw new OutputBchChangeLockedError();
   }
 
-  if (category && changeLocks[category]) {
+  // Token categories are hex strings, which are compared case-insensitively
+  if (category && changeLocks[category.toLowerCase()]) {
     throw new OutputTokenChangeLockedError(category);
   }
 }
@@ -317,9 +319,14 @@ export function createOpReturnOutput(
 }
 
 function toBin(output: string): Uint8Array {
-  const data = output.replace(/^0x/, '');
-  const encode = data === output ? utf8ToBin : hexToBin;
-  return encode(data);
+  if (!output.startsWith('0x')) return utf8ToBin(output);
+
+  const hex = output.slice(2);
+  if (!isHex(hex)) {
+    throw new Error(`OP_RETURN chunk should be a valid hex string with an even number of digits, found '${output}'`);
+  }
+
+  return hexToBin(hex);
 }
 
 // BCH consensus requires the fork id flag on every signing serialization

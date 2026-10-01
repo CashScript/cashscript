@@ -41,7 +41,28 @@ contract FunctionNameCollision(int a) {
 }
 `;
 
+// Two contracts where the name of one is a prefix of the name of the other
+const PREFIX_NAME = `
+contract Vault(int a) {
+  function spend(int b) {
+    console.log("vault b is", b);
+    require(a == b, "b should be a");
+  }
+}
+`;
+
+const PREFIXED_NAME = `
+contract VaultSidecar() {
+  function spend(int c, int d) {
+    require(c + d == 10, "c + d should be 10");
+    require(c > d, "c should be larger than d");
+  }
+}
+`;
+
 export const ARTIFACT_SAME_NAME_DIFFERENT_PATH = compileString(SAME_NAME_DIFFERENT_PATH);
 export const ARTIFACT_NAME_COLLISION = compileString(NAME_COLLISION);
 export const ARTIFACT_CONTRACT_NAME_COLLISION = compileString(CONTRACT_NAME_COLLISION);
 export const ARTIFACT_FUNCTION_NAME_COLLISION = compileString(FUNCTION_NAME_COLLISION);
+export const ARTIFACT_PREFIX_NAME = compileString(PREFIX_NAME);
+export const ARTIFACT_PREFIXED_NAME = compileString(PREFIXED_NAME);

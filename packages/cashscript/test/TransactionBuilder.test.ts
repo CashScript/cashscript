@@ -1,4 +1,4 @@
-import { decodeTransactionUnsafe, hexToBin, stringify } from '@bitauth/libauth';
+import { binToHex, decodeTransactionUnsafe, hexToBin, stringify } from '@bitauth/libauth';
 import { Contract, SignatureTemplate, ElectrumNetworkProvider, MockNetworkProvider, placeholderP2PKHUnlocker, placeholderPublicKey, placeholderSignature } from '../src/index.js';
 import {
   bobAddress,
@@ -14,8 +14,8 @@ import {
   carolTokenAddress,
   alicePriv,
 } from './fixture/vars.js';
-import { Network, SpendableUtxo, Utxo } from '../src/interfaces.js';
-import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo, isFungibleTokenUtxo } from '../src/utils.js';
+import { Network, SignatureAlgorithm, SighashType, SpendableUtxo, Utxo } from '../src/interfaces.js';
+import { utxoComparator, calculateDust, randomUtxo, randomToken, isNonTokenUtxo, isFungibleTokenUtxo, addressToLockScript } from '../src/utils.js';
 import p2pkhArtifact from './fixture/p2pkh.artifact.js';
 import twtArtifact from './fixture/transfer_with_timeout.artifact.js';
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
@@ -30,6 +30,8 @@ import {
   UnlockerLockingBytecodeMismatchError,
 } from '../src/Errors.js';
 import { FailingMockNetworkProvider } from '../src/network/MockNetworkProvider.js';
+import { NetworkProviderError, NetworkProviderMissingInputsError } from '../src/network/errors.js';
+import { ElectrumClient, type ElectrumClientEvents } from '@electrum-cash/network';
 
 describe('Transaction Builder', () => {
   const provider = process.env.TESTS_USE_CHIPNET
@@ -189,6 +191,14 @@ describe('Transaction Builder', () => {
       expect(() => buildWithFee(size)).not.toThrow();
     });
 
+    it('should fail when an OP_RETURN chunk is not valid hex', async () => {
+      const builder = new TransactionBuilder({ provider });
+
+      expect(() => builder.addOpReturnOutput(['0xabc'])).toThrow("OP_RETURN chunk should be a valid hex string with an even number of digits, found '0xabc'");
+      expect(() => builder.addOpReturnOutput(['0xzz'])).toThrow("found '0xzz'");
+      expect(() => builder.addOpReturnOutput(['0x', '0xABCD', 'abc'])).not.toThrow();
+    });
+
     // TODO: Consider improving error messages checked below to also include the input/output index
 
     it('should fail when trying to send to invalid address', async () => {
@@ -271,6 +281,13 @@ describe('Transaction Builder', () => {
         new TransactionBuilder({ provider })
           .addInput(aliceUtxos[0], new SignatureTemplate(bobPriv).unlockP2PKH())
       )).toThrow(UnlockerLockingBytecodeMismatchError);
+    });
+
+    it('should compare the UTXO and unlocker locking bytecode case-insensitively', async () => {
+      const utxo = randomUtxo({ lockingBytecode: p2pkhInstance.lockingBytecode.toUpperCase() });
+      const unlocker = p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv));
+
+      expect(() => new TransactionBuilder({ provider }).addInput(utxo, unlocker)).not.toThrow();
     });
 
     it('should fail when adding a UTXO without a lockingBytecode', async () => {
@@ -395,6 +412,41 @@ describe('Transaction Builder', () => {
     expect((await error).message).toMatch(/^Transaction [0-9a-f]{64} was broadcast, but its details could not be retrieved/);
   });
 
+  it('should throw network provider errors from send() unchanged', async () => {
+    const mockProvider = new MockNetworkProvider();
+    const utxo = mockProvider.addUtxo(aliceAddress, randomUtxo({ satoshis: 100_000n }));
+    const createTransaction = (amount: bigint): TransactionBuilder => new TransactionBuilder({ provider: mockProvider })
+      .addInput(utxo, new SignatureTemplate(alicePriv).unlockP2PKH())
+      .addOutput({ to: aliceAddress, amount });
+
+    await createTransaction(90_000n).send();
+
+    // The UTXO was spent by the first transaction, so a second transaction spending it is a double spend
+    const error = await createTransaction(80_000n).send().catch((e) => e);
+    expect(error).toBeInstanceOf(NetworkProviderMissingInputsError);
+    expect(error.message).toContain('UTXO not found');
+  });
+
+  it('should throw a NetworkProviderError from send() for an unrecognised Electrum rejection', async () => {
+    const electrum = {
+      connect: vi.fn(async () => {}),
+      disconnect: vi.fn(async () => true),
+      request: vi.fn(async () => new Error('some-unrecognised-rejection')),
+    };
+    const electrumProvider = new ElectrumNetworkProvider(Network.CHIPNET, {
+      electrum: electrum as unknown as ElectrumClient<ElectrumClientEvents>,
+    });
+
+    const utxo = randomUtxo({ lockingBytecode: p2pkhInstance.lockingBytecode });
+    const transaction = new TransactionBuilder({ provider: electrumProvider })
+      .addInput(utxo, p2pkhInstance.unlock.spend(carolPub, new SignatureTemplate(carolPriv)))
+      .addOutput({ to: carolAddress, amount: 1_000n });
+
+    const error = await transaction.send().catch((e) => e);
+    expect(error).toBeInstanceOf(NetworkProviderError);
+    expect(error.originalError).toBe('some-unrecognised-rejection');
+  });
+
   it('should preserve the Bitauth URI when broadcast fails', async () => {
     const failingProvider = new FailingMockNetworkProvider();
     const contract = new Contract(p2pkhArtifact, [carolPkh], { provider: failingProvider });
@@ -479,6 +531,25 @@ describe('Transaction Builder', () => {
       });
     });
 
+    describe('addBchChangeOutputIfNeeded', () => {
+      it('should never pay less than the fee rate with ECDSA signatures', () => {
+        const ecdsaTemplate = new SignatureTemplate(carolPriv, SighashType.SIGHASH_ALL, SignatureAlgorithm.ECDSA);
+        const carolLockingBytecode = binToHex(addressToLockScript(carolAddress));
+
+        // ECDSA signatures vary in length, so signing again after adding the change output can make the transaction
+        // larger than the transaction that the change was calculated for
+        for (let i = 0; i < 100; i += 1) {
+          const builder = new TransactionBuilder({ provider })
+            .addInput(randomUtxo({ lockingBytecode: carolLockingBytecode }), ecdsaTemplate.unlockP2PKH())
+            .addInput(randomContractUtxo(), p2pkhInstance.unlock.spend(carolPub, ecdsaTemplate))
+            .addOutput({ to: bobAddress, amount: 10_000n })
+            .addBchChangeOutputIfNeeded({ to: aliceAddress, feeRate: 1 });
+
+          expect(() => builder.build()).not.toThrow();
+        }
+      });
+    });
+
     describe('token change lock', () => {
       it('should prevent further inputs or outputs of the same category after a token change output was added', () => {
         const token = randomToken();
@@ -557,6 +628,30 @@ describe('Transaction Builder', () => {
         const carolChange = txOutputs.find((o) => o.to === carolTokenAddress);
         expect(aliceChange!.token).toEqual({ amount: 300n, category: tokenA.category });
         expect(carolChange!.token).toEqual({ amount: 3000n, category: tokenB.category });
+      });
+
+      it('should compare token categories case-insensitively', () => {
+        const token = randomToken({ amount: 1000n });
+        const upperCaseCategory = token.category.toUpperCase();
+
+        const builder = new TransactionBuilder({ provider, allowImplicitFungibleTokenBurn: true })
+          .addInput(randomContractUtxo({ token }), carolUnlocker())
+          .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 400n, category: upperCaseCategory } })
+          .addTokenChangeOutputIfNeeded({ category: upperCaseCategory, to: aliceTokenAddress });
+
+        // The change output is added, so no tokens are burned
+        const txOutputs = getTxOutputs(decodeTransactionUnsafe(hexToBin(builder.build())));
+        const changeOutput = txOutputs.find((o) => o.to === aliceTokenAddress);
+        expect(changeOutput!.token).toEqual({ amount: 600n, category: token.category });
+
+        // The category is locked in either case
+        expect(() => builder.addInput(randomContractUtxo({ token }), carolUnlocker())).toThrow(OutputTokenChangeLockedError);
+
+        // Without implicit burns, tokens sent to the upper case category are not counted as burned
+        expect(() => new TransactionBuilder({ provider })
+          .addInput(randomContractUtxo({ token }), carolUnlocker())
+          .addOutput({ to: bobTokenAddress, amount: 1000n, token: { amount: 1000n, category: upperCaseCategory } })
+          .build()).not.toThrow();
       });
 
       it('should fail when the change address does not support tokens', () => {
