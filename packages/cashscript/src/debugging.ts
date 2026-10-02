@@ -11,7 +11,11 @@ export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
 
 // debugs the template, optionally logging the execution data
-export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
+export const debugTemplate = (
+  template: WalletTemplate,
+  artifacts: Artifact[],
+  getErrorBitauthUri: () => string = () => getBitauthUri(template),
+): DebugResults => {
   // If a contract has the same name, but a different bytecode, then it is considered a name collision
   const hasArtifactNameCollision = artifacts.some(
     (artifact) => (
@@ -26,25 +30,33 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
   const results: DebugResults = {};
   const unlockingScriptIds = Object.keys(template.scripts).filter((key) => 'unlocks' in template.scripts[key]);
 
+  const context = createDebugContext(template, getErrorBitauthUri);
+
   for (const unlockingScriptId of unlockingScriptIds) {
     const scenarioIds = (template.scripts[unlockingScriptId] as WalletTemplateScriptUnlocking).passes ?? [];
 
     const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(artifact.contractName));
 
     for (const scenarioId of scenarioIds) {
-      results[`${unlockingScriptId}.${scenarioId}`] = debugSingleScenario(template, matchingArtifact, unlockingScriptId, scenarioId);
+      results[`${unlockingScriptId}.${scenarioId}`] = debugSingleScenario(
+        template, context, matchingArtifact, unlockingScriptId, scenarioId,
+      );
     }
   }
 
-  verifyFullTransaction(template);
+  verifyFullTransaction(template, context);
 
   return results;
 };
 
 const debugSingleScenario = (
-  template: WalletTemplate, artifact: Artifact | undefined, unlockingScriptId: string, scenarioId: string,
+  template: WalletTemplate,
+  context: DebugContext,
+  artifact: Artifact | undefined,
+  unlockingScriptId: string,
+  scenarioId: string,
 ): DebugResult => {
-  const { vm, program } = createProgram(template, unlockingScriptId, scenarioId);
+  const { vm, program } = createProgram(template, context, unlockingScriptId, scenarioId);
 
   const fullDebugSteps = vm.debug(program);
 
@@ -121,7 +133,7 @@ const debugSingleScenario = (
     // public key does not match pkh in EQUALVERIFY
     // Note: due to P2PKHUnlocker implementation, the CHECKSIG cannot fail in practice, only the EQUALVERIFY can fail
     if (!artifact) {
-      throw new FailedTransactionError(error, getBitauthUri(template));
+      throw new FailedTransactionError(error, context.getErrorBitauthUri());
     }
 
     const frame = resolveFrame(artifact, lastExecutedDebugStep);
@@ -136,13 +148,13 @@ const debugSingleScenario = (
 
       // Note that we use failingIp here rather than requireStatementIp, see comment above
       throw new FailedRequireError(
-        artifact, failingIp, requireStatement, inputIndex, getBitauthUri(template), error, frame, callStack,
+        artifact, failingIp, requireStatement, inputIndex, context.getErrorBitauthUri(), error, frame, callStack,
       );
     }
 
     // Note that we use failingIp here rather than requireStatementIp, see comment above
     throw new FailedTransactionEvaluationError(
-      artifact, failingIp, inputIndex, getBitauthUri(template), error, frame,
+      artifact, failingIp, inputIndex, context.getErrorBitauthUri(), error, frame,
     );
   }
 
@@ -167,7 +179,7 @@ const debugSingleScenario = (
     // If there is no artifact, this is a P2PKH debug error, final verify can only occur when final CHECKSIG failed
     // Note: due to P2PKHUnlocker implementation, this cannot happen in practice
     if (!artifact) {
-      throw new FailedTransactionError(evaluationResult, getBitauthUri(template));
+      throw new FailedTransactionError(evaluationResult, context.getErrorBitauthUri());
     }
 
     const frame = resolveFrame(artifact, lastExecutedDebugStep);
@@ -183,7 +195,7 @@ const debugSingleScenario = (
         sourcemapInstructionPointer,
         requireStatement,
         inputIndex,
-        getBitauthUri(template),
+        context.getErrorBitauthUri(),
         undefined,
         frame,
         callStack,
@@ -191,7 +203,7 @@ const debugSingleScenario = (
     }
 
     throw new FailedTransactionEvaluationError(
-      artifact, sourcemapInstructionPointer, inputIndex, getBitauthUri(template), evaluationResult, frame,
+      artifact, sourcemapInstructionPointer, inputIndex, context.getErrorBitauthUri(), evaluationResult, frame,
     );
   }
 
@@ -207,12 +219,19 @@ const extractInputIndexFromScenario = (scenarioId: string): number => {
 
 type Program = AuthenticationProgramCommon;
 type CreateProgramResult = { vm: VM, program: Program };
+type DebugContext = { compiler: ReturnType<typeof createCompiler>, vm: VM, getErrorBitauthUri: () => string };
 
-// internal util. instantiates the virtual machine and compiles the template into a program
-const createProgram = (template: WalletTemplate, unlockingScriptId: string, scenarioId: string): CreateProgramResult => {
-  const configuration = walletTemplateToCompilerConfiguration(template);
-  const vm = createVirtualMachine(template.supported[0] as VmTarget);
-  const compiler = createCompiler(configuration);
+const createDebugContext = (template: WalletTemplate, getErrorBitauthUri: () => string): DebugContext => ({
+  compiler: createCompiler(walletTemplateToCompilerConfiguration(template)),
+  vm: createVirtualMachine(template.supported[0] as VmTarget),
+  getErrorBitauthUri,
+});
+
+// internal util. compiles a scenario of the template into a program
+const createProgram = (
+  template: WalletTemplate, context: DebugContext, unlockingScriptId: string, scenarioId: string,
+): CreateProgramResult => {
+  const { compiler, vm } = context;
 
   if (!template.scripts[unlockingScriptId]) {
     throw new Error(`No unlock script found in template for ID ${unlockingScriptId}`);
@@ -229,11 +248,11 @@ const createProgram = (template: WalletTemplate, unlockingScriptId: string, scen
   });
 
   if (typeof scenarioGeneration === 'string') {
-    throw new FailedTransactionError(scenarioGeneration, getBitauthUri(template));
+    throw new FailedTransactionError(scenarioGeneration, context.getErrorBitauthUri());
   }
 
   if (typeof scenarioGeneration.scenario === 'string') {
-    throw new FailedTransactionError(scenarioGeneration.scenario, getBitauthUri(template));
+    throw new FailedTransactionError(scenarioGeneration.scenario, context.getErrorBitauthUri());
   }
 
   return { vm, program: scenarioGeneration.scenario.program };
@@ -379,7 +398,7 @@ const getFinalExecutedVerifyIp = (executedDebugSteps: AuthenticationProgramState
 
 // After debugging, we want to verify the full transaction to ensure it is valid (this catches any errors that are not
 // necessarily script errors)
-const verifyFullTransaction = (template: WalletTemplate): void => {
+const verifyFullTransaction = (template: WalletTemplate, context: DebugContext): void => {
   const placeholderScriptId = Object.keys(template.scripts).find((key) => 'unlocks' in template.scripts[key]);
   const placeholderScenarioId = (template.scripts[placeholderScriptId ?? ''] as WalletTemplateScriptUnlocking)?.passes?.[0];
 
@@ -387,7 +406,7 @@ const verifyFullTransaction = (template: WalletTemplate): void => {
     throw new Error('No placeholder scenario ID or script ID found');
   }
 
-  const { vm, program } = createProgram(template, placeholderScriptId, placeholderScenarioId);
+  const { vm, program } = createProgram(template, context, placeholderScriptId, placeholderScenarioId);
 
   const verificationResult = vm.verify({
     sourceOutputs: program.sourceOutputs,
@@ -395,7 +414,7 @@ const verifyFullTransaction = (template: WalletTemplate): void => {
   });
 
   if (typeof verificationResult === 'string') {
-    throw new FailedTransactionError(verificationResult, getBitauthUri(template));
+    throw new FailedTransactionError(verificationResult, context.getErrorBitauthUri());
   }
 };
 
