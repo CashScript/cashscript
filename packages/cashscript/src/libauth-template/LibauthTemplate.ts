@@ -31,7 +31,7 @@ import {
   Utxo,
 } from '../interfaces.js';
 import SignatureTemplate from '../SignatureTemplate.js';
-import { addressToLockScript, extendedStringify, zip } from '../utils.js';
+import { addressToLockScript, extendedStringify, generateLibauthSourceOutputs, zip } from '../utils.js';
 import { TransactionBuilder } from '../TransactionBuilder.js';
 import { zlibSync } from 'fflate';
 import MockNetworkProvider from '../network/MockNetworkProvider.js';
@@ -39,9 +39,27 @@ import { addHexPrefixExceptEmpty, DEFAULT_VM_TARGET, formatBytecodeForDebugging,
 
 // TODO: Add / improve descriptions throughout the template generation
 
+export interface LibauthTemplateOptions {
+  // So libauth only compiles each scenario's slot, keeping debugging linear in the number of inputs.
+  // The other inputs and outputs then show as raw bytecode in BitAuth IDE
+  useTransactionBytecode?: boolean;
+}
+
+interface TransactionBytecode {
+  unlocking: string[];
+  sourceLocking: string[];
+  outputLocking: string[];
+}
+
+interface ScenarioBytecode {
+  transaction?: TransactionBytecode;
+  lockingBytecodeParamsMapping: Record<string, WalletTemplateScenarioBytecode>;
+}
+
 export const getLibauthTemplate = (
   transactionBuilder: TransactionBuilder,
   libauthTransaction: TransactionBch,
+  options: LibauthTemplateOptions = {},
 ): WalletTemplate => {
   if (transactionBuilder.inputs.some((input) => !isStandardUnlockableUtxo(input))) {
     throw new Error('Cannot use debugging functionality with a transaction that contains custom unlockers');
@@ -51,6 +69,10 @@ export const getLibauthTemplate = (
     ? transactionBuilder.provider.vmTarget
     : DEFAULT_VM_TARGET;
 
+  const scenarioBytecode: ScenarioBytecode = options.useTransactionBytecode
+    ? { transaction: getTransactionBytecode(transactionBuilder, libauthTransaction), lockingBytecodeParamsMapping: {} }
+    : { lockingBytecodeParamsMapping: generateLockingBytecodeParamsMapping(transactionBuilder) };
+
   const template: WalletTemplate = {
     $schema: 'https://ide.bitauth.com/authentication-template-v0.schema.json',
     description: 'Imported from cashscript',
@@ -59,19 +81,33 @@ export const getLibauthTemplate = (
     version: 0,
     entities: generateAllTemplateEntities(transactionBuilder),
     scripts: generateAllTemplateScripts(transactionBuilder),
-    scenarios: generateAllTemplateScenarios(libauthTransaction, transactionBuilder),
+    scenarios: generateAllTemplateScenarios(libauthTransaction, transactionBuilder, scenarioBytecode),
   };
 
   return template;
 };
 
-export const debugLibauthTemplate = (template: WalletTemplate, transaction: TransactionBuilder): DebugResults => {
+const getTransactionBytecode = (
+  transactionBuilder: TransactionBuilder,
+  libauthTransaction: TransactionBch,
+): TransactionBytecode => ({
+  unlocking: libauthTransaction.inputs.map((input) => binToHex(input.unlockingBytecode)),
+  sourceLocking: generateLibauthSourceOutputs(transactionBuilder.inputs)
+    .map((output) => binToHex(output.lockingBytecode)),
+  outputLocking: libauthTransaction.outputs.map((output) => binToHex(output.lockingBytecode)),
+});
+
+export const debugLibauthTemplate = (
+  template: WalletTemplate,
+  transaction: TransactionBuilder,
+  getErrorBitauthUri?: () => string,
+): DebugResults => {
   const allArtifacts = transaction.inputs
     .map(input => isContractUnlocker(input.unlocker) ? input.unlocker.contract : undefined)
     .filter((contract): contract is Contract => Boolean(contract))
     .map(contract => contract.artifact);
 
-  return debugTemplate(template, allArtifacts);
+  return debugTemplate(template, allArtifacts, getErrorBitauthUri);
 };
 
 export const getBitauthUri = (template: WalletTemplate): string => {
@@ -96,7 +132,7 @@ const generateAllTemplateEntities = (
     throw new Error('Unknown unlocker type');
   });
 
-  return entities.reduce((acc, entity) => ({ ...acc, ...entity }), {});
+  return Object.assign({}, ...entities);
 };
 
 const generateAllTemplateScripts = (
@@ -121,7 +157,7 @@ const generateAllTemplateScripts = (
     throw new Error('Unknown unlocker type');
   });
 
-  return scripts.reduce((acc, script) => ({ ...acc, ...script }), {});
+  return Object.assign({}, ...scripts);
 };
 
 const generateLockingBytecodeParamsMapping = (
@@ -145,10 +181,11 @@ const generateLockingBytecodeParamsMapping = (
 const generateAllTemplateScenarios = (
   libauthTransaction: TransactionBch,
   transactionBuilder: TransactionBuilder,
+  scenarioBytecode: ScenarioBytecode,
 ): WalletTemplate['scenarios'] => {
   const scenarios = transactionBuilder.inputs.map((input, inputIndex) => {
     if (isP2PKHUnlocker(input.unlocker)) {
-      return generateTemplateScenariosP2PKH(libauthTransaction, transactionBuilder, inputIndex);
+      return generateTemplateScenariosP2PKH(libauthTransaction, transactionBuilder, inputIndex, scenarioBytecode);
     }
 
     if (isContractUnlocker(input.unlocker)) {
@@ -160,13 +197,14 @@ const generateAllTemplateScenarios = (
         input.unlocker.abiFunction,
         encodedArgs,
         inputIndex,
+        scenarioBytecode,
       );
     }
 
     throw new Error('Unknown unlocker type');
   });
 
-  return scenarios.reduce((acc, scenario) => ({ ...acc, ...scenario }), {});
+  return Object.assign({}, ...scenarios);
 };
 
 const generateTemplateEntitiesP2PKH = (
@@ -342,6 +380,7 @@ const generateTemplateScenarios = (
   abiFunction: AbiFunction,
   encodedFunctionArgs: EncodedFunctionArgument[],
   inputIndex: number,
+  scenarioBytecode: ScenarioBytecode,
 ): WalletTemplate['scenarios'] => {
   const artifact = contract.artifact;
   const encodedConstructorArgs = contract.encodedConstructorArgs;
@@ -363,8 +402,12 @@ const generateTemplateScenarios = (
           privateKeys: generateTemplateScenarioKeys(abiFunction.inputs, encodedFunctionArgs),
         },
       },
-      transaction: generateTemplateScenarioTransaction(contract, libauthTransaction, transactionBuilder, inputIndex),
-      sourceOutputs: generateTemplateScenarioSourceOutputs(transactionBuilder, libauthTransaction, inputIndex),
+      transaction: generateTemplateScenarioTransaction(
+        contract, libauthTransaction, transactionBuilder, inputIndex, scenarioBytecode,
+      ),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(
+        transactionBuilder, libauthTransaction, inputIndex, scenarioBytecode,
+      ),
     },
   };
 
@@ -375,6 +418,7 @@ const generateTemplateScenariosP2PKH = (
   libauthTransaction: TransactionBch,
   transactionBuilder: TransactionBuilder,
   inputIndex: number,
+  scenarioBytecode: ScenarioBytecode,
 ): WalletTemplate['scenarios'] => {
   const scenarioIdentifier = `P2PKH_spend_input${inputIndex}_evaluate`;
   const { signature, publicKey } = getSignatureAndPubkeyFromP2PKHInput(libauthTransaction.inputs[inputIndex]);
@@ -391,8 +435,12 @@ const generateTemplateScenariosP2PKH = (
           [`public_key_${inputIndex}`]: `0x${binToHex(publicKey)}`,
         },
       },
-      transaction: generateTemplateScenarioTransaction(undefined, libauthTransaction, transactionBuilder, inputIndex),
-      sourceOutputs: generateTemplateScenarioSourceOutputs(transactionBuilder, libauthTransaction, inputIndex),
+      transaction: generateTemplateScenarioTransaction(
+        undefined, libauthTransaction, transactionBuilder, inputIndex, scenarioBytecode,
+      ),
+      sourceOutputs: generateTemplateScenarioSourceOutputs(
+        transactionBuilder, libauthTransaction, inputIndex, scenarioBytecode,
+      ),
     },
   };
 
@@ -404,8 +452,13 @@ const generateTemplateScenarioTransaction = (
   libauthTransaction: TransactionBch,
   transactionBuilder: TransactionBuilder,
   slotIndex: number,
+  scenarioBytecode: ScenarioBytecode,
 ): WalletTemplateScenario['transaction'] => {
-  const lockingBytecodeParamsMapping = generateLockingBytecodeParamsMapping(transactionBuilder);
+  if (scenarioBytecode.transaction) {
+    return generateTemplateScenarioTransactionFromBytecode(libauthTransaction, slotIndex, scenarioBytecode.transaction);
+  }
+
+  const { lockingBytecodeParamsMapping } = scenarioBytecode;
 
   const zippedInputs = zip(transactionBuilder.inputs, libauthTransaction.inputs);
   const inputs = zippedInputs.map(([csInput, libauthInput], inputIndex) => {
@@ -435,15 +488,43 @@ const generateTemplateScenarioTransaction = (
   return { inputs, locktime, outputs, version };
 };
 
+const generateTemplateScenarioTransactionFromBytecode = (
+  libauthTransaction: TransactionBch,
+  slotIndex: number,
+  transactionBytecode: TransactionBytecode,
+): WalletTemplateScenario['transaction'] => {
+  const inputs = libauthTransaction.inputs.map((libauthInput, inputIndex) => ({
+    outpointIndex: libauthInput.outpointIndex,
+    outpointTransactionHash: binToHex(libauthInput.outpointTransactionHash),
+    sequenceNumber: libauthInput.sequenceNumber,
+    unlockingBytecode: inputIndex === slotIndex ? ['slot'] as ['slot'] : transactionBytecode.unlocking[inputIndex],
+  }));
+
+  const outputs = libauthTransaction.outputs.map((libauthOutput, outputIndex) => ({
+    lockingBytecode: transactionBytecode.outputLocking[outputIndex],
+    token: serialiseTokenDetails(libauthOutput.token),
+    valueSatoshis: Number(libauthOutput.valueSatoshis),
+  }));
+
+  return { inputs, locktime: libauthTransaction.locktime, outputs, version: libauthTransaction.version };
+};
+
 const generateTemplateScenarioSourceOutputs = (
   transactionBuilder: TransactionBuilder,
   libauthTransaction: TransactionBch,
   slotIndex: number,
+  scenarioBytecode: ScenarioBytecode,
 ): Array<WalletTemplateScenarioOutput<true>> => {
   const zippedInputs = zip(transactionBuilder.inputs, libauthTransaction.inputs);
   return zippedInputs.map(([csInput, libauthInput], inputIndex) => {
+    const lockingBytecode = scenarioBytecode.transaction && inputIndex !== slotIndex
+      ? scenarioBytecode.transaction.sourceLocking[inputIndex]
+      : generateTemplateScenarioBytecodeForSourceOutputs(
+        csInput, libauthInput, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex,
+      );
+
     return {
-      lockingBytecode: generateTemplateScenarioBytecodeForSourceOutputs(csInput, libauthInput, inputIndex, 'p2pkh_placeholder_lock', inputIndex === slotIndex),
+      lockingBytecode,
       valueSatoshis: Number(csInput.satoshis),
       token: serialiseTokenDetails(csInput.token),
     };

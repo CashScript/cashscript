@@ -2,7 +2,9 @@ import {
   lockingBytecodeToCashAddress,
   hexToBin,
   Transaction,
+  WalletTemplate,
   binToHex,
+  decodeTransaction,
 } from '@bitauth/libauth';
 import PQueue from 'p-queue';
 import pRetry from 'p-retry';
@@ -14,6 +16,8 @@ import MockNetworkProvider from '../src/network/MockNetworkProvider.js';
 import NetworkProvider from '../src/network/NetworkProvider.js';
 import SignatureTemplate from '../src/SignatureTemplate.js';
 import { TransactionBuilder } from '../src/TransactionBuilder.js';
+import { DebugResults } from '../src/debugging.js';
+import { debugLibauthTemplate, getBitauthUri, getLibauthTemplate } from '../src/libauth-template/LibauthTemplate.js';
 
 export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork): Output[] {
   return tx.outputs.map((o) => {
@@ -140,4 +144,30 @@ export function gatherUtxos<U extends Utxo>(
     total,
     changeAmount,
   };
+}
+
+// Some fixtures fail evaluation, so the error is compared as well as the results
+export function expectSameDebugOutcomeWithTransactionBytecode(transaction: TransactionBuilder): void {
+  const libauthTransaction = decodeTransaction(hexToBin(transaction.build()));
+  if (typeof libauthTransaction === 'string') throw new Error(libauthTransaction);
+
+  const scriptTemplate = getLibauthTemplate(transaction, libauthTransaction);
+  const bytecodeTemplate = getLibauthTemplate(transaction, libauthTransaction, { useTransactionBytecode: true });
+
+  for (const scenario of Object.values(bytecodeTemplate.scenarios ?? {})) {
+    const templateInputs = scenario.transaction?.inputs.filter((input) => typeof input.unlockingBytecode !== 'string');
+    const templateSourceOutputs = scenario.sourceOutputs?.filter((output) => typeof output.lockingBytecode !== 'string');
+    expect(templateInputs).toEqual([expect.objectContaining({ unlockingBytecode: ['slot'] })]);
+    expect(templateSourceOutputs).toEqual([expect.objectContaining({ lockingBytecode: ['slot'] })]);
+  }
+
+  const debugOutcome = (template: WalletTemplate): DebugResults | Error => {
+    try {
+      return debugLibauthTemplate(template, transaction, () => getBitauthUri(scriptTemplate));
+    } catch (error) {
+      return error as Error;
+    }
+  };
+
+  expect(debugOutcome(bytecodeTemplate)).toEqual(debugOutcome(scriptTemplate));
 }

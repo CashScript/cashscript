@@ -339,6 +339,30 @@ describe('Multi-Contract-Debugging tests', () => {
     });
   });
 
+  describe('Many inputs', () => {
+    it('should attribute a failing require statement to the right input among many inputs', async () => {
+      const contract = new Contract(p2pkhArtifact, [alicePkh], { provider });
+      const transaction = new TransactionBuilder({ provider });
+
+      for (let inputIndex = 0; inputIndex < 40; inputIndex += 1) {
+        // Unique outpoints, random ones can collide across this many inputs
+        const utxo = provider.addUtxo(
+          contract.address,
+          randomUtxo({ txid: inputIndex.toString(16).padStart(64, '0'), vout: 0, satoshis: 10_000n }),
+        );
+        const unlocker = inputIndex === 33
+          ? contract.unlock.spend(bobPub, bobSignatureTemplate)
+          : contract.unlock.spend(alicePub, new SignatureTemplate(alicePriv));
+        transaction.addInput(utxo, unlocker);
+      }
+
+      transaction.addOutput({ to: contract.address, amount: 300_000n });
+
+      await expect(transaction)
+        .toFailRequireWith('P2PKH.cash:4 Require statement failed at input 33 in contract P2PKH.cash at line 4.');
+    });
+  });
+
   describe('Non-require error messages', () => {
     it('should fail with the correct error message when there are name collisions on the contractName', () => {
       const nameCollision = new Contract(ARTIFACT_NAME_COLLISION, [0n], { provider });

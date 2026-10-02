@@ -44,6 +44,7 @@ This release contains several breaking changes, please refer to the [migration n
 - :bug: Fix minimum fee check rounding bug.
 - :bug: Fix bug where `setLocktime()` accepted invalid values.
 - :bug: Fix edge case bug where a failing final `require(variable)` statement was reported incorrectly in debugging.
+- :racehorse: Greatly improve debugging performance for transactions with many inputs, which also speeds up `send()` on the `MockNetworkProvider` and the `toFailRequire` matchers.
 
 ## v0.13.3
 
