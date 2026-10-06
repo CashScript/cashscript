@@ -303,7 +303,8 @@ function deriveAnchor(
 
     // The prologue is one contiguous opcode block at the function's start
     const lastPrologueOpcode = Math.max(...prologueTags.map((t) => t.endIndex));
-    const firstBodyOpcode = lastPrologueOpcode + 1;
+    // If nothing follows the prologue (e.g. `require(b)` for a bool parameter), it is anchored to its own last opcode
+    const firstBodyOpcode = Math.min(lastPrologueOpcode + 1, locationData.length - 1);
     const firstBodyLine = getDisplayLine(locationData[firstBodyOpcode]);
 
     // `insertAfterLine` of `firstBodyLine - 1` lands all the prologue annotations directly above the

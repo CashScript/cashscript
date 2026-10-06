@@ -54,7 +54,7 @@ export function gatherFungibleTokenUtxos<U extends Utxo>(
   utxos: U[], tokenCategory: string, amount: bigint,
 ): GatherUtxosResult<U> {
   const sortedTokenUtxos = utxos
-    .filter((utxo) => isFungibleTokenUtxo(utxo) && utxo.token!.category === tokenCategory)
+    .filter((utxo) => isFungibleTokenUtxo(utxo) && utxo.token!.category.toLowerCase() === tokenCategory.toLowerCase())
     .toSorted((a, b) => Number(b.token!.amount - a.token!.amount));
 
   const targetUtxos: U[] = [];

@@ -7,6 +7,7 @@ import {
   calculateBytesize,
   countOpcodes,
   encodeNullDataScript,
+  Op,
   scriptToAsm,
   scriptToBytecode,
 } from '../src/index.js';
@@ -50,6 +51,26 @@ describe('script utils', () => {
       it(`should convert asm to bytecode for "${name}"`, () => {
         expect(asmToBytecode(asm)).toEqual(bytecode);
       });
+    });
+  });
+
+  describe('asmToBytecode() with invalid ASM', () => {
+    it('should throw on an unknown opcode instead of encoding it as OP_0', () => {
+      expect(() => asmToBytecode('OP_1 OP_NOT_AN_OPCODE')).toThrow("Unknown opcode 'OP_NOT_AN_OPCODE' in ASM");
+      expect(() => asmToBytecode('OP_toString')).toThrow("Unknown opcode 'OP_toString' in ASM");
+    });
+
+    it('should throw on data that is not hex or has an odd number of digits', () => {
+      expect(() => asmToBytecode('OP_1 zz')).toThrow("Invalid data 'zz' in ASM");
+      expect(() => asmToBytecode('abc')).toThrow("Invalid data 'abc' in ASM");
+      expect(() => asmToBytecode('<0xabc>')).toThrow("Invalid data '<0xabc>' in ASM");
+    });
+
+    it('should encode every opcode name that bytecodeToAsm produces', () => {
+      for (let opcode = Op.OP_1NEGATE; opcode <= 0xff; opcode += 1) {
+        const bytecode = Uint8Array.of(opcode);
+        expect(asmToBytecode(bytecodeToAsm(bytecode))).toEqual(bytecode);
+      }
     });
   });
 

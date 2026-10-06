@@ -10,8 +10,13 @@ import { VmTarget } from './interfaces.js';
 export type DebugResult = AuthenticationProgramStateCommon[];
 export type DebugResults = Record<string, DebugResult>;
 
-// debugs the template, optionally logging the execution data
-export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): DebugResults => {
+// debugs the template, optionally logging the execution data. The artifacts are keyed by the ID of the unlocking script
+// that spends the contract, so every input is debugged with the artifact of its own contract
+export const debugTemplate = (
+  template: WalletTemplate, artifactsByUnlockingScriptId: Record<string, Artifact>,
+): DebugResults => {
+  const artifacts = Object.values(artifactsByUnlockingScriptId);
+
   // If a contract has the same name, but a different bytecode, then it is considered a name collision
   const hasArtifactNameCollision = artifacts.some(
     (artifact) => (
@@ -29,7 +34,7 @@ export const debugTemplate = (template: WalletTemplate, artifacts: Artifact[]): 
   for (const unlockingScriptId of unlockingScriptIds) {
     const scenarioIds = (template.scripts[unlockingScriptId] as WalletTemplateScriptUnlocking).passes ?? [];
 
-    const matchingArtifact = artifacts.find((artifact) => unlockingScriptId.startsWith(artifact.contractName));
+    const matchingArtifact = artifactsByUnlockingScriptId[unlockingScriptId];
 
     for (const scenarioId of scenarioIds) {
       results[`${unlockingScriptId}.${scenarioId}`] = debugSingleScenario(template, matchingArtifact, unlockingScriptId, scenarioId);
@@ -72,6 +77,13 @@ const debugSingleScenario = (
     // - multiple log statements may exist for the same ip, so we need to handle all of them.
     const executedLogs = executedDebugSteps
       .flatMap((debugStep, index) => {
+        // A step with an error did not complete its instruction, so the log entries after it were not reached. libauth
+        // also repeats the final state at the end of the trace, which should only be matched once.
+        const previousDebugStep = executedDebugSteps[index - 1];
+        const isRepeatedFinalState = index === executedDebugSteps.length - 1
+          && debugStep.ip === previousDebugStep?.ip && debugStep.instructions === previousDebugStep?.instructions;
+        if (debugStep.error || isRepeatedFinalState) return [];
+
         const frame = resolveFrame(artifact, debugStep);
         const logEntries = frame.logs.filter((log) => log.ip === debugStep.ip);
         if (logEntries.length === 0) return [];
@@ -151,7 +163,11 @@ const debugSingleScenario = (
 
   // Check if the evaluation failed matches any of the possible failure cases
   if (failedFinalVerify(evaluationResult)) {
-    const finalExecutedVerifyIp = getFinalExecutedVerifyIp(executedDebugSteps);
+    // Only the steps of the frame that failed are used, since ips of other frames (e.g. a function body that was
+    // invoked by the final require statement) do not point into this frame
+    const finalExecutedVerifyIp = getFinalExecutedVerifyIp(
+      executedDebugSteps.filter((step) => step.instructions === lastExecutedDebugStep.instructions),
+    );
 
     // The final executed verify instruction points to the "implicit" VERIFY that is added at the end of the script.
     // This instruction does not exist in the sourcemap, so we need to decrement the instruction pointer to get the
