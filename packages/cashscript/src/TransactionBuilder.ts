@@ -407,7 +407,8 @@ export class TransactionBuilder {
       console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
     }
 
-    return debugLibauthTemplate(this.getLibauthTemplate(), this);
+    const template = getLibauthTemplate(this, this.buildLibauthTransaction(), { useTransactionBytecode: true });
+    return debugLibauthTemplate(template, this, () => this.getBitauthUriWithFallback());
   }
 
   /**
@@ -518,20 +519,20 @@ export class TransactionBuilder {
       txid = await this.provider.sendRawTransaction(tx);
     } catch (e: any) {
       const reason = e.error ?? e.message;
-
-      const getBitauthUriWithFallback = (): string => {
-        try {
-          return getBitauthUri(this.getLibauthTemplate());
-        } catch {
-          return 'Bitauth URI generation failed';
-        }
-      };
-
-      throw new FailedTransactionError(reason, getBitauthUriWithFallback());
+      throw new FailedTransactionError(reason, this.getBitauthUriWithFallback());
     }
 
     // The transaction was broadcast successfully, so failing to retrieve it afterwards is not a failed transaction
     return raw ? this.getTxDetails(txid, raw) : this.getTxDetails(txid);
+  }
+
+  // Building the link must not replace the error it is attached to
+  private getBitauthUriWithFallback(): string {
+    try {
+      return getBitauthUri(this.getLibauthTemplate());
+    } catch {
+      return 'Bitauth URI generation failed';
+    }
   }
 
   private async getTxDetails(txid: string): Promise<TransactionDetails>;
