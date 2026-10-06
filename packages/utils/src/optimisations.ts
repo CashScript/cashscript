@@ -179,9 +179,11 @@ export const optimisationReplacements = [
 
   // Replace stack shuffles with shorter equivalents
   ['OP_SWAP OP_OVER', 'OP_TUCK'],
-  // Note that OP_3DUP also copies an item that is then dropped, which raises the operation cost when that item is large
-  ['OP_2 OP_PICK OP_2 OP_PICK', 'OP_3DUP OP_DROP'],
-  ['OP_2 OP_PICK OP_OVER', 'OP_3DUP OP_NIP'],
+  // These are disabled because OP_3DUP also copies an item that is then dropped, which can increase the operation cost
+  // by up to ~10,000 per occurrence (depending on the size of the dropped item), so contracts that are within the
+  // operation cost limits without these optimisations could exceed them with these optimisations
+  // ['OP_2 OP_PICK OP_2 OP_PICK', 'OP_3DUP OP_DROP'],
+  // ['OP_2 OP_PICK OP_OVER', 'OP_3DUP OP_NIP'],
   ['OP_2 OP_PICK OP_NIP', 'OP_DROP OP_OVER'],
   ['OP_TOALTSTACK OP_ROT OP_ROT OP_FROMALTSTACK', 'OP_2SWAP OP_ROT'],
 
