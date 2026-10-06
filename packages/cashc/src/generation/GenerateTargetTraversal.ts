@@ -519,6 +519,9 @@ export default class GenerateTargetTraversal extends AstTraversal {
     const scopedReassign = this.scopeDepth > 0 && node.targets.some((target) => target.isReassignment);
     if (!scopedReassign) {
       this.popFromStack(node.targets.length);
+      node.targets
+        .filter((target) => target.isReassignment)
+        .forEach((target) => this.renameReassignedVariable(target.identifier.name));
       node.targets.forEach((target) => this.pushToStack(target.identifier.name));
       this.dropUnusedTupleTargets(node);
       return node;
@@ -579,9 +582,17 @@ export default class GenerateTargetTraversal extends AstTraversal {
       this.popFromStack();
     } else {
       this.popFromStack();
+      this.renameReassignedVariable(node.identifier.name);
       this.pushToStack(node.identifier.name);
     }
     return node;
+  }
+
+  // Outside of a loop/branch, a reassignment leaves the old value on the stack (it gets dropped with the rest of the
+  // stack at the end of the function). We make that old slot anonymous, so it can never be read as the new value.
+  private renameReassignedVariable(name: string): void {
+    const stackIndex = this.getStackIndex(name, true);
+    if (stackIndex !== -1) this.stack[stackIndex] = '(value)';
   }
 
   // This algorithm can be optimised for hardcoded depths
