@@ -1,0 +1,9 @@
+function verifyData(datasig s, bytes message, pubkey pk) returns (bool) {
+    return checkDataSig(s, message, pk);
+}
+
+contract Test() {
+    function spend(datasig s, bytes message, pubkey pk) {
+        require(verifyData(s, message, pk));
+    }
+}

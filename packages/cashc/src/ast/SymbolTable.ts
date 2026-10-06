@@ -1,22 +1,58 @@
-import { Type } from '@cashscript/utils';
+import { DebugFrame, Type, Script, Op, encodeInt } from '@cashscript/utils';
 import {
   VariableDefinitionNode,
   ParameterNode,
+  FunctionDefinitionNode,
+  ConstantDefinitionNode,
   IdentifierNode,
-  Node,
+  DefinitionNode,
 } from './AST.js';
+import { Modifier } from './Globals.js';
+import { functionReturnType } from '../utils.js';
+
+export enum ReferenceKind {
+  READ = 'read',
+  WRITE = 'write',
+}
+
+export interface Reference {
+  kind: ReferenceKind;
+  node: IdentifierNode;
+}
 
 export class Symbol {
-  references: IdentifierNode[] = [];
+  references: Reference[] = [];
+  inlinedFrame?: DebugFrame;
+
   private constructor(
     public name: string,
     public type: Type,
     public symbolType: SymbolType,
-    public definition?: Node,
+    public definition?: DefinitionNode,
     public parameters?: Type[],
-  ) {}
+    public bytecode?: Script,
+    public functionId?: number,
+  ) { }
+
+  hasModifier(modifier: Modifier): boolean {
+    return this.definition !== undefined
+      && !(this.definition instanceof FunctionDefinitionNode)
+      && this.definition.modifiers.includes(modifier);
+  }
+
+  getReferences(kind: ReferenceKind): Reference[] {
+    return this.references.filter((reference) => reference.kind === kind);
+  }
+
+  isUnused(): boolean {
+    return this.getReferences(ReferenceKind.READ).length === 0;
+  }
 
   static variable(node: VariableDefinitionNode | ParameterNode): Symbol {
+    return new Symbol(node.name, node.type, SymbolType.VARIABLE, node);
+  }
+
+  static constant(node: ConstantDefinitionNode): Symbol {
     return new Symbol(node.name, node.type, SymbolType.VARIABLE, node);
   }
 
@@ -24,8 +60,23 @@ export class Symbol {
     return new Symbol(name, type, SymbolType.VARIABLE);
   }
 
-  static function(name: string, type: Type, parameters: Type[]): Symbol {
-    return new Symbol(name, type, SymbolType.FUNCTION, undefined, parameters);
+  static builtinFunction(name: string, returnType: Type, parameters: Type[], bytecode: Script): Symbol {
+    return new Symbol(name, returnType, SymbolType.FUNCTION, undefined, parameters, bytecode);
+  }
+
+  static userFunction(node: FunctionDefinitionNode): Symbol {
+    const parameterTypes = node.parameters.map((parameter) => parameter.type);
+    return new Symbol(node.name, functionReturnType(node.returnTypes), SymbolType.FUNCTION, node, parameterTypes);
+  }
+
+  setFunctionId(functionId: number): void {
+    this.functionId = functionId;
+    this.bytecode = [encodeInt(BigInt(functionId)), Op.OP_INVOKE];
+  }
+
+  setInlinedBytecode(bytecode: Script, frame: DebugFrame): void {
+    this.bytecode = bytecode;
+    this.inlinedFrame = frame;
   }
 
   static class(name: string, type: Type, parameters: Type[]): Symbol {
@@ -52,7 +103,7 @@ export class SymbolTable {
 
   constructor(
     public parent?: SymbolTable,
-  ) {}
+  ) { }
 
   set(symbol: Symbol): void {
     this.symbols.set(symbol.name, symbol);
@@ -70,9 +121,10 @@ export class SymbolTable {
     return `[${Array.from(this.symbols).map((e) => e[1])}]`;
   }
 
-  unusedSymbols(): Symbol[] {
+  getUnmarkedUnusedSymbols(): Symbol[] {
     return Array.from(this.symbols)
       .map((e) => e[1])
-      .filter((s) => s.references.length === 0);
+      .filter((s) => !s.hasModifier(Modifier.UNUSED))
+      .filter((s) => s.isUnused());
   }
 }

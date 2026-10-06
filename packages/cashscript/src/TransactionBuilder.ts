@@ -12,7 +12,7 @@ import {
   Output,
   TransactionDetails,
   UnlockableUtxo,
-  Utxo,
+  SpendableUtxo,
   InputOptions,
   isUnlockableUtxo,
   isStandardUnlockableUtxo,
@@ -34,6 +34,7 @@ import {
   getOutputSize,
   validateInput,
   validateOutput,
+  validateUnlocker,
 } from './utils.js';
 import {
   FailedTransactionError,
@@ -109,7 +110,7 @@ export class TransactionBuilder {
    * @returns This builder for chaining.
    * @throws If the UTXO is invalid.
    */
-  addInput(utxo: Utxo, unlocker: Unlocker, options?: InputOptions): this {
+  addInput(utxo: SpendableUtxo, unlocker: Unlocker, options?: InputOptions): this {
     return this.addInputs([utxo], unlocker, options);
   }
 
@@ -122,7 +123,7 @@ export class TransactionBuilder {
    * @returns This builder for chaining.
    * @throws If any UTXO is invalid.
    */
-  addInputs(utxos: Utxo[], unlocker: Unlocker, options?: InputOptions): this;
+  addInputs(utxos: SpendableUtxo[], unlocker: Unlocker, options?: InputOptions): this;
 
   /**
    * Add multiple UTXOs that each carry their own unlocker.
@@ -133,7 +134,7 @@ export class TransactionBuilder {
    */
   addInputs(utxos: UnlockableUtxo[]): this;
 
-  addInputs(utxos: Utxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
+  addInputs(utxos: SpendableUtxo[] | UnlockableUtxo[], unlocker?: Unlocker, options?: InputOptions): this {
     utxos.forEach((utxo) => validateInput(utxo, this.changeLocks));
     if (
       (!unlocker && utxos.some((utxo) => !isUnlockableUtxo(utxo)))
@@ -141,6 +142,10 @@ export class TransactionBuilder {
     ) {
       throw new Error('Either all UTXOs must have an individual unlocker specified, or no UTXOs must have an individual unlocker specified and a shared unlocker must be provided');
     }
+
+    utxos.forEach((utxo, i) => (
+      validateUnlocker(utxo, unlocker ?? (utxo as UnlockableUtxo).unlocker, this.inputs.length + i, this.provider.network)
+    ));
 
     if (!unlocker) {
       this.inputs = this.inputs.concat(utxos as UnlockableUtxo[]);
@@ -314,8 +319,13 @@ export class TransactionBuilder {
    *
    * @param locktime - The absolute locktime to use (block height or UNIX timestamp).
    * @returns This builder for chaining.
+   * @throws If the locktime is not an unsigned 32-bit integer.
    */
   setLocktime(locktime: number): this {
+    if (!Number.isInteger(locktime) || locktime < 0 || locktime > 0xffffffff) {
+      throw new Error(`Locktime ${locktime} should be an integer between 0 and 4294967295`);
+    }
+
     this.locktime = locktime;
     return this;
   }
@@ -393,7 +403,7 @@ export class TransactionBuilder {
       .map((input) => 'contract' in input.unlocker ? input.unlocker.contract.artifact.compiler.version : null)
       .filter((version) => version !== null);
 
-    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0'))) {
+    if (!contractVersions.every((version) => semver.satisfies(version, '>=0.11.0', { includePrerelease: true }))) {
       console.warn('For the best debugging experience, please recompile your contract with cashc version 0.11.0 or newer.');
     }
 
@@ -503,9 +513,9 @@ export class TransactionBuilder {
       this.debug();
     }
 
+    let txid: string;
     try {
-      const txid = await this.provider.sendRawTransaction(tx);
-      return raw ? await this.getTxDetails(txid, raw) : await this.getTxDetails(txid);
+      txid = await this.provider.sendRawTransaction(tx);
     } catch (e: any) {
       const reason = e.error ?? e.message;
 
@@ -519,6 +529,9 @@ export class TransactionBuilder {
 
       throw new FailedTransactionError(reason, getBitauthUriWithFallback());
     }
+
+    // The transaction was broadcast successfully, so failing to retrieve it afterwards is not a failed transaction
+    return raw ? this.getTxDetails(txid, raw) : this.getTxDetails(txid);
   }
 
   private async getTxDetails(txid: string): Promise<TransactionDetails>;
@@ -538,8 +551,7 @@ export class TransactionBuilder {
       }
     }
 
-    // Should not happen
-    throw new Error('Could not retrieve transaction details for over 10 minutes');
+    throw new Error(`Transaction ${txid} was broadcast, but its details could not be retrieved for over 10 minutes`);
   }
 
   /**
@@ -573,19 +585,20 @@ export class TransactionBuilder {
     const transactionSize = this.getEncodedTransactionSize(transaction);
 
     const fee = totalInputAmount - totalOutputAmount;
-    const feePerByte = Number((Number(fee) / transactionSize).toFixed(2));
+    const feePerByte = Number(fee) / transactionSize;
 
     if (this.options.maximumFeeSatoshis && fee > this.options.maximumFeeSatoshis) {
       throw new TransactionFeeTooHighError(fee, this.options.maximumFeeSatoshis);
     }
 
+    // The limits are checked against the exact fee per byte, which is only rounded (away from the limit) for display
     if (this.options.maximumFeeSatsPerByte && feePerByte > this.options.maximumFeeSatsPerByte) {
-      throw new TransactionFeePerByteTooHighError(feePerByte, this.options.maximumFeeSatsPerByte);
+      throw new TransactionFeePerByteTooHighError(Math.ceil(feePerByte * 100) / 100, this.options.maximumFeeSatsPerByte);
     }
 
     const STANDARD_MIN_FEE_PER_BYTE = 1.0;
     if (feePerByte < STANDARD_MIN_FEE_PER_BYTE) {
-      throw new TransactionFeePerByteTooLowError(feePerByte, STANDARD_MIN_FEE_PER_BYTE);
+      throw new TransactionFeePerByteTooLowError(Math.floor(feePerByte * 100) / 100, STANDARD_MIN_FEE_PER_BYTE);
     }
   }
 

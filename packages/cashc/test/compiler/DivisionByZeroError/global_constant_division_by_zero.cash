@@ -1,0 +1,7 @@
+int constant DIVIDED = 10 / 0;
+
+contract GlobalConstantDivisionByZero() {
+    function spend() {
+        require(DIVIDED == 0);
+    }
+}

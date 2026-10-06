@@ -1,0 +1,13 @@
+function pair(int n) returns (int, int) {
+    return n + 1, n + 2;
+}
+
+contract Test() {
+    function spend(int n, int unused pad) {
+        if (n > 0) {
+            (int q, pad) = pair(n);
+            require(q > 0);
+        }
+        require(n < 100);
+    }
+}

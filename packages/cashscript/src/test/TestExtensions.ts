@@ -1,15 +1,7 @@
 import { DebugResults } from '../debugging.js';
 
-declare global {
-  namespace jest {
-    // eslint-disable-next-line
-    interface Matchers<R> {
-      toLog(value?: RegExp | string): Promise<void>;
-      toFailRequireWith(value: RegExp | string): Promise<void>;
-      toFailRequire(): Promise<void>;
-    }
-  }
-}
+// Registers the custom matchers at runtime. Their types are declared separately for Vitest and Jest, in
+// VitestExtensions.ts and JestExtensions.ts (which are exported as cashscript/vitest and cashscript/jest).
 
 interface Debuggable {
   debug(): DebugResults;
@@ -18,7 +10,7 @@ interface Debuggable {
 type TestFramework = typeof vi;
 const testFramework: TestFramework = (globalThis as any).vi ?? (globalThis as any).jest;
 
-// Extend Vitest with the custom matchers, this file needs to be imported in the vitest.setup.ts file or the test file
+// Extend Vitest or Jest with the custom matchers
 expect.extend({
   toLog(
     transaction: Debuggable,

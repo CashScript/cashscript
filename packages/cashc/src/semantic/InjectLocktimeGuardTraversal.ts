@@ -1,10 +1,13 @@
 import { PrimitiveType } from '@cashscript/utils';
 import {
   BlockNode,
+  ContractNode,
+  FunctionCallNode,
   FunctionDefinitionNode,
   IntLiteralNode,
   Node,
   NullaryOpNode,
+  SourceFileNode,
   TimeOpNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
@@ -12,43 +15,88 @@ import { TimeOp } from '../ast/Globals.js';
 import { Location } from '../ast/Location.js';
 import { NullaryOperator } from '../ast/Operator.js';
 
-// Per BCH consensus, `tx.locktime` is only protocol-enforced if at least one input has a non-final sequence number
-// If a require(tx.time >= ...) check or a require(this.age >= ...) with a compile-time int literal below 2^31 is
-// present, then `tx.locktime` is protocol-enforced. If no such check is present, then we add a
-// synthetic require(tx.time >= tx.locktime) check.
+// Per BCH consensus, `tx.locktime` is only protocol-enforced if at least one input has a non-final
+// sequence number. A require(tx.time >= ...) check — or a require(this.age >= ...) with a compile-time
+// int literal below 2^31 — forces that non-finality. When a spending path uses `tx.locktime` without
+// such a check, we inject a synthetic require(tx.time >= tx.locktime) guard at the start of the function.
 export default class InjectLocktimeGuardTraversal extends AstTraversal {
-  private hasTimeCheckOnPath = false;
-  private functionNeedsGuard = false;
+  // Keep track of which global functions require a locktime guard when called.
+  private globalFunctionRequiresLocktimeGuard = new Map<FunctionDefinitionNode, boolean>();
+
+  visitSourceFile(node: SourceFileNode): Node {
+    // Only contract spending functions are traversed (and guarded); globals are analysed on demand.
+    node.contract = this.visitOptional(node.contract) as ContractNode | undefined;
+    return node;
+  }
 
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
-    this.hasTimeCheckOnPath = false;
-    this.functionNeedsGuard = false;
-
-    super.visitFunctionDefinition(node);
-
-    if (this.functionNeedsGuard) {
+    if (this.requiresLocktimeGuard(node.body)) {
       node.body.statements = [createLocktimeGuard(node), ...(node.body.statements ?? [])];
     }
     return node;
   }
 
-  visitBlock(node: BlockNode): Node {
-    const previous = this.hasTimeCheckOnPath;
+  private requiresLocktimeGuard(body: BlockNode): boolean {
+    const analyser = new LocktimeGuardRequirementAnalyser((func) => this.checkGlobalFunctionRequiresLocktimeGuard(func));
+    analyser.visit(body);
+    return analyser.requiresLocktimeGuard;
+  }
 
-    // Check whether there are any locktime checks on the same execution path, BEFORE entering the block body.
-    // So even if there are locktime checks after the `tx.locktime` access, it counts as a locktime check
+  // Memoised, cycle-safe analysis of a single global function.
+  private checkGlobalFunctionRequiresLocktimeGuard(func: FunctionDefinitionNode): boolean {
+    const memoised = this.globalFunctionRequiresLocktimeGuard.get(func);
+    if (memoised !== undefined) return memoised;
+
+    this.globalFunctionRequiresLocktimeGuard.set(func, false); // seed: a re-entrant (cyclic) call contributes nothing
+    const requiresLocktimeGuard = this.requiresLocktimeGuard(func.body);
+    this.globalFunctionRequiresLocktimeGuard.set(func, requiresLocktimeGuard);
+    return requiresLocktimeGuard;
+  }
+}
+
+class LocktimeGuardRequirementAnalyser extends AstTraversal {
+  requiresLocktimeGuard = false;
+  private isAlreadyCovered = false;
+
+  constructor(
+    private checkGlobalFunctionRequiresLocktimeGuard: (func: FunctionDefinitionNode) => boolean,
+  ) {
+    super();
+  }
+
+  visitBlock(node: BlockNode): Node {
+    const enclosingIsAlreadyCovered = this.isAlreadyCovered;
+
+    // A time check anywhere in this block covers the whole block (order within the block is irrelevant);
+    // a sibling branch's check does not, since each branch body is its own block.
     if (node.statements?.some(isLocktimeCheck)) {
-      this.hasTimeCheckOnPath = true;
+      this.isAlreadyCovered = true;
     }
+
     super.visitBlock(node);
-    this.hasTimeCheckOnPath = previous;
+
+    this.isAlreadyCovered = enclosingIsAlreadyCovered;
     return node;
   }
 
   visitNullaryOp(node: NullaryOpNode): Node {
-    if (node.operator === NullaryOperator.LOCKTIME && !this.hasTimeCheckOnPath) {
-      this.functionNeedsGuard = true;
+    if (node.operator === NullaryOperator.LOCKTIME && !this.isAlreadyCovered) {
+      this.requiresLocktimeGuard = true;
     }
+    return node;
+  }
+
+  visitFunctionCall(node: FunctionCallNode): Node {
+    node = super.visitFunctionCall(node) as FunctionCallNode;
+    if (this.isAlreadyCovered) return node;
+
+    const functionDefinition = node.identifier.symbol?.definition;
+    if (!functionDefinition || !(functionDefinition instanceof FunctionDefinitionNode)) return node;
+
+    if (this.checkGlobalFunctionRequiresLocktimeGuard(functionDefinition)) {
+      this.requiresLocktimeGuard = true;
+    }
+
     return node;
   }
 }

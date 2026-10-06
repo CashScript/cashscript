@@ -158,7 +158,7 @@ function encodeInitialState(counter: bigint, blockHeight: bigint): string {
 
 ### Duplicate Contract UTXOs
 
-For systems expecting [concurrent usage](/docs/guides/concurrency), create multiple identical contract UTXOs in the genesis transaction. Each duplicate sits at the same contract address with the same token type, allowing independent transactions to spend different UTXOs without conflicting.
+For systems expecting [concurrent usage](/docs/design/concurrency), create multiple identical contract UTXOs in the genesis transaction. Each duplicate sits at the same contract address with the same token type, allowing independent transactions to spend different UTXOs without conflicting.
 
 When duplicating UTXOs that hold fungible tokens, distribute the total supply exactly across them:
 
@@ -179,7 +179,7 @@ To start the authchain during deployment, include a dust output at index `0` to 
 txBuilder.addOutput({ to: bcmrAuthchainAddress, amount: 1000n });
 ```
 
-Metadata can be published in the genesis transaction with an `OP_RETURN` output containing the BCMR protocol identifier, registry hash, and registry URL. It can also be published later in an authchain transaction. See the [CashTokens guide](/docs/guides/cashtokens#cashtokens-bcmr-metadata) for more on BCMR metadata and tooling.
+Metadata can be published in the genesis transaction with an `OP_RETURN` output containing the BCMR protocol identifier, registry hash, and registry URL. It can also be published later in an authchain transaction. See the [CashTokens guide](/docs/design/cashtokens#cashtokens-bcmr-metadata) for more on BCMR metadata and tooling.
 
 :::note
 A two-step deployment can avoid a follow-up authchain update: prepare the `vout: 0` UTXO first, publish the BCMR registry, then broadcast the genesis transaction with the registry hash in the `OP_RETURN`.

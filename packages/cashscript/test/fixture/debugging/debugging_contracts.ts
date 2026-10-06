@@ -1,4 +1,160 @@
-import { compileString } from 'cashc';
+import { compileFile, compileString } from 'cashc/dist/internal.js';
+
+const CONTRACT_TEST_FUNCTION_DEBUGGING = `
+function checkValue(int value) {
+  console.log("checking", value);
+  require(value > 0, "value must be positive");
+}
+
+contract Test() {
+  function spend(int x) {
+    checkValue(x);
+    require(x < 100, "x must be small");
+  }
+}
+`;
+
+const CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS = `
+function hashTwice(pubkey pk) returns (bytes32) {
+  bytes32 singleHash = sha256(pk);
+  console.log(singleHash);
+  bytes32 doubleHash = sha256(singleHash);
+  return doubleHash;
+}
+
+contract Test(pubkey owner) {
+  function spend() {
+    require(hashTwice(owner).length == 32, "should be 32 bytes");
+  }
+}
+`;
+
+// Nested function calls, so a require failing in the innermost function produces a call stack
+// through the intermediate function into the contract. The Defined variant exercises the same
+// stack through the VM's control stack instead of through inline ranges.
+const CONTRACT_TEST_NESTED_FUNCTIONS = `
+function assertPositive(int value) {
+  require(value > 0, "value must be positive");
+}
+
+function validate(int amount) {
+  assertPositive(amount);
+  require(amount < 1000, "amount too large");
+}
+
+contract Test() {
+  function spend(int x) {
+    validate(x);
+    require(x < 100);
+  }
+}
+`;
+
+// The same nested-call shape as CONTRACT_TEST_NESTED_FUNCTIONS, but with the functions imported
+// from another file, so the call stack attributes its hops to the imported file.
+const NESTED_HELPERS_SOURCE = `
+function assertPositive(int value) {
+  require(value > 0, "value must be positive");
+}
+
+function validate(int amount) {
+  assertPositive(amount);
+  require(amount < 1000, "amount too large");
+}
+`;
+
+const CONTRACT_TEST_NESTED_IMPORTED_FUNCTIONS = `
+import "./nested_helpers.cash";
+
+contract Test() {
+  function spend(int x) {
+    validate(x);
+    require(x < 100);
+  }
+}
+`;
+
+// The inlined wrapper invokes the defined bigCheck, where the require fails — the smallest shape
+// where an inline range and the VM's control stack combine in one call stack.
+const CONTRACT_TEST_INLINED_CALLING_DEFINED = `
+function bigCheck(int v) returns (int) {
+  require(v > 0, "v must be positive");
+  return (v * 7 + 3) * (v + 11) - 5;
+}
+
+function wrapper(int v) returns (int) {
+  return bigCheck(v) + bigCheck(v + 1);
+}
+
+contract Test() {
+  function spend(int x) {
+    require(wrapper(x) > 0, "sum must be positive");
+  }
+}
+`;
+
+// Alternates between shared and inlined callables: spend invokes the defined outerHelper, which
+// contains the inlined middle, which invokes the defined deepHelper, which contains the inlined
+// innerCheck where the require fails.
+const CONTRACT_TEST_MIXED_NESTED_FUNCTIONS = `
+function innerCheck(int v) {
+  require(v > 0, "v must be positive");
+}
+
+function deepHelper(int v) returns (int) {
+  innerCheck(v);
+  return (v * 7 + 3) * (v + 11) - 5;
+}
+
+function middle(int v) returns (int) {
+  return deepHelper(v) + deepHelper(v + 1);
+}
+
+function outerHelper(int v) returns (int) {
+  return middle(v) * 2;
+}
+
+contract Test() {
+  function spend(int x) {
+    require(outerHelper(x) + outerHelper(x + 1) > 0, "sum must be positive");
+  }
+}
+`;
+
+// The require statement inside the (inlined) function spans multiple lines, so its statement can
+// only be extracted through the function frame's source map rather than a single source line.
+const CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE = `
+function checkRange(int value) {
+  require(
+    value > 0,
+    "value must be positive"
+  );
+}
+
+contract Test() {
+  function spend(int x) {
+    checkRange(x);
+    require(x < 100);
+  }
+}
+`;
+
+// Multi-value return destructuring: the requires only pass when the first declared return value
+// binds to the first target (quotient) and the last to the last (remainder), pinning the runtime
+// value ordering of the calling convention.
+const CONTRACT_TEST_MULTI_RETURN = `
+function divmod(int a, int b) returns (int, int) {
+  return a / b, a % b;
+}
+
+contract Test() {
+  function spend(int x) {
+    int q, int r = divmod(x, 3);
+    require(q == 4, "quotient should be 4");
+    require(r == 1, "remainder should be 1");
+  }
+}
+`;
 
 const CONTRACT_TEST_REQUIRES = `
 contract Test() {
@@ -152,6 +308,15 @@ contract Test() {
   }
 }`;
 
+const CONTRACT_TEST_FINAL_REQUIRE_VARIABLE = `
+contract Test() {
+  function test_final_require_variable(int x) {
+    bool isLarge = x > 5;
+    require(isLarge);
+  }
+}
+`;
+
 const CONTRACT_TEST_MULTILINE_REQUIRES = `
 contract Test() {
   // We test this because the cleanup looks different and the final OP_VERIFY isn't removed for these kinds of functions
@@ -303,6 +468,14 @@ contract Test(pubkey owner) {
       require(tx.outputs[this.activeInputIndex].value == inputValue - 1000);
     }
   }
+
+  function test_log_reassigned_after_final_use(int a) {
+    int v = a;
+    v = v + 1;
+    require(v == 2);
+    console.log('v:', v);
+    require(a == 1);
+  }
 }
 `;
 
@@ -427,9 +600,25 @@ contract Test(pubkey owner, int num, int num2, int num3, int num4, int num5) {
 }
 `;
 
+// The loop spends most of the operation cost budget, and the padding sets how much budget the input gets, so a test can
+// move the point where it runs out across the instructions of the require statements after the loop
+const CONTRACT_TEST_OPERATION_COST_OVERRUN = `
+contract Test() {
+  function spend(int rounds, bytes unused padding) {
+    bytes32 digest = sha256(0x00);
+    for (int i = 0; i < rounds; i = i + 1) {
+      digest = sha256(digest);
+    }
+    require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode, "Output 0 must pay back to the contract");
+    require(tx.outputs[0].value >= 1000, "Output 0 must keep 1000 sats");
+  }
+}
+`;
+
 export const artifactTestRequires = compileString(CONTRACT_TEST_REQUIRES);
 export const artifactTestSingleFunction = compileString(CONTRACT_TEST_REQUIRE_SINGLE_FUNCTION);
 export const artifactTestMultilineRequires = compileString(CONTRACT_TEST_MULTILINE_REQUIRES);
+export const artifactTestFinalRequireVariable = compileString(CONTRACT_TEST_FINAL_REQUIRE_VARIABLE);
 export const artifactTestZeroHandling = compileString(CONTRACT_TEST_ZERO_HANDLING);
 export const artifactTestLogs = compileString(CONTRACT_TEST_LOGS);
 export const artifactTestConsecutiveLogs = compileString(CONTRACT_TEST_CONSECUTIVE_LOGS);
@@ -437,3 +626,33 @@ export const artifactTestMultipleLogs = compileString(CONTRACT_TEST_MULTIPLE_LOG
 export const artifactTestMultipleConstructorParameters = compileString(CONTRACT_TEST_MULTIPLE_CONSTRUCTOR_PARAMETERS);
 export const artifactTestRequireInsideLoop = compileString(CONTRACT_TEST_REQUIRE_INSIDE_LOOP);
 export const artifactTestLogInsideLoop = compileString(CONTRACT_TEST_LOG_INSIDE_LOOP);
+export const artifactTestFunctionDebugging = compileString(CONTRACT_TEST_FUNCTION_DEBUGGING);
+export const artifactTestFunctionIntermediateResults = compileString(CONTRACT_TEST_FUNCTION_INTERMEDIATE_RESULTS);
+export const artifactTestMultiReturn = compileString(CONTRACT_TEST_MULTI_RETURN);
+export const artifactTestMultilineFunctionRequire = compileString(CONTRACT_TEST_MULTILINE_FUNCTION_REQUIRE);
+export const artifactTestNestedFunctions = compileString(CONTRACT_TEST_NESTED_FUNCTIONS);
+export const artifactTestNestedFunctionsDefined = compileString(
+  CONTRACT_TEST_NESTED_FUNCTIONS,
+  { disableInlining: true },
+);
+export const artifactTestNestedImportedFunctions = compileString(
+  CONTRACT_TEST_NESTED_IMPORTED_FUNCTIONS,
+  { files: { './nested_helpers.cash': NESTED_HELPERS_SOURCE } },
+);
+export const artifactTestMixedNestedFunctions = compileString(CONTRACT_TEST_MIXED_NESTED_FUNCTIONS);
+export const artifactTestInlinedCallingDefined = compileString(CONTRACT_TEST_INLINED_CALLING_DEFINED);
+export const artifactTestOperationCostOverrun = compileString(CONTRACT_TEST_OPERATION_COST_OVERRUN);
+
+// Compiled from a file so the imported function (function_helpers.cash) keeps its own source provenance.
+export const artifactTestImportedFunctionDebugging = compileFile(new URL('./function_importer.cash', import.meta.url));
+
+// Variants with inlining disabled, so single-use functions stay OP_DEFINE'd and are debugged
+// through their own frames (attributing to their own source instead of the call site).
+export const artifactTestFunctionDebuggingDefined = compileString(
+  CONTRACT_TEST_FUNCTION_DEBUGGING,
+  { disableInlining: true },
+);
+export const artifactTestImportedFunctionDebuggingDefined = compileFile(
+  new URL('./function_importer.cash', import.meta.url),
+  { disableInlining: true },
+);

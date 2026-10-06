@@ -1,0 +1,8 @@
+import "./function_helpers.cash";
+
+contract Test() {
+    function spend(int x) {
+        assertPositive(x);
+        require(x < 100, "x must be small");
+    }
+}

@@ -1,0 +1,12 @@
+function swap(int x, int y) returns (int, int) {
+    return y, x;
+}
+
+contract Test() {
+    function spend(int seed) {
+        int a = seed;
+        // `b` is never declared, so reassigning it must fail
+        (a, b) = swap(a, seed);
+        require(a + b >= 0);
+    }
+}

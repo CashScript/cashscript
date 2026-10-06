@@ -1,0 +1,7 @@
+bool constant VALUE = 1;
+
+contract GlobalConstantWrongType() {
+    function spend() {
+        require(true);
+    }
+}

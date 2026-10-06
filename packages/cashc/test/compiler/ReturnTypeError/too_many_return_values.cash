@@ -1,0 +1,10 @@
+function bad(int a) returns (int, int) {
+    return a;
+}
+
+contract Test() {
+    function spend(int x) {
+        int p, int q = bad(x);
+        require(p == q);
+    }
+}

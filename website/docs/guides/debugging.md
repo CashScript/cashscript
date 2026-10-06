@@ -34,6 +34,18 @@ Bitauth IDE: [link]
 
 Read the error message to see which line in the CashScript contract causes the transaction validation to fail. Investigate whether the contract function invocation is the issue (on the TypeScript SDK side) or whether the issue is in the CashScript contract itself (so you'd need to update your contract and recompile the artifact). If it is not clear **why** the CashScript contract is failing on that line, then you can use the following two strategies: console logging & Bitauth IDE stack trace.
 
+#### Call stacks
+
+When the failing `require` statement sits inside a [user-defined function](/docs/language/contracts#user-defined-functions), the error message also includes a call stack showing how execution reached it. The innermost frame is listed first, the contract function that started the call last.
+
+```bash
+Test.cash:2 Require statement failed at input 0 in contract Test, function assertPositive (Test.cash, line 2) with the following message: value must be positive.
+Failing statement: require(value > 0, "value must be positive");
+  at assertPositive (Test.cash:2) — require(value > 0, "value must be positive");
+  at validate (Test.cash:6) — assertPositive(amount)
+  at Test.cash:12 — validate(x)
+```
+
 ### Console Logging
 
 To help with debugging you can add `console.log` statements to your CashScript contract file to log variables. This way you investigate whether the variables have the expected values when they get to the failing `require` statement in the CashScript file. After adding the `console.log` statements, recompile your contract so they are added to your contract's Artifact.
@@ -52,31 +64,44 @@ const uri = transactionBuilder.getBitauthUri();
 It is unsafe to debug transactions on mainnet using the BitAuth IDE as private keys will be exposed to BitAuth IDE and transmitted over the network.
 :::
 
-The Bitauth IDE will show you the two-way mapping between the CashScript contract code generated opcodes. Here is [a Bitauth IDE link][BitauthIDE] for the basic `TransferWithTimeout` contract as an example:
+The Bitauth IDE will show you the two-way mapping between the CashScript contract code and the generated opcodes. User-defined functions are included with the same mapping: each function definition is rendered as a push group annotated with the function's own source lines, and imported functions are annotated with the file they are imported from.
+
+Here is [a Bitauth IDE link][BitauthIDE] for an example `HalfTimeVault` contract, which uses a `halfRoundedUp()` function imported from `math.cash`. Note the source-mapped function definition (`OP_DEFINE`) at the top, the `OP_INVOKE` call sites, and the `>>>` annotation rows. Functions that are small enough to be inlined more cheaply are compiled directly into the contract code instead, so they don't show up as a separate definition.
 
 ```js
-// "TransferWithTimeout" contract constructor parameters
+// "HalfTimeVault" contract constructor parameters
 <timeout> // int = <0x90d003>
-<recipient> // pubkey = <0x038f55548d7f3d183cebb8ee77036feeb408f4a5030fb486717659bb944fe5eb4c>
-<sender> // pubkey = <0x0218d4166169298d42c1f763e243e4b5bc3df8e11690aa953b17a6e02902625f90>
+<owner> // pubkey = <0x034f355bdcb7cc0af728ef3cceb9615d90684bb5b2ca5f859ab0f0b704075871aa>
 
 // bytecode
-                                       /* pragma cashscript ~0.11.0;                                                   */
-                                       /*                                                                              */
-                                       /* contract TransferWithTimeout(pubkey sender, pubkey recipient, int timeout) { */
-                                       /*     // Require recipient's signature to match                                */
-OP_3 OP_PICK OP_0 OP_NUMEQUAL OP_IF    /*     function transfer(sig recipientSig) {                                    */
-OP_4 OP_ROLL OP_ROT OP_CHECKSIG        /*         require(checkSig(recipientSig, recipient));                          */
-OP_NIP OP_NIP OP_NIP OP_ELSE           /*     }                                                                        */
-                                       /*                                                                              */
-                                       /*     // Require timeout time to be reached and sender's signature to match    */
-OP_3 OP_ROLL OP_1 OP_NUMEQUALVERIFY    /*     function timeout(sig senderSig) {                                        */
-OP_3 OP_ROLL OP_SWAP OP_CHECKSIGVERIFY /*         require(checkSig(senderSig, sender));                                */
-OP_SWAP OP_CHECKLOCKTIMEVERIFY         /*         require(tx.time >= timeout);                                         */
-OP_2DROP OP_1                          /*     }                                                                        */
-OP_ENDIF                               /* }                                                                            */
-
+                                                                           /* >>> imported from math.cash                                               */
+<                                                                          /* function halfRoundedUp(int amount) returns (int) {                        */
+  OP_DUP OP_2 OP_DIV OP_SWAP OP_2 OP_MOD OP_ADD                            /*     return amount / 2 + amount % 2;                                       */
+> OP_0 OP_DEFINE                                                           /* }                                                                         */
+                                                                           /*                                                                           */
+                                                                           /* pragma cashscript ^0.14.0;                                                */
+                                                                           /*                                                                           */
+                                                                           /* import "./math.cash";                                                     */
+                                                                           /*                                                                           */
+                                                                           /* contract HalfTimeVault(pubkey owner, int timeout) {                       */
+                                                                           /*     // Early claims must leave half the coins and tokens in the vault     */
+OP_2 OP_PICK OP_0 OP_NUMEQUAL OP_IF                                        /*     function claimEarly(sig ownerSig) {                                   */
+OP_3 OP_ROLL OP_SWAP OP_CHECKSIGVERIFY                                     /*         require(checkSig(ownerSig, owner));                               */
+OP_0 OP_INVOKE OP_CHECKLOCKTIMEVERIFY OP_DROP                              /*         require(tx.time >= halfRoundedUp(timeout));                       */
+OP_INPUTINDEX OP_UTXOVALUE                                                 /*         int vaultValue = tx.inputs[this.activeInputIndex].value;          */
+OP_0 OP_OUTPUTVALUE OP_SWAP OP_0 OP_INVOKE OP_GREATERTHANOREQUAL OP_VERIFY /*         require(tx.outputs[0].value >= halfRoundedUp(vaultValue));        */
+OP_INPUTINDEX OP_UTXOTOKENAMOUNT                                           /*         int vaultTokens = tx.inputs[this.activeInputIndex].tokenAmount;   */
+OP_0 OP_OUTPUTTOKENAMOUNT OP_SWAP OP_0 OP_INVOKE OP_GREATERTHANOREQUAL     /*         require(tx.outputs[0].tokenAmount >= halfRoundedUp(vaultTokens)); */
+OP_NIP                                                                     /*         >>> scope cleanup                                                 */
+OP_ELSE                                                                    /*     }                                                                     */
+                                                                           /*                                                                           */
+                                                                           /*     // After the full timeout, the owner can claim everything             */
+OP_ROT OP_1 OP_NUMEQUALVERIFY                                              /*     function claim(sig ownerSig) {                                        */
+OP_ROT OP_SWAP OP_CHECKSIGVERIFY                                           /*         require(checkSig(ownerSig, owner));                               */
+OP_CHECKLOCKTIMEVERIFY OP_DROP                                             /*         require(tx.time >= timeout);                                      */
+OP_1                                                                       /*     }                                                                     */
+OP_ENDIF                                                                   /* }                                                                         */
 ```
 
-[BitauthIDE]: https://ide.bitauth.com/import-template/eJzFWAtv2zYQ_isCN2BJ4drUW8raAK3jNkbSJEvcFUMdGBR1stXakidRWYIg--07SrIk23LgDhlGBKEiHu-7x3fUMY_k55TPYMHIEZkJsUyPer3Qh64XCpaJWZfHi558gEiEnIkwjl4LWCznTMDrO9ot9na_pXFEOsSHlCfhUkqhuuFiGScCfCVI4oXCWTorVlEwYgtAiT6-u8nfKR8hgoRJ6RPwsuk0jKbKqATCDWm2LJSRo6_kff90olHNnFCT3HbIHSRpjkg7RJopQkjJ0SMZJSxKA0i-hGI2ChcQZ2ISRstM0MmSJWiBwI1ScN3sfhyJhHGh8ARyhxUWoQ9ZxPM_GlsrP1qQlIMcSvmJHkrzc_2pNL7NqnnMv6NU25JYNzyLclnpNUtC5s0LV1OIfEhuwum2O-N6cUxq65U4qH0akxJmTGqnap0dIh6W8tUZPJCnTrmyG2oTR8zCVOFlWDcBau1f2HwO4oQJJkES4OEyxHy24VSLe0LVynaglf63YVWh2QtppWgHzirkmE8f7rfhymqoMpOLKSJW4B54lpdCCbShqRUPR4N77RXRTjAUXrI0hZ2U3dgGd2yeyVK93YxEWyHgaq_XZF1beY2jNxUF5TkTxUkyScNpxESWQBfdnOBeVJ1O5HMm7uP0WEG9KDOOxhE-bYQxjKqEofL1AOY7w0gob5U36vFYnmZFKNL2-i5q9qm9aFchlDMeZKMiM0stnenas6fGVoRaZDBavDqi4igVScZFnKxHroxs0yt671KfUh2de1PVQy6wzLzv8FDIUN0JTNM0HN8OdF91dA6e5wDYNtWtAMAzqBMYzKQ6DTzDsWzVtkzX81zDCMDEZX5cJW5buaY6vqFalmq5mouPGlcD29JBM3QwPNPjuh84oOIyZcw1dU-1mQVUc6lmaWbg0uMys96DAB77MI6U_UbvlbJM2HTBGh8i5W_aVdUu_XVPHc3xqvcj0C86fgy64koLlQ7K5BTp6qxyVbGjk3On5NKh8vgvvMZcXcOfWZhArfaXVKnqWJ5tCyb4bB-vL68muoK_rob9MzlT-evi86fBb5_fncvn4YcGdFX9ovT8AFFrK_BYkS7tMUpoQyJcX56fF_NITv3TQf_sZvhxw2s5ksLtA-yQ-HcEO2gid2o7Dg-f4V8JfTG8UramwfnNYDvgT_t4tK_Xe4r-vwzPp5pmq--OnCW7PMk8hlnw80au4PpOCjZptsq12qTZ74Pr4Yc_GtA1zcqikiyrvlx7UmwX9M2Xd1dNnpXoz9Gsgu6UVjxLsDXoNbTzy_7ZaPhpUDvcDHgTWtx382Afv63Oiv2P1BJaO7m-vCqCvXP8FwyXdXRxUpwbzwyEfjHYFfSeoi9fXKRoCyHCK0S8b2NYdXgoXjYwg_JV26dFaW3_1pvddxG2tQzveKCU2mUZ_TUDWZOyvS4_00XvW3SHsiftSk2ywUVTVo1AfQtCxS_RaZC1Kwh5ic6INO4ZZNWOke1LAVFlY8mzJEHs97KJPIVwOsNd2vprGWtypNqGhViaa3QIfr7zhC6T8A4zc1b-2bgfEstwLddjhqepaJvuO6pl2hq1uUZdz0HjTUvXLIeCYXsAGmO2a_HA9j3K8YfbJL9V5N9UxotMPpI8yfKy8EhkUx5j3zAsnEGjVm9G9Z5TbMLQFgBuBa5lqrYWcNc3HGrqAQ-Au6aqqtRmjgm6r_nUU33VBWmyjUmjlu5z3fAC2S_jIQQRh4ts4cnkGxgH17LzaBQdPHbg7yuWfCXpPBbk9gkvKnJR5CHUTIqjsHTlx9ZWYlvMVQ1HM1Xug61xmfvA9wPbMTBArmcyZpgOhs-2ASzHYTLjkthww0ScIqMxWdRFpKfmvy00WY1xlnC4fA5-ZXmbSsNxnm4xL_8AUE0PwQ==
+[BitauthIDE]: https://ide.bitauth.com/import-template/eJztWW1z2jgQ_isa391M0qNgDAacazNDA22YJJAjkPYm9BhZyMEXsH22TJPJ9L_frvyCeUuhIf3S0wewZWn30aPV7nr9qPwasDGfUuVIGQvhBUeFgj3iedMWNBTjPHOnBbzgjrAZFbbrvBZ86k2o4K9naj6am_8ncB0lp4x4wHzbw1EgrjX1XF_wEbF8d0oYDcbRUxjo0CmHESfQdyX7yAfucB-EjkiDm-Htre3ckl6sCCYEoRcJU45ulHcnp0NN1SpDVVc-55QZ9wOpUc0pCFPYPFCOHpVTOrF69pRf03AihrbjhUIdetQH3QKm4JBFwCeuI3zKBGE-l0sl1AH0ocPkTWZquoIFHeRAKiG_qIcIWUoGNTdLSPRSzSqaI9VipWqlxFWDVypGVSubVlGrMo3rrGTpvFor61W9aPCqbliGqVZhQqVmljU6nLjsDhQsSmUTak-b1J88JEsNHTkQGaK-Tc1JRIv7BZi-sm9X1z9Inw2U-WqJa805GChzPQNlzkMqNKeIBw97zviD8jUXPdioalmPGNsBYfE2LEmfi_5IJxMuGlRQ1CCAAjcU63TEj7bUkgjaoCfhAOgd8ftVdbEhp1TJYUS4hN9zFkorjhUtSVqrD1rGhJaNeeNmw0iPBgHu9LLZrc7hMzoJ8XyBicTQ5oPWGTMMKBSWbGDd-Rg4bxKDQA_huL4_DOxbh4rQ53lY5RB4BuHBEK9Dce8GxwQkw5iBM3DgaolF20n3C2Qv8idn2o4gb8kb9XiAfigiAzh4kZMHG_MSYmHr8B8cXy8yB08LxiVtg69Z2ZOFp7AtCV94EQg_ZML1F7cotvcF_u4NdaSqJaAx2kH50AvNO_4QPVdLZauk6-aImVXGVGpVtRq3Soxx06gU9ZGhVmpl09RNjVHdqukGNVVLNatqWa3qtWqRUpAtt9h8EJy5Iz5wyP5a4RU5Pj4m9kLomVIMZBBrdhT2qgA07BVbatZj2K2uG4L9jvoenDRB6BRuxSHxORwSJ8DjB3ePT2EjpHM5bPQv8U-T161r_Lv6WJ_3XXQa-FdvNL6BDVukPMZCCkQjvyc3vxHtjy0XitiOUakqQTXft9rNrVlai-3rM6Yvtoi3vbWYt_20_WPzfHo7pZnci_yt5ovlvLrtVv6kvEX-A7xqvpA6j4GyM2k_IXNp2FmIRwdxCJExJSejTRx9Nru4l-ENAk-U3sgcJiDTMBBkwumMS58MuSGHNdjggDH3F-4dh0tIP7B_JpP8BFviYC9bJ2eps2v3L5p_9uvneN16vyO2NDrM86sDSIki1iCXeiIcZFqMrYQQup1zCSWJCCenzZOzq9aH62a39f6vXe3N5_-Gts8P4J2P3QGegwRYLoJ4ePitExJjk1S12teds2aK6rxzctZrXTRjaBg4up3LnbGJ-zxaFjl-uxRjE3vbiDHG1mpf9nutdqP5CTH0e5861_Xz_u7xK4MNzV3azjXk2xzyKAApk-vgBl9F8nBc7BlvYU8LM9rPeUzMeQZolrdOvwcII1CZrV3i9EO3We81u73TervTTU0yJnc9b3FOfqPG-lc5nC8iQ-NG3noApV2_6PTbvWfy1ouO4RbEyQNblxkLAlzlLQtqJ_Y221uGt4z6DexFS0H6Ymzt1jeMfHfeMAMOmOuBJwPP5oTezsJibM3zq-ckbsvY9pPF_VzxNI5ZdQtrFxiErHAySYJnTvZI3ws5Xhw3CIeC2AOcD6igrdnTbkcafjEbrXYIB0_HrO8IV2uwPSNavVzM-u4gtVPMSqLUlqlmjK24E4IfeE7Rh7Qb2ydCT7T_3wK_r-0ZG1QmsfLEHSgpu1tVJtMqI4yNK1nNuGvxJSGT9i4WHxfrrHUHKqoUvgxw8HRSDrqfL2Pu86iyG7_pRmXXqDCJFdE8SsLaKuBIak94vVzXVVQYGJetlX0UvLDAm9SoQWBUYcMqIrwRSQY9354BG1AxXyrQK8VnNqwjg3afOgHmSsjfoxJlUFAgBlWQusDLTpQ9KUc6LDzu6c3nnMLLL2DR2KhmGYZWGVklkxvlom5Szo0S12q6peq6wVmtqDFYW6lWq9AqkGCavMbVYhWIMypYsQSHxx3G2-HURHrLmlE2KlX4TWq2ELTepXtzowQTVyifv0J9Gh8ii8pRUdNVFT71xGmXXMfK1Md5dfRlPr64EGR9-FAmdyxrTj_AcnBPZYZ-RYUbgMkrR4YBnCBP6ccwDc-pG_qMd54iKuF4RWIRBKJI0PYfymbZog==
 

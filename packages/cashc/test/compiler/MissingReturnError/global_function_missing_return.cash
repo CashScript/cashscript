@@ -1,0 +1,10 @@
+function broken(int a) returns (int) {
+    int b = a + 1;
+    require(b > 0);
+}
+
+contract Test() {
+    function spend(int x) {
+        require(broken(x) == 2);
+    }
+}

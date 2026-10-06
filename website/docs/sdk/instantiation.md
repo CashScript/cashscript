@@ -161,17 +161,22 @@ const contractBalance = await contract.getBalance()
 
 ### getUtxos()
 ```ts
-async contract.getUtxos(): Promise<Utxo[]>
+async contract.getUtxos(): Promise<SpendableUtxo[]>
 ```
 
 Returns all UTXOs that can be spent by the contract. Both confirmed and unconfirmed UTXOs are included.
 
 ```ts
+interface SpendableUtxo extends Utxo {
+  lockingBytecode: string;
+}
+
 interface Utxo {
   txid: string;
   vout: number;
   satoshis: bigint;
   token?: TokenDetails;
+  lockingBytecode?: string;
 }
 ```
 

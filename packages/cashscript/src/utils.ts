@@ -14,6 +14,7 @@ import {
   bigIntToCompactUint,
   NonFungibleTokenCapability,
   bigIntToVmNumber,
+  SigningSerializationFlag,
 } from '@bitauth/libauth';
 import {
   encodeInt,
@@ -35,13 +36,21 @@ import {
   UnlockableUtxo,
   LibauthTokenDetails,
   ContractType,
+  SighashType,
+  SpendableUtxo,
+  Unlocker,
+  isContractUnlocker,
+  isP2PKHUnlocker,
+  isPlaceholderUnlocker,
 } from './interfaces.js';
 import { VERSION_SIZE, LOCKTIME_SIZE } from './constants.js';
 import {
   OutputSatoshisTooSmallError,
   OutputTokenAmountTooSmallError,
   TokensToNonTokenAddressError,
+  InputMissingLockingBytecodeError,
   UndefinedInputError,
+  UnlockerLockingBytecodeMismatchError,
   OutputAddressNetworkMismatchError,
   OutputTokenCategoryInvalidError,
   OutputTokenCommitmentInvalidError,
@@ -57,7 +66,55 @@ export function validateInput(utxo: Utxo, changeLocks: Record<string, boolean>):
     throw new UndefinedInputError();
   }
 
+  if (!utxo.lockingBytecode) {
+    throw new InputMissingLockingBytecodeError();
+  }
+
   validateChangeLocks(changeLocks, utxo.token?.category);
+}
+
+// A UTXO/unlocker mismatch would be rejected by the network, so we catch it locally with a descriptive error
+export function validateUnlocker(utxo: SpendableUtxo, unlocker: Unlocker, inputIndex: number, network: Network): void {
+  const unlockerLockingBytecode = getUnlockerLockingBytecode(unlocker);
+  if (unlockerLockingBytecode === undefined || utxo.lockingBytecode === unlockerLockingBytecode) return;
+
+  throw new UnlockerLockingBytecodeMismatchError(
+    inputIndex,
+    formatLockingBytecode(utxo.lockingBytecode, network),
+    formatLockingBytecode(unlockerLockingBytecode, network),
+    describeUnlocker(unlocker),
+  );
+}
+
+// The locking bytecode this unlocker is able to unlock
+function getUnlockerLockingBytecode(unlocker: Unlocker): string | undefined {
+  if (isContractUnlocker(unlocker)) return unlocker.contract.lockingBytecode;
+  if (isP2PKHUnlocker(unlocker)) return binToHex(publicKeyToP2PKHLockingBytecode(unlocker.template.publicKey));
+  if (isPlaceholderUnlocker(unlocker)) return unlocker.lockingBytecode;
+  return undefined;
+}
+
+function describeUnlocker(unlocker: Unlocker): string {
+  if (isContractUnlocker(unlocker)) {
+    return `unlocker for function "${unlocker.abiFunction.name}" of contract "${unlocker.contract.name}"`;
+  }
+
+  if (isP2PKHUnlocker(unlocker)) {
+    return `P2PKH unlocker for public key ${binToHex(unlocker.template.publicKey)}`;
+  }
+
+  if (isPlaceholderUnlocker(unlocker)) {
+    return 'placeholder P2PKH unlocker';
+  }
+
+  return 'custom unlocker';
+}
+
+function formatLockingBytecode(lockingBytecode: string, network: Network): string {
+  const prefix = getNetworkPrefix(network);
+  const result = lockingBytecodeToCashAddress({ bytecode: hexToBin(lockingBytecode), prefix });
+  if (typeof result === 'string') return `locking bytecode ${lockingBytecode}`;
+  return `address ${result.address} (locking bytecode ${lockingBytecode})`;
 }
 
 export function validateOutput(output: Output, network: Network, changeLocks: Record<string, boolean>): void {
@@ -177,7 +234,7 @@ export function generateLibauthSourceOutputs(inputs: UnlockableUtxo[]): LibauthO
   const sourceOutputs = inputs.map((input) => {
     const sourceOutput = {
       amount: input.satoshis,
-      to: input.unlocker.generateLockingBytecode(),
+      to: hexToBin(input.lockingBytecode),
       token: input.token,
     };
 
@@ -265,15 +322,20 @@ function toBin(output: string): Uint8Array {
   return encode(data);
 }
 
+// BCH consensus requires the fork id flag on every signing serialization
+export function toSigningSerializationType(sighashType: SighashType): number {
+  return sighashType | SigningSerializationFlag.forkId;
+}
+
 export function createSighashPreimage(
   transaction: Transaction,
   sourceOutputs: LibauthOutput[],
   inputIndex: number,
   coveredBytecode: Uint8Array,
-  hashtype: number,
+  sighashType: SighashType,
 ): Uint8Array {
   const context = { inputIndex, sourceOutputs, transaction };
-  const signingSerializationType = new Uint8Array([hashtype]);
+  const signingSerializationType = new Uint8Array([toSigningSerializationType(sighashType)]);
 
   const sighashPreimage = generateSigningSerializationBch(context, { coveredBytecode, signingSerializationType });
 
@@ -364,14 +426,12 @@ const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
  * @param defaults - Values that override the randomly generated fields.
  * @returns A synthetic UTXO with random `txid`, `vout`, and `satoshis`.
  */
-export const randomUtxo = (defaults?: Partial<Utxo>): Utxo => ({
-  ...{
-    txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
-    vout: Math.floor(Math.random() * 10),
-    satoshis: 100_000n + randomInt(),
-  },
+export const randomUtxo = <T extends Partial<Utxo>>(defaults?: T): Utxo & T => ({
+  txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+  vout: Math.floor(Math.random() * 10),
+  satoshis: 100_000n + randomInt(),
   ...defaults,
-});
+} as Utxo & T);
 
 /**
  * Generate random fungible `TokenDetails` for use in tests and examples. Fields can be overridden

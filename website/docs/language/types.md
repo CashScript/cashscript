@@ -34,6 +34,8 @@ Note the lack of the `**` (exponentiation).
 
 The shift operators `<<` and `>>` when applied to `int` are arithmetic shifts, which means that the value is multiplied or divided by `2^n` where `n` is the number of bits to shift. See [Bitshift and arithmetic shift](#bitshift-and-arithmetic-shift) for more details.
 
+Note that `>>` rounds down (towards negative infinity), while `/` rounds towards zero. So for negative numbers, the results can differ: `-7 >> 1` is `-4`, while `-7 / 2` is `-3`.
+
 #### Number Formatting
 
 Underscores can be used to separate the digits of a numeric literal to aid readability, e.g. `1_000_000`. Numbers can also be formatted in scientific notation, e.g. `1e6` or `1E6`. These can also be combined, e.g. `1_000e6`.
@@ -53,7 +55,7 @@ Dates and times are always represented as integers. To get the UTC timestamp of 
 
 ```solidity
 int timestamp = date("2021-02-17T01:30:00");
-require(timestamp == 1613554200);
+require(timestamp == 1613525400);
 ```
 
 
@@ -127,7 +129,7 @@ Operators:
 - `!=` (inequality)
 
 ### Transaction Signature
-`sig`: Byte sequence representing a transaction signature. Generally 65 bytes long.
+`sig`: Byte sequence representing a transaction signature. Generally 65 bytes long: a 64-byte Schnorr signature followed by a single sighash flag byte that indicates which parts of the transaction were signed. See [SighashType](/docs/sdk/signature-templates#sighashtype) for the meaning of this byte.
 
 Operators:
 
@@ -161,11 +163,19 @@ string cash = bitcoinCash.split(8)[1];
 It is not supported to use a variable for the tupleIndex. Instead you can assign both sides of the tuple as shown below and use either element conditional on the value of the variable.
 :::
 
-It is also possible to assign both sides of the tuple at once with a destructuring syntax:
+It is also possible to assign both sides of the tuple at once with a destructuring syntax, allowing both new variable declarations and reassignments:
 
 ```solidity
 string hello, string world = "Hello World".split(6);
 require(hello + "World" == "Hello " + world);
+```
+
+Declarations and reassignments can be mixed freely in a single destructuring (e.g. `(bytes fresh, existing) = x.split(1);`). The target list may optionally be wrapped in parentheses.
+
+Newly declared targets accept the same modifiers as regular variable declarations: `constant` prevents later reassignment, while `unused` discards the value immediately, which is useful when only part of the tuple is needed:
+
+```solidity
+bytes unused ignored, bytes constant tail = someBytes.split(4);
 ```
 
 ## Type Casting

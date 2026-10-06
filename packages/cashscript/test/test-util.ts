@@ -6,9 +6,9 @@ import {
 } from '@bitauth/libauth';
 import PQueue from 'p-queue';
 import pRetry from 'p-retry';
-import { Output, Network, Utxo } from '../src/interfaces.js';
+import { Output, Network, SpendableUtxo, Utxo } from '../src/interfaces.js';
 import { network as defaultNetwork, funderAddress, funderPriv } from './fixture/vars.js';
-import { getNetworkPrefix, isNonTokenUtxo, libauthOutputToCashScriptOutput } from '../src/utils.js';
+import { addressToLockScript, getNetworkPrefix, isNonTokenUtxo, libauthOutputToCashScriptOutput } from '../src/utils.js';
 import { utxoComparator } from '../src/utils.js';
 import MockNetworkProvider from '../src/network/MockNetworkProvider.js';
 import NetworkProvider from '../src/network/NetworkProvider.js';
@@ -38,7 +38,7 @@ export function getTxOutputs(tx: Transaction, network: Network = defaultNetwork)
   });
 }
 
-export function getLargestUtxo(utxos: Utxo[]): Utxo {
+export function getLargestUtxo<U extends Utxo>(utxos: U[]): U {
   return [...utxos].sort(utxoComparator).reverse()[0];
 }
 
@@ -59,7 +59,7 @@ export async function addUtxo(
   provider: NetworkProvider,
   address: string,
   utxo: Utxo,
-): Promise<Utxo> {
+): Promise<SpendableUtxo> {
   if (provider instanceof MockNetworkProvider) {
     return provider.addUtxo(address, utxo);
   }
@@ -89,7 +89,7 @@ async function sendLiveAddUtxo(
   provider: NetworkProvider,
   address: string,
   utxo: Utxo,
-): Promise<Utxo> {
+): Promise<SpendableUtxo> {
   const funderUtxos = (await provider.getUtxos(funderAddress))
     .filter(isNonTokenUtxo)
     .sort(utxoComparator)
@@ -107,14 +107,15 @@ async function sendLiveAddUtxo(
     txid: tx.txid,
     vout: 0,
     satoshis: utxo.satoshis,
+    lockingBytecode: binToHex(addressToLockScript(address)),
   };
 }
 
-export function gatherUtxos(
-  utxos: Utxo[],
+export function gatherUtxos<U extends Utxo>(
+  utxos: U[],
   options?: { amount?: bigint, fee?: bigint },
-): { utxos: Utxo[], total: bigint, changeAmount: bigint } {
-  const targetUtxos: Utxo[] = [];
+): { utxos: U[], total: bigint, changeAmount: bigint } {
+  const targetUtxos: U[] = [];
   let total = 0n;
 
   // 1000 for fees

@@ -1,10 +1,12 @@
 import {
   Node,
   SourceFileNode,
+  ImportNode,
   ContractNode,
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -22,11 +24,14 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  ExpressionNode,
+  FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
   WhileNode,
@@ -36,7 +41,13 @@ import AstVisitor from './AstVisitor.js';
 
 export default class AstTraversal extends AstVisitor<Node> {
   visitSourceFile(node: SourceFileNode): Node {
-    node.contract = this.visit(node.contract) as ContractNode;
+    node.constants = this.visitList(node.constants) as ConstantDefinitionNode[];
+    node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
+    node.contract = this.visitOptional(node.contract) as ContractNode | undefined;
+    return node;
+  }
+
+  visitImport(node: ImportNode): Node {
     return node;
   }
 
@@ -49,6 +60,11 @@ export default class AstTraversal extends AstVisitor<Node> {
   visitFunctionDefinition(node: FunctionDefinitionNode): Node {
     node.parameters = this.visitList(node.parameters) as ParameterNode[];
     node.body = this.visit(node.body) as BlockNode;
+    return node;
+  }
+
+  visitConstantDefinition(node: ConstantDefinitionNode): Node {
+    node.value = this.visit(node.value) as ExpressionNode;
     return node;
   }
 
@@ -82,8 +98,18 @@ export default class AstTraversal extends AstVisitor<Node> {
     return node;
   }
 
+  visitReturn(node: ReturnNode): Node {
+    node.expressions = this.visitList(node.expressions);
+    return node;
+  }
+
   visitConsoleStatement(node: ConsoleStatementNode): Node {
     node.parameters = this.visitList(node.parameters) as ConsoleParameterNode[];
+    return node;
+  }
+
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
     return node;
   }
 

@@ -1,0 +1,5 @@
+contract Test() {
+    function spend() {
+        require(tx.outputs[0].lockingBytecode == new LockingBytecodeNullData([0x6d02, 0xabababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab]));
+    }
+}

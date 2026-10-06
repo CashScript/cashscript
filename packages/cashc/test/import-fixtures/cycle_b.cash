@@ -1,0 +1,5 @@
+import "./cycle_a.cash";
+
+function b(int n) returns (int) {
+    return n * 2;
+}

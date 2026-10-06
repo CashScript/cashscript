@@ -1,0 +1,9 @@
+function toBytes(int a) returns (bytes32) {
+    return a;
+}
+
+contract Test() {
+    function spend(int x) {
+        require(toBytes(x) == 0x0000000000000000000000000000000000000000000000000000000000000000);
+    }
+}

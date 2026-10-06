@@ -1,0 +1,9 @@
+function verifyMulti(sig s1, sig s2, pubkey pk1, pubkey pk2) returns (bool) {
+    return checkMultiSig([s1, s2], [pk1, pk2]);
+}
+
+contract Test() {
+    function spend(sig s1, sig s2, pubkey pk1, pubkey pk2) {
+        require(verifyMulti(s1, s2, pk1, pk2));
+    }
+}

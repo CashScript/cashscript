@@ -59,7 +59,7 @@ describe('Locktime Guard with function parameters', () => {
   const provider = new MockNetworkProvider();
 
   const artifactWithParameter = compileString(`
-    pragma cashscript ^0.13.0;
+    pragma cashscript ^0.14.0;
 
     contract ParameterizedLocktimeGuard() {
         function spend(

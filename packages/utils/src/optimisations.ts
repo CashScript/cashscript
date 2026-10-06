@@ -1,4 +1,6 @@
-const provableOptimisations = [
+// Note: the order in which these optimisations are applied can impact the output, so entries should
+// not be reordered without carefully verifying the compiled bytecode of existing contracts.
+export const optimisationReplacements = [
   // Hardcoded arithmetic
   ['OP_1 OP_ADD', 'OP_1ADD'],
   ['OP_1 OP_SUB', 'OP_1SUB'],
@@ -49,6 +51,7 @@ const provableOptimisations = [
 
   // Remove/replace extraneous OP_SWAP
   ['OP_SWAP OP_ADD', 'OP_ADD'],
+  ['OP_SWAP OP_MUL', 'OP_MUL'],
   // This was added to keep the old behaviour while explicitly disallowing partial matches in the optimisation regex
   ['OP_SWAP OP_EQUALVERIFY', 'OP_EQUALVERIFY'],
   ['OP_SWAP OP_EQUAL', 'OP_EQUAL'],
@@ -70,6 +73,7 @@ const provableOptimisations = [
   // Random optimisations (don't know what I'm targeting with this)
   ['OP_2DUP OP_DROP', 'OP_OVER'],
   ['OP_2DUP OP_NIP', 'OP_DUP'],
+  // Note that this removes OP_CAT's maximum stack item size check, which only matters for unused concatenations
   ['OP_CAT OP_DROP', 'OP_2DROP'],
   ['OP_NIP OP_DROP', 'OP_2DROP'],
 
@@ -118,39 +122,114 @@ const provableOptimisations = [
   // .slice(0, x) optimisation & .slice(x, y.length) optimisation
   ['OP_0 OP_SPLIT OP_NIP', ''],
   ['OP_SIZE OP_SPLIT OP_DROP', ''],
-] as [string, string][];
 
-const unprovableOptimisations = [
   // Hardcoded arithmetic
-  // CashProof can't prove OP_IF without parameters
+  // Note that OP_NOT does a VM-number check that OP_NOTIF does not, which gets removed by this optimisation. Compiled
+  // bools are always valid VM numbers unless they come from unsafe_bool() or unenforced function parameter types.
+  // This is also why OP_0 OP_NUMEQUAL => OP_NOT is not safe: it would remove the function selector's number check
   ['OP_NOT OP_IF', 'OP_NOTIF'],
+
   // Merge OP_VERIFY
-  // CashProof can't prove OP_CHECKMULTISIG without specifying N
   ['OP_CHECKMULTISIG OP_VERIFY', 'OP_CHECKMULTISIGVERIFY'],
+
   // Remove/replace extraneous OP_SWAP
-  // CashProof can't prove bitwise operators
   ['OP_SWAP OP_AND', 'OP_AND'],
   ['OP_SWAP OP_OR', 'OP_OR'],
   ['OP_SWAP OP_XOR', 'OP_XOR'],
 
   // Remove/replace extraneous OP_DUP
-  // CashProof can't prove bitwise operators
   ['OP_DUP OP_AND', ''],
   ['OP_DUP OP_OR', ''],
 
-  // These are new optimisations that we cannot prove since CashProof doesn't work any more
-  // //////////////////////////////////////////////////////////////////////////////////////
-
-  // TODO: Enable this optimisation when we overhaul the type system
-  // (right now bool(4) == true => false, but !!bool(4) == true => true) so can't replace OP_NOT OP_NOT with ''
-  // ['OP_NOT OP_NOT', '']
-
+  // Invert comparison operators instead of negating them
   ['OP_LESSTHAN OP_NOT', 'OP_GREATERTHANOREQUAL'],
   ['OP_GREATERTHAN OP_NOT', 'OP_LESSTHANOREQUAL'],
   ['OP_LESSTHANOREQUAL OP_NOT', 'OP_GREATERTHAN'],
   ['OP_GREATERTHANOREQUAL OP_NOT', 'OP_LESSTHAN'],
-] as [string, string][];
 
-// Note: we moved these optimisations into a single file, but kept the exact same order as before,
-// because the order in which optimisations are applied can impact the output.
-export const optimisationReplacements = [...provableOptimisations, ...unprovableOptimisations];
+  // This can get emitted by tuple destructuring
+  ['OP_TOALTSTACK OP_FROMALTSTACK', ''],
+
+  // unsafe_bool(4) == true => false, but !!unsafe_bool(4) == true => true) so we can't replace OP_NOT OP_NOT with ''
+  // in the general case, but when it is followed by a consuming instruction that does not differentiate between
+  // true and truthy values (e.g. OP_IF, OP_UNTIL, OP_VERIFY), we can replace OP_NOT OP_NOT with ''
+  // Note that technically OP_NOT OP_NOT would also do a VM-number check, which gets removed by this optimisation
+  ['OP_NOT OP_NOT OP_UNTIL', 'OP_UNTIL'],
+  ['OP_NOT OP_NOTIF', 'OP_IF'],
+  ['OP_NOT OP_NOT OP_VERIFY', 'OP_VERIFY'],
+
+  // Remove extraneous OP_DUP/OP_NIP around in-place increments (e.g. for-loop updates)
+  ['OP_DUP OP_1ADD OP_NIP', 'OP_1ADD'],
+  ['OP_DUP OP_1SUB OP_NIP', 'OP_1SUB'],
+
+  // Replace alt stack round trips (e.g. from reassignments inside loops) with regular stack ops
+  ['OP_SWAP OP_TOALTSTACK OP_SWAP OP_FROMALTSTACK', 'OP_ROT OP_ROT'],
+  ['OP_TOALTSTACK OP_NIP OP_FROMALTSTACK', 'OP_ROT OP_DROP'],
+  ['OP_ROT OP_ROT OP_2DROP', 'OP_NIP OP_NIP'],
+
+  // Remove extraneous OP_SWAP before order-independent operations
+  ['OP_SWAP OP_BOOLOR', 'OP_BOOLOR'],
+  ['OP_SWAP OP_BOOLAND', 'OP_BOOLAND'],
+  ['OP_SWAP OP_MIN', 'OP_MIN'],
+  ['OP_SWAP OP_MAX', 'OP_MAX'],
+  ['OP_SWAP OP_2DROP', 'OP_2DROP'],
+
+  // Remove extraneous OP_DUP before OP_SIZE, which leaves its input on the stack
+  ['OP_DUP OP_SIZE OP_NIP', 'OP_SIZE'],
+
+  // Replace stack shuffles with shorter equivalents
+  ['OP_SWAP OP_OVER', 'OP_TUCK'],
+  // These are disabled because OP_3DUP also copies an item that is then dropped, which can increase the operation cost
+  // by up to ~10,000 per occurrence (depending on the size of the dropped item), so contracts that are within the
+  // operation cost limits without these optimisations could exceed them with these optimisations
+  // ['OP_2 OP_PICK OP_2 OP_PICK', 'OP_3DUP OP_DROP'],
+  // ['OP_2 OP_PICK OP_OVER', 'OP_3DUP OP_NIP'],
+  ['OP_2 OP_PICK OP_NIP', 'OP_DROP OP_OVER'],
+  ['OP_TOALTSTACK OP_ROT OP_ROT OP_FROMALTSTACK', 'OP_2SWAP OP_ROT'],
+
+  // NOTE: these optimisations (as well as some others above) are currently hardcoded, but should become dynamic.
+  // This is something we want to properly implement in v0.15
+  
+  // OP_TUCK leaves the two operands in the opposite order, so this only holds for order-independent comparisons
+  ['OP_DUP OP_ROT OP_NUMEQUALVERIFY', 'OP_TUCK OP_NUMEQUALVERIFY'],
+
+  // Replace copy-and-drop around in-place increments and decrements of a deeper variable (e.g. x = x + 1 inside a branch)
+  // These come before the deeper drop rules below, which would otherwise match the end of these patterns first
+  ['OP_OVER OP_1ADD OP_ROT OP_DROP', 'OP_SWAP OP_1ADD'],
+  ['OP_2 OP_PICK OP_1ADD OP_3 OP_ROLL OP_DROP', 'OP_ROT OP_1ADD'],
+  ['OP_3 OP_PICK OP_1ADD OP_4 OP_ROLL OP_DROP', 'OP_3 OP_ROLL OP_1ADD'],
+  ['OP_4 OP_PICK OP_1ADD OP_5 OP_ROLL OP_DROP', 'OP_4 OP_ROLL OP_1ADD'],
+  ['OP_5 OP_PICK OP_1ADD OP_6 OP_ROLL OP_DROP', 'OP_5 OP_ROLL OP_1ADD'],
+  ['OP_6 OP_PICK OP_1ADD OP_7 OP_ROLL OP_DROP', 'OP_6 OP_ROLL OP_1ADD'],
+  ['OP_7 OP_PICK OP_1ADD OP_8 OP_ROLL OP_DROP', 'OP_7 OP_ROLL OP_1ADD'],
+  ['OP_8 OP_PICK OP_1ADD OP_9 OP_ROLL OP_DROP', 'OP_8 OP_ROLL OP_1ADD'],
+  ['OP_9 OP_PICK OP_1ADD OP_10 OP_ROLL OP_DROP', 'OP_9 OP_ROLL OP_1ADD'],
+  ['OP_10 OP_PICK OP_1ADD OP_11 OP_ROLL OP_DROP', 'OP_10 OP_ROLL OP_1ADD'],
+  ['OP_11 OP_PICK OP_1ADD OP_12 OP_ROLL OP_DROP', 'OP_11 OP_ROLL OP_1ADD'],
+  ['OP_12 OP_PICK OP_1ADD OP_13 OP_ROLL OP_DROP', 'OP_12 OP_ROLL OP_1ADD'],
+  ['OP_13 OP_PICK OP_1ADD OP_14 OP_ROLL OP_DROP', 'OP_13 OP_ROLL OP_1ADD'],
+  ['OP_14 OP_PICK OP_1ADD OP_15 OP_ROLL OP_DROP', 'OP_14 OP_ROLL OP_1ADD'],
+  ['OP_15 OP_PICK OP_1ADD OP_16 OP_ROLL OP_DROP', 'OP_15 OP_ROLL OP_1ADD'],
+  ['OP_OVER OP_1SUB OP_ROT OP_DROP', 'OP_SWAP OP_1SUB'],
+  ['OP_2 OP_PICK OP_1SUB OP_3 OP_ROLL OP_DROP', 'OP_ROT OP_1SUB'],
+  ['OP_3 OP_PICK OP_1SUB OP_4 OP_ROLL OP_DROP', 'OP_3 OP_ROLL OP_1SUB'],
+  ['OP_4 OP_PICK OP_1SUB OP_5 OP_ROLL OP_DROP', 'OP_4 OP_ROLL OP_1SUB'],
+  ['OP_5 OP_PICK OP_1SUB OP_6 OP_ROLL OP_DROP', 'OP_5 OP_ROLL OP_1SUB'],
+  ['OP_6 OP_PICK OP_1SUB OP_7 OP_ROLL OP_DROP', 'OP_6 OP_ROLL OP_1SUB'],
+  ['OP_7 OP_PICK OP_1SUB OP_8 OP_ROLL OP_DROP', 'OP_7 OP_ROLL OP_1SUB'],
+  ['OP_8 OP_PICK OP_1SUB OP_9 OP_ROLL OP_DROP', 'OP_8 OP_ROLL OP_1SUB'],
+  ['OP_9 OP_PICK OP_1SUB OP_10 OP_ROLL OP_DROP', 'OP_9 OP_ROLL OP_1SUB'],
+  ['OP_10 OP_PICK OP_1SUB OP_11 OP_ROLL OP_DROP', 'OP_10 OP_ROLL OP_1SUB'],
+  ['OP_11 OP_PICK OP_1SUB OP_12 OP_ROLL OP_DROP', 'OP_11 OP_ROLL OP_1SUB'],
+  ['OP_12 OP_PICK OP_1SUB OP_13 OP_ROLL OP_DROP', 'OP_12 OP_ROLL OP_1SUB'],
+  ['OP_13 OP_PICK OP_1SUB OP_14 OP_ROLL OP_DROP', 'OP_13 OP_ROLL OP_1SUB'],
+  ['OP_14 OP_PICK OP_1SUB OP_15 OP_ROLL OP_DROP', 'OP_14 OP_ROLL OP_1SUB'],
+  ['OP_15 OP_PICK OP_1SUB OP_16 OP_ROLL OP_DROP', 'OP_15 OP_ROLL OP_1SUB'],
+  /////////////////////////////////////////////////////////////////////////
+
+  // Replace drops of items deeper in the stack (e.g. from scope cleanup) with shorter equivalents
+  ['OP_ROT OP_DROP OP_NIP', 'OP_NIP OP_NIP'],
+  ['OP_3 OP_ROLL OP_DROP OP_ROT', 'OP_2SWAP OP_NIP'],
+  ['OP_ROT OP_ROT OP_DROP', 'OP_NIP OP_SWAP'],
+  ['OP_3 OP_ROLL OP_DROP OP_NIP OP_NIP', 'OP_NIP OP_NIP OP_NIP'],
+] as [string, string][];

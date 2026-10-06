@@ -1,0 +1,8 @@
+contract SliceVariableReuse() {
+    function spend(bytes data, int index) {
+        int next = index + 1;
+        next = next + 1;
+        require(data.slice(next, next + 1) == 0x33);
+        require(data.slice(index, index + 1) == 0x11);
+    }
+}

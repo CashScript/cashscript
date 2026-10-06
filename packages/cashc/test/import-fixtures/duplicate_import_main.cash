@@ -1,0 +1,11 @@
+import "./duplicate_import_helper.cash";
+
+function shared(int a) returns (int) {
+    return a + 1;
+}
+
+contract DuplicateImport() {
+    function spend() {
+        require(shared(1) == 2);
+    }
+}

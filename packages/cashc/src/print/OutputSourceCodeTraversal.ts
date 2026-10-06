@@ -2,10 +2,13 @@ import { binToHex } from '@bitauth/libauth';
 import { SymbolTable } from '../ast/SymbolTable.js';
 import {
   Node,
+  SourceFileNode,
+  ImportNode,
   ContractNode,
   ParameterNode,
   VariableDefinitionNode,
   FunctionDefinitionNode,
+  ConstantDefinitionNode,
   AssignNode,
   IdentifierNode,
   BranchNode,
@@ -22,16 +25,19 @@ import {
   ArrayNode,
   TupleIndexOpNode,
   RequireNode,
+  ReturnNode,
   InstantiationNode,
   TupleAssignmentNode,
   NullaryOpNode,
   ConsoleStatementNode,
   ConsoleParameterNode,
+  FunctionCallStatementNode,
   SliceNode,
   DoWhileNode,
   WhileNode,
   ForNode,
   NonControlStatementNode,
+  ExpressionNode,
 } from '../ast/AST.js';
 import AstTraversal from '../ast/AstTraversal.js';
 
@@ -61,6 +67,19 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(` --> ST: ${symbolTable}`);
   }
 
+  visitSourceFile(node: SourceFileNode): Node {
+    node.imports = this.visitList(node.imports) as ImportNode[];
+    node.constants = this.visitList(node.constants) as ConstantDefinitionNode[];
+    node.functions = this.visitList(node.functions) as FunctionDefinitionNode[];
+    if (node.contract) node.contract = this.visit(node.contract) as ContractNode;
+    return node;
+  }
+
+  visitImport(node: ImportNode): Node {
+    this.addOutput(`import "${node.path}";\n`, true);
+    return node;
+  }
+
   visitContract(node: ContractNode): Node {
     this.addOutput(`contract ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
@@ -80,12 +99,20 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
     this.addOutput(`function ${node.name}(`, true);
     node.parameters = this.visitCommaList(node.parameters) as ParameterNode[];
     this.addOutput(')');
+    if (node.returnTypes) this.addOutput(` returns (${node.returnTypes.join(', ')})`);
     this.outputSymbolTable(node.symbolTable);
     this.addOutput(' ');
 
     node.body = this.visit(node.body) as BlockNode;
     this.addOutput('\n');
 
+    return node;
+  }
+
+  visitConstantDefinition(node: ConstantDefinitionNode): Node {
+    this.addOutput(`${node.type} constant ${node.name} = `, true);
+    node.value = this.visit(node.value) as ExpressionNode;
+    this.addOutput(';\n');
     return node;
   }
 
@@ -100,19 +127,28 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
   }
 
   visitParameter(node: ParameterNode): Node {
-    this.addOutput(`${node.type} ${node.name}`);
+    const modifiers = node.modifiers.length > 0 ? `${node.modifiers.join(' ')} ` : '';
+    this.addOutput(`${node.type} ${modifiers}${node.name}`);
     return node;
   }
 
   visitVariableDefinition(node: VariableDefinitionNode): Node {
-    this.addOutput(`${node.type} ${node.name} = `, true);
+    const modifiers = node.modifiers.length > 0 ? `${node.modifiers.join(' ')} ` : '';
+    this.addOutput(`${node.type} ${modifiers}${node.name} = `, true);
     this.visit(node.expression);
 
     return node;
   }
 
   visitTupleAssignment(node: TupleAssignmentNode): Node {
-    this.addOutput(`${node.left.type} ${node.left.name}, ${node.right.type} ${node.right.name} = `, true);
+    const targets = node.targets
+      .map((target) => {
+        if (target.isReassignment) return target.identifier.name;
+        const modifiers = target.modifiers.length > 0 ? `${target.modifiers.join(' ')} ` : '';
+        return `${target.type} ${modifiers}${target.identifier.name}`;
+      })
+      .join(', ');
+    this.addOutput(`${targets} = `, true);
     this.visit(node.tuple);
 
     return node;
@@ -144,6 +180,18 @@ export default class OutputSourceCodeTraversal extends AstTraversal {
 
     this.addOutput(')');
 
+    return node;
+  }
+
+  visitReturn(node: ReturnNode): Node {
+    this.addOutput('return ', true);
+    node.expressions = this.visitCommaList(node.expressions) as ExpressionNode[];
+    return node;
+  }
+
+  visitFunctionCallStatement(node: FunctionCallStatementNode): Node {
+    this.addOutput('', true);
+    node.functionCall = this.visit(node.functionCall) as FunctionCallNode;
     return node;
   }
 

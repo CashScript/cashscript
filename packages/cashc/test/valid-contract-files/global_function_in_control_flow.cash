@@ -1,0 +1,17 @@
+function triple(int a) returns (int) {
+    return a * 3;
+}
+
+contract GlobalFunctionInControlFlow() {
+    function spend(int x, bool useLoop) {
+        int total = 0;
+        if (useLoop) {
+            for (int i = 0; i < 3; i = i + 1) {
+                total = total + triple(x);
+            }
+        } else {
+            total = triple(x);
+        }
+        require(total == 9);
+    }
+}

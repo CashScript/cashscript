@@ -139,9 +139,9 @@ contract DexContract(bytes20 poolOwnerPkh) {
 }
 ```
 
-Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes). Furthermore, even contracts with hand-optimized bytecode can still be used with the CashScript SDK, [find out more in the optimization guide](/docs/guides/optimization#advanced-hand-optimizing-bytecode).
+Compared to the manually written and hand-optimized opcodes version of the contract, the CashScript compiled bytecode has just 5 extra opcodes overhead (7 extra bytes). Furthermore, even contracts with hand-optimized bytecode can still be used with the CashScript SDK, [find out more in the optimization guide](/docs/design/optimization#advanced-hand-optimizing-bytecode).
 
-More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/guides/covenants).
+More advanced examples on covenants, using NFTs to keep local state and issuing NFTs as receipts can be found in the [Covenants & Introspection Guide](/docs/design/covenants).
 
 [GitHub-CashScript-Examples]: https://github.com/CashScript/cashscript/tree/master/examples
 [Cauldron-Whitepaper]: https://www.cauldron.quest/_files/ugd/ae85be_b1dc04d2b6b94ab5a200e3d8cd197aa3.pdf

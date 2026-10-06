@@ -1,0 +1,7 @@
+int constant abs = 1;
+
+contract GlobalConstantWithBuiltinName() {
+    function spend() {
+        require(abs == 1);
+    }
+}
