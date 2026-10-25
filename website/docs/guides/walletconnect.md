@@ -268,7 +268,10 @@ WizardConnect covers transaction signing only. For arbitrary message signing, us
 
 Send the request to your WizardConnect dapp client. Its `signTransaction` method takes the `transaction` and `inputPaths` and returns the signed transaction.
 
+WizardConnect sends requests over its relay as plain JSON, which cannot hold the `bigint` and `Uint8Array` fields of the `WcTransactionObject`. Passing the object as-is throws `TypeError: Do not know how to serialize a BigInt`. Encode the transaction object with libauth's `stringify` first, as with BCH WalletConnect.
+
 ```ts
+import { stringify } from "@bitauth/libauth";
 import { type WcTransactionObject } from "cashscript";
 
 interface SignTransactionRequest {
@@ -280,7 +283,10 @@ async function signWizardTransaction(
   request: SignTransactionRequest,
 ): Promise<string | undefined> {
   try {
-    const result = await dappConnectionManager.signTransaction(request);
+    const result = await dappConnectionManager.signTransaction({
+      transaction: JSON.parse(stringify(request.transaction)),
+      inputPaths: request.inputPaths,
+    });
     return result.signedTransaction;
   } catch (error) {
     return undefined;
