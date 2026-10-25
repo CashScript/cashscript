@@ -9,6 +9,9 @@ import {
   scriptToAddress,
   createUnlockingBytecode,
   getInputSize,
+  randomUtxo,
+  randomToken,
+  randomNFT,
 } from '../src/utils.js';
 import { Network } from '../src/interfaces.js';
 import { alicePkh, alicePub } from './fixture/vars.js';
@@ -113,6 +116,44 @@ describe('utils', () => {
       expect(mainnetAddressP2sh20Tokens).toEqual(expectedMainnetAddressP2sh20Tokens);
       expect(testnetAddressP2sh20Tokens).toEqual(expectedTestnetAddressP2sh20Tokens);
       expect(regtestAddressP2sh20Tokens).toEqual(expectedRegtestAddressP2sh20Tokens);
+    });
+  });
+
+  describe('random test helpers', () => {
+    // With the old 10,000 possible values, 2,000 draws were all but certain to collide
+    const draws = 2_000;
+    const distinct = (values: string[]): number => new Set(values).size;
+
+    it('should give every random UTXO a distinct outpoint', () => {
+      const utxos = Array.from({ length: draws }, () => randomUtxo());
+
+      expect(distinct(utxos.map((utxo) => `${utxo.txid}:${utxo.vout}`))).toBe(draws);
+      utxos.forEach((utxo) => expect(utxo.txid).toMatch(/^[0-9a-f]{64}$/));
+    });
+
+    it('should give every random token a distinct category', () => {
+      const categories = Array.from({ length: draws }, () => randomToken().category);
+
+      expect(distinct(categories)).toBe(draws);
+      categories.forEach((category) => expect(category).toMatch(/^[0-9a-f]{64}$/));
+    });
+
+    it('should give random NFTs distinct categories and 4-byte commitments', () => {
+      const nfts = Array.from({ length: draws }, () => randomNFT());
+      const commitments = nfts.map((nft) => nft.nft!.commitment);
+
+      expect(distinct(nfts.map((nft) => nft.category))).toBe(draws);
+      commitments.forEach((commitment) => expect(commitment).toMatch(/^[0-9a-f]{8}$/));
+      // 4 random bytes can still collide by chance (~0.05% for 2,000 draws), so allow a few repeats
+      expect(distinct(commitments)).toBeGreaterThan(draws - 5);
+    });
+
+    it('should still let defaults override the random fields', () => {
+      const txid = 'ab'.repeat(32);
+
+      expect(randomUtxo({ txid, vout: 3 })).toMatchObject({ txid, vout: 3 });
+      expect(randomToken({ category: txid }).category).toBe(txid);
+      expect(randomNFT({ category: txid }).category).toBe(txid);
     });
   });
 });

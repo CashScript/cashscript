@@ -13,14 +13,12 @@ import {
   isHex,
   bigIntToCompactUint,
   NonFungibleTokenCapability,
-  bigIntToVmNumber,
   SigningSerializationFlag,
 } from '@bitauth/libauth';
 import {
   encodeInt,
   hash160,
   hash256,
-  sha256,
   Op,
   Script,
   scriptToBytecode,
@@ -419,6 +417,10 @@ export function getNetworkPrefix(network: string): 'bitcoincash' | 'bchtest' | '
 
 const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
 
+// Transaction ids, token categories and NFT commitments are random bytes, so tests that create many random UTXOs
+// or tokens don't end up with colliding outpoints or categories
+const randomBytesHex = (length: number): string => binToHex(crypto.getRandomValues(new Uint8Array(length)));
+
 /**
  * Generate a random `Utxo` for use with `MockNetworkProvider.addUtxo` in tests and examples.
  * Fields can be overridden by passing a `defaults` object.
@@ -427,7 +429,7 @@ const randomInt = (): bigint => BigInt(Math.floor(Math.random() * 10000));
  * @returns A synthetic UTXO with random `txid`, `vout`, and `satoshis`.
  */
 export const randomUtxo = <T extends Partial<Utxo>>(defaults?: T): Utxo & T => ({
-  txid: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+  txid: randomBytesHex(32),
   vout: Math.floor(Math.random() * 10),
   satoshis: 100_000n + randomInt(),
   ...defaults,
@@ -442,7 +444,7 @@ export const randomUtxo = <T extends Partial<Utxo>>(defaults?: T): Utxo & T => (
  */
 export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => ({
   ...{
-    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    category: randomBytesHex(32),
     amount: 100_000n + randomInt(),
   },
   ...defaults,
@@ -457,10 +459,10 @@ export const randomToken = (defaults?: Partial<TokenDetails>): TokenDetails => (
  */
 export const randomNFT = (defaults?: Partial<TokenDetails>): TokenDetails => ({
   ...{
-    category: binToHex(sha256(bigIntToVmNumber(randomInt()))),
+    category: randomBytesHex(32),
     amount: 0n,
     nft: {
-      commitment: binToHex(sha256(bigIntToVmNumber(randomInt()))).slice(0, 8),
+      commitment: randomBytesHex(4),
       capability: NonFungibleTokenCapability.none,
     },
   },
